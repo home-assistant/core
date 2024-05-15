@@ -40,6 +40,7 @@
     'context': <ANY>,
     'entity_id': 'switch.test_mower_1_enable_schedule',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })

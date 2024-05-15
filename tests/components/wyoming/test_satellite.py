@@ -169,7 +169,7 @@ class SatelliteAsyncTcpClient(MockAsyncTcpClient):
 
     def inject_event(self, event: Event) -> None:
         """Put an event in as the next response."""
-        self.responses = [event] + self.responses
+        self.responses = [event, *self.responses]
 
 
 async def test_satellite_pipeline(hass: HomeAssistant) -> None:
@@ -185,9 +185,9 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
     ]
 
     pipeline_kwargs: dict[str, Any] = {}
-    pipeline_event_callback: Callable[
-        [assist_pipeline.PipelineEvent], None
-    ] | None = None
+    pipeline_event_callback: Callable[[assist_pipeline.PipelineEvent], None] | None = (
+        None
+    )
     run_pipeline_called = asyncio.Event()
     audio_chunk_received = asyncio.Event()
 
@@ -771,9 +771,9 @@ async def test_pipeline_changed(hass: HomeAssistant) -> None:
         ).event(),
     ]
 
-    pipeline_event_callback: Callable[
-        [assist_pipeline.PipelineEvent], None
-    ] | None = None
+    pipeline_event_callback: Callable[[assist_pipeline.PipelineEvent], None] | None = (
+        None
+    )
     run_pipeline_called = asyncio.Event()
     pipeline_stopped = asyncio.Event()
 
@@ -845,9 +845,9 @@ async def test_audio_settings_changed(hass: HomeAssistant) -> None:
         ).event(),
     ]
 
-    pipeline_event_callback: Callable[
-        [assist_pipeline.PipelineEvent], None
-    ] | None = None
+    pipeline_event_callback: Callable[[assist_pipeline.PipelineEvent], None] | None = (
+        None
+    )
     run_pipeline_called = asyncio.Event()
     pipeline_stopped = asyncio.Event()
 
@@ -981,9 +981,9 @@ async def test_client_stops_pipeline(hass: HomeAssistant) -> None:
         ).event(),
     ]
 
-    pipeline_event_callback: Callable[
-        [assist_pipeline.PipelineEvent], None
-    ] | None = None
+    pipeline_event_callback: Callable[[assist_pipeline.PipelineEvent], None] | None = (
+        None
+    )
     run_pipeline_called = asyncio.Event()
     pipeline_stopped = asyncio.Event()
 

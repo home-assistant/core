@@ -159,9 +159,9 @@ class ThermoworksSmokeSensor(SensorEntity):
                         if key and key not in EXCLUDE_KEYS:
                             self._attr_extra_state_attributes[key] = val
                 # store actual unit because attributes are not converted
-                self._attr_extra_state_attributes[
-                    "unit_of_min_max"
-                ] = self._attr_native_unit_of_measurement
+                self._attr_extra_state_attributes["unit_of_min_max"] = (
+                    self._attr_native_unit_of_measurement
+                )
 
         except (RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update status for %s", self.name)

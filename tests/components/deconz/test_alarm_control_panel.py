@@ -171,11 +171,11 @@ async def test_alarm_control_panel(
 
     # Event signals alarm control panel arming
 
-    for arming_event in {
+    for arming_event in (
         AncillaryControlPanel.ARMING_AWAY,
         AncillaryControlPanel.ARMING_NIGHT,
         AncillaryControlPanel.ARMING_STAY,
-    }:
+    ):
         event_changed_sensor = {
             "t": "event",
             "e": "changed",
@@ -190,10 +190,10 @@ async def test_alarm_control_panel(
 
     # Event signals alarm control panel pending
 
-    for pending_event in {
+    for pending_event in (
         AncillaryControlPanel.ENTRY_DELAY,
         AncillaryControlPanel.EXIT_DELAY,
-    }:
+    ):
         event_changed_sensor = {
             "t": "event",
             "e": "changed",

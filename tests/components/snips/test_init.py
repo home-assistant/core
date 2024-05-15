@@ -7,7 +7,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.bootstrap import async_setup_component
-import homeassistant.components.snips as snips
+from homeassistant.components import snips
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.intent import ServiceIntentHandler, async_register
 

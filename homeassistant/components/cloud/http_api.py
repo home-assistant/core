@@ -16,10 +16,10 @@ from aiohttp import web
 import attr
 from hass_nabucasa import Cloud, auth, thingtalk
 from hass_nabucasa.const import STATE_DISCONNECTED
-from hass_nabucasa.voice import MAP_VOICE
+from hass_nabucasa.voice import TTS_VOICES
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
+from homeassistant.components import http, websocket_api
 from homeassistant.components.alexa import (
     entities as alexa_entities,
     errors as alexa_errors,
@@ -46,6 +46,7 @@ from .const import (
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_REMOTE_ALLOW_REMOTE_ENABLE,
+    PREF_STRICT_CONNECTION,
     PREF_TTS_DEFAULT_VOICE,
     REQUEST_TIMEOUT,
 )
@@ -71,6 +72,7 @@ _CLOUD_ERRORS: dict[type[Exception], tuple[HTTPStatus, str]] = {
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Initialize the HTTP API."""
+    websocket_api.async_register_command(hass, websocket_cloud_remove_data)
     websocket_api.async_register_command(hass, websocket_cloud_status)
     websocket_api.async_register_command(hass, websocket_subscription)
     websocket_api.async_register_command(hass, websocket_update_prefs)
@@ -134,12 +136,12 @@ def _handle_cloud_errors(
         """Handle exceptions that raise from the wrapped request handler."""
         try:
             result = await handler(view, request, *args, **kwargs)
-            return result
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             status, msg = _process_cloud_exception(err, request.path)
             return view.json_message(
                 msg, status_code=status, message_code=err.__class__.__name__.lower()
             )
+        return result
 
     return error_handler
 
@@ -165,7 +167,7 @@ def _ws_handle_cloud_errors(
         try:
             return await handler(hass, connection, msg)
 
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             err_status, err_msg = _process_cloud_exception(err, msg["type"])
             connection.send_error(msg["id"], str(err_status), err_msg)
 
@@ -222,7 +224,10 @@ class CloudLoginView(HomeAssistantView):
         cloud: Cloud[CloudClient] = hass.data[DOMAIN]
         await cloud.login(data["email"], data["password"])
 
-        new_cloud_pipeline_id = await async_create_cloud_pipeline(hass)
+        if "assist_pipeline" in hass.config.components:
+            new_cloud_pipeline_id = await async_create_cloud_pipeline(hass)
+        else:
+            new_cloud_pipeline_id = None
         return self.json({"success": True, "cloud_pipeline": new_cloud_pipeline_id})
 
 
@@ -329,6 +334,33 @@ class CloudForgotPasswordView(HomeAssistantView):
         return self.json_message("ok")
 
 
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "cloud/remove_data"})
+@websocket_api.async_response
+async def websocket_cloud_remove_data(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle request for account info.
+
+    Async friendly.
+    """
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    if cloud.is_logged_in:
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"], "logged_in", "Can't remove data when logged in."
+            )
+        )
+        return
+
+    await cloud.remove_data()
+    await cloud.client.prefs.async_erase_config()
+
+    connection.send_message(websocket_api.result_message(msg["id"]))
+
+
 @websocket_api.websocket_command({vol.Required("type"): "cloud/status"})
 @websocket_api.async_response
 async def websocket_cloud_status(
@@ -398,6 +430,16 @@ async def websocket_subscription(
     async_manage_legacy_subscription_issue(hass, data)
 
 
+def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
+    """Validate language and voice."""
+    language, voice = value
+    if language not in TTS_VOICES:
+        raise vol.Invalid(f"Invalid language {language}")
+    if voice not in TTS_VOICES[language]:
+        raise vol.Invalid(f"Invalid voice {voice} for language {language}")
+    return value
+
+
 @_require_cloud_login
 @websocket_api.websocket_command(
     {
@@ -408,9 +450,12 @@ async def websocket_subscription(
         vol.Optional(PREF_GOOGLE_REPORT_STATE): bool,
         vol.Optional(PREF_GOOGLE_SECURE_DEVICES_PIN): vol.Any(None, str),
         vol.Optional(PREF_TTS_DEFAULT_VOICE): vol.All(
-            vol.Coerce(tuple), vol.In(MAP_VOICE)
+            vol.Coerce(tuple), validate_language_voice
         ),
         vol.Optional(PREF_REMOTE_ALLOW_REMOTE_ENABLE): bool,
+        vol.Optional(PREF_STRICT_CONNECTION): vol.Coerce(
+            http.const.StrictConnectionMode
+        ),
     }
 )
 @websocket_api.async_response
@@ -812,5 +857,12 @@ def tts_info(
 ) -> None:
     """Fetch available tts info."""
     connection.send_result(
-        msg["id"], {"languages": [(lang, gender.value) for lang, gender in MAP_VOICE]}
+        msg["id"],
+        {
+            "languages": [
+                (language, voice)
+                for language, voices in TTS_VOICES.items()
+                for voice in voices
+            ]
+        },
     )

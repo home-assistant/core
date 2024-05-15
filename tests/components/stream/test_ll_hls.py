@@ -397,7 +397,7 @@ async def test_ll_hls_playlist_bad_msn_part(
     """Test some playlist requests with invalid _HLS_msn/_HLS_part."""
 
     async def _handler_bad_request(request):
-        raise web.HTTPBadRequest()
+        raise web.HTTPBadRequest
 
     await async_setup_component(
         hass,

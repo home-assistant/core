@@ -11,7 +11,7 @@ from zhaquirks.quirk_ids import TUYA_PLUG_MANUFACTURER, TUYA_PLUG_ONOFF
 from zhaquirks.xiaomi.aqara.magnet_ac01 import OppleCluster as MagnetAC01OppleCluster
 from zhaquirks.xiaomi.aqara.switch_acn047 import OppleCluster as T2RelayOppleCluster
 from zigpy import types
-from zigpy.quirks.v2 import EntityMetadata, ZCLEnumMetadata
+from zigpy.quirks.v2 import ZCLEnumMetadata
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasWd
 
@@ -29,7 +29,7 @@ from .core.const import (
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_ON_OFF,
-    QUIRK_METADATA,
+    ENTITY_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     Strobe,
@@ -179,7 +179,7 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if QUIRK_METADATA not in kwargs and (
+        if ENTITY_METADATA not in kwargs and (
             cls._attribute_name in cluster_handler.cluster.unsupported_attributes
             or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._attribute_name) is None
@@ -202,17 +202,16 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
     ) -> None:
         """Init this select entity."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
-        if QUIRK_METADATA in kwargs:
-            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
+        if ENTITY_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[ENTITY_METADATA])
         self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
-    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+    def _init_from_quirks_metadata(self, entity_metadata: ZCLEnumMetadata) -> None:
         """Init this entity from the quirks metadata."""
         super()._init_from_quirks_metadata(entity_metadata)
-        zcl_enum_metadata: ZCLEnumMetadata = entity_metadata.entity_metadata
-        self._attribute_name = zcl_enum_metadata.attribute_name
-        self._enum = zcl_enum_metadata.enum
+        self._attribute_name = entity_metadata.attribute_name
+        self._enum = entity_metadata.enum
 
     @property
     def current_option(self) -> str | None:

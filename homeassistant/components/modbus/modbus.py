@@ -56,7 +56,6 @@ from .const import (
     CONF_BYTESIZE,
     CONF_MSG_WAIT,
     CONF_PARITY,
-    CONF_RETRIES,
     CONF_STOPBITS,
     DEFAULT_HUB,
     MODBUS_DOMAIN as DOMAIN,
@@ -133,6 +132,8 @@ async def async_modbus_setup(
 
     if config[DOMAIN]:
         config[DOMAIN] = check_config(hass, config[DOMAIN])
+        if not config[DOMAIN]:
+            return False
     if DOMAIN in hass.data and config[DOMAIN] == []:
         hubs = hass.data[DOMAIN]
         for name in hubs:
@@ -234,6 +235,18 @@ async def async_modbus_setup(
 
     async def async_restart_hub(service: ServiceCall) -> None:
         """Restart Modbus hub."""
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_restart",
+            breaks_in_ha_version="2024.11.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_restart",
+        )
+        _LOGGER.warning(
+            "`modbus.restart` is deprecated and will be removed in version 2024.11"
+        )
         async_dispatcher_send(hass, SIGNAL_START_ENTITY)
         hub = hub_collect[service.data[ATTR_HUB]]
         await hub.async_restart()
@@ -257,28 +270,10 @@ class ModbusHub:
     def __init__(self, hass: HomeAssistant, client_config: dict[str, Any]) -> None:
         """Initialize the Modbus hub."""
 
-        if CONF_RETRIES in client_config:
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "deprecated_retries",
-                breaks_in_ha_version="2024.7.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_retries",
-                translation_placeholders={
-                    "config_key": "retries",
-                    "integration": DOMAIN,
-                    "url": "https://www.home-assistant.io/integrations/modbus",
-                },
-            )
-            _LOGGER.warning(
-                "`retries`: is deprecated and will be removed in version 2024.7"
-            )
-        else:
-            client_config[CONF_RETRIES] = 3
         # generic configuration
-        self._client: AsyncModbusSerialClient | AsyncModbusTcpClient | AsyncModbusUdpClient | None = None
+        self._client: (
+            AsyncModbusSerialClient | AsyncModbusTcpClient | AsyncModbusUdpClient | None
+        ) = None
         self._async_cancel_listener: Callable[[], None] | None = None
         self._in_error = False
         self._lock = asyncio.Lock()
@@ -342,7 +337,7 @@ class ModbusHub:
             try:
                 await self._client.connect()  # type: ignore[union-attr]
             except ModbusException as exception_error:
-                err = f"{self.name} connect failed, retry in pymodbus  ({str(exception_error)})"
+                err = f"{self.name} connect failed, retry in pymodbus  ({exception_error!s})"
                 self._log_error(err, error_state=False)
                 return
             message = f"modbus {self.name} communication open"
@@ -409,9 +404,7 @@ class ModbusHub:
         try:
             result: ModbusResponse = await entry.func(address, value, **kwargs)
         except ModbusException as exception_error:
-            error = (
-                f"Error: device: {slave} address: {address} -> {str(exception_error)}"
-            )
+            error = f"Error: device: {slave} address: {address} -> {exception_error!s}"
             self._log_error(error)
             return None
         if not result:
@@ -421,7 +414,7 @@ class ModbusHub:
             self._log_error(error)
             return None
         if not hasattr(result, entry.attr):
-            error = f"Error: device: {slave} address: {address} -> {str(result)}"
+            error = f"Error: device: {slave} address: {address} -> {result!s}"
             self._log_error(error)
             return None
         if result.isError():

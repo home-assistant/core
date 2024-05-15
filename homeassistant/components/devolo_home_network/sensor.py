@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Generic, TypeVar
 
-from devolo_plc_api.device import Device
 from devolo_plc_api.device_api import ConnectedStationInfo, NeighborAPInfo
 from devolo_plc_api.plcnet_api import REMOTE, DataRate, LogicalNetwork
 
@@ -17,16 +16,15 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from . import DevoloHomeNetworkConfigEntry
 from .const import (
     CONNECTED_PLC_DEVICES,
     CONNECTED_WIFI_CLIENTS,
-    DOMAIN,
     NEIGHBORING_WIFI_NETWORKS,
     PLC_RX_RATE,
     PLC_TX_RATE,
@@ -101,13 +99,13 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DevoloHomeNetworkConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
-    device: Device = hass.data[DOMAIN][entry.entry_id]["device"]
-    coordinators: dict[str, DataUpdateCoordinator[Any]] = hass.data[DOMAIN][
-        entry.entry_id
-    ]["coordinators"]
+    device = entry.runtime_data.device
+    coordinators = entry.runtime_data.coordinators
 
     entities: list[BaseDevoloSensorEntity[Any, Any]] = []
     if device.plcnet:
@@ -116,7 +114,6 @@ async def async_setup_entry(
                 entry,
                 coordinators[CONNECTED_PLC_DEVICES],
                 SENSOR_TYPES[CONNECTED_PLC_DEVICES],
-                device,
             )
         )
         network = await device.plcnet.async_get_network_overview()
@@ -129,7 +126,6 @@ async def async_setup_entry(
                     entry,
                     coordinators[CONNECTED_PLC_DEVICES],
                     SENSOR_TYPES[PLC_TX_RATE],
-                    device,
                     peer,
                 )
             )
@@ -138,7 +134,6 @@ async def async_setup_entry(
                     entry,
                     coordinators[CONNECTED_PLC_DEVICES],
                     SENSOR_TYPES[PLC_RX_RATE],
-                    device,
                     peer,
                 )
             )
@@ -148,7 +143,6 @@ async def async_setup_entry(
                 entry,
                 coordinators[CONNECTED_WIFI_CLIENTS],
                 SENSOR_TYPES[CONNECTED_WIFI_CLIENTS],
-                device,
             )
         )
         entities.append(
@@ -156,7 +150,6 @@ async def async_setup_entry(
                 entry,
                 coordinators[NEIGHBORING_WIFI_NETWORKS],
                 SENSOR_TYPES[NEIGHBORING_WIFI_NETWORKS],
-                device,
             )
         )
     async_add_entities(entities)
@@ -171,14 +164,13 @@ class BaseDevoloSensorEntity(
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: DevoloHomeNetworkConfigEntry,
         coordinator: DataUpdateCoordinator[_CoordinatorDataT],
         description: DevoloSensorEntityDescription[_ValueDataT],
-        device: Device,
     ) -> None:
         """Initialize entity."""
         self.entity_description = description
-        super().__init__(entry, coordinator, device)
+        super().__init__(entry, coordinator)
 
 
 class DevoloSensorEntity(BaseDevoloSensorEntity[_CoordinatorDataT, _CoordinatorDataT]):
@@ -199,14 +191,13 @@ class DevoloPlcDataRateSensorEntity(BaseDevoloSensorEntity[LogicalNetwork, DataR
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: DevoloHomeNetworkConfigEntry,
         coordinator: DataUpdateCoordinator[LogicalNetwork],
         description: DevoloSensorEntityDescription[DataRate],
-        device: Device,
         peer: str,
     ) -> None:
         """Initialize entity."""
-        super().__init__(entry, coordinator, description, device)
+        super().__init__(entry, coordinator, description)
         self._peer = peer
         peer_device = next(
             device

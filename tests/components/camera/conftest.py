@@ -63,12 +63,15 @@ async def mock_camera_web_rtc_fixture(hass):
     )
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.camera.Camera.frontend_stream_type",
-        new_callable=PropertyMock(return_value=StreamType.WEB_RTC),
-    ), patch(
-        "homeassistant.components.camera.Camera.async_handle_web_rtc_offer",
-        return_value=WEBRTC_ANSWER,
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.frontend_stream_type",
+            new_callable=PropertyMock(return_value=StreamType.WEB_RTC),
+        ),
+        patch(
+            "homeassistant.components.camera.Camera.async_handle_web_rtc_offer",
+            return_value=WEBRTC_ANSWER,
+        ),
     ):
         yield
 
@@ -85,14 +88,16 @@ async def mock_camera_with_device_fixture():
         def __get__(self, obj, obj_type=None):
             return obj.name
 
-    with patch(
-        "homeassistant.components.camera.Camera.has_entity_name",
-        new_callable=PropertyMock(return_value=True),
-    ), patch(
-        "homeassistant.components.camera.Camera.unique_id", new=UniqueIdMock()
-    ), patch(
-        "homeassistant.components.camera.Camera.device_info",
-        new_callable=PropertyMock(return_value=dev_info),
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.has_entity_name",
+            new_callable=PropertyMock(return_value=True),
+        ),
+        patch("homeassistant.components.camera.Camera.unique_id", new=UniqueIdMock()),
+        patch(
+            "homeassistant.components.camera.Camera.device_info",
+            new_callable=PropertyMock(return_value=dev_info),
+        ),
     ):
         yield
 
