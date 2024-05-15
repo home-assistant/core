@@ -253,14 +253,18 @@ class TeslemetryMetricSpeedNumberEntity(TeslemetryVehicleEntity, NumberEntity):
             UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.MILES_PER_HOUR
         )
 
-        super().__init__(data, "vehicle_state_speed_limit_mode_current_limit_mph")
+        super().__init__(data, "vehicle_state_speed_limit_mode_current_limit_kph")
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
-        if self._value is None:
+
+        if (
+            value := self.get("vehicle_state_speed_limit_mode_current_limit_mph")
+            is None
+        ):
             self._attr_native_value = None
         else:
-            self._attr_native_value = round(self.convert_to(self._value), 1)
+            self._attr_native_value = round(self.convert_to(value), 1)
         self._attr_native_min_value = round(
             self.convert_to(
                 self.get_number("vehicle_state_speed_limit_mode_min_limit_mph", 50)

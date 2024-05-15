@@ -26,7 +26,7 @@
       "storm_mode_capable": true,
       "flex_energy_request_capable": false,
       "car_charging_data_supported": false,
-      "off_grid_vehicle_charging_reserve_supported": false,
+      "off_grid_vehicle_charging_reserve_supported": true,
       "vehicle_charging_performance_view_enabled": false,
       "vehicle_charging_solar_offset_view_enabled": false,
       "battery_solar_offset_view_enabled": true,
