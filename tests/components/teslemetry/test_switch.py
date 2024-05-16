@@ -87,7 +87,7 @@ async def test_switch_offline(
             "VehicleSpecific.set_preconditioning_max",
         ),
         (
-            "energy_site_storm_mode",
+            "energy_site_storm_watch",
             "EnergySpecific.storm_mode",
             "EnergySpecific.storm_mode",
         ),

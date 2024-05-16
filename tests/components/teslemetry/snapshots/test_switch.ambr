@@ -46,7 +46,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switch[switch.energy_site_storm_mode-entry]
+# name: test_switch[switch.energy_site_storm_watch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -58,7 +58,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.energy_site_storm_mode',
+    'entity_id': 'switch.energy_site_storm_watch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -70,7 +70,7 @@
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': 'Storm mode',
+    'original_name': 'Storm watch',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -79,14 +79,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[switch.energy_site_storm_mode-state]
+# name: test_switch[switch.energy_site_storm_watch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'Energy Site Storm mode',
+      'friendly_name': 'Energy Site Storm watch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.energy_site_storm_mode',
+    'entity_id': 'switch.energy_site_storm_watch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -436,14 +436,14 @@
     'state': 'off',
   })
 # ---
-# name: test_switch_alt[switch.energy_site_storm_mode-state]
+# name: test_switch_alt[switch.energy_site_storm_watch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'Energy Site Storm mode',
+      'friendly_name': 'Energy Site Storm watch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.energy_site_storm_mode',
+    'entity_id': 'switch.energy_site_storm_watch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

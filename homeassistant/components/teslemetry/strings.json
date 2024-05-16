@@ -294,7 +294,7 @@
         "name": "Allow charging from grid"
       },
       "user_settings_storm_mode_enabled": {
-        "name": "Storm mode"
+        "name": "Storm watch"
       },
       "vehicle_state_sentry_mode": {
         "name": "Sentry mode"
