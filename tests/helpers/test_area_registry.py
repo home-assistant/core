@@ -500,7 +500,7 @@ async def test_async_get_or_create_thread_checks(
     """We raise when trying to create in the wrong thread."""
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls async_create from a thread. Please report this issue.",
+        match="Detected code that calls area_registry.async_create from a thread.",
     ):
         await hass.async_add_executor_job(area_registry.async_create, "Mock1")
 
@@ -512,7 +512,7 @@ async def test_async_update_thread_checks(
     area = area_registry.async_create("Mock1")
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls _async_update from a thread. Please report this issue.",
+        match="Detected code that calls area_registry.async_update from a thread.",
     ):
         await hass.async_add_executor_job(
             partial(area_registry.async_update, area.id, name="Mock2")
@@ -526,6 +526,6 @@ async def test_async_delete_thread_checks(
     area = area_registry.async_create("Mock1")
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls async_delete from a thread. Please report this issue.",
+        match="Detected code that calls area_registry.async_delete from a thread.",
     ):
         await hass.async_add_executor_job(area_registry.async_delete, area.id)

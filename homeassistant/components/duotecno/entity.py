@@ -41,6 +41,11 @@ class DuotecnoEntity(Entity):
         """When a unit has an update."""
         self.async_write_ha_state()
 
+    @property
+    def available(self) -> bool:
+        """Available state for the unit."""
+        return self._unit.is_available()
+
 
 _T = TypeVar("_T", bound="DuotecnoEntity")
 _P = ParamSpec("_P")
