@@ -36,8 +36,8 @@ def format_unix_timestamp(timestamp) -> str:
 
 def format_progress(torrent: qbittorrentapi.TorrentDictionary) -> str:
     """Format the progress of a torrent."""
-    progress = torrent["progress"]
-    progress = float(progress) * 100  # type: ignore[arg-type,assignment]
+    progress: Any = torrent["progress"]
+    progress = float(progress) * 100
     return f"{progress:.2f}"
 
 
@@ -60,6 +60,7 @@ def format_torrent(torrent: qbittorrentapi.TorrentDictionary) -> dict[str, Any]:
     value["percent_done"] = format_progress(torrent)
     value["status"] = torrent["state"]
     value["eta"] = seconds_to_hhmmss(torrent["eta"])
-    value["ratio"] = f"{float(torrent["ratio"]):.2f}"  # type: ignore[arg-type]
+    ratio: Any = torrent["ratio"]
+    value["ratio"] = f"{float(ratio):.2f}"
 
     return value
