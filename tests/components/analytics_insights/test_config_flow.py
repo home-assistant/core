@@ -6,12 +6,12 @@ from unittest.mock import AsyncMock
 import pytest
 from python_homeassistant_analytics import HomeassistantAnalyticsConnectionError
 
-from homeassistant import config_entries
 from homeassistant.components.analytics_insights.const import (
     CONF_TRACKED_CUSTOM_INTEGRATIONS,
     CONF_TRACKED_INTEGRATIONS,
     DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -61,7 +61,7 @@ async def test_form(
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
 
@@ -96,7 +96,7 @@ async def test_submitting_empty_form(
 ) -> None:
     """Test we can't submit an empty form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
 
@@ -128,20 +128,28 @@ async def test_submitting_empty_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        (HomeassistantAnalyticsConnectionError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
 async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_analytics_client: AsyncMock
+    hass: HomeAssistant,
+    mock_analytics_client: AsyncMock,
+    exception: Exception,
+    reason: str,
 ) -> None:
     """Test we handle cannot connect error."""
 
-    mock_analytics_client.get_integrations.side_effect = (
-        HomeassistantAnalyticsConnectionError
-    )
+    mock_analytics_client.get_integrations.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == reason
 
 
 async def test_form_already_configured(
@@ -159,7 +167,7 @@ async def test_form_already_configured(
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
