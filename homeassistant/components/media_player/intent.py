@@ -1,5 +1,7 @@
 """Intents for the media_player integration."""
 
+from dataclasses import dataclass
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -8,8 +10,9 @@ from homeassistant.const import (
     SERVICE_MEDIA_PLAY,
     SERVICE_VOLUME_SET,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import intent
+from homeassistant.util import dt as dt_util
 
 from . import ATTR_MEDIA_VOLUME_LEVEL, DOMAIN
 from .const import MediaPlayerEntityFeature, MediaPlayerState
@@ -20,6 +23,14 @@ INTENT_MEDIA_NEXT = "HassMediaNext"
 INTENT_SET_VOLUME = "HassSetVolume"
 
 DATA_LAST_PAUSED = f"{DOMAIN}.last_paused"
+
+
+@dataclass(frozen=True)
+class LastPaused:
+    """Information about last media players that were paused by voice."""
+
+    timestamp: float
+    entity_ids: set[str]
 
 
 async def async_setup_intents(hass: HomeAssistant) -> None:
@@ -81,7 +92,10 @@ class MediaPauseHandler(intent.ServiceIntentHandler):
 
         if match_result.is_match:
             # Save entity ids of paused media players
-            hass.data[DATA_LAST_PAUSED] = {s.entity_id for s in match_result.states}
+            hass.data[DATA_LAST_PAUSED] = LastPaused(
+                timestamp=dt_util.now().timestamp(),
+                entity_ids={s.entity_id for s in match_result.states},
+            )
 
         return await super().async_handle_states(
             intent_obj, match_result, match_constraints
@@ -116,14 +130,31 @@ class MediaUnpauseHandler(intent.ServiceIntentHandler):
             and (not match_constraints.name)
             and (last_paused := hass.data.get(DATA_LAST_PAUSED))
         ):
-            # Resume only the previously paused media players if they are in the
-            # targeted set.
-            targeted_ids = {s.entity_id for s in match_result.states}
-            overlapping_ids = targeted_ids.intersection(last_paused)
-            if overlapping_ids:
-                match_result.states = [
-                    s for s in match_result.states if s.entity_id in overlapping_ids
-                ]
+            # Check for a media player that was paused more recently than the
+            # ones by voice.
+            recent_state: State | None = None
+            for state in match_result.states:
+                if state.last_changed_timestamp <= last_paused.timestamp:
+                    continue
+
+                if (recent_state is None) or (
+                    state.last_changed_timestamp > recent_state.last_changed_timestamp
+                ):
+                    recent_state = state
+
+            if recent_state is not None:
+                # Resume the more recently paused media player (outside of voice).
+                match_result.states = [recent_state]
+                hass.data.pop(DATA_LAST_PAUSED)
+            else:
+                # Resume only the previously paused media players if they are in the
+                # targeted set.
+                targeted_ids = {s.entity_id for s in match_result.states}
+                overlapping_ids = targeted_ids.intersection(last_paused.entity_ids)
+                if overlapping_ids:
+                    match_result.states = [
+                        s for s in match_result.states if s.entity_id in overlapping_ids
+                    ]
 
         return await super().async_handle_states(
             intent_obj, match_result, match_constraints
