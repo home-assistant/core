@@ -156,7 +156,7 @@ async def test_block_restored_motion_switch_no_last_state(
     )
     register_device(device_reg, entry)
     entity_id = register_entity(
-        hass, SWITCH_DOMAIN, "test_name_motion_active", "sensor_0-motionActive", entry
+        hass, SWITCH_DOMAIN, "test_name_motion_detection", "sensor_0-motionActive", entry
     )
     monkeypatch.setattr(mock_block_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)
