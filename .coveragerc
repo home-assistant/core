@@ -1358,6 +1358,7 @@ omit =
     homeassistant/components/supla/*
     homeassistant/components/surepetcare/__init__.py
     homeassistant/components/surepetcare/binary_sensor.py
+    homeassistant/components/surepetcare/coordinator.py
     homeassistant/components/surepetcare/entity.py
     homeassistant/components/surepetcare/sensor.py
     homeassistant/components/swiss_hydrological_data/sensor.py
