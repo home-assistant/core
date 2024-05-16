@@ -7,12 +7,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import (
-    CONF_EMAIL,
-    PERCENTAGE,
-    UnitOfElectricPotential,
-    UnitOfTemperature,
-)
+from homeassistant.const import PERCENTAGE, UnitOfElectricPotential, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -75,12 +70,9 @@ async def async_setup_entry(
     """Defer sensor setup to the shared sensor module."""
     coordinator = config_entry.runtime_data
 
-    entities = [
-        PoolSenseSensor(coordinator, config_entry.data[CONF_EMAIL], description)
-        for description in SENSOR_TYPES
-    ]
-
-    async_add_entities(entities, False)
+    async_add_entities(
+        PoolSenseSensor(coordinator, description) for description in SENSOR_TYPES
+    )
 
 
 class PoolSenseSensor(PoolSenseEntity, SensorEntity):
