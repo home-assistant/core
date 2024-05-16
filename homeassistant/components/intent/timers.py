@@ -71,6 +71,9 @@ class TimerInfo:
     area_id: str | None = None
     """Id of area that the device belongs to."""
 
+    area_name: str | None = None
+    """Normalized name of the area that the device belongs to."""
+
     floor_id: str | None = None
     """Id of floor that the device's area belongs to."""
 
@@ -85,12 +88,9 @@ class TimerInfo:
         return max(0, self.seconds - seconds_running)
 
     @cached_property
-    def name_normalized(self) -> str | None:
+    def name_normalized(self) -> str:
         """Return normalized timer name."""
-        if self.name is None:
-            return None
-
-        return self.name.strip().casefold()
+        return _normalize_name(self.name or "")
 
     def cancel(self) -> None:
         """Cancel the timer."""
@@ -223,6 +223,7 @@ class TimerManager:
             if device.area_id and (
                 area := area_registry.async_get_area(device.area_id)
             ):
+                timer.area_name = _normalize_name(area.name)
                 timer.floor_id = area.floor_id
 
         self.timers[timer_id] = timer
@@ -422,9 +423,22 @@ def _find_timer(
         has_filter = True
         name = slots["name"]["value"]
         assert name is not None
-        name_norm = name.strip().casefold()
+        name_norm = _normalize_name(name)
 
         matching_timers = [t for t in matching_timers if t.name_normalized == name_norm]
+        if len(matching_timers) == 1:
+            # Only 1 match
+            return matching_timers[0]
+
+    # Search by area name
+    area_name: str | None = None
+    if "area" in slots:
+        has_filter = True
+        area_name = slots["area"]["value"]
+        assert area_name is not None
+        area_name_norm = _normalize_name(area_name)
+
+        matching_timers = [t for t in matching_timers if t.area_name == area_name_norm]
         if len(matching_timers) == 1:
             # Only 1 match
             return matching_timers[0]
@@ -501,8 +515,9 @@ def _find_timer(
         raise MultipleTimersMatchedError
 
     _LOGGER.warning(
-        "Timer not found: name=%s, hours=%s, minutes=%s, seconds=%s, device_id=%s",
+        "Timer not found: name=%s, area=%s, hours=%s, minutes=%s, seconds=%s, device_id=%s",
         name,
+        area_name,
         start_hours,
         start_minutes,
         start_seconds,
@@ -524,9 +539,21 @@ def _find_timers(
     if "name" in slots:
         name = slots["name"]["value"]
         assert name is not None
-        name_norm = name.strip().casefold()
+        name_norm = _normalize_name(name)
 
         matching_timers = [t for t in matching_timers if t.name_normalized == name_norm]
+        if not matching_timers:
+            # No matches
+            return matching_timers
+
+    # Filter by area name
+    area_name: str | None = None
+    if "area" in slots:
+        area_name = slots["area"]["value"]
+        assert area_name is not None
+        area_name_norm = _normalize_name(area_name)
+
+        matching_timers = [t for t in matching_timers if t.area_name == area_name_norm]
         if not matching_timers:
             # No matches
             return matching_timers
@@ -590,6 +617,11 @@ def _find_timers(
     return matching_timers
 
 
+def _normalize_name(name: str) -> str:
+    """Normalize name for comparison."""
+    return name.strip().casefold()
+
+
 def _get_total_seconds(slots: dict[str, Any]) -> int:
     """Return the total number of seconds from hours/minutes/seconds slots."""
     total_seconds = 0
@@ -603,6 +635,55 @@ def _get_total_seconds(slots: dict[str, Any]) -> int:
         total_seconds += int(slots["seconds"]["value"])
 
     return total_seconds
+
+
+def _round_time(hours: int, minutes: int, seconds: int) -> tuple[int, int, int]:
+    """Round time to a lower precision for feedback."""
+    if hours > 0:
+        # No seconds, round up above 45 minutes and down below 15
+        rounded_hours = hours
+        rounded_seconds = 0
+        if minutes > 45:
+            # 01:50:30 -> 02:00:00
+            rounded_hours += 1
+            rounded_minutes = 0
+        elif minutes < 15:
+            # 01:10:30 -> 01:00:00
+            rounded_minutes = 0
+        else:
+            # 01:25:30 -> 01:30:00
+            rounded_minutes = 30
+    elif minutes > 0:
+        # Round up above 45 seconds, down below 15
+        rounded_hours = 0
+        rounded_minutes = minutes
+        if seconds > 45:
+            # 00:01:50 -> 00:02:00
+            rounded_minutes += 1
+            rounded_seconds = 0
+        elif seconds < 15:
+            # 00:01:10 -> 00:01:00
+            rounded_seconds = 0
+        else:
+            # 00:01:25 -> 00:01:30
+            rounded_seconds = 30
+    else:
+        # Round up above 50 seconds, exact below 10, and down to nearest 10
+        # otherwise.
+        rounded_hours = 0
+        rounded_minutes = 0
+        if seconds > 50:
+            # 00:00:55 -> 00:01:00
+            rounded_minutes = 1
+            rounded_seconds = 0
+        elif seconds < 10:
+            # 00:00:09 -> 00:00:09
+            rounded_seconds = seconds
+        else:
+            # 00:01:25 -> 00:01:20
+            rounded_seconds = seconds - (seconds % 10)
+
+    return rounded_hours, rounded_minutes, rounded_seconds
 
 
 class StartTimerIntentHandler(intent.IntentHandler):
@@ -655,6 +736,7 @@ class CancelTimerIntentHandler(intent.IntentHandler):
     slot_schema = {
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
+        vol.Optional("area"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -677,6 +759,7 @@ class IncreaseTimerIntentHandler(intent.IntentHandler):
         vol.Any("hours", "minutes", "seconds"): cv.positive_int,
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
+        vol.Optional("area"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -700,6 +783,7 @@ class DecreaseTimerIntentHandler(intent.IntentHandler):
         vol.Required(vol.Any("hours", "minutes", "seconds")): cv.positive_int,
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
+        vol.Optional("area"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -722,6 +806,7 @@ class PauseTimerIntentHandler(intent.IntentHandler):
     slot_schema = {
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
+        vol.Optional("area"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -743,6 +828,7 @@ class UnpauseTimerIntentHandler(intent.IntentHandler):
     slot_schema = {
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
+        vol.Optional("area"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -764,6 +850,7 @@ class TimerStatusIntentHandler(intent.IntentHandler):
     slot_schema = {
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
+        vol.Optional("area"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -778,6 +865,11 @@ class TimerStatusIntentHandler(intent.IntentHandler):
             minutes, seconds = divmod(total_seconds, 60)
             hours, minutes = divmod(minutes, 60)
 
+            # Get lower-precision time for feedback
+            rounded_hours, rounded_minutes, rounded_seconds = _round_time(
+                hours, minutes, seconds
+            )
+
             statuses.append(
                 {
                     ATTR_ID: timer.id,
@@ -791,6 +883,9 @@ class TimerStatusIntentHandler(intent.IntentHandler):
                     "hours_left": hours,
                     "minutes_left": minutes,
                     "seconds_left": seconds,
+                    "rounded_hours_left": rounded_hours,
+                    "rounded_minutes_left": rounded_minutes,
+                    "rounded_seconds_left": rounded_seconds,
                     "total_seconds_left": total_seconds,
                 }
             )
