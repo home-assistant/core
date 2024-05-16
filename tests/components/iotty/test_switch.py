@@ -158,5 +158,3 @@ async def test_setup_entry_ok_twodevices(
     await async_setup_entry(hass, mock_config_entry, mock_async_add_entities)
 
     assert len(mock_async_add_entities.mock_calls) == 1
-
-    assert len(mock_coordinator_store_entity.mock_calls) == 2

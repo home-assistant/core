@@ -1,5 +1,7 @@
 """Implement a iotty Light Switch Device."""
 
+from __future__ import annotations
+
 import logging
 from typing import Any
 
@@ -19,6 +21,30 @@ from .const import DOMAIN
 from .coordinator import IottyDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Activate the iotty LightSwitch component."""
+    _LOGGER.debug("Setup SWITCH entry id is %s", config_entry.entry_id)
+
+    hass_data = hass.data[DOMAIN]
+
+    coordinator: IottyDataUpdateCoordinator = hass_data[config_entry.entry_id]
+
+    entities = [
+        IottyLightSwitch(
+            coordinator=coordinator, iotty_cloud=coordinator.iotty, iotty_device=d
+        )
+        for d in coordinator.data.devices
+        if d.device_type == LS_DEVICE_TYPE_UID
+    ]
+    _LOGGER.debug("Found %d LightSwitches", len(entities))
+
+    async_add_entities(entities)
 
 
 class IottyLightSwitch(SwitchEntity, CoordinatorEntity[Device]):
@@ -94,29 +120,3 @@ class IottyLightSwitch(SwitchEntity, CoordinatorEntity[Device]):
         )
         self._iotty_device.is_on = device.is_on
         self.async_write_ha_state()
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Activate the iotty LightSwitch component."""
-    _LOGGER.debug("Setup SWITCH entry id is %s", config_entry.entry_id)
-
-    hass_data = hass.data[DOMAIN]
-
-    coordinator: IottyDataUpdateCoordinator = hass_data[config_entry.entry_id]
-
-    entities = [
-        IottyLightSwitch(
-            coordinator=coordinator, iotty_cloud=coordinator.iotty, iotty_device=d
-        )
-        for d in coordinator.data.devices
-        if d.device_type == LS_DEVICE_TYPE_UID
-    ]
-    _LOGGER.debug("Found %d LightSwitches", len(entities))
-    for e in entities:
-        coordinator.store_entity(e.device_id, e)
-
-    async_add_entities(entities)

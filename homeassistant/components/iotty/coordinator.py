@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import api
-from .const import DOMAIN, LOGGER, PLATFORMS, UPDATE_INTERVAL
+from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
     """Class to manage fetching Iotty data."""
 
     config_entry: ConfigEntry
-    _entities: dict
+    _entities: dict[str, Entity]
     _devices: list[Device]
 
     def __init__(
@@ -66,10 +66,6 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
 
         await super().async_config_entry_first_refresh()
 
-        await self.hass.config_entries.async_forward_entry_setups(
-            self.config_entry, PLATFORMS
-        )
-
     async def _async_update_data(self) -> IottyData:
         """Fetch data from iottyCloud device."""
         _LOGGER.debug("Fetching devices status from iottyCloud")
@@ -77,8 +73,11 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
         for device in self._devices:
             res = await self.iotty.get_status(device.device_id)
             json = res.get(RESULT, {})
-            if not (hasattr(json, "get") and callable(json.get)) or not (
-                status := json.get(STATUS)
+            if (
+                not isinstance(res, dict)
+                or RESULT not in res
+                or not isinstance(json := res[RESULT], dict)
+                or not (status := json.get(STATUS))
             ):
                 _LOGGER.warning("Unable to read status for device %s", device.device_id)
             else:

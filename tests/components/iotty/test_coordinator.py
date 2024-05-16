@@ -110,8 +110,6 @@ async def test_first_refresh_call_ok(
 
     assert len(mock_async_first_refresh.mock_calls) == 1
 
-    assert len(mock_config_entries_async_forward_entry_setup.mock_calls) == 1
-
 
 async def test_first_refresh_twodevices_ok(
     mock_config_entry: MockConfigEntry,
