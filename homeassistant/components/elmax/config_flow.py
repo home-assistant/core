@@ -370,7 +370,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except ElmaxBadPinError:
             errors["base"] = "invalid_pin"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error occurred")
             errors["base"] = "unknown"
 

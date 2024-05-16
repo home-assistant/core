@@ -1,13 +1,16 @@
 """The tests for the MQTT component."""
 
 import asyncio
+from collections.abc import Generator
 from copy import deepcopy
 from datetime import datetime, timedelta
 import json
+import logging
 import socket
 import ssl
+import time
 from typing import Any, TypedDict
-from unittest.mock import ANY, MagicMock, call, mock_open, patch
+from unittest.mock import ANY, MagicMock, Mock, call, mock_open, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import paho.mqtt.client as paho_mqtt
@@ -17,6 +20,7 @@ import voluptuous as vol
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.client import (
+    _LOGGER as CLIENT_LOGGER,
     RECONNECT_INTERVAL_SECONDS,
     EnsureJobAfterCooldown,
 )
@@ -31,6 +35,7 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
+    CONF_PROTOCOL,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
@@ -109,6 +114,15 @@ def record_calls(calls: list[ReceiveMessage]) -> MessageCallbackType:
         calls.append(msg)
 
     return record_calls
+
+
+@pytest.fixture
+def client_debug_log() -> Generator[None, None]:
+    """Set the mqtt client log level to DEBUG."""
+    logger = logging.getLogger("mqtt_client_tests_debug")
+    logger.setLevel(logging.DEBUG)
+    with patch.object(CLIENT_LOGGER, "parent", logger):
+        yield
 
 
 def help_assert_message(
@@ -938,6 +952,42 @@ async def test_receiving_non_utf8_message_gets_logged(
     )
 
 
+async def test_receiving_message_with_non_utf8_topic_gets_logged(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    record_calls: MessageCallbackType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test receiving a non utf8 encoded topic."""
+    await mqtt_mock_entry()
+    await mqtt.async_subscribe(hass, "test-topic", record_calls)
+
+    # Local import to avoid processing MQTT modules when running a testcase
+    # which does not use MQTT.
+
+    # pylint: disable-next=import-outside-toplevel
+    from paho.mqtt.client import MQTTMessage
+
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.mqtt.models import MqttData
+
+    msg = MQTTMessage(topic=b"tasmota/discovery/18FE34E0B760\xcc\x02")
+    msg.payload = b"Payload"
+    msg.qos = 2
+    msg.retain = True
+    msg.timestamp = time.monotonic()
+
+    mqtt_data: MqttData = hass.data["mqtt"]
+    assert mqtt_data.client
+    mqtt_data.client._async_mqtt_on_message(Mock(), None, msg)
+
+    assert (
+        "Skipping received retained message on invalid "
+        "topic b'tasmota/discovery/18FE34E0B760\\xcc\\x02' "
+        "(qos=2): b'Payload'" in caplog.text
+    )
+
+
 async def test_all_subscriptions_run_when_decode_fails(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -999,6 +1049,7 @@ async def test_subscribe_topic_not_initialize(
 @patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.2)
 async def test_subscribe_and_resubscribe(
     hass: HomeAssistant,
+    client_debug_log: None,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     mqtt_client_mock: MqttMockPahoClient,
     calls: list[ReceiveMessage],
@@ -1876,7 +1927,7 @@ async def test_reload_entry_with_restored_subscriptions(
     hass.config.components.add(mqtt.DOMAIN)
     mqtt_client_mock.connect.return_value = 0
     with patch("homeassistant.config.load_yaml_config_file", return_value={}):
-        await entry.async_setup(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
 
     await mqtt.async_subscribe(hass, "test-topic", record_calls)
     await mqtt.async_subscribe(hass, "wild/+/card", record_calls)
@@ -2221,21 +2272,21 @@ async def test_setup_manual_mqtt_with_invalid_config(
         (
             {
                 mqtt.CONF_BROKER: "mock-broker",
-                mqtt.CONF_PROTOCOL: "3.1",
+                CONF_PROTOCOL: "3.1",
             },
             3,
         ),
         (
             {
                 mqtt.CONF_BROKER: "mock-broker",
-                mqtt.CONF_PROTOCOL: "3.1.1",
+                CONF_PROTOCOL: "3.1.1",
             },
             4,
         ),
         (
             {
                 mqtt.CONF_BROKER: "mock-broker",
-                mqtt.CONF_PROTOCOL: "5",
+                CONF_PROTOCOL: "5",
             },
             5,
         ),
@@ -2607,19 +2658,19 @@ async def test_subscription_done_when_birth_message_is_sent(
         mqtt_client_mock.on_connect(None, None, 0, 0)
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await mqtt.async_subscribe(hass, "topic/test", record_calls)
         # We wait until we receive a birth message
         await asyncio.wait_for(birth.wait(), 1)
-        # Assert we already have subscribed at the client
-        # for new config payloads at the time we the birth message is received
-        assert ("homeassistant/+/+/config", 0) in help_all_subscribe_calls(
-            mqtt_client_mock
-        )
-        assert ("homeassistant/+/+/+/config", 0) in help_all_subscribe_calls(
-            mqtt_client_mock
-        )
-        mqtt_client_mock.publish.assert_called_with(
-            "homeassistant/status", "online", 0, False
-        )
+
+    # Assert we already have subscribed at the client
+    # for new config payloads at the time we the birth message is received
+    subscribe_calls = help_all_subscribe_calls(mqtt_client_mock)
+    assert ("homeassistant/+/+/config", 0) in subscribe_calls
+    assert ("homeassistant/+/+/+/config", 0) in subscribe_calls
+    mqtt_client_mock.publish.assert_called_with(
+        "homeassistant/status", "online", 0, False
+    )
+    assert ("topic/test", 0) in subscribe_calls
 
 
 @pytest.mark.parametrize(
@@ -4358,6 +4409,34 @@ async def test_server_sock_connect_and_disconnect(
 @patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
 @patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
 @patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+async def test_server_sock_buffer_size(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test handling the socket buffer size fails."""
+    mqtt_mock = await mqtt_mock_entry()
+    await hass.async_block_till_done()
+    assert mqtt_mock.connected is True
+
+    mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
+
+    client, server = socket.socketpair(
+        family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0
+    )
+    client.setblocking(False)
+    server.setblocking(False)
+    with patch.object(client, "setsockopt", side_effect=OSError("foo")):
+        mqtt_client_mock.on_socket_open(mqtt_client_mock, None, client)
+        mqtt_client_mock.on_socket_register_write(mqtt_client_mock, None, client)
+        await hass.async_block_till_done()
+    assert "Unable to increase the socket buffer size" in caplog.text
+
+
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_client_sock_failure_after_connect(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -4440,3 +4519,31 @@ async def test_loop_write_failure(
     await hass.async_block_till_done()
 
     assert "Disconnected from MQTT server mock-broker:1883 (7)" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "attr",
+    [
+        "EntitySubscription",
+        "MqttCommandTemplate",
+        "MqttValueTemplate",
+        "PayloadSentinel",
+        "PublishPayloadType",
+        "ReceiveMessage",
+        "ReceivePayloadType",
+        "async_prepare_subscribe_topics",
+        "async_publish",
+        "async_subscribe",
+        "async_subscribe_topics",
+        "async_unsubscribe_topics",
+        "async_wait_for_mqtt_client",
+        "publish",
+        "subscribe",
+        "valid_publish_topic",
+        "valid_qos_schema",
+        "valid_subscribe_topic",
+    ],
+)
+async def test_mqtt_integration_level_imports(hass: HomeAssistant, attr: str) -> None:
+    """Test mqtt integration level public published imports are available."""
+    assert hasattr(mqtt, attr)

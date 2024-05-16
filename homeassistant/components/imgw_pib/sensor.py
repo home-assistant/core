@@ -13,15 +13,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfLength, UnitOfTemperature
+from homeassistant.const import EntityCategory, UnitOfLength, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ImgwPibConfigEntry
-from .const import ATTRIBUTION
 from .coordinator import ImgwPibDataUpdateCoordinator
+from .entity import ImgwPibEntity
 
 PARALLEL_UPDATES = 1
 
@@ -34,6 +33,26 @@ class ImgwPibSensorEntityDescription(SensorEntityDescription):
 
 
 SENSOR_TYPES: tuple[ImgwPibSensorEntityDescription, ...] = (
+    ImgwPibSensorEntityDescription(
+        key="flood_alarm_level",
+        translation_key="flood_alarm_level",
+        native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+        value=lambda data: data.flood_alarm_level.value,
+    ),
+    ImgwPibSensorEntityDescription(
+        key="flood_warning_level",
+        translation_key="flood_warning_level",
+        native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+        value=lambda data: data.flood_warning_level.value,
+    ),
     ImgwPibSensorEntityDescription(
         key="water_level",
         translation_key="water_level",
@@ -70,13 +89,9 @@ async def async_setup_entry(
     )
 
 
-class ImgwPibSensorEntity(
-    CoordinatorEntity[ImgwPibDataUpdateCoordinator], SensorEntity
-):
+class ImgwPibSensorEntity(ImgwPibEntity, SensorEntity):
     """Define IMGW-PIB sensor entity."""
 
-    _attr_attribution = ATTRIBUTION
-    _attr_has_entity_name = True
     entity_description: ImgwPibSensorEntityDescription
 
     def __init__(
@@ -88,7 +103,6 @@ class ImgwPibSensorEntity(
         super().__init__(coordinator)
 
         self._attr_unique_id = f"{coordinator.station_id}_{description.key}"
-        self._attr_device_info = coordinator.device_info
         self.entity_description = description
 
     @property
