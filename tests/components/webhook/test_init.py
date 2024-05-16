@@ -55,6 +55,22 @@ async def test_generate_webhook_url(hass: HomeAssistant) -> None:
     assert url == "https://example.com/api/webhook/some_id"
 
 
+async def test_generate_webhook_url_internal(hass: HomeAssistant) -> None:
+    """Test we can get the internal URL."""
+    await async_process_ha_core_config(
+        hass,
+        {
+            "internal_url": "http://192.168.1.100:8123",
+            "external_url": "https://example.com",
+        },
+    )
+    url = webhook.async_generate_url(
+        hass, "some_id", prefer_external=False, allow_ip=True
+    )
+
+    assert url == "http://192.168.1.100:8123/api/webhook/some_id"
+
+
 async def test_async_generate_path(hass: HomeAssistant) -> None:
     """Test generating just the path component of the url correctly."""
     path = webhook.async_generate_path("some_id")
