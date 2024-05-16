@@ -1,7 +1,5 @@
 """Tests for the sensors provided by the Whois integration."""
 
-from unittest.mock import MagicMock
-
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -14,12 +12,13 @@ import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed
 
 pytestmark = [
-    pytest.mark.usefixtures("init_integration"),
     pytest.mark.freeze_time("2022-01-01 12:00:00", tz_offset=0),
 ]
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "mock_whois", "init_integration"
+)
 @pytest.mark.parametrize(
     "entity_id",
     [
@@ -54,6 +53,7 @@ async def test_whois_sensors(
     assert device_entry == snapshot
 
 
+@pytest.mark.usefixtures("mock_whois_missing_some_attrs", "init_integration")
 async def test_whois_sensors_missing_some_attrs(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
 ) -> None:
@@ -65,6 +65,7 @@ async def test_whois_sensors_missing_some_attrs(
     assert entry == snapshot
 
 
+@pytest.mark.usefixtures("mock_whois", "init_integration")
 @pytest.mark.parametrize(
     "entity_id",
     [
@@ -85,7 +86,11 @@ async def test_disabled_by_default_sensors(
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default",
+    "mock_whois_empty",
+    "init_integration",
+)
 @pytest.mark.parametrize(
     "entity_id",
     [
@@ -100,11 +105,8 @@ async def test_disabled_by_default_sensors(
         "sensor.home_assistant_io_reseller",
     ],
 )
-async def test_no_data(
-    hass: HomeAssistant, mock_whois: MagicMock, entity_id: str
-) -> None:
+async def test_no_data(hass: HomeAssistant, entity_id: str) -> None:
     """Test whois sensors become unknown when there is no data provided."""
-    mock_whois.return_value = None
 
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()

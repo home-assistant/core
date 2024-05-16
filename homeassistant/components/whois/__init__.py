@@ -2,20 +2,14 @@
 
 from __future__ import annotations
 
-from whois import Domain, query as whois_query
-from whois.exceptions import (
-    FailedParsingWhoisOutput,
-    UnknownDateFormat,
-    UnknownTld,
-    WhoisCommandFailed,
-)
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from . import helper
 from .const import DOMAIN, LOGGER, PLATFORMS, SCAN_INTERVAL
+from .helper import Domain
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -25,11 +19,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Query WHOIS for domain information."""
         try:
             return await hass.async_add_executor_job(
-                whois_query, entry.data[CONF_DOMAIN]
+                helper.query, entry.data[CONF_DOMAIN]
             )
-        except UnknownTld as ex:
+        except helper.WhoisUnknownTLD as ex:
             raise UpdateFailed("Could not set up whois, TLD is unknown") from ex
-        except (FailedParsingWhoisOutput, WhoisCommandFailed, UnknownDateFormat) as ex:
+        except helper.GenericWhoisError as ex:
             raise UpdateFailed("An error occurred during WHOIS lookup") from ex
 
     coordinator: DataUpdateCoordinator[Domain | None] = DataUpdateCoordinator(

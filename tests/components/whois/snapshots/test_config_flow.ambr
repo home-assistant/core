@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_full_flow_with_error[FailedParsingWhoisOutput-unexpected_response]
+# name: test_full_flow_with_error[FailedParsingWhoisOutput-whois_command_failed]
   FlowResultSnapshot({
     'context': dict({
       'source': 'user',
@@ -37,7 +37,7 @@
     'version': 1,
   })
 # ---
-# name: test_full_flow_with_error[UnknownDateFormat-unknown_date_format]
+# name: test_full_flow_with_error[UnknownDateFormat-whois_command_failed]
   FlowResultSnapshot({
     'context': dict({
       'source': 'user',

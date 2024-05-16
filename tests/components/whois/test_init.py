@@ -3,14 +3,9 @@
 from unittest.mock import MagicMock
 
 import pytest
-from whois.exceptions import (
-    FailedParsingWhoisOutput,
-    UnknownDateFormat,
-    UnknownTld,
-    WhoisCommandFailed,
-)
 
 from homeassistant.components.whois.const import DOMAIN
+from homeassistant.components.whois.helper import GenericWhoisError, WhoisUnknownTLD
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -39,7 +34,7 @@ async def test_load_unload_config_entry(
 
 @pytest.mark.parametrize(
     "side_effect",
-    [FailedParsingWhoisOutput, UnknownDateFormat, UnknownTld, WhoisCommandFailed],
+    [WhoisUnknownTLD, GenericWhoisError],
 )
 async def test_error_handling(
     hass: HomeAssistant,

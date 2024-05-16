@@ -49,8 +49,8 @@ async def test_full_user_flow(
     ("throw", "reason"),
     [
         (UnknownTld, "unknown_tld"),
-        (FailedParsingWhoisOutput, "unexpected_response"),
-        (UnknownDateFormat, "unknown_date_format"),
+        (FailedParsingWhoisOutput, "whois_command_failed"),
+        (UnknownDateFormat, "whois_command_failed"),
         (WhoisCommandFailed, "whois_command_failed"),
     ],
 )

@@ -5,17 +5,11 @@ from __future__ import annotations
 from typing import Any
 
 import voluptuous as vol
-import whois
-from whois.exceptions import (
-    FailedParsingWhoisOutput,
-    UnknownDateFormat,
-    UnknownTld,
-    WhoisCommandFailed,
-)
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DOMAIN
 
+from . import helper
 from .const import DOMAIN
 
 
@@ -39,15 +33,11 @@ class WhoisFlowHandler(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             try:
-                await self.hass.async_add_executor_job(whois.query, domain)
-            except UnknownTld:
+                await self.hass.async_add_executor_job(helper.query, domain)
+            except helper.WhoisUnknownTLD:
                 errors["base"] = "unknown_tld"
-            except WhoisCommandFailed:
+            except helper.GenericWhoisError:
                 errors["base"] = "whois_command_failed"
-            except FailedParsingWhoisOutput:
-                errors["base"] = "unexpected_response"
-            except UnknownDateFormat:
-                errors["base"] = "unknown_date_format"
             else:
                 return self.async_create_entry(
                     title=self.imported_name or user_input[CONF_DOMAIN],

@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from whois import Domain
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+from .helper import Domain
 
 
 async def async_get_config_entry_diagnostics(

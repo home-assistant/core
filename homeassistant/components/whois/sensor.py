@@ -7,8 +7,6 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import cast
 
-from whois import Domain
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -26,6 +24,7 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import dt as dt_util
 
 from .const import ATTR_EXPIRES, ATTR_NAME_SERVERS, ATTR_REGISTRAR, ATTR_UPDATED, DOMAIN
+from .helper import Domain
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -41,12 +41,9 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_whois() -> Generator[MagicMock, None, None]:
     """Return a mocked query."""
-    with (
-        patch(
-            "homeassistant.components.whois.whois_query",
-        ) as whois_mock,
-        patch("homeassistant.components.whois.config_flow.whois.query", new=whois_mock),
-    ):
+    with patch(
+        "homeassistant.components.whois.helper.whois.query",
+    ) as whois_mock:
         domain = whois_mock.return_value
         domain.abuse_contact = "abuse@example.com"
         domain.admin = "admin@example.com"
@@ -69,49 +66,31 @@ def mock_whois() -> Generator[MagicMock, None, None]:
 
 @pytest.fixture
 def mock_whois_missing_some_attrs() -> Generator[Mock, None, None]:
-    """Return a mocked query that only sets admin."""
-
-    class LimitedWhoisMock:
-        """A limited mock of whois_query."""
-
-        def __init__(self, *args, **kwargs):
-            """Mock only attributes the library always sets being available."""
-            self.creation_date = datetime(2019, 1, 1, 0, 0, 0)
-            self.dnssec = True
-            self.expiration_date = datetime(2023, 1, 1, 0, 0, 0)
-            self.last_updated = datetime(
-                2022, 1, 1, 0, 0, 0, tzinfo=dt_util.get_time_zone("Europe/Amsterdam")
-            )
-            self.name = "home-assistant.io"
-            self.name_servers = ["ns1.example.com", "ns2.example.com"]
-            self.registrar = "My Registrar"
-            self.status = "OK"
-            self.statuses = ["OK"]
-
+    """Return a mocked query that only sets one attribute."""
     with patch(
-        "homeassistant.components.whois.whois_query", LimitedWhoisMock
+        "homeassistant.components.whois.helper.whois.query",
     ) as whois_mock:
+        domain = whois_mock.return_value
+        domain.last_updated = datetime(
+            2022, 1, 1, 0, 0, 0, tzinfo=dt_util.get_time_zone("Europe/Amsterdam")
+        )
+        yield domain
+
+
+@pytest.fixture
+def mock_whois_empty() -> Generator[Mock, None, None]:
+    """Mock an empty response from the whois library."""
+    with patch(
+        "homeassistant.components.whois.helper.whois.query",
+    ) as whois_mock:
+        whois_mock.return_value = None
         yield whois_mock
 
 
 @pytest.fixture
 async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_whois: MagicMock
-) -> MockConfigEntry:
-    """Set up thewhois integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    return mock_config_entry
-
-
-@pytest.fixture
-async def init_integration_missing_some_attrs(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_whois_missing_some_attrs: MagicMock,
 ) -> MockConfigEntry:
     """Set up thewhois integration for testing."""
     mock_config_entry.add_to_hass(hass)
