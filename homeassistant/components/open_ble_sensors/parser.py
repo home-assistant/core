@@ -63,4 +63,6 @@ class OpenBLESensorsBluetoothDeviceData(BluetoothData):
         self.set_device_manufacturer(MFR)
 
         batt = service_info.manufacturer_data[2167][3]
+        impedance = 100
         self.update_predefined_sensor(SensorLibrary.BATTERY__PERCENTAGE, batt)
+        self.update_predefined_sensor(SensorLibrary.IMPEDANCE__OHM, impedance)

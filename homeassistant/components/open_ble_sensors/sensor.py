@@ -94,6 +94,15 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=UnitOfPressure.MBAR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    (
+        OpenBLESensorsSensorDeviceClass.IMPEDANCE,
+        Units.OHM,
+    ): SensorEntityDescription(
+        key=f"{OpenBLESensorsSensorDeviceClass.IMPEDANCE}_{Units.OHM}",
+        device_class=OpenBLESensorsSensorDeviceClass.IMPEDANCE,
+        native_unit_of_measurement=Units.OHM,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }
 
 
