@@ -73,7 +73,7 @@ async def test_block_motion_switch(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test Shelly motion active turn on/off services."""
-    entity_id = "switch.test_name_motion_active"
+    entity_id = "switch.test_name_motion_detection"
     await init_integration(hass, 1, sleep_period=1000, model=model)
 
     # Make device online
