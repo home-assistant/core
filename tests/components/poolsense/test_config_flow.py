@@ -67,7 +67,7 @@ async def test_duplicate_entry(
     mock_poolsense_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test we handle invalid credentials."""
+    """Test we can't add the same entry twice."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
