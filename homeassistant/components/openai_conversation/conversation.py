@@ -42,6 +42,15 @@ async def async_setup_entry(
     async_add_entities([agent])
 
 
+def _format_tool(tool: llm.Tool) -> dict[str, Any]:
+    """Format tool specification."""
+    tool_spec = {"name": tool.name}
+    if tool.description:
+        tool_spec["description"] = tool.description
+    tool_spec["parameters"] = convert(tool.parameters)
+    return {"type": "function", "function": tool_spec}
+
+
 class OpenAIConversationEntity(
     conversation.ConversationEntity, conversation.AbstractConversationAgent
 ):
@@ -111,16 +120,8 @@ class OpenAIConversationEntity(
 
         client = self.hass.data[DOMAIN][self.entry.entry_id]
 
-        def format_tool(tool: llm.Tool) -> dict[str, Any]:
-            """Format tool specification."""
-            tool_spec = {"name": tool.name}
-            if tool.description:
-                tool_spec["description"] = tool.description
-            tool_spec["parameters"] = convert(tool.parameters)
-            return {"type": "function", "function": tool_spec}
-
         tools: list[dict[str, Any]] | None = [
-            format_tool(tool) for tool in llm.async_get_tools(self.hass)
+            _format_tool(tool) for tool in llm.async_get_tools(self.hass)
         ]
         if not tools:
             tools = None
