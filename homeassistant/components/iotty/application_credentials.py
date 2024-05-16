@@ -1,4 +1,4 @@
-"""application_credentials platform the iotty integration."""
+"""Application credentials platform for iotty."""
 
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.core import HomeAssistant

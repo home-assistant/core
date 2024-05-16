@@ -53,7 +53,7 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
             hass, aiohttp_client.async_get_clientsession(hass), session
         )
 
-    def store_entity(self, device_id: str, entity: Entity) -> None:
+    def set_entity(self, device_id: str, entity: Entity) -> None:
         """Store iotty device within Hass entities."""
         _LOGGER.debug("Storing device '%s' in entities", device_id)
         self._entities[device_id] = entity

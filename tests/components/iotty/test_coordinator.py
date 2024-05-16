@@ -14,7 +14,7 @@ from .conftest import test_ls
 from tests.common import MockConfigEntry
 
 
-async def test_store_entity_double_id_only_one(
+async def test_set_entity_double_id_only_one(
     mock_config_entry: MockConfigEntry,
     hass: HomeAssistant,
     local_oauth_impl,
@@ -34,21 +34,21 @@ async def test_store_entity_double_id_only_one(
     )
     assert sut_coordinator is not None
 
-    sut_coordinator.store_entity(
+    sut_coordinator.set_entity(
         test_ls[0].device_id, IottyLightSwitch(sut_coordinator, mock_iotty, test_ls[0])
     )
 
     assert len(sut_coordinator._entities) == 1
 
     # Other device, same ID
-    sut_coordinator.store_entity(
+    sut_coordinator.set_entity(
         test_ls[0].device_id, IottyLightSwitch(sut_coordinator, mock_iotty, test_ls[1])
     )
 
     assert len(sut_coordinator._entities) == 1
 
 
-async def test_store_entity_two_devices_ok(
+async def test_set_entity_two_devices_ok(
     mock_config_entry: MockConfigEntry,
     hass: HomeAssistant,
     local_oauth_impl,
@@ -68,12 +68,12 @@ async def test_store_entity_two_devices_ok(
     )
     assert sut_coordinator is not None
 
-    sut_coordinator.store_entity(
+    sut_coordinator.set_entity(
         test_ls[0].device_id, IottyLightSwitch(sut_coordinator, mock_iotty, test_ls[0])
     )
 
     # Other device
-    sut_coordinator.store_entity(
+    sut_coordinator.set_entity(
         test_ls[1].device_id, IottyLightSwitch(sut_coordinator, mock_iotty, test_ls[1])
     )
 
@@ -211,10 +211,10 @@ async def test_async_update_data_twodevices_withstatus(
     await hass.async_block_till_done()
 
     test_device_1 = IottyLightSwitch(sut_coordinator, sut_coordinator.iotty, test_ls[0])
-    sut_coordinator.store_entity(test_ls[0].device_id, test_device_1)
+    sut_coordinator.set_entity(test_ls[0].device_id, test_device_1)
 
     test_device_2 = IottyLightSwitch(sut_coordinator, sut_coordinator.iotty, test_ls[1])
-    sut_coordinator.store_entity(
+    sut_coordinator.set_entity(
         test_ls[1].device_id,
         test_device_2,
     )

@@ -139,7 +139,7 @@ async def test_setup_entry_ok_twodevices(
     mock_async_add_entities: AddEntitiesCallback,
     local_oauth_impl: ClientSession,
     mock_coordinator: IottyDataUpdateCoordinator,
-    mock_coordinator_store_entity,
+    mock_coordinator_set_entity,
 ) -> None:
     """Correctly setup the SWITCH entry, with two iotty Devices to add to Hass."""
 

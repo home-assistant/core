@@ -120,11 +120,11 @@ def mock_coordinator() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_coordinator_store_entity() -> Generator[AsyncMock, None, None]:
-    """Mock coordinator's store_entity fn."""
+def mock_coordinator_set_entity() -> Generator[AsyncMock, None, None]:
+    """Mock coordinator's set_entity fn."""
 
     with patch(
-        "homeassistant.components.iotty.coordinator.IottyDataUpdateCoordinator.store_entity"
+        "homeassistant.components.iotty.coordinator.IottyDataUpdateCoordinator.set_entity"
     ) as mock_fn:
         yield mock_fn
 
@@ -144,10 +144,10 @@ def mock_devices() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_store_entity() -> Generator[None, MagicMock, None]:
+def mock_set_entity() -> Generator[None, MagicMock, None]:
     """To check if we correctly inject iottyCloud into device classes."""
 
-    with patch("homeassistant.components.iotty.api.IottyProxy.store_entity") as mock_fn:
+    with patch("homeassistant.components.iotty.api.IottyProxy.set_entity") as mock_fn:
         yield mock_fn
 
 
