@@ -31,6 +31,8 @@ RETRY_STOP = datetime.timedelta(minutes=10)
 
 DEBOUNCE_TIME = 10 * 60  # in seconds
 
+NWSConfigEntry = ConfigEntry["NWSData"]
+
 
 def base_unique_id(latitude: float, longitude: float) -> str:
     """Return unique id for entries in configuration."""
@@ -45,9 +47,6 @@ class NWSData:
     coordinator_observation: TimestampDataUpdateCoordinator[None]
     coordinator_forecast: TimestampDataUpdateCoordinator[None]
     coordinator_forecast_hourly: TimestampDataUpdateCoordinator[None]
-
-
-NWSConfigEntry = ConfigEntry[NWSData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
