@@ -10,6 +10,9 @@ MQTT = {
     "dsmr_reader": [
         "dsmr/#",
     ],
+    "esphome": [
+        "esphome/discover/#",
+    ],
     "fully_kiosk": [
         "fully/deviceInfo/+",
     ],

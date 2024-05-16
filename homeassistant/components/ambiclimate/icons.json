@@ -1,7 +1,0 @@
-{
-  "services": {
-    "set_comfort_mode": "mdi:auto-mode",
-    "send_comfort_feedback": "mdi:thermometer-checked",
-    "set_temperature_mode": "mdi:thermometer"
-  }
-}

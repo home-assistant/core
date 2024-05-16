@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
-from reolink_aio.exceptions import ReolinkError
+from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
 from homeassistant.components.reolink import FIRMWARE_UPDATE_INTERVAL, const
 from homeassistant.config import async_process_ha_core_config
@@ -49,6 +49,11 @@ pytestmark = pytest.mark.usefixtures("reolink_connect", "reolink_platforms")
             "get_states",
             AsyncMock(side_effect=ReolinkError("Test error")),
             ConfigEntryState.SETUP_RETRY,
+        ),
+        (
+            "get_states",
+            AsyncMock(side_effect=CredentialsInvalidError("Test error")),
+            ConfigEntryState.SETUP_ERROR,
         ),
         (
             "supported",
