@@ -7,7 +7,7 @@ from aioflo.errors import RequestError
 from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
-from homeassistant.components.flo.device import FloDeviceDataUpdateCoordinator
+from homeassistant.components.flo.coordinator import FloDeviceDataUpdateCoordinator
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

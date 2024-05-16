@@ -20,8 +20,8 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import gather_with_limited_concurrency
 
 from .const import DOMAIN
+from .coordinator import DeviceCoordinator, async_register_device
 from .models import WemoConfigEntryData, WemoData, async_wemo_data
-from .wemo_device import DeviceCoordinator, async_register_device
 
 # Max number of devices to initialize at once. This limit is in place to
 # avoid tying up too many executor threads with WeMo device setup.

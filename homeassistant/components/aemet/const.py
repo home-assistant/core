@@ -55,8 +55,6 @@ CONF_STATION_UPDATES = "station_updates"
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 DEFAULT_NAME = "AEMET"
 DOMAIN = "aemet"
-ENTRY_NAME = "name"
-ENTRY_WEATHER_COORDINATOR = "weather_coordinator"
 
 ATTR_API_CONDITION = "condition"
 ATTR_API_FORECAST_CONDITION = "condition"

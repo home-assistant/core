@@ -22,8 +22,8 @@ from homeassistant.util.scaling import int_states_in_range
 
 from . import async_wemo_dispatcher_connect
 from .const import SERVICE_RESET_FILTER_LIFE, SERVICE_SET_HUMIDITY
+from .coordinator import DeviceCoordinator
 from .entity import WemoBinaryStateEntity
-from .wemo_device import DeviceCoordinator
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 0
