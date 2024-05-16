@@ -124,7 +124,6 @@ NO_DIAGNOSTICS = [
     "hyperion",
     "modbus",
     "nightscout",
-    "nws",
     "point",
     "pvpc_hourly_pricing",
     "risco",
