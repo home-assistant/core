@@ -162,7 +162,10 @@ class RestSensor(ManualTriggerSensorEntity, RestEntity):
         """Update state from the rest data."""
         try:
             value = self.rest.data_without_xml()
-        except ExpatError:
+        except ExpatError as err:
+            _LOGGER.warning(
+                "REST xml result could not be parsed and converted to JSON: %s", err
+            )
             value = self.rest.data
 
         if self._json_attrs:

@@ -152,8 +152,11 @@ class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
 
         try:
             response = self.rest.data_without_xml()
-        except ExpatError:
+        except ExpatError as err:
             self._attr_is_on = False
+            _LOGGER.warning(
+                "REST xml result could not be parsed and converted to JSON: %s", err
+            )
             return
 
         raw_value = response
