@@ -112,6 +112,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
                     f"has quality scale {integration.quality_scale} and "
                     "should not be present in .coveragerc file",
                 )
+                continue
 
             if (
                 path.parts[-1] in {"*", "const.py"}
@@ -121,6 +122,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
                     "coverage",
                     f"has tests and should not use {last_part} in .coveragerc file",
                 )
+                continue
 
             for check in DONT_IGNORE:
                 if path.parts[-1] not in {"*", check}:
