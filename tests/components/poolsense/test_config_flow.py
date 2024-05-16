@@ -62,7 +62,7 @@ async def test_invalid_credentials(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_valid_credentials(
+async def test_duplicate_entry(
     hass: HomeAssistant,
     mock_poolsense_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
