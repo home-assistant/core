@@ -4,7 +4,7 @@ from collections.abc import Callable
 from typing import Any
 from unittest.mock import patch
 
-from axis.vapix.models.api import CONTEXT
+from axis.models.api import CONTEXT
 import pytest
 import respx
 
@@ -149,9 +149,12 @@ async def test_lights(
     assert light_0.name == f"{NAME} IR Light 0"
 
     # Turn on, set brightness, light already on
-    with patch("axis.vapix.vapix.LightHandler.activate_light") as mock_activate, patch(
-        "axis.vapix.vapix.LightHandler.set_manual_intensity"
-    ) as mock_set_intensity:
+    with (
+        patch("axis.interfaces.vapix.LightHandler.activate_light") as mock_activate,
+        patch(
+            "axis.interfaces.vapix.LightHandler.set_manual_intensity"
+        ) as mock_set_intensity,
+    ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -162,7 +165,9 @@ async def test_lights(
         mock_set_intensity.assert_called_once_with("led0", 29)
 
     # Turn off
-    with patch("axis.vapix.vapix.LightHandler.deactivate_light") as mock_deactivate:
+    with patch(
+        "axis.interfaces.vapix.LightHandler.deactivate_light"
+    ) as mock_deactivate:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
@@ -185,9 +190,12 @@ async def test_lights(
     assert light_0.state == STATE_OFF
 
     # Turn on, set brightness
-    with patch("axis.vapix.vapix.LightHandler.activate_light") as mock_activate, patch(
-        "axis.vapix.vapix.LightHandler.set_manual_intensity"
-    ) as mock_set_intensity:
+    with (
+        patch("axis.interfaces.vapix.LightHandler.activate_light") as mock_activate,
+        patch(
+            "axis.interfaces.vapix.LightHandler.set_manual_intensity"
+        ) as mock_set_intensity,
+    ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -198,7 +206,9 @@ async def test_lights(
         mock_set_intensity.assert_not_called()
 
     # Turn off, light already off
-    with patch("axis.vapix.vapix.LightHandler.deactivate_light") as mock_deactivate:
+    with patch(
+        "axis.interfaces.vapix.LightHandler.deactivate_light"
+    ) as mock_deactivate:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,

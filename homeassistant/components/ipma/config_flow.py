@@ -40,8 +40,8 @@ class IpmaFlowHandler(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_LATITUDE],
                     user_input[CONF_LONGITUDE],
                 )
-            except IPMAException as err:
-                _LOGGER.exception(err)
+            except IPMAException:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(title=location.name, data=user_input)

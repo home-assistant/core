@@ -201,7 +201,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             ) from ex
 
         except Exception as ex:
-            _LOGGER.exception(ex)
+            _LOGGER.exception("Unexpected exception")
             raise AbortFlow("unknown_error") from ex
 
         finally:

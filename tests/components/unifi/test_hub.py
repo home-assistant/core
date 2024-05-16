@@ -235,9 +235,6 @@ async def setup_unifi_integration(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    if config_entry.entry_id not in hass.data[UNIFI_DOMAIN]:
-        return None
-
     return config_entry
 
 
@@ -254,7 +251,7 @@ async def test_hub_setup(
         config_entry = await setup_unifi_integration(
             hass, aioclient_mock, system_information_response=SYSTEM_INFORMATION
         )
-        hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+        hub = config_entry.runtime_data
 
     entry = hub.config.entry
     assert len(forward_entry_setup.mock_calls) == 1
@@ -306,10 +303,13 @@ async def test_hub_not_accessible(hass: HomeAssistant) -> None:
 
 async def test_hub_trigger_reauth_flow(hass: HomeAssistant) -> None:
     """Failed authentication trigger a reauthentication flow."""
-    with patch(
-        "homeassistant.components.unifi.get_unifi_api",
-        side_effect=AuthenticationRequired,
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
+    with (
+        patch(
+            "homeassistant.components.unifi.get_unifi_api",
+            side_effect=AuthenticationRequired,
+        ),
+        patch.object(hass.config_entries.flow, "async_init") as mock_flow_init,
+    ):
         await setup_unifi_integration(hass)
         mock_flow_init.assert_called_once()
     assert hass.data[UNIFI_DOMAIN] == {}
@@ -330,7 +330,7 @@ async def test_config_entry_updated(
 ) -> None:
     """Calling reset when the entry has been setup."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
 
     event_call = Mock()
     unsub = async_dispatcher_connect(hass, hub.signal_options_update, event_call)
@@ -353,7 +353,7 @@ async def test_reset_after_successful_setup(
 ) -> None:
     """Calling reset when the entry has been setup."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
 
     result = await hub.async_reset()
     await hass.async_block_till_done()
@@ -366,7 +366,7 @@ async def test_reset_fails(
 ) -> None:
     """Calling reset when the entry has been setup can return false."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_unload",
@@ -440,9 +440,12 @@ async def test_reconnect_mechanism_exceptions(
     """Verify async_reconnect calls expected methods."""
     await setup_unifi_integration(hass, aioclient_mock)
 
-    with patch("aiounifi.Controller.login", side_effect=exception), patch(
-        "homeassistant.components.unifi.hub.hub.UnifiWebsocket.reconnect"
-    ) as mock_reconnect:
+    with (
+        patch("aiounifi.Controller.login", side_effect=exception),
+        patch(
+            "homeassistant.components.unifi.hub.hub.UnifiWebsocket.reconnect"
+        ) as mock_reconnect,
+    ):
         await websocket_mock.disconnect()
 
         await websocket_mock.reconnect()
@@ -481,7 +484,8 @@ async def test_get_unifi_api_fails_to_connect(
     hass: HomeAssistant, side_effect, raised_exception
 ) -> None:
     """Check that get_unifi_api can handle UniFi Network being unavailable."""
-    with patch("aiounifi.Controller.login", side_effect=side_effect), pytest.raises(
-        raised_exception
+    with (
+        patch("aiounifi.Controller.login", side_effect=side_effect),
+        pytest.raises(raised_exception),
     ):
         await get_unifi_api(hass, ENTRY_CONFIG)

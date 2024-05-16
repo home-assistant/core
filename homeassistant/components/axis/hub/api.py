@@ -5,7 +5,7 @@ from types import MappingProxyType
 from typing import Any
 
 import axis
-from axis.configuration import Configuration
+from axis.models.configuration import Configuration
 
 from homeassistant.const import (
     CONF_HOST,

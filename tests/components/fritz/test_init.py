@@ -29,10 +29,10 @@ async def test_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock) -> None:
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(entry.entry_id)
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_options_reload(
@@ -53,7 +53,7 @@ async def test_options_reload(
     ) as mock_reload:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        assert entry.state == ConfigEntryState.LOADED
+        assert entry.state is ConfigEntryState.LOADED
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
         await hass.async_block_till_done()
@@ -76,13 +76,13 @@ async def test_setup_auth_fail(hass: HomeAssistant, error) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection",
+        "homeassistant.components.fritz.coordinator.FritzConnection",
         side_effect=error,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.parametrize(
@@ -96,10 +96,10 @@ async def test_setup_fail(hass: HomeAssistant, error) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection",
+        "homeassistant.components.fritz.coordinator.FritzConnection",
         side_effect=error,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY

@@ -82,7 +82,7 @@ async def test_config_entry_unload(
     assert state is None
 
     config_entry = await mock_config_entry_setup(hass, mock_tts_entity)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNKNOWN
@@ -115,7 +115,7 @@ async def test_config_entry_unload(
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     state = hass.states.get(entity_id)
     assert state is None
@@ -133,7 +133,7 @@ async def test_restore_state(
     config_entry = await mock_config_entry_setup(hass, mock_tts_entity)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     state = hass.states.get(entity_id)
     assert state
     assert state.state == timestamp
@@ -1399,10 +1399,10 @@ def test_resolve_engine(hass: HomeAssistant, setup: str, engine_id: str) -> None
     assert tts.async_resolve_engine(hass, engine_id) == engine_id
     assert tts.async_resolve_engine(hass, "non-existing") is None
 
-    with patch.dict(
-        hass.data[tts.DATA_TTS_MANAGER].providers, {}, clear=True
-    ), patch.dict(hass.data[tts.DOMAIN]._platforms, {}, clear=True), patch.dict(
-        hass.data[tts.DOMAIN]._entities, {}, clear=True
+    with (
+        patch.dict(hass.data[tts.DATA_TTS_MANAGER].providers, {}, clear=True),
+        patch.dict(hass.data[tts.DOMAIN]._platforms, {}, clear=True),
+        patch.dict(hass.data[tts.DOMAIN]._entities, {}, clear=True),
     ):
         assert tts.async_resolve_engine(hass, None) is None
 

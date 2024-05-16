@@ -177,7 +177,6 @@ def async_log_errors(
     async def wrapper(
         self: _DenonDeviceT, *args: _P.args, **kwargs: _P.kwargs
     ) -> _R | None:
-        # pylint: disable=protected-access
         available = True
         try:
             return await func(self, *args, **kwargs)
@@ -232,12 +231,10 @@ def async_log_errors(
                 func.__name__,
                 err,
             )
-        except DenonAvrError as err:
+        except DenonAvrError:
             available = False
             _LOGGER.exception(
-                "Error %s occurred in method %s for Denon AVR receiver",
-                err,
-                func.__name__,
+                "Error occurred in method %s for Denon AVR receiver", func.__name__
             )
         finally:
             if available and not self.available:

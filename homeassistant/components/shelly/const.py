@@ -31,7 +31,6 @@ DOMAIN: Final = "shelly"
 
 LOGGER: Logger = getLogger(__package__)
 
-DATA_CONFIG_ENTRY: Final = "config_entry"
 CONF_COAP_PORT: Final = "coap_port"
 FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
 
@@ -234,3 +233,5 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
 )
 
 CONF_GEN = "gen"
+
+SHELLY_PLUS_RGBW_CHANNELS = 4

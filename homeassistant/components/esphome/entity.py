@@ -130,7 +130,6 @@ def esphome_state_property(
 
     @functools.wraps(func)
     def _wrapper(self: _EntityT) -> _R | None:
-        # pylint: disable-next=protected-access
         if not self._has_state:
             return None
         val = func(self)
@@ -166,14 +165,14 @@ def convert_api_error_ha_error(
 ICON_SCHEMA = vol.Schema(cv.icon)
 
 
-ENTITY_CATEGORIES: EsphomeEnumMapper[
-    EsphomeEntityCategory, EntityCategory | None
-] = EsphomeEnumMapper(
-    {
-        EsphomeEntityCategory.NONE: None,
-        EsphomeEntityCategory.CONFIG: EntityCategory.CONFIG,
-        EsphomeEntityCategory.DIAGNOSTIC: EntityCategory.DIAGNOSTIC,
-    }
+ENTITY_CATEGORIES: EsphomeEnumMapper[EsphomeEntityCategory, EntityCategory | None] = (
+    EsphomeEnumMapper(
+        {
+            EsphomeEntityCategory.NONE: None,
+            EsphomeEntityCategory.CONFIG: EntityCategory.CONFIG,
+            EsphomeEntityCategory.DIAGNOSTIC: EntityCategory.DIAGNOSTIC,
+        }
+    )
 )
 
 

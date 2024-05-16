@@ -7,7 +7,7 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from aionut import AIONUTClient, NUTError
+from aionut import AIONUTClient, NUTError, NUTLoginError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -21,27 +21,35 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    COORDINATOR,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     INTEGRATION_SUPPORTED_COMMANDS,
     PLATFORMS,
-    PYNUT_DATA,
-    PYNUT_UNIQUE_ID,
-    USER_AVAILABLE_COMMANDS,
 )
 
 NUT_FAKE_SERIAL = ["unknown", "blank"]
 
 _LOGGER = logging.getLogger(__name__)
 
+NutConfigEntry = ConfigEntry["NutRuntimeData"]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+@dataclass
+class NutRuntimeData:
+    """Runtime data definition."""
+
+    coordinator: DataUpdateCoordinator
+    data: PyNUTData
+    unique_id: str
+    user_available_commands: set[str]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
     """Set up Network UPS Tools (NUT) from a config entry."""
 
     # strip out the stale options CONF_RESOURCES,
@@ -70,6 +78,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from NUT."""
         try:
             return await data.async_update()
+        except NUTLoginError as err:
+            raise ConfigEntryAuthFailed from err
         except NUTError as err:
             raise UpdateFailed(f"Error fetching UPS state: {err}") from err
 
@@ -108,13 +118,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         user_available_commands = set()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        COORDINATOR: coordinator,
-        PYNUT_DATA: data,
-        PYNUT_UNIQUE_ID: unique_id,
-        USER_AVAILABLE_COMMANDS: user_available_commands,
-    }
+    entry.runtime_data = NutRuntimeData(
+        coordinator, data, unique_id, user_available_commands
+    )
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -133,9 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -249,16 +253,9 @@ class PyNUTData:
 
     async def _async_get_alias(self) -> str | None:
         """Get the ups alias from NUT."""
-        try:
-            ups_list = await self._client.list_ups()
-        except NUTError as err:
-            _LOGGER.error("Failure getting NUT ups alias, %s", err)
-            return None
-
-        if not ups_list:
+        if not (ups_list := await self._client.list_ups()):
             _LOGGER.error("Empty list while getting NUT ups aliases")
             return None
-
         self.ups_list = ups_list
         return list(ups_list)[0]
 
@@ -270,9 +267,7 @@ class PyNUTData:
         manufacturer = _manufacturer_from_status(self._status)
         model = _model_from_status(self._status)
         firmware = _firmware_from_status(self._status)
-        device_info = NUTDeviceInfo(manufacturer, model, firmware)
-
-        return device_info
+        return NUTDeviceInfo(manufacturer, model, firmware)
 
     async def _async_get_status(self) -> dict[str, str]:
         """Get the ups status from NUT."""

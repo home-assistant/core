@@ -24,6 +24,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     ExposedEntities,
     async_expose_entity,
 )
+from homeassistant.components.http.const import StrictConnectionMode
 from homeassistant.const import CONTENT_TYPE_JSON, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -368,9 +369,10 @@ async def test_system_msg(hass: HomeAssistant) -> None:
 
 async def test_cloud_connection_info(hass: HomeAssistant) -> None:
     """Test connection info msg."""
-    with patch("hass_nabucasa.Cloud.initialize"), patch(
-        "uuid.UUID.hex", new_callable=PropertyMock
-    ) as hexmock:
+    with (
+        patch("hass_nabucasa.Cloud.initialize"),
+        patch("uuid.UUID.hex", new_callable=PropertyMock) as hexmock,
+    ):
         hexmock.return_value = "12345678901234567890"
         setup = await async_setup_component(hass, "cloud", {"cloud": {}})
         assert setup
@@ -386,6 +388,7 @@ async def test_cloud_connection_info(hass: HomeAssistant) -> None:
             "connected": False,
             "enabled": False,
             "instance_domain": None,
+            "strict_connection": StrictConnectionMode.DISABLED,
         },
         "version": HA_VERSION,
     }

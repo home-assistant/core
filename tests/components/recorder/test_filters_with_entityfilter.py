@@ -536,7 +536,7 @@ async def test_same_entity_included_excluded_include_domain_wins(
 async def test_specificly_included_entity_always_wins(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
-    """Test specificlly included entity always wins."""
+    """Test specifically included entity always wins."""
     filter_accept = {
         "media_player.test2",
         "media_player.test3",
@@ -586,7 +586,7 @@ async def test_specificly_included_entity_always_wins(
 async def test_specificly_included_entity_always_wins_over_glob(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
-    """Test specificlly included entity always wins over a glob."""
+    """Test specifically included entity always wins over a glob."""
     filter_accept = {
         "sensor.apc900va_status",
         "sensor.apc900va_battery_charge",
