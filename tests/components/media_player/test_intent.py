@@ -1,5 +1,7 @@
 """The tests for the media_player platform."""
 
+import asyncio
+
 import pytest
 
 from homeassistant.components.media_player import (
@@ -580,6 +582,7 @@ async def test_manual_pause_unpause(
     hass.states.async_set(device_1.entity_id, STATE_PAUSED, attributes=attributes)
 
     # "Manually" pause the second device (outside of voice)
+    await asyncio.sleep(0.2)
     hass.states.async_set(device_2.entity_id, STATE_PAUSED, attributes=attributes)
 
     # Unpause with no constraints.
