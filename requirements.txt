@@ -18,7 +18,7 @@ bcrypt==4.1.2
 certifi>=2021.5.30
 ciso8601==2.3.1
 fnv-hash-fast==0.5.0
-hass-nabucasa==0.78.0
+hass-nabucasa==0.81.0
 httpx==0.27.0
 home-assistant-bluetooth==1.12.0
 ifaddr==0.2.0
