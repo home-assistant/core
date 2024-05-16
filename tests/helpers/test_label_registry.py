@@ -464,7 +464,7 @@ async def test_async_create_thread_safety(
     """Test async_create raises when called from wrong thread."""
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls async_create from a thread. Please report this issue.",
+        match="Detected code that calls label_registry.async_create from a thread.",
     ):
         await hass.async_add_executor_job(label_registry.async_create, "any")
 
@@ -478,7 +478,7 @@ async def test_async_delete_thread_safety(
 
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls async_delete from a thread. Please report this issue.",
+        match="Detected code that calls label_registry.async_delete from a thread.",
     ):
         await hass.async_add_executor_job(label_registry.async_delete, any_label)
 
@@ -492,7 +492,7 @@ async def test_async_update_thread_safety(
 
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls async_update from a thread. Please report this issue.",
+        match="Detected code that calls label_registry.async_update from a thread.",
     ):
         await hass.async_add_executor_job(
             partial(label_registry.async_update, any_label.label_id, name="new name")

@@ -32,15 +32,16 @@ from homeassistant.components.switch import DOMAIN as DEVICE_SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-    update_coordinator,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -175,9 +176,7 @@ class UpdateCoordinatorDataType(TypedDict):
     entity_states: dict[str, StateType | bool]
 
 
-class FritzBoxTools(
-    update_coordinator.DataUpdateCoordinator[UpdateCoordinatorDataType]
-):  # pylint: disable=hass-enforce-coordinator-module
+class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     """FritzBoxTools class."""
 
     def __init__(
@@ -342,7 +341,7 @@ class FritzBoxTools(
                     "call_deflections"
                 ] = await self.async_update_call_deflections()
         except FRITZ_EXCEPTIONS as ex:
-            raise update_coordinator.UpdateFailed(ex) from ex
+            raise UpdateFailed(ex) from ex
 
         _LOGGER.debug("enity_data: %s", entity_data)
         return entity_data
@@ -779,7 +778,7 @@ class FritzBoxTools(
             ) from ex
 
 
-class AvmWrapper(FritzBoxTools):  # pylint: disable=hass-enforce-coordinator-module
+class AvmWrapper(FritzBoxTools):
     """Setup AVM wrapper for API calls."""
 
     async def _async_service_call(
@@ -961,7 +960,7 @@ class FritzData:
     wol_buttons: dict = field(default_factory=dict)
 
 
-class FritzDeviceBase(update_coordinator.CoordinatorEntity[AvmWrapper]):
+class FritzDeviceBase(CoordinatorEntity[AvmWrapper]):
     """Entity base class for a device connected to a FRITZ!Box device."""
 
     def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:
@@ -1142,7 +1141,7 @@ class FritzEntityDescription(EntityDescription, FritzRequireKeysMixin):
     """Fritz entity base description."""
 
 
-class FritzBoxBaseCoordinatorEntity(update_coordinator.CoordinatorEntity[AvmWrapper]):
+class FritzBoxBaseCoordinatorEntity(CoordinatorEntity[AvmWrapper]):
     """Fritz host coordinator entity base class."""
 
     entity_description: FritzEntityDescription
