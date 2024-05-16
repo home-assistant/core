@@ -24,7 +24,7 @@ from homeassistant.const import (
     STATE_UNLOCKED,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import ServiceValidationError, TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
@@ -95,6 +95,7 @@ class TemplateLock(TemplateEntity, LockEntity):
         self._command_unlock = Script(hass, config[CONF_UNLOCK], name, DOMAIN)
         self._code_format_template = config.get(CONF_CODE_FORMAT_TEMPLATE)
         self._code_format = None
+        self._code_format_template_error = None
         self._optimistic = config.get(CONF_OPTIMISTIC)
         self._attr_assumed_state = bool(self._optimistic)
 
@@ -153,20 +154,26 @@ class TemplateLock(TemplateEntity, LockEntity):
                 self._code_format_template,
                 None,
                 self._update_code_format,
-                none_on_template_error=True,
             )
         super()._async_setup_templates()
 
     @callback
-    def _update_code_format(self, render):
+    def _update_code_format(self, render: str | TemplateError | None):
         """Update code format from the template."""
-        if render in (None, "None", ""):
+        if isinstance(render, TemplateError):
             self._code_format = None
-            return
-        self._code_format = render
+            self._code_format_template_error = render
+        elif render in (None, "None", ""):
+            self._code_format = None
+            self._code_format_template_error = None
+        else:
+            self._code_format = render
+            self._code_format_template_error = None
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
+        self._raise_template_error_if_available()
+
         if self._optimistic:
             self._state = True
             self.async_write_ha_state()
@@ -179,6 +186,8 @@ class TemplateLock(TemplateEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
+        self._raise_template_error_if_available()
+
         if self._optimistic:
             self._state = False
             self.async_write_ha_state()
@@ -188,3 +197,7 @@ class TemplateLock(TemplateEntity, LockEntity):
         await self.async_run_script(
             self._command_unlock, run_variables=tpl_vars, context=self._context
         )
+
+    def _raise_template_error_if_available(self):
+        if self._code_format_template_error is not None:
+            raise ServiceValidationError(self._code_format_template_error)

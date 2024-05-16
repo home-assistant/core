@@ -373,16 +373,15 @@ async def test_lock_actions_fail_with_invalid_code(
         },
     ],
 )
-async def test_lock_actions_execute_with_code_template_rendering_error(
+async def test_lock_actions_dont_execute_with_code_template_rendering_error(
     hass: HomeAssistant, start_ha, calls
 ) -> None:
-    """Test lock code format rendering fails are ignored."""
+    """Test lock code format rendering fails block lock/unlock actions."""
     await hass.services.async_call(
         lock.DOMAIN,
         lock.SERVICE_LOCK,
         {ATTR_ENTITY_ID: "lock.template_lock"},
     )
-    await hass.async_block_till_done()
     await hass.services.async_call(
         lock.DOMAIN,
         lock.SERVICE_UNLOCK,
@@ -390,13 +389,7 @@ async def test_lock_actions_execute_with_code_template_rendering_error(
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 2
-    assert calls[0].data["action"] == "lock"
-    assert calls[0].data["caller"] == "lock.template_lock"
-    assert calls[0].data["code"] is None
-    assert calls[1].data["action"] == "unlock"
-    assert calls[1].data["caller"] == "lock.template_lock"
-    assert calls[1].data["code"] == "any-value"
+    assert len(calls) == 0
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
