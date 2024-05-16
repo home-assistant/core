@@ -65,7 +65,7 @@ async def test_generate_webhook_url_internal(hass: HomeAssistant) -> None:
         },
     )
     url = webhook.async_generate_url(
-        hass, "some_id", prefer_external=False, allow_ip=True
+        hass, "some_id", allow_external=False, allow_ip=True
     )
 
     assert url == "http://192.168.1.100:8123/api/webhook/some_id"

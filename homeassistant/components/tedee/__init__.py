@@ -66,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.warning("Failed to cleanup Tedee webhooks by host: %s", ex)
 
         webhook_url = webhook_generate_url(
-            hass, entry.data[CONF_WEBHOOK_ID], prefer_external=False, allow_ip=True
+            hass, entry.data[CONF_WEBHOOK_ID], allow_external=False, allow_ip=True
         )
         webhook_name = "Tedee"
         if entry.title != NAME:
