@@ -7,12 +7,14 @@ from .const import (
 
 class AlarmDecoderEntity(Entity):
     """Define a base AlarmDecoder entity."""
-
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._client.serial_number)},
-            "manufacturer": "NuTech",
-            "serial_number": self._client.serial_number,
-            "sw_version": self._client.version_number,
-        }
+    
+    _attr_has_entity_name = True
+    
+    def __init__(self, client):
+        self._client = client
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._client.serial_number)},
+            manufacturer="NuTech",
+            serial_number=self._client.serial_number,
+            sw_version=self._client.version_number,
+        )

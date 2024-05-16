@@ -80,7 +80,6 @@ class AlarmDecoderAlarmPanel(AlarmDecoderEntity, AlarmControlPanelEntity):
     """Representation of an AlarmDecoder-based alarm panel."""
 
     _attr_name = "Alarm Panel"
-    _attr_has_entity_name = True
     _attr_should_poll = False
     _attr_code_format = CodeFormat.NUMBER
     _attr_supported_features = (
@@ -91,8 +90,8 @@ class AlarmDecoderAlarmPanel(AlarmDecoderEntity, AlarmControlPanelEntity):
 
     def __init__(self, client, auto_bypass, code_arm_required, alt_night_mode):
         """Initialize the alarm panel."""
+        super().__init__(client)
         self._attr_unique_id = f"{client.serial_number}-panel"
-        self._client = client
         self._auto_bypass = auto_bypass
         self._attr_code_arm_required = code_arm_required
         self._alt_night_mode = alt_night_mode

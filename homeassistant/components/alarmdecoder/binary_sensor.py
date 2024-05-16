@@ -67,7 +67,6 @@ async def async_setup_entry(
 class AlarmDecoderBinarySensor(AlarmDecoderEntity, BinarySensorEntity):
     """Representation of an AlarmDecoder binary sensor."""
 
-    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(
@@ -82,8 +81,8 @@ class AlarmDecoderBinarySensor(AlarmDecoderEntity, BinarySensorEntity):
         relay_chan,
     ):
         """Initialize the binary_sensor."""
+        super().__init__(client)
         self._attr_unique_id = f"{client.serial_number}-zone-{zone_number}"
-        self._client = client
         self._zone_number = int(zone_number)
         self._zone_type = zone_type
         self._attr_name = zone_name
