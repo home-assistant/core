@@ -145,7 +145,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: NWSConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the NWS weather platform."""
-    nws_data: NWSData = entry.runtime_data
+    nws_data = entry.runtime_data
     station = entry.data[CONF_STATION]
 
     async_add_entities(

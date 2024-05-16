@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from pynws import SimpleNWS
-
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
@@ -22,7 +20,7 @@ async def async_get_config_entry_diagnostics(
     config_entry: NWSConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    nws_data: SimpleNWS = config_entry.runtime_data.api
+    nws_data = config_entry.runtime_data.api
 
     return {
         "info": async_redact_data(config_entry.data, CONFIG_TO_REDACT),

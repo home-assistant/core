@@ -82,7 +82,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the NWS weather platform."""
     entity_registry = er.async_get(hass)
-    nws_data: NWSData = entry.runtime_data
+    nws_data = entry.runtime_data
 
     # Remove hourly entity from legacy config entries
     if entity_id := entity_registry.async_get_entity_id(

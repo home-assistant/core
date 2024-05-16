@@ -37,9 +37,6 @@ def base_unique_id(latitude: float, longitude: float) -> str:
     return f"{latitude}_{longitude}"
 
 
-NWSConfigEntry = ConfigEntry["NWSData"]
-
-
 @dataclass
 class NWSData:
     """Data for the National Weather Service integration."""
@@ -48,6 +45,9 @@ class NWSData:
     coordinator_observation: TimestampDataUpdateCoordinator[None]
     coordinator_forecast: TimestampDataUpdateCoordinator[None]
     coordinator_forecast_hourly: TimestampDataUpdateCoordinator[None]
+
+
+NWSConfigEntry = ConfigEntry[NWSData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
@@ -161,7 +161,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
