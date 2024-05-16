@@ -33,8 +33,8 @@ class AlarmDecoderSensor(AlarmDecoderEntity, SensorEntity):
     _attr_should_poll = False
 
     def __init__(self, client):
+        super().__init__(client)
         self._attr_unique_id = f"{client.serial_number}-display"
-        self._client = client
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
