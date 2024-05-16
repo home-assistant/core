@@ -5,11 +5,8 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
-from homeassistant.components.risco import (
-    LAST_EVENT_TIMESTAMP_KEY,
-    CannotConnectError,
-    UnauthorizedError,
-)
+from homeassistant.components.risco import CannotConnectError, UnauthorizedError
+from homeassistant.components.risco.coordinator import LAST_EVENT_TIMESTAMP_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -169,7 +166,7 @@ def _set_utc_time_zone(hass):
 def save_mock():
     """Create a mock for async_save."""
     with patch(
-        "homeassistant.components.risco.Store.async_save",
+        "homeassistant.components.risco.coordinator.Store.async_save",
     ) as save_mock:
         yield save_mock
 
@@ -196,7 +193,7 @@ async def test_cloud_setup(
             "homeassistant.components.risco.RiscoCloud.get_events", return_value=[]
         ) as events_mock,
         patch(
-            "homeassistant.components.risco.Store.async_load",
+            "homeassistant.components.risco.coordinator.Store.async_load",
             return_value={LAST_EVENT_TIMESTAMP_KEY: TEST_EVENTS[0].time},
         ),
     ):
