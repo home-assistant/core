@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 from aioswitcher.device import SwitcherBase
@@ -11,12 +10,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    update_coordinator,
-)
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -25,9 +19,8 @@ from .const import (
     DATA_DEVICE,
     DATA_DISCOVERY,
     DOMAIN,
-    MAX_UPDATE_INTERVAL_SEC,
-    SIGNAL_DEVICE_ADD,
 )
+from .coordinator import SwitcherDataUpdateCoordinator
 from .utils import async_start_bridge, async_stop_bridge
 
 PLATFORMS = [
@@ -122,61 +115,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     return True
-
-
-class SwitcherDataUpdateCoordinator(
-    update_coordinator.DataUpdateCoordinator[SwitcherBase]
-):  # pylint: disable=hass-enforce-coordinator-module
-    """Switcher device data update coordinator."""
-
-    def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, device: SwitcherBase
-    ) -> None:
-        """Initialize the Switcher device coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=device.name,
-            update_interval=timedelta(seconds=MAX_UPDATE_INTERVAL_SEC),
-        )
-        self.entry = entry
-        self.data = device
-
-    async def _async_update_data(self) -> SwitcherBase:
-        """Mark device offline if no data."""
-        raise update_coordinator.UpdateFailed(
-            f"Device {self.name} did not send update for"
-            f" {MAX_UPDATE_INTERVAL_SEC} seconds"
-        )
-
-    @property
-    def model(self) -> str:
-        """Switcher device model."""
-        return self.data.device_type.value  # type: ignore[no-any-return]
-
-    @property
-    def device_id(self) -> str:
-        """Switcher device id."""
-        return self.data.device_id  # type: ignore[no-any-return]
-
-    @property
-    def mac_address(self) -> str:
-        """Switcher device mac address."""
-        return self.data.mac_address  # type: ignore[no-any-return]
-
-    @callback
-    def async_setup(self) -> None:
-        """Set up the coordinator."""
-        dev_reg = dr.async_get(self.hass)
-        dev_reg.async_get_or_create(
-            config_entry_id=self.entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
-            identifiers={(DOMAIN, self.device_id)},
-            manufacturer="Switcher",
-            name=self.name,
-            model=self.model,
-        )
-        async_dispatcher_send(self.hass, SIGNAL_DEVICE_ADD, self)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
