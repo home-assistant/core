@@ -1352,6 +1352,7 @@ omit =
     homeassistant/components/supla/*
     homeassistant/components/surepetcare/__init__.py
     homeassistant/components/surepetcare/binary_sensor.py
+    homeassistant/components/surepetcare/coordinator.py
     homeassistant/components/surepetcare/entity.py
     homeassistant/components/surepetcare/sensor.py
     homeassistant/components/swiss_hydrological_data/sensor.py
@@ -1647,6 +1648,7 @@ omit =
     homeassistant/components/xbox/base_sensor.py
     homeassistant/components/xbox/binary_sensor.py
     homeassistant/components/xbox/browse_media.py
+    homeassistant/components/xbox/coordinator.py
     homeassistant/components/xbox/media_player.py
     homeassistant/components/xbox/remote.py
     homeassistant/components/xbox/sensor.py
