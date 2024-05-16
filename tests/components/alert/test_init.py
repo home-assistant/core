@@ -4,7 +4,7 @@ from copy import deepcopy
 
 import pytest
 
-import homeassistant.components.alert as alert
+from homeassistant.components import alert, notify
 from homeassistant.components.alert.const import (
     CONF_ALERT_MESSAGE,
     CONF_DATA,
@@ -14,7 +14,6 @@ from homeassistant.components.alert.const import (
     CONF_TITLE,
     DOMAIN,
 )
-import homeassistant.components.notify as notify
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,

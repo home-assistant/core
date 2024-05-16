@@ -243,6 +243,14 @@ class DeprecatedConstantEnum(NamedTuple):
     breaks_in_ha_version: str | None
 
 
+class DeprecatedAlias(NamedTuple):
+    """Deprecated alias."""
+
+    value: Any
+    replacement: str
+    breaks_in_ha_version: str | None
+
+
 _PREFIX_DEPRECATED = "_DEPRECATED_"
 
 
@@ -254,6 +262,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
     """
     module_name = module_globals.get("__name__")
     value = replacement = None
+    description = "constant"
     if (deprecated_const := module_globals.get(_PREFIX_DEPRECATED + name)) is None:
         raise AttributeError(f"Module {module_name!r} has no attribute {name!r}")
     if isinstance(deprecated_const, DeprecatedConstant):
@@ -265,6 +274,11 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
         replacement = (
             f"{deprecated_const.enum.__class__.__name__}.{deprecated_const.enum.name}"
         )
+        breaks_in_ha_version = deprecated_const.breaks_in_ha_version
+    elif isinstance(deprecated_const, DeprecatedAlias):
+        description = "alias"
+        value = deprecated_const.value
+        replacement = deprecated_const.replacement
         breaks_in_ha_version = deprecated_const.breaks_in_ha_version
 
     if value is None or replacement is None:
@@ -284,7 +298,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
         name,
         module_name or __name__,
         replacement,
-        "constant",
+        description,
         "used",
         breaks_in_ha_version,
         log_when_no_integration_is_found=False,

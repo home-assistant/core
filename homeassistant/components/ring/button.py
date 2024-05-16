@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+from ring_doorbell import RingOther
+
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
+from . import RingData
+from .const import DOMAIN
 from .coordinator import RingDataCoordinator
 from .entity import RingEntity, exception_wrap
 
@@ -22,25 +25,23 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the buttons for the Ring devices."""
-    devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
-    devices_coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
-        RING_DEVICES_COORDINATOR
-    ]
+    ring_data: RingData = hass.data[DOMAIN][config_entry.entry_id]
+    devices_coordinator = ring_data.devices_coordinator
 
     async_add_entities(
         RingDoorButton(device, devices_coordinator, BUTTON_DESCRIPTION)
-        for device in devices["other"]
+        for device in ring_data.devices.other
         if device.has_capability("open")
     )
 
 
-class RingDoorButton(RingEntity, ButtonEntity):
+class RingDoorButton(RingEntity[RingOther], ButtonEntity):
     """Creates a button to open the ring intercom door."""
 
     def __init__(
         self,
-        device,
-        coordinator,
+        device: RingOther,
+        coordinator: RingDataCoordinator,
         description: ButtonEntityDescription,
     ) -> None:
         """Initialize the button."""

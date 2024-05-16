@@ -98,10 +98,10 @@ async def test_config_entry_reload(hass: HomeAssistant) -> None:
     with _patch_discovery(), _patch_wifibulb():
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
         await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.NOT_LOADED
+        assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_config_entry_retry(hass: HomeAssistant) -> None:
@@ -113,7 +113,7 @@ async def test_config_entry_retry(hass: HomeAssistant) -> None:
     with _patch_discovery(no_device=True), _patch_wifibulb(no_device=True):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_config_entry_retry_right_away_on_discovery(hass: HomeAssistant) -> None:
@@ -125,7 +125,7 @@ async def test_config_entry_retry_right_away_on_discovery(hass: HomeAssistant) -
     with _patch_discovery(no_device=True), _patch_wifibulb(no_device=True):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
     with _patch_discovery(), _patch_wifibulb():
         await hass.config_entries.flow.async_init(
@@ -134,7 +134,7 @@ async def test_config_entry_retry_right_away_on_discovery(hass: HomeAssistant) -
             data=DHCP_DISCOVERY,
         )
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_coordinator_retry_right_away_on_discovery_already_setup(
@@ -152,7 +152,7 @@ async def test_coordinator_retry_right_away_on_discovery_already_setup(
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = "light.bulb_rgbcw_ddeeff"
     assert entity_registry.async_get(entity_id).unique_id == MAC_ADDRESS
@@ -219,7 +219,7 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
     ):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
 
     assert config_entry.unique_id == MAC_ADDRESS
     assert config_entry.title == title
@@ -235,7 +235,7 @@ async def test_time_sync_startup_and_next_day(hass: HomeAssistant) -> None:
     with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
 
     assert len(bulb.async_set_time.mock_calls) == 1
     async_fire_time_changed(hass, utcnow() + timedelta(hours=24))

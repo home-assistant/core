@@ -28,19 +28,21 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTime,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import (
-    condition,
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -79,7 +81,9 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
-            vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
+            vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Any(
+                None, vol.Coerce(int)
+            ),
             vol.Optional(CONF_UNIT_PREFIX): vol.In(UNIT_PREFIXES),
             vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
             vol.Remove(CONF_UNIT_OF_MEASUREMENT): cv.string,
@@ -97,57 +101,72 @@ class _IntegrationMethod(ABC):
         return _NAME_TO_INTEGRATION_METHOD[method_name]()
 
     @abstractmethod
-    def validate_states(self, left: State, right: State) -> bool:
+    def validate_states(
+        self, left: State, right: State
+    ) -> tuple[Decimal, Decimal] | None:
         """Check state requirements for integration."""
 
     @abstractmethod
     def calculate_area_with_two_states(
-        self, elapsed_time: float, left: State, right: State
+        self, elapsed_time: Decimal, left: Decimal, right: Decimal
     ) -> Decimal:
         """Calculate area given two states."""
 
     def calculate_area_with_one_state(
-        self, elapsed_time: float, constant_state: State
+        self, elapsed_time: Decimal, constant_state: Decimal
     ) -> Decimal:
-        return Decimal(constant_state.state) * Decimal(elapsed_time)
+        return constant_state * elapsed_time
 
 
 class _Trapezoidal(_IntegrationMethod):
     def calculate_area_with_two_states(
-        self, elapsed_time: float, left: State, right: State
+        self, elapsed_time: Decimal, left: Decimal, right: Decimal
     ) -> Decimal:
-        return Decimal(elapsed_time) * (Decimal(left.state) + Decimal(right.state)) / 2
+        return elapsed_time * (left + right) / 2
 
-    def validate_states(self, left: State, right: State) -> bool:
-        return _is_numeric_state(left) and _is_numeric_state(right)
+    def validate_states(
+        self, left: State, right: State
+    ) -> tuple[Decimal, Decimal] | None:
+        if (left_dec := _decimal_state(left.state)) is None or (
+            right_dec := _decimal_state(right.state)
+        ) is None:
+            return None
+        return (left_dec, right_dec)
 
 
 class _Left(_IntegrationMethod):
     def calculate_area_with_two_states(
-        self, elapsed_time: float, left: State, right: State
+        self, elapsed_time: Decimal, left: Decimal, right: Decimal
     ) -> Decimal:
         return self.calculate_area_with_one_state(elapsed_time, left)
 
-    def validate_states(self, left: State, right: State) -> bool:
-        return _is_numeric_state(left)
+    def validate_states(
+        self, left: State, right: State
+    ) -> tuple[Decimal, Decimal] | None:
+        if (left_dec := _decimal_state(left.state)) is None:
+            return None
+        return (left_dec, left_dec)
 
 
 class _Right(_IntegrationMethod):
     def calculate_area_with_two_states(
-        self, elapsed_time: float, left: State, right: State
+        self, elapsed_time: Decimal, left: Decimal, right: Decimal
     ) -> Decimal:
         return self.calculate_area_with_one_state(elapsed_time, right)
 
-    def validate_states(self, left: State, right: State) -> bool:
-        return _is_numeric_state(right)
+    def validate_states(
+        self, left: State, right: State
+    ) -> tuple[Decimal, Decimal] | None:
+        if (right_dec := _decimal_state(right.state)) is None:
+            return None
+        return (right_dec, right_dec)
 
 
-def _is_numeric_state(state: State) -> bool:
+def _decimal_state(state: str) -> Decimal | None:
     try:
-        float(state.state)
-        return True
-    except (ValueError, TypeError):
-        return False
+        return Decimal(state)
+    except (InvalidOperation, TypeError):
+        return None
 
 
 _NAME_TO_INTEGRATION_METHOD: dict[str, type[_IntegrationMethod]] = {
@@ -242,10 +261,14 @@ async def async_setup_entry(
         # Before we had support for optional selectors, "none" was used for selecting nothing
         unit_prefix = None
 
+    round_digits = config_entry.options.get(CONF_ROUND_DIGITS)
+    if round_digits:
+        round_digits = int(round_digits)
+
     integral = IntegrationSensor(
         integration_method=config_entry.options[CONF_METHOD],
         name=config_entry.title,
-        round_digits=int(config_entry.options[CONF_ROUND_DIGITS]),
+        round_digits=round_digits,
         source_entity=source_entity_id,
         unique_id=config_entry.entry_id,
         unit_prefix=unit_prefix,
@@ -266,7 +289,7 @@ async def async_setup_platform(
     integral = IntegrationSensor(
         integration_method=config[CONF_METHOD],
         name=config.get(CONF_NAME),
-        round_digits=config[CONF_ROUND_DIGITS],
+        round_digits=config.get(CONF_ROUND_DIGITS),
         source_entity=config[CONF_SOURCE_SENSOR],
         unique_id=config.get(CONF_UNIQUE_ID),
         unit_prefix=config.get(CONF_UNIT_PREFIX),
@@ -287,7 +310,7 @@ class IntegrationSensor(RestoreSensor):
         *,
         integration_method: str,
         name: str | None,
-        round_digits: int,
+        round_digits: int | None,
         source_entity: str,
         unique_id: str | None,
         unit_prefix: str | None,
@@ -311,6 +334,7 @@ class IntegrationSensor(RestoreSensor):
         self._source_entity: str = source_entity
         self._last_valid_state: Decimal | None = None
         self._attr_device_info = device_info
+        self._attr_suggested_display_precision = round_digits or 2
 
     def _calculate_unit(self, source_unit: str) -> str:
         """Multiply source_unit with time unit of the integral.
@@ -413,7 +437,7 @@ class IntegrationSensor(RestoreSensor):
         if old_state is None or new_state is None:
             return
 
-        if condition.state(self.hass, new_state, [STATE_UNAVAILABLE]):
+        if new_state.state == STATE_UNAVAILABLE:
             self._attr_available = False
             self.async_write_ha_state()
             return
@@ -421,17 +445,15 @@ class IntegrationSensor(RestoreSensor):
         self._attr_available = True
         self._derive_and_set_attributes_from_state(new_state)
 
-        if not self._method.validate_states(old_state, new_state):
+        if not (states := self._method.validate_states(old_state, new_state)):
             self.async_write_ha_state()
             return
 
-        elapsed_seconds = (
-            new_state.last_updated - old_state.last_updated
-        ).total_seconds()
-
-        area = self._method.calculate_area_with_two_states(
-            elapsed_seconds, old_state, new_state
+        elapsed_seconds = Decimal(
+            (new_state.last_updated - old_state.last_updated).total_seconds()
         )
+
+        area = self._method.calculate_area_with_two_states(elapsed_seconds, *states)
 
         self._update_integral(area)
         self.async_write_ha_state()
@@ -439,7 +461,7 @@ class IntegrationSensor(RestoreSensor):
     @property
     def native_value(self) -> Decimal | None:
         """Return the state of the sensor."""
-        if isinstance(self._state, Decimal):
+        if isinstance(self._state, Decimal) and self._round_digits:
             return round(self._state, self._round_digits)
         return self._state
 
@@ -451,11 +473,9 @@ class IntegrationSensor(RestoreSensor):
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the sensor."""
-        state_attr = {
+        return {
             ATTR_SOURCE_ID: self._source_entity,
         }
-
-        return state_attr
 
     @property
     def extra_restore_state_data(self) -> IntegrationSensorExtraStoredData:

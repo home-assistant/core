@@ -1,6 +1,6 @@
 """The tests for the mFi switch platform."""
 
-import unittest.mock as mock
+from unittest import mock
 
 import pytest
 

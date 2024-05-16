@@ -48,7 +48,7 @@ from homeassistant.components.websocket_api.auth import (
 )
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
-from homeassistant.config_entries import ConfigEntries, ConfigEntry
+from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HassJob, HomeAssistant
 from homeassistant.helpers import (
@@ -62,6 +62,7 @@ from homeassistant.helpers import (
     label_registry as lr,
     recorder as recorder_helper,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import BASE_PLATFORMS, async_setup_component
 from homeassistant.util import location
@@ -354,7 +355,7 @@ def verify_cleanup(
         if expected_lingering_tasks:
             _LOGGER.warning("Lingering task after test %r", task)
         else:
-            pytest.fail(f"Lingering task after test {repr(task)}")
+            pytest.fail(f"Lingering task after test {task!r}")
         task.cancel()
     if tasks:
         event_loop.run_until_complete(asyncio.wait(tasks))
@@ -367,9 +368,9 @@ def verify_cleanup(
                 elif handle._args and isinstance(job := handle._args[-1], HassJob):
                     if job.cancel_on_shutdown:
                         continue
-                    pytest.fail(f"Lingering timer after job {repr(job)}")
+                    pytest.fail(f"Lingering timer after job {job!r}")
                 else:
-                    pytest.fail(f"Lingering timer after test {repr(handle)}")
+                    pytest.fail(f"Lingering timer after test {handle!r}")
                 handle.cancel()
 
     # Verify no threads where left behind.
@@ -498,7 +499,7 @@ def aiohttp_client(
         elif isinstance(__param, BaseTestServer):
             client = TestClient(__param, loop=loop, **kwargs)
         else:
-            raise TypeError("Unknown argument type: %r" % type(__param))
+            raise TypeError(f"Unknown argument type: {type(__param)!r}")
 
         await client.start_server()
         clients.append(client)
@@ -525,6 +526,7 @@ async def hass(
     load_registries: bool,
     hass_storage: dict[str, Any],
     request: pytest.FixtureRequest,
+    mock_recorder_before_hass: None,
 ) -> AsyncGenerator[HomeAssistant, None]:
     """Create a test instance of Home Assistant."""
 
@@ -541,8 +543,8 @@ async def hass(
         else:
             exceptions.append(
                 Exception(
-                    "Received exception handler without exception, but with message: %s"
-                    % context["message"]
+                    "Received exception handler without exception, "
+                    f"but with message: {context["message"]}"
                 )
             )
         orig_exception_handler(loop, context)
@@ -556,12 +558,21 @@ async def hass(
 
         # Config entries are not normally unloaded on HA shutdown. They are unloaded here
         # to ensure that they could, and to help track lingering tasks and timers.
-        await asyncio.gather(
-            *(
-                create_eager_task(config_entry.async_unload(hass))
-                for config_entry in hass.config_entries.async_entries()
+        loaded_entries = [
+            entry
+            for entry in hass.config_entries.async_entries()
+            if entry.state is ConfigEntryState.LOADED
+        ]
+        if loaded_entries:
+            await asyncio.gather(
+                *(
+                    create_eager_task(
+                        hass.config_entries.async_unload(config_entry.entry_id),
+                        loop=hass.loop,
+                    )
+                    for config_entry in loaded_entries
+                )
             )
-        )
 
         await hass.async_stop(force=True)
 
@@ -855,10 +866,21 @@ def hass_ws_client(
             data["id"] = next(id_generator)
             return websocket.send_json(data)
 
+        async def _remove_device(device_id: str, config_entry_id: str) -> Any:
+            await _send_json_auto_id(
+                {
+                    "type": "config/device_registry/remove_config_entry",
+                    "config_entry_id": config_entry_id,
+                    "device_id": device_id,
+                }
+            )
+            return await websocket.receive_json()
+
         # wrap in client
         wrapped_websocket = cast(MockHAClientWebSocket, websocket)
         wrapped_websocket.client = client
         wrapped_websocket.send_json_auto_id = _send_json_auto_id
+        wrapped_websocket.remove_device = _remove_device
         return wrapped_websocket
 
     return create_client
@@ -903,26 +925,45 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient, None,
             self.rc = 0
 
     with patch("paho.mqtt.client.Client") as mock_client:
+        # The below use a call_soon for the on_publish/on_subscribe/on_unsubscribe
+        # callbacks to simulate the behavior of the real MQTT client which will
+        # not be synchronous.
 
         @ha.callback
         def _async_fire_mqtt_message(topic, payload, qos, retain):
             async_fire_mqtt_message(hass, topic, payload, qos, retain)
             mid = get_mid()
-            mock_client.on_publish(0, 0, mid)
+            hass.loop.call_soon(mock_client.on_publish, 0, 0, mid)
             return FakeInfo(mid)
 
         def _subscribe(topic, qos=0):
             mid = get_mid()
-            mock_client.on_subscribe(0, 0, mid)
+            hass.loop.call_soon(mock_client.on_subscribe, 0, 0, mid)
             return (0, mid)
 
         def _unsubscribe(topic):
             mid = get_mid()
-            mock_client.on_unsubscribe(0, 0, mid)
+            hass.loop.call_soon(mock_client.on_unsubscribe, 0, 0, mid)
             return (0, mid)
 
+        def _connect(*args, **kwargs):
+            # Connect always calls reconnect once, but we
+            # mock it out so we call reconnect to simulate
+            # the behavior.
+            mock_client.reconnect()
+            hass.loop.call_soon_threadsafe(
+                mock_client.on_connect, mock_client, None, 0, 0, 0
+            )
+            mock_client.on_socket_open(
+                mock_client, None, Mock(fileno=Mock(return_value=-1))
+            )
+            mock_client.on_socket_register_write(
+                mock_client, None, Mock(fileno=Mock(return_value=-1))
+            )
+            return 0
+
         mock_client = mock_client.return_value
-        mock_client.connect.return_value = 0
+        mock_client.connect.side_effect = _connect
         mock_client.subscribe.side_effect = _subscribe
         mock_client.unsubscribe.side_effect = _unsubscribe
         mock_client.publish.side_effect = _async_fire_mqtt_message
@@ -984,8 +1025,9 @@ async def _mqtt_mock_entry(
 
         # connected set to True to get a more realistic behavior when subscribing
         mock_mqtt_instance.connected = True
+        mqtt_client_mock.on_connect(mqtt_client_mock, None, 0, 0, 0)
 
-        hass.helpers.dispatcher.async_dispatcher_send(mqtt.MQTT_CONNECTED)
+        async_dispatcher_send(hass, mqtt.MQTT_CONNECTED)
         await hass.async_block_till_done()
 
         return mock_mqtt_instance
@@ -1112,14 +1154,43 @@ def mock_network() -> Generator[None, None, None]:
         yield
 
 
-@pytest.fixture(autouse=True)
-def mock_get_source_ip() -> Generator[None, None, None]:
+@pytest.fixture(autouse=True, scope="session")
+def mock_get_source_ip() -> Generator[patch, None, None]:
     """Mock network util's async_get_source_ip."""
-    with patch(
+    patcher = patch(
         "homeassistant.components.network.util.async_get_source_ip",
         return_value="10.10.10.10",
-    ):
-        yield
+    )
+    patcher.start()
+    try:
+        yield patcher
+    finally:
+        patcher.stop()
+
+
+@pytest.fixture(autouse=True, scope="session")
+def translations_once() -> Generator[patch, None, None]:
+    """Only load translations once per session."""
+    from homeassistant.helpers.translation import _TranslationsCacheData
+
+    cache = _TranslationsCacheData({}, {})
+    patcher = patch(
+        "homeassistant.helpers.translation._TranslationsCacheData",
+        return_value=cache,
+    )
+    patcher.start()
+    try:
+        yield patcher
+    finally:
+        patcher.stop()
+
+
+@pytest.fixture
+def disable_translations_once(translations_once):
+    """Override loading translations once."""
+    translations_once.stop()
+    yield
+    translations_once.start()
 
 
 @pytest.fixture
@@ -1383,8 +1454,12 @@ def hass_recorder(
             ),
         ):
 
-            def setup_recorder(config: dict[str, Any] | None = None) -> HomeAssistant:
+            def setup_recorder(
+                *, config: dict[str, Any] | None = None, timezone: str | None = None
+            ) -> HomeAssistant:
                 """Set up with params."""
+                if timezone is not None:
+                    hass.config.set_time_zone(timezone)
                 init_recorder_component(hass, config, recorder_db_url)
                 hass.start()
                 hass.block_till_done()
@@ -1539,6 +1614,15 @@ async def recorder_mock(
 ) -> recorder.Recorder:
     """Fixture with in-memory recorder."""
     return await async_setup_recorder_instance(hass, recorder_config)
+
+
+@pytest.fixture
+def mock_recorder_before_hass() -> None:
+    """Mock the recorder.
+
+    Override or parametrize this fixture with a fixture that mocks the recorder,
+    in the tests that need to test the recorder.
+    """
 
 
 @pytest.fixture(name="enable_bluetooth")

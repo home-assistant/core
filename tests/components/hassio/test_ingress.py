@@ -379,8 +379,8 @@ async def test_ingress_request_get_compressed(
 
     # Check we got right response
     assert resp.status == HTTPStatus.OK
-    body = await resp.text()
-    assert body == body
+    resp_body = await resp.text()
+    assert resp_body == body
     assert resp.headers["Content-Encoding"] == "deflate"
 
     # Check we forwarded command

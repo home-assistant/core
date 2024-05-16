@@ -123,7 +123,8 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
 
         # The device reflects the old state for a few moments. Update the
         # state manually and trigger a refresh after a short debounced delay.
-        self.coordinator.data.active_zones.remove(self._zone)
+        if self.is_on:
+            self.coordinator.data.active_zones.remove(self._zone)
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 

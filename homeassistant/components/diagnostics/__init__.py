@@ -174,6 +174,7 @@ async def _async_get_json_file_response(
     all_custom_components = await async_get_custom_components(hass)
     for cc_domain, cc_obj in all_custom_components.items():
         custom_components[cc_domain] = {
+            "documentation": cc_obj.documentation,
             "version": cc_obj.version,
             "requirements": cc_obj.requirements,
         }

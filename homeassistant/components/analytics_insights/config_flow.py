@@ -53,7 +53,6 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        self._async_abort_entries_match()
         errors: dict[str, str] = {}
         if user_input is not None:
             if not user_input.get(CONF_TRACKED_INTEGRATIONS) and not user_input.get(
@@ -83,6 +82,9 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
         except HomeassistantAnalyticsConnectionError:
             LOGGER.exception("Error connecting to Home Assistant analytics")
             return self.async_abort(reason="cannot_connect")
+        except Exception:  # noqa: BLE001
+            LOGGER.exception("Unexpected error")
+            return self.async_abort(reason="unknown")
 
         options = [
             SelectOptionDict(

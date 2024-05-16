@@ -1,4 +1,4 @@
-"""Config flow for Motionblinds BLE integration."""
+"""Config flow for Motionblinds Bluetooth integration."""
 
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ CONFIG_SCHEMA = vol.Schema({vol.Required(CONF_MAC_CODE): str})
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Motionblinds BLE."""
+    """Handle a config flow for Motionblinds Bluetooth."""
 
     def __init__(self) -> None:
         """Initialize a ConfigFlow."""

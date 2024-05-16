@@ -160,8 +160,9 @@ async def async_remove_orphaned_entries_service(hub: DeconzHub) -> None:
     entities_to_be_removed = []
     devices_to_be_removed = [
         entry.id
-        for entry in device_registry.devices.values()
-        if hub.config_entry.entry_id in entry.config_entries
+        for entry in device_registry.devices.get_devices_for_config_entry_id(
+            hub.config_entry.entry_id
+        )
     ]
 
     # Don't remove the Gateway host entry

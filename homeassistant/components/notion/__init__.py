@@ -108,7 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         (CONF_REFRESH_TOKEN, client.refresh_token),
         (CONF_USER_UUID, client.user_uuid),
     ):
-        if entry.data[key] == value:
+        if entry.data.get(key) == value:
             continue
         entry_updates["data"][key] = value
 

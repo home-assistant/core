@@ -108,12 +108,10 @@ def create_v1_mock_binary_sensor_entity_entry(
         device_id=device_entry_id,
     )
     assert entity_entry.unique_id == entity_unique_id
-    binary_sensor_entity_id_key_mapping = {
+    return {
         "entity_id": entity_entry.entity_id,
         "key": BINARY_SENSOR_KEYS["v2"],
     }
-
-    return binary_sensor_entity_id_key_mapping
 
 
 async def test_setup_and_unload_entry(
@@ -134,12 +132,12 @@ async def test_setup_and_unload_entry(
     ):
         assert await hass.config_entries.async_setup(java_mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        assert java_mock_config_entry.state == ConfigEntryState.LOADED
+        assert java_mock_config_entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(java_mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert not hass.data.get(DOMAIN)
-    assert java_mock_config_entry.state == ConfigEntryState.NOT_LOADED
+    assert java_mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_setup_entry_lookup_failure(
@@ -157,7 +155,7 @@ async def test_setup_entry_lookup_failure(
         )
 
     await hass.async_block_till_done()
-    assert java_mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert java_mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_init_failure(
@@ -175,7 +173,7 @@ async def test_setup_entry_init_failure(
         )
 
     await hass.async_block_till_done()
-    assert java_mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert java_mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_not_ready(
@@ -199,7 +197,7 @@ async def test_setup_entry_not_ready(
         )
 
     await hass.async_block_till_done()
-    assert java_mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert java_mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_entry_migration(
@@ -246,7 +244,7 @@ async def test_entry_migration(
         CONF_ADDRESS: TEST_ADDRESS,
     }
     assert migrated_config_entry.version == 3
-    assert migrated_config_entry.state == ConfigEntryState.LOADED
+    assert migrated_config_entry.state is ConfigEntryState.LOADED
 
     # Test migrated device entry.
     device_entry = device_registry.async_get(device_entry_id)
@@ -305,7 +303,7 @@ async def test_entry_migration_host_only(
         CONF_ADDRESS: TEST_HOST,
     }
     assert v1_mock_config_entry.version == 3
-    assert v1_mock_config_entry.state == ConfigEntryState.LOADED
+    assert v1_mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_entry_migration_v3_failure(
@@ -335,4 +333,4 @@ async def test_entry_migration_v3_failure(
 
     # Test config entry.
     assert v1_mock_config_entry.version == 2
-    assert v1_mock_config_entry.state == ConfigEntryState.MIGRATION_ERROR
+    assert v1_mock_config_entry.state is ConfigEntryState.MIGRATION_ERROR

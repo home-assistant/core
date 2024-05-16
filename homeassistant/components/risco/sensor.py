@@ -17,8 +17,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from . import RiscoEventsDataUpdateCoordinator, is_local
+from . import is_local
 from .const import DOMAIN, EVENTS_COORDINATOR
+from .coordinator import RiscoEventsDataUpdateCoordinator
 from .entity import zone_unique_id
 
 CATEGORIES = {
@@ -56,8 +57,8 @@ async def async_setup_entry(
         config_entry.entry_id
     ][EVENTS_COORDINATOR]
     sensors = [
-        RiscoSensor(coordinator, id, [], name, config_entry.entry_id)
-        for id, name in CATEGORIES.items()
+        RiscoSensor(coordinator, category_id, [], name, config_entry.entry_id)
+        for category_id, name in CATEGORIES.items()
     ]
     sensors.append(
         RiscoSensor(

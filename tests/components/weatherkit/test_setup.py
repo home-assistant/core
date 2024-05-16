@@ -7,8 +7,8 @@ from apple_weatherkit.client import (
     WeatherKitApiClientError,
 )
 
-from homeassistant import config_entries
 from homeassistant.components.weatherkit.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import EXAMPLE_CONFIG_DATA
@@ -65,4 +65,4 @@ async def test_client_error_handling(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state == config_entries.ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY

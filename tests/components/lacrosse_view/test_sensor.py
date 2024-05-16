@@ -43,7 +43,7 @@ async def test_entities_added(hass: HomeAssistant) -> None:
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.test_temperature")
 
 
@@ -67,7 +67,7 @@ async def test_sensor_permission(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.SETUP_ERROR
+    assert entries[0].state is ConfigEntryState.SETUP_ERROR
     assert not hass.states.get("sensor.test_temperature")
     assert "This account does not have permission to read Test" in caplog.text
 
@@ -92,7 +92,7 @@ async def test_field_not_supported(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.test_some_unsupported_field") is None
     assert "Unsupported sensor field" in caplog.text
 
@@ -128,7 +128,7 @@ async def test_field_types(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
     assert hass.states.get(f"sensor.test_{entity_id}").state == expected
 
 
@@ -151,7 +151,7 @@ async def test_no_field(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.test_temperature").state == "unavailable"
 
 
@@ -174,5 +174,5 @@ async def test_field_data_missing(hass: HomeAssistant) -> None:
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.test_temperature").state == "unknown"
