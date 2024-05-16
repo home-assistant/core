@@ -6,13 +6,16 @@ from functools import partial
 import logging
 import mimetypes
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
+import google.ai.generativelanguage as glm
 from google.api_core.exceptions import ClientError
 import google.generativeai as genai
 import google.generativeai.types as genai_types
 import voluptuous as vol
+from voluptuous_openapi import convert
 
+from homeassistant import setup
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, MATCH_ALL
@@ -27,7 +30,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     TemplateError,
 )
-from homeassistant.helpers import config_validation as cv, intent, template
+from homeassistant.helpers import config_validation as cv, intent, llm, template
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import ulid
 
@@ -159,7 +162,60 @@ class GoogleGenerativeAIAgent(conversation.AbstractConversationAgent):
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
+        if "intent" not in self.hass.config.components:
+            await setup.async_setup_component(self.hass, "intent", {})
+
+        def format_tool(tool: llm.Tool) -> dict[str, Any]:
+            """Format tool specification."""
+
+            def format_schema(schema: dict[str, Any]) -> dict[str, Any]:
+                """Format the schema to protobuf."""
+                SUPPORTED_KEYS = [
+                    "type",
+                    "format",
+                    "description",
+                    "nullable",
+                    "enum",
+                    "items",
+                    "properties",
+                    "required",
+                ]
+                result = {}
+                for key, val in schema.items():
+                    if key not in SUPPORTED_KEYS:
+                        continue
+                    if key == "type":
+                        key = "type_"
+                        val = val.upper()
+                    elif key == "format":
+                        key = "format_"
+                    elif key == "items":
+                        val = format_schema(val)
+                    elif key == "properties":
+                        val = {k: format_schema(v) for k, v in val.items()}
+                    result[key] = val
+                return result
+
+            parameters = format_schema(convert(tool.parameters))
+
+            return glm.Tool(
+                {
+                    "function_declarations": [
+                        {
+                            "name": tool.name,
+                            "description": tool.description,
+                            "parameters": parameters,
+                        }
+                    ]
+                }
+            )
+
+        tools = [format_tool(tool) for tool in llm.async_get_tools(self.hass)]
+        if not tools:
+            tools = None
+
         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
+
         model = genai.GenerativeModel(
             model_name=self.entry.options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL),
             generation_config={
@@ -172,6 +228,7 @@ class GoogleGenerativeAIAgent(conversation.AbstractConversationAgent):
                     CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS
                 ),
             },
+            tools=tools,
         )
         _LOGGER.debug("Model: %s", model)
 
@@ -184,7 +241,9 @@ class GoogleGenerativeAIAgent(conversation.AbstractConversationAgent):
 
         intent_response = intent.IntentResponse(language=user_input.language)
         try:
-            prompt = self._async_generate_prompt(raw_prompt)
+            prompt = self._async_generate_prompt(
+                raw_prompt, user_input.device_id, user_input.context.user_id
+            )
         except TemplateError as err:
             _LOGGER.error("Error rendering prompt: %s", err)
             intent_response.async_set_error(
@@ -201,43 +260,86 @@ class GoogleGenerativeAIAgent(conversation.AbstractConversationAgent):
         _LOGGER.debug("Input: '%s' with history: %s", user_input.text, messages)
 
         chat = model.start_chat(history=messages)
-        try:
-            chat_response = await chat.send_message_async(user_input.text)
-        except (
-            ClientError,
-            ValueError,
-            genai_types.BlockedPromptException,
-            genai_types.StopCandidateException,
-        ) as err:
-            _LOGGER.error("Error sending message: %s", err)
-            intent_response.async_set_error(
-                intent.IntentResponseErrorCode.UNKNOWN,
-                f"Sorry, I had a problem talking to Google Generative AI: {err}",
-            )
-            return conversation.ConversationResult(
-                response=intent_response, conversation_id=conversation_id
-            )
 
-        _LOGGER.debug("Response: %s", chat_response.parts)
-        if not chat_response.parts:
-            intent_response.async_set_error(
-                intent.IntentResponseErrorCode.UNKNOWN,
-                "Sorry, I had a problem talking to Google Generative AI. Likely blocked",
+        chat_request = user_input.text
+        while True:
+            try:
+                chat_response = await chat.send_message_async(chat_request)
+            except (
+                ClientError,
+                ValueError,
+                genai_types.BlockedPromptException,
+                genai_types.StopCandidateException,
+            ) as err:
+                _LOGGER.error("Error sending message: %s", err)
+                intent_response.async_set_error(
+                    intent.IntentResponseErrorCode.UNKNOWN,
+                    f"Sorry, I had a problem talking to Google Generative AI: {err}",
+                )
+                return conversation.ConversationResult(
+                    response=intent_response, conversation_id=conversation_id
+                )
+
+            _LOGGER.debug("Response: %s", chat_response.parts)
+            if not chat_response.parts:
+                intent_response.async_set_error(
+                    intent.IntentResponseErrorCode.UNKNOWN,
+                    "Sorry, I had a problem talking to Google Generative AI. Likely blocked",
+                )
+                return conversation.ConversationResult(
+                    response=intent_response, conversation_id=conversation_id
+                )
+            self.history[conversation_id] = chat.history
+            tool_call = chat_response.parts[0].function_call
+
+            if not tool_call:
+                break
+
+            _LOGGER.info(
+                "Tool call: %s(%s)",
+                tool_call.name,
+                dict(tool_call.args),
             )
-            return conversation.ConversationResult(
-                response=intent_response, conversation_id=conversation_id
+            try:
+                tool_input = llm.ToolInput(
+                    tool_name=tool_call.name,
+                    tool_args=dict(tool_call.args),
+                    platform=DOMAIN,
+                    context=user_input.context,
+                    user_prompt=user_input.text,
+                    language=user_input.language,
+                    assistant=conversation.DOMAIN,
+                )
+                function_response = await llm.async_call_tool(self.hass, tool_input)
+            except Exception as e:  # noqa: BLE001
+                function_response = {"error": type(e).__name__}
+                if str(e):
+                    function_response["error_text"] = str(e)
+
+            _LOGGER.info("Tool response: %s", function_response)
+            chat_request = glm.Content(
+                parts=[
+                    glm.Part(
+                        function_response=glm.FunctionResponse(
+                            name=tool_call.name, response=function_response
+                        )
+                    )
+                ]
             )
-        self.history[conversation_id] = chat.history
         intent_response.async_set_speech(chat_response.text)
         return conversation.ConversationResult(
             response=intent_response, conversation_id=conversation_id
         )
 
-    def _async_generate_prompt(self, raw_prompt: str) -> str:
+    def _async_generate_prompt(
+        self, raw_prompt: str, device_id: str | None, user_id: str | None
+    ) -> str:
         """Generate a prompt for the user."""
         return template.Template(raw_prompt, self.hass).async_render(
             {
                 "ha_name": self.hass.config.location_name,
+                "device_id": device_id,
+                "user_id": user_id,
             },
             parse_result=False,
         )
