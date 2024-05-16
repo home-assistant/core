@@ -16,7 +16,7 @@ attrs==23.2.0
 awesomeversion==24.2.0
 bcrypt==4.1.2
 bleak-retry-connector==3.5.0
-bleak==0.22.0
+bleak==0.22.1
 bluetooth-adapters==0.19.2
 bluetooth-auto-recovery==1.4.2
 bluetooth-data-tools==1.19.0
@@ -29,8 +29,8 @@ fnv-hash-fast==0.5.0
 ha-av==10.1.1
 ha-ffmpeg==3.2.0
 habluetooth==3.0.1
-hass-nabucasa==0.78.0
-hassil==1.6.1
+hass-nabucasa==0.81.0
+hassil==1.7.1
 home-assistant-bluetooth==1.12.0
 home-assistant-frontend==20240501.1
 home-assistant-intents==2024.4.24
