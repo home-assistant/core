@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -37,8 +36,8 @@ from homeassistant.util.unit_conversion import (
 )
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import NWSData, base_unique_id, device_info
-from .const import ATTRIBUTION, CONF_STATION, DOMAIN, OBSERVATION_VALID_TIME
+from . import NWSConfigEntry, NWSData, base_unique_id, device_info
+from .const import ATTRIBUTION, CONF_STATION, OBSERVATION_VALID_TIME
 
 PARALLEL_UPDATES = 0
 
@@ -143,10 +142,10 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: NWSConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the NWS weather platform."""
-    nws_data: NWSData = hass.data[DOMAIN][entry.entry_id]
+    nws_data = entry.runtime_data
     station = entry.data[CONF_STATION]
 
     async_add_entities(

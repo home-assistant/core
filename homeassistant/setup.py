@@ -202,6 +202,7 @@ async def _async_process_dependencies(
         or create_eager_task(
             async_setup_component(hass, dep, config),
             name=f"setup {dep} as dependency of {integration.domain}",
+            loop=hass.loop,
         )
         for dep in integration.dependencies
         if dep not in hass.config.components

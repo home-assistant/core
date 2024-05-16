@@ -40,7 +40,7 @@ dependencies    = [
     "fnv-hash-fast==0.5.0",
     # hass-nabucasa is imported by helpers which don't depend on the cloud
     # integration
-    "hass-nabucasa==0.78.0",
+    "hass-nabucasa==0.81.0",
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.27.0",
@@ -455,14 +455,15 @@ filterwarnings = [
     # -- Tests
     # Ignore custom pytest marks
     "ignore:Unknown pytest.mark.disable_autouse_fixture:pytest.PytestUnknownMarkWarning:tests.components.met",
+    "ignore:Unknown pytest.mark.dataset:pytest.PytestUnknownMarkWarning:tests.components.screenlogic",
 
     # -- design choice 3rd party
-    # https://github.com/gwww/elkm1/blob/2.2.6/elkm1_lib/util.py#L8-L19
+    # https://github.com/gwww/elkm1/blob/2.2.7/elkm1_lib/util.py#L8-L19
     "ignore:ssl.TLSVersion.TLSv1 is deprecated:DeprecationWarning:elkm1_lib.util",
-    # https://github.com/michaeldavie/env_canada/blob/v0.6.1/env_canada/ec_cache.py
+    # https://github.com/michaeldavie/env_canada/blob/v0.6.2/env_canada/ec_cache.py
     "ignore:Inheritance class CacheClientSession from ClientSession is discouraged:DeprecationWarning:env_canada.ec_cache",
     # https://github.com/allenporter/ical/pull/215
-    # https://github.com/allenporter/ical/blob/7.0.3/ical/util.py#L20-L22
+    # https://github.com/allenporter/ical/blob/8.0.0/ical/util.py#L20-L22
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:ical.util",
     # https://github.com/bachya/regenmaschine/blob/2024.03.0/regenmaschine/client.py#L52
     "ignore:ssl.TLSVersion.SSLv3 is deprecated:DeprecationWarning:regenmaschine.client",
@@ -473,9 +474,10 @@ filterwarnings = [
     "ignore:Deprecated call to `pkg_resources.declare_namespace\\(('google.*'|'pywinusb'|'repoze'|'xbox'|'zope')\\)`:DeprecationWarning:pkg_resources",
 
     # -- tracked upstream / open PRs
-    # https://github.com/certbot/certbot/issues/9828 - v2.8.0
+    # https://github.com/certbot/certbot/issues/9828 - v2.10.0
     "ignore:X509Extension support in pyOpenSSL is deprecated. You should use the APIs in cryptography:DeprecationWarning:acme.crypto_util",
-    # https://github.com/influxdata/influxdb-client-python/issues/603 - v1.37.0
+    # https://github.com/influxdata/influxdb-client-python/issues/603 - v1.42.0
+    # https://github.com/influxdata/influxdb-client-python/pull/652
     "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:influxdb_client.client.write.point",
     # https://github.com/beetbox/mediafile/issues/67 - v0.12.0
     "ignore:'imghdr' is deprecated and slated for removal in Python 3.13:DeprecationWarning:mediafile",
@@ -494,6 +496,8 @@ filterwarnings = [
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:datadog.util.compat",
     # https://github.com/fwestenberg/devialet/pull/6 - >1.4.5
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:devialet.devialet_api",
+    # https://github.com/httplib2/httplib2/pull/226 - >=0.21.0
+    "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:httplib2",
     # https://github.com/jaraco/jaraco.abode/commit/9e3e789efc96cddcaa15f920686bbeb79a7469e0 - update jaraco.abode to >=5.1.0
     "ignore:`jaraco.functools.call_aside` is deprecated, use `jaraco.functools.invoke` instead:DeprecationWarning:jaraco.abode.helpers.timeline",
     # https://github.com/majuss/lupupy/pull/15 - >0.3.2
@@ -508,13 +512,13 @@ filterwarnings = [
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.miioprotocol",
     # https://github.com/hunterjm/python-onvif-zeep-async/pull/51 - >3.1.12
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:onvif.client",
+    # https://github.com/pkkid/python-plexapi/pull/1404 - >4.15.13
+    "ignore:invalid escape sequence:SyntaxWarning:.*plexapi.base",
     # https://github.com/googleapis/python-pubsub/commit/060f00bcea5cd129be3a2d37078535cc97b4f5e8 - >=2.13.12
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:google.pubsub_v1.services.publisher.client",
     # https://github.com/okunishinishi/python-stringcase/commit/6a5c5bbd3fe5337862abc7fd0853a0f36e18b2e1 - >1.2.0
     "ignore:invalid escape sequence:SyntaxWarning:.*stringcase",
-    # https://github.com/grahamwetzler/smart-meter-texas/pull/143 - >0.5.3
-    "ignore:ssl.OP_NO_SSL\\*/ssl.OP_NO_TLS\\* options are deprecated:DeprecationWarning:smart_meter_texas",
-    # https://github.com/timmo001/system-bridge-connector/pull/27 - >= 4.1.0
+    # https://github.com/timmo001/system-bridge-connector/pull/27 - >=4.1.0
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:systembridgeconnector.version",
     # https://github.com/jschlyter/ttls/commit/d64f1251397b8238cf6a35bea64784de25e3386c - >=1.8.1
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:ttls",
@@ -535,10 +539,10 @@ filterwarnings = [
     # https://github.com/lidatong/dataclasses-json/issues/328
     # https://github.com/lidatong/dataclasses-json/pull/351
     "ignore:The 'default' argument to fields is deprecated. Use 'dump_default' instead:DeprecationWarning:dataclasses_json.mm",
-    # https://pypi.org/project/emulated-roku/ - v0.2.1
+    # https://pypi.org/project/emulated-roku/ - v0.3.0 - 2023-12-19
     # https://github.com/martonperei/emulated_roku
     "ignore:loop argument is deprecated:DeprecationWarning:emulated_roku",
-    # https://github.com/thecynic/pylutron - v0.2.10
+    # https://github.com/thecynic/pylutron - v0.2.13
     "ignore:setDaemon\\(\\) is deprecated, set the daemon attribute instead:DeprecationWarning:pylutron",
     # Wrong stacklevel
     # https://bugs.launchpad.net/beautifulsoup/+bug/2034451
@@ -551,34 +555,43 @@ filterwarnings = [
     # https://pypi.org/project/pyblackbird/ - v0.6 - 2023-03-15
     # https://github.com/koolsb/pyblackbird/pull/9 -> closed
     "ignore:invalid escape sequence:SyntaxWarning:.*pyblackbird",
-    # https://github.com/pkkid/python-plexapi/pull/1244 - v4.15.11 -> new issue same file
-    # https://github.com/pkkid/python-plexapi/pull/1370 -> Not fixed here
-    "ignore:invalid escape sequence:SyntaxWarning:.*plexapi.base",
     # https://pypi.org/project/pyws66i/ - v1.1 - 2022-04-05
     "ignore:invalid escape sequence:SyntaxWarning:.*pyws66i",
+    # https://pypi.org/project/sanix/ - v1.0.6 - 2024-05-01
+    # https://github.com/tomaszsluszniak/sanix_py/blob/v1.0.6/sanix/__init__.py#L42
+    "ignore:invalid escape sequence:SyntaxWarning:.*sanix",
     # https://pypi.org/project/sleekxmppfs/ - v1.4.1 - 2022-08-18
     "ignore:invalid escape sequence:SyntaxWarning:.*sleekxmppfs.thirdparty.mini_dateutil",
+    # https://pypi.org/project/vobject/ - v0.9.7 - 2024-03-25
+    # https://github.com/py-vobject/vobject
+    "ignore:invalid escape sequence:SyntaxWarning:.*vobject.base",
     # - pkg_resources
     # https://pypi.org/project/aiomusiccast/ - v0.14.8 - 2023-03-20
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:aiomusiccast",
+    # https://pypi.org/project/habitipy/ - v0.3.1 - 2019-01-14 / 2024-04-28
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:habitipy.api",
     # https://github.com/eavanvalkenburg/pysiaalarm/blob/v3.1.1/src/pysiaalarm/data/data.py#L7 - v3.1.1 - 2023-04-17
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:pysiaalarm.data.data",
     # https://pypi.org/project/pybotvac/ - v0.0.25 - 2024-04-11
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:pybotvac.version",
     # https://github.com/home-assistant-ecosystem/python-mystrom/blob/2.2.0/pymystrom/__init__.py#L10 - v2.2.0 - 2023-05-21
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:pymystrom",
-    # https://pypi.org/project/velbus-aio/ - v2024.4.0
-    # https://github.com/Cereal2nd/velbus-aio/blob/2024.4.0/velbusaio/handler.py#L13
+    # https://pypi.org/project/velbus-aio/ - v2024.4.1
+    # https://github.com/Cereal2nd/velbus-aio/blob/2024.4.1/velbusaio/handler.py#L12
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:velbusaio.handler",
 
     # -- Python 3.13
     # HomeAssistant
     "ignore:'audioop' is deprecated and slated for removal in Python 3.13:DeprecationWarning:homeassistant.components.assist_pipeline.websocket_api",
+    # https://pypi.org/project/nextcord/ - v2.6.0 - 2023-09-23
+    # https://github.com/nextcord/nextcord/issues/1174
+    # https://github.com/nextcord/nextcord/blob/v2.6.1/nextcord/player.py#L5
+    "ignore:'audioop' is deprecated and slated for removal in Python 3.13:DeprecationWarning:nextcord.player",
     # https://pypi.org/project/pylutron/ - v0.2.12 - 2024-02-12
     # https://github.com/thecynic/pylutron/issues/89
     "ignore:'telnetlib' is deprecated and slated for removal in Python 3.13:DeprecationWarning:pylutron",
-    # https://pypi.org/project/SpeechRecognition/ - v3.10.3 - 2024-03-30
-    # https://github.com/Uberi/speech_recognition/blob/3.10.3/speech_recognition/__init__.py#L7
+    # https://pypi.org/project/SpeechRecognition/ - v3.10.4 - 2024-05-05
+    # https://github.com/Uberi/speech_recognition/blob/3.10.4/speech_recognition/__init__.py#L7
     "ignore:'aifc' is deprecated and slated for removal in Python 3.13:DeprecationWarning:speech_recognition",
     # https://pypi.org/project/voip-utils/ - v0.1.0 - 2023-06-28
     # https://github.com/home-assistant-libs/voip-utils/blob/v0.1.0/voip_utils/rtp_audio.py#L2
@@ -605,11 +618,9 @@ filterwarnings = [
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:directv.models",
     # https://pypi.org/project/foobot_async/ - v1.0.0 - 2020-11-24
     "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:foobot_async",
-    # https://pypi.org/project/habitipy/ - v0.3.0 - 2019-01-14
-    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:habitipy.api",
     # https://pypi.org/project/httpsig/ - v1.3.0 - 2018-11-28
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:httpsig",
-    # https://pypi.org/project/influxdb/ - v5.3.1 - 2020-11-11 (archived)
+    # https://pypi.org/project/influxdb/ - v5.3.2 - 2024-04-18 (archived)
     "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:influxdb.line_protocol",
     # https://pypi.org/project/lark-parser/ - v0.12.0 - 2021-08-30 -> moved to `lark`
     # https://pypi.org/project/commentjson/ - v0.9.0 - 2020-10-05
@@ -651,10 +662,6 @@ filterwarnings = [
     "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:rx.internal.constants",
     # https://pypi.org/project/rxv/ - v0.7.0 - 2021-10-10
     "ignore:defusedxml.cElementTree is deprecated, import from defusedxml.ElementTree instead:DeprecationWarning:rxv.ssdp",
-    # https://pypi.org/project/vilfo-api-client/ - v0.4.1 - 2021-11-06
-    "ignore:Function 'semver.compare' is deprecated. Deprecated since version 3.0.0:PendingDeprecationWarning:.*vilfo.client",
-    # https://pypi.org/project/vobject/ - v0.9.6.1 - 2018-07-18
-    "ignore:invalid escape sequence:SyntaxWarning:.*vobject.base",
     # https://pypi.org/project/webrtcvad/ - v2.0.10 - 2017-01-08
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:webrtcvad",
 ]
