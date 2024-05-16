@@ -53,7 +53,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _createOnkyoEntry(self, receiver: eiscp.eISCP):
         name = f"{receiver.info[EISCP_MODEL_NAME]} {receiver.info[EISCP_IDENTIFIER]}"
-        return self.async_create_entry(
+        entry = self.async_create_entry(
             title=name,
             data={
                 CONF_HOST: receiver.host,
@@ -63,6 +63,8 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_MAC: receiver.info[EISCP_IDENTIFIER],
             },
         )
+        receiver.disconnect()
+        return entry
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -78,22 +80,24 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             if not is_ip_address(user_input[CONF_HOST]):
                 errors["base"] = "no_ip"
             else:
+                receiver = None
+                unique_id = None
                 try:
                     receiver = eiscp.eISCP(user_input[CONF_HOST], user_input[CONF_PORT])
+                    unique_id = receiver.info[EISCP_IDENTIFIER]
                 except TypeError:
                     # Info is None when connection fails
                     errors["base"] = "cannot_connect"
-                else:
-                    await self.async_set_unique_id(
-                        receiver.info[EISCP_IDENTIFIER], raise_on_progress=False
-                    )
+                finally:
+                    if receiver:
+                        receiver.disconnect()
+
+                if unique_id:
+                    await self.async_set_unique_id(unique_id, raise_on_progress=False)
                     self._abort_if_unique_id_configured(
                         updates={CONF_HOST: user_input[CONF_HOST]}
                     )
                     return self._createOnkyoEntry(receiver)
-
-                finally:
-                    receiver.disconnect()
 
         return self.async_show_form(
             step_id="user",
@@ -127,26 +131,26 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         discovered_devices = eiscp.eISCP.discover()
         _LOGGER.debug("eISCP discovery result: %s", discovered_devices)
 
-        self._discovered_devices = {
-            device.info[EISCP_IDENTIFIER]: device for device in discovered_devices
-        }
+        self._discovered_devices = {}
+        devices_names = {}
+        for device in discovered_devices:
+            info = device.info
+            identifier = info[EISCP_IDENTIFIER]
+            host = device.host
 
-        devices_name = {
-            device.info[
-                EISCP_IDENTIFIER
-            ]: f"{BRAND_NAME} {device.info[EISCP_MODEL_NAME]} ({device.host}:{device.port})"
-            for host, device in self._discovered_devices.items()
-            if device.info[EISCP_IDENTIFIER] not in current_unique_ids
-            and host not in current_hosts
-        }
+            self._discovered_devices[identifier] = device
+            if identifier not in current_unique_ids and host not in current_hosts:
+                devices_names[identifier] = (
+                    f"{BRAND_NAME} {device.info[EISCP_MODEL_NAME]} ({host}:{device.port})"
+                )
 
         # Check if there is at least one device
-        if not devices_name:
+        if not devices_names:
             return self.async_abort(reason="no_devices_found")
 
         return self.async_show_form(
             step_id="pick_device",
-            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
+            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_names)}),
         )
 
     @staticmethod
