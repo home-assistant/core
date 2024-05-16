@@ -122,6 +122,12 @@
       "network_ssid": {
         "name": "Wi-Fi SSID"
       },
+      "position_deebot": {
+        "name": "Last Position"
+      },
+      "position_charger": {
+        "name": "Charger Position"
+      },
       "stats_area": {
         "name": "Area cleaned"
       },

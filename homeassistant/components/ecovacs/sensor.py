@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Generic
 
 from deebot_client.capabilities import Capabilities, CapabilityEvent, CapabilityLifeSpan
@@ -283,7 +284,7 @@ class EcovacsPositionSensor(
         async def on_event(event: PositionsEvent) -> None:
             for position in event.positions:
                 if position.type == self.entity_description.position_type:
-                    self._attr_native_value = position.type
+                    self._attr_native_value = datetime.now()
                     self._attr_extra_state_attributes = {
                         ATTRIBUTE_POSITION_X: position.x,
                         ATTRIBUTE_POSITION_Y: position.y,
