@@ -1,17 +1,20 @@
 """Intents for the media_player integration."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import time
+from typing import Final
 
 import voluptuous as vol
 
 from homeassistant.const import (
+    EVENT_STATE_CHANGED,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_VOLUME_SET,
+    STATE_PAUSED,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
 from homeassistant.helpers import intent
 
 from . import ATTR_MEDIA_VOLUME_LEVEL, DOMAIN
@@ -22,21 +25,44 @@ INTENT_MEDIA_UNPAUSE = "HassMediaUnpause"
 INTENT_MEDIA_NEXT = "HassMediaNext"
 INTENT_SET_VOLUME = "HassSetVolume"
 
-DATA_LAST_PAUSED = f"{DOMAIN}.last_paused"
+_PAUSE_DELAY: Final = 5
 
 
-@dataclass(frozen=True)
+@dataclass
 class LastPaused:
     """Information about last media players that were paused by voice."""
 
-    timestamp: float
-    entity_ids: set[str]
+    timestamp: float | None = None
+    entity_ids: set[str] = field(default_factory=set)
+    waiting_entity_ids: set[str] = field(default_factory=set)
 
 
 async def async_setup_intents(hass: HomeAssistant) -> None:
     """Set up the media_player intents."""
-    intent.async_register(hass, MediaUnpauseHandler())
-    intent.async_register(hass, MediaPauseHandler())
+    last_paused = LastPaused()
+
+    def state_changed_listener(event: Event[EventStateChangedData]) -> None:
+        """Update last paused timestamp as expected media players enter their paused states."""
+        if (
+            ((state := event.data.get("new_state")) is None)
+            or (state.domain != DOMAIN)
+            or (state.state != STATE_PAUSED)
+        ):
+            return
+
+        entity_id = state.entity_id
+        if entity_id not in last_paused.waiting_entity_ids:
+            return
+
+        # Move out of waiting and bump timestamp
+        last_paused.waiting_entity_ids.remove(entity_id)
+        last_paused.entity_ids.add(entity_id)
+        last_paused.timestamp = time.time()
+
+    hass.bus.async_listen(EVENT_STATE_CHANGED, state_changed_listener)
+
+    intent.async_register(hass, MediaUnpauseHandler(last_paused))
+    intent.async_register(hass, MediaPauseHandler(last_paused))
     intent.async_register(
         hass,
         intent.ServiceIntentHandler(
@@ -69,7 +95,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
 class MediaPauseHandler(intent.ServiceIntentHandler):
     """Handler for pause intent. Records last paused media players."""
 
-    def __init__(self) -> None:
+    def __init__(self, last_paused: LastPaused) -> None:
         """Initialize handler."""
         super().__init__(
             INTENT_MEDIA_PAUSE,
@@ -79,6 +105,7 @@ class MediaPauseHandler(intent.ServiceIntentHandler):
             required_features=MediaPlayerEntityFeature.PAUSE,
             required_states={MediaPlayerState.PLAYING},
         )
+        self.last_paused = last_paused
 
     async def async_handle_states(
         self,
@@ -88,13 +115,13 @@ class MediaPauseHandler(intent.ServiceIntentHandler):
         match_preferences: intent.MatchTargetsPreferences | None = None,
     ) -> intent.IntentResponse:
         """Record last paused media players."""
-        hass = intent_obj.hass
-
         if match_result.is_match:
             # Save entity ids of paused media players
-            hass.data[DATA_LAST_PAUSED] = LastPaused(
-                timestamp=time.time(),
-                entity_ids={s.entity_id for s in match_result.states},
+            self.last_paused.timestamp = time.time()
+            self.last_paused.entity_ids.clear()
+            self.last_paused.waiting_entity_ids.clear()
+            self.last_paused.waiting_entity_ids.update(
+                s.entity_id for s in match_result.states
             )
 
         return await super().async_handle_states(
@@ -105,7 +132,7 @@ class MediaPauseHandler(intent.ServiceIntentHandler):
 class MediaUnpauseHandler(intent.ServiceIntentHandler):
     """Handler for unpause/resume intent. Uses last paused media players."""
 
-    def __init__(self) -> None:
+    def __init__(self, last_paused: LastPaused) -> None:
         """Initialize handler."""
         super().__init__(
             INTENT_MEDIA_UNPAUSE,
@@ -114,6 +141,7 @@ class MediaUnpauseHandler(intent.ServiceIntentHandler):
             required_domains={DOMAIN},
             required_states={MediaPlayerState.PAUSED},
         )
+        self.last_paused = last_paused
 
     async def async_handle_states(
         self,
@@ -123,18 +151,17 @@ class MediaUnpauseHandler(intent.ServiceIntentHandler):
         match_preferences: intent.MatchTargetsPreferences | None = None,
     ) -> intent.IntentResponse:
         """Unpause last paused media players."""
-        hass = intent_obj.hass
-
         if (
             match_result.is_match
             and (not match_constraints.name)
-            and (last_paused := hass.data.get(DATA_LAST_PAUSED))
+            and (self.last_paused.timestamp is not None)
+            and self.last_paused.entity_ids
         ):
             # Check for a media player that was paused more recently than the
             # ones by voice.
             recent_state: State | None = None
             for state in match_result.states:
-                if state.last_changed_timestamp <= last_paused.timestamp:
+                if state.last_changed_timestamp <= self.last_paused.timestamp:
                     continue
 
                 if (recent_state is None) or (
@@ -145,12 +172,14 @@ class MediaUnpauseHandler(intent.ServiceIntentHandler):
             if recent_state is not None:
                 # Resume the more recently paused media player (outside of voice).
                 match_result.states = [recent_state]
-                hass.data.pop(DATA_LAST_PAUSED)
+                self.last_paused.timestamp = None
+                self.last_paused.entity_ids.clear()
+                self.last_paused.waiting_entity_ids.clear()
             else:
                 # Resume only the previously paused media players if they are in the
                 # targeted set.
                 targeted_ids = {s.entity_id for s in match_result.states}
-                overlapping_ids = targeted_ids.intersection(last_paused.entity_ids)
+                overlapping_ids = targeted_ids.intersection(self.last_paused.entity_ids)
                 if overlapping_ids:
                     match_result.states = [
                         s for s in match_result.states if s.entity_id in overlapping_ids

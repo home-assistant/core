@@ -536,6 +536,34 @@ async def test_manual_pause_unpause(
     device_2 = entity_registry.async_update_entity(device_2.entity_id, name="device 2")
     hass.states.async_set(device_2.entity_id, STATE_PLAYING, attributes=attributes)
 
+    # Pause both devices by voice
+    calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PAUSE)
+    response = await intent.async_handle(
+        hass,
+        "test",
+        media_player_intent.INTENT_MEDIA_PAUSE,
+    )
+    await hass.async_block_till_done()
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 2
+
+    hass.states.async_set(device_1.entity_id, STATE_PAUSED, attributes=attributes)
+    hass.states.async_set(device_2.entity_id, STATE_PAUSED, attributes=attributes)
+
+    # Unpause both devices by voice
+    calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PLAY)
+    response = await intent.async_handle(
+        hass,
+        "test",
+        media_player_intent.INTENT_MEDIA_UNPAUSE,
+    )
+    await hass.async_block_till_done()
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 2
+
+    hass.states.async_set(device_1.entity_id, STATE_PLAYING, attributes=attributes)
+    hass.states.async_set(device_2.entity_id, STATE_PLAYING, attributes=attributes)
+
     # Pause the first device by voice
     calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PAUSE)
     response = await intent.async_handle(
