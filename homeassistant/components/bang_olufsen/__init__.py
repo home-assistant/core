@@ -61,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         TimeoutError,
     ) as error:
         await client.close_api_client()
-        raise ConfigEntryNotReady(f"Unable to connect to {entry.title}")
+        raise ConfigEntryNotReady(f"Unable to connect to {entry.title}") from error
 
     websocket = BangOlufsenWebsocket(hass, entry, client)
 

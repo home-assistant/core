@@ -489,9 +489,9 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         if len(peers) > 0:
             self._beolink_attribute["beolink"]["peers"] = {}
             for peer in peers:
-                self._beolink_attribute["beolink"]["peers"][
-                    peer.friendly_name
-                ] = peer.jid
+                self._beolink_attribute["beolink"]["peers"][peer.friendly_name] = (
+                    peer.jid
+                )
 
         self._remote_leader = self._playback_metadata.remote_leader
 
@@ -542,14 +542,14 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                     )
                     for peer in peers:
                         if peer.jid == beolink_listener.jid:
-                            beolink_listeners_attribute[
-                                peer.friendly_name
-                            ] = beolink_listener.jid
+                            beolink_listeners_attribute[peer.friendly_name] = (
+                                beolink_listener.jid
+                            )
                             break
 
-                self._beolink_attribute["beolink"][
-                    "listeners"
-                ] = beolink_listeners_attribute
+                self._beolink_attribute["beolink"]["listeners"] = (
+                    beolink_listeners_attribute
+                )
 
         self._attr_group_members = group_members
 
@@ -562,11 +562,9 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         unique_id = jid.split(".")[2].split("@")[0]
 
         entity_registry = er.async_get(self.hass)
-        entity_id = entity_registry.async_get_entity_id(
+        return entity_registry.async_get_entity_id(
             Platform.MEDIA_PLAYER, DOMAIN, unique_id
         )
-
-        return entity_id
 
     def _get_beolink_jid(self, entity_id: str) -> str | None:
         """Get beolink JID from entity_id."""
