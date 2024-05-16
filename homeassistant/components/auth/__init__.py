@@ -694,3 +694,25 @@ def websocket_sign_path(
             },
         )
     )
+
+
+@callback
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "auth/remove_expiry_date_refresh_token",
+        vol.Required("refresh_token_id"): str,
+    }
+)
+@websocket_api.ws_require_user()
+def websocket_remove_expiry_date_refresh_token(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle a remove expiry date from refresh token request."""
+    refresh_token = connection.user.refresh_tokens.get(msg["refresh_token_id"])
+
+    if refresh_token is None:
+        connection.send_error(msg["id"], "invalid_token_id", "Received invalid token")
+        return
+
+    hass.auth.async_remove_expiry_date(refresh_token)
+    connection.send_result(msg["id"], {})
