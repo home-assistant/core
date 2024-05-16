@@ -277,9 +277,7 @@ async def test_media_player_play_media(
         },
         blocking=True,
     )
-    mock_api.send_launch_app_command.assert_called_with(
-        "market://launch?id=tv.twitch.android.app"
-    )
+    mock_api.send_launch_app_command.assert_called_with("tv.twitch.android.app")
 
     with pytest.raises(ValueError):
         await hass.services.async_call(

@@ -176,12 +176,8 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
             await self._channel_set_task
             return
 
-        if media_type == MediaType.URL:
+        if media_type in [MediaType.URL, MediaType.APP]:
             self._send_launch_app_command(media_id)
-            return
-
-        if media_type == MediaType.APP:
-            self._send_launch_app_command(f"market://launch?id={media_id}")
             return
 
         raise ValueError(f"Invalid media type: {media_type}")
