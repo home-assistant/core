@@ -200,9 +200,6 @@
       "ptz_pan_position": {
         "default": "mdi:pan"
       },
-      "battery_percent": {
-        "default": "mdi:battery"
-      },
       "battery_temperature": {
         "default": "mdi:thermometer"
       },
