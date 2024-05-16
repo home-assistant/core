@@ -1,6 +1,7 @@
 """Intents for the media_player integration."""
 
 from dataclasses import dataclass
+import time
 
 import voluptuous as vol
 
@@ -12,7 +13,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import intent
-from homeassistant.util import dt as dt_util
 
 from . import ATTR_MEDIA_VOLUME_LEVEL, DOMAIN
 from .const import MediaPlayerEntityFeature, MediaPlayerState
@@ -93,7 +93,7 @@ class MediaPauseHandler(intent.ServiceIntentHandler):
         if match_result.is_match:
             # Save entity ids of paused media players
             hass.data[DATA_LAST_PAUSED] = LastPaused(
-                timestamp=dt_util.now().timestamp(),
+                timestamp=time.time(),
                 entity_ids={s.entity_id for s in match_result.states},
             )
 
