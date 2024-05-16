@@ -2044,7 +2044,7 @@ def _fast_build_sum_list(
     ]
 
 
-def _sorted_statistics_to_dict(
+def _sorted_statistics_to_dict(  # noqa: C901
     hass: HomeAssistant,
     session: Session,
     stats: Sequence[Row[Any]],
@@ -2198,9 +2198,14 @@ def _async_import_statistics(
     for statistic in statistics:
         start = statistic["start"]
         if start.tzinfo is None or start.tzinfo.utcoffset(start) is None:
-            raise HomeAssistantError("Naive timestamp")
+            raise HomeAssistantError(
+                "Naive timestamp: no or invalid timezone info provided"
+            )
         if start.minute != 0 or start.second != 0 or start.microsecond != 0:
-            raise HomeAssistantError("Invalid timestamp")
+            raise HomeAssistantError(
+                "Invalid timestamp: timestamps must be from the top of the hour (minutes and seconds = 0)"
+            )
+
         statistic["start"] = dt_util.as_utc(start)
 
         if "last_reset" in statistic and statistic["last_reset"] is not None:

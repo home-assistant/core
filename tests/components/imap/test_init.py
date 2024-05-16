@@ -76,7 +76,7 @@ async def test_entry_startup_and_unload(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert await config_entry.async_unload(hass)
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -449,7 +449,7 @@ async def test_handle_cleanup_exception(
     # Fail cleaning up
     mock_imap_protocol.close.side_effect = imap_close
 
-    assert await config_entry.async_unload(hass)
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert "Error while cleaning up imap connection" in caplog.text
 

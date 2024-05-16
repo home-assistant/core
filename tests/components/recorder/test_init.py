@@ -159,14 +159,18 @@ async def test_shutdown_before_startup_finishes(
     await recorder_helper.async_wait_recorder(hass)
     instance = get_instance(hass)
 
-    session = await hass.async_add_executor_job(instance.get_session)
+    session = await instance.async_add_executor_job(instance.get_session)
 
     with patch.object(instance, "engine"):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
         await hass.async_block_till_done()
         await hass.async_stop()
 
-    run_info = await hass.async_add_executor_job(run_information_with_session, session)
+    def _run_information_with_session():
+        instance.recorder_and_worker_thread_ids.add(threading.get_ident())
+        return run_information_with_session(session)
+
+    run_info = await instance.async_add_executor_job(_run_information_with_session)
 
     assert run_info.run_id == 1
     assert run_info.start is not None
@@ -1693,7 +1697,8 @@ async def test_database_corruption_while_running(
     await hass.async_block_till_done()
     caplog.clear()
 
-    original_start_time = get_instance(hass).recorder_runs_manager.recording_start
+    instance = get_instance(hass)
+    original_start_time = instance.recorder_runs_manager.recording_start
 
     hass.states.async_set("test.lost", "on", {})
 
@@ -1737,11 +1742,11 @@ async def test_database_corruption_while_running(
             assert db_states[0].event_id is None
             return db_states[0].to_native()
 
-    state = await hass.async_add_executor_job(_get_last_state)
+    state = await instance.async_add_executor_job(_get_last_state)
     assert state.entity_id == "test.two"
     assert state.state == "on"
 
-    new_start_time = get_instance(hass).recorder_runs_manager.recording_start
+    new_start_time = instance.recorder_runs_manager.recording_start
     assert original_start_time < new_start_time
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
@@ -1850,7 +1855,7 @@ async def test_database_lock_and_unlock(
     assert instance.unlock_database()
 
     await task
-    db_events = await hass.async_add_executor_job(_get_db_events)
+    db_events = await instance.async_add_executor_job(_get_db_events)
     assert len(db_events) == 1
 
 
