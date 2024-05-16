@@ -14,7 +14,7 @@
     },
     "abort": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "An unknown error occurred"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "no_integration_selected": "You must select at least one integration to track"
