@@ -33,6 +33,7 @@ class AlarmDecoderSensor(AlarmDecoderEntity, SensorEntity):
     _attr_should_poll = False
 
     def __init__(self, client):
+        """Initialize the alarm decoder sensor."""
         super().__init__(client)
         self._attr_unique_id = f"{client.serial_number}-display"
 

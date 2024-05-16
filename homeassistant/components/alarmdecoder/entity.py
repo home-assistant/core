@@ -1,4 +1,5 @@
 """Support for AlarmDecoder-based alarm control panels entity."""
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import (
@@ -11,6 +12,7 @@ class AlarmDecoderEntity(Entity):
     _attr_has_entity_name = True
     
     def __init__(self, client):
+        """Initialize the alarm decoder entity."""
         self._client = client
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._client.serial_number)},
