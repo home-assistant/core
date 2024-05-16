@@ -393,15 +393,22 @@ async def test_setup_get_xml(hass: HomeAssistant) -> None:
 
 
 @respx.mock
+@pytest.mark.parametrize(
+    ("content"),
+    [
+        (""),
+        ("<open></close>"),
+    ],
+)
 async def test_setup_get_bad_xml(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, content: str
 ) -> None:
     """Test attributes get extracted from a XML result with bad xml."""
 
     respx.get("http://localhost").respond(
         status_code=HTTPStatus.OK,
         headers={"content-type": "text/xml"},
-        content="<open></close>",
+        content=content,
     )
     assert await async_setup_component(
         hass,
@@ -423,6 +430,7 @@ async def test_setup_get_bad_xml(
     state = hass.states.get("binary_sensor.foo")
 
     assert state.state == STATE_OFF
+    assert "REST xml result could not be parsed" in caplog.text
 
 
 @respx.mock
