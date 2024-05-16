@@ -4,13 +4,14 @@ import json
 from typing import Any, Literal
 
 import openai
+import voluptuous as vol
 from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import intent, llm, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import ulid
@@ -169,19 +170,19 @@ class OpenAIConversationEntity(
                         language=user_input.language,
                         assistant=conversation.DOMAIN,
                     )
-                    function_response = await llm.async_call_tool(self.hass, tool_input)
-                except Exception as e:  # noqa: BLE001
-                    function_response = {"error": type(e).__name__}
+                    tool_response = await llm.async_call_tool(self.hass, tool_input)
+                except (HomeAssistantError, vol.Invalid) as e:
+                    tool_response = {"error": type(e).__name__}
                     if str(e):
-                        function_response["error_text"] = str(e)
+                        tool_response["error_text"] = str(e)
 
-                LOGGER.info("Tool response: %s", function_response)
+                LOGGER.info("Tool response: %s", tool_response)
                 messages.append(
                     {
                         "role": "tool",
                         "tool_call_id": tool_call.id,
                         "name": tool_call.function.name,
-                        "content": json.dumps(function_response),
+                        "content": json.dumps(tool_response),
                     }
                 )
 
