@@ -90,9 +90,9 @@ def async_generate_id() -> str:
 def async_generate_url(
     hass: HomeAssistant,
     webhook_id: str,
-    allow_ip: bool | None = None,
     allow_internal: bool = True,
-    allow_external: bool = False,
+    allow_external: bool = True,
+    allow_ip: bool | None = None,
     prefer_external: bool = False,
 ) -> str:
     """Generate the full URL for a webhook_id."""
