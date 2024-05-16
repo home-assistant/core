@@ -35,6 +35,7 @@ from time import monotonic
 from typing import (
     TYPE_CHECKING,
     Any,
+    Final,
     Generic,
     NotRequired,
     ParamSpec,
@@ -325,7 +326,7 @@ class HassJob(Generic[_P, _R_co]):
         job_type: HassJobType | None = None,
     ) -> None:
         """Create a job object."""
-        self.target = target
+        self.target: Final = target
         self.name = name
         self._cancel_on_shutdown = cancel_on_shutdown
         self._job_type = job_type
@@ -746,9 +747,7 @@ class HomeAssistant:
         # https://github.com/home-assistant/core/pull/71960
         if hassjob.job_type is HassJobType.Coroutinefunction:
             if TYPE_CHECKING:
-                hassjob.target = cast(
-                    Callable[..., Coroutine[Any, Any, _R]], hassjob.target
-                )
+                hassjob = cast(HassJob[..., Coroutine[Any, Any, _R]], hassjob)
             task = create_eager_task(
                 hassjob.target(*args), name=hassjob.name, loop=self.loop
             )
@@ -756,12 +755,12 @@ class HomeAssistant:
                 return task
         elif hassjob.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
-                hassjob.target = cast(Callable[..., _R], hassjob.target)
+                hassjob = cast(HassJob[..., _R], hassjob)
             self.loop.call_soon(hassjob.target, *args)
             return None
         else:
             if TYPE_CHECKING:
-                hassjob.target = cast(Callable[..., _R], hassjob.target)
+                hassjob = cast(HassJob[..., _R], hassjob)
             task = self.loop.run_in_executor(None, hassjob.target, *args)
 
         task_bucket = self._background_tasks if background else self._tasks
@@ -936,7 +935,7 @@ class HomeAssistant:
         # https://github.com/home-assistant/core/pull/71960
         if hassjob.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
-                hassjob.target = cast(Callable[..., _R], hassjob.target)
+                hassjob = cast(HassJob[..., _R], hassjob)
             hassjob.target(*args)
             return None
 
