@@ -2190,6 +2190,9 @@ vilfo-api-client==0.5.0
 # homeassistant.components.voip
 voip-utils==0.1.0
 
+# homeassistant.components.openai_conversation
+voluptuous-openapi==0.0.3
+
 # homeassistant.components.volvooncall
 volvooncall==0.10.3
 

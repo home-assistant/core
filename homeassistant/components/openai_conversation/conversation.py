@@ -1,15 +1,18 @@
 """Conversation support for OpenAI."""
 
-from typing import Literal
+import json
+from typing import Any, Literal
 
 import openai
+from voluptuous_openapi import convert
 
+from homeassistant import setup
 from homeassistant.components import assist_pipeline, conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import intent, template
+from homeassistant.helpers import intent, llm, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import ulid
 
@@ -87,7 +90,9 @@ class OpenAIConversationEntity(
         else:
             conversation_id = ulid.ulid_now()
             try:
-                prompt = self._async_generate_prompt(raw_prompt)
+                prompt = self._async_generate_prompt(
+                    raw_prompt, user_input.device_id, user_input.context.user_id
+                )
             except TemplateError as err:
                 LOGGER.error("Error rendering prompt: %s", err)
                 intent_response = intent.IntentResponse(language=user_input.language)
@@ -106,41 +111,101 @@ class OpenAIConversationEntity(
 
         client = self.hass.data[DOMAIN][self.entry.entry_id]
 
-        try:
-            result = await client.chat.completions.create(
-                model=model,
-                messages=messages,
-                max_tokens=max_tokens,
-                top_p=top_p,
-                temperature=temperature,
-                user=conversation_id,
-            )
-        except openai.OpenAIError as err:
-            intent_response = intent.IntentResponse(language=user_input.language)
-            intent_response.async_set_error(
-                intent.IntentResponseErrorCode.UNKNOWN,
-                f"Sorry, I had a problem talking to OpenAI: {err}",
-            )
-            return conversation.ConversationResult(
-                response=intent_response, conversation_id=conversation_id
-            )
+        if "intent" not in self.hass.config.components:
+            await setup.async_setup_component(self.hass, "intent", {})
 
-        LOGGER.debug("Response %s", result)
-        response = result.choices[0].message.model_dump(include={"role", "content"})
-        messages.append(response)
+        def format_tool(tool: llm.Tool) -> dict[str, Any]:
+            """Format tool specification."""
+            tool_spec = {"name": tool.name}
+            if tool.description:
+                tool_spec["description"] = tool.description
+            tool_spec["parameters"] = convert(tool.parameters)
+            return {"type": "function", "function": tool_spec}
+
+        tools: list[dict[str, Any]] | None = [
+            format_tool(tool) for tool in llm.async_get_tools(self.hass)
+        ]
+        if not tools:
+            tools = None
+
+        while True:
+            try:
+                result = await client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    tools=tools,
+                    max_tokens=max_tokens,
+                    top_p=top_p,
+                    temperature=temperature,
+                    user=conversation_id,
+                )
+            except openai.OpenAIError as err:
+                intent_response = intent.IntentResponse(language=user_input.language)
+                intent_response.async_set_error(
+                    intent.IntentResponseErrorCode.UNKNOWN,
+                    f"Sorry, I had a problem talking to OpenAI: {err}",
+                )
+                return conversation.ConversationResult(
+                    response=intent_response, conversation_id=conversation_id
+                )
+
+            LOGGER.debug("Response %s", result)
+            response = result.choices[0].message
+            messages.append(response)
+            tool_calls = response.tool_calls
+
+            if not tool_calls:
+                break
+
+            for tool_call in tool_calls:
+                LOGGER.info(
+                    "Tool call: %s(%s)",
+                    tool_call.function.name,
+                    tool_call.function.arguments,
+                )
+                try:
+                    tool_input = llm.ToolInput(
+                        tool_name=tool_call.function.name,
+                        tool_args=json.loads(tool_call.function.arguments),
+                        platform=DOMAIN,
+                        context=user_input.context,
+                        user_prompt=user_input.text,
+                        language=user_input.language,
+                        assistant=conversation.DOMAIN,
+                    )
+                    function_response = await llm.async_call_tool(self.hass, tool_input)
+                except Exception as e:  # noqa: BLE001
+                    function_response = {"error": type(e).__name__}
+                    if str(e):
+                        function_response["error_text"] = str(e)
+
+                LOGGER.info("Tool response: %s", function_response)
+                messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "name": tool_call.function.name,
+                        "content": json.dumps(function_response),
+                    }
+                )
+
         self.history[conversation_id] = messages
 
         intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_speech(response["content"])
+        intent_response.async_set_speech(response.content)
         return conversation.ConversationResult(
             response=intent_response, conversation_id=conversation_id
         )
 
-    def _async_generate_prompt(self, raw_prompt: str) -> str:
+    def _async_generate_prompt(
+        self, raw_prompt: str, device_id: str | None, user_id: str | None
+    ) -> str:
         """Generate a prompt for the user."""
         return template.Template(raw_prompt, self.hass).async_render(
             {
                 "ha_name": self.hass.config.location_name,
+                "device_id": device_id,
+                "user_id": user_id,
             },
             parse_result=False,
         )
