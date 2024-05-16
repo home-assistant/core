@@ -126,7 +126,7 @@ class SetTemperatureIntent(intent.ServiceIntentHandler):
             INTENT_SET_TEMPERATURE,
             DOMAIN,
             SERVICE_SET_TEMPERATURE,
-            extra_slots={ATTR_TEMPERATURE: vol.All(vol.Range(min=-100, max=200))},
+            required_slots={ATTR_TEMPERATURE: vol.All(vol.Range(min=-100, max=200))},
         )
 
     async def async_call_service(
