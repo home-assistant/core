@@ -15,6 +15,12 @@
       }
     },
     "sensor": {
+      "flood_warning_level": {
+        "default": "mdi:alert-outline"
+      },
+      "flood_alarm_level": {
+        "default": "mdi:alert"
+      },
       "water_level": {
         "default": "mdi:waves"
       },

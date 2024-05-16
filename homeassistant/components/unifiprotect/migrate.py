@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from itertools import chain
 import logging
+from typing import TypedDict
 
 from pyunifiprotect import ProtectApiClient
 from pyunifiprotect.data import Bootstrap
-from typing_extensions import TypedDict
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity

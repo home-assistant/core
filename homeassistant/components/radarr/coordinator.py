@@ -46,7 +46,7 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
     """Data update coordinator for the Radarr integration."""
 
     config_entry: ConfigEntry
-    update_interval = timedelta(seconds=30)
+    _update_interval = timedelta(seconds=30)
 
     def __init__(
         self,
@@ -59,7 +59,7 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
             hass=hass,
             logger=LOGGER,
             name=DOMAIN,
-            update_interval=self.update_interval,
+            update_interval=self._update_interval,
         )
         self.api_client = api_client
         self.host_configuration = host_configuration
@@ -133,7 +133,7 @@ class QueueDataUpdateCoordinator(RadarrDataUpdateCoordinator):
 class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
     """Calendar update coordinator."""
 
-    update_interval = timedelta(hours=1)
+    _update_interval = timedelta(hours=1)
 
     def __init__(
         self,
