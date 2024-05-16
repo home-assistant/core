@@ -37,6 +37,9 @@ def base_unique_id(latitude: float, longitude: float) -> str:
     return f"{latitude}_{longitude}"
 
 
+NWSConfigEntry = ConfigEntry["NWSData"]
+
+
 @dataclass
 class NWSData:
     """Data for the National Weather Service integration."""
@@ -47,7 +50,7 @@ class NWSData:
     coordinator_forecast_hourly: TimestampDataUpdateCoordinator[None]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
     """Set up a National Weather Service entry."""
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
@@ -130,8 +133,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
         ),
     )
-    nws_hass_data = hass.data.setdefault(DOMAIN, {})
-    nws_hass_data[entry.entry_id] = NWSData(
+    entry.runtime_data = NWSData(
         nws_data,
         coordinator_observation,
         coordinator_forecast,
@@ -161,12 +163,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-        if len(hass.data[DOMAIN]) == 0:
-            hass.data.pop(DOMAIN)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 def device_info(latitude: float, longitude: float) -> DeviceInfo:
