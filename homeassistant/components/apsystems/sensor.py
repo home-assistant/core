@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import ApsystemsConfigEntry, ApSystemsData
-from .entity import ApsystemsEntity
+from .entity import ApSystemsCoordinatorEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -128,7 +128,7 @@ async def async_setup_entry(
     )
 
 
-class ApSystemsSensorWithDescription(ApsystemsEntity, SensorEntity):
+class ApSystemsSensorWithDescription(ApSystemsCoordinatorEntity, SensorEntity):
     """Base sensor to be used with description."""
 
     entity_description: ApsystemsLocalApiSensorDescription
