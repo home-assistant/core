@@ -146,7 +146,7 @@ adax==0.4.0
 adb-shell[async]==0.4.4
 
 # homeassistant.components.alarmdecoder
-adext==0.4.2
+adext==0.4.3
 
 # homeassistant.components.adguard
 adguardhome==0.6.3
@@ -240,7 +240,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==24.3.0
+aioesphomeapi==24.4.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0

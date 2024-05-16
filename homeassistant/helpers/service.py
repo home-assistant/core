@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Iterable
+from collections.abc import Awaitable, Callable, Coroutine, Iterable
 import dataclasses
 from enum import Enum
 from functools import cache, partial
 import logging
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, TypedDict, TypeGuard, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeGuard, TypeVar, cast
 
 import voluptuous as vol
 
@@ -1156,7 +1156,7 @@ def verify_domain_control(
     return decorator
 
 
-class ReloadServiceHelper:
+class ReloadServiceHelper(Generic[_T]):
     """Helper for reload services.
 
     The helper has the following purposes:
@@ -1166,7 +1166,7 @@ class ReloadServiceHelper:
 
     def __init__(
         self,
-        service_func: Callable[[ServiceCall], Awaitable],
+        service_func: Callable[[ServiceCall], Coroutine[Any, Any, Any]],
         reload_targets_func: Callable[[ServiceCall], set[_T]],
     ) -> None:
         """Initialize ReloadServiceHelper."""
