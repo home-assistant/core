@@ -68,9 +68,9 @@ class StreamState:
         """Initialize StreamState."""
         self._stream_id: int = 0
         self.hass = hass
-        self._outputs_callback: Callable[
-            [], Mapping[str, StreamOutput]
-        ] = outputs_callback
+        self._outputs_callback: Callable[[], Mapping[str, StreamOutput]] = (
+            outputs_callback
+        )
         # sequence gets incremented before the first segment so the first segment
         # has a sequence number of 0.
         self._sequence = -1
@@ -583,16 +583,16 @@ def stream_worker(
         # dts. Use "or 1" to deal with this.
         start_dts = next_video_packet.dts - (next_video_packet.duration or 1)
         first_keyframe.dts = first_keyframe.pts = start_dts
-    except StreamWorkerError as ex:
+    except StreamWorkerError:
         container.close()
-        raise ex
+        raise
     except StopIteration as ex:
         container.close()
         raise StreamEndedError("Stream ended; no additional packets") from ex
     except av.AVError as ex:
         container.close()
         raise StreamWorkerError(
-            "Error demuxing stream while finding first packet: %s" % str(ex)
+            f"Error demuxing stream while finding first packet: {ex!s}"
         ) from ex
 
     muxer = StreamMuxer(
@@ -612,12 +612,12 @@ def stream_worker(
         while not quit_event.is_set():
             try:
                 packet = next(container_packets)
-            except StreamWorkerError as ex:
-                raise ex
+            except StreamWorkerError:
+                raise
             except StopIteration as ex:
                 raise StreamEndedError("Stream ended; no additional packets") from ex
             except av.AVError as ex:
-                raise StreamWorkerError("Error demuxing stream: %s" % str(ex)) from ex
+                raise StreamWorkerError(f"Error demuxing stream: {ex!s}") from ex
 
             muxer.mux_packet(packet)
 

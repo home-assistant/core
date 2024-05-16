@@ -1,4 +1,5 @@
 """Fixtures for the button entity component tests."""
+
 import logging
 
 import pytest

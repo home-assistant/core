@@ -48,17 +48,13 @@ class HarmonyData(HarmonySubscriberMixin):
     def activity_names(self) -> list[str]:
         """Names of all the remotes activities."""
         activity_infos = self.activities
-        activities = [activity["label"] for activity in activity_infos]
-
-        return activities
+        return [activity["label"] for activity in activity_infos]
 
     @property
     def device_names(self):
         """Names of all of the devices connected to the hub."""
         device_infos = self._client.config.get("device", [])
-        devices = [device["label"] for device in device_infos]
-
-        return devices
+        return [device["label"] for device in device_infos]
 
     @property
     def unique_id(self):

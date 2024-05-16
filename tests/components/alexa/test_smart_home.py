@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.components import camera
 from homeassistant.components.alexa import smart_home, state_report
-import homeassistant.components.camera as camera
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 from homeassistant.components.media_player import MediaPlayerEntityFeature

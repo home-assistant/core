@@ -1,4 +1,5 @@
 """Constants for the Downloader component."""
+
 import logging
 
 _LOGGER = logging.getLogger(__package__)

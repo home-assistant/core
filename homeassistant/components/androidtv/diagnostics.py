@@ -7,12 +7,12 @@ from typing import Any
 import attr
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import ANDROID_DEV, DOMAIN, PROP_ETHMAC, PROP_SERIALNO, PROP_WIFIMAC
+from . import AndroidTVConfigEntry
+from .const import DOMAIN, PROP_ETHMAC, PROP_SERIALNO, PROP_WIFIMAC
 
 TO_REDACT = {CONF_UNIQUE_ID}  # UniqueID contain MAC Address
 TO_REDACT_DEV = {ATTR_CONNECTIONS, ATTR_IDENTIFIERS}
@@ -20,14 +20,13 @@ TO_REDACT_DEV_PROP = {PROP_ETHMAC, PROP_SERIALNO, PROP_WIFIMAC}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: AndroidTVConfigEntry
 ) -> dict[str, dict[str, Any]]:
     """Return diagnostics for a config entry."""
     data = {"entry": async_redact_data(entry.as_dict(), TO_REDACT)}
-    hass_data = hass.data[DOMAIN][entry.entry_id]
 
     # Get information from AndroidTV library
-    aftv = hass_data[ANDROID_DEV]
+    aftv = entry.runtime_data.aftv
     data["device_properties"] = {
         **async_redact_data(aftv.device_properties, TO_REDACT_DEV_PROP),
         "device_class": aftv.DEVICE_CLASS,

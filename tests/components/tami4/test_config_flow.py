@@ -20,7 +20,7 @@ async def test_step_user_valid_number(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -28,7 +28,7 @@ async def test_step_user_valid_number(
         result["flow_id"],
         user_input={CONF_PHONE: "+972555555555"},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "otp"
     assert result["errors"] == {}
 
@@ -44,7 +44,7 @@ async def test_step_user_invalid_number(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -52,7 +52,7 @@ async def test_step_user_invalid_number(
         result["flow_id"],
         user_input={CONF_PHONE: "+275123"},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_phone"}
 
@@ -74,7 +74,7 @@ async def test_step_user_exception(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -82,7 +82,7 @@ async def test_step_user_exception(
         result["flow_id"],
         user_input={CONF_PHONE: "+972555555555"},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": expected_error}
 
@@ -99,7 +99,7 @@ async def test_step_otp_valid(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -107,7 +107,7 @@ async def test_step_otp_valid(
         result["flow_id"],
         user_input={CONF_PHONE: "+972555555555"},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "otp"
     assert result["errors"] == {}
 
@@ -115,7 +115,7 @@ async def test_step_otp_valid(
         result["flow_id"],
         user_input={"otp": "123456"},
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Drink Water"
     assert "refresh_token" in result["data"]
 
@@ -142,7 +142,7 @@ async def test_step_otp_exception(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -150,7 +150,7 @@ async def test_step_otp_exception(
         result["flow_id"],
         user_input={CONF_PHONE: "+972555555555"},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "otp"
     assert result["errors"] == {}
 
@@ -158,6 +158,6 @@ async def test_step_otp_exception(
         result["flow_id"],
         user_input={"otp": "123456"},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "otp"
     assert result["errors"] == {"base": expected_error}

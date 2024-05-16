@@ -1,11 +1,9 @@
 """Support for Axis lights."""
 
-from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from functools import partial
 from typing import Any
 
-from axis.models.event import Event, EventOperation, EventTopic
+from axis.models.event import Event, EventTopic
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -13,11 +11,11 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import TOPIC_TO_EVENT_TYPE, AxisEventEntity
+from . import AxisConfigEntry
+from .entity import TOPIC_TO_EVENT_TYPE, AxisEventDescription, AxisEventEntity
 from .hub import AxisHub
 
 
@@ -31,15 +29,8 @@ def light_name_fn(hub: AxisHub, event: Event) -> str:
 
 
 @dataclass(frozen=True, kw_only=True)
-class AxisLightDescription(LightEntityDescription):
+class AxisLightDescription(AxisEventDescription, LightEntityDescription):
     """Axis light entity description."""
-
-    event_topic: EventTopic
-    """Event topic that provides state updates."""
-    name_fn: Callable[[AxisHub, Event], str]
-    """Function providing the corresponding name to the event ID."""
-    supported_fn: Callable[[AxisHub, Event], bool]
-    """Function validating if event is supported."""
 
 
 ENTITY_DESCRIPTIONS = (
@@ -54,34 +45,19 @@ ENTITY_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AxisConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Axis light platform."""
-    hub = AxisHub.get_hub(hass, config_entry)
-
-    @callback
-    def register_platform(descriptions: Iterable[AxisLightDescription]) -> None:
-        """Register entity platform to create entities on event initialized signal."""
-
-        @callback
-        def create_entity(description: AxisLightDescription, event: Event) -> None:
-            """Create Axis entity."""
-            if description.supported_fn(hub, event):
-                async_add_entities([AxisLight(hub, description, event)])
-
-        for description in descriptions:
-            hub.api.event.subscribe(
-                partial(create_entity, description),
-                topic_filter=description.event_topic,
-                operation_filter=EventOperation.INITIALIZED,
-            )
-
-    register_platform(ENTITY_DESCRIPTIONS)
+    config_entry.runtime_data.entity_loader.register_platform(
+        async_add_entities, AxisLight, ENTITY_DESCRIPTIONS
+    )
 
 
 class AxisLight(AxisEventEntity, LightEntity):
     """Representation of an Axis light."""
+
+    entity_description: AxisLightDescription
 
     _attr_should_poll = True
     _attr_color_mode = ColorMode.BRIGHTNESS
@@ -91,11 +67,9 @@ class AxisLight(AxisEventEntity, LightEntity):
         self, hub: AxisHub, description: AxisLightDescription, event: Event
     ) -> None:
         """Initialize the Axis light."""
-        super().__init__(event, hub)
-        self.entity_description = description
-        self._attr_name = description.name_fn(hub, event)
-        self._attr_is_on = event.is_tripped
+        super().__init__(hub, description, event)
 
+        self._attr_is_on = event.is_tripped
         self._light_id = f"led{event.id}"
         self.current_intensity = 0
         self.max_intensity = 0

@@ -161,6 +161,11 @@
       "name": "[%key:component::sensor::entity_component::wind_speed::name%]"
     }
   },
+  "exceptions": {
+    "out_of_range": {
+      "message": "Value {value} for {entity_id} is outside valid range {min_value} - {max_value}."
+    }
+  },
   "services": {
     "set_value": {
       "name": "Set",

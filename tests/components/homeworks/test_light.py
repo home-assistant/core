@@ -1,4 +1,5 @@
 """Tests for the Lutron Homeworks Series 4 and 8 light."""
+
 from unittest.mock import ANY, MagicMock
 
 from pyhomeworks.pyhomeworks import HW_LIGHT_CHANGED

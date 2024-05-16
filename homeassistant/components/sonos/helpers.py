@@ -39,15 +39,13 @@ _ReturnFuncType = Callable[Concatenate[_T, _P], _R | None]
 @overload
 def soco_error(
     errorcodes: None = ...,
-) -> Callable[[_FuncType[_T, _P, _R]], _FuncType[_T, _P, _R]]:
-    ...
+) -> Callable[[_FuncType[_T, _P, _R]], _FuncType[_T, _P, _R]]: ...
 
 
 @overload
 def soco_error(
     errorcodes: list[str],
-) -> Callable[[_FuncType[_T, _P, _R]], _ReturnFuncType[_T, _P, _R]]:
-    ...
+) -> Callable[[_FuncType[_T, _P, _R]], _ReturnFuncType[_T, _P, _R]]: ...
 
 
 def soco_error(
@@ -105,7 +103,7 @@ def _find_target_identifier(instance: Any, fallback_soco: SoCo | None) -> str | 
     if soco := getattr(instance, "soco", fallback_soco):
         # Holds a SoCo instance attribute
         # Only use attributes with no I/O
-        return soco._player_name or soco.ip_address  # pylint: disable=protected-access
+        return soco._player_name or soco.ip_address  # noqa: SLF001
     return None
 
 

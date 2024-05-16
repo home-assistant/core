@@ -177,6 +177,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_mower_1_charging',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -222,6 +223,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_mower_1_leaving_dock',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -267,6 +269,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_mower_1_returning_to_dock',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })

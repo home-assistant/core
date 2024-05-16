@@ -672,7 +672,6 @@ def core_rs(hass_storage):
                 }
             ],
         }
-        return
 
     return _storage
 
@@ -1096,9 +1095,9 @@ async def test_elec_measurement_sensor_polling(
 
     entity_id = ENTITY_ID_PREFIX.format("power")
     zigpy_dev = elec_measurement_zigpy_dev
-    zigpy_dev.endpoints[1].electrical_measurement.PLUGGED_ATTR_READS[
-        "active_power"
-    ] = 20
+    zigpy_dev.endpoints[1].electrical_measurement.PLUGGED_ATTR_READS["active_power"] = (
+        20
+    )
 
     await zha_device_joined_restored(zigpy_dev)
 
@@ -1107,9 +1106,9 @@ async def test_elec_measurement_sensor_polling(
     assert state.state == "2.0"
 
     # update the value for the power reading
-    zigpy_dev.endpoints[1].electrical_measurement.PLUGGED_ATTR_READS[
-        "active_power"
-    ] = 60
+    zigpy_dev.endpoints[1].electrical_measurement.PLUGGED_ATTR_READS["active_power"] = (
+        60
+    )
 
     # ensure the state is still 2.0
     state = hass.states.get(entity_id)
@@ -1260,10 +1259,10 @@ async def test_last_feeding_size_sensor_v2(
     assert entity_id is not None
 
     await send_attributes_report(hass, cluster, {0x010C: 1})
-    assert_state(hass, entity_id, "1.0", UnitOfMass.GRAMS)
+    assert_state(hass, entity_id, "1.0", UnitOfMass.GRAMS.value)
 
     await send_attributes_report(hass, cluster, {0x010C: 5})
-    assert_state(hass, entity_id, "5.0", UnitOfMass.GRAMS)
+    assert_state(hass, entity_id, "5.0", UnitOfMass.GRAMS.value)
 
 
 @pytest.fixture

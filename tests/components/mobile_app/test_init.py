@@ -84,14 +84,17 @@ async def _test_create_cloud_hook(
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.cloud.async_active_subscription",
-        return_value=async_active_subscription_return_value,
-    ), patch(
-        "homeassistant.components.cloud.async_is_connected", return_value=True
-    ), patch(
-        "homeassistant.components.cloud.async_get_or_create_cloudhook", autospec=True
-    ) as mock_async_get_or_create_cloudhook:
+    with (
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=async_active_subscription_return_value,
+        ),
+        patch("homeassistant.components.cloud.async_is_connected", return_value=True),
+        patch(
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
+            autospec=True,
+        ) as mock_async_get_or_create_cloudhook,
+    ):
         cloud_hook = "https://hook-url"
         mock_async_get_or_create_cloudhook.return_value = cloud_hook
 
