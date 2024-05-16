@@ -6,7 +6,6 @@ from typing import Any, Literal
 import openai
 from voluptuous_openapi import convert
 
-from homeassistant import setup
 from homeassistant.components import assist_pipeline, conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
@@ -110,9 +109,6 @@ class OpenAIConversationEntity(
         LOGGER.debug("Prompt for %s: %s", model, messages)
 
         client = self.hass.data[DOMAIN][self.entry.entry_id]
-
-        if "intent" not in self.hass.config.components:
-            await setup.async_setup_component(self.hass, "intent", {})
 
         def format_tool(tool: llm.Tool) -> dict[str, Any]:
             """Format tool specification."""
