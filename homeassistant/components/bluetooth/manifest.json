@@ -19,7 +19,7 @@
     "bluetooth-adapters==0.19.2",
     "bluetooth-auto-recovery==1.4.2",
     "bluetooth-data-tools==1.19.0",
-    "dbus-fast==2.21.1",
+    "dbus-fast==2.21.2",
     "habluetooth==3.0.1"
   ]
 }

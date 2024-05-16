@@ -38,15 +38,33 @@ from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, State
 from homeassistant.helpers import config_validation as cv, integration_platform, intent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DOMAIN, TIMER_DATA
+from .timers import (
+    CancelTimerIntentHandler,
+    DecreaseTimerIntentHandler,
+    IncreaseTimerIntentHandler,
+    PauseTimerIntentHandler,
+    StartTimerIntentHandler,
+    TimerManager,
+    TimerStatusIntentHandler,
+    UnpauseTimerIntentHandler,
+    async_register_timer_handler,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+__all__ = [
+    "async_register_timer_handler",
+    "DOMAIN",
+]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Intent component."""
+    hass.data[TIMER_DATA] = TimerManager(hass)
+
     hass.http.register_view(IntentHandleView())
 
     await integration_platform.async_process_integration_platforms(
@@ -74,6 +92,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         NevermindIntentHandler(),
     )
     intent.async_register(hass, SetPositionIntentHandler())
+    intent.async_register(hass, StartTimerIntentHandler())
+    intent.async_register(hass, CancelTimerIntentHandler())
+    intent.async_register(hass, IncreaseTimerIntentHandler())
+    intent.async_register(hass, DecreaseTimerIntentHandler())
+    intent.async_register(hass, PauseTimerIntentHandler())
+    intent.async_register(hass, UnpauseTimerIntentHandler())
+    intent.async_register(hass, TimerStatusIntentHandler())
 
     return True
 

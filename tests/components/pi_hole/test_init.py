@@ -1,7 +1,7 @@
 """Test pi_hole component."""
 
 import logging
-from unittest.mock import AsyncMock
+from unittest.mock import ANY, AsyncMock
 
 from hole.exceptions import HoleError
 import pytest
@@ -14,18 +14,49 @@ from homeassistant.components.pi_hole.const import (
     SERVICE_DISABLE_ATTR_DURATION,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_LOCATION,
+    CONF_NAME,
+    CONF_SSL,
+)
 from homeassistant.core import HomeAssistant
 
 from . import (
+    API_KEY,
     CONFIG_DATA,
     CONFIG_DATA_DEFAULTS,
+    CONFIG_ENTRY_WITHOUT_API_KEY,
     SWITCH_ENTITY_ID,
     _create_mocked_hole,
     _patch_init_hole,
 )
 
 from tests.common import MockConfigEntry
+
+
+@pytest.mark.parametrize(
+    ("config_entry_data", "expected_api_token"),
+    [(CONFIG_DATA_DEFAULTS, API_KEY), (CONFIG_ENTRY_WITHOUT_API_KEY, "")],
+)
+async def test_setup_api(
+    hass: HomeAssistant, config_entry_data: dict, expected_api_token: str
+) -> None:
+    """Tests the API object is created with the expected parameters."""
+    mocked_hole = _create_mocked_hole()
+    config_entry_data = {**config_entry_data, CONF_STATISTICS_ONLY: True}
+    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=config_entry_data)
+    entry.add_to_hass(hass)
+    with _patch_init_hole(mocked_hole) as patched_init_hole:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        patched_init_hole.assert_called_once_with(
+            config_entry_data[CONF_HOST],
+            ANY,
+            api_token=expected_api_token,
+            location=config_entry_data[CONF_LOCATION],
+            tls=config_entry_data[CONF_SSL],
+        )
 
 
 async def test_setup_with_defaults(hass: HomeAssistant) -> None:
