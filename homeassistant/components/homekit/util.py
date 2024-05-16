@@ -72,7 +72,8 @@ from .const import (
     CONF_STREAM_COUNT,
     CONF_STREAM_SOURCE,
     CONF_SUPPORT_AUDIO,
-    CONF_THRESHOLD,
+    CONF_THRESHOLD_CO,
+    CONF_THRESHOLD_CO2,
     CONF_VIDEO_CODEC,
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
@@ -226,7 +227,8 @@ SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
 
 SENSOR_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
-        vol.Optional(CONF_THRESHOLD): vol.Any(None, cv.positive_int),
+        vol.Optional(CONF_THRESHOLD_CO): vol.Any(None, cv.positive_int),
+        vol.Optional(CONF_THRESHOLD_CO2): vol.Any(None, cv.positive_int),
     }
 )
 

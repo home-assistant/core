@@ -41,7 +41,8 @@ from .const import (
     CHAR_PM25_DENSITY,
     CHAR_SMOKE_DETECTED,
     CHAR_VOC_DENSITY,
-    CONF_THRESHOLD,
+    CONF_THRESHOLD_CO,
+    CONF_THRESHOLD_CO2,
     PROP_CELSIUS,
     PROP_MAX_VALUE,
     PROP_MIN_VALUE,
@@ -337,7 +338,7 @@ class CarbonMonoxideSensor(HomeAccessory):
             [CHAR_CARBON_MONOXIDE_LEVEL, CHAR_CARBON_MONOXIDE_PEAK_LEVEL],
         )
 
-        self.threshold_co = self.config.get(CONF_THRESHOLD, THRESHOLD_CO)
+        self.threshold_co = self.config.get(CONF_THRESHOLD_CO, THRESHOLD_CO)
         _LOGGER.debug("%s: Set CO threshold to %d", self.entity_id, self.threshold_co)
 
         self.char_level = serv_co.configure_char(CHAR_CARBON_MONOXIDE_LEVEL, value=0)
@@ -377,7 +378,7 @@ class CarbonDioxideSensor(HomeAccessory):
             [CHAR_CARBON_DIOXIDE_LEVEL, CHAR_CARBON_DIOXIDE_PEAK_LEVEL],
         )
 
-        self.threshold_co2 = self.config.get(CONF_THRESHOLD, THRESHOLD_CO2)
+        self.threshold_co2 = self.config.get(CONF_THRESHOLD_CO2, THRESHOLD_CO2)
         _LOGGER.debug("%s: Set CO2 threshold to %d", self.entity_id, self.threshold_co2)
 
         self.char_level = serv_co2.configure_char(CHAR_CARBON_DIOXIDE_LEVEL, value=0)

@@ -5,7 +5,8 @@ from unittest.mock import patch
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.homekit import get_accessory
 from homeassistant.components.homekit.const import (
-    CONF_THRESHOLD,
+    CONF_THRESHOLD_CO,
+    CONF_THRESHOLD_CO2,
     PROP_CELSIUS,
     THRESHOLD_CO,
     THRESHOLD_CO2,
@@ -386,7 +387,7 @@ async def test_co_with_configured_threshold(hass: HomeAssistant, hk_driver) -> N
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = CarbonMonoxideSensor(
-        hass, hk_driver, "CO", entity_id, 2, {CONF_THRESHOLD: co_threshold}
+        hass, hk_driver, "CO", entity_id, 2, {CONF_THRESHOLD_CO: co_threshold}
     )
     acc.run()
     await hass.async_block_till_done()
@@ -454,7 +455,7 @@ async def test_co2_with_configured_threshold(hass: HomeAssistant, hk_driver) -> 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = CarbonDioxideSensor(
-        hass, hk_driver, "CO2", entity_id, 2, {CONF_THRESHOLD: co2_threshold}
+        hass, hk_driver, "CO2", entity_id, 2, {CONF_THRESHOLD_CO2: co2_threshold}
     )
     acc.run()
     await hass.async_block_till_done()
