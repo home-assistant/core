@@ -27,6 +27,15 @@
       },
       "confirm_discovery": {
         "description": "Do you want to set up Nettigo Air Monitor at {host}?"
+      },
+      "reconfigure_confirm": {
+        "description": "Update configuration for {device_name}.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::nam::config::step::user::data_description::host%]"
+        }
       }
     },
     "error": {
@@ -38,7 +47,8 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "device_unsupported": "The device is unsupported.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again."
+      "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
+      "another_device": "The IP address/hostname of another Nettigo Air Monitor was used."
     }
   },
   "entity": {
