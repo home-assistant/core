@@ -1,6 +1,7 @@
 """Tests for intent timers."""
 
 import asyncio
+from unittest.mock import patch
 
 import pytest
 
@@ -238,6 +239,25 @@ async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
 
     async with asyncio.timeout(1):
         await started_event.wait()
+
+    # Adding 0 seconds has no effect
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_INCREASE_TIMER,
+        {
+            "start_hours": {"value": 1},
+            "start_minutes": {"value": 2},
+            "start_seconds": {"value": 3},
+            "hours": {"value": 0},
+            "minutes": {"value": 0},
+            "seconds": {"value": 0},
+        },
+        device_id=device_id,
+    )
+
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    assert not updated_event.is_set()
 
     # Add 30 seconds to the timer
     result = await intent.async_handle(
@@ -1111,6 +1131,17 @@ async def test_area_filter(
     assert len(timers) == 1
     assert timers[0].get(ATTR_NAME) == "media"
 
+    # Filter by area that doesn't exist
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_TIMER_STATUS,
+        {"area": {"value": "does-not-exist"}},
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    timers = result.speech_slots.get("timers", [])
+    assert len(timers) == 0
+
     # Cancel by area + time
     result = await intent.async_handle(
         hass,
@@ -1119,6 +1150,45 @@ async def test_area_filter(
         {"area": {"value": "living room"}, "start_minutes": {"value": 15}},
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    # Cancel by area
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_CANCEL_TIMER,
+        {"area": {"value": "living room"}},
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    # Get status with device missing
+    with patch(
+        "homeassistant.helpers.device_registry.DeviceRegistry.async_get",
+        return_value=None,
+    ):
+        result = await intent.async_handle(
+            hass,
+            "test",
+            intent.INTENT_TIMER_STATUS,
+            device_id=device_kitchen.id,
+        )
+        assert result.response_type == intent.IntentResponseType.ACTION_DONE
+        timers = result.speech_slots.get("timers", [])
+        assert len(timers) == 1
+
+    # Get status with area missing
+    with patch(
+        "homeassistant.helpers.area_registry.AreaRegistry.async_get_area",
+        return_value=None,
+    ):
+        result = await intent.async_handle(
+            hass,
+            "test",
+            intent.INTENT_TIMER_STATUS,
+            device_id=device_kitchen.id,
+        )
+        assert result.response_type == intent.IntentResponseType.ACTION_DONE
+        timers = result.speech_slots.get("timers", [])
+        assert len(timers) == 1
 
 
 def test_round_time() -> None:

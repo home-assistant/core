@@ -88,12 +88,9 @@ class TimerInfo:
         return max(0, self.seconds - seconds_running)
 
     @cached_property
-    def name_normalized(self) -> str | None:
+    def name_normalized(self) -> str:
         """Return normalized timer name."""
-        if self.name is None:
-            return None
-
-        return _normalize_name(self.name)
+        return _normalize_name(self.name or "")
 
     def cancel(self) -> None:
         """Cancel the timer."""
@@ -890,7 +887,6 @@ class TimerStatusIntentHandler(intent.IntentHandler):
                     "rounded_minutes_left": rounded_minutes,
                     "rounded_seconds_left": rounded_seconds,
                     "total_seconds_left": total_seconds,
-                    "created_at": timer.created_at,
                 }
             )
 
