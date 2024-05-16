@@ -580,6 +580,10 @@ def websocket_refresh_tokens(
         else:
             auth_provider_type = None
 
+        expire_at = None
+        if refresh.expire_at:
+            expire_at = dt_util.utc_from_timestamp(refresh.expire_at)
+
         tokens.append(
             {
                 "auth_provider_type": auth_provider_type,
@@ -587,7 +591,7 @@ def websocket_refresh_tokens(
                 "client_id": refresh.client_id,
                 "client_name": refresh.client_name,
                 "created_at": refresh.created_at,
-                "expire_at": refresh.expire_at,
+                "expire_at": expire_at,
                 "id": refresh.id,
                 "is_current": refresh.id == current_id,
                 "last_used_at": refresh.last_used_at,
