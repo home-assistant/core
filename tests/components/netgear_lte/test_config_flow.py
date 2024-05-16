@@ -9,6 +9,7 @@ from homeassistant.components.netgear_lte.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import CONF_DATA
 
@@ -40,7 +41,7 @@ async def test_flow_user_form(hass: HomeAssistant, connection: None) -> None:
     assert result["context"]["unique_id"] == "FFFFFFFFFFFFF"
 
 
-@pytest.mark.parametrize("source", (SOURCE_USER, SOURCE_IMPORT))
+@pytest.mark.parametrize("source", [SOURCE_USER, SOURCE_IMPORT])
 async def test_flow_already_configured(
     hass: HomeAssistant, setup_integration: None, source: str
 ) -> None:
@@ -51,7 +52,7 @@ async def test_flow_already_configured(
         data=CONF_DATA,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 

@@ -988,7 +988,7 @@ async def test_cost_sensor_handle_late_price_sensor(
 
 @pytest.mark.parametrize(
     "unit",
-    (UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
+    [UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS],
 )
 async def test_cost_sensor_handle_gas(
     setup_integration, hass: HomeAssistant, hass_storage: dict[str, Any], unit
@@ -1086,12 +1086,12 @@ async def test_cost_sensor_handle_gas_kwh(
 
 @pytest.mark.parametrize(
     ("unit_system", "usage_unit", "growth"),
-    (
+    [
         # 1 cubic foot = 7.47 gl, 100 ft3 growth @ 0.5/ft3:
         (US_CUSTOMARY_SYSTEM, UnitOfVolume.CUBIC_FEET, 374.025974025974),
         (US_CUSTOMARY_SYSTEM, UnitOfVolume.GALLONS, 50.0),
         (METRIC_SYSTEM, UnitOfVolume.CUBIC_METERS, 50.0),
-    ),
+    ],
 )
 async def test_cost_sensor_handle_water(
     setup_integration,

@@ -21,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     Context,
     Event,
+    EventStateChangedData,
     HomeAssistant,
     ServiceResponse,
     State,
@@ -36,7 +37,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     TrackTemplate,
     TrackTemplateResult,
     async_track_template_result,
@@ -55,7 +55,7 @@ from homeassistant.loader import (
     async_get_integration_descriptions,
     async_get_integrations,
 )
-from homeassistant.setup import DATA_SETUP_TIME, async_get_loaded_integrations
+from homeassistant.setup import async_get_loaded_integrations, async_get_setup_timings
 from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
@@ -105,7 +105,7 @@ def pong_message(iden: int) -> dict[str, Any]:
 def _forward_events_check_permissions(
     send_message: Callable[[bytes | str | dict[str, Any] | Callable[[], str]], None],
     user: User,
-    msg_id: int,
+    message_id_as_bytes: bytes,
     event: Event,
 ) -> None:
     """Forward state changed events to websocket."""
@@ -118,17 +118,17 @@ def _forward_events_check_permissions(
         and not permissions.check_entity(event.data["entity_id"], POLICY_READ)
     ):
         return
-    send_message(messages.cached_event_message(msg_id, event))
+    send_message(messages.cached_event_message(message_id_as_bytes, event))
 
 
 @callback
 def _forward_events_unconditional(
     send_message: Callable[[bytes | str | dict[str, Any] | Callable[[], str]], None],
-    msg_id: int,
+    message_id_as_bytes: bytes,
     event: Event,
 ) -> None:
     """Forward events to websocket."""
-    send_message(messages.cached_event_message(msg_id, event))
+    send_message(messages.cached_event_message(message_id_as_bytes, event))
 
 
 @callback
@@ -152,20 +152,22 @@ def handle_subscribe_events(
         )
         raise Unauthorized(user_id=connection.user.id)
 
+    message_id_as_bytes = str(msg["id"]).encode()
+
     if event_type == EVENT_STATE_CHANGED:
         forward_events = partial(
             _forward_events_check_permissions,
             connection.send_message,
             connection.user,
-            msg["id"],
+            message_id_as_bytes,
         )
     else:
         forward_events = partial(
-            _forward_events_unconditional, connection.send_message, msg["id"]
+            _forward_events_unconditional, connection.send_message, message_id_as_bytes
         )
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
-        event_type, forward_events, run_immediately=True
+        event_type, forward_events
     )
 
     connection.send_result(msg["id"])
@@ -289,7 +291,7 @@ async def handle_call_service(
             translation_placeholders=err.translation_placeholders,
         )
     except HomeAssistantError as err:
-        connection.logger.exception(err)
+        connection.logger.exception("Unexpected exception")
         connection.send_error(
             msg["id"],
             const.ERR_HOME_ASSISTANT_ERROR,
@@ -298,8 +300,8 @@ async def handle_call_service(
             translation_key=err.translation_key,
             translation_placeholders=err.translation_placeholders,
         )
-    except Exception as err:  # pylint: disable=broad-except
-        connection.logger.exception(err)
+    except Exception as err:
+        connection.logger.exception("Unexpected exception")
         connection.send_error(msg["id"], const.ERR_UNKNOWN_ERROR, str(err))
 
 
@@ -366,7 +368,7 @@ def _forward_entity_changes(
     send_message: Callable[[str | bytes | dict[str, Any] | Callable[[], str]], None],
     entity_ids: set[str],
     user: User,
-    msg_id: int,
+    message_id_as_bytes: bytes,
     event: Event[EventStateChangedData],
 ) -> None:
     """Forward entity state changed events to websocket."""
@@ -382,7 +384,7 @@ def _forward_entity_changes(
         and not permissions.check_entity(event.data["entity_id"], POLICY_READ)
     ):
         return
-    send_message(messages.cached_state_diff_message(msg_id, event))
+    send_message(messages.cached_state_diff_message(message_id_as_bytes, event))
 
 
 @callback
@@ -401,6 +403,7 @@ def handle_subscribe_entities(
     # state changed events or we will introduce a race condition
     # where some states are missed
     states = _async_get_allowed_states(hass, connection)
+    message_id_as_bytes = str(msg["id"]).encode()
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         EVENT_STATE_CHANGED,
         partial(
@@ -408,9 +411,8 @@ def handle_subscribe_entities(
             connection.send_message,
             entity_ids,
             connection.user,
-            msg["id"],
+            message_id_as_bytes,
         ),
-        run_immediately=True,
     )
     connection.send_result(msg["id"])
 
@@ -539,12 +541,11 @@ def handle_integration_setup_info(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations command."""
-    setup_time: dict[str, float] = hass.data[DATA_SETUP_TIME]
     connection.send_result(
         msg["id"],
         [
             {"domain": integration, "seconds": seconds}
-            for integration, seconds in setup_time.items()
+            for integration, seconds in async_get_setup_timings(hass).items()
         ],
     )
 

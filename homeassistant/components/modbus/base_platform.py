@@ -67,7 +67,6 @@ from .const import (
 )
 from .modbus import ModbusHub
 
-PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -203,7 +202,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             registers.reverse()
         return registers
 
-    def __process_raw_value(self, entry: float | int | str | bytes) -> str | None:
+    def __process_raw_value(self, entry: float | str | bytes) -> str | None:
         """Process value from sensor with NaN handling, scaling, offset, min/max etc."""
         if self._nan_value and entry in (self._nan_value, -self._nan_value):
             return None

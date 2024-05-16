@@ -6,7 +6,6 @@ import logging
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -25,10 +24,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up harmony activities select."""
     data: HarmonyData = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
-    _LOGGER.debug("creating select for %s hub activities", entry.data[CONF_NAME])
-    async_add_entities(
-        [HarmonyActivitySelect(f"{entry.data[CONF_NAME]} Activities", data)]
-    )
+    async_add_entities([HarmonyActivitySelect(data)])
 
 
 class HarmonyActivitySelect(HarmonyEntity, SelectEntity):
@@ -36,13 +32,12 @@ class HarmonyActivitySelect(HarmonyEntity, SelectEntity):
 
     _attr_translation_key = "activities"
 
-    def __init__(self, name: str, data: HarmonyData) -> None:
+    def __init__(self, data: HarmonyData) -> None:
         """Initialize HarmonyActivitySelect class."""
         super().__init__(data=data)
         self._data = data
         self._attr_unique_id = self._data.unique_id
         self._attr_device_info = self._data.device_info(DOMAIN)
-        self._attr_name = name
 
     @property
     def options(self) -> list[str]:

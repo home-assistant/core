@@ -234,7 +234,7 @@ def _async_process_callbacks(
             hass.async_run_hass_job(
                 callback, discovery_info, ssdp_change, background=True
             )
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Failed to callback info: %s", discovery_info)
 
 
@@ -256,9 +256,9 @@ class IntegrationMatchers:
 
     def __init__(self) -> None:
         """Init optimized integration matching."""
-        self._match_by_key: dict[
-            str, dict[str, list[tuple[str, dict[str, str]]]]
-        ] | None = None
+        self._match_by_key: (
+            dict[str, dict[str, list[tuple[str, dict[str, str]]]]] | None
+        ) = None
 
     @core_callback
     def async_setup(
@@ -392,9 +392,7 @@ class Scanner:
 
         await self._async_start_ssdp_listeners()
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self.async_stop, run_immediately=True
-        )
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         self._cancel_scan = async_track_time_interval(
             self.hass, self.async_scan, SCAN_INTERVAL, name="SSDP scanner"
         )
@@ -735,10 +733,11 @@ async def _async_find_next_available_port(source: AddressTupleVXType) -> int:
         addr = (source[0],) + (port,) + source[2:]
         try:
             test_socket.bind(addr)
-            return port
         except OSError:
             if port == UPNP_SERVER_MAX_PORT - 1:
                 raise
+        else:
+            return port
 
     raise RuntimeError("unreachable")
 
@@ -754,13 +753,10 @@ class Server:
     async def async_start(self) -> None:
         """Start the server."""
         bus = self.hass.bus
-        bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self.async_stop, run_immediately=True
-        )
+        bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED,
             self._async_start_upnp_servers,
-            run_immediately=True,
         )
 
     async def _async_get_instance_udn(self) -> str:

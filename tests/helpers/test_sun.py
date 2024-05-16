@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.sun as sun
+from homeassistant.helpers import sun
 import homeassistant.util.dt as dt_util
 
 

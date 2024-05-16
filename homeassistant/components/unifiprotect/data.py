@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Generator, Iterable
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 from typing import Any, cast
 
@@ -225,7 +226,7 @@ class ProtectData:
                 self._async_update_device(obj, message.changed_data)
 
         # trigger updates for camera that the event references
-        elif isinstance(obj, Event):  # type: ignore[unreachable]
+        elif isinstance(obj, Event):
             if _LOGGER.isEnabledFor(logging.DEBUG):
                 log_event(obj)
             if obj.type is EventType.DEVICE_ADOPTED:
@@ -268,7 +269,12 @@ class ProtectData:
         this will be a no-op. If the websocket is disconnected,
         this will trigger a reconnect and refresh.
         """
-        self._hass.async_create_task(self.async_refresh(), eager_start=True)
+        self._entry.async_create_background_task(
+            self._hass,
+            self.async_refresh(),
+            name=f"{DOMAIN} {self._entry.title} refresh",
+            eager_start=True,
+        )
 
     @callback
     def async_subscribe_device_id(
@@ -280,11 +286,7 @@ class ProtectData:
                 self._hass, self._async_poll, self._update_interval
             )
         self._subscriptions.setdefault(mac, []).append(update_callback)
-
-        def _unsubscribe() -> None:
-            self.async_unsubscribe_device_id(mac, update_callback)
-
-        return _unsubscribe
+        return partial(self.async_unsubscribe_device_id, mac, update_callback)
 
     @callback
     def async_unsubscribe_device_id(
@@ -301,12 +303,10 @@ class ProtectData:
     @callback
     def _async_signal_device_update(self, device: ProtectDeviceType) -> None:
         """Call the callbacks for a device_id."""
-
-        if not self._subscriptions.get(device.mac):
+        if not (subscriptions := self._subscriptions.get(device.mac)):
             return
-
         _LOGGER.debug("Updating device: %s (%s)", device.name, device.mac)
-        for update_callback in self._subscriptions[device.mac]:
+        for update_callback in subscriptions:
             update_callback(device)
 
 

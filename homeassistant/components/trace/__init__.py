@@ -173,7 +173,7 @@ async def async_restore_traces(hass: HomeAssistant) -> None:
         restored_traces = {}
 
     for key, traces in restored_traces.items():
-        # Add stored traces in reversed order to priorize the newest traces
+        # Add stored traces in reversed order to prioritize the newest traces
         for json_trace in reversed(traces):
             if (
                 (stored_traces := _get_data(hass).get(key))
@@ -185,7 +185,7 @@ async def async_restore_traces(hass: HomeAssistant) -> None:
             try:
                 trace = RestoredTrace(json_trace)
             # Catch any exception to not blow up if the stored trace is invalid
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Failed to restore trace")
                 continue
             _async_store_restored_trace(hass, trace)

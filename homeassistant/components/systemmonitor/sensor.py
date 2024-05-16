@@ -7,6 +7,7 @@ import contextlib
 from dataclasses import dataclass
 from datetime import datetime
 from functools import lru_cache
+import ipaddress
 import logging
 import socket
 import sys
@@ -24,7 +25,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_RESOURCES,
     CONF_TYPE,
@@ -46,7 +47,8 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateTyp
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .const import CONF_PROCESS, DOMAIN, DOMAIN_COORDINATOR, NET_IO_TYPES
+from . import SystemMonitorConfigEntry
+from .const import CONF_PROCESS, DOMAIN, NET_IO_TYPES
 from .coordinator import SystemMonitorCoordinator
 from .util import get_all_disk_mounts, get_all_network_interfaces, read_cpu_temperature
 
@@ -136,6 +138,11 @@ def get_ip_address(
     if entity.argument in addresses:
         for addr in addresses[entity.argument]:
             if addr.family == IF_ADDRS_FAMILY[entity.entity_description.key]:
+                address = ipaddress.ip_address(addr.address)
+                if address.version == 6 and (
+                    address.is_link_local or address.is_loopback
+                ):
+                    continue
                 return addr.address
     return None
 
@@ -495,20 +502,23 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SystemMonitorConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up System Montor sensors based on a config entry."""
     entities: list[SystemMonitorSensor] = []
     legacy_resources: set[str] = set(entry.options.get("resources", []))
     loaded_resources: set[str] = set()
-    coordinator: SystemMonitorCoordinator = hass.data[DOMAIN_COORDINATOR]
+    coordinator = entry.runtime_data.coordinator
+    psutil_wrapper = entry.runtime_data.psutil_wrapper
     sensor_data = coordinator.data
 
     def get_arguments() -> dict[str, Any]:
         """Return startup information."""
         return {
-            "disk_arguments": get_all_disk_mounts(hass),
-            "network_arguments": get_all_network_interfaces(hass),
+            "disk_arguments": get_all_disk_mounts(hass, psutil_wrapper),
+            "network_arguments": get_all_network_interfaces(hass, psutil_wrapper),
         }
 
     cpu_temperature: float | None = None
@@ -776,6 +786,7 @@ class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEnt
         self.argument = argument
         self.value: int | None = None
         self.update_time: float | None = None
+        self._attr_native_value = self.entity_description.value_fn(self)
 
     async def async_added_to_hass(self) -> None:
         """When added to hass."""
@@ -791,16 +802,19 @@ class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEnt
         ].remove(self.entity_id)
         return await super().async_will_remove_from_hass()
 
-    @property
-    def native_value(self) -> StateType | datetime:
-        """Return the state."""
-        return self.entity_description.value_fn(self)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        # Set the native value here so we can use it in available property
+        # without having to recalculate it
+        self._attr_native_value = self.entity_description.value_fn(self)
+        super()._handle_coordinator_update()
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
         if self.entity_description.none_is_unavailable:
-            return bool(
+            return (
                 self.coordinator.last_update_success is True
                 and self.native_value is not None
             )

@@ -92,7 +92,7 @@ async def test_chain(
         assert state.state == "18.05"
 
 
-@pytest.mark.parametrize("missing", (True, False))
+@pytest.mark.parametrize("missing", [True, False])
 async def test_chain_history(
     recorder_mock: Recorder,
     hass: HomeAssistant,
@@ -130,12 +130,15 @@ async def test_chain_history(
             ]
         }
 
-    with patch(
-        "homeassistant.components.recorder.history.state_changes_during_period",
-        return_value=fake_states,
-    ), patch(
-        "homeassistant.components.recorder.history.get_last_state_changes",
-        return_value=fake_states,
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            return_value=fake_states,
+        ),
+        patch(
+            "homeassistant.components.recorder.history.get_last_state_changes",
+            return_value=fake_states,
+        ),
     ):
         with assert_setup_component(1, "sensor"):
             assert await async_setup_component(hass, "sensor", config)
@@ -234,12 +237,15 @@ async def test_history_time(recorder_mock: Recorder, hass: HomeAssistant) -> Non
             State("sensor.test_monitored", "18.2", last_changed=t_2),
         ]
     }
-    with patch(
-        "homeassistant.components.recorder.history.state_changes_during_period",
-        return_value=fake_states,
-    ), patch(
-        "homeassistant.components.recorder.history.get_last_state_changes",
-        return_value=fake_states,
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            return_value=fake_states,
+        ),
+        patch(
+            "homeassistant.components.recorder.history.get_last_state_changes",
+            return_value=fake_states,
+        ),
     ):
         with assert_setup_component(1, "sensor"):
             assert await async_setup_component(hass, "sensor", config)

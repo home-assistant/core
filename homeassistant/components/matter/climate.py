@@ -313,6 +313,6 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.UnoccupiedCoolingSetpoint,
             clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
         ),
-        device_type=(device_types.Thermostat,),
+        device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
     ),
 ]

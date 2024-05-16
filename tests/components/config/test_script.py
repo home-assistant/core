@@ -29,7 +29,7 @@ async def setup_script(hass, script_config, stub_blueprint_populate):
     assert await async_setup_component(hass, "script", {"script": script_config})
 
 
-@pytest.mark.parametrize("script_config", ({},))
+@pytest.mark.parametrize("script_config", [{}])
 async def test_get_script_config(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_config_store
 ) -> None:
@@ -52,7 +52,7 @@ async def test_get_script_config(
     assert result == {"alias": "Moon"}
 
 
-@pytest.mark.parametrize("script_config", ({},))
+@pytest.mark.parametrize("script_config", [{}])
 async def test_update_script_config(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_config_store
 ) -> None:
@@ -88,7 +88,7 @@ async def test_update_script_config(
     assert new_data["moon"] == {"alias": "Moon updated", "sequence": []}
 
 
-@pytest.mark.parametrize("script_config", ({},))
+@pytest.mark.parametrize("script_config", [{}])
 async def test_invalid_object_id(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_config_store
 ) -> None:
@@ -122,7 +122,7 @@ async def test_invalid_object_id(
     assert new_data == {}
 
 
-@pytest.mark.parametrize("script_config", ({},))
+@pytest.mark.parametrize("script_config", [{}])
 @pytest.mark.parametrize(
     ("updated_config", "validation_error"),
     [
@@ -182,7 +182,7 @@ async def test_update_script_config_with_error(
     assert validation_error not in caplog.text
 
 
-@pytest.mark.parametrize("script_config", ({},))
+@pytest.mark.parametrize("script_config", [{}])
 @pytest.mark.parametrize(
     ("updated_config", "validation_error"),
     [
@@ -237,7 +237,7 @@ async def test_update_script_config_with_blueprint_substitution_error(
     assert validation_error not in caplog.text
 
 
-@pytest.mark.parametrize("script_config", ({},))
+@pytest.mark.parametrize("script_config", [{}])
 async def test_update_remove_key_script_config(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_config_store
 ) -> None:
@@ -275,12 +275,12 @@ async def test_update_remove_key_script_config(
 
 @pytest.mark.parametrize(
     "script_config",
-    (
+    [
         {
             "one": {"alias": "Light on", "sequence": []},
             "two": {"alias": "Light off", "sequence": []},
         },
-    ),
+    ],
 )
 async def test_delete_script(
     hass: HomeAssistant,
@@ -320,7 +320,7 @@ async def test_delete_script(
     assert len(entity_registry.entities) == 1
 
 
-@pytest.mark.parametrize("script_config", ({},))
+@pytest.mark.parametrize("script_config", [{}])
 async def test_api_calls_require_admin(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

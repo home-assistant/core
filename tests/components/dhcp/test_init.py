@@ -535,11 +535,13 @@ async def test_setup_and_stop(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    with patch.object(
-        interfaces,
-        "resolve_iface",
-    ) as resolve_iface_call, patch("scapy.arch.common.compile_filter"), patch(
-        "homeassistant.components.dhcp.DiscoverHosts.async_discover"
+    with (
+        patch.object(
+            interfaces,
+            "resolve_iface",
+        ) as resolve_iface_call,
+        patch("scapy.arch.common.compile_filter"),
+        patch("homeassistant.components.dhcp.DiscoverHosts.async_discover"),
     ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
@@ -564,11 +566,15 @@ async def test_setup_fails_as_root(
 
     wait_event = threading.Event()
 
-    with patch("os.geteuid", return_value=0), patch.object(
-        interfaces,
-        "resolve_iface",
-        side_effect=Scapy_Exception,
-    ), patch("homeassistant.components.dhcp.DiscoverHosts.async_discover"):
+    with (
+        patch("os.geteuid", return_value=0),
+        patch.object(
+            interfaces,
+            "resolve_iface",
+            side_effect=Scapy_Exception,
+        ),
+        patch("homeassistant.components.dhcp.DiscoverHosts.async_discover"),
+    ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
@@ -590,13 +596,16 @@ async def test_setup_fails_non_root(
     )
     await hass.async_block_till_done()
 
-    with patch("os.geteuid", return_value=10), patch(
-        "scapy.arch.common.compile_filter"
-    ), patch.object(
-        interfaces,
-        "resolve_iface",
-        side_effect=Scapy_Exception,
-    ), patch("homeassistant.components.dhcp.DiscoverHosts.async_discover"):
+    with (
+        patch("os.geteuid", return_value=10),
+        patch("scapy.arch.common.compile_filter"),
+        patch.object(
+            interfaces,
+            "resolve_iface",
+            side_effect=Scapy_Exception,
+        ),
+        patch("homeassistant.components.dhcp.DiscoverHosts.async_discover"),
+    ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
@@ -617,14 +626,16 @@ async def test_setup_fails_with_broken_libpcap(
     )
     await hass.async_block_till_done()
 
-    with patch(
-        "scapy.arch.common.compile_filter",
-        side_effect=ImportError,
-    ) as compile_filter, patch.object(
-        interfaces,
-        "resolve_iface",
-    ) as resolve_iface_call, patch(
-        "homeassistant.components.dhcp.DiscoverHosts.async_discover"
+    with (
+        patch(
+            "scapy.arch.common.compile_filter",
+            side_effect=ImportError,
+        ) as compile_filter,
+        patch.object(
+            interfaces,
+            "resolve_iface",
+        ) as resolve_iface_call,
+        patch("homeassistant.components.dhcp.DiscoverHosts.async_discover"),
     ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
@@ -967,15 +978,18 @@ async def test_device_tracker_ignore_self_assigned_ips_before_start(
 
 async def test_aiodiscover_finds_new_hosts(hass: HomeAssistant) -> None:
     """Test aiodiscover finds new host."""
-    with patch.object(hass.config_entries.flow, "async_init") as mock_init, patch(
-        "homeassistant.components.dhcp.DiscoverHosts.async_discover",
-        return_value=[
-            {
-                dhcp.DISCOVERY_IP_ADDRESS: "192.168.210.56",
-                dhcp.DISCOVERY_HOSTNAME: "connect",
-                dhcp.DISCOVERY_MAC_ADDRESS: "b8b7f16db533",
-            }
-        ],
+    with (
+        patch.object(hass.config_entries.flow, "async_init") as mock_init,
+        patch(
+            "homeassistant.components.dhcp.DiscoverHosts.async_discover",
+            return_value=[
+                {
+                    dhcp.DISCOVERY_IP_ADDRESS: "192.168.210.56",
+                    dhcp.DISCOVERY_HOSTNAME: "connect",
+                    dhcp.DISCOVERY_MAC_ADDRESS: "b8b7f16db533",
+                }
+            ],
+        ),
     ):
         device_tracker_watcher = dhcp.NetworkWatcher(
             hass,
@@ -1016,25 +1030,28 @@ async def test_aiodiscover_does_not_call_again_on_shorter_hostname(
     additional discovery where the hostname is longer and then
     reject shorter ones.
     """
-    with patch.object(hass.config_entries.flow, "async_init") as mock_init, patch(
-        "homeassistant.components.dhcp.DiscoverHosts.async_discover",
-        return_value=[
-            {
-                dhcp.DISCOVERY_IP_ADDRESS: "192.168.210.56",
-                dhcp.DISCOVERY_HOSTNAME: "irobot-abc",
-                dhcp.DISCOVERY_MAC_ADDRESS: "b8b7f16db533",
-            },
-            {
-                dhcp.DISCOVERY_IP_ADDRESS: "192.168.210.56",
-                dhcp.DISCOVERY_HOSTNAME: "irobot-abcdef",
-                dhcp.DISCOVERY_MAC_ADDRESS: "b8b7f16db533",
-            },
-            {
-                dhcp.DISCOVERY_IP_ADDRESS: "192.168.210.56",
-                dhcp.DISCOVERY_HOSTNAME: "irobot-abc",
-                dhcp.DISCOVERY_MAC_ADDRESS: "b8b7f16db533",
-            },
-        ],
+    with (
+        patch.object(hass.config_entries.flow, "async_init") as mock_init,
+        patch(
+            "homeassistant.components.dhcp.DiscoverHosts.async_discover",
+            return_value=[
+                {
+                    dhcp.DISCOVERY_IP_ADDRESS: "192.168.210.56",
+                    dhcp.DISCOVERY_HOSTNAME: "irobot-abc",
+                    dhcp.DISCOVERY_MAC_ADDRESS: "b8b7f16db533",
+                },
+                {
+                    dhcp.DISCOVERY_IP_ADDRESS: "192.168.210.56",
+                    dhcp.DISCOVERY_HOSTNAME: "irobot-abcdef",
+                    dhcp.DISCOVERY_MAC_ADDRESS: "b8b7f16db533",
+                },
+                {
+                    dhcp.DISCOVERY_IP_ADDRESS: "192.168.210.56",
+                    dhcp.DISCOVERY_HOSTNAME: "irobot-abc",
+                    dhcp.DISCOVERY_MAC_ADDRESS: "b8b7f16db533",
+                },
+            ],
+        ),
     ):
         device_tracker_watcher = dhcp.NetworkWatcher(
             hass,
@@ -1077,9 +1094,12 @@ async def test_aiodiscover_does_not_call_again_on_shorter_hostname(
 
 async def test_aiodiscover_finds_new_hosts_after_interval(hass: HomeAssistant) -> None:
     """Test aiodiscover finds new host after interval."""
-    with patch.object(hass.config_entries.flow, "async_init") as mock_init, patch(
-        "homeassistant.components.dhcp.DiscoverHosts.async_discover",
-        return_value=[],
+    with (
+        patch.object(hass.config_entries.flow, "async_init") as mock_init,
+        patch(
+            "homeassistant.components.dhcp.DiscoverHosts.async_discover",
+            return_value=[],
+        ),
     ):
         device_tracker_watcher = dhcp.NetworkWatcher(
             hass,
@@ -1099,15 +1119,18 @@ async def test_aiodiscover_finds_new_hosts_after_interval(hass: HomeAssistant) -
 
     assert len(mock_init.mock_calls) == 0
 
-    with patch.object(hass.config_entries.flow, "async_init") as mock_init, patch(
-        "homeassistant.components.dhcp.DiscoverHosts.async_discover",
-        return_value=[
-            {
-                dhcp.DISCOVERY_IP_ADDRESS: "192.168.210.56",
-                dhcp.DISCOVERY_HOSTNAME: "connect",
-                dhcp.DISCOVERY_MAC_ADDRESS: "b8b7f16db533",
-            }
-        ],
+    with (
+        patch.object(hass.config_entries.flow, "async_init") as mock_init,
+        patch(
+            "homeassistant.components.dhcp.DiscoverHosts.async_discover",
+            return_value=[
+                {
+                    dhcp.DISCOVERY_IP_ADDRESS: "192.168.210.56",
+                    dhcp.DISCOVERY_HOSTNAME: "connect",
+                    dhcp.DISCOVERY_MAC_ADDRESS: "b8b7f16db533",
+                }
+            ],
+        ),
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=65))
         await hass.async_block_till_done()

@@ -4,6 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from aiohttp.client_exceptions import (
+    ClientConnectorError,
+    ClientOSError,
+    ServerTimeoutError,
+)
+from mozart_api.exceptions import ApiException
 from mozart_api.mozart_client import MozartClient
 
 from homeassistant.config_entries import ConfigEntry
@@ -45,7 +51,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = MozartClient(host=entry.data[CONF_HOST])
 
     # Check API and WebSocket connection
-    if not await client.check_device_connection():
+    try:
+        await client.check_device_connection(True)
+    except* (
+        ClientConnectorError,
+        ClientOSError,
+        ServerTimeoutError,
+        ApiException,
+        TimeoutError,
+    ) as error:
         await client.close_api_client()
         raise ConfigEntryNotReady(f"Unable to connect to {entry.title}")
 

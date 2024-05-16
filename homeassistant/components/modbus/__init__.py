@@ -113,6 +113,13 @@ from .const import (
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
+    CONF_SWING_MODE_REGISTER,
+    CONF_SWING_MODE_SWING_BOTH,
+    CONF_SWING_MODE_SWING_HORIZ,
+    CONF_SWING_MODE_SWING_OFF,
+    CONF_SWING_MODE_SWING_ON,
+    CONF_SWING_MODE_SWING_VERT,
+    CONF_SWING_MODE_VALUES,
     CONF_TARGET_TEMP,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_VERIFY,
@@ -134,6 +141,7 @@ from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
     check_hvac_target_temp_registers,
     duplicate_fan_mode_validator,
+    duplicate_swing_mode_validator,
     hvac_fixedsize_reglist_validator,
     nan_validator,
     register_int_list_validator,
@@ -296,6 +304,21 @@ CLIMATE_SCHEMA = vol.All(
                     duplicate_fan_mode_validator,
                 ),
             ),
+            vol.Optional(CONF_SWING_MODE_REGISTER): vol.Maybe(
+                vol.All(
+                    {
+                        vol.Required(CONF_ADDRESS): register_int_list_validator,
+                        CONF_SWING_MODE_VALUES: {
+                            vol.Optional(CONF_SWING_MODE_SWING_ON): cv.positive_int,
+                            vol.Optional(CONF_SWING_MODE_SWING_OFF): cv.positive_int,
+                            vol.Optional(CONF_SWING_MODE_SWING_HORIZ): cv.positive_int,
+                            vol.Optional(CONF_SWING_MODE_SWING_VERT): cv.positive_int,
+                            vol.Optional(CONF_SWING_MODE_SWING_BOTH): cv.positive_int,
+                        },
+                    },
+                    duplicate_swing_mode_validator,
+                )
+            ),
         },
     ),
     check_hvac_target_temp_registers,
@@ -440,6 +463,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
     """Release modbus resources."""
+    if DOMAIN not in hass.data:
+        _LOGGER.error("Modbus cannot reload, because it was never loaded")
+        return
     _LOGGER.info("Modbus reloading")
     hubs = hass.data[DOMAIN]
     for name in hubs:
