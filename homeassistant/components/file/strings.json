@@ -12,13 +12,11 @@
         "title": "File sensor",
         "description": "Set up a file based sensor",
         "data": {
-          "name": "Name",
           "file_path": "File path",
           "value_template": "Value template",
           "unit_of_measurement": "Unit of measurement"
         },
         "data_description": {
-          "name": "Name of the file based sensor",
           "file_path": "The local file path to retrieve the sensor value from",
           "value_template": "A template to render the the sensors value based on the file content",
           "unit_of_measurement": "Unit of measurement for the sensor"
@@ -29,12 +27,10 @@
         "description": "Set up a service that allows to write notification to a file.",
         "data": {
           "file_path": "[%key:component::file::config::step::sensor::data::file_path%]",
-          "name": "[%key:component::file::config::step::sensor::data::name%]",
           "timestamp": "Timestamp"
         },
         "data_description": {
           "file_path": "A local file path to write the notification to",
-          "name": "Name of the notify service",
           "timestamp": "Add a timestamp to the notification"
         }
       }

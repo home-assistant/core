@@ -439,7 +439,11 @@ class HomeAssistant:
 
             # frame is a circular import, so we import it here
             frame.report(
-                f"calls {what} from a thread",
+                f"calls {what} from a thread other than the event loop, "
+                "which may cause Home Assistant to crash or data to corrupt. "
+                "For more information, see "
+                "https://developers.home-assistant.io/docs/asyncio_thread_safety/"
+                f"#{what.replace('.', '')}",
                 error_if_core=True,
                 error_if_integration=True,
             )
@@ -802,7 +806,7 @@ class HomeAssistant:
         # check with a check for the `hass.config.debug` flag being set as
         # long term we don't want to be checking this in production
         # environments since it is a performance hit.
-        self.verify_event_loop_thread("async_create_task")
+        self.verify_event_loop_thread("hass.async_create_task")
         return self.async_create_task_internal(target, name, eager_start)
 
     @callback
@@ -1493,7 +1497,7 @@ class EventBus:
         This method must be run in the event loop.
         """
         _verify_event_type_length_or_raise(event_type)
-        self._hass.verify_event_loop_thread("async_fire")
+        self._hass.verify_event_loop_thread("hass.bus.async_fire")
         return self.async_fire_internal(
             event_type, event_data, origin, context, time_fired
         )
@@ -2506,7 +2510,7 @@ class ServiceRegistry:
 
         This method must be run in the event loop.
         """
-        self._hass.verify_event_loop_thread("async_register")
+        self._hass.verify_event_loop_thread("hass.services.async_register")
         self._async_register(
             domain, service, service_func, schema, supports_response, job_type
         )
@@ -2565,7 +2569,7 @@ class ServiceRegistry:
 
         This method must be run in the event loop.
         """
-        self._hass.verify_event_loop_thread("async_remove")
+        self._hass.verify_event_loop_thread("hass.services.async_remove")
         self._async_remove(domain, service)
 
     @callback
@@ -2762,14 +2766,16 @@ class ServiceRegistry:
         target = job.target
         if job.job_type is HassJobType.Coroutinefunction:
             if TYPE_CHECKING:
-                target = cast(Callable[..., Coroutine[Any, Any, _R]], target)
+                target = cast(
+                    Callable[..., Coroutine[Any, Any, ServiceResponse]], target
+                )
             return await target(service_call)
         if job.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
-                target = cast(Callable[..., _R], target)
+                target = cast(Callable[..., ServiceResponse], target)
             return target(service_call)
         if TYPE_CHECKING:
-            target = cast(Callable[..., _R], target)
+            target = cast(Callable[..., ServiceResponse], target)
         return await self._hass.async_add_executor_job(target, service_call)
 
 

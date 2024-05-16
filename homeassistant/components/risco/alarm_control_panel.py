@@ -29,7 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LocalData, RiscoDataUpdateCoordinator, is_local
+from . import LocalData, is_local
 from .const import (
     CONF_CODE_ARM_REQUIRED,
     CONF_CODE_DISARM_REQUIRED,
@@ -42,6 +42,7 @@ from .const import (
     RISCO_GROUPS,
     RISCO_PARTIAL_ARM,
 )
+from .coordinator import RiscoDataUpdateCoordinator
 from .entity import RiscoCloudEntity
 
 _LOGGER = logging.getLogger(__name__)

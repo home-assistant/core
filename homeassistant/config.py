@@ -1673,7 +1673,9 @@ async def async_process_component_config(
             validated_config
             for validated_config in await asyncio.gather(
                 *(
-                    create_eager_task(async_load_and_validate(p_integration))
+                    create_eager_task(
+                        async_load_and_validate(p_integration), loop=hass.loop
+                    )
                     for p_integration in platform_integrations_to_load
                 )
             )

@@ -367,7 +367,7 @@ async def test_get_or_create_thread_safety(
     """Test call async_get_or_create_from a thread."""
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls async_get_or_create from a thread. Please report this issue.",
+        match="Detected code that calls issue_registry.async_get_or_create from a thread.",
     ):
         await hass.async_add_executor_job(
             partial(
@@ -397,7 +397,7 @@ async def test_async_delete_issue_thread_safety(
 
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls async_delete from a thread. Please report this issue.",
+        match="Detected code that calls issue_registry.async_delete from a thread.",
     ):
         await hass.async_add_executor_job(
             ir.async_delete_issue,
@@ -422,7 +422,7 @@ async def test_async_ignore_issue_thread_safety(
 
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls async_ignore from a thread. Please report this issue.",
+        match="Detected code that calls issue_registry.async_ignore from a thread.",
     ):
         await hass.async_add_executor_job(
             ir.async_ignore_issue, hass, "any", "any", True
