@@ -25,6 +25,9 @@ class ApSystemsData:
     device_id: str
 
 
+type ApSystemsConfigEntry = ConfigEntry[ApSystemsData]  # type: ignore[valid-type]
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ApSystemsConfigEntry) -> bool:
     """Set up this integration using UI."""
     api = APsystemsEZ1M(ip_address=entry.data[CONF_IP_ADDRESS], timeout=8)
