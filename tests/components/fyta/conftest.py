@@ -1,7 +1,6 @@
 """Test helpers."""
 
 from collections.abc import Generator
-from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -9,11 +8,11 @@ import pytest
 from homeassistant.components.fyta.const import CONF_EXPIRATION
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-from .test_config_flow import ACCESS_TOKEN, EXPIRATION
+from .common import ACCESS_TOKEN, EXPIRATION
 
 
 @pytest.fixture
-def mock_fyta():
+def mock_fyta_cf():
     """Build a fixture for the Fyta API that connects successfully and returns one device."""
 
     mock_fyta_api = AsyncMock()
@@ -33,7 +32,7 @@ def mock_fyta_init():
     """Build a fixture for the Fyta API that connects successfully and returns one device."""
 
     mock_fyta_api = AsyncMock()
-    mock_fyta_api.expiration = datetime.now(tz=UTC) + timedelta(days=1)
+    mock_fyta_api.expiration = EXPIRATION
     mock_fyta_api.login = AsyncMock(
         return_value={
             CONF_ACCESS_TOKEN: ACCESS_TOKEN,
@@ -43,7 +42,7 @@ def mock_fyta_init():
     with patch(
         "homeassistant.components.fyta.FytaConnector.__new__",
         return_value=mock_fyta_api,
-    ):
+    ) as mock_fyta_api:
         yield mock_fyta_api
 
 

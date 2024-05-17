@@ -472,7 +472,6 @@ omit =
     homeassistant/components/frontier_silicon/browse_media.py
     homeassistant/components/frontier_silicon/media_player.py
     homeassistant/components/futurenow/light.py
-    homeassistant/components/fyta/__init__.py
     homeassistant/components/fyta/coordinator.py
     homeassistant/components/fyta/entity.py
     homeassistant/components/fyta/sensor.py
