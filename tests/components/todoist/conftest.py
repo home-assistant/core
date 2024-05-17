@@ -1,4 +1,5 @@
 """Common fixtures for the todoist tests."""
+
 from collections.abc import Generator
 from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
@@ -46,6 +47,7 @@ def make_api_task(
     due: Due | None = None,
     project_id: str | None = None,
     description: str | None = None,
+    parent_id: str | None = None,
 ) -> Task:
     """Mock a todoist Task instance."""
     return Task(
@@ -61,7 +63,7 @@ def make_api_task(
         id=id or "1",
         labels=["Label1"],
         order=1,
-        parent_id=None,
+        parent_id=parent_id,
         priority=1,
         project_id=project_id or PROJECT_ID,
         section_id=None,
@@ -151,9 +153,10 @@ async def mock_setup_integration(
     """Mock setup of the todoist integration."""
     if todoist_config_entry is not None:
         todoist_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.todoist.TodoistAPIAsync", return_value=api
-    ), patch("homeassistant.components.todoist.PLATFORMS", platforms):
+    with (
+        patch("homeassistant.components.todoist.TodoistAPIAsync", return_value=api),
+        patch("homeassistant.components.todoist.PLATFORMS", platforms),
+    ):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield

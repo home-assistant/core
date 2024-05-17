@@ -1,4 +1,5 @@
 """Sensor platform integration for ADC ports of Numato USB GPIO expanders."""
+
 from __future__ import annotations
 
 import logging
@@ -115,8 +116,7 @@ class NumatoGpioAdc(SensorEntity):
     def _clamp_to_source_range(self, val):
         # clamp to source range
         val = max(val, self._src_range[0])
-        val = min(val, self._src_range[1])
-        return val
+        return min(val, self._src_range[1])
 
     def _linear_scale_to_dest_range(self, val):
         # linear scale to dest range
@@ -124,5 +124,4 @@ class NumatoGpioAdc(SensorEntity):
         adc_val_rel = val - self._src_range[0]
         ratio = float(adc_val_rel) / float(src_len)
         dst_len = self._dst_range[1] - self._dst_range[0]
-        dest_val = self._dst_range[0] + ratio * dst_len
-        return dest_val
+        return self._dst_range[0] + ratio * dst_len

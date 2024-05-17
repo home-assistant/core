@@ -1,4 +1,5 @@
 """Test Home Assistant yaml loader."""
+
 from collections.abc import Generator
 import importlib
 import io
@@ -15,10 +16,10 @@ import yaml as pyyaml
 from homeassistant.config import YAML_CONFIG_FILE, load_yaml_config_file
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.util.yaml as yaml
+from homeassistant.util import yaml
 from homeassistant.util.yaml import loader as yaml_loader
 
-from tests.common import get_test_config_dir, patch_yaml_files
+from tests.common import extract_stack_to_frame, get_test_config_dir, patch_yaml_files
 
 
 @pytest.fixture(params=["enable_c_loader", "disable_c_loader"])
@@ -134,6 +135,7 @@ def test_include_yaml(
     [
         ({"/test/one.yaml": "one", "/test/two.yaml": "two"}, ["one", "two"]),
         ({"/test/one.yaml": "1", "/test/two.yaml": "2"}, [1, 2]),
+        ({"/test/one.yaml": "1", "/test/two.yaml": None}, [1]),
     ],
 )
 def test_include_dir_list(
@@ -189,6 +191,10 @@ def test_include_dir_list_recursive(
         (
             {"/test/first.yaml": "1", "/test/second.yaml": "2"},
             {"first": 1, "second": 2},
+        ),
+        (
+            {"/test/first.yaml": "1", "/test/second.yaml": None},
+            {"first": 1, "second": {}},
         ),
     ],
 )
@@ -248,6 +254,10 @@ def test_include_dir_named_recursive(
         (
             {"/test/first.yaml": "- 1", "/test/second.yaml": "- 2\n- 3"},
             [1, 2, 3],
+        ),
+        (
+            {"/test/first.yaml": "- 1", "/test/second.yaml": None},
+            [1],
         ),
     ],
 )
@@ -310,6 +320,13 @@ def test_include_dir_merge_list_recursive(
                 "/test/second.yaml": "key2: 2\nkey3: 3",
             },
             {"key1": 1, "key2": 2, "key3": 3},
+        ),
+        (
+            {
+                "/test/first.yaml": "key1: 1",
+                "/test/second.yaml": None,
+            },
+            {"key1": 1},
         ),
     ],
 )
@@ -500,9 +517,9 @@ class TestSecrets(unittest.TestCase):
 
     def test_secrets_are_not_dict(self):
         """Did secrets handle non-dict file."""
-        FILES[
-            self._secret_path
-        ] = "- http_pw: pwhttp\n  comp1_un: un1\n  comp1_pw: pw1\n"
+        FILES[self._secret_path] = (
+            "- http_pw: pwhttp\n  comp1_un: un1\n  comp1_pw: pw1\n"
+        )
         with pytest.raises(HomeAssistantError):
             load_yaml(
                 self._yaml_path,
@@ -551,13 +568,13 @@ def test_no_recursive_secrets(
 
 def test_input_class() -> None:
     """Test input class."""
-    input = yaml_loader.Input("hello")
-    input2 = yaml_loader.Input("hello")
+    yaml_input = yaml_loader.Input("hello")
+    yaml_input2 = yaml_loader.Input("hello")
 
-    assert input.name == "hello"
-    assert input == input2
+    assert yaml_input.name == "hello"
+    assert yaml_input == yaml_input2
 
-    assert len({input, input2}) == 1
+    assert len({yaml_input, yaml_input2}) == 1
 
 
 def test_input(try_both_loaders, try_both_dumpers) -> None:
@@ -590,36 +607,44 @@ async def test_loading_actual_file_with_syntax_error(
 def mock_integration_frame() -> Generator[Mock, None, None]:
     """Mock as if we're calling code from inside an integration."""
     correct_frame = Mock(
-        filename="/home/paulus/.homeassistant/custom_components/hue/light.py",
+        filename="/home/paulus/homeassistant/components/hue/light.py",
         lineno="23",
         line="self.light.is_on",
     )
-    with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
+    with (
+        patch(
+            "homeassistant.helpers.frame.linecache.getline",
+            return_value=correct_frame.line,
+        ),
+        patch(
+            "homeassistant.helpers.frame.get_current_frame",
+            return_value=extract_stack_to_frame(
+                [
+                    Mock(
+                        filename="/home/paulus/homeassistant/core.py",
+                        lineno="23",
+                        line="do_something()",
+                    ),
+                    correct_frame,
+                    Mock(
+                        filename="/home/paulus/aiohue/lights.py",
+                        lineno="2",
+                        line="something()",
+                    ),
+                ]
             ),
-            correct_frame,
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        ),
     ):
         yield correct_frame
 
 
 @pytest.mark.parametrize(
-    ("loader_class", "new_class"),
+    ("loader_class", "message"),
     [
-        (yaml.loader.SafeLoader, "FastSafeLoader"),
+        (yaml.loader.SafeLoader, "'SafeLoader' instead of 'FastSafeLoader'"),
         (
             yaml.loader.SafeLineLoader,
-            "PythonSafeLoader",
+            "'SafeLineLoader' instead of 'PythonSafeLoader'",
         ),
     ],
 )
@@ -628,17 +653,15 @@ async def test_deprecated_loaders(
     mock_integration_frame: Mock,
     caplog: pytest.LogCaptureFixture,
     loader_class,
-    new_class: str,
+    message: str,
 ) -> None:
     """Test instantiating the deprecated yaml loaders logs a warning."""
-    with pytest.raises(TypeError), patch(
-        "homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()
+    with (
+        pytest.raises(TypeError),
+        patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()),
     ):
         loader_class()
-    assert (
-        f"{loader_class.__name__} was called from hue, this is a deprecated class. "
-        f"Use {new_class} instead"
-    ) in caplog.text
+    assert (f"Detected that integration 'hue' uses deprecated {message}") in caplog.text
 
 
 def test_string_annotated(try_both_loaders) -> None:
@@ -689,3 +712,20 @@ def test_string_used_as_vol_schema(try_both_loaders) -> None:
     schema({"key_1": "value_1", "key_2": "value_2"})
     with pytest.raises(vol.Invalid):
         schema({"key_1": "value_2", "key_2": "value_1"})
+
+
+@pytest.mark.parametrize(
+    ("hass_config_yaml", "expected_data"), [("", {}), ("bla:", {"bla": None})]
+)
+def test_load_yaml_dict(
+    try_both_loaders, mock_hass_config_yaml: None, expected_data: Any
+) -> None:
+    """Test item without a key."""
+    assert yaml.load_yaml_dict(YAML_CONFIG_FILE) == expected_data
+
+
+@pytest.mark.parametrize("hass_config_yaml", ["abc", "123", "[]"])
+def test_load_yaml_dict_fail(try_both_loaders, mock_hass_config_yaml: None) -> None:
+    """Test item without a key."""
+    with pytest.raises(yaml_loader.YamlTypeError):
+        yaml_loader.load_yaml_dict(YAML_CONFIG_FILE)

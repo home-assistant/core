@@ -66,6 +66,7 @@ associate with an credential if "type" set to "link_user" in
     "version": 1
 }
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -79,8 +80,9 @@ import voluptuous_serialize
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import AuthManagerFlowManager, InvalidAuthError
-from homeassistant.auth.models import Credentials
+from homeassistant.auth.models import AuthFlowResult, Credentials
 from homeassistant.components import onboarding
+from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.auth import async_user_not_allowed_do_auth
 from homeassistant.components.http.ban import (
     log_invalid_auth,
@@ -89,7 +91,7 @@ from homeassistant.components.http.ban import (
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.network import is_cloud_connection
 from homeassistant.util.network import is_local
 
@@ -103,7 +105,8 @@ if TYPE_CHECKING:
     from . import StoreResultType
 
 
-async def async_setup(
+@callback
+def async_setup(
     hass: HomeAssistant, store_result: Callable[[str, Credentials], str]
 ) -> None:
     """Component to allow users to login."""
@@ -144,7 +147,7 @@ class AuthProvidersView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Get available auth providers."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         if not onboarding.async_is_user_onboarded(hass):
             return self.json_message(
                 message="Onboarding not finished",
@@ -165,8 +168,6 @@ class AuthProvidersView(HomeAssistantView):
 
         providers = []
         for provider in hass.auth.auth_providers:
-            additional_data = {}
-
             if provider.type == "trusted_networks":
                 if cloud_connection:
                     # Skip quickly as trusted networks are not available on cloud
@@ -179,39 +180,28 @@ class AuthProvidersView(HomeAssistantView):
                 except InvalidAuthError:
                     # Not a trusted network, so we don't expose that trusted_network authenticator is setup
                     continue
-            elif (
-                provider.type == "homeassistant"
-                and not cloud_connection
-                and is_local(remote_address)
-                and "person" in hass.config.components
-            ):
-                # We are local, return user id and username
-                users = await provider.store.async_get_users()
-                additional_data["users"] = {
-                    user.id: credentials.data["username"]
-                    for user in users
-                    for credentials in user.credentials
-                    if (
-                        credentials.auth_provider_type == provider.type
-                        and credentials.auth_provider_id == provider.id
-                    )
-                }
 
             providers.append(
                 {
                     "name": provider.name,
                     "id": provider.id,
                     "type": provider.type,
-                    **additional_data,
                 }
             )
 
-        return self.json(providers)
+        preselect_remember_me = not cloud_connection and is_local(remote_address)
+
+        return self.json(
+            {
+                "providers": providers,
+                "preselect_remember_me": preselect_remember_me,
+            }
+        )
 
 
 def _prepare_result_json(
-    result: data_entry_flow.FlowResult,
-) -> data_entry_flow.FlowResult:
+    result: AuthFlowResult,
+) -> AuthFlowResult:
     """Convert result to JSON."""
     if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
         data = result.copy()
@@ -250,7 +240,7 @@ class LoginFlowBaseView(HomeAssistantView):
         self,
         request: web.Request,
         client_id: str,
-        result: data_entry_flow.FlowResult,
+        result: AuthFlowResult,
     ) -> web.Response:
         """Convert the flow result to a response."""
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
@@ -268,7 +258,7 @@ class LoginFlowBaseView(HomeAssistantView):
                 await process_wrong_login(request)
             return self.json(_prepare_result_json(result))
 
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         if not await indieauth.verify_redirect_uri(
             hass, client_id, result["context"]["redirect_uri"]
@@ -310,7 +300,9 @@ class LoginFlowIndexView(LoginFlowBaseView):
         vol.Schema(
             {
                 vol.Required("client_id"): str,
-                vol.Required("handler"): vol.Any(str, list),
+                vol.Required("handler"): vol.All(
+                    [vol.Any(str, None)], vol.Length(2, 2), vol.Coerce(tuple)
+                ),
                 vol.Required("redirect_uri"): str,
                 vol.Optional("type", default="authorize"): str,
             }
@@ -325,15 +317,11 @@ class LoginFlowIndexView(LoginFlowBaseView):
         if not indieauth.verify_client_id(client_id):
             return self.json_message("Invalid client id", HTTPStatus.BAD_REQUEST)
 
-        handler: tuple[str, ...] | str
-        if isinstance(data["handler"], list):
-            handler = tuple(data["handler"])
-        else:
-            handler = data["handler"]
+        handler: tuple[str, str] = tuple(data["handler"])
 
         try:
             result = await self._flow_mgr.async_init(
-                handler,  # type: ignore[arg-type]
+                handler,
                 context={
                     "ip_address": ip_address(request.remote),  # type: ignore[arg-type]
                     "credential_only": data.get("type") == "link_user",

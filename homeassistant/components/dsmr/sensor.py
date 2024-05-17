@@ -1,4 +1,5 @@
 """Support for Dutch Smart Meter (also known as Smartmeter or P1 port)."""
+
 from __future__ import annotations
 
 import asyncio
@@ -28,6 +29,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
+    CONF_PROTOCOL,
     EVENT_HOMEASSISTANT_STOP,
     EntityCategory,
     UnitOfEnergy,
@@ -46,9 +48,6 @@ from homeassistant.util import Throttle
 
 from .const import (
     CONF_DSMR_VERSION,
-    CONF_PRECISION,
-    CONF_PROTOCOL,
-    CONF_RECONNECT_INTERVAL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
     CONF_TIME_BETWEEN_UPDATE,
@@ -69,7 +68,7 @@ EVENT_FIRST_TELEGRAM = "dsmr_first_telegram_{}"
 UNIT_CONVERSION = {"m3": UnitOfVolume.CUBIC_METERS}
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class DSMRSensorEntityDescription(SensorEntityDescription):
     """Represents an DSMR Sensor."""
 
@@ -80,6 +79,13 @@ class DSMRSensorEntityDescription(SensorEntityDescription):
 
 
 SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
+    DSMRSensorEntityDescription(
+        key="timestamp",
+        obis_reference=obis_references.P1_MESSAGE_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
     DSMRSensorEntityDescription(
         key="current_electricity_usage",
         translation_key="current_electricity_usage",
@@ -101,7 +107,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         device_class=SensorDeviceClass.ENUM,
         options=["low", "normal"],
-        icon="mdi:flash",
     ),
     DSMRSensorEntityDescription(
         key="electricity_used_tariff_1",
@@ -189,7 +194,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.SHORT_POWER_FAILURE_COUNT,
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:flash-off",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -198,7 +202,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.LONG_POWER_FAILURE_COUNT,
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:flash-off",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -231,7 +234,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.VOLTAGE_SWELL_L1_COUNT,
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:pulse",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -240,7 +242,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.VOLTAGE_SWELL_L2_COUNT,
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:pulse",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -249,7 +250,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.VOLTAGE_SWELL_L3_COUNT,
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:pulse",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -348,6 +348,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.BELGIUM_CURRENT_AVERAGE_DEMAND,
         dsmr_versions={"5B"},
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
         key="belgium_maximum_demand_current_month",
@@ -355,6 +356,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.BELGIUM_MAXIMUM_DEMAND_MONTH,
         dsmr_versions={"5B"},
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
         key="hourly_gas_meter_reading",
@@ -529,9 +531,7 @@ async def async_setup_entry(
         add_entities_handler = None
 
         if dsmr_version == "5B":
-            mbus_entities = create_mbus_entities(hass, telegram, entry)
-            for mbus_entity in mbus_entities:
-                entities.append(mbus_entity)
+            entities.extend(create_mbus_entities(hass, telegram, entry))
 
         entities.extend(
             [
@@ -609,7 +609,7 @@ async def async_setup_entry(
         transport = None
         protocol = None
 
-        while hass.state == CoreState.not_running or hass.is_running:
+        while hass.state is CoreState.not_running or hass.is_running:
             # Start DSMR asyncio.Protocol reader
 
             # Reflect connected state in devices state by setting an
@@ -636,7 +636,7 @@ async def async_setup_entry(
                     await protocol.wait_closed()
 
                     # Unexpected disconnect
-                    if hass.state == CoreState.not_running or hass.is_running:
+                    if hass.state is CoreState.not_running or hass.is_running:
                         stop_listener()
 
                 transport = None
@@ -647,11 +647,9 @@ async def async_setup_entry(
                 update_entities_telegram(None)
 
                 # throttle reconnect attempts
-                await asyncio.sleep(
-                    entry.data.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
-                )
+                await asyncio.sleep(DEFAULT_RECONNECT_INTERVAL)
 
-            except (serial.serialutil.SerialException, OSError):
+            except (serial.SerialException, OSError):
                 # Log any error while establishing connection and drop to retry
                 # connection wait
                 LOGGER.exception("Error connecting to DSMR")
@@ -663,16 +661,14 @@ async def async_setup_entry(
                 update_entities_telegram(None)
 
                 # throttle reconnect attempts
-                await asyncio.sleep(
-                    entry.data.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
-                )
+                await asyncio.sleep(DEFAULT_RECONNECT_INTERVAL)
             except CancelledError:
                 # Reflect disconnect state in devices state by setting an
                 # None telegram resulting in `unavailable` states
                 update_entities_telegram(None)
 
                 if stop_listener and (
-                    hass.state == CoreState.not_running or hass.is_running
+                    hass.state is CoreState.not_running or hass.is_running
                 ):
                     stop_listener()
 
@@ -795,9 +791,7 @@ class DSMREntity(SensorEntity):
             return self.translate_tariff(value, self._entry.data[CONF_DSMR_VERSION])
 
         with suppress(TypeError):
-            value = round(
-                float(value), self._entry.data.get(CONF_PRECISION, DEFAULT_PRECISION)
-            )
+            value = round(float(value), DEFAULT_PRECISION)
 
         # Make sure we do not return a zero value for an energy sensor
         if not value and self.state_class == SensorStateClass.TOTAL_INCREASING:

@@ -1,4 +1,5 @@
 """Support for using number with ecobee thermostats."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -18,19 +19,12 @@ from .entity import EcobeeBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class EcobeeNumberEntityDescriptionBase:
-    """Required values when describing Ecobee number entities."""
+@dataclass(frozen=True, kw_only=True)
+class EcobeeNumberEntityDescription(NumberEntityDescription):
+    """Class describing Ecobee number entities."""
 
     ecobee_setting_key: str
     set_fn: Callable[[EcobeeData, int, int], Awaitable]
-
-
-@dataclass
-class EcobeeNumberEntityDescription(
-    NumberEntityDescription, EcobeeNumberEntityDescriptionBase
-):
-    """Class describing Ecobee number entities."""
 
 
 VENTILATOR_NUMBERS = (
@@ -60,16 +54,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ecobee thermostat number entity."""
     data: EcobeeData = hass.data[DOMAIN]
-    entities = []
     _LOGGER.debug("Adding min time ventilators numbers (if present)")
-    for index, thermostat in enumerate(data.ecobee.thermostats):
-        if thermostat["settings"]["ventilatorType"] == "none":
-            continue
-        _LOGGER.debug("Adding %s's ventilator min times number", thermostat["name"])
-        for numbers in VENTILATOR_NUMBERS:
-            entities.append(EcobeeVentilatorMinTime(data, index, numbers))
 
-    async_add_entities(entities, True)
+    async_add_entities(
+        (
+            EcobeeVentilatorMinTime(data, index, numbers)
+            for index, thermostat in enumerate(data.ecobee.thermostats)
+            if thermostat["settings"]["ventilatorType"] != "none"
+            for numbers in VENTILATOR_NUMBERS
+        ),
+        True,
+    )
 
 
 class EcobeeVentilatorMinTime(EcobeeBaseEntity, NumberEntity):
@@ -93,10 +88,15 @@ class EcobeeVentilatorMinTime(EcobeeBaseEntity, NumberEntity):
         super().__init__(data, thermostat_index)
         self.entity_description = description
         self._attr_unique_id = f"{self.base_unique_id}_ventilator_{description.key}"
+        self.update_without_throttle = False
 
     async def async_update(self) -> None:
         """Get the latest state from the thermostat."""
-        await self.data.update()
+        if self.update_without_throttle:
+            await self.data.update(no_throttle=True)
+            self.update_without_throttle = False
+        else:
+            await self.data.update()
         self._attr_native_value = self.thermostat["settings"][
             self.entity_description.ecobee_setting_key
         ]
@@ -104,3 +104,4 @@ class EcobeeVentilatorMinTime(EcobeeBaseEntity, NumberEntity):
     def set_native_value(self, value: float) -> None:
         """Set new ventilator Min On Time value."""
         self.entity_description.set_fn(self.data, self.thermostat_index, int(value))
+        self.update_without_throttle = True

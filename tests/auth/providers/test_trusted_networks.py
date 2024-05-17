@@ -1,4 +1,5 @@
 """Test the Trusted Networks auth provider."""
+
 from ipaddress import ip_address, ip_network
 from unittest.mock import Mock, patch
 
@@ -16,9 +17,11 @@ from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
-def store(hass):
+async def store(hass):
     """Mock store."""
-    return auth_store.AuthStore(hass)
+    store = auth_store.AuthStore(hass)
+    await store.async_load()
+    return store
 
 
 @pytest.fixture

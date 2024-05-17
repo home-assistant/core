@@ -1,4 +1,5 @@
 """Diagnostics support for easyEnergy."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -21,6 +22,7 @@ def get_gas_price(data: EasyEnergyData, hours: int) -> float | None:
 
     Returns:
         The gas market price value.
+
     """
     if not data.gas_today:
         return None

@@ -1,4 +1,5 @@
 """The tests for the feedreader component."""
+
 from collections.abc import Generator
 from datetime import datetime, timedelta
 import pickle
@@ -14,6 +15,7 @@ from homeassistant.components.feedreader import (
     CONF_MAX_ENTRIES,
     CONF_URLS,
     DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
     EVENT_FEEDREADER,
 )
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
@@ -33,9 +35,8 @@ VALID_CONFIG_5 = {feedreader.DOMAIN: {CONF_URLS: [URL], CONF_MAX_ENTRIES: 1}}
 
 def load_fixture_bytes(src: str) -> bytes:
     """Return byte stream of fixture."""
-    feed_data = load_fixture(src)
-    raw = bytes(feed_data, "utf-8")
-    return raw
+    feed_data = load_fixture(src, DOMAIN)
+    return bytes(feed_data, "utf-8")
 
 
 @pytest.fixture(name="feed_one_event")
@@ -66,6 +67,12 @@ def fixture_feed_three_events(hass: HomeAssistant) -> bytes:
 def fixture_feed_atom_event(hass: HomeAssistant) -> bytes:
     """Load test feed data for atom event."""
     return load_fixture_bytes("feedreader5.xml")
+
+
+@pytest.fixture(name="feed_identically_timed_events")
+def fixture_feed_identically_timed_events(hass: HomeAssistant) -> bytes:
+    """Load test feed data for two events published at the exact same time."""
+    return load_fixture_bytes("feedreader6.xml")
 
 
 @pytest.fixture(name="events")
@@ -190,10 +197,13 @@ async def test_storage_data_writing(
     """Test writing to storage."""
     storage_data: dict[str, str] = {URL: "2018-04-30T05:10:00+00:00"}
 
-    with patch(
-        "feedparser.http.get",
-        return_value=feed_one_event,
-    ), patch("homeassistant.components.feedreader.DELAY_SAVE", new=0):
+    with (
+        patch(
+            "feedparser.http.get",
+            return_value=feed_one_event,
+        ),
+        patch("homeassistant.components.feedreader.DELAY_SAVE", new=0),
+    ):
         assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_2)
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -285,6 +295,66 @@ async def test_atom_feed(hass: HomeAssistant, events, feed_atom_event) -> None:
     assert events[0].data.updated_parsed.tm_min == 30
 
 
+async def test_feed_identical_timestamps(
+    hass: HomeAssistant, events, feed_identically_timed_events
+) -> None:
+    """Test feed with 2 entries with identical timestamps."""
+    with (
+        patch(
+            "feedparser.http.get",
+            return_value=feed_identically_timed_events,
+        ),
+        patch(
+            "homeassistant.components.feedreader.StoredData.get_timestamp",
+            return_value=gmtime(
+                datetime.fromisoformat("1970-01-01T00:00:00.0+0000").timestamp()
+            ),
+        ),
+    ):
+        assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_2)
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+
+    assert len(events) == 2
+    assert events[0].data.title == "Title 1"
+    assert events[1].data.title == "Title 2"
+    assert events[0].data.link == "http://www.example.com/link/1"
+    assert events[1].data.link == "http://www.example.com/link/2"
+    assert events[0].data.id == "GUID 1"
+    assert events[1].data.id == "GUID 2"
+    assert (
+        events[0].data.updated_parsed.tm_year
+        == events[1].data.updated_parsed.tm_year
+        == 2018
+    )
+    assert (
+        events[0].data.updated_parsed.tm_mon
+        == events[1].data.updated_parsed.tm_mon
+        == 4
+    )
+    assert (
+        events[0].data.updated_parsed.tm_mday
+        == events[1].data.updated_parsed.tm_mday
+        == 30
+    )
+    assert (
+        events[0].data.updated_parsed.tm_hour
+        == events[1].data.updated_parsed.tm_hour
+        == 15
+    )
+    assert (
+        events[0].data.updated_parsed.tm_min
+        == events[1].data.updated_parsed.tm_min
+        == 10
+    )
+    assert (
+        events[0].data.updated_parsed.tm_sec
+        == events[1].data.updated_parsed.tm_sec
+        == 0
+    )
+
+
 async def test_feed_updates(
     hass: HomeAssistant, events, feed_one_event, feed_two_event
 ) -> None:
@@ -306,14 +376,14 @@ async def test_feed_updates(
         # Change time and fetch more entries
         future = dt_util.utcnow() + timedelta(hours=1, seconds=1)
         async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert len(events) == 2
 
         # Change time but no new entries
         future = dt_util.utcnow() + timedelta(hours=2, seconds=2)
         async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert len(events) == 2
 

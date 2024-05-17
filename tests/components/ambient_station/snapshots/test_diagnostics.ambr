@@ -9,6 +9,7 @@
       'disabled_by': None,
       'domain': 'ambient_station',
       'entry_id': '382cf7643f016fd48b3fe52163fe8877',
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,

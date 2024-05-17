@@ -1,4 +1,5 @@
 """Test Subaru device tracker."""
+
 from copy import deepcopy
 from unittest.mock import patch
 

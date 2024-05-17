@@ -1,10 +1,11 @@
 """Test the Reolink init."""
+
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
-from reolink_aio.exceptions import ReolinkError
+from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
 from homeassistant.components.reolink import FIRMWARE_UPDATE_INTERVAL, const
 from homeassistant.config import async_process_ha_core_config
@@ -19,7 +20,7 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .conftest import TEST_CAM_MODEL, TEST_HOST_MODEL, TEST_NVR_NAME
+from .conftest import TEST_CAM_MODEL, TEST_HOST_MODEL, TEST_MAC, TEST_NVR_NAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -50,6 +51,11 @@ pytestmark = pytest.mark.usefixtures("reolink_connect", "reolink_platforms")
             ConfigEntryState.SETUP_RETRY,
         ),
         (
+            "get_states",
+            AsyncMock(side_effect=CredentialsInvalidError("Test error")),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
             "supported",
             Mock(return_value=False),
             ConfigEntryState.LOADED,
@@ -67,7 +73,7 @@ async def test_failures_parametrized(
     """Test outcomes when changing errors."""
     setattr(reolink_connect, attr, value)
     assert await hass.config_entries.async_setup(config_entry.entry_id) is (
-        expected == ConfigEntryState.LOADED
+        expected is ConfigEntryState.LOADED
     )
     await hass.async_block_till_done()
 
@@ -87,7 +93,7 @@ async def test_firmware_error_twice(
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.UPDATE}.{TEST_NVR_NAME}_firmware"
     assert hass.states.is_state(entity_id, STATE_OFF)
@@ -172,6 +178,42 @@ async def test_cleanup_disconnected_cams(
     assert sorted(device_models) == sorted(expected_models)
 
 
+async def test_cleanup_deprecated_entities(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test deprecated ir_lights light entity is cleaned."""
+    reolink_connect.channels = [0]
+    ir_id = f"{TEST_MAC}_0_ir_lights"
+
+    entity_registry.async_get_or_create(
+        domain=Platform.LIGHT,
+        platform=const.DOMAIN,
+        unique_id=ir_id,
+        config_entry=config_entry,
+        suggested_object_id=ir_id,
+        disabled_by=None,
+    )
+
+    assert entity_registry.async_get_entity_id(Platform.LIGHT, const.DOMAIN, ir_id)
+    assert (
+        entity_registry.async_get_entity_id(Platform.SWITCH, const.DOMAIN, ir_id)
+        is None
+    )
+
+    # setup CH 0 and NVR switch entities/device
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(Platform.LIGHT, const.DOMAIN, ir_id) is None
+    )
+    assert entity_registry.async_get_entity_id(Platform.SWITCH, const.DOMAIN, ir_id)
+
+
 async def test_no_repair_issue(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -199,12 +241,14 @@ async def test_https_repair_issue(
         hass, {"country": "GB", "internal_url": "https://test_homeassistant_address"}
     )
 
-    with patch(
-        "homeassistant.components.reolink.host.FIRST_ONVIF_TIMEOUT", new=0
-    ), patch(
-        "homeassistant.components.reolink.host.FIRST_ONVIF_LONG_POLL_TIMEOUT", new=0
-    ), patch(
-        "homeassistant.components.reolink.host.ReolinkHost._async_long_polling",
+    with (
+        patch("homeassistant.components.reolink.host.FIRST_ONVIF_TIMEOUT", new=0),
+        patch(
+            "homeassistant.components.reolink.host.FIRST_ONVIF_LONG_POLL_TIMEOUT", new=0
+        ),
+        patch(
+            "homeassistant.components.reolink.host.ReolinkHost._async_long_polling",
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -224,12 +268,14 @@ async def test_ssl_repair_issue(
         hass, {"country": "GB", "internal_url": "http://test_homeassistant_address"}
     )
 
-    with patch(
-        "homeassistant.components.reolink.host.FIRST_ONVIF_TIMEOUT", new=0
-    ), patch(
-        "homeassistant.components.reolink.host.FIRST_ONVIF_LONG_POLL_TIMEOUT", new=0
-    ), patch(
-        "homeassistant.components.reolink.host.ReolinkHost._async_long_polling",
+    with (
+        patch("homeassistant.components.reolink.host.FIRST_ONVIF_TIMEOUT", new=0),
+        patch(
+            "homeassistant.components.reolink.host.FIRST_ONVIF_LONG_POLL_TIMEOUT", new=0
+        ),
+        patch(
+            "homeassistant.components.reolink.host.ReolinkHost._async_long_polling",
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -262,12 +308,14 @@ async def test_webhook_repair_issue(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test repairs issue is raised when the webhook url is unreachable."""
-    with patch(
-        "homeassistant.components.reolink.host.FIRST_ONVIF_TIMEOUT", new=0
-    ), patch(
-        "homeassistant.components.reolink.host.FIRST_ONVIF_LONG_POLL_TIMEOUT", new=0
-    ), patch(
-        "homeassistant.components.reolink.host.ReolinkHost._async_long_polling",
+    with (
+        patch("homeassistant.components.reolink.host.FIRST_ONVIF_TIMEOUT", new=0),
+        patch(
+            "homeassistant.components.reolink.host.FIRST_ONVIF_LONG_POLL_TIMEOUT", new=0
+        ),
+        patch(
+            "homeassistant.components.reolink.host.ReolinkHost._async_long_polling",
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

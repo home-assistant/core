@@ -1,4 +1,5 @@
 """SAJ solar inverter interface."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -78,7 +79,7 @@ async def async_setup_platform(
     sensor_def = pysaj.Sensors(wifi)
 
     # Use all sensors by default
-    hass_sensors = []
+    hass_sensors: list[SAJsensor] = []
 
     kwargs = {}
     if wifi:
@@ -102,11 +103,11 @@ async def async_setup_platform(
     if not done:
         raise PlatformNotReady
 
-    for sensor in sensor_def:
-        if sensor.enabled:
-            hass_sensors.append(
-                SAJsensor(saj.serialnumber, sensor, inverter_name=config.get(CONF_NAME))
-            )
+    hass_sensors.extend(
+        SAJsensor(saj.serialnumber, sensor, inverter_name=config.get(CONF_NAME))
+        for sensor in sensor_def
+        if sensor.enabled
+    )
 
     async_add_entities(hass_sensors)
 

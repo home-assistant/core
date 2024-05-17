@@ -1,4 +1,5 @@
 """Platform for binary sensor integration."""
+
 from __future__ import annotations
 
 import logging
@@ -40,10 +41,10 @@ class LaundrifyPowerPlug(
     """Representation of a laundrify Power Plug."""
 
     _attr_device_class = BinarySensorDeviceClass.RUNNING
-    _attr_icon = "mdi:washing-machine"
     _attr_unique_id: str
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "laundrify_power_plug"
 
     def __init__(
         self, coordinator: LaundrifyUpdateCoordinator, device: LaundrifyDevice

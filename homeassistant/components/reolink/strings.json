@@ -10,6 +10,13 @@
           "use_https": "Enable HTTPS",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Reolink device. For example: '192.168.1.25'.",
+          "port": "The port to connect to the Reolink device. For HTTP normally: '80', for HTTPS normally '443'.",
+          "use_https": "Use a HTTPS (SSL) connection to the Reolink device.",
+          "username": "Username to login to the Reolink device itself. Not the Reolink cloud account.",
+          "password": "Password to login to the Reolink device itself. Not the Reolink cloud account."
         }
       },
       "reauth_confirm": {
@@ -21,7 +28,7 @@
       "api_error": "API error occurred",
       "cannot_connect": "Failed to connect, check the IP address of the camera",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "not_admin": "User needs to be admin, user ''{username}'' has authorisation level ''{userlevel}''",
+      "not_admin": "User needs to be admin, user \"{username}\" has authorisation level \"{userlevel}\"",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "webhook_exception": "Home Assistant URL is not available, go to Settings > System > Network > Home Assistant URL and correct the URLs, see {more_info}"
     },
@@ -35,6 +42,9 @@
       "init": {
         "data": {
           "protocol": "Protocol"
+        },
+        "data_description": {
+          "protocol": "Streaming protocol to use for the camera entities. RTSP supports 4K streams (h265 encoding) while RTMP and FLV do not. FLV is the least demanding on the camera."
         }
       }
     }
@@ -93,6 +103,9 @@
       "visitor": {
         "name": "Visitor"
       },
+      "package": {
+        "name": "Package"
+      },
       "motion_lens_0": {
         "name": "Motion lens 0"
       },
@@ -114,6 +127,9 @@
       "visitor_lens_0": {
         "name": "Visitor lens 0"
       },
+      "package_lens_0": {
+        "name": "Package lens 0"
+      },
       "motion_lens_1": {
         "name": "Motion lens 1"
       },
@@ -134,6 +150,9 @@
       },
       "visitor_lens_1": {
         "name": "Visitor lens 1"
+      },
+      "package_lens_1": {
+        "name": "Package lens 1"
       }
     },
     "button": {
@@ -228,9 +247,6 @@
       "floodlight": {
         "name": "Floodlight"
       },
-      "ir_lights": {
-        "name": "Infra red lights in night mode"
-      },
       "status_led": {
         "name": "Status LED"
       }
@@ -254,19 +270,25 @@
       "motion_sensitivity": {
         "name": "Motion sensitivity"
       },
-      "ai_face_sensititvity": {
+      "pir_sensitivity": {
+        "name": "PIR sensitivity"
+      },
+      "ai_face_sensitivity": {
         "name": "AI face sensitivity"
       },
-      "ai_person_sensititvity": {
+      "ai_person_sensitivity": {
         "name": "AI person sensitivity"
       },
-      "ai_vehicle_sensititvity": {
+      "ai_vehicle_sensitivity": {
         "name": "AI vehicle sensitivity"
       },
-      "ai_pet_sensititvity": {
+      "ai_package_sensitivity": {
+        "name": "AI package sensitivity"
+      },
+      "ai_pet_sensitivity": {
         "name": "AI pet sensitivity"
       },
-      "ai_animal_sensititvity": {
+      "ai_animal_sensitivity": {
         "name": "AI animal sensitivity"
       },
       "ai_face_delay": {
@@ -277,6 +299,9 @@
       },
       "ai_vehicle_delay": {
         "name": "AI vehicle delay"
+      },
+      "ai_package_delay": {
+        "name": "AI package delay"
       },
       "ai_pet_delay": {
         "name": "AI pet delay"
@@ -301,6 +326,21 @@
       },
       "day_night_switch_threshold": {
         "name": "Day night switch threshold"
+      },
+      "image_brightness": {
+        "name": "Image brightness"
+      },
+      "image_contrast": {
+        "name": "Image contrast"
+      },
+      "image_saturation": {
+        "name": "Image saturation"
+      },
+      "image_sharpness": {
+        "name": "Image sharpness"
+      },
+      "image_hue": {
+        "name": "Image hue"
       }
     },
     "select": {
@@ -326,6 +366,9 @@
       "ptz_preset": {
         "name": "PTZ preset"
       },
+      "play_quick_reply_message": {
+        "name": "Play quick reply message"
+      },
       "auto_quick_reply_message": {
         "name": "Auto quick reply message",
         "state": {
@@ -345,7 +388,8 @@
         "state": {
           "stayoff": "Stay off",
           "auto": "Auto",
-          "alwaysonatnight": "Auto & always on at night"
+          "alwaysonatnight": "Auto & always on at night",
+          "alwayson": "Always on"
         }
       }
     },
@@ -355,6 +399,23 @@
       },
       "ptz_pan_position": {
         "name": "PTZ pan position"
+      },
+      "battery_temperature": {
+        "name": "Battery temperature"
+      },
+      "battery_state": {
+        "name": "Battery state",
+        "state": {
+          "discharging": "Discharging",
+          "charging": "Charging",
+          "chargecomplete": "Charge complete"
+        }
+      },
+      "hdd_storage": {
+        "name": "HDD {hdd_index} storage"
+      },
+      "sd_storage": {
+        "name": "SD {hdd_index} storage"
       }
     },
     "siren": {
@@ -363,6 +424,9 @@
       }
     },
     "switch": {
+      "ir_lights": {
+        "name": "Infra red lights in night mode"
+      },
       "record_audio": {
         "name": "Record audio"
       },
@@ -375,8 +439,11 @@
       "auto_focus": {
         "name": "Auto focus"
       },
-      "gaurd_return": {
+      "guard_return": {
         "name": "Guard return"
+      },
+      "ptz_patrol": {
+        "name": "PTZ patrol"
       },
       "email": {
         "name": "Email on event"
@@ -398,6 +465,12 @@
       },
       "hdr": {
         "name": "HDR"
+      },
+      "pir_enabled": {
+        "name": "PIR enabled"
+      },
+      "pir_reduce_alarm": {
+        "name": "PIR reduce false alarm"
       }
     }
   }

@@ -1,4 +1,5 @@
 """Support for LIFX lights."""
+
 from __future__ import annotations
 
 import asyncio
@@ -281,7 +282,7 @@ class LIFXLight(LIFXEntity, LightEntity):
         """Send a power change to the bulb."""
         try:
             await self.coordinator.async_set_power(pwr, duration)
-        except asyncio.TimeoutError as ex:
+        except TimeoutError as ex:
             raise HomeAssistantError(f"Timeout setting power for {self.name}") from ex
 
     async def set_color(
@@ -294,7 +295,7 @@ class LIFXLight(LIFXEntity, LightEntity):
         merged_hsbk = merge_hsbk(self.bulb.color, hsbk)
         try:
             await self.coordinator.async_set_color(merged_hsbk, duration)
-        except asyncio.TimeoutError as ex:
+        except TimeoutError as ex:
             raise HomeAssistantError(f"Timeout setting color for {self.name}") from ex
 
     async def get_color(
@@ -303,7 +304,7 @@ class LIFXLight(LIFXEntity, LightEntity):
         """Send a get color message to the bulb."""
         try:
             await self.coordinator.async_get_color()
-        except asyncio.TimeoutError as ex:
+        except TimeoutError as ex:
             raise HomeAssistantError(
                 f"Timeout setting getting color for {self.name}"
             ) from ex
@@ -417,7 +418,7 @@ class LIFXMultiZone(LIFXColor):
                 await super().set_color(hsbk, kwargs, duration)
                 return
 
-            zones = list(range(0, num_zones))
+            zones = list(range(num_zones))
         else:
             zones = [x for x in set(zones) if x < num_zones]
 
@@ -429,7 +430,7 @@ class LIFXMultiZone(LIFXColor):
                 await self.coordinator.async_set_color_zones(
                     zone, zone, zone_hsbk, duration, apply
                 )
-            except asyncio.TimeoutError as ex:
+            except TimeoutError as ex:
                 raise HomeAssistantError(
                     f"Timeout setting color zones for {self.name}"
                 ) from ex
@@ -444,7 +445,7 @@ class LIFXMultiZone(LIFXColor):
         """Send a get color zones message to the device."""
         try:
             await self.coordinator.async_get_color_zones()
-        except asyncio.TimeoutError as ex:
+        except TimeoutError as ex:
             raise HomeAssistantError(
                 f"Timeout getting color zones from {self.name}"
             ) from ex
@@ -477,7 +478,7 @@ class LIFXExtendedMultiZone(LIFXMultiZone):
             await self.coordinator.async_set_extended_color_zones(
                 color_zones, duration=duration
             )
-        except asyncio.TimeoutError as ex:
+        except TimeoutError as ex:
             raise HomeAssistantError(
                 f"Timeout setting color zones on {self.name}"
             ) from ex

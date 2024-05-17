@@ -1,4 +1,5 @@
 """Test config entries API."""
+
 from typing import Any
 
 import pytest
@@ -14,7 +15,7 @@ from tests.typing import WebSocketGenerator
 @pytest.fixture(autouse=True)
 async def setup_config(hass, local_auth):
     """Fixture that sets up the auth provider ."""
-    await auth_ha.async_setup(hass)
+    auth_ha.async_setup(hass)
 
 
 @pytest.fixture

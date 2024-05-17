@@ -1,9 +1,9 @@
 """Support for Zigbee Home Automation devices."""
+
 import asyncio
 import contextlib
 import copy
 import logging
-import os
 import re
 
 import voluptuous as vol
@@ -18,7 +18,6 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
 from . import repairs, websocket_api
@@ -37,8 +36,6 @@ from .core.const import (
     DOMAIN,
     PLATFORMS,
     SIGNAL_ADD_ENTITIES,
-    STARTUP_FAILURE_DELAY_S,
-    STARTUP_RETRIES,
     RadioType,
 )
 from .core.device import get_device_automation_triggers
@@ -127,18 +124,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     zha_data = get_zha_data(hass)
 
     if zha_data.yaml_config.get(CONF_ENABLE_QUIRKS, True):
-        setup_quirks(
-            custom_quirks_path=zha_data.yaml_config.get(CONF_CUSTOM_QUIRKS_PATH)
+        await hass.async_add_import_executor_job(
+            setup_quirks, zha_data.yaml_config.get(CONF_CUSTOM_QUIRKS_PATH)
         )
-
-    # temporary code to remove the ZHA storage file from disk.
-    # this will be removed in 2022.10.0
-    storage_path = hass.config.path(STORAGE_DIR, "zha.storage")
-    if os.path.isfile(storage_path):
-        _LOGGER.debug("removing ZHA storage file")
-        await hass.async_add_executor_job(os.remove, storage_path)
-    else:
-        _LOGGER.debug("ZHA storage file does not exist or was already removed")
 
     # Load and cache device trigger information early
     device_registry = dr.async_get(hass)
@@ -161,49 +149,40 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     _LOGGER.debug("Trigger cache: %s", zha_data.device_trigger_cache)
 
-    # Retry setup a few times before giving up to deal with missing serial ports in VMs
-    for attempt in range(STARTUP_RETRIES):
-        try:
-            zha_gateway = await ZHAGateway.async_from_config(
-                hass=hass,
-                config=zha_data.yaml_config,
-                config_entry=config_entry,
-            )
-            break
-        except NetworkSettingsInconsistent as exc:
-            await warn_on_inconsistent_network_settings(
-                hass,
-                config_entry=config_entry,
-                old_state=exc.old_state,
-                new_state=exc.new_state,
-            )
-            raise ConfigEntryError(
-                "Network settings do not match most recent backup"
-            ) from exc
-        except TransientConnectionError as exc:
-            raise ConfigEntryNotReady from exc
-        except Exception as exc:  # pylint: disable=broad-except
-            _LOGGER.debug(
-                "Couldn't start coordinator (attempt %s of %s)",
-                attempt + 1,
-                STARTUP_RETRIES,
-                exc_info=exc,
-            )
+    try:
+        zha_gateway = await ZHAGateway.async_from_config(
+            hass=hass,
+            config=zha_data.yaml_config,
+            config_entry=config_entry,
+        )
+    except NetworkSettingsInconsistent as exc:
+        await warn_on_inconsistent_network_settings(
+            hass,
+            config_entry=config_entry,
+            old_state=exc.old_state,
+            new_state=exc.new_state,
+        )
+        raise ConfigEntryError(
+            "Network settings do not match most recent backup"
+        ) from exc
+    except TransientConnectionError as exc:
+        raise ConfigEntryNotReady from exc
+    except Exception as exc:
+        _LOGGER.debug("Failed to set up ZHA", exc_info=exc)
+        device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
 
-            if attempt < STARTUP_RETRIES - 1:
-                await asyncio.sleep(STARTUP_FAILURE_DELAY_S)
-                continue
+        if (
+            not device_path.startswith("socket://")
+            and RadioType[config_entry.data[CONF_RADIO_TYPE]] == RadioType.ezsp
+        ):
+            try:
+                # Ignore all exceptions during probing, they shouldn't halt setup
+                if await warn_on_wrong_silabs_firmware(hass, device_path):
+                    raise ConfigEntryError("Incorrect firmware installed") from exc
+            except AlreadyRunningEZSP as ezsp_exc:
+                raise ConfigEntryNotReady from ezsp_exc
 
-            if RadioType[config_entry.data[CONF_RADIO_TYPE]] == RadioType.ezsp:
-                try:
-                    # Ignore all exceptions during probing, they shouldn't halt setup
-                    await warn_on_wrong_silabs_firmware(
-                        hass, config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
-                    )
-                except AlreadyRunningEZSP as ezsp_exc:
-                    raise ConfigEntryNotReady from ezsp_exc
-
-            raise
+        raise ConfigEntryNotReady from exc
 
     repairs.async_delete_blocking_issues(hass)
 
@@ -283,8 +262,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if data[CONF_RADIO_TYPE] != RadioType.deconz and baudrate in BAUD_RATES:
             data[CONF_DEVICE][CONF_BAUDRATE] = baudrate
 
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, data=data)
+        hass.config_entries.async_update_entry(config_entry, data=data, version=2)
 
     if config_entry.version == 2:
         data = {**config_entry.data}
@@ -292,8 +270,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if data[CONF_RADIO_TYPE] == "ti_cc":
             data[CONF_RADIO_TYPE] = "znp"
 
-        config_entry.version = 3
-        hass.config_entries.async_update_entry(config_entry, data=data)
+        hass.config_entries.async_update_entry(config_entry, data=data, version=3)
 
     if config_entry.version == 3:
         data = {**config_entry.data}
@@ -310,8 +287,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if not data[CONF_DEVICE].get(CONF_FLOW_CONTROL):
             data[CONF_DEVICE][CONF_FLOW_CONTROL] = None
 
-        config_entry.version = 4
-        hass.config_entries.async_update_entry(config_entry, data=data)
+        hass.config_entries.async_update_entry(config_entry, data=data, version=4)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True

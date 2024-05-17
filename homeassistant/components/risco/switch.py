@@ -1,5 +1,8 @@
 """Support for bypassing Risco alarm zones."""
+
 from __future__ import annotations
+
+from typing import Any
 
 from pyrisco.common import Zone
 
@@ -9,8 +12,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LocalData, RiscoDataUpdateCoordinator, is_local
+from . import LocalData, is_local
 from .const import DATA_COORDINATOR, DOMAIN
+from .coordinator import RiscoDataUpdateCoordinator
 from .entity import RiscoCloudZoneEntity, RiscoLocalZoneEntity
 
 
@@ -58,11 +62,11 @@ class RiscoCloudSwitch(RiscoCloudZoneEntity, SwitchEntity):
         """Return true if the zone is bypassed."""
         return self._zone.bypassed
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._bypass(True)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._bypass(False)
 
@@ -92,11 +96,11 @@ class RiscoLocalSwitch(RiscoLocalZoneEntity, SwitchEntity):
         """Return true if the zone is bypassed."""
         return self._zone.bypassed
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._bypass(True)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._bypass(False)
 

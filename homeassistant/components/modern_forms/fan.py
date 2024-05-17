@@ -1,4 +1,5 @@
 """Support for Modern Forms Fan Fans."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -12,16 +13,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
-    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+from homeassistant.util.scaling import int_states_in_range
 
-from . import (
-    ModernFormsDataUpdateCoordinator,
-    ModernFormsDeviceEntity,
-    modernforms_exception_handler,
-)
+from . import ModernFormsDeviceEntity, modernforms_exception_handler
 from .const import (
     ATTR_SLEEP_TIME,
     CLEAR_TIMER,
@@ -31,6 +28,7 @@ from .const import (
     SERVICE_CLEAR_FAN_SLEEP_TIMER,
     SERVICE_SET_FAN_SLEEP_TIMER,
 )
+from .coordinator import ModernFormsDataUpdateCoordinator
 
 
 async def async_setup_entry(

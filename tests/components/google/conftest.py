@@ -1,9 +1,11 @@
 """Test configuration and mocks for the google integration."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Generator
 import datetime
 import http
+import time
 from typing import Any, TypeVar
 from unittest.mock import Mock, mock_open, patch
 
@@ -189,9 +191,9 @@ def creds(
 
 
 @pytest.fixture
-def config_entry_token_expiry(token_expiry: datetime.datetime) -> float:
+def config_entry_token_expiry() -> float:
     """Fixture for token expiration value stored in the config entry."""
-    return token_expiry.timestamp()
+    return time.time() + 86400
 
 
 @pytest.fixture
@@ -239,7 +241,7 @@ def mock_events_list(
 
     def _put_result(
         response: dict[str, Any],
-        calendar_id: str = None,
+        calendar_id: str | None = None,
         exc: ClientError | None = None,
     ) -> None:
         if calendar_id is None:
@@ -253,20 +255,18 @@ def mock_events_list(
             json=resp,
             exc=exc,
         )
-        return
 
     return _put_result
 
 
 @pytest.fixture
 def mock_events_list_items(
-    mock_events_list: Callable[[dict[str, Any]], None]
+    mock_events_list: Callable[[dict[str, Any]], None],
 ) -> Callable[[list[dict[str, Any]]], None]:
     """Fixture to construct an API response containing event items."""
 
     def _put_items(items: list[dict[str, Any]]) -> None:
         mock_events_list({"items": items})
-        return
 
     return _put_items
 
@@ -287,7 +287,6 @@ def mock_calendars_list(
             json=resp,
             exc=exc,
         )
-        return
 
     return _result
 
@@ -310,7 +309,6 @@ def mock_calendar_get(
             exc=exc,
             status=status,
         )
-        return
 
     return _result
 
@@ -328,7 +326,6 @@ def mock_insert_event(
             f"{API_BASE_URL}/calendars/{calendar_id}/events",
             exc=exc,
         )
-        return
 
     return _expect_result
 

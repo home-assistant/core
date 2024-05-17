@@ -1,4 +1,5 @@
 """The tests for the notify.persistent_notification service."""
+
 from homeassistant.components import notify
 import homeassistant.components.persistent_notification as pn
 from homeassistant.core import HomeAssistant

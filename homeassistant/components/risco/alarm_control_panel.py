@@ -1,4 +1,5 @@
 """Support for Risco alarms."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -6,6 +7,7 @@ import logging
 from typing import Any
 
 from pyrisco.common import Partition
+from pyrisco.local.partition import Partition as LocalPartition
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -27,7 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LocalData, RiscoDataUpdateCoordinator, is_local
+from . import LocalData, is_local
 from .const import (
     CONF_CODE_ARM_REQUIRED,
     CONF_CODE_DISARM_REQUIRED,
@@ -40,6 +42,7 @@ from .const import (
     RISCO_GROUPS,
     RISCO_PARTIAL_ARM,
 )
+from .coordinator import RiscoDataUpdateCoordinator
 from .entity import RiscoCloudEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -132,7 +135,7 @@ class RiscoAlarm(AlarmControlPanelEntity):
 
         return None
 
-    def _validate_code(self, code):
+    def _validate_code(self, code: str | None) -> bool:
         """Validate given code."""
         return code == self._code
 
@@ -159,7 +162,7 @@ class RiscoAlarm(AlarmControlPanelEntity):
         """Send arm custom bypass command."""
         await self._arm(STATE_ALARM_ARMED_CUSTOM_BYPASS, code)
 
-    async def _arm(self, mode, code):
+    async def _arm(self, mode: str, code: str | None) -> None:
         if self.code_arm_required and not self._validate_code(code):
             _LOGGER.warning("Wrong code entered for %s", mode)
             return
@@ -205,7 +208,7 @@ class RiscoCloudAlarm(RiscoAlarm, RiscoCloudEntity):
     def _get_data_from_coordinator(self) -> None:
         self._partition = self.coordinator.data.partitions[self._partition_id]
 
-    async def _call_alarm_method(self, method, *args):
+    async def _call_alarm_method(self, method: str, *args: Any) -> None:
         alarm = await getattr(self._risco, method)(self._partition_id, *args)
         self._partition = alarm.partitions[self._partition_id]
         self.async_write_ha_state()
@@ -220,7 +223,7 @@ class RiscoLocalAlarm(RiscoAlarm):
         self,
         system_id: str,
         partition_id: int,
-        partition: Partition,
+        partition: LocalPartition,
         partition_updates: dict[int, Callable[[], Any]],
         code: str,
         options: dict[str, Any],

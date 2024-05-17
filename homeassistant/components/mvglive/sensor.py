@@ -1,4 +1,5 @@
 """Support for departure information for public transport in Munich."""
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -70,9 +71,8 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the MVGLive sensor."""
-    sensors = []
-    for nextdeparture in config[CONF_NEXT_DEPARTURE]:
-        sensors.append(
+    add_entities(
+        (
             MVGLiveSensor(
                 nextdeparture.get(CONF_STATION),
                 nextdeparture.get(CONF_DESTINATIONS),
@@ -83,8 +83,10 @@ def setup_platform(
                 nextdeparture.get(CONF_NUMBER),
                 nextdeparture.get(CONF_NAME),
             )
-        )
-    add_entities(sensors, True)
+            for nextdeparture in config[CONF_NEXT_DEPARTURE]
+        ),
+        True,
+    )
 
 
 class MVGLiveSensor(SensorEntity):

@@ -1,0 +1,651 @@
+# serializer version: 1
+# name: test_config_entry
+  dict({
+    'config-entry': dict({
+      'data': dict({
+        'AccessoryPairingID': '00:00:00:00:00:00',
+      }),
+      'title': 'test',
+      'version': 1,
+    }),
+    'config-num': 0,
+    'devices': list([
+      dict({
+        'entities': list([
+          dict({
+            'device_class': None,
+            'disabled': False,
+            'disabled_by': None,
+            'entity_category': 'diagnostic',
+            'icon': None,
+            'original_device_class': 'identify',
+            'original_icon': None,
+            'original_name': 'Koogeek-LS1-20833F Identify',
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'identify',
+                'friendly_name': 'Koogeek-LS1-20833F Identify',
+              }),
+              'entity_id': 'button.koogeek_ls1_20833f_identify',
+              'state': 'unknown',
+            }),
+            'unit_of_measurement': None,
+          }),
+          dict({
+            'device_class': None,
+            'disabled': False,
+            'disabled_by': None,
+            'entity_category': None,
+            'icon': None,
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Koogeek-LS1-20833F Light Strip',
+            'state': dict({
+              'attributes': dict({
+                'brightness': None,
+                'color_mode': None,
+                'color_temp': None,
+                'color_temp_kelvin': None,
+                'friendly_name': 'Koogeek-LS1-20833F Light Strip',
+                'hs_color': None,
+                'max_color_temp_kelvin': 6535,
+                'max_mireds': 500,
+                'min_color_temp_kelvin': 2000,
+                'min_mireds': 153,
+                'rgb_color': None,
+                'supported_color_modes': list([
+                  'color_temp',
+                  'hs',
+                ]),
+                'supported_features': 0,
+                'xy_color': None,
+              }),
+              'entity_id': 'light.koogeek_ls1_20833f_light_strip',
+              'state': 'off',
+            }),
+            'unit_of_measurement': None,
+          }),
+        ]),
+        'hw_version': '',
+        'manfacturer': 'Koogeek',
+        'model': 'LS1',
+        'name': 'Koogeek-LS1-20833F',
+        'sw_version': '2.2.15',
+      }),
+    ]),
+    'entity-map': list([
+      dict({
+        'aid': 1,
+        'services': list([
+          dict({
+            'characteristics': list([
+              dict({
+                'description': 'Name',
+                'format': 'string',
+                'iid': 2,
+                'maxLen': 64,
+                'perms': list([
+                  'pr',
+                ]),
+                'type': '00000023-0000-1000-8000-0026BB765291',
+                'value': 'Koogeek-LS1-20833F',
+              }),
+              dict({
+                'description': 'Manufacturer',
+                'format': 'string',
+                'iid': 3,
+                'maxLen': 64,
+                'perms': list([
+                  'pr',
+                ]),
+                'type': '00000020-0000-1000-8000-0026BB765291',
+                'value': 'Koogeek',
+              }),
+              dict({
+                'description': 'Model',
+                'format': 'string',
+                'iid': 4,
+                'maxLen': 64,
+                'perms': list([
+                  'pr',
+                ]),
+                'type': '00000021-0000-1000-8000-0026BB765291',
+                'value': 'LS1',
+              }),
+              dict({
+                'description': 'Serial Number',
+                'format': 'string',
+                'iid': 5,
+                'maxLen': 64,
+                'perms': list([
+                  'pr',
+                ]),
+                'type': '00000030-0000-1000-8000-0026BB765291',
+                'value': '**REDACTED**',
+              }),
+              dict({
+                'description': 'Identify',
+                'format': 'bool',
+                'iid': 6,
+                'perms': list([
+                  'pw',
+                ]),
+                'type': '00000014-0000-1000-8000-0026BB765291',
+              }),
+              dict({
+                'description': 'Firmware Revision',
+                'format': 'string',
+                'iid': 23,
+                'maxLen': 64,
+                'perms': list([
+                  'pr',
+                ]),
+                'type': '00000052-0000-1000-8000-0026BB765291',
+                'value': '2.2.15',
+              }),
+            ]),
+            'iid': 1,
+            'type': '0000003E-0000-1000-8000-0026BB765291',
+          }),
+          dict({
+            'characteristics': list([
+              dict({
+                'description': 'On',
+                'format': 'bool',
+                'iid': 8,
+                'perms': list([
+                  'pr',
+                  'pw',
+                  'ev',
+                ]),
+                'type': '00000025-0000-1000-8000-0026BB765291',
+                'value': False,
+              }),
+              dict({
+                'description': 'Hue',
+                'format': 'float',
+                'iid': 9,
+                'maxValue': 359,
+                'minStep': 1,
+                'minValue': 0,
+                'perms': list([
+                  'pr',
+                  'pw',
+                  'ev',
+                ]),
+                'type': '00000013-0000-1000-8000-0026BB765291',
+                'unit': 'arcdegrees',
+                'value': 44,
+              }),
+              dict({
+                'description': 'Saturation',
+                'format': 'float',
+                'iid': 10,
+                'maxValue': 100,
+                'minStep': 1,
+                'minValue': 0,
+                'perms': list([
+                  'pr',
+                  'pw',
+                  'ev',
+                ]),
+                'type': '0000002F-0000-1000-8000-0026BB765291',
+                'unit': 'percentage',
+                'value': 0,
+              }),
+              dict({
+                'description': 'Brightness',
+                'format': 'int',
+                'iid': 11,
+                'maxValue': 100,
+                'minStep': 1,
+                'minValue': 0,
+                'perms': list([
+                  'pr',
+                  'pw',
+                  'ev',
+                ]),
+                'type': '00000008-0000-1000-8000-0026BB765291',
+                'unit': 'percentage',
+                'value': 100,
+              }),
+              dict({
+                'description': 'Name',
+                'format': 'string',
+                'iid': 12,
+                'maxLen': 64,
+                'perms': list([
+                  'pr',
+                ]),
+                'type': '00000023-0000-1000-8000-0026BB765291',
+                'value': 'Light Strip',
+              }),
+            ]),
+            'iid': 7,
+            'type': '00000043-0000-1000-8000-0026BB765291',
+          }),
+          dict({
+            'characteristics': list([
+              dict({
+                'description': 'TIMER_SETTINGS',
+                'format': 'tlv8',
+                'iid': 14,
+                'perms': list([
+                  'pr',
+                  'pw',
+                ]),
+                'type': '4AAAF942-0DEC-11E5-B939-0800200C9A66',
+                'value': 'AHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+              }),
+            ]),
+            'iid': 13,
+            'type': '4AAAF940-0DEC-11E5-B939-0800200C9A66',
+          }),
+          dict({
+            'characteristics': list([
+              dict({
+                'description': 'FW Upgrade supported types',
+                'format': 'string',
+                'iid': 16,
+                'maxLen': 64,
+                'perms': list([
+                  'pr',
+                  'hd',
+                ]),
+                'type': '151909D2-3802-11E4-916C-0800200C9A66',
+                'value': 'url,data',
+              }),
+              dict({
+                'description': 'FW Upgrade URL',
+                'format': 'string',
+                'iid': 17,
+                'maxLen': 64,
+                'perms': list([
+                  'pw',
+                  'hd',
+                ]),
+                'type': '151909D1-3802-11E4-916C-0800200C9A66',
+              }),
+              dict({
+                'description': 'FW Upgrade Status',
+                'format': 'int',
+                'iid': 18,
+                'perms': list([
+                  'pr',
+                  'ev',
+                  'hd',
+                ]),
+                'type': '151909D6-3802-11E4-916C-0800200C9A66',
+                'value': 0,
+              }),
+              dict({
+                'description': 'FW Upgrade Data',
+                'format': 'data',
+                'iid': 19,
+                'perms': list([
+                  'pw',
+                  'hd',
+                ]),
+                'type': '151909D7-3802-11E4-916C-0800200C9A66',
+              }),
+            ]),
+            'iid': 15,
+            'type': '151909D0-3802-11E4-916C-0800200C9A66',
+          }),
+          dict({
+            'characteristics': list([
+              dict({
+                'description': 'Timezone',
+                'format': 'int',
+                'iid': 21,
+                'perms': list([
+                  'pr',
+                  'pw',
+                ]),
+                'type': '151909D5-3802-11E4-916C-0800200C9A66',
+                'value': 0,
+              }),
+              dict({
+                'description': 'Time value since Epoch',
+                'format': 'int',
+                'iid': 22,
+                'perms': list([
+                  'pr',
+                  'pw',
+                ]),
+                'type': '151909D4-3802-11E4-916C-0800200C9A66',
+                'value': 1550348623,
+              }),
+            ]),
+            'iid': 20,
+            'type': '151909D3-3802-11E4-916C-0800200C9A66',
+          }),
+        ]),
+      }),
+    ]),
+  })
+# ---
+# name: test_device
+  dict({
+    'config-entry': dict({
+      'data': dict({
+        'AccessoryPairingID': '00:00:00:00:00:00',
+      }),
+      'title': 'test',
+      'version': 1,
+    }),
+    'config-num': 0,
+    'device': dict({
+      'entities': list([
+        dict({
+          'device_class': None,
+          'disabled': False,
+          'disabled_by': None,
+          'entity_category': 'diagnostic',
+          'icon': None,
+          'original_device_class': 'identify',
+          'original_icon': None,
+          'original_name': 'Koogeek-LS1-20833F Identify',
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'Koogeek-LS1-20833F Identify',
+            }),
+            'entity_id': 'button.koogeek_ls1_20833f_identify',
+            'state': 'unknown',
+          }),
+          'unit_of_measurement': None,
+        }),
+        dict({
+          'device_class': None,
+          'disabled': False,
+          'disabled_by': None,
+          'entity_category': None,
+          'icon': None,
+          'original_device_class': None,
+          'original_icon': None,
+          'original_name': 'Koogeek-LS1-20833F Light Strip',
+          'state': dict({
+            'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
+              'color_temp': None,
+              'color_temp_kelvin': None,
+              'friendly_name': 'Koogeek-LS1-20833F Light Strip',
+              'hs_color': None,
+              'max_color_temp_kelvin': 6535,
+              'max_mireds': 500,
+              'min_color_temp_kelvin': 2000,
+              'min_mireds': 153,
+              'rgb_color': None,
+              'supported_color_modes': list([
+                'color_temp',
+                'hs',
+              ]),
+              'supported_features': 0,
+              'xy_color': None,
+            }),
+            'entity_id': 'light.koogeek_ls1_20833f_light_strip',
+            'state': 'off',
+          }),
+          'unit_of_measurement': None,
+        }),
+      ]),
+      'hw_version': '',
+      'manfacturer': 'Koogeek',
+      'model': 'LS1',
+      'name': 'Koogeek-LS1-20833F',
+      'sw_version': '2.2.15',
+    }),
+    'entity-map': list([
+      dict({
+        'aid': 1,
+        'services': list([
+          dict({
+            'characteristics': list([
+              dict({
+                'description': 'Name',
+                'format': 'string',
+                'iid': 2,
+                'maxLen': 64,
+                'perms': list([
+                  'pr',
+                ]),
+                'type': '00000023-0000-1000-8000-0026BB765291',
+                'value': 'Koogeek-LS1-20833F',
+              }),
+              dict({
+                'description': 'Manufacturer',
+                'format': 'string',
+                'iid': 3,
+                'maxLen': 64,
+                'perms': list([
+                  'pr',
+                ]),
+                'type': '00000020-0000-1000-8000-0026BB765291',
+                'value': 'Koogeek',
+              }),
+              dict({
+                'description': 'Model',
+                'format': 'string',
+                'iid': 4,
+                'maxLen': 64,
+                'perms': list([
+                  'pr',
+                ]),
+                'type': '00000021-0000-1000-8000-0026BB765291',
+                'value': 'LS1',
+              }),
+              dict({
+                'description': 'Serial Number',
+                'format': 'string',
+                'iid': 5,
+                'maxLen': 64,
+                'perms': list([
+                  'pr',
+                ]),
+                'type': '00000030-0000-1000-8000-0026BB765291',
+                'value': '**REDACTED**',
+              }),
+              dict({
+                'description': 'Identify',
+                'format': 'bool',
+                'iid': 6,
+                'perms': list([
+                  'pw',
+                ]),
+                'type': '00000014-0000-1000-8000-0026BB765291',
+              }),
+              dict({
+                'description': 'Firmware Revision',
+                'format': 'string',
+                'iid': 23,
+                'maxLen': 64,
+                'perms': list([
+                  'pr',
+                ]),
+                'type': '00000052-0000-1000-8000-0026BB765291',
+                'value': '2.2.15',
+              }),
+            ]),
+            'iid': 1,
+            'type': '0000003E-0000-1000-8000-0026BB765291',
+          }),
+          dict({
+            'characteristics': list([
+              dict({
+                'description': 'On',
+                'format': 'bool',
+                'iid': 8,
+                'perms': list([
+                  'pr',
+                  'pw',
+                  'ev',
+                ]),
+                'type': '00000025-0000-1000-8000-0026BB765291',
+                'value': False,
+              }),
+              dict({
+                'description': 'Hue',
+                'format': 'float',
+                'iid': 9,
+                'maxValue': 359,
+                'minStep': 1,
+                'minValue': 0,
+                'perms': list([
+                  'pr',
+                  'pw',
+                  'ev',
+                ]),
+                'type': '00000013-0000-1000-8000-0026BB765291',
+                'unit': 'arcdegrees',
+                'value': 44,
+              }),
+              dict({
+                'description': 'Saturation',
+                'format': 'float',
+                'iid': 10,
+                'maxValue': 100,
+                'minStep': 1,
+                'minValue': 0,
+                'perms': list([
+                  'pr',
+                  'pw',
+                  'ev',
+                ]),
+                'type': '0000002F-0000-1000-8000-0026BB765291',
+                'unit': 'percentage',
+                'value': 0,
+              }),
+              dict({
+                'description': 'Brightness',
+                'format': 'int',
+                'iid': 11,
+                'maxValue': 100,
+                'minStep': 1,
+                'minValue': 0,
+                'perms': list([
+                  'pr',
+                  'pw',
+                  'ev',
+                ]),
+                'type': '00000008-0000-1000-8000-0026BB765291',
+                'unit': 'percentage',
+                'value': 100,
+              }),
+              dict({
+                'description': 'Name',
+                'format': 'string',
+                'iid': 12,
+                'maxLen': 64,
+                'perms': list([
+                  'pr',
+                ]),
+                'type': '00000023-0000-1000-8000-0026BB765291',
+                'value': 'Light Strip',
+              }),
+            ]),
+            'iid': 7,
+            'type': '00000043-0000-1000-8000-0026BB765291',
+          }),
+          dict({
+            'characteristics': list([
+              dict({
+                'description': 'TIMER_SETTINGS',
+                'format': 'tlv8',
+                'iid': 14,
+                'perms': list([
+                  'pr',
+                  'pw',
+                ]),
+                'type': '4AAAF942-0DEC-11E5-B939-0800200C9A66',
+                'value': 'AHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+              }),
+            ]),
+            'iid': 13,
+            'type': '4AAAF940-0DEC-11E5-B939-0800200C9A66',
+          }),
+          dict({
+            'characteristics': list([
+              dict({
+                'description': 'FW Upgrade supported types',
+                'format': 'string',
+                'iid': 16,
+                'maxLen': 64,
+                'perms': list([
+                  'pr',
+                  'hd',
+                ]),
+                'type': '151909D2-3802-11E4-916C-0800200C9A66',
+                'value': 'url,data',
+              }),
+              dict({
+                'description': 'FW Upgrade URL',
+                'format': 'string',
+                'iid': 17,
+                'maxLen': 64,
+                'perms': list([
+                  'pw',
+                  'hd',
+                ]),
+                'type': '151909D1-3802-11E4-916C-0800200C9A66',
+              }),
+              dict({
+                'description': 'FW Upgrade Status',
+                'format': 'int',
+                'iid': 18,
+                'perms': list([
+                  'pr',
+                  'ev',
+                  'hd',
+                ]),
+                'type': '151909D6-3802-11E4-916C-0800200C9A66',
+                'value': 0,
+              }),
+              dict({
+                'description': 'FW Upgrade Data',
+                'format': 'data',
+                'iid': 19,
+                'perms': list([
+                  'pw',
+                  'hd',
+                ]),
+                'type': '151909D7-3802-11E4-916C-0800200C9A66',
+              }),
+            ]),
+            'iid': 15,
+            'type': '151909D0-3802-11E4-916C-0800200C9A66',
+          }),
+          dict({
+            'characteristics': list([
+              dict({
+                'description': 'Timezone',
+                'format': 'int',
+                'iid': 21,
+                'perms': list([
+                  'pr',
+                  'pw',
+                ]),
+                'type': '151909D5-3802-11E4-916C-0800200C9A66',
+                'value': 0,
+              }),
+              dict({
+                'description': 'Time value since Epoch',
+                'format': 'int',
+                'iid': 22,
+                'perms': list([
+                  'pr',
+                  'pw',
+                ]),
+                'type': '151909D4-3802-11E4-916C-0800200C9A66',
+                'value': 1550348623,
+              }),
+            ]),
+            'iid': 20,
+            'type': '151909D3-3802-11E4-916C-0800200C9A66',
+          }),
+        ]),
+      }),
+    ]),
+  })
+# ---

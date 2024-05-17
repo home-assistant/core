@@ -1,4 +1,5 @@
 """Test the Ecoforest config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from pyecoforest.exceptions import EcoforestAuthenticationRequired
@@ -20,7 +21,7 @@ async def test_form(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -33,7 +34,7 @@ async def test_form(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert "result" in result
     assert result["result"].unique_id == "1234"
     assert result["title"] == "Ecoforest 1234"
@@ -52,7 +53,7 @@ async def test_form_device_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -65,7 +66,7 @@ async def test_form_device_already_configured(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -99,7 +100,7 @@ async def test_flow_fails(
             config,
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": message}
 
     with patch(
@@ -112,4 +113,4 @@ async def test_flow_fails(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY

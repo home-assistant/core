@@ -1,8 +1,11 @@
 """Update coordinator for the Bluetooth integration."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import logging
+
+from habluetooth import BluetoothScanningMode
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
@@ -13,7 +16,7 @@ from .api import (
     async_track_unavailable,
 )
 from .match import BluetoothCallbackMatcher
-from .models import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
+from .models import BluetoothChange, BluetoothServiceInfoBleak
 
 
 class BasePassiveBluetoothCoordinator(ABC):
@@ -79,11 +82,6 @@ class BasePassiveBluetoothCoordinator(ABC):
         # This is the time from the last advertisement that
         # was set when the unavailable callback was called.
         return self._last_unavailable_time
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return self._available
 
     @callback
     def _async_start(self) -> None:

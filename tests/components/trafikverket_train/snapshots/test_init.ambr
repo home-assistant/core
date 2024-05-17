@@ -1,0 +1,16 @@
+# serializer version: 1
+# name: test_auth_failed
+  FlowResultSnapshot({
+    'context': dict({
+      'entry_id': '1',
+      'source': 'reauth',
+      'title_placeholders': dict({
+        'name': 'Mock Title',
+      }),
+      'unique_id': '321',
+    }),
+    'flow_id': <ANY>,
+    'handler': 'trafikverket_train',
+    'step_id': 'reauth_confirm',
+  })
+# ---

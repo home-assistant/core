@@ -1,4 +1,5 @@
 """Class to reload platforms."""
+
 from __future__ import annotations
 
 import asyncio
@@ -13,7 +14,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
-from . import config_per_platform
 from .entity import Entity
 from .entity_component import EntityComponent
 from .entity_platform import EntityPlatform, async_get_platforms
@@ -69,13 +69,13 @@ async def _resetup_platform(
 
     root_config: dict[str, list[ConfigType]] = {platform_domain: []}
     # Extract only the config for template, ignore the rest.
-    for p_type, p_config in config_per_platform(conf, platform_domain):
+    for p_type, p_config in conf_util.config_per_platform(conf, platform_domain):
         if p_type != integration_domain:
             continue
 
         root_config[platform_domain].append(p_config)
 
-    component = integration.get_component()
+    component = await integration.async_get_component()
 
     if hasattr(component, "async_reset_platform"):
         # If the integration has its own way to reset
@@ -139,8 +139,7 @@ async def _async_reconfig_platform(
 @overload
 async def async_integration_yaml_config(
     hass: HomeAssistant, integration_name: str
-) -> ConfigType | None:
-    ...
+) -> ConfigType | None: ...
 
 
 @overload
@@ -149,8 +148,7 @@ async def async_integration_yaml_config(
     integration_name: str,
     *,
     raise_on_failure: Literal[True],
-) -> ConfigType:
-    ...
+) -> ConfigType: ...
 
 
 @overload
@@ -158,9 +156,8 @@ async def async_integration_yaml_config(
     hass: HomeAssistant,
     integration_name: str,
     *,
-    raise_on_failure: Literal[False] | bool,
-) -> ConfigType | None:
-    ...
+    raise_on_failure: Literal[False],
+) -> ConfigType | None: ...
 
 
 async def async_integration_yaml_config(

@@ -1,4 +1,5 @@
 """Support for Roborock time."""
+
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
@@ -7,9 +8,9 @@ from datetime import time
 import logging
 from typing import Any
 
-from roborock.api import AttributeCache
 from roborock.command_cache import CacheableAttribute
 from roborock.exceptions import RoborockException
+from roborock.version_1_apis.roborock_client_v1 import AttributeCache
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -25,9 +26,9 @@ from .device import RoborockEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class RoborockTimeDescriptionMixin:
-    """Define an entity description mixin for time entities."""
+@dataclass(frozen=True, kw_only=True)
+class RoborockTimeDescription(TimeEntityDescription):
+    """Class to describe a Roborock time entity."""
 
     # Gets the status of the switch
     cache_key: CacheableAttribute
@@ -37,16 +38,10 @@ class RoborockTimeDescriptionMixin:
     get_value: Callable[[AttributeCache], datetime.time]
 
 
-@dataclass
-class RoborockTimeDescription(TimeEntityDescription, RoborockTimeDescriptionMixin):
-    """Class to describe an Roborock time entity."""
-
-
 TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
     RoborockTimeDescription(
         key="dnd_start_time",
         translation_key="dnd_start_time",
-        icon="mdi:bell-cancel",
         cache_key=CacheableAttribute.dnd_timer,
         update_value=lambda cache, desired_time: cache.update_value(
             [
@@ -64,7 +59,6 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
     RoborockTimeDescription(
         key="dnd_end_time",
         translation_key="dnd_end_time",
-        icon="mdi:bell-ring",
         cache_key=CacheableAttribute.dnd_timer,
         update_value=lambda cache, desired_time: cache.update_value(
             [
@@ -82,7 +76,6 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
     RoborockTimeDescription(
         key="off_peak_start",
         translation_key="off_peak_start",
-        icon="mdi:power-plug",
         cache_key=CacheableAttribute.valley_electricity_timer,
         update_value=lambda cache, desired_time: cache.update_value(
             [
@@ -101,7 +94,6 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
     RoborockTimeDescription(
         key="off_peak_end",
         translation_key="off_peak_end",
-        icon="mdi:power-plug-off",
         cache_key=CacheableAttribute.valley_electricity_timer,
         update_value=lambda cache, desired_time: cache.update_value(
             [
@@ -145,7 +137,9 @@ async def async_setup_entry(
         return_exceptions=True,
     )
     valid_entities: list[RoborockTimeEntity] = []
-    for (coordinator, description), result in zip(possible_entities, results):
+    for (coordinator, description), result in zip(
+        possible_entities, results, strict=False
+    ):
         if result is None or isinstance(result, RoborockException):
             _LOGGER.debug("Not adding entity because of %s", result)
         else:

@@ -1,4 +1,5 @@
 """Support for particulate matter sensors connected to a serial port."""
+
 from __future__ import annotations
 
 import logging

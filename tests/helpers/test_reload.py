@@ -1,4 +1,5 @@
 """Tests for the reload helper."""
+
 import logging
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -53,7 +54,7 @@ async def test_reload_platform(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert component_setup.called
 
-    assert f"{DOMAIN}.{PLATFORM}" in hass.config.components
+    assert f"{PLATFORM}.{DOMAIN}" in hass.config.components
     assert len(setup_called) == 1
 
     platform = async_get_platform_without_config_entry(hass, PLATFORM, DOMAIN)
@@ -93,7 +94,7 @@ async def test_setup_reload_service(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert component_setup.called
 
-    assert f"{DOMAIN}.{PLATFORM}" in hass.config.components
+    assert f"{PLATFORM}.{DOMAIN}" in hass.config.components
     assert len(setup_called) == 1
 
     await async_setup_reload_service(hass, PLATFORM, [DOMAIN])
@@ -134,16 +135,19 @@ async def test_setup_reload_service_when_async_process_component_config_fails(
     await hass.async_block_till_done()
     assert component_setup.called
 
-    assert f"{DOMAIN}.{PLATFORM}" in hass.config.components
+    assert f"{PLATFORM}.{DOMAIN}" in hass.config.components
     assert len(setup_called) == 1
 
     await async_setup_reload_service(hass, PLATFORM, [DOMAIN])
 
     yaml_path = get_fixture_path("helpers/reload_configuration.yaml")
-    with patch.object(config, "YAML_CONFIG_FILE", yaml_path), patch.object(
-        config,
-        "async_process_component_config",
-        return_value=config.IntegrationConfigInfo(None, []),
+    with (
+        patch.object(config, "YAML_CONFIG_FILE", yaml_path),
+        patch.object(
+            config,
+            "async_process_component_config",
+            return_value=config.IntegrationConfigInfo(None, []),
+        ),
     ):
         await hass.services.async_call(
             PLATFORM,
@@ -186,7 +190,7 @@ async def test_setup_reload_service_with_platform_that_provides_async_reset_plat
     await hass.async_block_till_done()
     assert component_setup.called
 
-    assert f"{DOMAIN}.{PLATFORM}" in hass.config.components
+    assert f"{PLATFORM}.{DOMAIN}" in hass.config.components
     assert len(setup_called) == 1
 
     await async_setup_reload_service(hass, PLATFORM, [DOMAIN])
@@ -249,10 +253,14 @@ async def test_async_integration_failing_on_reload(hass: HomeAssistant) -> None:
     mock_integration(hass, MockModule(DOMAIN))
 
     yaml_path = get_fixture_path(f"helpers/{DOMAIN}_configuration.yaml")
-    with patch.object(config, "YAML_CONFIG_FILE", yaml_path), patch(
-        "homeassistant.config.async_process_component_config",
-        side_effect=HomeAssistantError(),
-    ), pytest.raises(HomeAssistantError):
+    with (
+        patch.object(config, "YAML_CONFIG_FILE", yaml_path),
+        patch(
+            "homeassistant.config.async_process_component_config",
+            side_effect=HomeAssistantError(),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
         # Test fetching yaml config does raise when the raise_on_failure option is set
         await async_integration_yaml_config(hass, DOMAIN, raise_on_failure=True)
 
@@ -262,7 +270,8 @@ async def test_async_integration_missing_yaml_config(hass: HomeAssistant) -> Non
     mock_integration(hass, MockModule(DOMAIN))
 
     yaml_path = get_fixture_path("helpers/does_not_exist_configuration.yaml")
-    with pytest.raises(FileNotFoundError), patch.object(
-        config, "YAML_CONFIG_FILE", yaml_path
+    with (
+        pytest.raises(FileNotFoundError),
+        patch.object(config, "YAML_CONFIG_FILE", yaml_path),
     ):
         await async_integration_yaml_config(hass, DOMAIN)

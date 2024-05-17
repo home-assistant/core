@@ -1,0 +1,14 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:palette"
+    }
+  },
+  "services": {
+    "turn_on": "mdi:power",
+    "reload": "mdi:reload",
+    "apply": "mdi:check",
+    "create": "mdi:plus",
+    "delete": "mdi:delete"
+  }
+}

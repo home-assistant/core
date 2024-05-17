@@ -56,3 +56,8 @@ custom_validator_bad_1:
 
 # This always raises ValueError
 custom_validator_bad_2:
+
+# Invalid domains
+"iot_domain ":
+"":
+5:

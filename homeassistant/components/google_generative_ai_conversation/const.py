@@ -1,6 +1,9 @@
 """Constants for the Google Generative AI Conversation integration."""
 
+import logging
+
 DOMAIN = "google_generative_ai_conversation"
+LOGGER = logging.getLogger(__package__)
 CONF_PROMPT = "prompt"
 DEFAULT_PROMPT = """This smart home is controlled by Home Assistant.
 
@@ -24,10 +27,12 @@ Answer the user's questions about the world truthfully.
 If the user wants to control a device, reject the request and suggest using the Home Assistant app.
 """
 CONF_CHAT_MODEL = "chat_model"
-DEFAULT_CHAT_MODEL = "models/chat-bison-001"
+DEFAULT_CHAT_MODEL = "models/gemini-pro"
 CONF_TEMPERATURE = "temperature"
-DEFAULT_TEMPERATURE = 0.25
+DEFAULT_TEMPERATURE = 0.9
 CONF_TOP_P = "top_p"
-DEFAULT_TOP_P = 0.95
+DEFAULT_TOP_P = 1.0
 CONF_TOP_K = "top_k"
-DEFAULT_TOP_K = 40
+DEFAULT_TOP_K = 1
+CONF_MAX_TOKENS = "max_tokens"
+DEFAULT_MAX_TOKENS = 150

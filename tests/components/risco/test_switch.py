@@ -1,4 +1,5 @@
 """Tests for the Risco binary sensors."""
+
 from unittest.mock import PropertyMock, patch
 
 import pytest
@@ -123,16 +124,17 @@ async def _check_local_state(hass, zones, bypassed, entity_id, zone_id, callback
 
 
 @pytest.fixture
-def _mock_zone_handler():
+def mock_zone_handler():
+    """Create a mock for add_zone_handler."""
     with patch("homeassistant.components.risco.RiscoLocal.add_zone_handler") as mock:
         yield mock
 
 
 async def test_local_states(
-    hass: HomeAssistant, two_zone_local, _mock_zone_handler, setup_risco_local
+    hass: HomeAssistant, two_zone_local, mock_zone_handler, setup_risco_local
 ) -> None:
     """Test the various alarm states."""
-    callback = _mock_zone_handler.call_args.args[0]
+    callback = mock_zone_handler.call_args.args[0]
 
     assert callback is not None
 

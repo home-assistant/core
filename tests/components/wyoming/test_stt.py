@@ -1,4 +1,5 @@
 """Test stt."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -81,10 +82,13 @@ async def test_streaming_audio_oserror(
 
     mock_client = MockAsyncTcpClient([Transcript(text="Hello world").event()])
 
-    with patch(
-        "homeassistant.components.wyoming.stt.AsyncTcpClient",
-        mock_client,
-    ), patch.object(mock_client, "read_event", side_effect=OSError("Boom!")):
+    with (
+        patch(
+            "homeassistant.components.wyoming.stt.AsyncTcpClient",
+            mock_client,
+        ),
+        patch.object(mock_client, "read_event", side_effect=OSError("Boom!")),
+    ):
         result = await entity.async_process_audio_stream(metadata, audio_stream())
 
     assert result.result == stt.SpeechResultState.ERROR

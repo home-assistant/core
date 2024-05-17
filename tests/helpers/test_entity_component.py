@@ -3,6 +3,7 @@
 from collections import OrderedDict
 from datetime import timedelta
 import logging
+import re
 from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun import freeze_time
@@ -115,10 +116,7 @@ async def test_setup_does_discovery(
     assert ("platform_test", {}, {"msg": "discovery_info"}) == mock_setup.call_args[0]
 
 
-@patch("homeassistant.helpers.entity_platform.async_track_time_interval")
-async def test_set_scan_interval_via_config(
-    mock_track: Mock, hass: HomeAssistant
-) -> None:
+async def test_set_scan_interval_via_config(hass: HomeAssistant) -> None:
     """Test the setting of the scan interval via configuration."""
 
     def platform_setup(
@@ -134,13 +132,14 @@ async def test_set_scan_interval_via_config(
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    component.setup(
-        {DOMAIN: {"platform": "platform", "scan_interval": timedelta(seconds=30)}}
-    )
+    with patch.object(hass.loop, "call_later") as mock_track:
+        component.setup(
+            {DOMAIN: {"platform": "platform", "scan_interval": timedelta(seconds=30)}}
+        )
 
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
     assert mock_track.called
-    assert timedelta(seconds=30) == mock_track.call_args[0][2]
+    assert mock_track.call_args[0][0] == 30.0
 
 
 async def test_set_entity_namespace_via_config(hass: HomeAssistant) -> None:
@@ -215,7 +214,7 @@ async def test_platform_not_ready(hass: HomeAssistant) -> None:
         await component.async_setup({DOMAIN: {"platform": "mod1"}})
         await hass.async_block_till_done()
         assert len(platform1_setup.mock_calls) == 1
-        assert "test_domain.mod1" not in hass.config.components
+        assert "mod1.test_domain" not in hass.config.components
 
         # Should not trigger attempt 2
         async_fire_time_changed(hass, utcnow + timedelta(seconds=29))
@@ -226,7 +225,7 @@ async def test_platform_not_ready(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, utcnow + timedelta(seconds=30))
         await hass.async_block_till_done()
         assert len(platform1_setup.mock_calls) == 2
-        assert "test_domain.mod1" not in hass.config.components
+        assert "mod1.test_domain" not in hass.config.components
 
         # This should not trigger attempt 3
         async_fire_time_changed(hass, utcnow + timedelta(seconds=59))
@@ -237,7 +236,7 @@ async def test_platform_not_ready(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, utcnow + timedelta(seconds=60))
         await hass.async_block_till_done()
         assert len(platform1_setup.mock_calls) == 3
-        assert "test_domain.mod1" in hass.config.components
+        assert "mod1.test_domain" in hass.config.components
 
 
 async def test_extract_from_service_fails_if_no_entity_id(hass: HomeAssistant) -> None:
@@ -317,7 +316,7 @@ async def test_setup_dependencies_platform(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert "test_component" in hass.config.components
     assert "test_component2" in hass.config.components
-    assert "test_domain.test_component" in hass.config.components
+    assert "test_component.test_domain" in hass.config.components
 
 
 async def test_setup_entry(hass: HomeAssistant) -> None:
@@ -365,7 +364,13 @@ async def test_setup_entry_fails_duplicate(hass: HomeAssistant) -> None:
 
     assert await component.async_setup_entry(entry)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            f"Config entry Mock Title ({entry.entry_id}) for "
+            "entry_domain.test_domain has already been setup!"
+        ),
+    ):
         await component.async_setup_entry(entry)
 
 
@@ -680,7 +685,7 @@ async def test_platforms_shutdown_on_stop(hass: HomeAssistant) -> None:
     await component.async_setup({DOMAIN: {"platform": "mod1"}})
     await hass.async_block_till_done()
     assert len(platform1_setup.mock_calls) == 1
-    assert "test_domain.mod1" not in hass.config.components
+    assert "mod1.test_domain" not in hass.config.components
 
     with patch.object(
         component._platforms[DOMAIN], "async_shutdown"

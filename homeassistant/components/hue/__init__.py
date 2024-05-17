@@ -1,4 +1,5 @@
 """Support for the Philips Hue system."""
+
 from aiohue.util import normalize_bridge_id
 
 from homeassistant.components import persistent_notification

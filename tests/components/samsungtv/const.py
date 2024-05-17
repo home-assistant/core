@@ -1,4 +1,5 @@
 """Constants for the samsungtv tests."""
+
 from samsungtvws.event import ED_INSTALLED_APP_EVENT
 
 from homeassistant.components import ssdp
@@ -68,7 +69,7 @@ SAMPLE_DEVICE_INFO_WIFI = {
     "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
     "device": {
         "modelName": "82GXARRS",
-        "wifiMac": "aa:bb:ww:ii:ff:ii",
+        "wifiMac": "aa:bb:aa:aa:aa:aa",
         "name": "[TV] Living Room",
         "type": "Samsung SmartTV",
         "networkType": "wireless",
@@ -136,7 +137,7 @@ SAMPLE_DEVICE_INFO_UE48JU6400 = {
         "countryCode": "AT",
         "msfVersion": "2.0.25",
         "smartHubAgreement": "true",
-        "wifiMac": "aa:bb:ww:ii:ff:ii",
+        "wifiMac": "aa:bb:aa:aa:aa:aa",
         "developerMode": "0",
         "developerIP": "",
     },

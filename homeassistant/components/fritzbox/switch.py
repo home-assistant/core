@@ -1,37 +1,41 @@
 """Support for AVM FRITZ!SmartHome switch devices."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxDeviceEntity
-from .common import get_coordinator
+from .coordinator import FritzboxConfigEntry
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FritzboxConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the FRITZ!SmartHome switch from ConfigEntry."""
-    coordinator = get_coordinator(hass, entry.entry_id)
+    coordinator = entry.runtime_data
 
     @callback
-    def _add_entities() -> None:
+    def _add_entities(devices: set[str] | None = None) -> None:
         """Add devices."""
-        if not coordinator.new_devices:
+        if devices is None:
+            devices = coordinator.new_devices
+        if not devices:
             return
         async_add_entities(
             FritzboxSwitch(coordinator, ain)
-            for ain in coordinator.new_devices
+            for ain in devices
             if coordinator.data.devices[ain].has_switch
         )
 
     entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
-    _add_entities()
+    _add_entities(set(coordinator.data.devices))
 
 
 class FritzboxSwitch(FritzBoxDeviceEntity, SwitchEntity):

@@ -1,13 +1,14 @@
 """Component to interface with locks that can be controlled remotely."""
+
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
+from functools import cached_property
 import logging
 import re
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, final
 
 import voluptuous as vol
 
@@ -21,27 +22,37 @@ from homeassistant.const import (
     STATE_JAMMED,
     STATE_LOCKED,
     STATE_LOCKING,
+    STATE_OPEN,
+    STATE_OPENING,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
     make_entity_service_schema,
 )
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstantEnum,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.service import remove_entity_service_fields
 from homeassistant.helpers.typing import ConfigType, StateType
+
+from . import group as group_pre_import  # noqa: F401
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CHANGED_BY = "changed_by"
 CONF_DEFAULT_CODE = "default_code"
 
-DOMAIN = "lock"
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -59,7 +70,7 @@ class LockEntityFeature(IntFlag):
 
 # The SUPPORT_OPEN constant is deprecated as of Home Assistant 2022.5.
 # Please use the LockEntityFeature enum instead.
-SUPPORT_OPEN = 1
+_DEPRECATED_SUPPORT_OPEN = DeprecatedConstantEnum(LockEntityFeature.OPEN, "2025.1")
 
 PROP_TO_ATTR = {"changed_by": ATTR_CHANGED_BY, "code_format": ATTR_CODE_FORMAT}
 
@@ -75,46 +86,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_UNLOCK, LOCK_SERVICE_SCHEMA, _async_unlock
+        SERVICE_UNLOCK, LOCK_SERVICE_SCHEMA, "async_handle_unlock_service"
     )
     component.async_register_entity_service(
-        SERVICE_LOCK, LOCK_SERVICE_SCHEMA, _async_lock
+        SERVICE_LOCK, LOCK_SERVICE_SCHEMA, "async_handle_lock_service"
     )
     component.async_register_entity_service(
-        SERVICE_OPEN, LOCK_SERVICE_SCHEMA, _async_open, [LockEntityFeature.OPEN]
+        SERVICE_OPEN,
+        LOCK_SERVICE_SCHEMA,
+        "async_handle_open_service",
+        [LockEntityFeature.OPEN],
     )
 
     return True
-
-
-@callback
-def _add_default_code(entity: LockEntity, service_call: ServiceCall) -> dict[Any, Any]:
-    data = remove_entity_service_fields(service_call)
-    code: str = data.pop(ATTR_CODE, "")
-    if not code:
-        code = entity._lock_option_default_code  # pylint: disable=protected-access
-    if entity.code_format_cmp and not entity.code_format_cmp.match(code):
-        raise ValueError(
-            f"Code '{code}' for locking {entity.entity_id} doesn't match pattern {entity.code_format}"
-        )
-    if code:
-        data[ATTR_CODE] = code
-    return data
-
-
-async def _async_lock(entity: LockEntity, service_call: ServiceCall) -> None:
-    """Lock the lock."""
-    await entity.async_lock(**_add_default_code(entity, service_call))
-
-
-async def _async_unlock(entity: LockEntity, service_call: ServiceCall) -> None:
-    """Unlock the lock."""
-    await entity.async_unlock(**_add_default_code(entity, service_call))
-
-
-async def _async_open(entity: LockEntity, service_call: ServiceCall) -> None:
-    """Open the door latch."""
-    await entity.async_open(**_add_default_code(entity, service_call))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -129,12 +113,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class LockEntityDescription(EntityDescription):
+class LockEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes lock entities."""
 
 
-class LockEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "changed_by",
+    "code_format",
+    "is_locked",
+    "is_locking",
+    "is_unlocking",
+    "is_open",
+    "is_opening",
+    "is_jammed",
+    "supported_features",
+}
+
+
+class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for lock entities."""
 
     entity_description: LockEntityDescription
@@ -142,6 +138,8 @@ class LockEntity(Entity):
     _attr_code_format: str | None = None
     _attr_is_locked: bool | None = None
     _attr_is_locking: bool | None = None
+    _attr_is_open: bool | None = None
+    _attr_is_opening: bool | None = None
     _attr_is_unlocking: bool | None = None
     _attr_is_jammed: bool | None = None
     _attr_state: None = None
@@ -149,12 +147,34 @@ class LockEntity(Entity):
     _lock_option_default_code: str = ""
     __code_format_cmp: re.Pattern[str] | None = None
 
-    @property
+    @final
+    @callback
+    def add_default_code(self, data: dict[Any, Any]) -> dict[Any, Any]:
+        """Add default lock code."""
+        code: str = data.pop(ATTR_CODE, "")
+        if not code:
+            code = self._lock_option_default_code
+        if self.code_format_cmp and not self.code_format_cmp.match(code):
+            if TYPE_CHECKING:
+                assert self.code_format
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="add_default_code",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "code_format": self.code_format,
+                },
+            )
+        if code:
+            data[ATTR_CODE] = code
+        return data
+
+    @cached_property
     def changed_by(self) -> str | None:
         """Last change triggered by."""
         return self._attr_changed_by
 
-    @property
+    @cached_property
     def code_format(self) -> str | None:
         """Regex for code format or None if no code is required."""
         return self._attr_code_format
@@ -173,45 +193,70 @@ class LockEntity(Entity):
             self.__code_format_cmp = re.compile(self.code_format)
         return self.__code_format_cmp
 
-    @property
+    @cached_property
     def is_locked(self) -> bool | None:
         """Return true if the lock is locked."""
         return self._attr_is_locked
 
-    @property
+    @cached_property
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
         return self._attr_is_locking
 
-    @property
+    @cached_property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
         return self._attr_is_unlocking
 
-    @property
+    @cached_property
+    def is_open(self) -> bool | None:
+        """Return true if the lock is open."""
+        return self._attr_is_open
+
+    @cached_property
+    def is_opening(self) -> bool | None:
+        """Return true if the lock is opening."""
+        return self._attr_is_opening
+
+    @cached_property
     def is_jammed(self) -> bool | None:
         """Return true if the lock is jammed (incomplete locking)."""
         return self._attr_is_jammed
 
+    @final
+    async def async_handle_lock_service(self, **kwargs: Any) -> None:
+        """Add default code and lock."""
+        await self.async_lock(**self.add_default_code(kwargs))
+
     def lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self.hass.async_add_executor_job(ft.partial(self.lock, **kwargs))
 
+    @final
+    async def async_handle_unlock_service(self, **kwargs: Any) -> None:
+        """Add default code and unlock."""
+        await self.async_unlock(**self.add_default_code(kwargs))
+
     def unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         await self.hass.async_add_executor_job(ft.partial(self.unlock, **kwargs))
 
+    @final
+    async def async_handle_open_service(self, **kwargs: Any) -> None:
+        """Add default code and open."""
+        await self.async_open(**self.add_default_code(kwargs))
+
     def open(self, **kwargs: Any) -> None:
         """Open the door latch."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
@@ -233,18 +278,27 @@ class LockEntity(Entity):
         """Return the state."""
         if self.is_jammed:
             return STATE_JAMMED
+        if self.is_opening:
+            return STATE_OPENING
         if self.is_locking:
             return STATE_LOCKING
+        if self.is_open:
+            return STATE_OPEN
         if self.is_unlocking:
             return STATE_UNLOCKING
         if (locked := self.is_locked) is None:
             return None
         return STATE_LOCKED if locked else STATE_UNLOCKED
 
-    @property
+    @cached_property
     def supported_features(self) -> LockEntityFeature:
         """Return the list of supported features."""
-        return self._attr_supported_features
+        features = self._attr_supported_features
+        if type(features) is int:  # noqa: E721
+            new_features = LockEntityFeature(features)
+            self._report_deprecated_supported_features_values(new_features)
+            return new_features
+        return features
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the sensor entity is added to hass."""
@@ -276,3 +330,11 @@ class LockEntity(Entity):
             return
 
         self._lock_option_default_code = ""
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = ft.partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

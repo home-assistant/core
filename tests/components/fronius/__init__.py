@@ -1,4 +1,5 @@
 """Tests for the Fronius integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -37,7 +38,7 @@ async def setup_fronius_integration(
 
 
 def _load_and_patch_fixture(
-    override_data: dict[str, list[tuple[list[str], Any]]]
+    override_data: dict[str, list[tuple[list[str], Any]]],
 ) -> Callable[[str, str | None], str]:
     """Return a fixture loader that patches values at nested keys for a given filename."""
 
@@ -120,7 +121,7 @@ async def enable_all_entities(hass, freezer, config_entry_id, time_till_next_upd
         for entry in entities
         if entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     ]:
-        registry.async_update_entity(entry.entity_id, **{"disabled_by": None})
+        registry.async_update_entity(entry.entity_id, disabled_by=None)
     await hass.async_block_till_done()
     freezer.tick(time_till_next_update)
     async_fire_time_changed(hass)

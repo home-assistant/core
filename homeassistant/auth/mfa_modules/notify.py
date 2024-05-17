@@ -2,6 +2,7 @@
 
 Sending HOTP through notify service
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -87,7 +88,7 @@ class NotifySetting:
     target: str | None = attr.ib(default=None)
 
 
-_UsersDict = dict[str, NotifySetting]
+type _UsersDict = dict[str, NotifySetting]
 
 
 @MULTI_FACTOR_AUTH_MODULES.register("notify")
@@ -152,7 +153,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         """Return list of notify services."""
         unordered_services = set()
 
-        for service in self.hass.services.async_services().get("notify", {}):
+        for service in self.hass.services.async_services_for_domain("notify"):
             if service not in self._exclude:
                 unordered_services.add(service)
 

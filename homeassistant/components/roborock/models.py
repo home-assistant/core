@@ -1,4 +1,5 @@
 """Roborock Models."""
+
 from dataclasses import dataclass
 from typing import Any
 
@@ -23,3 +24,12 @@ class RoborockHassDeviceInfo:
             "product": self.product.as_dict(),
             "props": self.props.as_dict(),
         }
+
+
+@dataclass
+class RoborockMapInfo:
+    """A model to describe all information about a map we may want."""
+
+    flag: int
+    name: str
+    rooms: dict[int, str]

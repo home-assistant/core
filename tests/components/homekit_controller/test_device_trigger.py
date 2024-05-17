@@ -1,10 +1,11 @@
 """Test homekit_controller stateless triggers."""
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.homekit_controller.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -87,7 +88,6 @@ async def test_enumerate_remote(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    utcnow,
 ) -> None:
     """Test that remote is correctly enumerated."""
     await setup_test_component(hass, create_remote)
@@ -116,18 +116,18 @@ async def test_enumerate_remote(
         },
     ]
 
-    for button in ("button1", "button2", "button3", "button4"):
-        for subtype in ("single_press", "double_press", "long_press"):
-            expected.append(
-                {
-                    "device_id": device.id,
-                    "domain": "homekit_controller",
-                    "platform": "device",
-                    "type": button,
-                    "subtype": subtype,
-                    "metadata": {},
-                }
-            )
+    expected.extend(
+        {
+            "device_id": device.id,
+            "domain": "homekit_controller",
+            "platform": "device",
+            "type": button,
+            "subtype": subtype,
+            "metadata": {},
+        }
+        for button in ("button1", "button2", "button3", "button4")
+        for subtype in ("single_press", "double_press", "long_press")
+    )
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
@@ -139,7 +139,6 @@ async def test_enumerate_button(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    utcnow,
 ) -> None:
     """Test that a button is correctly enumerated."""
     await setup_test_component(hass, create_button)
@@ -168,17 +167,17 @@ async def test_enumerate_button(
         },
     ]
 
-    for subtype in ("single_press", "double_press", "long_press"):
-        expected.append(
-            {
-                "device_id": device.id,
-                "domain": "homekit_controller",
-                "platform": "device",
-                "type": "button1",
-                "subtype": subtype,
-                "metadata": {},
-            }
-        )
+    expected.extend(
+        {
+            "device_id": device.id,
+            "domain": "homekit_controller",
+            "platform": "device",
+            "type": "button1",
+            "subtype": subtype,
+            "metadata": {},
+        }
+        for subtype in ("single_press", "double_press", "long_press")
+    )
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
@@ -190,7 +189,6 @@ async def test_enumerate_doorbell(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    utcnow,
 ) -> None:
     """Test that a button is correctly enumerated."""
     await setup_test_component(hass, create_doorbell)
@@ -219,17 +217,17 @@ async def test_enumerate_doorbell(
         },
     ]
 
-    for subtype in ("single_press", "double_press", "long_press"):
-        expected.append(
-            {
-                "device_id": device.id,
-                "domain": "homekit_controller",
-                "platform": "device",
-                "type": "doorbell",
-                "subtype": subtype,
-                "metadata": {},
-            }
-        )
+    expected.extend(
+        {
+            "device_id": device.id,
+            "domain": "homekit_controller",
+            "platform": "device",
+            "type": "doorbell",
+            "subtype": subtype,
+            "metadata": {},
+        }
+        for subtype in ("single_press", "double_press", "long_press")
+    )
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
@@ -241,7 +239,6 @@ async def test_handle_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    utcnow,
     calls,
 ) -> None:
     """Test that events are handled."""
@@ -362,7 +359,6 @@ async def test_handle_events_late_setup(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    utcnow,
     calls,
 ) -> None:
     """Test that events are handled when setup happens after startup."""
@@ -374,7 +370,7 @@ async def test_handle_events_late_setup(
 
     await hass.config_entries.async_unload(helper.config_entry.entry_id)
     await hass.async_block_till_done()
-    assert helper.config_entry.state == ConfigEntryState.NOT_LOADED
+    assert helper.config_entry.state is ConfigEntryState.NOT_LOADED
 
     assert await async_setup_component(
         hass,
@@ -428,7 +424,7 @@ async def test_handle_events_late_setup(
 
     await hass.config_entries.async_setup(helper.config_entry.entry_id)
     await hass.async_block_till_done()
-    assert helper.config_entry.state == ConfigEntryState.LOADED
+    assert helper.config_entry.state is ConfigEntryState.LOADED
 
     # Make sure first automation (only) fires for single press
     helper.pairing.testing.update_named_service(

@@ -1,13 +1,7 @@
 {
   "domain": "harmony",
   "name": "Logitech Harmony Hub",
-  "codeowners": [
-    "@ehendrix23",
-    "@bramkragten",
-    "@bdraco",
-    "@mkeesey",
-    "@Aohzan"
-  ],
+  "codeowners": ["@ehendrix23", "@bdraco", "@mkeesey", "@Aohzan"],
   "config_flow": true,
   "dependencies": ["remote", "switch"],
   "documentation": "https://www.home-assistant.io/integrations/harmony",

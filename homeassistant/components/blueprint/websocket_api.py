@@ -1,4 +1,5 @@
 """Websocket API for blueprint."""
+
 from __future__ import annotations
 
 import asyncio
@@ -18,7 +19,7 @@ from .errors import FailedToLoad, FileAlreadyExists
 
 
 @callback
-def async_setup(hass: HomeAssistant):
+def async_setup(hass: HomeAssistant) -> None:
     """Set up the websocket API."""
     websocket_api.async_register_command(hass, ws_list_blueprints)
     websocket_api.async_register_command(hass, ws_import_blueprint)
@@ -76,7 +77,7 @@ async def ws_import_blueprint(
         imported_blueprint = await importer.fetch_blueprint_from_url(hass, msg["url"])
 
     if imported_blueprint is None:
-        connection.send_error(
+        connection.send_error(  # type: ignore[unreachable]
             msg["id"], websocket_api.ERR_NOT_SUPPORTED, "This url is not supported"
         )
         return

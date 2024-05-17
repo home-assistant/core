@@ -1,4 +1,5 @@
 """Support for Yamaha Receivers."""
+
 from __future__ import annotations
 
 import logging

@@ -1,4 +1,5 @@
 """Number for ViCare."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -19,36 +20,58 @@ from PyViCare.PyViCareUtils import (
 )
 from requests.exceptions import ConnectionError as RequestConnectionError
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ViCareRequiredKeysMixin
-from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG
+from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
+from .types import HeatingProgram, ViCareDevice, ViCareRequiredKeysMixin
 from .utils import get_circuits, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysMixin):
     """Describes ViCare number entity."""
 
+    value_getter: Callable[[PyViCareDevice], float]
     value_setter: Callable[[PyViCareDevice, float], Any] | None = None
     min_value_getter: Callable[[PyViCareDevice], float | None] | None = None
     max_value_getter: Callable[[PyViCareDevice], float | None] | None = None
     stepping_getter: Callable[[PyViCareDevice], float | None] | None = None
 
 
+DEVICE_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
+    ViCareNumberEntityDescription(
+        key="dhw_secondary_temperature",
+        translation_key="dhw_secondary_temperature",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getDomesticHotWaterConfiguredTemperature2(),
+        value_setter=lambda api, value: api.setDomesticHotWaterTemperature2(value),
+        # no getters for min, max, stepping exposed yet, using static values
+        native_min_value=10,
+        native_max_value=60,
+        native_step=1,
+    ),
+)
+
+
 CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
         key="heating curve shift",
         translation_key="heating_curve_shift",
-        icon="mdi:plus-minus-variant",
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_getter=lambda api: api.getHeatingCurveShift(),
         value_setter=lambda api, shift: (
@@ -64,7 +87,6 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
         key="heating curve slope",
         translation_key="heating_curve_slope",
-        icon="mdi:slope-uphill",
         entity_category=EntityCategory.CONFIG,
         value_getter=lambda api: api.getHeatingCurveSlope(),
         value_setter=lambda api, slope: (
@@ -77,25 +99,165 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         native_max_value=3.5,
         native_step=0.1,
     ),
+    ViCareNumberEntityDescription(
+        key="normal_temperature",
+        translation_key="normal_temperature",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getDesiredTemperatureForProgram(
+            HeatingProgram.NORMAL
+        ),
+        value_setter=lambda api, value: api.setProgramTemperature(
+            HeatingProgram.NORMAL, value
+        ),
+        min_value_getter=lambda api: api.getProgramMinTemperature(
+            HeatingProgram.NORMAL
+        ),
+        max_value_getter=lambda api: api.getProgramMaxTemperature(
+            HeatingProgram.NORMAL
+        ),
+        stepping_getter=lambda api: api.getProgramStepping(HeatingProgram.NORMAL),
+    ),
+    ViCareNumberEntityDescription(
+        key="reduced_temperature",
+        translation_key="reduced_temperature",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getDesiredTemperatureForProgram(
+            HeatingProgram.REDUCED
+        ),
+        value_setter=lambda api, value: api.setProgramTemperature(
+            HeatingProgram.REDUCED, value
+        ),
+        min_value_getter=lambda api: api.getProgramMinTemperature(
+            HeatingProgram.REDUCED
+        ),
+        max_value_getter=lambda api: api.getProgramMaxTemperature(
+            HeatingProgram.REDUCED
+        ),
+        stepping_getter=lambda api: api.getProgramStepping(HeatingProgram.REDUCED),
+    ),
+    ViCareNumberEntityDescription(
+        key="comfort_temperature",
+        translation_key="comfort_temperature",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getDesiredTemperatureForProgram(
+            HeatingProgram.COMFORT
+        ),
+        value_setter=lambda api, value: api.setProgramTemperature(
+            HeatingProgram.COMFORT, value
+        ),
+        min_value_getter=lambda api: api.getProgramMinTemperature(
+            HeatingProgram.COMFORT
+        ),
+        max_value_getter=lambda api: api.getProgramMaxTemperature(
+            HeatingProgram.COMFORT
+        ),
+        stepping_getter=lambda api: api.getProgramStepping(HeatingProgram.COMFORT),
+    ),
+    ViCareNumberEntityDescription(
+        key="normal_heating_temperature",
+        translation_key="normal_heating_temperature",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getDesiredTemperatureForProgram(
+            HeatingProgram.NORMAL_HEATING
+        ),
+        value_setter=lambda api, value: api.setProgramTemperature(
+            HeatingProgram.NORMAL_HEATING, value
+        ),
+        min_value_getter=lambda api: api.getProgramMinTemperature(
+            HeatingProgram.NORMAL_HEATING
+        ),
+        max_value_getter=lambda api: api.getProgramMaxTemperature(
+            HeatingProgram.NORMAL_HEATING
+        ),
+        stepping_getter=lambda api: api.getProgramStepping(
+            HeatingProgram.NORMAL_HEATING
+        ),
+    ),
+    ViCareNumberEntityDescription(
+        key="reduced_heating_temperature",
+        translation_key="reduced_heating_temperature",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getDesiredTemperatureForProgram(
+            HeatingProgram.REDUCED_HEATING
+        ),
+        value_setter=lambda api, value: api.setProgramTemperature(
+            HeatingProgram.REDUCED_HEATING, value
+        ),
+        min_value_getter=lambda api: api.getProgramMinTemperature(
+            HeatingProgram.REDUCED_HEATING
+        ),
+        max_value_getter=lambda api: api.getProgramMaxTemperature(
+            HeatingProgram.REDUCED_HEATING
+        ),
+        stepping_getter=lambda api: api.getProgramStepping(
+            HeatingProgram.REDUCED_HEATING
+        ),
+    ),
+    ViCareNumberEntityDescription(
+        key="comfort_heating_temperature",
+        translation_key="comfort_heating_temperature",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getDesiredTemperatureForProgram(
+            HeatingProgram.COMFORT_HEATING
+        ),
+        value_setter=lambda api, value: api.setProgramTemperature(
+            HeatingProgram.COMFORT_HEATING, value
+        ),
+        min_value_getter=lambda api: api.getProgramMinTemperature(
+            HeatingProgram.COMFORT_HEATING
+        ),
+        max_value_getter=lambda api: api.getProgramMaxTemperature(
+            HeatingProgram.COMFORT_HEATING
+        ),
+        stepping_getter=lambda api: api.getProgramStepping(
+            HeatingProgram.COMFORT_HEATING
+        ),
+    ),
 )
 
 
 def _build_entities(
-    api: PyViCareDevice,
-    device_config: PyViCareDeviceConfig,
+    device_list: list[ViCareDevice],
 ) -> list[ViCareNumber]:
-    """Create ViCare number entities for a component."""
+    """Create ViCare number entities for a device."""
 
-    return [
+    entities: list[ViCareNumber] = [
         ViCareNumber(
-            circuit,
-            device_config,
+            device.api,
+            device.config,
             description,
         )
-        for circuit in get_circuits(api)
-        for description in CIRCUIT_ENTITY_DESCRIPTIONS
-        if is_supported(description.key, description, circuit)
+        for device in device_list
+        for description in DEVICE_ENTITY_DESCRIPTIONS
+        if is_supported(description.key, description, device.api)
     ]
+
+    entities.extend(
+        [
+            ViCareNumber(
+                circuit,
+                device.config,
+                description,
+            )
+            for device in device_list
+            for circuit in get_circuits(device.api)
+            for description in CIRCUIT_ENTITY_DESCRIPTIONS
+            if is_supported(description.key, description, circuit)
+        ]
+    )
+    return entities
 
 
 async def async_setup_entry(
@@ -104,14 +266,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare number devices."""
-    api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
-    device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
+    device_list = hass.data[DOMAIN][config_entry.entry_id][DEVICE_LIST]
 
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
-            api,
-            device_config,
+            device_list,
         )
     )
 
@@ -149,6 +309,7 @@ class ViCareNumber(ViCareEntity, NumberEntity):
                 self._attr_native_value = self.entity_description.value_getter(
                     self._api
                 )
+
                 if min_value := _get_value(
                     self.entity_description.min_value_getter, self._api
                 ):

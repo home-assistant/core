@@ -1,7 +1,7 @@
 """Config validation helper for the automation integration."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from contextlib import suppress
 from typing import Any
@@ -11,7 +11,7 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant.components import blueprint
 from homeassistant.components.trace import TRACE_CONFIG_SCHEMA
-from homeassistant.config import config_without_domain
+from homeassistant.config import config_per_platform, config_without_domain
 from homeassistant.const import (
     CONF_ALIAS,
     CONF_CONDITION,
@@ -21,7 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform, config_validation as cv, script
+from homeassistant.helpers import config_validation as cv, script
 from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.helpers.typing import ConfigType
@@ -255,15 +255,15 @@ async def async_validate_config_item(
 
 async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType:
     """Validate config."""
+    # No gather here since _try_async_validate_config_item is unlikely to suspend
+    # and the cost of creating many tasks is not worth the benefit.
     automations = list(
         filter(
             lambda x: x is not None,
-            await asyncio.gather(
-                *(
-                    _try_async_validate_config_item(hass, p_config)
-                    for _, p_config in config_per_platform(config, DOMAIN)
-                )
-            ),
+            [
+                await _try_async_validate_config_item(hass, p_config)
+                for _, p_config in config_per_platform(config, DOMAIN)
+            ],
         )
     )
 

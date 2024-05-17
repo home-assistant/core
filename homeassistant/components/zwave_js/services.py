@@ -1,4 +1,5 @@
 """Methods and classes related to executing Z-Wave commands."""
+
 from __future__ import annotations
 
 import asyncio
@@ -25,13 +26,13 @@ from zwave_js_server.util.node import (
     async_set_config_parameter,
 )
 
-from homeassistant.components.group import expand_entity_ids
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.group import expand_entity_ids
 
 from . import const
 from .config_validation import BITMASK_SCHEMA, VALUE_SCHEMA
@@ -49,7 +50,7 @@ T = TypeVar("T", ZwaveNode, Endpoint)
 
 
 def parameter_name_does_not_need_bitmask(
-    val: dict[str, int | str | list[str]]
+    val: dict[str, int | str | list[str]],
 ) -> dict[str, int | str | list[str]]:
     """Validate that if a parameter name is provided, bitmask is not as well."""
     if (
@@ -84,7 +85,7 @@ def get_valid_responses_from_results(
     zwave_objects: Sequence[T], results: Sequence[Any]
 ) -> Generator[tuple[T, Any], None, None]:
     """Return valid responses from a list of results."""
-    for zwave_object, result in zip(zwave_objects, results):
+    for zwave_object, result in zip(zwave_objects, results, strict=False):
         if not isinstance(result, Exception):
             yield zwave_object, result
 
@@ -95,7 +96,9 @@ def raise_exceptions_from_results(
     """Raise list of exceptions from a list of results."""
     errors: Sequence[tuple[T, Any]]
     if errors := [
-        tup for tup in zip(zwave_objects, results) if isinstance(tup[1], Exception)
+        tup
+        for tup in zip(zwave_objects, results, strict=True)
+        if isinstance(tup[1], Exception)
     ]:
         lines = [
             *(
@@ -724,8 +727,8 @@ class ZWaveServices:
             first_node = next(node for node in nodes)
             client = first_node.client
         except StopIteration:
-            entry_id = self._hass.config_entries.async_entries(const.DOMAIN)[0].entry_id
-            client = self._hass.data[const.DOMAIN][entry_id][const.DATA_CLIENT]
+            data = self._hass.config_entries.async_entries(const.DOMAIN)[0].runtime_data
+            client = data[const.DATA_CLIENT]
             assert client.driver
             first_node = next(
                 node

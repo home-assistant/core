@@ -1,4 +1,5 @@
 """Tests for Logger Websocket API commands."""
+
 import logging
 from unittest.mock import patch
 
@@ -101,12 +102,15 @@ async def test_custom_integration_log_level(
         },
     )
 
-    with patch(
-        "homeassistant.components.logger.helpers.async_get_integration",
-        return_value=integration,
-    ), patch(
-        "homeassistant.components.logger.websocket_api.async_get_integration",
-        return_value=integration,
+    with (
+        patch(
+            "homeassistant.components.logger.helpers.async_get_integration",
+            return_value=integration,
+        ),
+        patch(
+            "homeassistant.components.logger.websocket_api.async_get_integration",
+            return_value=integration,
+        ),
     ):
         await websocket_client.send_json(
             {

@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "charging_speed": {
+        "default": "mdi:speedometer"
+      },
+      "added_range": {
+        "default": "mdi:map-marker-distance"
+      },
+      "cost": {
+        "default": "mdi:ev-station"
+      },
+      "current_mode": {
+        "default": "mdi:ev-station"
+      },
+      "depot_price": {
+        "default": "mdi:ev-station"
+      },
+      "energy_price": {
+        "default": "mdi:ev-station"
+      },
+      "status_description": {
+        "default": "mdi:ev-station"
+      }
+    }
+  }
+}

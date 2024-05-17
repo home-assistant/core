@@ -1,4 +1,5 @@
 """Fixtures for Pure Energie integration tests."""
+
 from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -52,7 +53,7 @@ def mock_pure_energie_config_flow(
 def mock_pure_energie():
     """Return a mocked Pure Energie client."""
     with patch(
-        "homeassistant.components.pure_energie.GridNet", autospec=True
+        "homeassistant.components.pure_energie.coordinator.GridNet", autospec=True
     ) as pure_energie_mock:
         pure_energie = pure_energie_mock.return_value
         pure_energie.smartbridge = AsyncMock(

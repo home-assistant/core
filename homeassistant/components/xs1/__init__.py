@@ -1,4 +1,5 @@
 """Support for the EZcontrol XS1 gateway."""
+
 import asyncio
 import logging
 

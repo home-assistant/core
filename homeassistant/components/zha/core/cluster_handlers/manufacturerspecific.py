@@ -1,12 +1,14 @@
 """Manufacturer specific cluster handlers module for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING, Any
 
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
-from zhaquirks.quirk_ids import TUYA_PLUG_MANUFACTURER
+from zhaquirks.quirk_ids import TUYA_PLUG_MANUFACTURER, XIAOMI_AQARA_VIBRATION_AQ1
 import zigpy.zcl
+from zigpy.zcl.clusters.closures import DoorLock
 
 from homeassistant.core import callback
 
@@ -24,6 +26,7 @@ from ..const import (
     UNKNOWN,
 )
 from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
+from .general import MultistateInputClusterHandler
 
 if TYPE_CHECKING:
     from ..endpoint import Endpoint
@@ -34,7 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     registries.SMARTTHINGS_HUMIDITY_CLUSTER
 )
-class SmartThingsHumidity(ClusterHandler):
+class SmartThingsHumidityClusterHandler(ClusterHandler):
     """Smart Things Humidity cluster handler."""
 
     REPORT_CONFIG = (
@@ -47,7 +50,7 @@ class SmartThingsHumidity(ClusterHandler):
 
 @registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(0xFD00)
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(0xFD00)
-class OsramButton(ClusterHandler):
+class OsramButtonClusterHandler(ClusterHandler):
     """Osram button cluster handler."""
 
     REPORT_CONFIG = ()
@@ -55,7 +58,7 @@ class OsramButton(ClusterHandler):
 
 @registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(registries.PHILLIPS_REMOTE_CLUSTER)
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(registries.PHILLIPS_REMOTE_CLUSTER)
-class PhillipsRemote(ClusterHandler):
+class PhillipsRemoteClusterHandler(ClusterHandler):
     """Phillips remote cluster handler."""
 
     REPORT_CONFIG = ()
@@ -82,7 +85,7 @@ class TuyaClusterHandler(ClusterHandler):
 
 @registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(0xFCC0)
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(0xFCC0)
-class OppleRemote(ClusterHandler):
+class OppleRemoteClusterHandler(ClusterHandler):
     """Opple cluster handler."""
 
     REPORT_CONFIG = ()
@@ -147,6 +150,25 @@ class OppleRemote(ClusterHandler):
                 "buzzer": True,
                 "linkage_alarm": True,
             }
+        elif self.cluster.endpoint.model == "lumi.magnet.ac01":
+            self.ZCL_INIT_ATTRS = {
+                "detection_distance": True,
+            }
+        elif self.cluster.endpoint.model == "lumi.switch.acn047":
+            self.ZCL_INIT_ATTRS = {
+                "switch_mode": True,
+                "switch_type": True,
+                "startup_on_off": True,
+                "decoupled_mode": True,
+            }
+        elif self.cluster.endpoint.model == "lumi.curtain.agl001":
+            self.ZCL_INIT_ATTRS = {
+                "hooks_state": True,
+                "hooks_lock": True,
+                "positions_stored": True,
+                "light_level": True,
+                "hand_open": True,
+            }
 
     async def async_initialize_cluster_handler_specific(self, from_cache: bool) -> None:
         """Initialize cluster handler specific."""
@@ -160,7 +182,7 @@ class OppleRemote(ClusterHandler):
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     registries.SMARTTHINGS_ACCELERATION_CLUSTER
 )
-class SmartThingsAcceleration(ClusterHandler):
+class SmartThingsAccelerationClusterHandler(ClusterHandler):
     """Smart Things Acceleration cluster handler."""
 
     REPORT_CONFIG = (
@@ -207,7 +229,7 @@ class SmartThingsAcceleration(ClusterHandler):
 
 
 @registries.CLIENT_CLUSTER_HANDLER_REGISTRY.register(0xFC31)
-class InovelliNotificationClusterHandler(ClientClusterHandler):
+class InovelliNotificationClientClusterHandler(ClientClusterHandler):
     """Inovelli Notification cluster handler."""
 
     @callback
@@ -399,7 +421,26 @@ class IkeaAirPurifierClusterHandler(ClusterHandler):
 
 @registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(0xFC80)
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(0xFC80)
-class IkeaRemote(ClusterHandler):
+class IkeaRemoteClusterHandler(ClusterHandler):
     """Ikea Matter remote cluster handler."""
 
     REPORT_CONFIG = ()
+
+
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
+    DoorLock.cluster_id, XIAOMI_AQARA_VIBRATION_AQ1
+)
+class XiaomiVibrationAQ1ClusterHandler(MultistateInputClusterHandler):
+    """Xiaomi DoorLock Cluster is in fact a MultiStateInput Cluster."""
+
+
+@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(0xFC11)
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(0xFC11)
+class SonoffPresenceSenorClusterHandler(ClusterHandler):
+    """SonoffPresenceSensor cluster handler."""
+
+    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
+        """Initialize SonoffPresenceSensor cluster handler."""
+        super().__init__(cluster, endpoint)
+        if self.cluster.endpoint.model == "SNZB-06P":
+            self.ZCL_INIT_ATTRS = {"last_illumination_state": True}

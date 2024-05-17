@@ -1,4 +1,5 @@
 """Support for an Intergas heater via an InComfort/InTouch Lan2RF gateway."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -23,7 +24,7 @@ INCOMFORT_PRESSURE = "CV Pressure"
 INCOMFORT_TAP_TEMP = "Tap Temp"
 
 
-@dataclass
+@dataclass(frozen=True)
 class IncomfortSensorEntityDescription(SensorEntityDescription):
     """Describes Incomfort sensor entity."""
 

@@ -1,4 +1,5 @@
 """Tests for AVM Fritz!Box sensor component."""
+
 from datetime import timedelta
 from unittest.mock import Mock
 
@@ -86,7 +87,7 @@ async def test_update(hass: HomeAssistant, fritz: Mock) -> None:
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert fritz().update_devices.call_count == 2
     assert fritz().login.call_count == 1
@@ -104,7 +105,7 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock) -> None:
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert fritz().update_devices.call_count == 4
     assert fritz().login.call_count == 4
@@ -127,7 +128,7 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(f"{DOMAIN}.new_device_temperature")
     assert state

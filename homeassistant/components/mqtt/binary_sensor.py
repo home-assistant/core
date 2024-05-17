@@ -1,4 +1,5 @@
 """Support for MQTT binary sensors."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -42,7 +43,6 @@ from .mixins import (
     MqttAvailability,
     MqttEntity,
     async_setup_entity_entry_helper,
-    validate_sensor_entity_category,
     write_state_on_attr_change,
 )
 from .models import MqttValueTemplate, ReceiveMessage
@@ -56,7 +56,7 @@ DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_FORCE_UPDATE = False
 CONF_EXPIRE_AFTER = "expire_after"
 
-_PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
@@ -68,15 +68,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = vol.All(
-    validate_sensor_entity_category(binary_sensor.DOMAIN, discovery=True),
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
-)
-
-PLATFORM_SCHEMA_MODERN = vol.All(
-    validate_sensor_entity_category(binary_sensor.DOMAIN, discovery=False),
-    _PLATFORM_SCHEMA_BASE,
-)
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
 
 async def async_setup_entry(
@@ -224,8 +216,8 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                 template_info = ""
                 if self._config.get(CONF_VALUE_TEMPLATE) is not None:
                     template_info = (
-                        f", template output: '{str(payload)}', with value template"
-                        f" '{str(self._config.get(CONF_VALUE_TEMPLATE))}'"
+                        f", template output: '{payload!s}', with value template"
+                        f" '{self._config.get(CONF_VALUE_TEMPLATE)!s}'"
                     )
                 _LOGGER.info(
                     (

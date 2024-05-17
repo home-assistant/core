@@ -1,4 +1,5 @@
 """The sensor tests for the august platform."""
+
 from typing import Any
 
 from homeassistant import core as ha
@@ -340,7 +341,7 @@ async def test_restored_state(
     )
 
     # Home assistant is not running yet
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     mock_restore_cache_with_extra_data(
         hass,
         [
@@ -351,8 +352,7 @@ async def test_restored_state(
         ],
     )
 
-    august_entry = await _create_august_with_devices(hass, [lock_one])
-    august_entry.add_to_hass(hass)
+    await _create_august_with_devices(hass, [lock_one])
 
     await hass.async_block_till_done()
 

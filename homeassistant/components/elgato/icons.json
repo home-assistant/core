@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "switch": {
+      "bypass": {
+        "default": "mdi:battery-off-outline"
+      },
+      "energy_saving": {
+        "default": "mdi:leaf"
+      }
+    }
+  },
+  "services": {
+    "identify": "mdi:crosshairs-question"
+  }
+}

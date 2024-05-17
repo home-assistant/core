@@ -1,4 +1,5 @@
 """Support for the Microsoft Cognitive Services text-to-speech service."""
+
 import logging
 
 from pycsspeechtts import pycsspeechtts

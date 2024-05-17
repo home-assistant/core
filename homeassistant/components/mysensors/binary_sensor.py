@@ -1,4 +1,5 @@
 """Support for MySensors binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -21,7 +22,7 @@ from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .helpers import on_unload
 
 
-@dataclass
+@dataclass(frozen=True)
 class MySensorsBinarySensorDescription(BinarySensorEntityDescription):
     """Describe a MySensors binary sensor entity."""
 

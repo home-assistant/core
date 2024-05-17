@@ -1,4 +1,5 @@
 """Coordinator for BMW."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -32,8 +33,6 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
             entry.data[CONF_PASSWORD],
             get_region_from_name(entry.data[CONF_REGION]),
             observer_position=GPSPosition(hass.config.latitude, hass.config.longitude),
-            # Force metric system as BMW API apparently only returns metric values now
-            use_metric_units=True,
         )
         self.read_only = entry.options[CONF_READ_ONLY]
         self._entry = entry
@@ -50,6 +49,9 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
             name=f"{DOMAIN}-{entry.data['username']}",
             update_interval=timedelta(seconds=SCAN_INTERVALS[entry.data[CONF_REGION]]),
         )
+
+        # Default to false on init so _async_update_data logic works
+        self.last_update_success = False
 
     async def _async_update_data(self) -> None:
         """Fetch data from BMW."""

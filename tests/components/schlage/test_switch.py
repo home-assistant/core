@@ -1,4 +1,5 @@
 """Test schlage switch."""
+
 from unittest.mock import Mock
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN

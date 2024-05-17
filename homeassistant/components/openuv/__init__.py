@@ -1,4 +1,5 @@
 """Support for UV data from openuv.io."""
+
 from __future__ import annotations
 
 import asyncio
@@ -104,8 +105,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if version == 1:
         data.pop(CONF_BINARY_SENSORS, None)
         data.pop(CONF_SENSORS, None)
-        version = entry.version = 2
-        hass.config_entries.async_update_entry(entry, data=data)
+        version = 2
+        hass.config_entries.async_update_entry(entry, data=data, version=2)
         LOGGER.debug("Migration to version %s successful", version)
 
     return True

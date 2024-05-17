@@ -1,4 +1,5 @@
 """Fixtures for tests."""
+
 from http import HTTPStatus
 
 import pytest

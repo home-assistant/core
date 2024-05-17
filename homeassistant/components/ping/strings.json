@@ -1,12 +1,27 @@
 {
+  "entity": {
+    "sensor": {
+      "round_trip_time_avg": {
+        "name": "Round Trip Time Average"
+      },
+      "round_trip_time_max": {
+        "name": "Round Trip Time Maximum"
+      },
+      "round_trip_time_mdev": {
+        "name": "Round Trip Time Mean Deviation"
+      },
+      "round_trip_time_min": {
+        "name": "Round Trip Time Minimum"
+      }
+    }
+  },
   "config": {
     "step": {
       "user": {
         "title": "Add Ping",
         "description": "Ping allows you to check the availability of a host.",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "count": "Ping count"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
           "host": "The hostname or IP address of the device you want to ping."
@@ -23,7 +38,11 @@
       "init": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "count": "[%key:component::ping::config::step::user::data::count%]"
+          "count": "Ping count",
+          "consider_home": "Consider home interval"
+        },
+        "data_description": {
+          "consider_home": "Seconds to wait till marking a device tracker as not home after not being seen."
         }
       }
     },

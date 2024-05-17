@@ -1,4 +1,5 @@
 """Data template classes for discovery used to generate additional data for setup."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
@@ -564,6 +565,7 @@ class ConfigurableFanValueMappingDataTemplate(
 
     `configuration_value_to_fan_value_mapping` maps the values from
     `configuration_option` to the value mapping object.
+
     """
 
     def resolve_data(
@@ -634,6 +636,7 @@ class FixedFanValueMappingDataTemplate(
               )
           ),
       ),
+
     """
 
     def get_fan_value_mapping(

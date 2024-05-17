@@ -1,4 +1,5 @@
 """Support for ZHA controls using the select platform."""
+
 from __future__ import annotations
 
 from enum import Enum
@@ -7,7 +8,10 @@ import logging
 from typing import TYPE_CHECKING, Any, Self
 
 from zhaquirks.quirk_ids import TUYA_PLUG_MANUFACTURER, TUYA_PLUG_ONOFF
+from zhaquirks.xiaomi.aqara.magnet_ac01 import OppleCluster as MagnetAC01OppleCluster
+from zhaquirks.xiaomi.aqara.switch_acn047 import OppleCluster as T2RelayOppleCluster
 from zigpy import types
+from zigpy.quirks.v2 import ZCLEnumMetadata
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasWd
 
@@ -23,7 +27,9 @@ from .core.const import (
     CLUSTER_HANDLER_HUE_OCCUPANCY,
     CLUSTER_HANDLER_IAS_WD,
     CLUSTER_HANDLER_INOVELLI,
+    CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_ON_OFF,
+    ENTITY_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     Strobe,
@@ -79,9 +85,9 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
         **kwargs: Any,
     ) -> None:
         """Init this select entity."""
+        self._cluster_handler: ClusterHandler = cluster_handlers[0]
         self._attribute_name = self._enum.__name__
         self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
-        self._cluster_handler: ClusterHandler = cluster_handlers[0]
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
     @property
@@ -173,7 +179,7 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if (
+        if ENTITY_METADATA not in kwargs and (
             cls._attribute_name in cluster_handler.cluster.unsupported_attributes
             or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._attribute_name) is None
@@ -195,9 +201,17 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         **kwargs: Any,
     ) -> None:
         """Init this select entity."""
-        self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
+        if ENTITY_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[ENTITY_METADATA])
+        self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+
+    def _init_from_quirks_metadata(self, entity_metadata: ZCLEnumMetadata) -> None:
+        """Init this entity from the quirks metadata."""
+        super()._init_from_quirks_metadata(entity_metadata)
+        self._attribute_name = entity_metadata.attribute_name
+        self._enum = entity_metadata.enum
 
     @property
     def current_option(self) -> str | None:
@@ -408,23 +422,64 @@ class AqaraApproachDistance(ZCLEnumSelectEntity):
     _attr_translation_key: str = "approach_distance"
 
 
-class AqaraE1ReverseDirection(types.enum8):
-    """Aqara curtain reversal."""
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"lumi.magnet.ac01"}
+)
+class AqaraMagnetAC01DetectionDistance(ZCLEnumSelectEntity):
+    """Representation of a ZHA detection distance configuration entity."""
 
-    Normal = 0x00
-    Inverted = 0x01
+    _unique_id_suffix = "detection_distance"
+    _attribute_name = "detection_distance"
+    _enum = MagnetAC01OppleCluster.DetectionDistance
+    _attr_translation_key: str = "detection_distance"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="window_covering", models={"lumi.curtain.agl001"}
+    cluster_handler_names="opple_cluster", models={"lumi.switch.acn047"}
 )
-class AqaraCurtainMode(ZCLEnumSelectEntity):
-    """Representation of a ZHA curtain mode configuration entity."""
+class AqaraT2RelaySwitchMode(ZCLEnumSelectEntity):
+    """Representation of a ZHA switch mode configuration entity."""
 
-    _unique_id_suffix = "window_covering_mode"
-    _attribute_name = "window_covering_mode"
-    _enum = AqaraE1ReverseDirection
-    _attr_translation_key: str = "window_covering_mode"
+    _unique_id_suffix = "switch_mode"
+    _attribute_name = "switch_mode"
+    _enum = T2RelayOppleCluster.SwitchMode
+    _attr_translation_key: str = "switch_mode"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"lumi.switch.acn047"}
+)
+class AqaraT2RelaySwitchType(ZCLEnumSelectEntity):
+    """Representation of a ZHA switch type configuration entity."""
+
+    _unique_id_suffix = "switch_type"
+    _attribute_name = "switch_type"
+    _enum = T2RelayOppleCluster.SwitchType
+    _attr_translation_key: str = "switch_type"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"lumi.switch.acn047"}
+)
+class AqaraT2RelayStartupOnOff(ZCLEnumSelectEntity):
+    """Representation of a ZHA startup on off configuration entity."""
+
+    _unique_id_suffix = "startup_on_off"
+    _attribute_name = "startup_on_off"
+    _enum = T2RelayOppleCluster.StartupOnOff
+    _attr_translation_key: str = "start_up_on_off"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"lumi.switch.acn047"}
+)
+class AqaraT2RelayDecoupledMode(ZCLEnumSelectEntity):
+    """Representation of a ZHA switch decoupled mode configuration entity."""
+
+    _unique_id_suffix = "decoupled_mode"
+    _attribute_name = "decoupled_mode"
+    _enum = T2RelayOppleCluster.DecoupledMode
+    _attr_translation_key: str = "decoupled_mode"
 
 
 class InovelliOutputMode(types.enum1):
@@ -569,7 +624,6 @@ class AqaraPetFeederMode(ZCLEnumSelectEntity):
     _attribute_name = "feeding_mode"
     _enum = AqaraFeedingMode
     _attr_translation_key: str = "feeding_mode"
-    _attr_icon: str = "mdi:wrench-clock"
 
 
 class AqaraThermostatPresetMode(types.enum8):
@@ -590,3 +644,47 @@ class AqaraThermostatPreset(ZCLEnumSelectEntity):
     _attribute_name = "preset"
     _enum = AqaraThermostatPresetMode
     _attr_translation_key: str = "preset"
+
+
+class SonoffPresenceDetectionSensitivityEnum(types.enum8):
+    """Enum for detection sensitivity select entity."""
+
+    Low = 0x01
+    Medium = 0x02
+    High = 0x03
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_OCCUPANCY, models={"SNZB-06P"}
+)
+class SonoffPresenceDetectionSensitivity(ZCLEnumSelectEntity):
+    """Entity to set the detection sensitivity of the Sonoff SNZB-06P."""
+
+    _unique_id_suffix = "detection_sensitivity"
+    _attribute_name = "ultrasonic_u_to_o_threshold"
+    _enum = SonoffPresenceDetectionSensitivityEnum
+    _attr_translation_key: str = "detection_sensitivity"
+
+
+class KeypadLockoutEnum(types.enum8):
+    """Keypad lockout options."""
+
+    Unlock = 0x00
+    Lock1 = 0x01
+    Lock2 = 0x02
+    Lock3 = 0x03
+    Lock4 = 0x04
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="thermostat_ui")
+class KeypadLockout(ZCLEnumSelectEntity):
+    """Mandatory attribute for thermostat_ui cluster.
+
+    Often only the first two are implemented, and Lock2 to Lock4 should map to Lock1 in the firmware.
+    This however covers all bases.
+    """
+
+    _unique_id_suffix = "keypad_lockout"
+    _attribute_name: str = "keypad_lockout"
+    _enum = KeypadLockoutEnum
+    _attr_translation_key: str = "keypad_lockout"

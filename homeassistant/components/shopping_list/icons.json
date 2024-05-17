@@ -1,0 +1,19 @@
+{
+  "entity": {
+    "todo": {
+      "shopping_list": {
+        "default": "mdi:cart"
+      }
+    }
+  },
+  "services": {
+    "add_item": "mdi:cart-plus",
+    "remove_item": "mdi:cart-remove",
+    "complete_item": "mdi:cart-check",
+    "incomplete_item": "mdi:cart-off",
+    "complete_all": "mdi:cart-check",
+    "incomplete_all": "mdi:cart-off",
+    "clear_completed_items": "mdi:cart-remove",
+    "sort": "mdi:sort"
+  }
+}

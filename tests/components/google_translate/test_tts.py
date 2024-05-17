@@ -1,4 +1,5 @@
 """The tests for the Google speech platform."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -71,6 +72,8 @@ async def setup_fixture(
         await mock_config_entry_setup(hass, config)
     else:
         raise RuntimeError("Invalid setup fixture")
+
+    await hass.async_block_till_done()
 
 
 @pytest.fixture(name="config")

@@ -1,10 +1,11 @@
 """Light platform support for yeelight."""
+
 from __future__ import annotations
 
-import asyncio
+from collections.abc import Callable, Coroutine
 import logging
 import math
-from typing import Any
+from typing import Any, Concatenate
 
 import voluptuous as vol
 import yeelight
@@ -238,15 +239,19 @@ def _parse_custom_effects(effects_config) -> dict[str, dict[str, Any]]:
     return effects
 
 
-def _async_cmd(func):
+def _async_cmd[_YeelightBaseLightT: YeelightBaseLight, **_P, _R](
+    func: Callable[Concatenate[_YeelightBaseLightT, _P], Coroutine[Any, Any, _R]],
+) -> Callable[Concatenate[_YeelightBaseLightT, _P], Coroutine[Any, Any, _R | None]]:
     """Define a wrapper to catch exceptions from the bulb."""
 
-    async def _async_wrap(self: YeelightBaseLight, *args, **kwargs):
+    async def _async_wrap(
+        self: _YeelightBaseLightT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> _R | None:
         for attempts in range(2):
             try:
                 _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
                 return await func(self, *args, **kwargs)
-            except asyncio.TimeoutError as ex:
+            except TimeoutError as ex:
                 # The wifi likely dropped, so we want to retry once since
                 # python-yeelight will auto reconnect
                 if attempts == 0:
@@ -269,6 +274,7 @@ def _async_cmd(func):
                     f"Error when calling {func.__name__} for bulb "
                     f"{self.device.name} at {self.device.host}: {str(ex) or type(ex)}"
                 ) from ex
+        return None
 
     return _async_wrap
 
@@ -992,7 +998,6 @@ class YeelightNightLightMode(YeelightBaseLight):
     """Representation of a Yeelight when in nightlight mode."""
 
     _attr_color_mode = ColorMode.BRIGHTNESS
-    _attr_icon = "mdi:weather-night"
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_translation_key = "nightlight"
 

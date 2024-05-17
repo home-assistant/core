@@ -21,6 +21,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'devolo',
     'model': 'dLAN pro 1200+ WiFi ac',
     'name': 'Mock Title',

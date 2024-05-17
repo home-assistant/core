@@ -1,5 +1,6 @@
 """Support for Melissa climate."""
-import melissa
+
+from melissa import AsyncMelissa
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -30,7 +31,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
-    api = melissa.AsyncMelissa(username=username, password=password)
+    api = AsyncMelissa(username=username, password=password)
     await api.async_connect()
     hass.data[DATA_MELISSA] = api
 

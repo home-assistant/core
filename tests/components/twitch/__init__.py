@@ -1,4 +1,5 @@
 """Tests for the Twitch component."""
+
 import asyncio
 from collections.abc import AsyncGenerator, AsyncIterator
 from dataclasses import dataclass
@@ -122,7 +123,6 @@ class TwitchMock:
 
     async def _noop(self):
         """Fake function to create task."""
-        pass
 
     async def get_users(
         self, user_ids: list[str] | None = None, logins: list[str] | None = None
@@ -152,10 +152,10 @@ class TwitchMock:
         self,
         token: str,
         scope: list[AuthScope],
+        refresh_token: str | None = None,
         validate: bool = True,
     ) -> None:
         """Set user authentication."""
-        pass
 
     async def get_followed_channels(
         self, user_id: str, broadcaster_id: str | None = None
@@ -198,7 +198,7 @@ class TwitchUnauthorizedMock(TwitchMock):
 
     def __await__(self):
         """Add async capabilities to the mock."""
-        raise TwitchAuthorizationException()
+        raise TwitchAuthorizationException
 
 
 class TwitchMissingScopeMock(TwitchMock):
@@ -208,7 +208,7 @@ class TwitchMissingScopeMock(TwitchMock):
         self, token: str, scope: list[AuthScope], validate: bool = True
     ) -> None:
         """Set user authentication."""
-        raise MissingScopeException()
+        raise MissingScopeException
 
 
 class TwitchInvalidTokenMock(TwitchMock):
@@ -218,7 +218,7 @@ class TwitchInvalidTokenMock(TwitchMock):
         self, token: str, scope: list[AuthScope], validate: bool = True
     ) -> None:
         """Set user authentication."""
-        raise InvalidTokenException()
+        raise InvalidTokenException
 
 
 class TwitchInvalidUserMock(TwitchMock):
@@ -243,4 +243,4 @@ class TwitchAPIExceptionMock(TwitchMock):
         self, broadcaster_id: str, user_id: str
     ) -> UserSubscriptionMock:
         """Check if the user is subscribed."""
-        raise TwitchAPIException()
+        raise TwitchAPIException

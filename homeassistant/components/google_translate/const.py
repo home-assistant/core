@@ -1,4 +1,5 @@
 """Constants for the Google Translate text-to-speech integration."""
+
 from dataclasses import dataclass
 
 CONF_TLD = "tld"
@@ -6,8 +7,25 @@ DEFAULT_LANG = "en"
 DEFAULT_TLD = "com"
 DOMAIN = "google_translate"
 
+# INSTRUCTIONS TO UPDATE LIST:
+#
+# Removal:
+# Removal is as simple as deleting the line containing the language code no longer
+# supported.
+#
+# Addition:
+# In order to add to this list, follow the below steps:
+# 1. Find out if the language is supported: Go to Google Translate website and try
+#    translating any word from English into your desired language.
+#    If the "speech" icon is grayed out or no speech is generated, the language is
+#    not supported and cannot be added. Otherwise, proceed:
+# 2. Grab the language code from https://cloud.google.com/translate/docs/languages
+# 3. Add the language code in SUPPORT_LANGUAGES, making sure to not disturb the
+#    alphabetical nature of the list.
+
 SUPPORT_LANGUAGES = [
     "af",
+    "am",
     "ar",
     "bg",
     "bn",
@@ -19,16 +37,18 @@ SUPPORT_LANGUAGES = [
     "de",
     "el",
     "en",
-    "eo",
     "es",
     "et",
+    "eu",
     "fi",
+    "fil",
     "fr",
+    "gl",
     "gu",
+    "ha",
     "hi",
     "hr",
     "hu",
-    "hy",
     "id",
     "is",
     "it",
@@ -39,15 +59,16 @@ SUPPORT_LANGUAGES = [
     "kn",
     "ko",
     "la",
-    "lv",
     "lt",
-    "mk",
+    "lv",
     "ml",
     "mr",
+    "ms",
     "my",
     "ne",
     "nl",
     "no",
+    "pa",
     "pl",
     "pt",
     "ro",

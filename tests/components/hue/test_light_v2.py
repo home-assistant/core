@@ -1,4 +1,5 @@
 """Philips Hue lights platform tests for V2 bridge/api."""
+
 from homeassistant.components.light import ColorMode
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -72,7 +73,7 @@ async def test_lights(
     assert light_4.attributes["friendly_name"] == "Hue on/off light"
     assert light_4.state == "off"
     assert light_4.attributes["mode"] == "normal"
-    assert light_4.attributes["supported_color_modes"] == []
+    assert light_4.attributes["supported_color_modes"] == [ColorMode.ONOFF]
 
 
 async def test_light_turn_on_service(
@@ -203,6 +204,28 @@ async def test_light_turn_on_service(
         mock_bridge_v2.mock_requests[8]["json"]["timed_effects"]["effect"] == "sunrise"
     )
     assert mock_bridge_v2.mock_requests[8]["json"]["timed_effects"]["duration"] == 6000
+
+    # test enabling effect should ignore color temperature
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": test_light_id, "effect": "candle", "color_temp": 500},
+        blocking=True,
+    )
+    assert len(mock_bridge_v2.mock_requests) == 10
+    assert mock_bridge_v2.mock_requests[9]["json"]["effects"]["effect"] == "candle"
+    assert "color_temperature" not in mock_bridge_v2.mock_requests[9]["json"]
+
+    # test enabling effect should ignore xy color
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": test_light_id, "effect": "candle", "xy_color": [0.123, 0.123]},
+        blocking=True,
+    )
+    assert len(mock_bridge_v2.mock_requests) == 11
+    assert mock_bridge_v2.mock_requests[10]["json"]["effects"]["effect"] == "candle"
+    assert "xy_color" not in mock_bridge_v2.mock_requests[9]["json"]
 
 
 async def test_light_turn_off_service(
@@ -527,7 +550,7 @@ async def test_grouped_lights(
 
     # PUT request should have been sent to ALL group lights with correct params
     assert len(mock_bridge_v2.mock_requests) == 3
-    for index in range(0, 3):
+    for index in range(3):
         assert (
             mock_bridge_v2.mock_requests[index]["json"]["identify"]["action"]
             == "identify"
@@ -565,7 +588,7 @@ async def test_grouped_lights(
 
     # PUT request should have been sent to ALL group lights with correct params
     assert len(mock_bridge_v2.mock_requests) == 3
-    for index in range(0, 3):
+    for index in range(3):
         assert (
             mock_bridge_v2.mock_requests[index]["json"]["identify"]["action"]
             == "identify"

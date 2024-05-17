@@ -1,4 +1,5 @@
 """Tests for IPMA config flow."""
+
 from unittest.mock import patch
 
 from pyipma import IPMAException
@@ -26,7 +27,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     test_data = {
@@ -56,7 +57,7 @@ async def test_config_flow_failures(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     test_data = {
@@ -91,7 +92,7 @@ async def test_config_flow_failures(hass: HomeAssistant) -> None:
     }
 
 
-async def test_flow_entry_already_exists(hass: HomeAssistant, config_entry) -> None:
+async def test_flow_entry_already_exists(hass: HomeAssistant, init_integration) -> None:
     """Test user input for config_entry that already exists.
 
     Test when the form should show when user puts existing location
@@ -108,5 +109,5 @@ async def test_flow_entry_already_exists(hass: HomeAssistant, config_entry) -> N
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

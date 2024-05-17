@@ -1,4 +1,5 @@
 """Allow users to set and activate scenes."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping, ValuesView
@@ -30,11 +31,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import (
-    config_per_platform,
-    config_validation as cv,
-    entity_platform,
-)
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback, EntityPlatform
 from homeassistant.helpers.service import (
     async_extract_entity_ids,
@@ -139,7 +136,7 @@ class SceneConfig(NamedTuple):
     id: str | None
     name: str
     icon: str | None
-    states: dict
+    states: dict[str, State]
 
 
 @callback
@@ -208,7 +205,7 @@ async def async_setup_platform(
         await platform.async_reset()
 
         # Extract only the config for the Home Assistant platform, ignore the rest.
-        for p_type, p_config in config_per_platform(conf, SCENE_DOMAIN):
+        for p_type, p_config in conf_util.config_per_platform(conf, SCENE_DOMAIN):
             if p_type != HA_DOMAIN:
                 continue
 
@@ -285,7 +282,6 @@ async def async_setup_platform(
             scene = platform.entities.get(entity_id)
             if scene is None:
                 raise ServiceValidationError(
-                    f"{entity_id} is not a valid scene entity_id",
                     translation_domain=SCENE_DOMAIN,
                     translation_key="entity_not_scene",
                     translation_placeholders={
@@ -295,7 +291,6 @@ async def async_setup_platform(
             assert isinstance(scene, HomeAssistantScene)
             if not scene.from_service:
                 raise ServiceValidationError(
-                    f"The scene {entity_id} is not created with service `scene.create`",
                     translation_domain=SCENE_DOMAIN,
                     translation_key="entity_not_dynamically_created",
                     translation_placeholders={

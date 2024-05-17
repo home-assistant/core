@@ -1,5 +1,5 @@
 """The tests for the hassio component."""
-import asyncio
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -396,7 +396,7 @@ async def test_bad_gateway_when_cannot_find_supervisor(
     hassio_client, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we get a bad gateway error if we can't find supervisor."""
-    aioclient_mock.get("http://127.0.0.1/app/entrypoint.js", exc=asyncio.TimeoutError)
+    aioclient_mock.get("http://127.0.0.1/app/entrypoint.js", exc=TimeoutError)
 
     resp = await hassio_client.get("/api/hassio/app/entrypoint.js")
     assert resp.status == HTTPStatus.BAD_GATEWAY

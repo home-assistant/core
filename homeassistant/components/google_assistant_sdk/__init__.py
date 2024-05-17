@@ -1,4 +1,5 @@
 """Support for Google Assistant SDK."""
+
 from __future__ import annotations
 
 import dataclasses
@@ -97,7 +98,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if entry.state == ConfigEntryState.LOADED
     ]
     if len(loaded_entries) == 1:
-        for service_name in hass.services.async_services()[DOMAIN]:
+        for service_name in hass.services.async_services_for_domain(DOMAIN):
             hass.services.async_remove(DOMAIN, service_name)
 
     conversation.async_unset_agent(hass, entry)
@@ -168,7 +169,9 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
             self.language = user_input.language
             self.assistant = TextAssistant(credentials, self.language)
 
-        resp = self.assistant.assist(user_input.text)
+        resp = await self.hass.async_add_executor_job(
+            self.assistant.assist, user_input.text
+        )
         text_response = resp[0] or "<empty response>"
 
         intent_response = intent.IntentResponse(language=user_input.language)

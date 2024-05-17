@@ -1,4 +1,5 @@
 """Component for the Portuguese weather service - IPMA."""
+
 import asyncio
 import logging
 
@@ -17,7 +18,7 @@ from .const import DATA_API, DATA_LOCATION, DOMAIN
 
 DEFAULT_NAME = "ipma"
 
-PLATFORMS = [Platform.WEATHER, Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     try:
         async with asyncio.timeout(30):
             location = await Location.get(api, float(latitude), float(longitude))
-    except (IPMAException, asyncio.TimeoutError) as err:
+    except (IPMAException, TimeoutError) as err:
         raise ConfigEntryNotReady(
             f"Could not get location for ({latitude},{longitude})"
         ) from err

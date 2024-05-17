@@ -3,6 +3,7 @@
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
 """
+
 from pysmartthings import Attribute, Capability
 from pysmartthings.device import Status
 import pytest
@@ -213,6 +214,8 @@ async def test_legacy_thermostat_entity_state(
         == ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
@@ -240,6 +243,8 @@ async def test_basic_thermostat_entity_state(
         state.attributes[ATTR_SUPPORTED_FEATURES]
         == ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert ATTR_HVAC_ACTION not in state.attributes
     assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
@@ -261,6 +266,8 @@ async def test_thermostat_entity_state(hass: HomeAssistant, thermostat) -> None:
         == ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
@@ -288,6 +295,8 @@ async def test_buggy_thermostat_entity_state(
         state.attributes[ATTR_SUPPORTED_FEATURES]
         == ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.state is STATE_UNKNOWN
     assert state.attributes[ATTR_TEMPERATURE] is None
@@ -320,6 +329,8 @@ async def test_air_conditioner_entity_state(
         | ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
         HVACMode.COOL,

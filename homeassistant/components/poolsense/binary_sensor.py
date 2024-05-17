@@ -1,4 +1,5 @@
 """Support for PoolSense binary sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -6,12 +7,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import PoolSenseConfigEntry
 from .entity import PoolSenseEntity
 
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
@@ -30,11 +30,11 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: PoolSenseConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     entities = [
         PoolSenseBinarySensor(coordinator, config_entry.data[CONF_EMAIL], description)
