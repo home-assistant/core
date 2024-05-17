@@ -6,7 +6,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ApsystemsConfigEntry, ApSystemsData
+from . import ApSystemsData
 from .const import DOMAIN
 from .coordinator import ApSystemsDataCoordinator
 
@@ -19,15 +19,12 @@ class ApSystemsEntity(Entity):
     def __init__(
         self,
         data: ApSystemsData,
-        entry: ApsystemsConfigEntry,
     ) -> None:
         """Initialize the APsystems entity."""
-        self._entry = entry
-        assert entry.unique_id
-        self._attr_unique_id = entry.unique_id
+        self._attr_unique_id = data.device_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            serial_number=self._attr_unique_id,
+            identifiers={(DOMAIN, data.device_id)},
+            serial_number=data.device_id,
             manufacturer="APsystems",
             model="EZ1-M",
         )
@@ -41,8 +38,7 @@ class ApSystemsCoordinatorEntity(
     def __init__(
         self,
         data: ApSystemsData,
-        entry: ApsystemsConfigEntry,
     ) -> None:
         """Initialize the APsystems entity and the coordinator entity."""
         super().__init__(data.coordinator)
-        ApSystemsEntity.__init__(self, data, entry)
+        ApSystemsEntity.__init__(self, data)

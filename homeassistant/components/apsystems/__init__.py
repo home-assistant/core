@@ -14,7 +14,7 @@ from .coordinator import ApSystemsDataCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-type ApsystemsConfigEntry = ConfigEntry[ApSystemsDataCoordinator]
+type ApSystemsConfigEntry = ConfigEntry[ApSystemsDataCoordinator]
 
 
 @dataclass
@@ -25,12 +25,15 @@ class ApSystemsData:
     device_id: str
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ApsystemsConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ApSystemsConfigEntry) -> bool:
     """Set up this integration using UI."""
     api = APsystemsEZ1M(ip_address=entry.data[CONF_IP_ADDRESS], timeout=8)
     coordinator = ApSystemsDataCoordinator(hass, api)
     await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = ApSystemsData(coordinator=coordinator, api=api)
+    assert entry.unique_id
+    entry.runtime_data = ApSystemsData(
+        coordinator=coordinator, device_id=entry.unique_id
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
