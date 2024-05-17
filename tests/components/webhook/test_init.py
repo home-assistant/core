@@ -1,6 +1,7 @@
 """Test the webhook component."""
 
 from http import HTTPStatus
+from inspect import signature as inspect_signature
 from ipaddress import ip_address
 from unittest.mock import Mock, patch
 
@@ -69,6 +70,35 @@ async def test_generate_webhook_url_internal(hass: HomeAssistant) -> None:
     )
 
     assert url == "http://192.168.1.100:8123/api/webhook/some_id"
+
+
+async def test_async_signature_get_url_webhook(hass: HomeAssistant) -> None:
+    """Test the signature of get_url and async_generate_url match."""
+
+    def compare_parameters(param1, param2) -> bool:
+        """Compare two parameters, without comparing their kind (KEYWORD_ONLY, ...)."""
+        return (
+            param1.name == param2.name
+            and param1.default == param2.default
+            and param1.annotation == param2.annotation
+        )
+
+    signature_get_url_params = inspect_signature(webhook.get_url).parameters
+    signature_generate_url_params = inspect_signature(
+        webhook.async_generate_url
+    ).parameters
+
+    params_to_check = [
+        "allow_internal",
+        "allow_external",
+        "allow_ip",
+        "prefer_external",
+    ]
+
+    for param in params_to_check:
+        assert compare_parameters(
+            signature_get_url_params[param], signature_generate_url_params[param]
+        )
 
 
 async def test_async_generate_path(hass: HomeAssistant) -> None:
