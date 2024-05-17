@@ -19,6 +19,8 @@ CONF_ELMAX_MODE_DIRECT_PORT = "panel_api_port"
 CONF_ELMAX_MODE_DIRECT_SSL = "use_ssl"
 CONF_ELMAX_MODE_DIRECT_SSL_CERT = "ssl_cert"
 
+SIGNAL_PANEL_UPDATE = f"{DOMAIN}_panel_update"
+
 ELMAX_LOCAL_API_PATH = "api/v2"
 
 CONF_CONFIG_ENTRY_ID = "config_entry_id"
