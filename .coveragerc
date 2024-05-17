@@ -82,7 +82,6 @@ omit =
     homeassistant/components/aprilaire/coordinator.py
     homeassistant/components/aprilaire/entity.py
     homeassistant/components/apsystems/__init__.py
-    homeassistant/components/apsystems/const.py
     homeassistant/components/apsystems/coordinator.py
     homeassistant/components/apsystems/sensor.py
     homeassistant/components/aqualogic/*
@@ -465,8 +464,7 @@ omit =
     homeassistant/components/freebox/camera.py
     homeassistant/components/freebox/home_base.py
     homeassistant/components/freebox/switch.py
-    homeassistant/components/fritz/common.py
-    homeassistant/components/fritz/device_tracker.py
+    homeassistant/components/fritz/coordinator.py
     homeassistant/components/fritz/services.py
     homeassistant/components/fritz/switch.py
     homeassistant/components/fritzbox_callmonitor/__init__.py
@@ -981,9 +979,9 @@ omit =
     homeassistant/components/openuv/coordinator.py
     homeassistant/components/openuv/sensor.py
     homeassistant/components/openweathermap/__init__.py
+    homeassistant/components/openweathermap/coordinator.py
     homeassistant/components/openweathermap/sensor.py
     homeassistant/components/openweathermap/weather.py
-    homeassistant/components/openweathermap/weather_update_coordinator.py
     homeassistant/components/opnsense/__init__.py
     homeassistant/components/opnsense/device_tracker.py
     homeassistant/components/opower/__init__.py
@@ -1057,11 +1055,6 @@ omit =
     homeassistant/components/point/alarm_control_panel.py
     homeassistant/components/point/binary_sensor.py
     homeassistant/components/point/sensor.py
-    homeassistant/components/poolsense/__init__.py
-    homeassistant/components/poolsense/binary_sensor.py
-    homeassistant/components/poolsense/coordinator.py
-    homeassistant/components/poolsense/entity.py
-    homeassistant/components/poolsense/sensor.py
     homeassistant/components/powerwall/__init__.py
     homeassistant/components/progettihwsw/__init__.py
     homeassistant/components/progettihwsw/binary_sensor.py
@@ -1354,6 +1347,7 @@ omit =
     homeassistant/components/supla/*
     homeassistant/components/surepetcare/__init__.py
     homeassistant/components/surepetcare/binary_sensor.py
+    homeassistant/components/surepetcare/coordinator.py
     homeassistant/components/surepetcare/entity.py
     homeassistant/components/surepetcare/sensor.py
     homeassistant/components/swiss_hydrological_data/sensor.py
@@ -1553,6 +1547,8 @@ omit =
     homeassistant/components/v2c/number.py
     homeassistant/components/v2c/sensor.py
     homeassistant/components/v2c/switch.py
+    homeassistant/components/vallox/__init__.py
+    homeassistant/components/vallox/coordinator.py
     homeassistant/components/vasttrafik/sensor.py
     homeassistant/components/velbus/__init__.py
     homeassistant/components/velbus/binary_sensor.py
@@ -1647,6 +1643,7 @@ omit =
     homeassistant/components/xbox/base_sensor.py
     homeassistant/components/xbox/binary_sensor.py
     homeassistant/components/xbox/browse_media.py
+    homeassistant/components/xbox/coordinator.py
     homeassistant/components/xbox/media_player.py
     homeassistant/components/xbox/remote.py
     homeassistant/components/xbox/sensor.py

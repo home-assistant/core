@@ -125,7 +125,7 @@ adax==0.4.0
 adb-shell[async]==0.4.4
 
 # homeassistant.components.alarmdecoder
-adext==0.4.2
+adext==0.4.3
 
 # homeassistant.components.adguard
 adguardhome==0.6.3
@@ -219,7 +219,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==24.3.0
+aioesphomeapi==24.4.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -482,7 +482,7 @@ bleak-esphome==1.0.0
 bleak-retry-connector==3.5.0
 
 # homeassistant.components.bluetooth
-bleak==0.22.0
+bleak==0.22.1
 
 # homeassistant.components.blebox
 blebox-uniapi==2.2.2
@@ -855,10 +855,10 @@ habitipy==0.3.1
 habluetooth==3.0.1
 
 # homeassistant.components.cloud
-hass-nabucasa==0.78.0
+hass-nabucasa==0.81.0
 
 # homeassistant.components.conversation
-hassil==1.6.1
+hassil==1.7.1
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.8
@@ -1483,7 +1483,7 @@ pyinsteon==1.6.1
 pyipma==3.0.7
 
 # homeassistant.components.ipp
-pyipp==0.15.0
+pyipp==0.16.0
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0
