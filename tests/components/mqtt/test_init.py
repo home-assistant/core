@@ -1927,7 +1927,7 @@ async def test_reload_entry_with_restored_subscriptions(
     hass.config.components.add(mqtt.DOMAIN)
     mqtt_client_mock.connect.return_value = 0
     with patch("homeassistant.config.load_yaml_config_file", return_value={}):
-        await entry.async_setup(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
 
     await mqtt.async_subscribe(hass, "test-topic", record_calls)
     await mqtt.async_subscribe(hass, "wild/+/card", record_calls)
@@ -4409,6 +4409,34 @@ async def test_server_sock_connect_and_disconnect(
 @patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
 @patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
 @patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+async def test_server_sock_buffer_size(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test handling the socket buffer size fails."""
+    mqtt_mock = await mqtt_mock_entry()
+    await hass.async_block_till_done()
+    assert mqtt_mock.connected is True
+
+    mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
+
+    client, server = socket.socketpair(
+        family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0
+    )
+    client.setblocking(False)
+    server.setblocking(False)
+    with patch.object(client, "setsockopt", side_effect=OSError("foo")):
+        mqtt_client_mock.on_socket_open(mqtt_client_mock, None, client)
+        mqtt_client_mock.on_socket_register_write(mqtt_client_mock, None, client)
+        await hass.async_block_till_done()
+    assert "Unable to increase the socket buffer size" in caplog.text
+
+
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_client_sock_failure_after_connect(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -4491,3 +4519,31 @@ async def test_loop_write_failure(
     await hass.async_block_till_done()
 
     assert "Disconnected from MQTT server mock-broker:1883 (7)" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "attr",
+    [
+        "EntitySubscription",
+        "MqttCommandTemplate",
+        "MqttValueTemplate",
+        "PayloadSentinel",
+        "PublishPayloadType",
+        "ReceiveMessage",
+        "ReceivePayloadType",
+        "async_prepare_subscribe_topics",
+        "async_publish",
+        "async_subscribe",
+        "async_subscribe_topics",
+        "async_unsubscribe_topics",
+        "async_wait_for_mqtt_client",
+        "publish",
+        "subscribe",
+        "valid_publish_topic",
+        "valid_qos_schema",
+        "valid_subscribe_topic",
+    ],
+)
+async def test_mqtt_integration_level_imports(hass: HomeAssistant, attr: str) -> None:
+    """Test mqtt integration level public published imports are available."""
+    assert hasattr(mqtt, attr)

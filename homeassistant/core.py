@@ -35,6 +35,7 @@ from time import monotonic
 from typing import (
     TYPE_CHECKING,
     Any,
+    Final,
     Generic,
     NotRequired,
     ParamSpec,
@@ -325,7 +326,7 @@ class HassJob(Generic[_P, _R_co]):
         job_type: HassJobType | None = None,
     ) -> None:
         """Create a job object."""
-        self.target = target
+        self.target: Final = target
         self.name = name
         self._cancel_on_shutdown = cancel_on_shutdown
         self._job_type = job_type
@@ -439,7 +440,11 @@ class HomeAssistant:
 
             # frame is a circular import, so we import it here
             frame.report(
-                f"calls {what} from a thread",
+                f"calls {what} from a thread other than the event loop, "
+                "which may cause Home Assistant to crash or data to corrupt. "
+                "For more information, see "
+                "https://developers.home-assistant.io/docs/asyncio_thread_safety/"
+                f"#{what.replace('.', '')}",
                 error_if_core=True,
                 error_if_integration=True,
             )
@@ -742,9 +747,7 @@ class HomeAssistant:
         # https://github.com/home-assistant/core/pull/71960
         if hassjob.job_type is HassJobType.Coroutinefunction:
             if TYPE_CHECKING:
-                hassjob.target = cast(
-                    Callable[..., Coroutine[Any, Any, _R]], hassjob.target
-                )
+                hassjob = cast(HassJob[..., Coroutine[Any, Any, _R]], hassjob)
             task = create_eager_task(
                 hassjob.target(*args), name=hassjob.name, loop=self.loop
             )
@@ -752,12 +755,12 @@ class HomeAssistant:
                 return task
         elif hassjob.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
-                hassjob.target = cast(Callable[..., _R], hassjob.target)
+                hassjob = cast(HassJob[..., _R], hassjob)
             self.loop.call_soon(hassjob.target, *args)
             return None
         else:
             if TYPE_CHECKING:
-                hassjob.target = cast(Callable[..., _R], hassjob.target)
+                hassjob = cast(HassJob[..., _R], hassjob)
             task = self.loop.run_in_executor(None, hassjob.target, *args)
 
         task_bucket = self._background_tasks if background else self._tasks
@@ -802,7 +805,7 @@ class HomeAssistant:
         # check with a check for the `hass.config.debug` flag being set as
         # long term we don't want to be checking this in production
         # environments since it is a performance hit.
-        self.verify_event_loop_thread("async_create_task")
+        self.verify_event_loop_thread("hass.async_create_task")
         return self.async_create_task_internal(target, name, eager_start)
 
     @callback
@@ -932,7 +935,7 @@ class HomeAssistant:
         # https://github.com/home-assistant/core/pull/71960
         if hassjob.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
-                hassjob.target = cast(Callable[..., _R], hassjob.target)
+                hassjob = cast(HassJob[..., _R], hassjob)
             hassjob.target(*args)
             return None
 
@@ -1493,7 +1496,7 @@ class EventBus:
         This method must be run in the event loop.
         """
         _verify_event_type_length_or_raise(event_type)
-        self._hass.verify_event_loop_thread("async_fire")
+        self._hass.verify_event_loop_thread("hass.bus.async_fire")
         return self.async_fire_internal(
             event_type, event_data, origin, context, time_fired
         )
@@ -2506,7 +2509,7 @@ class ServiceRegistry:
 
         This method must be run in the event loop.
         """
-        self._hass.verify_event_loop_thread("async_register")
+        self._hass.verify_event_loop_thread("hass.services.async_register")
         self._async_register(
             domain, service, service_func, schema, supports_response, job_type
         )
@@ -2565,7 +2568,7 @@ class ServiceRegistry:
 
         This method must be run in the event loop.
         """
-        self._hass.verify_event_loop_thread("async_remove")
+        self._hass.verify_event_loop_thread("hass.services.async_remove")
         self._async_remove(domain, service)
 
     @callback
@@ -2762,14 +2765,16 @@ class ServiceRegistry:
         target = job.target
         if job.job_type is HassJobType.Coroutinefunction:
             if TYPE_CHECKING:
-                target = cast(Callable[..., Coroutine[Any, Any, _R]], target)
+                target = cast(
+                    Callable[..., Coroutine[Any, Any, ServiceResponse]], target
+                )
             return await target(service_call)
         if job.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
-                target = cast(Callable[..., _R], target)
+                target = cast(Callable[..., ServiceResponse], target)
             return target(service_call)
         if TYPE_CHECKING:
-            target = cast(Callable[..., _R], target)
+            target = cast(Callable[..., ServiceResponse], target)
         return await self._hass.async_add_executor_job(target, service_call)
 
 
@@ -2899,7 +2904,7 @@ class Config:
 
     def is_allowed_external_url(self, url: str) -> bool:
         """Check if an external URL is allowed."""
-        parsed_url = f"{str(yarl.URL(url))}/"
+        parsed_url = f"{yarl.URL(url)!s}/"
 
         return any(
             allowed
