@@ -238,7 +238,9 @@ class OperationNotAllowed(ConfigError):
     """Raised when a config entry operation is not allowed."""
 
 
-UpdateListenerType = Callable[[HomeAssistant, "ConfigEntry"], Coroutine[Any, Any, None]]
+type UpdateListenerType = Callable[
+    [HomeAssistant, ConfigEntry], Coroutine[Any, Any, None]
+]
 
 FROZEN_CONFIG_ENTRY_ATTRS = {
     "entry_id",
@@ -1955,7 +1957,7 @@ class ConfigEntries:
         if entry.entry_id not in self._entries:
             raise UnknownEntry(entry.entry_id)
 
-        self.hass.verify_event_loop_thread("async_update_entry")
+        self.hass.verify_event_loop_thread("hass.config_entries.async_update_entry")
         changed = False
         _setter = object.__setattr__
 
