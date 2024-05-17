@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.CALENDAR,
     Platform.DEVICE_TRACKER,
     Platform.LAWN_MOWER,
     Platform.NUMBER,
