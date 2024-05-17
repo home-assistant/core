@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from wled import WLEDConnectionError, WLEDError
 
@@ -11,11 +11,8 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .entity import WLEDEntity
 
-_WLEDEntityT = TypeVar("_WLEDEntityT", bound=WLEDEntity)
-_P = ParamSpec("_P")
 
-
-def wled_exception_handler(
+def wled_exception_handler[_WLEDEntityT: WLEDEntity, **_P](
     func: Callable[Concatenate[_WLEDEntityT, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_WLEDEntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate WLED calls to handle WLED exceptions.
