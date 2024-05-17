@@ -7,7 +7,6 @@ from elmax_api.model.alarm_status import AlarmArmStatus, AlarmStatus
 from elmax_api.model.area import Area
 from elmax_api.model.command import AreaCommand
 from elmax_api.model.panel import PanelStatus
-from helpers.typing import StateType
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -24,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import InvalidStateError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .common import ElmaxEntity
 from .const import DOMAIN
