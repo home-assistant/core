@@ -151,12 +151,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabiticaConfigEntry) -> 
     username = entry.data[CONF_API_USER]
     password = entry.data[CONF_API_KEY]
 
-    api = HAHabitipyAsync(
+    api = await hass.async_add_executor_job(
+        HAHabitipyAsync,
         {
             "url": url,
             "login": username,
             "password": password,
-        }
+        },
     )
     try:
         user = await api.user.get(userFields="profile")
