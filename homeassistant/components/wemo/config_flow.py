@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
 
 from .const import DOMAIN
-from .wemo_device import Options, OptionsValidationError
+from .coordinator import Options, OptionsValidationError
 
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:

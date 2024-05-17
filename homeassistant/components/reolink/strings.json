@@ -270,6 +270,9 @@
       "motion_sensitivity": {
         "name": "Motion sensitivity"
       },
+      "pir_sensitivity": {
+        "name": "PIR sensitivity"
+      },
       "ai_face_sensitivity": {
         "name": "AI face sensitivity"
       },
@@ -397,6 +400,17 @@
       "ptz_pan_position": {
         "name": "PTZ pan position"
       },
+      "battery_temperature": {
+        "name": "Battery temperature"
+      },
+      "battery_state": {
+        "name": "Battery state",
+        "state": {
+          "discharging": "Discharging",
+          "charging": "Charging",
+          "chargecomplete": "Charge complete"
+        }
+      },
       "hdd_storage": {
         "name": "HDD {hdd_index} storage"
       },
@@ -451,6 +465,12 @@
       },
       "hdr": {
         "name": "HDR"
+      },
+      "pir_enabled": {
+        "name": "PIR enabled"
+      },
+      "pir_reduce_alarm": {
+        "name": "PIR reduce false alarm"
       }
     }
   }
