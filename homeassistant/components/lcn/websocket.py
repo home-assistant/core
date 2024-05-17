@@ -382,10 +382,15 @@ async def websocket_delete_entity(
         connection.send_result(msg["id"], False)
         return
 
+<<<<<<< HEAD
     entity_configs = [
         ec for ec in config_entry.data[CONF_ENTITIES] if ec != entity_config
     ]
     data = {**config_entry.data, CONF_ENTITIES: entity_configs}
+=======
+    data = deepcopy(dict(config_entry.data))
+    data[CONF_ENTITIES].remove(entity_config)
+>>>>>>> b72fb0c0b6 (Add tests for lcn websockets)
     hass.config_entries.async_update_entry(config_entry, data=data)
 
     # cleanup registries
