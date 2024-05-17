@@ -99,9 +99,9 @@ UNSUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
 RECONNECT_INTERVAL_SECONDS = 10
 
-SocketType = socket.socket | ssl.SSLSocket | Any
+type SocketType = socket.socket | ssl.SSLSocket | Any
 
-SubscribePayloadType = str | bytes  # Only bytes if encoding is None
+type SubscribePayloadType = str | bytes  # Only bytes if encoding is None
 
 
 def publish(
