@@ -59,7 +59,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
 )
-from .weather_update_coordinator import WeatherUpdateCoordinator
+from .coordinator import WeatherUpdateCoordinator
 
 WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
