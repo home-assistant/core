@@ -77,14 +77,14 @@ async def async_attach_trigger(
         telegram: Telegram, telegram_dict: TelegramDict
     ) -> None:
         """Filter Telegram and call trigger action."""
-        telegram_type = telegram.payload.__class__
-        if telegram_type is GroupValueWrite:
+        payload_apci = type(telegram.payload)
+        if payload_apci is GroupValueWrite:
             if config[CONF_KNX_GROUP_VALUE_WRITE] is False:
                 return
-        elif telegram_type is GroupValueResponse:
+        elif payload_apci is GroupValueResponse:
             if config[CONF_KNX_GROUP_VALUE_RESPONSE] is False:
                 return
-        elif telegram_type is GroupValueRead:
+        elif payload_apci is GroupValueRead:
             if config[CONF_KNX_GROUP_VALUE_READ] is False:
                 return
 
@@ -98,10 +98,10 @@ async def async_attach_trigger(
             return
 
         if trigger_transcoder is not None and (
-            telegram_type in (GroupValueWrite, GroupValueResponse)
+            payload_apci in (GroupValueWrite, GroupValueResponse)
         ):
             decoded_payload = decode_telegram_payload(
-                payload=telegram.payload.value,  # type: ignore[union-attr]  # checked via telegram_type
+                payload=telegram.payload.value,  # type: ignore[union-attr]  # checked via payload_apci
                 transcoder=trigger_transcoder,  # type: ignore[type-abstract]  # parse_transcoder don't return abstract classes
             )
             # overwrite decoded payload values in telegram_dict
