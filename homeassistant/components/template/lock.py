@@ -200,4 +200,12 @@ class TemplateLock(TemplateEntity, LockEntity):
 
     def _raise_template_error_if_available(self):
         if self._code_format_template_error is not None:
-            raise ServiceValidationError(self._code_format_template_error)
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="code_format_template_error",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "code_format_template": self._code_format_template.template,
+                    "cause": str(self._code_format_template_error),
+                },
+            )
