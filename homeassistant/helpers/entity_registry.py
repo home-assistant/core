@@ -134,14 +134,14 @@ class _EventEntityRegistryUpdatedData_Update(TypedDict):
     old_entity_id: NotRequired[str]
 
 
-EventEntityRegistryUpdatedData = (
+type EventEntityRegistryUpdatedData = (
     _EventEntityRegistryUpdatedData_CreateRemove
     | _EventEntityRegistryUpdatedData_Update
 )
 
 
-EntityOptionsType = Mapping[str, Mapping[str, Any]]
-ReadOnlyEntityOptionsType = ReadOnlyDict[str, ReadOnlyDict[str, Any]]
+type EntityOptionsType = Mapping[str, Mapping[str, Any]]
+type ReadOnlyEntityOptionsType = ReadOnlyDict[str, ReadOnlyDict[str, Any]]
 
 DISPLAY_DICT_OPTIONAL = (
     # key, attr_name, convert_to_list
@@ -821,7 +821,7 @@ class EntityRegistry(BaseRegistry):
                 unit_of_measurement=unit_of_measurement,
             )
 
-        self.hass.verify_event_loop_thread("async_get_or_create")
+        self.hass.verify_event_loop_thread("entity_registry.async_get_or_create")
         _validate_item(
             self.hass,
             domain,
@@ -894,7 +894,7 @@ class EntityRegistry(BaseRegistry):
     @callback
     def async_remove(self, entity_id: str) -> None:
         """Remove an entity from registry."""
-        self.hass.verify_event_loop_thread("async_remove")
+        self.hass.verify_event_loop_thread("entity_registry.async_remove")
         entity = self.entities.pop(entity_id)
         config_entry_id = entity.config_entry_id
         key = (entity.domain, entity.platform, entity.unique_id)
@@ -1089,7 +1089,7 @@ class EntityRegistry(BaseRegistry):
         if not new_values:
             return old
 
-        self.hass.verify_event_loop_thread("_async_update_entity")
+        self.hass.verify_event_loop_thread("entity_registry.async_update_entity")
 
         new = self.entities[entity_id] = attr.evolve(old, **new_values)
 

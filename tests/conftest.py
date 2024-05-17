@@ -14,7 +14,7 @@ import reprlib
 import sqlite3
 import ssl
 import threading
-from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, cast
+from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp import client
@@ -204,11 +204,7 @@ class HAFakeDatetime(freezegun.api.FakeDatetime):  # type: ignore[name-defined]
         return ha_datetime_to_fakedatetime(result)
 
 
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-
-
-def check_real(func: Callable[_P, Coroutine[Any, Any, _R]]):
+def check_real[**_P, _R](func: Callable[_P, Coroutine[Any, Any, _R]]):
     """Force a function to require a keyword _test_real to be passed in."""
 
     @functools.wraps(func)
@@ -566,7 +562,10 @@ async def hass(
         if loaded_entries:
             await asyncio.gather(
                 *(
-                    create_eager_task(config_entry.async_unload(hass))
+                    create_eager_task(
+                        hass.config_entries.async_unload(config_entry.entry_id),
+                        loop=hass.loop,
+                    )
                     for config_entry in loaded_entries
                 )
             )
@@ -1163,6 +1162,31 @@ def mock_get_source_ip() -> Generator[patch, None, None]:
         yield patcher
     finally:
         patcher.stop()
+
+
+@pytest.fixture(autouse=True, scope="session")
+def translations_once() -> Generator[patch, None, None]:
+    """Only load translations once per session."""
+    from homeassistant.helpers.translation import _TranslationsCacheData
+
+    cache = _TranslationsCacheData({}, {})
+    patcher = patch(
+        "homeassistant.helpers.translation._TranslationsCacheData",
+        return_value=cache,
+    )
+    patcher.start()
+    try:
+        yield patcher
+    finally:
+        patcher.stop()
+
+
+@pytest.fixture
+def disable_translations_once(translations_once):
+    """Override loading translations once."""
+    translations_once.stop()
+    yield
+    translations_once.start()
 
 
 @pytest.fixture
