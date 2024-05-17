@@ -1,11 +1,15 @@
 """Test Onkyo config flow."""
 
+from typing import Any
 from unittest import mock
 from unittest.mock import MagicMock, patch
 
 import eiscp
+import pytest
 
 from homeassistant.components.onkyo.const import (
+    CONF_SOUND_MODE_LIST,
+    CONF_SOURCES,
     DOMAIN,
     EISCP_IDENTIFIER,
     EISCP_MODEL_NAME,
@@ -21,6 +25,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
+from tests.components.onkyo import setup_integration
 
 
 async def test_no_manual_entry_and_no_devices_discovered(hass: HomeAssistant) -> None:
@@ -122,7 +129,7 @@ async def test_manual_entry_valid_ip(
 async def test_select_manually_discovered_device(hass: HomeAssistant) -> None:
     """Test the full user configuration flow."""
 
-    info = {EISCP_IDENTIFIER: "004815162342 ", EISCP_MODEL_NAME: "fake_model"}
+    info = {EISCP_IDENTIFIER: "004815162342", EISCP_MODEL_NAME: "fake_model"}
     receiver = MagicMock()
     receiver.host = "fake_host"
     receiver.port = 12345
@@ -148,13 +155,81 @@ async def test_select_manually_discovered_device(hass: HomeAssistant) -> None:
         # Empty form triggers manual discovery
         configure_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],
-            user_input={CONF_DEVICE: "004815162342 "},
+            user_input={CONF_DEVICE: "004815162342"},
         )
 
     assert configure_result["type"] is FlowResultType.CREATE_ENTRY
-    assert configure_result["title"] == "fake_model 004815162342 "
+    assert configure_result["title"] == "fake_model 004815162342"
     assert configure_result["data"][CONF_HOST] == "fake_host"
     assert configure_result["data"][CONF_PORT] == 12345
-    assert configure_result["data"][CONF_NAME] == "fake_model 004815162342 "
+    assert configure_result["data"][CONF_NAME] == "fake_model 004815162342"
     assert configure_result["data"][CONF_MODEL] == "fake_model"
-    assert configure_result["data"][CONF_MAC] == "004815162342 "
+    assert configure_result["data"][CONF_MAC] == "004815162342"
+
+
+@pytest.mark.parametrize(
+    ("user_input", "error"),
+    [
+        (
+            {CONF_SOURCES: ["list"]},
+            "invalid_sources",
+        ),
+        (
+            {CONF_SOUND_MODE_LIST: ["list"]},
+            "invalid_sound_mode_list",
+        ),
+    ],
+)
+async def test_options_flow_failures(
+    hass: HomeAssistant,
+    # mock_setup_entry: AsyncMock,
+    # opensky_client: AsyncMock,
+    config_entry: MockConfigEntry,
+    user_input: dict[str, Any],
+    error: str,
+) -> None:
+    """Test load and unload entry."""
+    await setup_integration(hass, config_entry)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={**user_input},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"]["base"] == error
+
+
+async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Test options flow."""
+    await setup_integration(hass, config_entry)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "receiver_max_volume": 200,
+            "sound_mode_list": {},
+            "maximum_volume": 42,
+            "sources": {},
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "receiver_max_volume": 200,
+        "sound_mode_list": {},
+        "maximum_volume": 42,
+        "sources": {},
+    }
