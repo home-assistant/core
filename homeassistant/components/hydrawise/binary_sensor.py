@@ -48,8 +48,10 @@ ZONE_BINARY_SENSORS: tuple[HydrawiseBinarySensorEntityDescription, ...] = (
         key="is_watering",
         translation_key="watering",
         device_class=BinarySensorDeviceClass.RUNNING,
-        value_fn=lambda watering_sensor: watering_sensor.zone.scheduled_runs.current_run
-        is not None,
+        value_fn=(
+            lambda watering_sensor: watering_sensor.zone.scheduled_runs.current_run
+            is not None
+        ),
     ),
 )
 
