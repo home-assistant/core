@@ -376,6 +376,7 @@ FLOWS = {
         "ondilo_ico",
         "onewire",
         "onvif",
+        "open_ble_sensors",
         "open_meteo",
         "openai_conversation",
         "openexchangerates",
