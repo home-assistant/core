@@ -236,5 +236,3 @@ UPDATE_ENTITY_BASE_SCHEMA = {
     vol.Required("entity_id"): str,
     **CREATE_ENTITY_BASE_SCHEMA,
 }
-
-SCHEMA_OPTIONS: dict[str, dict] = {}

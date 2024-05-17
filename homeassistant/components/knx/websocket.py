@@ -19,7 +19,6 @@ from .const import DOMAIN
 from .storage.config_store import ConfigStoreException
 from .storage.entity_store_schema import (
     CREATE_ENTITY_BASE_SCHEMA,
-    SCHEMA_OPTIONS,
     UPDATE_ENTITY_BASE_SCHEMA,
 )
 from .storage.entity_store_validation import (
@@ -51,7 +50,6 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_get_entity_config)
     websocket_api.async_register_command(hass, ws_get_entity_entries)
     websocket_api.async_register_command(hass, ws_create_device)
-    websocket_api.async_register_command(hass, ws_get_platform_schema_options)
 
     if DOMAIN not in hass.data.get("frontend_panels", {}):
         await hass.http.async_register_static_paths(
@@ -433,23 +431,3 @@ def ws_create_device(
         configuration_url=f"homeassistant://knx/entities/view?device_id={_device.id}",
     )
     connection.send_result(msg["id"], _device.dict_repr)
-
-
-@websocket_api.require_admin
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "knx/get_platform_schema_options",
-        vol.Required("platform"): str,
-    }
-)
-@callback
-def ws_get_platform_schema_options(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict,
-) -> None:
-    """Send schema options for a platform entity configuration."""
-    connection.send_result(
-        msg["id"],
-        result=SCHEMA_OPTIONS.get(msg["platform"]),
-    )

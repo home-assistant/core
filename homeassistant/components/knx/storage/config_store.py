@@ -12,7 +12,6 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util.ulid import ulid_now
 
 from ..const import DOMAIN
-from .entity_store_schema import SCHEMA_OPTIONS
 
 if TYPE_CHECKING:
     from ..knx_entity import KnxEntity
@@ -87,7 +86,6 @@ class KNXConfigStore:
             return {
                 "platform": entry.domain,
                 "data": self.data["entities"][entry.domain][entry.unique_id],
-                "schema_options": SCHEMA_OPTIONS.get(entry.domain),
             }
         except KeyError as err:
             raise ConfigStoreException(f"Entity data not found: {entity_id}") from err
