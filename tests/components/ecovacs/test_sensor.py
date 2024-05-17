@@ -8,6 +8,9 @@ from deebot_client.events import (
     LifeSpan,
     LifeSpanEvent,
     NetworkInfoEvent,
+    Position,
+    PositionsEvent,
+    PositionType,
     StatsEvent,
     TotalStatsEvent,
 )
@@ -43,6 +46,14 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
     event_bus.notify(LifeSpanEvent(LifeSpan.BRUSH, 80, 60 * 60))
     event_bus.notify(LifeSpanEvent(LifeSpan.FILTER, 56, 40 * 60))
     event_bus.notify(LifeSpanEvent(LifeSpan.SIDE_BRUSH, 40, 20 * 60))
+    event_bus.notify(
+        PositionsEvent(
+            [
+                Position(PositionType.CHARGER, 5, 9),
+                Position(PositionType.DEEBOT, 1, 5),
+            ]
+        )
+    )
     event_bus.notify(ErrorEvent(0, "NoError: Robot is operational"))
     await block_till_done(hass, event_bus)
 
@@ -66,6 +77,8 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
                 "sensor.ozmo_950_main_brush_lifespan",
                 "sensor.ozmo_950_filter_lifespan",
                 "sensor.ozmo_950_side_brushes_lifespan",
+                "sensor.ozmo_950_last_position",
+                "sensor.ozmo_950_charger_position",
                 "sensor.ozmo_950_error",
             ],
         ),
