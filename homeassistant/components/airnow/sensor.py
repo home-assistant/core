@@ -154,7 +154,7 @@ class AirNowSensor(CoordinatorEntity[AirNowDataUpdateCoordinator], SensorEntity)
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, _device_id)},
             manufacturer=DEFAULT_NAME,
-            name=f"{coordinator.data[ATTR_API_STATION]}, {coordinator.data[ATTR_API_STATE]} {DEFAULT_NAME}",
+            name=DEFAULT_NAME,
         )
 
     @property
