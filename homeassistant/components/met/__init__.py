@@ -21,7 +21,7 @@ PLATFORMS = [Platform.WEATHER]
 
 _LOGGER = logging.getLogger(__name__)
 
-MetWeatherConfigEntry = ConfigEntry[MetDataUpdateCoordinator]
+type MetWeatherConfigEntry = ConfigEntry[MetDataUpdateCoordinator]
 
 
 async def async_setup_entry(

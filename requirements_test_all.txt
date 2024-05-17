@@ -855,7 +855,7 @@ habitipy==0.3.1
 habluetooth==3.0.1
 
 # homeassistant.components.cloud
-hass-nabucasa==0.78.0
+hass-nabucasa==0.81.0
 
 # homeassistant.components.conversation
 hassil==1.7.1
@@ -1317,7 +1317,7 @@ pyCEC==0.5.2
 pyControl4==1.1.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2024.5.0
+pyDuotecno==2024.5.1
 
 # homeassistant.components.electrasmart
 pyElectra==1.2.0
@@ -1483,7 +1483,7 @@ pyinsteon==1.6.1
 pyipma==3.0.7
 
 # homeassistant.components.ipp
-pyipp==0.15.0
+pyipp==0.16.0
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0

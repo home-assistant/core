@@ -3,58 +3,33 @@
 from __future__ import annotations
 
 from functools import partial
-import logging
 import mimetypes
 from pathlib import Path
-from typing import Any, Literal
 
-import google.ai.generativelanguage as glm
 from google.api_core.exceptions import ClientError
 import google.generativeai as genai
 import google.generativeai.types as genai_types
 import voluptuous as vol
-from voluptuous_openapi import convert
 
-from homeassistant import setup
-from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, MATCH_ALL
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.exceptions import (
-    ConfigEntryNotReady,
-    HomeAssistantError,
-    TemplateError,
-)
-from homeassistant.helpers import config_validation as cv, intent, llm, template
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import ulid
 
-from .const import (
-    CONF_CHAT_MODEL,
-    CONF_MAX_TOKENS,
-    CONF_PROMPT,
-    CONF_TEMPERATURE,
-    CONF_TOP_K,
-    CONF_TOP_P,
-    DEFAULT_CHAT_MODEL,
-    DEFAULT_MAX_TOKENS,
-    DEFAULT_PROMPT,
-    DEFAULT_TEMPERATURE,
-    DEFAULT_TOP_K,
-    DEFAULT_TOP_P,
-    DOMAIN,
-)
+from .const import CONF_CHAT_MODEL, CONF_PROMPT, DEFAULT_CHAT_MODEL, DOMAIN, LOGGER
 
-_LOGGER = logging.getLogger(__name__)
 SERVICE_GENERATE_CONTENT = "generate_content"
 CONF_IMAGE_FILENAME = "image_filename"
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+PLATFORMS = (Platform.CONVERSATION,)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -129,221 +104,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     except ClientError as err:
         if err.reason == "API_KEY_INVALID":
-            _LOGGER.error("Invalid API key: %s", err)
+            LOGGER.error("Invalid API key: %s", err)
             return False
         raise ConfigEntryNotReady(err) from err
 
-    conversation.async_set_agent(hass, entry, GoogleGenerativeAIAgent(hass, entry))
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload GoogleGenerativeAI."""
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        return False
+
     genai.configure(api_key=None)
-    conversation.async_unset_agent(hass, entry)
     return True
-
-
-def _format_schema(schema: dict[str, Any]) -> dict[str, Any]:
-    """Format the schema to protobuf."""
-    SUPPORTED_KEYS = [
-        "type",
-        "format",
-        "description",
-        "nullable",
-        "enum",
-        "items",
-        "properties",
-        "required",
-    ]
-    result = {}
-    for key, val in schema.items():
-        if key not in SUPPORTED_KEYS:
-            continue
-        if key == "type":
-            key = "type_"
-            val = val.upper()
-        elif key == "format":
-            key = "format_"
-        elif key == "items":
-            val = _format_schema(val)
-        elif key == "properties":
-            val = {k: _format_schema(v) for k, v in val.items()}
-        result[key] = val
-    return result
-
-
-def _format_tool(tool: llm.Tool) -> dict[str, Any]:
-    """Format tool specification."""
-
-    parameters = _format_schema(convert(tool.parameters))
-
-    return glm.Tool(
-        {
-            "function_declarations": [
-                {
-                    "name": tool.name,
-                    "description": tool.description,
-                    "parameters": parameters,
-                }
-            ]
-        }
-    )
-
-
-class GoogleGenerativeAIAgent(conversation.AbstractConversationAgent):
-    """Google Generative AI conversation agent."""
-
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Initialize the agent."""
-        self.hass = hass
-        self.entry = entry
-        self.history: dict[str, list[genai_types.ContentType]] = {}
-
-    @property
-    def supported_languages(self) -> list[str] | Literal["*"]:
-        """Return a list of supported languages."""
-        return MATCH_ALL
-
-    async def async_process(
-        self, user_input: conversation.ConversationInput
-    ) -> conversation.ConversationResult:
-        """Process a sentence."""
-        if "intent" not in self.hass.config.components:
-            await setup.async_setup_component(self.hass, "intent", {})
-
-        tools: list[dict[str, Any]] | None = [
-            _format_tool(tool) for tool in llm.async_get_tools(self.hass)
-        ]
-        if not tools:
-            tools = None
-
-        raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
-
-        model = genai.GenerativeModel(
-            model_name=self.entry.options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL),
-            generation_config={
-                "temperature": self.entry.options.get(
-                    CONF_TEMPERATURE, DEFAULT_TEMPERATURE
-                ),
-                "top_p": self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P),
-                "top_k": self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K),
-                "max_output_tokens": self.entry.options.get(
-                    CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS
-                ),
-            },
-            tools=tools,
-        )
-        _LOGGER.debug("Model: %s", model)
-
-        if user_input.conversation_id in self.history:
-            conversation_id = user_input.conversation_id
-            messages = self.history[conversation_id]
-        else:
-            conversation_id = ulid.ulid_now()
-            messages = [{}, {}]
-
-        intent_response = intent.IntentResponse(language=user_input.language)
-        try:
-            prompt = self._async_generate_prompt(
-                raw_prompt, user_input.device_id, user_input.context.user_id
-            )
-        except TemplateError as err:
-            _LOGGER.error("Error rendering prompt: %s", err)
-            intent_response.async_set_error(
-                intent.IntentResponseErrorCode.UNKNOWN,
-                f"Sorry, I had a problem with my template: {err}",
-            )
-            return conversation.ConversationResult(
-                response=intent_response, conversation_id=conversation_id
-            )
-
-        messages[0] = {"role": "user", "parts": prompt}
-        messages[1] = {"role": "model", "parts": "Ok"}
-
-        _LOGGER.debug("Input: '%s' with history: %s", user_input.text, messages)
-
-        chat = model.start_chat(history=messages)
-
-        chat_request = user_input.text
-        while True:
-            try:
-                chat_response = await chat.send_message_async(chat_request)
-            except (
-                ClientError,
-                ValueError,
-                genai_types.BlockedPromptException,
-                genai_types.StopCandidateException,
-            ) as err:
-                _LOGGER.error("Error sending message: %s", err)
-                intent_response.async_set_error(
-                    intent.IntentResponseErrorCode.UNKNOWN,
-                    f"Sorry, I had a problem talking to Google Generative AI: {err}",
-                )
-                return conversation.ConversationResult(
-                    response=intent_response, conversation_id=conversation_id
-                )
-
-            _LOGGER.debug("Response: %s", chat_response.parts)
-            if not chat_response.parts:
-                intent_response.async_set_error(
-                    intent.IntentResponseErrorCode.UNKNOWN,
-                    "Sorry, I had a problem talking to Google Generative AI. Likely blocked",
-                )
-                return conversation.ConversationResult(
-                    response=intent_response, conversation_id=conversation_id
-                )
-            self.history[conversation_id] = chat.history
-            tool_call = chat_response.parts[0].function_call
-
-            if not tool_call:
-                break
-
-            _LOGGER.info(
-                "Tool call: %s(%s)",
-                tool_call.name,
-                dict(tool_call.args),
-            )
-            try:
-                tool_input = llm.ToolInput(
-                    tool_name=tool_call.name,
-                    tool_args=dict(tool_call.args),
-                    platform=DOMAIN,
-                    context=user_input.context,
-                    user_prompt=user_input.text,
-                    language=user_input.language,
-                    assistant=conversation.DOMAIN,
-                )
-                function_response = await llm.async_call_tool(self.hass, tool_input)
-            except Exception as e:  # noqa: BLE001
-                function_response = {"error": type(e).__name__}
-                if str(e):
-                    function_response["error_text"] = str(e)
-
-            _LOGGER.info("Tool response: %s", function_response)
-            chat_request = glm.Content(
-                parts=[
-                    glm.Part(
-                        function_response=glm.FunctionResponse(
-                            name=tool_call.name, response=function_response
-                        )
-                    )
-                ]
-            )
-        intent_response.async_set_speech(chat_response.text)
-        return conversation.ConversationResult(
-            response=intent_response, conversation_id=conversation_id
-        )
-
-    def _async_generate_prompt(
-        self, raw_prompt: str, device_id: str | None, user_id: str | None
-    ) -> str:
-        """Generate a prompt for the user."""
-        return template.Template(raw_prompt, self.hass).async_render(
-            {
-                "ha_name": self.hass.config.location_name,
-                "device_id": device_id,
-                "user_id": user_id,
-            },
-            parse_result=False,
-        )
