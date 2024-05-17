@@ -34,8 +34,7 @@ class MammotionDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         ble_device: BLEDevice,
         device: mammotion.MammotionLubaDevice,
         base_unique_id: str,
-        device_name: str,
-        connectable: bool,
+        device_name: str
     ) -> None:
         """Initialize global mammotion data updater."""
         super().__init__(
@@ -45,7 +44,7 @@ class MammotionDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
             needs_poll_method=self._needs_poll,
             poll_method=self._async_update,
             mode=bluetooth.BluetoothScanningMode.ACTIVE,
-            connectable=connectable,
+            connectable=True,
         )
         self.ble_device = ble_device
         self.device = device
@@ -76,7 +75,7 @@ class MammotionDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         self, service_info: bluetooth.BluetoothServiceInfoBleak
     ) -> None:
         """Poll the device."""
-        await self.device.update()
+        await self.device.start_sync()
 
     @callback
     def _async_handle_unavailable(
