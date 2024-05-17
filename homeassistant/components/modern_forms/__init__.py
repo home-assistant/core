@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from aiomodernforms import ModernFormsConnectionError, ModernFormsError
 
@@ -16,11 +16,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import ModernFormsDataUpdateCoordinator
-
-_ModernFormsDeviceEntityT = TypeVar(
-    "_ModernFormsDeviceEntityT", bound="ModernFormsDeviceEntity"
-)
-_P = ParamSpec("_P")
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -61,7 +56,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def modernforms_exception_handler(
+def modernforms_exception_handler[
+    _ModernFormsDeviceEntityT: ModernFormsDeviceEntity,
+    **_P,
+](
     func: Callable[Concatenate[_ModernFormsDeviceEntityT, _P], Any],
 ) -> Callable[Concatenate[_ModernFormsDeviceEntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate Modern Forms calls to handle Modern Forms exceptions.
