@@ -169,21 +169,22 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
-
+        errors: dict[str, str] = {}
         if user_input is not None:
             try:
                 SCHEMA_SOURCES = vol.Schema({str: str})
                 SCHEMA_SOURCES(user_input.get(CONF_SOURCES))
-            except vol.error.MultipleInvalid:
-                return self.async_abort(reason="invalid_sources")
+            except vol.error.Invalid:
+                errors["base"] = "invalid_sources"
 
             try:
                 SCHEMA_SOUND_MODE_LIST = vol.Schema({str: str})
                 SCHEMA_SOUND_MODE_LIST(user_input.get(CONF_SOUND_MODE_LIST))
-            except vol.error.MultipleInvalid:
-                return self.async_abort(reason="invalid_sound_mode_list")
+            except vol.error.Invalid:
+                errors["base"] = "invalid_sound_mode_list"
 
-            return self.async_create_entry(data=user_input)
+            if not errors:
+                return self.async_create_entry(data=user_input)
 
         options_schema = vol.Schema(
             {
@@ -205,6 +206,7 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
         return self.async_show_form(
             step_id="init",
+            errors=errors,
             data_schema=self.add_suggested_values_to_schema(
                 options_schema, self.config_entry.options
             ),

@@ -14,7 +14,6 @@
       "no_ip": "Not a valid IP address."
     },
     "abort": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   },
@@ -30,10 +29,9 @@
         }
       }
     },
-    "abort": {
+    "error": {
       "invalid_sources": "Sources should be a list of key: value pairs.",
-      "invalid_sound_mode_list": "Sound modes should be a list of strings.",
-      "invalid_eiscp": "eiscp should be a list of key: list items."
+      "invalid_sound_mode_list": "Sound modes should be a list of strings."
     }
   },
   "services": {
