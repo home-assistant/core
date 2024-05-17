@@ -31,6 +31,33 @@ def is_docker_env() -> bool:
     return Path("/.dockerenv").exists()
 
 
+@cache
+def is_container() -> bool:
+    """Returns True if we run in a container (Kubernetes or Docker env)."""
+    if is_running_in_kubernetes:
+        return True
+    elif is_docker_env:
+        return True
+    else:
+        return False
+
+
+@cache
+def is_running_in_kubernetes() -> bool:
+    """Return true if we run in a kubernetes env."""
+    # Check for the presence of Kubernetes service account token file
+    if os.path.exists("/var/run/secrets/kubernetes.io/serviceaccount/token"):
+        return True
+
+    # Check for the presence of Kubernetes Downward API environment variables
+    if os.environ.get("KUBERNETES_SERVICE_HOST") and os.environ.get(
+        "KUBERNETES_SERVICE_PORT"
+    ):
+        return True
+
+    return False
+
+
 def get_installed_versions(specifiers: set[str]) -> set[str]:
     """Return a set of installed packages and versions."""
     return {specifier for specifier in specifiers if is_installed(specifier)}
