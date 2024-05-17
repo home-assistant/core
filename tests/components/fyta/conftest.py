@@ -9,7 +9,7 @@ import pytest
 from homeassistant.components.fyta.const import CONF_EXPIRATION, DOMAIN as FYTA_DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 
-from .common import ACCESS_TOKEN, EXPIRATION, PASSWORD, USERNAME
+from .const import ACCESS_TOKEN, EXPIRATION, PASSWORD, USERNAME
 
 from tests.common import MockConfigEntry
 

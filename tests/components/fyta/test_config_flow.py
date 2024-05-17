@@ -15,7 +15,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .common import ACCESS_TOKEN, EXPIRATION, PASSWORD, USERNAME
+from .const import ACCESS_TOKEN, EXPIRATION, PASSWORD, USERNAME
 
 from tests.common import MockConfigEntry
 
