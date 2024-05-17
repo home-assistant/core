@@ -89,6 +89,7 @@ from .condition import ConditionCheckerType, trace_condition_function
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
 from .event import async_call_later, async_track_template
 from .script_variables import ScriptVariables
+from .template import Template
 from .trace import (
     TraceElement,
     async_trace_path,
@@ -500,12 +501,24 @@ class _ScriptRun:
 
                 action = cv.determine_script_action(self._action)
 
-                if not self._action.get(CONF_ENABLED, True):
-                    self._log(
-                        "Skipped disabled step %s", self._action.get(CONF_ALIAS, action)
-                    )
-                    trace_set_result(enabled=False)
-                    return
+                if CONF_ENABLED in self._action:
+                    enabled = self._action[CONF_ENABLED]
+                    if isinstance(enabled, Template):
+                        try:
+                            enabled = enabled.async_render(limited=True)
+                        except exceptions.TemplateError as ex:
+                            self._handle_exception(
+                                ex,
+                                continue_on_error,
+                                self._log_exceptions or log_exceptions,
+                            )
+                    if not enabled:
+                        self._log(
+                            "Skipped disabled step %s",
+                            self._action.get(CONF_ALIAS, action),
+                        )
+                        trace_set_result(enabled=False)
+                        return
 
                 handler = f"_async_{action}_step"
                 try:
@@ -1298,7 +1311,7 @@ async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> 
         )
 
 
-_VarsType = dict[str, Any] | MappingProxyType
+type _VarsType = dict[str, Any] | MappingProxyType
 
 
 def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:

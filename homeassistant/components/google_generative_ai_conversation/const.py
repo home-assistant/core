@@ -1,6 +1,9 @@
 """Constants for the Google Generative AI Conversation integration."""
 
+import logging
+
 DOMAIN = "google_generative_ai_conversation"
+LOGGER = logging.getLogger(__package__)
 CONF_PROMPT = "prompt"
 DEFAULT_PROMPT = """This smart home is controlled by Home Assistant.
 

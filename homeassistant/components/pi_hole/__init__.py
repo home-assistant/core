@@ -42,7 +42,7 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 
-PiHoleConfigEntry = ConfigEntry["PiHoleData"]
+type PiHoleConfigEntry = ConfigEntry[PiHoleData]
 
 
 @dataclass
