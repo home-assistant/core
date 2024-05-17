@@ -1048,7 +1048,7 @@ async def _handle_entity_call(
         result = await task
 
     if asyncio.iscoroutine(result):
-        _LOGGER.error(
+        _LOGGER.error(  # type: ignore[unreachable]
             (
                 "Service %s for %s incorrectly returns a coroutine object. Await result"
                 " instead in service handler. Report bug to integration author"
