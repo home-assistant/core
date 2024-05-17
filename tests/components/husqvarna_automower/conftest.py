@@ -22,7 +22,7 @@ from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
 
 
 @pytest.fixture(name="jwt")
-def load_jwt_fixture():
+def load_jwt_fixture() -> str:
     """Load Fixture data."""
     return load_fixture("jwt", DOMAIN)
 
@@ -33,8 +33,14 @@ def mock_expires_at() -> float:
     return time.time() + 3600
 
 
+@pytest.fixture(name="scope")
+def mock_scope() -> str:
+    """Fixture to set correct scope for the token."""
+    return "iam:read amc:api"
+
+
 @pytest.fixture
-def mock_config_entry(jwt, expires_at: int) -> MockConfigEntry:
+def mock_config_entry(jwt: str, expires_at: int, scope: str) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         version=1,
@@ -44,7 +50,7 @@ def mock_config_entry(jwt, expires_at: int) -> MockConfigEntry:
             "auth_implementation": DOMAIN,
             "token": {
                 "access_token": jwt,
-                "scope": "iam:read amc:api",
+                "scope": scope,
                 "expires_in": 86399,
                 "refresh_token": "3012bc9f-7a65-4240-b817-9154ffdcc30f",
                 "provider": "husqvarna",

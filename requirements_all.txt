@@ -1649,7 +1649,7 @@ pyCEC==0.5.2
 pyControl4==1.1.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2024.3.2
+pyDuotecno==2024.5.0
 
 # homeassistant.components.electrasmart
 pyElectra==1.2.0
@@ -2439,7 +2439,7 @@ renault-api==0.2.2
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.8.9
+reolink-aio==0.8.10
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2572,7 +2572,7 @@ smhi-pkg==1.0.16
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.3
+soco==0.30.4
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
@@ -2866,7 +2866,7 @@ wiffi==1.1.2
 wirelesstagpy==0.8.1
 
 # homeassistant.components.wled
-wled==0.17.0
+wled==0.17.1
 
 # homeassistant.components.wolflink
 wolf-comm==0.0.7
