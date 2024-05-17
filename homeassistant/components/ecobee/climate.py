@@ -46,6 +46,7 @@ from .const import (
     ECOBEE_MODEL_TO_NAME,
     MANUFACTURER,
 )
+from .repairs import migrate_aux_heat_issue
 from .util import ecobee_date, ecobee_time, is_indefinite_hold
 
 ATTR_COOL_TEMP = "cool_temp"
@@ -577,17 +578,21 @@ class Thermostat(ClimateEntity):
         """Return true if aux heater."""
         return self.settings["hvacMode"] == ECOBEE_AUX_HEAT_ONLY
 
-    def turn_aux_heat_on(self) -> None:
+    async def async_turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
+        migrate_aux_heat_issue(self.hass)
         _LOGGER.debug("Setting HVAC mode to auxHeatOnly to turn on aux heat")
         self._last_hvac_mode_before_aux_heat = self.hvac_mode
-        self.data.ecobee.set_hvac_mode(self.thermostat_index, ECOBEE_AUX_HEAT_ONLY)
+        await self.hass.async_add_executor_job(
+            self.data.ecobee.set_hvac_mode, self.thermostat_index, ECOBEE_AUX_HEAT_ONLY
+        )
         self.update_without_throttle = True
 
-    def turn_aux_heat_off(self) -> None:
+    async def async_turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
+        migrate_aux_heat_issue(self.hass)
         _LOGGER.debug("Setting HVAC mode to last mode to disable aux heat")
-        self.set_hvac_mode(self._last_hvac_mode_before_aux_heat)
+        await self.async_set_hvac_mode(self._last_hvac_mode_before_aux_heat)
         self.update_without_throttle = True
 
     def set_preset_mode(self, preset_mode: str) -> None:
