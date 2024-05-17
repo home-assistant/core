@@ -4,10 +4,15 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+import json
 from typing import Generic
 
-from deebot_client.capabilities import Capabilities, CapabilityEvent, CapabilityLifeSpan
+from deebot_client.capabilities import (
+    Capabilities,
+    CapabilityEvent,
+    CapabilityLifeSpan,
+    VacuumCapabilities,
+)
 from deebot_client.events import (
     BatteryEvent,
     ErrorEvent,
@@ -188,7 +193,6 @@ POSITION_ENTITY_DESCRIPTIONS = tuple(
         position_type=position_type,
         key=f"position_{position_type.name.lower()}",
         translation_key=f"position_{position_type.name.lower()}",
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     )
     for position_type in SUPPORTED_POSITION_TYPES
@@ -214,7 +218,7 @@ async def async_setup_entry(
     )
     entities.extend(
         EcovacsPositionSensor(device, capability.position, description)
-        for device in controller.devices(Capabilities)
+        for device in controller.devices(VacuumCapabilities)
         if (capability := device.capabilities.map)
         for description in POSITION_ENTITY_DESCRIPTIONS
     )
@@ -285,11 +289,12 @@ class EcovacsPositionSensor(
         async def on_event(event: PositionsEvent) -> None:
             for position in event.positions:
                 if position.type == self.entity_description.position_type:
-                    self._attr_native_value = datetime.now()
-                    self._attr_extra_state_attributes = {
+                    coordinates = {
                         ATTRIBUTE_POSITION_X: position.x,
                         ATTRIBUTE_POSITION_Y: position.y,
                     }
+                    self._attr_native_value = json.dumps(coordinates)
+                    self._attr_extra_state_attributes = coordinates
                     self.async_write_ha_state()
 
         self._subscribe(self._capability.event, on_event)
