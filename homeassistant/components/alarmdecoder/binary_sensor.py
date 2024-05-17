@@ -16,14 +16,14 @@ from .const import (
     CONF_ZONE_NUMBER,
     CONF_ZONE_RFID,
     CONF_ZONE_TYPE,
+    DATA_AD,
     DEFAULT_ZONE_OPTIONS,
+    DOMAIN,
     OPTIONS_ZONES,
     SIGNAL_REL_MESSAGE,
     SIGNAL_RFX_MESSAGE,
     SIGNAL_ZONE_FAULT,
     SIGNAL_ZONE_RESTORE,
-    DATA_AD,
-    DOMAIN,
 )
 from .entity import AlarmDecoderEntity
 
@@ -57,7 +57,14 @@ async def async_setup_entry(
         relay_addr = zone_info.get(CONF_RELAY_ADDR)
         relay_chan = zone_info.get(CONF_RELAY_CHAN)
         entity = AlarmDecoderBinarySensor(
-            client, zone_num, zone_name, zone_type, zone_rfid, zone_loop, relay_addr, relay_chan
+            client,
+            zone_num,
+            zone_name,
+            zone_type,
+            zone_rfid,
+            zone_loop,
+            relay_addr,
+            relay_chan,
         )
         entities.append(entity)
 

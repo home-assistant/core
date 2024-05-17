@@ -6,11 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    SIGNAL_PANEL_MESSAGE,
-    DATA_AD,
-    DOMAIN,
-)
+from .const import DATA_AD, DOMAIN, SIGNAL_PANEL_MESSAGE
 from .entity import AlarmDecoderEntity
 
 

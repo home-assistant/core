@@ -96,7 +96,6 @@ class AlarmDecoderAlarmPanel(AlarmDecoderEntity, AlarmControlPanelEntity):
         self._attr_code_arm_required = code_arm_required
         self._alt_night_mode = alt_night_mode
 
-
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
