@@ -105,13 +105,12 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
 
             integration = integrations[integration_path.name]
 
-            if (
-                path.parts[-1] == "*"
-                and Path(f"tests/components/{integration.domain}/__init__.py").exists()
-            ):
+            if (last_part := path.parts[-1]) in {"*", "const.py"} and Path(
+                f"tests/components/{integration.domain}/__init__.py"
+            ).exists():
                 integration.add_error(
                     "coverage",
-                    "has tests and should not use wildcard in .coveragerc file",
+                    f"has tests and should not use {last_part} in .coveragerc file",
                 )
 
             for check in DONT_IGNORE:
