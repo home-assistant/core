@@ -229,7 +229,7 @@ ENTITY_STORE_DATA_SCHEMA = vol.All(
 
 CREATE_ENTITY_BASE_SCHEMA = {
     vol.Required("platform"): str,
-    vol.Required("data"): dict,  # validated by ENTITY_STORE_DATA_SCHEMA with vol.All()
+    vol.Required("data"): dict,  # validated by ENTITY_STORE_DATA_SCHEMA for platform
 }
 
 UPDATE_ENTITY_BASE_SCHEMA = {
