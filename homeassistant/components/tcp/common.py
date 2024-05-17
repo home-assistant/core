@@ -99,6 +99,9 @@ class TcpEntity(Entity):
 
     def update(self) -> None:
         """Get the latest value for this sensor."""
+        if self._state is not None:
+            # do not set it as unavailable if still unknown
+            self.available = False
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(self._config[CONF_TIMEOUT])
             try:
@@ -146,7 +149,9 @@ class TcpEntity(Entity):
             value = sock.recv(self._config[CONF_BUFFER_SIZE]).decode()
 
         value_template = self._config[CONF_VALUE_TEMPLATE]
-        if value_template is not None:
+        if value_template is None:
+            self._state = value
+        else:
             try:
                 self._state = value_template.render(parse_result=False, value=value)
             except TemplateError:
@@ -156,6 +161,5 @@ class TcpEntity(Entity):
                     value,
                 )
                 return
-            return
 
-        self._state = value
+        self.available = True
