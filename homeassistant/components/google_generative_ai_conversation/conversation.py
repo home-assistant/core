@@ -8,13 +8,14 @@ import google.ai.generativelanguage as glm
 from google.api_core.exceptions import ClientError
 import google.generativeai as genai
 import google.generativeai.types as genai_types
+import voluptuous as vol
 from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import intent, llm, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import ulid
@@ -229,7 +230,7 @@ class GoogleGenerativeAIConversationEntity(
                     assistant=conversation.DOMAIN,
                 )
                 function_response = await llm.async_call_tool(self.hass, tool_input)
-            except Exception as e:  # noqa: BLE001
+            except (HomeAssistantError, vol.Invalid) as e:
                 function_response = {"error": type(e).__name__}
                 if str(e):
                     function_response["error_text"] = str(e)
