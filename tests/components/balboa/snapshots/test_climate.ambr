@@ -33,7 +33,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:hot-tub',
+    'original_icon': None,
     'original_name': None,
     'platform': 'balboa',
     'previous_unique_id': None,
@@ -53,7 +53,6 @@
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'icon': 'mdi:hot-tub',
       'max_temp': 40.0,
       'min_temp': 10.0,
       'preset_mode': 'ready',

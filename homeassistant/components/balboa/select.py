@@ -23,7 +23,6 @@ async def async_setup_entry(
 class BalboaTempRangeSelectEntity(BalboaEntity, SelectEntity):
     """Representation of a Temperature Range select."""
 
-    _attr_unique_id = "temperature_range"
     _attr_translation_key = "temperature_range"
     _attr_options = [
         LowHighRange.LOW.name.lower(),
