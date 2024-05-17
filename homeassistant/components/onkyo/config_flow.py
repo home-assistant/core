@@ -27,8 +27,6 @@ from .const import (
     CONF_MAXIMUM_VOLUME_DEFAULT,
     CONF_RECEIVER_MAXIMUM_VOLUME,
     CONF_RECEIVER_MAXIMUM_VOLUME_DEFAULT,
-    CONF_SOUND_MODE_LIST,
-    CONF_SOUND_MODE_LIST_DEFAULT,
     CONF_SOURCES,
     CONF_SOURCES_DEFAULT,
     DOMAIN,
@@ -177,12 +175,6 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
             except vol.error.Invalid:
                 errors["base"] = "invalid_sources"
 
-            try:
-                SCHEMA_SOUND_MODE_LIST = vol.Schema({str: str})
-                SCHEMA_SOUND_MODE_LIST(user_input.get(CONF_SOUND_MODE_LIST))
-            except vol.error.Invalid:
-                errors["base"] = "invalid_sound_mode_list"
-
             if not errors:
                 return self.async_create_entry(data=user_input)
 
@@ -197,9 +189,6 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 ): vol.All(cv.positive_int, vol.Range(min=0, max=200)),
                 vol.Required(
                     CONF_SOURCES, default=CONF_SOURCES_DEFAULT
-                ): ObjectSelector(),
-                vol.Required(
-                    CONF_SOUND_MODE_LIST, default=CONF_SOUND_MODE_LIST_DEFAULT
                 ): ObjectSelector(),
             }
         )

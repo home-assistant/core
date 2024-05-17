@@ -26,17 +26,9 @@ CONF_SOURCES_DEFAULT = {
     "video7": "Video 7",
     "fm": "Radio",
 }
-CONF_SOUND_MODE_LIST = "sound_mode_list"
-CONF_SOUND_MODE_LIST_DEFAULT = {
-    "pure-audio": "Pure audio",
-    "direct": "Direct",
-    "theater-dimensional": "Theater dimensional",
-    "all-ch-stereo": "All channel stereo",
-}
 
 ATTR_AUDIO_INFORMATION = "audio_information"
 ATTR_HDMI_OUTPUT = "hdmi_output"
-ATTR_EISCP_COMMAND = "eiscp_command"
 ATTR_PRESET = "preset"
 ATTR_VIDEO_INFORMATION = "video_information"
 ATTR_VIDEO_OUT = "video_out"
@@ -46,7 +38,6 @@ DEFAULT_PLAYABLE_SOURCES = ("fm", "am", "tuner")
 TIMEOUT_MESSAGE = "Timeout waiting for response."
 MAXIMUM_UPDATE_RETRIES = 3
 
-SERVICE_EISCP_COMMAND = "onkyo_eiscp_command"
 SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 HDMI_OUTPUT_ACCEPTED_VALUES = [
     "no",

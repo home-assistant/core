@@ -8,7 +8,6 @@ import eiscp
 import pytest
 
 from homeassistant.components.onkyo.const import (
-    CONF_SOUND_MODE_LIST,
     CONF_SOURCES,
     DOMAIN,
     EISCP_IDENTIFIER,
@@ -174,10 +173,6 @@ async def test_select_manually_discovered_device(hass: HomeAssistant) -> None:
             {CONF_SOURCES: ["list"]},
             "invalid_sources",
         ),
-        (
-            {CONF_SOUND_MODE_LIST: ["list"]},
-            "invalid_sound_mode_list",
-        ),
     ],
 )
 async def test_options_flow_failures(
@@ -219,7 +214,6 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
         result["flow_id"],
         user_input={
             "receiver_max_volume": 200,
-            "sound_mode_list": {},
             "maximum_volume": 42,
             "sources": {},
         },
@@ -229,7 +223,6 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "receiver_max_volume": 200,
-        "sound_mode_list": {},
         "maximum_volume": 42,
         "sources": {},
     }

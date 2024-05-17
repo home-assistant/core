@@ -17,13 +17,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-)
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -37,14 +31,11 @@ from .const import (
     CONF_MAXIMUM_VOLUME_DEFAULT,
     CONF_RECEIVER_MAXIMUM_VOLUME,
     CONF_RECEIVER_MAXIMUM_VOLUME_DEFAULT,
-    CONF_SOUND_MODE_LIST,
-    CONF_SOUND_MODE_LIST_DEFAULT,
     CONF_SOURCES,
     CONF_SOURCES_DEFAULT,
     DEFAULT_PLAYABLE_SOURCES,
     HDMI_OUTPUT_ACCEPTED_VALUES,
     MAXIMUM_UPDATE_RETRIES,
-    SERVICE_EISCP_COMMAND,
     SERVICE_SELECT_HDMI_OUTPUT,
     TIMEOUT_MESSAGE,
 )
@@ -68,7 +59,6 @@ ONKYO_EISCP_COMMAND_SCHEMA = vol.Schema(
 SUPPORT_ONKYO_WO_VOLUME = (
     MediaPlayerEntityFeature.TURN_ON
     | MediaPlayerEntityFeature.TURN_OFF
-    | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.PLAY_MEDIA
 )
@@ -155,28 +145,6 @@ async def async_setup_entry(
         func=select_output_service,
     )
 
-    def command_service(entity: OnkyoDevice, call: ServiceCall) -> ServiceResponse:
-        """Handle for services."""
-
-        raw_response = entity.command(call.data["command"])
-        if not raw_response:
-            raise HomeAssistantError("Request failed")
-
-        key, _ = raw_response
-        value = _parse_onkyo_payload(raw_response)
-
-        if len(value) == 1:
-            value = value[0]
-
-        return {key: value}
-
-    platform.async_register_entity_service(
-        name=SERVICE_EISCP_COMMAND,
-        schema=ONKYO_EISCP_COMMAND_SCHEMA,
-        func=command_service,
-        supports_response=SupportsResponse.ONLY,
-    )
-
     host = entry.data[CONF_HOST]
     try:
         receiver = eiscp.eISCP(host)
@@ -248,13 +216,6 @@ class OnkyoDevice(OnkyoEntity, MediaPlayerEntity):
         self._reverse_source_mapping = {
             value: key for key, value in self._source_mapping.items()
         }
-        self._sound_mode_list_mapping = (
-            entry.options.get(CONF_SOUND_MODE_LIST) or CONF_SOUND_MODE_LIST_DEFAULT
-        )
-        self._attr_sound_mode_list = list(self._sound_mode_list_mapping.values())
-        self._reverse_sound_mode_list_mapping = {
-            value: key for key, value in self._sound_mode_list_mapping.items()
-        }
         self._attr_extra_state_attributes = {}
         self._hdmi_out_supported = True
         self._audio_info_supported = True
@@ -301,7 +262,6 @@ class OnkyoDevice(OnkyoEntity, MediaPlayerEntity):
         volume_raw = self.command("volume query")
         mute_raw = self.command("audio-muting query")
         current_source_raw = self.command("input-selector query")
-        current_sound_mode_raw = self.command("listening-mode query")
         # If the following command is sent to a device with only one HDMI out,
         # the display shows 'Not Available'.
         # We avoid this by checking if HDMI out is supported
@@ -327,14 +287,6 @@ class OnkyoDevice(OnkyoEntity, MediaPlayerEntity):
                     self._attr_source = self._source_mapping[source]
                     break
                 self._attr_source = "_".join(sources)
-
-        sound_modes = _parse_onkyo_payload(current_sound_mode_raw)
-        if sound_modes:
-            for sound_mode in sound_modes:
-                if sound_mode in self._sound_mode_list_mapping:
-                    self._attr_sound_mode = self._sound_mode_list_mapping[sound_mode]
-                    break
-                self._attr_sound_mode = "_".join(sound_modes)
 
         if preset_raw and self.source and self.source.lower() == "radio":
             self._attr_extra_state_attributes[ATTR_PRESET] = preset_raw[1]
@@ -397,12 +349,6 @@ class OnkyoDevice(OnkyoEntity, MediaPlayerEntity):
         if self.source_list and source in self.source_list:
             source = self._reverse_source_mapping[source]
         self.command(f"input-selector {source}")
-
-    def select_sound_mode(self, sound_mode: str) -> None:
-        """Set the sound mode."""
-        if self.sound_mode_list and sound_mode in self.sound_mode_list:
-            sound_mode = self._reverse_sound_mode_list_mapping[sound_mode]
-        self.command(f"listening-mode {sound_mode}")
 
     def play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any

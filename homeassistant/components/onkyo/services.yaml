@@ -1,15 +1,3 @@
-onkyo_eiscp_command:
-  target:
-    device:
-    entity:
-      integration: onkyo
-  fields:
-    command:
-      required: true
-      default: power=query
-      selector:
-        text:
-
 onkyo_select_hdmi_output:
   target:
     device:

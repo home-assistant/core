@@ -1,6 +1,5 @@
 {
   "services": {
-    "onkyo_eiscp_command": "mdi:audio-video",
     "onkyo_select_hdmi_output": "mdi:video-input-hdmi"
   }
 }
