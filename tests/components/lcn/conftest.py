@@ -13,7 +13,7 @@ import pytest
 
 from homeassistant.components.lcn.const import DOMAIN
 from homeassistant.components.lcn.helpers import AddressType, generate_unique_id
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_ENTITIES, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -60,6 +60,7 @@ class MockPchkConnectionManager(PchkConnectionManager):
         """Get LCN address connection."""
         return super().get_address_conn(addr, request_serials)
 
+    scan_modules = AsyncMock()
     send_command = AsyncMock()
 
 
@@ -67,6 +68,11 @@ def create_config_entry(name: str) -> MockConfigEntry:
     """Set up config entries with configuration data."""
     fixture_filename = f"lcn/config_entry_{name}.json"
     entry_data = json.loads(load_fixture(fixture_filename))
+    for device in entry_data[CONF_DEVICES]:
+        device[CONF_ADDRESS] = tuple(device[CONF_ADDRESS])
+    for entity in entry_data[CONF_ENTITIES]:
+        entity[CONF_ADDRESS] = tuple(entity[CONF_ADDRESS])
+
     options = {}
 
     title = entry_data[CONF_HOST]
