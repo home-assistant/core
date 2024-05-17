@@ -1,7 +1,7 @@
 """Test the initialization."""
 
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from fyta_cli.fyta_exceptions import (
     FytaAuthentificationError,
@@ -11,11 +11,14 @@ from fyta_cli.fyta_exceptions import (
 import pytest
 
 from homeassistant.components.fyta.const import CONF_EXPIRATION, DOMAIN as FYTA_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_platform
 from .const import ACCESS_TOKEN, EXPIRATION, EXPIRATION_OLD, PASSWORD, USERNAME
@@ -30,7 +33,7 @@ async def test_load_unload(
 ) -> None:
     """Test load and unload."""
 
-    await setup_platform(hass, mock_config_entry, [SENSOR_DOMAIN])
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
@@ -58,19 +61,10 @@ async def test_invalid_credentials(
     )
     mock_fyta_connector.login.side_effect = exception
 
-    with patch(
-        "homeassistant.components.fyta.config_flow.FytaConfigFlow.async_step_reauth",
-        return_value={
-            "type": FlowResultType.ABORT,
-            "flow_id": "mock_flow",
-            "step_id": "reauth_confirm",
-            "reason": "reauth_successful",
-        },
-    ) as mock_async_step_reauth:
-        await setup_platform(hass, mock_config_entry, [SENSOR_DOMAIN])
-        await hass.async_block_till_done()
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    await hass.async_block_till_done()
 
-    mock_async_step_reauth.assert_called_once()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_raise_config_entry_not_ready_when_offline(
@@ -82,7 +76,7 @@ async def test_raise_config_entry_not_ready_when_offline(
 
     mock_fyta_connector.update_all_plants.side_effect = FytaConnectionError
 
-    await setup_platform(hass, mock_config_entry, [SENSOR_DOMAIN])
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

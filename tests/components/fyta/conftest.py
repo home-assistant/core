@@ -48,10 +48,12 @@ def mock_fyta_connector():
     with (
         patch(
             "homeassistant.components.fyta.FytaConnector",
+            autospec=True,
             return_value=mock_fyta_connector,
         ),
         patch(
             "homeassistant.components.fyta.config_flow.FytaConnector",
+            autospec=True,
             return_value=mock_fyta_connector,
         ),
     ):
