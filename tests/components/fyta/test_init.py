@@ -1,5 +1,6 @@
 """Test the initialization."""
 
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 from fyta_cli.fyta_exceptions import (
@@ -23,23 +24,24 @@ from .common import (
     PASSWORD,
     USERNAME,
     setup_platform,
-    setup_platform_expired,
 )
 
 from tests.common import MockConfigEntry
 
 
-async def test_load_unload(hass: HomeAssistant, mock_fyta_init: AsyncMock) -> None:
+async def test_load_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fyta_connector: AsyncMock,
+) -> None:
     """Test load and unload."""
 
-    entry = await setup_platform(hass, SENSOR_DOMAIN)
-    assert entry.state is ConfigEntryState.LOADED
+    await setup_platform(hass, mock_config_entry, [SENSOR_DOMAIN])
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    # what could be a good test?
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(
@@ -50,60 +52,53 @@ async def test_load_unload(hass: HomeAssistant, mock_fyta_init: AsyncMock) -> No
     ],
 )
 async def test_invalid_credentials(
-    hass: HomeAssistant, exception: Exception, mock_fyta_init: AsyncMock
+    hass: HomeAssistant,
+    exception: Exception,
+    mock_config_entry: MockConfigEntry,
+    mock_fyta_connector: AsyncMock,
 ) -> None:
     """Test FYTA credentials changing."""
 
-    mock_fyta_init.return_value.login.side_effect = exception
+    mock_fyta_connector.expiration = datetime.fromisoformat(EXPIRATION_OLD).replace(
+        tzinfo=UTC
+    )
+    mock_fyta_connector.login.side_effect = exception
 
     with patch(
         "homeassistant.components.fyta.config_flow.FytaConfigFlow.async_step_reauth",
         return_value={
-            "type": FlowResultType.FORM,
+            "type": FlowResultType.ABORT,
             "flow_id": "mock_flow",
             "step_id": "reauth_confirm",
+            "reason": "reauth_successful",
         },
     ) as mock_async_step_reauth:
-        await setup_platform_expired(hass, SENSOR_DOMAIN)
+        await setup_platform(hass, mock_config_entry, [SENSOR_DOMAIN])
         await hass.async_block_till_done()
 
     mock_async_step_reauth.assert_called_once()
 
 
 async def test_raise_config_entry_not_ready_when_offline(
-    hass: HomeAssistant, mock_fyta_init: AsyncMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fyta_connector: AsyncMock,
 ) -> None:
     """Config entry state is SETUP_RETRY when FYTA is offline."""
 
-    mock_fyta_init.return_value.login.side_effect = FytaConnectionError
+    mock_fyta_connector.update_all_plants.side_effect = FytaConnectionError
 
-    mock_entry = MockConfigEntry(
-        domain=FYTA_DOMAIN,
-        title="fyta_user",
-        data={
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_ACCESS_TOKEN: ACCESS_TOKEN,
-            CONF_EXPIRATION: EXPIRATION_OLD.isoformat(),
-        },
-        minor_version=2,
-    )
-    mock_entry.add_to_hass(hass)
+    await setup_platform(hass, mock_config_entry, [SENSOR_DOMAIN])
+    await hass.async_block_till_done()
 
-    with (
-        patch("homeassistant.components.fyta.PLATFORMS", [SENSOR_DOMAIN]),
-    ):
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
     assert hass.config_entries.flow.async_progress() == []
 
 
 async def test_migrate_config_entry(
     hass: HomeAssistant,
-    mock_fyta: AsyncMock,
+    mock_fyta_connector: AsyncMock,
 ) -> None:
     """Test successful migration of entry data."""
     entry = MockConfigEntry(
@@ -129,4 +124,4 @@ async def test_migrate_config_entry(
     assert entry.data[CONF_USERNAME] == USERNAME
     assert entry.data[CONF_PASSWORD] == PASSWORD
     assert entry.data[CONF_ACCESS_TOKEN] == ACCESS_TOKEN
-    assert entry.data[CONF_EXPIRATION] == EXPIRATION.isoformat()
+    assert entry.data[CONF_EXPIRATION] == EXPIRATION
