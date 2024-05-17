@@ -1,4 +1,4 @@
-"""Coordiantor for the Modern Forms integration."""
+"""Coordinator for the Modern Forms integration."""
 
 from __future__ import annotations
 
