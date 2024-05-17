@@ -530,8 +530,12 @@ class DlnaDmrEntity(MediaPlayerEntity):
                     TransportState.PAUSED_PLAYBACK,
                 ):
                     force_refresh = True
+                    break
 
-        self.async_schedule_update_ha_state(force_refresh)
+        if force_refresh:
+            self.async_schedule_update_ha_state(force_refresh)
+        else:
+            self.async_write_ha_state()
 
     @property
     def available(self) -> bool:
