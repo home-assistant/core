@@ -1,4 +1,5 @@
 """Config flow for Flux integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -9,6 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components.light import ATTR_TRANSITION
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigFlowResult,
     OptionsFlow,
     OptionsFlowWithConfigEntry,
 )
@@ -20,7 +22,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     BooleanSelector,
     ColorTempSelector,
@@ -77,7 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
 
         if user_input is not None:
@@ -91,7 +92,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=USER_FLOW_SCHEMA,
         )
 
-    async def async_step_import(self, yaml_config: ConfigType) -> FlowResult:
+    async def async_step_import(self, yaml_config: ConfigType) -> ConfigFlowResult:
         """Handle import from configuration.yaml."""
         # start with the same default settings as in the UI
         entry_options = DEFAULT_SETTINGS.copy()
@@ -142,7 +143,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class FluxOptionsFlow(OptionsFlowWithConfigEntry):
     """Handle flux options."""
 
-    async def async_step_init(self, user_input=None) -> FlowResult:
+    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Configure the options."""
         if user_input is not None:
             return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
