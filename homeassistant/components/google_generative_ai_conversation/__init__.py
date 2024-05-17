@@ -144,6 +144,53 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+def _format_schema(schema: dict[str, Any]) -> dict[str, Any]:
+    """Format the schema to protobuf."""
+    SUPPORTED_KEYS = [
+        "type",
+        "format",
+        "description",
+        "nullable",
+        "enum",
+        "items",
+        "properties",
+        "required",
+    ]
+    result = {}
+    for key, val in schema.items():
+        if key not in SUPPORTED_KEYS:
+            continue
+        if key == "type":
+            key = "type_"
+            val = val.upper()
+        elif key == "format":
+            key = "format_"
+        elif key == "items":
+            val = _format_schema(val)
+        elif key == "properties":
+            val = {k: _format_schema(v) for k, v in val.items()}
+        result[key] = val
+    return result
+
+
+def _format_tool(tool: llm.Tool) -> dict[str, Any]:
+    """Format tool specification."""
+
+    parameters = _format_schema(convert(tool.parameters))
+
+    return glm.Tool(
+        {
+            "function_declarations": [
+                {
+                    "name": tool.name,
+                    "description": tool.description,
+                    "parameters": parameters,
+                }
+            ]
+        }
+    )
+
+
 class GoogleGenerativeAIAgent(conversation.AbstractConversationAgent):
     """Google Generative AI conversation agent."""
 
@@ -165,52 +212,9 @@ class GoogleGenerativeAIAgent(conversation.AbstractConversationAgent):
         if "intent" not in self.hass.config.components:
             await setup.async_setup_component(self.hass, "intent", {})
 
-        def format_tool(tool: llm.Tool) -> dict[str, Any]:
-            """Format tool specification."""
-
-            def format_schema(schema: dict[str, Any]) -> dict[str, Any]:
-                """Format the schema to protobuf."""
-                SUPPORTED_KEYS = [
-                    "type",
-                    "format",
-                    "description",
-                    "nullable",
-                    "enum",
-                    "items",
-                    "properties",
-                    "required",
-                ]
-                result = {}
-                for key, val in schema.items():
-                    if key not in SUPPORTED_KEYS:
-                        continue
-                    if key == "type":
-                        key = "type_"
-                        val = val.upper()
-                    elif key == "format":
-                        key = "format_"
-                    elif key == "items":
-                        val = format_schema(val)
-                    elif key == "properties":
-                        val = {k: format_schema(v) for k, v in val.items()}
-                    result[key] = val
-                return result
-
-            parameters = format_schema(convert(tool.parameters))
-
-            return glm.Tool(
-                {
-                    "function_declarations": [
-                        {
-                            "name": tool.name,
-                            "description": tool.description,
-                            "parameters": parameters,
-                        }
-                    ]
-                }
-            )
-
-        tools = [format_tool(tool) for tool in llm.async_get_tools(self.hass)]
+        tools: list[dict[str, Any]] | None = [
+            _format_tool(tool) for tool in llm.async_get_tools(self.hass)
+        ]
         if not tools:
             tools = None
 
