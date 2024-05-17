@@ -32,7 +32,7 @@ jobs:
       architectures: ${{ steps.info.outputs.architectures }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.4
+        uses: actions/checkout@v4.1.6
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
@@ -118,7 +118,7 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.4
+        uses: actions/checkout@v4.1.6
 
       - name: Download env_file
         uses: actions/download-artifact@v4.1.7
@@ -156,7 +156,7 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.4
+        uses: actions/checkout@v4.1.6
 
       - name: Download env_file
         uses: actions/download-artifact@v4.1.7
