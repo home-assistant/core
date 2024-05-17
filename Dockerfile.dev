@@ -53,6 +53,7 @@ COPY requirements_test.txt requirements_test_pre_commit.txt ./
 RUN pip3 install -r requirements_test.txt
 USER root
 RUN rm -rf requirements.txt requirements_test.txt requirements_test_pre_commit.txt homeassistant/
+USER vscode
 
 # Set the default shell to bash instead of sh
 ENV SHELL /bin/bash
