@@ -115,8 +115,8 @@ async def websocket_get_device_configs(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Get device configs."""
-    config_entry = hass.config_entries.async_get_entry(msg["host_id"])
-    if config_entry is None:
+    if not (config_entry := hass.config_entries.async_get_entry(msg["host_id"])):
+        connection.send_result(msg["id"], False)
         return
 
     connection.send_result(msg["id"], config_entry.data[CONF_DEVICES])
@@ -135,8 +135,8 @@ async def websocket_get_entity_configs(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Get entities configs."""
-    config_entry = hass.config_entries.async_get_entry(msg["host_id"])
-    if config_entry is None:
+    if not (config_entry := hass.config_entries.async_get_entry(msg["host_id"])):
+        connection.send_result(msg["id"], False)
         return
 
     if CONF_ADDRESS in msg:
@@ -160,8 +160,8 @@ async def websocket_scan_devices(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Scan for new devices."""
-    config_entry = hass.config_entries.async_get_entry(msg["host_id"])
-    if config_entry is None:
+    if not (config_entry := hass.config_entries.async_get_entry(msg["host_id"])):
+        connection.send_result(msg["id"], False)
         return
 
     host_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
@@ -185,7 +185,6 @@ async def websocket_scan_devices(
         vol.Required("type"): "lcn/devices/add",
         vol.Required("host_id"): cv.string,
         vol.Required(CONF_ADDRESS): ADDRESS_SCHEMA,
-        vol.Required(CONF_NAME): cv.string,
     }
 )
 @websocket_api.async_response
@@ -193,8 +192,8 @@ async def websocket_add_device(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Add a device."""
-    config_entry = hass.config_entries.async_get_entry(msg["host_id"])
-    if config_entry is None:
+    if not (config_entry := hass.config_entries.async_get_entry(msg["host_id"])):
+        connection.send_result(msg["id"], False)
         return
 
     if get_device_config(msg[CONF_ADDRESS], config_entry):
@@ -239,8 +238,8 @@ async def websocket_delete_device(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Delete a device."""
-    config_entry = hass.config_entries.async_get_entry(msg["host_id"])
-    if config_entry is None:
+    if not (config_entry := hass.config_entries.async_get_entry(msg["host_id"])):
+        connection.send_result(msg["id"], False)
         return
 
     device_config = get_device_config(msg[CONF_ADDRESS], config_entry)
@@ -252,6 +251,7 @@ async def websocket_delete_device(
     device = device_registry.async_get_device(identifiers, set())
 
     if not (device and device_config):
+        connection.send_result(msg["id"], False)
         return
 
     # remove module/group device from config_entry data
@@ -284,12 +284,12 @@ async def websocket_delete_device(
         vol.Required(CONF_DOMAIN): cv.string,
         vol.Required(CONF_DOMAIN_DATA): vol.Any(
             DOMAIN_DATA_BINARY_SENSOR,
-            DOMAIN_DATA_CLIMATE,
-            DOMAIN_DATA_COVER,
-            DOMAIN_DATA_LIGHT,
-            DOMAIN_DATA_SCENE,
             DOMAIN_DATA_SENSOR,
             DOMAIN_DATA_SWITCH,
+            DOMAIN_DATA_LIGHT,
+            DOMAIN_DATA_CLIMATE,
+            DOMAIN_DATA_COVER,
+            DOMAIN_DATA_SCENE,
         ),
     }
 )
@@ -299,9 +299,11 @@ async def websocket_add_entity(
 ) -> None:
     """Add an entity."""
     if not (config_entry := hass.config_entries.async_get_entry(msg["host_id"])):
+        connection.send_result(msg["id"], False)
         return
 
     if not (device_config := get_device_config(msg[CONF_ADDRESS], config_entry)):
+        connection.send_result(msg["id"], False)
         return
 
     domain_name = msg[CONF_DOMAIN]
@@ -358,8 +360,8 @@ async def websocket_delete_entity(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Delete an entity."""
-    config_entry = hass.config_entries.async_get_entry(msg["host_id"])
-    if config_entry is None:
+    if not (config_entry := hass.config_entries.async_get_entry(msg["host_id"])):
+        connection.send_result(msg["id"], False)
         return
 
     entity_config = next(
@@ -374,6 +376,10 @@ async def websocket_delete_entity(
         ),
         None,
     )
+
+    if entity_config is None:
+        connection.send_result(msg["id"], False)
+        return
 
     data = deepcopy(dict(config_entry.data))
     data[CONF_ENTITIES].remove(entity_config)
