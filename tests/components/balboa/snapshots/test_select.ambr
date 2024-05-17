@@ -27,7 +27,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:thermometer-lines',
+    'original_icon': None,
     'original_name': 'Temperature range',
     'platform': 'balboa',
     'previous_unique_id': None,
@@ -41,7 +41,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'FakeSpa Temperature range',
-      'icon': 'mdi:thermometer-lines',
       'options': list([
         'low',
         'high',
