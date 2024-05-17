@@ -140,7 +140,7 @@ class TimerEventType(StrEnum):
     """Timer finished without being cancelled."""
 
 
-TimerHandler = Callable[[TimerEventType, TimerInfo], None]
+type TimerHandler = Callable[[TimerEventType, TimerInfo], None]
 
 
 class TimerNotFoundError(intent.IntentHandleError):
