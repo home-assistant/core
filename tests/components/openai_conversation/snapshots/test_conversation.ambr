@@ -26,10 +26,7 @@
       'content': 'hello',
       'role': 'user',
     }),
-    dict({
-      'content': 'Hello, how can I help you?',
-      'role': 'assistant',
-    }),
+    ChatCompletionMessage(content='Hello, how can I help you?', role='assistant', function_call=None, tool_calls=None),
   ])
 # ---
 # name: test_default_prompt[conversation.openai]
