@@ -41,7 +41,7 @@ PLATFORMS: Final = [Platform.SENSOR]
 
 _FroniusCoordinatorT = TypeVar("_FroniusCoordinatorT", bound=FroniusCoordinatorBase)
 
-FroniusConfigEntry = ConfigEntry["FroniusSolarNet"]
+type FroniusConfigEntry = ConfigEntry[FroniusSolarNet]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> bool:

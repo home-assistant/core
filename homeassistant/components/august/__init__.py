@@ -49,7 +49,7 @@ API_CACHED_ATTRS = {
 }
 YALEXS_BLE_DOMAIN = "yalexs_ble"
 
-AugustConfigEntry = ConfigEntry["AugustData"]
+type AugustConfigEntry = ConfigEntry[AugustData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

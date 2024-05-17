@@ -84,7 +84,7 @@ class ShellyEntryData:
     rpc_poll: ShellyRpcPollingCoordinator | None = None
 
 
-ShellyConfigEntry = ConfigEntry[ShellyEntryData]
+type ShellyConfigEntry = ConfigEntry[ShellyEntryData]
 
 
 class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
