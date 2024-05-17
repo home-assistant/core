@@ -13,7 +13,7 @@ from . import init_integration
 from tests.common import snapshot_platform
 
 
-async def test_binary_sensors(
+async def test_covers(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
