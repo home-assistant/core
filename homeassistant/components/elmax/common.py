@@ -8,10 +8,17 @@ from elmax_api.model.endpoint import DeviceEndpoint
 from elmax_api.model.panel import PanelEntry
 from packaging import version
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, ELMAX_LOCAL_API_PATH, MIN_APIV2_SUPPORTED_VERSION
+from .const import (
+    DOMAIN,
+    ELMAX_LOCAL_API_PATH,
+    MIN_APIV2_SUPPORTED_VERSION,
+    SIGNAL_PANEL_UPDATE,
+)
 from .coordinator import ElmaxCoordinator
 
 
@@ -52,6 +59,8 @@ class DirectPanel(PanelEntry):
 class ElmaxEntity(CoordinatorEntity[ElmaxCoordinator]):
     """Wrapper for Elmax entities."""
 
+    _last_state: DeviceEndpoint = None
+
     def __init__(
         self,
         elmax_device: DeviceEndpoint,
@@ -72,6 +81,22 @@ class ElmaxEntity(CoordinatorEntity[ElmaxCoordinator]):
             model=panel_version,
             sw_version=panel_version,
         )
+
+    async def async_added_to_hass(self) -> None:
+        """Register push notifications callbacks if available."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SIGNAL_PANEL_UPDATE}-{self.coordinator.panel_entry.hash}-{self._device.endpoint_id}",
+                self._handle_update,
+            )
+        )
+        return await super().async_added_to_hass()
+
+    @callback
+    def _handle_update(self, endpoint_status: DeviceEndpoint) -> None:
+        self._last_state = endpoint_status
+        self.async_write_ha_state()
 
     @property
     def available(self) -> bool:
