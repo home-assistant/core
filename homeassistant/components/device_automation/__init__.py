@@ -9,7 +9,7 @@ from enum import Enum
 from functools import wraps
 import logging
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias, overload
+from typing import TYPE_CHECKING, Any, Literal, overload
 
 import voluptuous as vol
 import voluptuous_serialize
@@ -49,7 +49,7 @@ if TYPE_CHECKING:
     from .condition import DeviceAutomationConditionProtocol
     from .trigger import DeviceAutomationTriggerProtocol
 
-    DeviceAutomationPlatformType: TypeAlias = (
+    type DeviceAutomationPlatformType = (
         ModuleType
         | DeviceAutomationTriggerProtocol
         | DeviceAutomationConditionProtocol

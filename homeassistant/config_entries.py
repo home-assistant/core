@@ -238,7 +238,9 @@ class OperationNotAllowed(ConfigError):
     """Raised when a config entry operation is not allowed."""
 
 
-UpdateListenerType = Callable[[HomeAssistant, "ConfigEntry"], Coroutine[Any, Any, None]]
+type UpdateListenerType = Callable[
+    [HomeAssistant, ConfigEntry], Coroutine[Any, Any, None]
+]
 
 FROZEN_CONFIG_ENTRY_ATTRS = {
     "entry_id",

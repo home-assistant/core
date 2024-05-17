@@ -467,7 +467,7 @@ async def websocket_subscribe(
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
-ConnectionStatusCallback = Callable[[bool], None]
+type ConnectionStatusCallback = Callable[[bool], None]
 
 
 @callback

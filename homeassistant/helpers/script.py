@@ -1311,7 +1311,7 @@ async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> 
         )
 
 
-_VarsType = dict[str, Any] | MappingProxyType
+type _VarsType = dict[str, Any] | MappingProxyType
 
 
 def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:

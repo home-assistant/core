@@ -164,8 +164,8 @@ from . import indieauth, login_flow, mfa_setup_flow
 DOMAIN = "auth"
 STRICT_CONNECTION_URL = "/auth/strict_connection/temp_token"
 
-StoreResultType = Callable[[str, Credentials], str]
-RetrieveResultType = Callable[[str, str], Credentials | None]
+type StoreResultType = Callable[[str, Credentials], str]
+type RetrieveResultType = Callable[[str, str], Credentials | None]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 

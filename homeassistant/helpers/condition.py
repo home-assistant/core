@@ -115,7 +115,7 @@ class ConditionProtocol(Protocol):
         """Evaluate state based on configuration."""
 
 
-ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool | None]
+type ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool | None]
 
 
 def condition_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:

@@ -14,16 +14,16 @@ from .deprecation import (
     dir_with_deprecated_constants,
 )
 
-GPSType = tuple[float, float]
-ConfigType = dict[str, Any]
-DiscoveryInfoType = dict[str, Any]
-ServiceDataType = dict[str, Any]
-StateType = str | int | float | None
-TemplateVarsType = Mapping[str, Any] | None
-NoEventData = Mapping[str, Never]
+type GPSType = tuple[float, float]
+type ConfigType = dict[str, Any]
+type DiscoveryInfoType = dict[str, Any]
+type ServiceDataType = dict[str, Any]
+type StateType = str | int | float | None
+type TemplateVarsType = Mapping[str, Any] | None
+type NoEventData = Mapping[str, Never]
 
 # Custom type for recorder Queries
-QueryType = Any
+type QueryType = Any
 
 
 class UndefinedType(Enum):

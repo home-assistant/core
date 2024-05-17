@@ -141,7 +141,7 @@ _UNDEF: dict[Any, Any] = {}
 _SENTINEL = object()
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 _DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=Mapping[str, Any])
-CALLBACK_TYPE = Callable[[], None]
+type CALLBACK_TYPE = Callable[[], None]
 
 CORE_STORAGE_KEY = "core.config"
 CORE_STORAGE_VERSION = 1
@@ -152,8 +152,8 @@ DOMAIN = "homeassistant"
 # How long to wait to log tasks that are blocking
 BLOCK_LOG_TIMEOUT = 60
 
-ServiceResponse = JsonObjectType | None
-EntityServiceResponse = dict[str, ServiceResponse]
+type ServiceResponse = JsonObjectType | None
+type EntityServiceResponse = dict[str, ServiceResponse]
 
 
 class ConfigSource(enum.StrEnum):
