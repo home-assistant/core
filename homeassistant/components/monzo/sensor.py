@@ -79,15 +79,13 @@ async def async_setup_entry(
             lambda x: x.accounts,
         )
         for entity_description in ACCOUNT_SENSORS
-        for index, account in enumerate(
-            hass.data[DOMAIN][config_entry.entry_id].accounts
-        )
+        for index, account in enumerate(coordinator.data.accounts)
     ]
 
     pots = [
         MonzoSensor(coordinator, entity_description, index, MODEL_POT, lambda x: x.pots)
         for entity_description in POT_SENSORS
-        for index, _pot in enumerate(hass.data[DOMAIN][config_entry.entry_id].pots)
+        for index, _pot in enumerate(coordinator.data.pots)
     ]
 
     async_add_entities(accounts + pots)
