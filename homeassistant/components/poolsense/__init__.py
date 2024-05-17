@@ -11,7 +11,7 @@ from homeassistant.helpers import aiohttp_client
 
 from .coordinator import PoolSenseDataUpdateCoordinator
 
-PoolSenseConfigEntry = ConfigEntry[PoolSenseDataUpdateCoordinator]
+type PoolSenseConfigEntry = ConfigEntry[PoolSenseDataUpdateCoordinator]
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
