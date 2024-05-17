@@ -194,7 +194,7 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 vol.Required(
                     CONF_RECEIVER_MAXIMUM_VOLUME,
                     default=CONF_RECEIVER_MAXIMUM_VOLUME_DEFAULT,
-                ): vol.All(cv.positive_int, vol.In([80, 200])),
+                ): vol.All(cv.positive_int, vol.Range(min=0, max=200)),
                 vol.Required(
                     CONF_SOURCES, default=CONF_SOURCES_DEFAULT
                 ): ObjectSelector(),

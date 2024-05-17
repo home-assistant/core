@@ -22,7 +22,7 @@
       "init": {
         "data": {
           "maximum_volume": "Maximum volume limit (%)",
-          "receiver_max_volume": "Receiver maximum volume (80 for older models, 200 for current)",
+          "receiver_max_volume": "Receiver maximum volume (usually 80 for older models, 200 for current)",
           "sources": "List of input sources this receiver supports (eiscp argument: display value)",
           "sound_mode_list": "List of 'listening modes' this receiver supports (eiscp arguments)",
           "eiscp": "List of additional eiscp channels (eiscp argument: list of options)"
