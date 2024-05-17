@@ -8,6 +8,9 @@
     "DEVCONTAINER": "1",
     "PYTHONASYNCIODEBUG": "1"
   },
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
   // Port 5683 udp is used by Shelly integration
   "appPort": ["8123:8123", "5683:5683/udp"],
   "runArgs": ["-e", "GIT_EDITOR=code --wait"],

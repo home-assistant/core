@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
-from .common import AvmWrapper
 from .const import (
     DOMAIN,
     FRITZ_SERVICES,
@@ -20,6 +19,7 @@ from .const import (
     SERVICE_RECONNECT,
     SERVICE_SET_GUEST_WIFI_PW,
 )
+from .coordinator import AvmWrapper
 
 _LOGGER = logging.getLogger(__name__)
 

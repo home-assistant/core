@@ -28,6 +28,7 @@ from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
 
 PLATFORMS: Final = [
     Platform.CLIMATE,
+    Platform.SELECT,
     Platform.SENSOR,
 ]
 
@@ -127,6 +128,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Teslemetry Config."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        del entry.runtime_data
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

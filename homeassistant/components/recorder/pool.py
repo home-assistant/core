@@ -1,5 +1,6 @@
 """A pool for sqlite connections."""
 
+import asyncio
 import logging
 import threading
 import traceback
@@ -14,7 +15,7 @@ from sqlalchemy.pool import (
 )
 
 from homeassistant.helpers.frame import report
-from homeassistant.util.loop import check_loop
+from homeassistant.util.loop import raise_for_blocking_call
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,15 +87,22 @@ class RecorderPool(SingletonThreadPool, NullPool):
         if threading.get_ident() in self.recorder_and_worker_thread_ids:
             super().dispose()
 
-    def _do_get(self) -> ConnectionPoolEntry:
+    def _do_get(self) -> ConnectionPoolEntry:  # type: ignore[return]
         if threading.get_ident() in self.recorder_and_worker_thread_ids:
             return super()._do_get()
-        check_loop(
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            # Not in an event loop but not in the recorder or worker thread
+            # which is allowed but discouraged since its much slower
+            return self._do_get_db_connection_protected()
+        # In the event loop, raise an exception
+        raise_for_blocking_call(
             self._do_get_db_connection_protected,
             strict=True,
             advise_msg=ADVISE_MSG,
         )
-        return self._do_get_db_connection_protected()
+        # raise_for_blocking_call will raise an exception
 
     def _do_get_db_connection_protected(self) -> ConnectionPoolEntry:
         report(

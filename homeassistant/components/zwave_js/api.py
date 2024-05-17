@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 import dataclasses
 from functools import partial, wraps
-from typing import Any, Concatenate, Literal, ParamSpec, cast
+from typing import Any, Concatenate, Literal, cast
 
 from aiohttp import web, web_exceptions, web_request
 import voluptuous as vol
@@ -83,8 +83,6 @@ from .helpers import (
     async_get_node_from_device_id,
     get_device_id,
 )
-
-_P = ParamSpec("_P")
 
 DATA_UNSUBSCRIBE = "unsubs"
 
@@ -362,7 +360,7 @@ def async_get_node(
     return async_get_node_func
 
 
-def async_handle_failed_command(
+def async_handle_failed_command[**_P](
     orig_func: Callable[
         Concatenate[HomeAssistant, ActiveConnection, dict[str, Any], _P],
         Coroutine[Any, Any, None],

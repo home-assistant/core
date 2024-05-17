@@ -13,7 +13,7 @@ import pytest
 
 from homeassistant import bootstrap, loader, runner
 import homeassistant.config as config_util
-from homeassistant.config_entries import HANDLERS, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEBUG, SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.core import CoreState, HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -1161,7 +1161,6 @@ async def test_bootstrap_empty_integrations(
 def mock_mqtt_config_flow_fixture() -> Generator[None, None, None]:
     """Mock MQTT config flow."""
 
-    @HANDLERS.register("mqtt")
     class MockConfigFlow:
         """Mock the MQTT config flow."""
 

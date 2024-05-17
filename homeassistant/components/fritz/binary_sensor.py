@@ -16,13 +16,13 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import (
+from .const import DOMAIN
+from .coordinator import (
     AvmWrapper,
     ConnectionInfo,
     FritzBoxBaseCoordinatorEntity,
     FritzEntityDescription,
 )
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -40,7 +40,7 @@ TRACE_CONFIG_SCHEMA = {
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-TraceData = dict[str, LimitedSizeDict[str, BaseTrace]]
+type TraceData = dict[str, LimitedSizeDict[str, BaseTrace]]
 
 
 @callback

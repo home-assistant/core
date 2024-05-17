@@ -16,6 +16,7 @@ def mock_config_entry(hass):
     """Mock a config entry."""
     entry = MockConfigEntry(
         domain="google_generative_ai_conversation",
+        title="Google Generative AI Conversation",
         data={
             "api_key": "bla",
         },
