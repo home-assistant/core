@@ -36,7 +36,7 @@
         "name": "[%key:component::sensor::entity_component::ozone::name%]"
       },
       "station": {
-        "name": "Reporting station",
+        "name": "Reporting Station",
         "state_attributes": {
           "lat": { "name": "[%key:common::config_flow::data::latitude%]" },
           "long": { "name": "[%key:common::config_flow::data::longitude%]" }
