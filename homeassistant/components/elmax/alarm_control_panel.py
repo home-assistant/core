@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from elmax_api.exceptions import ElmaxApiError
 from elmax_api.model.alarm_status import AlarmArmStatus, AlarmStatus
 from elmax_api.model.area import Area
 from elmax_api.model.command import AreaCommand
@@ -110,6 +111,10 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
                 command=AreaCommand.DISARM,
                 extra_payload={"code": code},
             )
+        except ElmaxApiError as err:
+            if err.status_code == 403:
+                raise ValueError("Invalid disarm code specified") from err
+            raise
         finally:
             await self.coordinator.async_refresh()
 
