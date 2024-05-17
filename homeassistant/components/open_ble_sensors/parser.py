@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
+import struct
 
 from bluetooth_data_tools import short_address
 from bluetooth_sensor_state_data import BluetoothData
@@ -28,7 +29,7 @@ class OpenBLESensorsDevice:
 
 DEVICE_TYPES = {
     0xC0: OpenBLESensorsDevice("PSS CFG Beacon"),
-    0xD0: OpenBLESensorsDevice("Soil Sensor"),
+    0x55: OpenBLESensorsDevice("Soil Sensor"),
 }
 
 MFR_ID = 0x0877
@@ -56,13 +57,18 @@ class OpenBLESensorsBluetoothDeviceData(BluetoothData):
             return
         device = DEVICE_TYPES[device_id]
         name = device_type = device.model
+
         self.set_precision(2)
         self.set_device_type(device_type)
         self.set_title(f"{name} {short_address(service_info.address)}")
         self.set_device_name(f"{name} {short_address(service_info.address)}")
         self.set_device_manufacturer(MFR)
 
-        batt = service_info.manufacturer_data[2167][3]
-        impedance = 100
-        self.update_predefined_sensor(SensorLibrary.BATTERY__PERCENTAGE, batt)
-        self.update_predefined_sensor(SensorLibrary.IMPEDANCE__OHM, impedance)
+        if device_type == "Soil Sensor":
+            batt = data[1]
+            impedance = struct.unpack("<i", data[2:6])[0]
+            self.update_predefined_sensor(SensorLibrary.BATTERY__PERCENTAGE, batt)
+            self.update_predefined_sensor(SensorLibrary.IMPEDANCE__OHM, impedance)
+        else:
+            batt = data[3]
+            self.update_predefined_sensor(SensorLibrary.BATTERY__PERCENTAGE, batt)
