@@ -14,7 +14,7 @@ import reprlib
 import sqlite3
 import ssl
 import threading
-from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, cast
+from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp import client
@@ -204,11 +204,7 @@ class HAFakeDatetime(freezegun.api.FakeDatetime):  # type: ignore[name-defined]
         return ha_datetime_to_fakedatetime(result)
 
 
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-
-
-def check_real(func: Callable[_P, Coroutine[Any, Any, _R]]):
+def check_real[**_P, _R](func: Callable[_P, Coroutine[Any, Any, _R]]):
     """Force a function to require a keyword _test_real to be passed in."""
 
     @functools.wraps(func)

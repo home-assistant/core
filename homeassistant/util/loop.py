@@ -8,7 +8,7 @@ import functools
 import linecache
 import logging
 import threading
-from typing import Any, ParamSpec, TypeVar
+from typing import Any
 
 from homeassistant.core import HomeAssistant, async_get_hass
 from homeassistant.exceptions import HomeAssistantError
@@ -20,10 +20,6 @@ from homeassistant.helpers.frame import (
 from homeassistant.loader import async_suggest_report_issue
 
 _LOGGER = logging.getLogger(__name__)
-
-
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
 
 
 def _get_line_from_cache(filename: str, lineno: int) -> str:
@@ -114,7 +110,7 @@ def raise_for_blocking_call(
         )
 
 
-def protect_loop(
+def protect_loop[**_P, _R](
     func: Callable[_P, _R],
     loop_thread_id: int,
     strict: bool = True,
