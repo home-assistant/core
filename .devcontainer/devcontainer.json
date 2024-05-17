@@ -50,8 +50,7 @@
         ],
         "[python]": {
           "editor.defaultFormatter": "charliermarsh.ruff"
-        },
-        "ruff.path": ["/home/vscode/.local/bin/ruff"]
+        }
       }
     }
   }
