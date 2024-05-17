@@ -21,8 +21,9 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LocalData, RiscoDataUpdateCoordinator, is_local
+from . import LocalData, is_local
 from .const import DATA_COORDINATOR, DOMAIN, SYSTEM_UPDATE_SIGNAL
+from .coordinator import RiscoDataUpdateCoordinator
 from .entity import RiscoCloudZoneEntity, RiscoLocalZoneEntity
 
 SYSTEM_ENTITY_DESCRIPTIONS = [
