@@ -709,13 +709,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ozmo 950 Charger Position',
+      'x': 5,
+      'y': 9,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_charger_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '{"x": 5, "y": 9}',
   })
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_cleaning_duration:entity-registry]
@@ -946,13 +948,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ozmo 950 Last Position',
+      'x': 1,
+      'y': 5,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_last_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '{"x": 1, "y": 5}',
   })
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_main_brush_lifespan:entity-registry]
