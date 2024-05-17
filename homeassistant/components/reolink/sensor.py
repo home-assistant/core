@@ -65,7 +65,6 @@ SENSORS = (
     ReolinkSensorEntityDescription(
         key="battery_percent",
         cmd_key="GetBatteryInfo",
-        translation_key="battery_percent",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
