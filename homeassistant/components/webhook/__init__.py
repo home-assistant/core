@@ -93,7 +93,7 @@ def async_generate_url(
     allow_internal: bool = True,
     allow_external: bool = True,
     allow_ip: bool | None = None,
-    prefer_external: bool | None = None,
+    prefer_external: bool | None = True,
 ) -> str:
     """Generate the full URL for a webhook_id."""
     return (
