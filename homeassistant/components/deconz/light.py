@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any, TypedDict, TypeVar
+from typing import Any, TypedDict, TypeVar, cast
 
 from pydeconz.interfaces.groups import GroupHandler
 from pydeconz.interfaces.lights import LightHandler
 from pydeconz.models import ResourceType
 from pydeconz.models.event import EventType
-from pydeconz.models.group import Group
+from pydeconz.models.group import Group, TypedGroupAction
 from pydeconz.models.light.light import Light, LightAlert, LightColorMode, LightEffect
 
 from homeassistant.components.light import (
@@ -105,6 +105,23 @@ class SetStateAttributes(TypedDict, total=False):
     xy: tuple[float, float]
 
 
+def update_color_state(
+    group: Group, lights: list[Light], override: bool = False
+) -> None:
+    """Sync group color state with light."""
+    data = {
+        attribute: light_attribute
+        for light in lights
+        for attribute in ("bri", "ct", "hue", "sat", "xy", "colormode", "effect")
+        if (light_attribute := light.raw["state"].get(attribute)) is not None
+    }
+
+    if override:
+        group.raw["action"] = cast(TypedGroupAction, data)
+    else:
+        group.update(cast(dict[str, dict[str, Any]], {"action": data}))
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -148,11 +165,12 @@ async def async_setup_entry(
         if (group := hub.api.groups[group_id]) and not group.lights:
             return
 
-        first = True
-        for light_id in group.lights:
-            if (light := hub.api.lights.lights.get(light_id)) and light.reachable:
-                group.update_color_state(light, update_all_attributes=first)
-                first = False
+        lights = [
+            light
+            for light_id in group.lights
+            if (light := hub.api.lights.lights.get(light_id)) and light.reachable
+        ]
+        update_color_state(group, lights, True)
 
         async_add_entities([DeconzGroup(group, hub)])
 
@@ -326,7 +344,7 @@ class DeconzLight(DeconzBaseLight[Light]):
         if self._device.reachable and "attr" not in self._device.changed_keys:
             for group in self.hub.api.groups.values():
                 if self._device.resource_id in group.lights:
-                    group.update_color_state(self._device)
+                    update_color_state(group, [self._device])
 
 
 class DeconzGroup(DeconzBaseLight[Group]):
