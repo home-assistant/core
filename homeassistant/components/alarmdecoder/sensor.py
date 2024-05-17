@@ -23,7 +23,6 @@ async def async_setup_entry(
 class AlarmDecoderSensor(AlarmDecoderEntity, SensorEntity):
     """Representation of an AlarmDecoder keypad."""
 
-    _attr_has_entity_name = True
     _attr_translation_key = "alarm_panel_display"
     _attr_name = "Alarm Panel Display"
     _attr_should_poll = False
