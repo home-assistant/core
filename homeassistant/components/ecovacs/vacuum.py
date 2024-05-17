@@ -341,7 +341,7 @@ class EcovacsVacuum(
                 translation_key="vacuum_send_command_params_dict",
             )
 
-        if command in ["spot_area", "custom_area"]:
+        if command in ["spot_area", "custom_area", "update_positions"]:
             if params is None:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
@@ -373,6 +373,11 @@ class EcovacsVacuum(
                         params.get("cleanings", 1),
                     )
                 )
+            elif command == "update_positions":
+                if map_caps := self._capability.map:
+                    for action in map_caps.position.get:
+                        await self._device.execute_command(action)
+
         else:
             await self._device.execute_command(
                 self._capability.custom.set(command, params)

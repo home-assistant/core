@@ -213,8 +213,9 @@ async def async_setup_entry(
         if description.component in device.capabilities.life_span.types
     )
     entities.extend(
-        EcovacsPositionSensor(device, device.capabilities.map, description)
+        EcovacsPositionSensor(device, capability.position, description)
         for device in controller.devices(Capabilities)
+        if (capability := device.capabilities.map)
         for description in POSITION_ENTITY_DESCRIPTIONS
     )
     entities.extend(
