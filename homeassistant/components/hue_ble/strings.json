@@ -9,7 +9,7 @@
         }
       },
       "confirm": {
-        "description": "Do you want to set up {name}?"
+        "description": "Do you want to set up {name}?. Make sure the light is in Alexa/Google pairing mode."
       }
     },
     "error": {
