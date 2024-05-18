@@ -10,6 +10,29 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent, llm
 
 
+async def test_get_api_no_existing(hass: HomeAssistant) -> None:
+    """Test getting an llm api where no config exists."""
+    with pytest.raises(HomeAssistantError):
+        llm.async_get_api(hass, "non-existing")
+
+
+async def test_register_api(hass: HomeAssistant) -> None:
+    """Test registering an llm api."""
+    api = llm.IntentAPI(
+        hass=hass,
+        id="test",
+        name="Test",
+        prompt_template="Test",
+    )
+    llm.async_register_api(hass, api)
+
+    assert llm.async_get_api(hass, "test") is api
+    assert api in llm.async_get_apis(hass)
+
+    with pytest.raises(HomeAssistantError):
+        llm.async_register_api(hass, api)
+
+
 async def test_call_tool_no_existing(hass: HomeAssistant) -> None:
     """Test calling an llm tool where no config exists."""
     with pytest.raises(HomeAssistantError):
