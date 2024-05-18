@@ -70,7 +70,7 @@ class ProtectLock(ProtectDeviceEntity, LockEntity):
             LockEntityDescription(key="lock"),
         )
 
-        self._attr_name = f"{self.device.display_name} Lock"
+        self._attr_name = f"{self.device.device_name} Lock"
 
     @callback
     def _async_get_state_attrs(self) -> tuple[Any, ...]:
@@ -116,10 +116,10 @@ class ProtectLock(ProtectDeviceEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        _LOGGER.debug("Unlocking %s", self.device.display_name)
+        _LOGGER.debug("Unlocking %s", self.device.device_name)
         return await self.device.open_lock()
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        _LOGGER.debug("Locking %s", self.device.display_name)
+        _LOGGER.debug("Locking %s", self.device.device_name)
         return await self.device.close_lock()

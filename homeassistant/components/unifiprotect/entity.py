@@ -74,7 +74,7 @@ def _async_device_entities(
                     "Adding %s entity %s for %s",
                     klass.__name__,
                     description.name,
-                    device.display_name,
+                    device.device_name,
                 )
             continue
 
@@ -105,7 +105,7 @@ def _async_device_entities(
                 "Adding %s entity %s for %s",
                 klass.__name__,
                 description.name,
-                device.display_name,
+                device.device_name,
             )
 
     return entities
@@ -201,7 +201,7 @@ class ProtectDeviceEntity(Entity):
 
         if description is None:
             self._attr_unique_id = f"{self.device.mac}"
-            self._attr_name = f"{self.device.display_name}"
+            self._attr_name = f"{self.device.device_name}"
         else:
             self.entity_description = description
             self._attr_unique_id = f"{self.device.mac}_{description.key}"
@@ -210,7 +210,7 @@ class ProtectDeviceEntity(Entity):
                 if description.name and description.name is not UNDEFINED
                 else ""
             )
-            self._attr_name = f"{self.device.display_name} {name.title()}"
+            self._attr_name = f"{self.device.device_name} {name.title()}"
             if isinstance(description, ProtectRequiredKeysMixin):
                 self._async_get_ufp_enabled = description.get_ufp_enabled
 
@@ -228,7 +228,7 @@ class ProtectDeviceEntity(Entity):
     @callback
     def _async_set_device_info(self) -> None:
         self._attr_device_info = DeviceInfo(
-            name=self.device.display_name,
+            name=self.device.device_name,
             manufacturer=DEFAULT_BRAND,
             model=self.device.type,
             via_device=(DOMAIN, self.data.api.bootstrap.nvr.mac),
@@ -319,10 +319,10 @@ class ProtectNVREntity(ProtectDeviceEntity):
             connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
             identifiers={(DOMAIN, self.device.mac)},
             manufacturer=DEFAULT_BRAND,
-            name=self.device.display_name,
+            name=self.device.device_name,
             model=self.device.type,
             sw_version=str(self.device.version),
-            configuration_url=self.device.api.base_url,
+            configuration_url=self.device.api.protect_url,
         )
 
     @callback

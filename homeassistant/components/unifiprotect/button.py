@@ -178,7 +178,7 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
     ) -> None:
         """Initialize an UniFi camera."""
         super().__init__(data, device, description)
-        self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
+        self._attr_name = f"{self.device.device_name} {self.entity_description.name}"
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:

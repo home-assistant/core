@@ -94,7 +94,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             ),
         )
 
-        self._attr_name = f"{self.device.display_name} Speaker"
+        self._attr_name = f"{self.device.device_name} Speaker"
         self._attr_media_content_type = MediaType.MUSIC
 
     @callback
@@ -140,7 +140,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             self.device.talkback_stream is not None
             and self.device.talkback_stream.is_running
         ):
-            _LOGGER.debug("Stopping playback for %s Speaker", self.device.display_name)
+            _LOGGER.debug("Stopping playback for %s Speaker", self.device.device_name)
             await self.device.stop_audio()
             self._async_updated_event(self.device)
 
@@ -159,7 +159,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             raise HomeAssistantError("Only music media type is supported")
 
         _LOGGER.debug(
-            "Playing Media %s for %s Speaker", media_id, self.device.display_name
+            "Playing Media %s for %s Speaker", media_id, self.device.device_name
         )
         await self.async_media_stop()
         try:

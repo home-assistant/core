@@ -372,7 +372,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Paired Camera",
         icon="mdi:cctv",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="camera.display_name",
+        ufp_value="camera.device_name",
         ufp_perm=PermRequired.NO_WRITE,
     ),
 )
@@ -392,7 +392,7 @@ DOORLOCK_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Paired Camera",
         icon="mdi:cctv",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="camera.display_name",
+        ufp_value="camera.device_name",
         ufp_perm=PermRequired.NO_WRITE,
     ),
 )
@@ -564,7 +564,7 @@ LIGHT_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Paired Camera",
         icon="mdi:cctv",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="camera.display_name",
+        ufp_value="camera.device_name",
         ufp_perm=PermRequired.NO_WRITE,
     ),
 )
@@ -673,7 +673,7 @@ def _async_event_entities(
             _LOGGER.debug(
                 "Adding trip sensor entity %s for %s",
                 description.name,
-                device.display_name,
+                device.device_name,
             )
 
         if not device.feature_flags.has_smart_detect:
@@ -687,7 +687,7 @@ def _async_event_entities(
             _LOGGER.debug(
                 "Adding sensor entity %s for %s",
                 description.name,
-                device.display_name,
+                device.device_name,
             )
 
     return entities

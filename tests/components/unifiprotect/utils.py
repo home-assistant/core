@@ -107,7 +107,7 @@ def ids_from_device_description(
 ) -> tuple[str, str]:
     """Return expected unique_id and entity_id for a give platform/device/description combination."""
 
-    entity_name = normalize_name(device.display_name)
+    entity_name = normalize_name(device.device_name)
     description_entity_name = normalize_name(str(description.name))
 
     unique_id = f"{device.mac}_{description.key}"

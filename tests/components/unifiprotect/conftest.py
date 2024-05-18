@@ -117,8 +117,9 @@ def mock_ufp_client(bootstrap: Bootstrap):
     nvr._api = client
     client.bootstrap._api = client
 
-    client.base_url = "https://127.0.0.1"
+    client.protect_url = "https://127.0.0.1"
     client.connection_host = IPv4Address("127.0.0.1")
+    client.get_release_versions = AsyncMock()
     client.get_nvr = AsyncMock(return_value=nvr)
     client.get_bootstrap = AsyncMock(return_value=bootstrap)
     client.update = AsyncMock(return_value=bootstrap)

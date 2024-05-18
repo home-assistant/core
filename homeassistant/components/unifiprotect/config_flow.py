@@ -191,7 +191,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_VERIFY_SSL] = False
                 nvr_data, errors = await self._async_get_nvr_data(user_input)
             if nvr_data and not errors:
-                return self._async_create_entry(nvr_data.display_name, user_input)
+                return self._async_create_entry(nvr_data.device_name, user_input)
 
         placeholders = {
             "name": discovery_info["hostname"]
@@ -262,7 +262,6 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             password=user_input[CONF_PASSWORD],
             verify_ssl=verify_ssl,
             cache_dir=Path(self.hass.config.path(STORAGE_DIR, "unifiprotect")),
-            config_dir=Path(self.hass.config.path(STORAGE_DIR, "unifiprotect")),
         )
 
         errors = {}
@@ -346,7 +345,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(nvr_data.mac)
                 self._abort_if_unique_id_configured()
 
-                return self._async_create_entry(nvr_data.display_name, user_input)
+                return self._async_create_entry(nvr_data.device_name, user_input)
 
         user_input = user_input or {}
         return self.async_show_form(

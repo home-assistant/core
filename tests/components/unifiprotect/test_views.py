@@ -237,7 +237,7 @@ async def test_video_bad_nvr_id(
 ) -> None:
     """Test video URL with bad NVR id."""
 
-    ufp.api.request = AsyncMock()
+    ufp.api._os.request = AsyncMock()
     await init_entry(hass, ufp, [camera])
 
     event = Event(
@@ -259,7 +259,7 @@ async def test_video_bad_nvr_id(
     response = cast(ClientResponse, await http_client.get(url))
 
     assert response.status == 404
-    ufp.api.request.assert_not_called()
+    ufp.api._os.request.assert_not_called()
 
 
 async def test_video_bad_camera_id(
@@ -271,7 +271,7 @@ async def test_video_bad_camera_id(
 ) -> None:
     """Test video URL with bad camera id."""
 
-    ufp.api.request = AsyncMock()
+    ufp.api._os.request = AsyncMock()
     await init_entry(hass, ufp, [camera])
 
     event = Event(
@@ -293,7 +293,7 @@ async def test_video_bad_camera_id(
     response = cast(ClientResponse, await http_client.get(url))
 
     assert response.status == 404
-    ufp.api.request.assert_not_called()
+    ufp.api._os.request.assert_not_called()
 
 
 async def test_video_bad_camera_perms(
@@ -305,7 +305,7 @@ async def test_video_bad_camera_perms(
 ) -> None:
     """Test video URL with bad camera perms."""
 
-    ufp.api.request = AsyncMock()
+    ufp.api._os.request = AsyncMock()
     await init_entry(hass, ufp, [camera])
 
     event = Event(
@@ -329,7 +329,7 @@ async def test_video_bad_camera_perms(
     response = cast(ClientResponse, await http_client.get(url))
 
     assert response.status == 403
-    ufp.api.request.assert_not_called()
+    ufp.api._os.request.assert_not_called()
 
 
 @pytest.mark.parametrize(("start", "end"), [("test", None), (None, "test")])
@@ -344,7 +344,7 @@ async def test_video_bad_params(
 ) -> None:
     """Test video URL with bad start/end params."""
 
-    ufp.api.request = AsyncMock()
+    ufp.api._os.request = AsyncMock()
     await init_entry(hass, ufp, [camera])
 
     event_start = fixed_now - timedelta(seconds=30)
@@ -369,7 +369,7 @@ async def test_video_bad_params(
     response = cast(ClientResponse, await http_client.get(url))
 
     assert response.status == 400
-    ufp.api.request.assert_not_called()
+    ufp.api._os.request.assert_not_called()
 
 
 async def test_video_bad_video(
@@ -381,7 +381,7 @@ async def test_video_bad_video(
 ) -> None:
     """Test video URL with no video."""
 
-    ufp.api.request = AsyncMock(side_effect=ClientError)
+    ufp.api._os.request = AsyncMock(side_effect=ClientError)
     await init_entry(hass, ufp, [camera])
 
     event_start = fixed_now - timedelta(seconds=30)
@@ -403,7 +403,7 @@ async def test_video_bad_video(
     response = cast(ClientResponse, await http_client.get(url))
 
     assert response.status == 404
-    ufp.api.request.assert_called_once()
+    ufp.api._os.request.assert_called_once()
 
 
 async def test_video(
@@ -423,7 +423,7 @@ async def test_video(
     mock_response.content_length = 8
     mock_response.content.iter_chunked = Mock(return_value=content)
 
-    ufp.api.request = AsyncMock(return_value=mock_response)
+    ufp.api._os.request = AsyncMock(return_value=mock_response)
     await init_entry(hass, ufp, [camera])
 
     event_start = fixed_now - timedelta(seconds=30)
@@ -446,7 +446,7 @@ async def test_video(
     assert await response.content.read() == b"testtest"
 
     assert response.status == 200
-    ufp.api.request.assert_called_once()
+    ufp.api._os.request.assert_called_once()
 
 
 async def test_video_entity_id(
@@ -466,7 +466,7 @@ async def test_video_entity_id(
     mock_response.content_length = 8
     mock_response.content.iter_chunked = Mock(return_value=content)
 
-    ufp.api.request = AsyncMock(return_value=mock_response)
+    ufp.api._os.request = AsyncMock(return_value=mock_response)
     await init_entry(hass, ufp, [camera])
 
     event_start = fixed_now - timedelta(seconds=30)
@@ -490,4 +490,4 @@ async def test_video_entity_id(
     assert await response.content.read() == b"testtest"
 
     assert response.status == 200
-    ufp.api.request.assert_called_once()
+    ufp.api._os.request.assert_called_once()
