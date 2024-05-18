@@ -60,7 +60,7 @@ async def test_intent_tool(hass: HomeAssistant) -> None:
         context=test_context,
         user_prompt="test_text",
         language="*",
-        assistant="test_assistant",
+        assistant="conversation",
     )
 
     with patch(
@@ -79,7 +79,7 @@ async def test_intent_tool(hass: HomeAssistant) -> None:
         "test_text",
         test_context,
         "*",
-        "test_assistant",
+        "conversation",
     )
     assert response == {
         "card": {},

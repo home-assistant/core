@@ -11,6 +11,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.climate.intent import INTENT_GET_TEMPERATURE
+from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.weather.intent import INTENT_GET_WEATHER
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -137,6 +138,10 @@ class IntentTool(Tool):
     @callback
     def async_is_applicable(self, hass: HomeAssistant, tool_input: ToolInput) -> bool:
         """Check the intent applicability."""
+        if (
+            tool_input.assistant != CONVERSATION_DOMAIN
+        ):  # This is an example logic, we can come up with something more clever
+            return False
         slots = {key: {"value": val} for key, val in tool_input.tool_args.items()}
         intent_obj = intent.Intent(
             hass,
