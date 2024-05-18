@@ -50,9 +50,7 @@ async def test_form(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "api_key": "bla",
-            },
+            {"api_key": "bla", "allow_hass_access": True},
         )
         await hass.async_block_till_done()
 
@@ -116,9 +114,7 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "api_key": "bla",
-            },
+            {"api_key": "bla", "allow_hass_access": True},
         )
 
     assert result2["type"] is FlowResultType.FORM

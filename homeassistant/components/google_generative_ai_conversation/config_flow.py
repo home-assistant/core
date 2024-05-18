@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from functools import partial
 import logging
-import types
 from types import MappingProxyType
 from typing import Any
 
@@ -18,7 +17,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_ALLOW_HASS_ACCESS, CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -47,19 +46,19 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
+        vol.Required(CONF_ALLOW_HASS_ACCESS, default=False): bool,
     }
 )
 
-DEFAULT_OPTIONS = types.MappingProxyType(
-    {
-        CONF_PROMPT: DEFAULT_PROMPT,
-        CONF_CHAT_MODEL: DEFAULT_CHAT_MODEL,
-        CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
-        CONF_TOP_P: DEFAULT_TOP_P,
-        CONF_TOP_K: DEFAULT_TOP_K,
-        CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
-    }
-)
+DEFAULT_OPTIONS = {
+    CONF_PROMPT: DEFAULT_PROMPT,
+    CONF_CHAT_MODEL: DEFAULT_CHAT_MODEL,
+    CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
+    CONF_TOP_P: DEFAULT_TOP_P,
+    CONF_TOP_K: DEFAULT_TOP_K,
+    CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
+    CONF_ALLOW_HASS_ACCESS: False,
+}
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
@@ -99,7 +98,11 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(
-                title="Google Generative AI Conversation", data=user_input
+                title="",
+                data=user_input,
+                options={
+                    CONF_ALLOW_HASS_ACCESS: user_input.pop(CONF_ALLOW_HASS_ACCESS)
+                },
             )
 
         return self.async_show_form(
@@ -140,8 +143,9 @@ def google_generative_ai_config_option_schema(
     options: MappingProxyType[str, Any],
 ) -> dict:
     """Return a schema for Google Generative AI completion options."""
-    if not options:
-        options = DEFAULT_OPTIONS
+    options = dict(options)
+    for key, value in DEFAULT_OPTIONS.items():
+        options.setdefault(key, value)
     return {
         vol.Optional(
             CONF_PROMPT,

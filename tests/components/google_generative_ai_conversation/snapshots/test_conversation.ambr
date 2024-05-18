@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_default_prompt[None]
+# name: test_default_prompt[False-None]
   list([
     tuple(
       '',
@@ -14,6 +14,34 @@
         }),
         'model_name': 'models/gemini-pro',
         'tools': None,
+      }),
+    ),
+    tuple(
+      '().__str__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    tuple(
+      '().__str__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    tuple(
+      '().__str__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    tuple(
+      '().__str__',
+      tuple(
+      ),
+      dict({
       }),
     ),
     tuple(
@@ -60,7 +88,7 @@
     ),
   ])
 # ---
-# name: test_default_prompt[conversation.google_generative_ai_conversation]
+# name: test_default_prompt[False-conversation.google_generative_ai_conversation]
   list([
     tuple(
       '',
@@ -75,6 +103,34 @@
         }),
         'model_name': 'models/gemini-pro',
         'tools': None,
+      }),
+    ),
+    tuple(
+      '().__str__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    tuple(
+      '().__str__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    tuple(
+      '().__str__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    tuple(
+      '().__str__',
+      tuple(
+      ),
+      dict({
       }),
     ),
     tuple(
@@ -121,48 +177,178 @@
     ),
   ])
 # ---
-# name: test_generate_content_service_with_image
+# name: test_default_prompt[True-None]
   list([
     tuple(
       '',
       tuple(
       ),
       dict({
-        'model_name': 'gemini-pro-vision',
+        'generation_config': dict({
+          'max_output_tokens': 150,
+          'temperature': 0.9,
+          'top_k': 1,
+          'top_p': 1.0,
+        }),
+        'model_name': 'models/gemini-pro',
+        'tools': None,
       }),
     ),
     tuple(
-      '().generate_content_async',
+      '().__str__',
       tuple(
-        list([
-          'Describe this image from my doorbell camera',
+      ),
+      dict({
+      }),
+    ),
+    tuple(
+      '().__str__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    tuple(
+      '().__str__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    tuple(
+      '().__str__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    tuple(
+      '().start_chat',
+      tuple(
+      ),
+      dict({
+        'history': list([
           dict({
-            'data': b'image bytes',
-            'mime_type': 'image/jpeg',
+            'parts': '''
+              This smart home is controlled by Home Assistant.
+              
+              An overview of the areas and the devices in this smart home:
+              
+              Test Area:
+              - Test Device (Test Model)
+              
+              Test Area 2:
+              - Test Device 2
+              - Test Device 3 (Test Model 3A)
+              - Test Device 4
+              - 1 (3)
+              
+              Answer the user's questions about the world truthfully.
+              
+              If the user wants to control a device, reject the request and suggest using the Home Assistant app.
+            ''',
+            'role': 'user',
+          }),
+          dict({
+            'parts': 'Ok',
+            'role': 'model',
           }),
         ]),
+      }),
+    ),
+    tuple(
+      '().start_chat().send_message_async',
+      tuple(
+        'hello',
       ),
       dict({
       }),
     ),
   ])
 # ---
-# name: test_generate_content_service_without_images
+# name: test_default_prompt[True-conversation.google_generative_ai_conversation]
   list([
     tuple(
       '',
       tuple(
       ),
       dict({
-        'model_name': 'gemini-pro',
+        'generation_config': dict({
+          'max_output_tokens': 150,
+          'temperature': 0.9,
+          'top_k': 1,
+          'top_p': 1.0,
+        }),
+        'model_name': 'models/gemini-pro',
+        'tools': None,
       }),
     ),
     tuple(
-      '().generate_content_async',
+      '().__str__',
       tuple(
-        list([
-          'Write an opening speech for a Home Assistant release party',
+      ),
+      dict({
+      }),
+    ),
+    tuple(
+      '().__str__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    tuple(
+      '().__str__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    tuple(
+      '().__str__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    tuple(
+      '().start_chat',
+      tuple(
+      ),
+      dict({
+        'history': list([
+          dict({
+            'parts': '''
+              This smart home is controlled by Home Assistant.
+              
+              An overview of the areas and the devices in this smart home:
+              
+              Test Area:
+              - Test Device (Test Model)
+              
+              Test Area 2:
+              - Test Device 2
+              - Test Device 3 (Test Model 3A)
+              - Test Device 4
+              - 1 (3)
+              
+              Answer the user's questions about the world truthfully.
+              
+              If the user wants to control a device, reject the request and suggest using the Home Assistant app.
+            ''',
+            'role': 'user',
+          }),
+          dict({
+            'parts': 'Ok',
+            'role': 'model',
+          }),
         ]),
+      }),
+    ),
+    tuple(
+      '().start_chat().send_message_async',
+      tuple(
+        'hello',
       ),
       dict({
       }),

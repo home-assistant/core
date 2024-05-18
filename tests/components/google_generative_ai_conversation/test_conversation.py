@@ -16,12 +16,8 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     "agent_id", [None, "conversation.google_generative_ai_conversation"]
 )
-@patch(
-    "homeassistant.components.google_generative_ai_conversation.conversation.llm.async_get_tools",
-    return_value=[],
-)
+@pytest.mark.parametrize("allow_hass_access", [False, True])
 async def test_default_prompt(
-    mock_get_tools,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
@@ -29,6 +25,7 @@ async def test_default_prompt(
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
     agent_id: str | None,
+    allow_hass_access: bool,
 ) -> None:
     """Test that the default prompt works."""
     entry = MockConfigEntry(title=None)
@@ -38,6 +35,15 @@ async def test_default_prompt(
 
     if agent_id is None:
         agent_id = mock_config_entry.entry_id
+
+    if allow_hass_access:
+        hass.config_entries.async_update_entry(
+            mock_config_entry,
+            options={
+                **mock_config_entry.options,
+                "allow_hass_access": True,
+            },
+        )
 
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -105,7 +111,13 @@ async def test_default_prompt(
         model=3,
         suggested_area="Test Area 2",
     )
-    with patch("google.generativeai.GenerativeModel") as mock_model:
+    with (
+        patch("google.generativeai.GenerativeModel") as mock_model,
+        patch(
+            "homeassistant.components.google_generative_ai_conversation.conversation.llm.async_get_tools",
+            return_value=[],
+        ) as mock_get_tools,
+    ):
         mock_chat = AsyncMock()
         mock_model.return_value.start_chat.return_value = mock_chat
         chat_response = MagicMock()
@@ -125,6 +137,7 @@ async def test_default_prompt(
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.as_dict()["speech"]["plain"]["speech"] == "Hi there!"
     assert [tuple(mock_call) for mock_call in mock_model.mock_calls] == snapshot
+    assert mock_get_tools.called == allow_hass_access
 
 
 async def test_error_handling(

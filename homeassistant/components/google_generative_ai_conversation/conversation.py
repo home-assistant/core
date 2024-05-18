@@ -13,7 +13,7 @@ from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import MATCH_ALL
+from homeassistant.const import CONF_ALLOW_HASS_ACCESS, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import intent, llm, template
@@ -48,21 +48,23 @@ async def async_setup_entry(
     async_add_entities([agent])
 
 
+SUPPORTED_SCHEMA_KEYS = {
+    "type",
+    "format",
+    "description",
+    "nullable",
+    "enum",
+    "items",
+    "properties",
+    "required",
+}
+
+
 def _format_schema(schema: dict[str, Any]) -> dict[str, Any]:
     """Format the schema to protobuf."""
-    SUPPORTED_KEYS = [
-        "type",
-        "format",
-        "description",
-        "nullable",
-        "enum",
-        "items",
-        "properties",
-        "required",
-    ]
     result = {}
     for key, val in schema.items():
-        if key not in SUPPORTED_KEYS:
+        if key not in SUPPORTED_SCHEMA_KEYS:
             continue
         if key == "type":
             key = "type_"
@@ -131,11 +133,12 @@ class GoogleGenerativeAIConversationEntity(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
-        tools: list[dict[str, Any]] | None = [
-            _format_tool(tool) for tool in llm.async_get_tools(self.hass)
-        ]
-        if not tools:
-            tools = None
+        tools: list[dict[str, Any]] | None = None
+
+        if self.entry.options.get(CONF_ALLOW_HASS_ACCESS):
+            tools = [_format_tool(tool) for tool in llm.async_get_tools(self.hass)]
+            if not tools:
+                tools = None
 
         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
         model = genai.GenerativeModel(
