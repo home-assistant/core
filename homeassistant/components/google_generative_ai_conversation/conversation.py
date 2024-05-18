@@ -218,15 +218,13 @@ class GoogleGenerativeAIConversationEntity(
             if not tool_call:
                 break
 
-            LOGGER.debug(
-                "Tool call: %s(%s)",
-                tool_call.name,
-                dict(tool_call.args),
-            )
+            tool_args = dict(tool_call.args)
+
+            LOGGER.debug("Tool call: %s(%s)", tool_call.name, tool_args)
             try:
                 tool_input = llm.ToolInput(
                     tool_name=tool_call.name,
-                    tool_args=dict(tool_call.args),
+                    tool_args=tool_args,
                     platform=DOMAIN,
                     context=user_input.context,
                     user_prompt=user_input.text,
