@@ -143,40 +143,35 @@ def google_generative_ai_config_option_schema(
     options: MappingProxyType[str, Any],
 ) -> dict:
     """Return a schema for Google Generative AI completion options."""
-    options = dict(options)
-    for key, value in DEFAULT_OPTIONS.items():
-        options.setdefault(key, value)
     return {
         vol.Optional(
             CONF_PROMPT,
-            description={"suggested_value": options[CONF_PROMPT]},
+            description={"suggested_value": options.get(CONF_PROMPT)},
             default=DEFAULT_PROMPT,
         ): TemplateSelector(),
         vol.Optional(
             CONF_CHAT_MODEL,
-            description={
-                "suggested_value": options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL)
-            },
+            description={"suggested_value": options.get(CONF_CHAT_MODEL)},
             default=DEFAULT_CHAT_MODEL,
         ): str,
         vol.Optional(
             CONF_TEMPERATURE,
-            description={"suggested_value": options[CONF_TEMPERATURE]},
+            description={"suggested_value": options.get(CONF_TEMPERATURE)},
             default=DEFAULT_TEMPERATURE,
         ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
         vol.Optional(
             CONF_TOP_P,
-            description={"suggested_value": options[CONF_TOP_P]},
+            description={"suggested_value": options.get(CONF_TOP_P)},
             default=DEFAULT_TOP_P,
         ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
         vol.Optional(
             CONF_TOP_K,
-            description={"suggested_value": options[CONF_TOP_K]},
+            description={"suggested_value": options.get(CONF_TOP_K)},
             default=DEFAULT_TOP_K,
         ): int,
         vol.Optional(
             CONF_MAX_TOKENS,
-            description={"suggested_value": options[CONF_MAX_TOKENS]},
+            description={"suggested_value": options.get(CONF_MAX_TOKENS)},
             default=DEFAULT_MAX_TOKENS,
         ): int,
     }
