@@ -19,7 +19,7 @@ PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
-AirlyConfigEntry = ConfigEntry[AirlyDataUpdateCoordinator]
+type AirlyConfigEntry = ConfigEntry[AirlyDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AirlyConfigEntry) -> bool:

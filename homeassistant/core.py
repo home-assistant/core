@@ -141,7 +141,7 @@ _UNDEF: dict[Any, Any] = {}
 _SENTINEL = object()
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 _DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=Mapping[str, Any])
-CALLBACK_TYPE = Callable[[], None]
+type CALLBACK_TYPE = Callable[[], None]
 
 CORE_STORAGE_KEY = "core.config"
 CORE_STORAGE_VERSION = 1
@@ -152,8 +152,8 @@ DOMAIN = "homeassistant"
 # How long to wait to log tasks that are blocking
 BLOCK_LOG_TIMEOUT = 60
 
-ServiceResponse = JsonObjectType | None
-EntityServiceResponse = dict[str, ServiceResponse]
+type ServiceResponse = JsonObjectType | None
+type EntityServiceResponse = dict[str, ServiceResponse]
 
 
 class ConfigSource(enum.StrEnum):
@@ -580,8 +580,6 @@ class HomeAssistant:
                 functools.partial(self.async_create_task, target, eager_start=True)
             )
             return
-        if TYPE_CHECKING:
-            target = cast(Callable[[*_Ts], Any], target)
         self.loop.call_soon_threadsafe(
             functools.partial(self._async_add_hass_job, HassJob(target), *args)
         )
@@ -648,12 +646,6 @@ class HomeAssistant:
         if asyncio.iscoroutine(target):
             return self.async_create_task(target, eager_start=eager_start)
 
-        # This code path is performance sensitive and uses
-        # if TYPE_CHECKING to avoid the overhead of constructing
-        # the type used for the cast. For history see:
-        # https://github.com/home-assistant/core/pull/71960
-        if TYPE_CHECKING:
-            target = cast(Callable[[*_Ts], Coroutine[Any, Any, _R] | _R], target)
         return self._async_add_hass_job(HassJob(target), *args)
 
     @overload
@@ -987,12 +979,6 @@ class HomeAssistant:
         if asyncio.iscoroutine(target):
             return self.async_create_task(target, eager_start=True)
 
-        # This code path is performance sensitive and uses
-        # if TYPE_CHECKING to avoid the overhead of constructing
-        # the type used for the cast. For history see:
-        # https://github.com/home-assistant/core/pull/71960
-        if TYPE_CHECKING:
-            target = cast(Callable[[*_Ts], Coroutine[Any, Any, _R] | _R], target)
         return self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self, wait_background_tasks: bool = False) -> None:

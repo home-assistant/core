@@ -34,9 +34,9 @@ EVENT_USER_ADDED = "user_added"
 EVENT_USER_UPDATED = "user_updated"
 EVENT_USER_REMOVED = "user_removed"
 
-_MfaModuleDict = dict[str, MultiFactorAuthModule]
-_ProviderKey = tuple[str, str | None]
-_ProviderDict = dict[_ProviderKey, AuthProvider]
+type _MfaModuleDict = dict[str, MultiFactorAuthModule]
+type _ProviderKey = tuple[str, str | None]
+type _ProviderDict = dict[_ProviderKey, AuthProvider]
 
 
 class InvalidAuthError(Exception):
