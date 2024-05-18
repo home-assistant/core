@@ -164,6 +164,14 @@ async def test_function_call(
     entry = MockConfigEntry(title=None)
     entry.add_to_hass(hass)
 
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            **mock_config_entry.options,
+            "allow_hass_access": True,
+        },
+    )
+
     agent_id = mock_config_entry.entry_id
     context = Context()
 
@@ -171,7 +179,11 @@ async def test_function_call(
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
     mock_tool.parameters = vol.Schema(
-        {vol.Optional("param1", description="Test parameters"): str}
+        {
+            vol.Optional("param1", description="Test parameters"): [
+                vol.All(str, vol.Lower)
+            ]
+        }
     )
 
     mock_get_tools.return_value = [mock_tool]
@@ -183,7 +195,7 @@ async def test_function_call(
         mock_chat.send_message_async.return_value = chat_response
         mock_part = MagicMock()
         mock_part.function_call.name = "test_tool"
-        mock_part.function_call.args = {"param1": "test_value"}
+        mock_part.function_call.args = {"param1": ["test_value"]}
 
         def tool_call(hass, tool_input):
             mock_part.function_call = False
@@ -222,7 +234,7 @@ async def test_function_call(
         hass,
         llm.ToolInput(
             tool_name="test_tool",
-            tool_args={"param1": "test_value"},
+            tool_args={"param1": ["test_value"]},
             platform="google_generative_ai_conversation",
             context=context,
             user_prompt="Please call the test function",
@@ -249,6 +261,14 @@ async def test_function_exception(
     entry = MockConfigEntry(title=None)
     entry.add_to_hass(hass)
 
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            **mock_config_entry.options,
+            "allow_hass_access": True,
+        },
+    )
+
     agent_id = mock_config_entry.entry_id
     context = Context()
 
@@ -256,7 +276,11 @@ async def test_function_exception(
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
     mock_tool.parameters = vol.Schema(
-        {vol.Optional("param1", description="Test parameters"): str}
+        {
+            vol.Optional("param1", description="Test parameters"): vol.All(
+                vol.Coerce(int), vol.Range(0, 100)
+            )
+        }
     )
 
     mock_get_tools.return_value = [mock_tool]
