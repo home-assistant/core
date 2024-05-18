@@ -849,7 +849,7 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     assert len(calls) == 1
 
     # Remove the device
-    await remove_device(hass, await hass_ws_client(hass), device_entry.id)
+    await remove_device(hass, hass_ws_client, device_entry.id)
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(
@@ -1139,7 +1139,7 @@ async def test_attach_unknown_remove_device_from_registry(
     )
 
     # Remove the device
-    await remove_device(hass, await hass_ws_client(hass), device_entry.id)
+    await remove_device(hass, hass_ws_client, device_entry.id)
     await hass.async_block_till_done()
 
 
