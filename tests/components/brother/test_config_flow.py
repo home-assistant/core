@@ -85,7 +85,7 @@ async def test_unsupported_model_error(hass: HomeAssistant) -> None:
     """Test unsupported printer model error."""
     with patch(
         "homeassistant.components.brother.Brother.create",
-        side_effect=UnsupportedModelError("error"),
+        new=AsyncMock(side_effect=UnsupportedModelError("error")),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
@@ -140,7 +140,7 @@ async def test_zeroconf_unsupported_model(hass: HomeAssistant) -> None:
     """Test unsupported printer model error."""
     with patch(
         "homeassistant.components.brother.Brother.create",
-        side_effect=UnsupportedModelError("error"),
+        new=AsyncMock(side_effect=UnsupportedModelError("error")),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
