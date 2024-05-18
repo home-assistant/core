@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import MonzoCoordinator
-from .const import DOMAIN
+from .const import DOMAIN, MODEL_POT
 from .coordinator import MonzoData
 from .entity import MonzoBaseEntity
 
@@ -58,8 +58,6 @@ POT_SENSORS = (
         suggested_display_precision=2,
     ),
 )
-
-MODEL_POT = "Pot"
 
 
 async def async_setup_entry(

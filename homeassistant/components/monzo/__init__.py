@@ -14,6 +14,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from .api import AuthenticatedMonzoAPI
 from .const import DOMAIN
 from .coordinator import MonzoCoordinator
+from .services import register_services
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -32,6 +33,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    await register_services(hass)
 
     return True
 
