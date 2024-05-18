@@ -17,34 +17,6 @@
       }),
     ),
     tuple(
-      '().__str__',
-      tuple(
-      ),
-      dict({
-      }),
-    ),
-    tuple(
-      '().__str__',
-      tuple(
-      ),
-      dict({
-      }),
-    ),
-    tuple(
-      '().__str__',
-      tuple(
-      ),
-      dict({
-      }),
-    ),
-    tuple(
-      '().__str__',
-      tuple(
-      ),
-      dict({
-      }),
-    ),
-    tuple(
       '().start_chat',
       tuple(
       ),
@@ -103,34 +75,6 @@
         }),
         'model_name': 'models/gemini-pro',
         'tools': None,
-      }),
-    ),
-    tuple(
-      '().__str__',
-      tuple(
-      ),
-      dict({
-      }),
-    ),
-    tuple(
-      '().__str__',
-      tuple(
-      ),
-      dict({
-      }),
-    ),
-    tuple(
-      '().__str__',
-      tuple(
-      ),
-      dict({
-      }),
-    ),
-    tuple(
-      '().__str__',
-      tuple(
-      ),
-      dict({
       }),
     ),
     tuple(
@@ -195,34 +139,6 @@
       }),
     ),
     tuple(
-      '().__str__',
-      tuple(
-      ),
-      dict({
-      }),
-    ),
-    tuple(
-      '().__str__',
-      tuple(
-      ),
-      dict({
-      }),
-    ),
-    tuple(
-      '().__str__',
-      tuple(
-      ),
-      dict({
-      }),
-    ),
-    tuple(
-      '().__str__',
-      tuple(
-      ),
-      dict({
-      }),
-    ),
-    tuple(
       '().start_chat',
       tuple(
       ),
@@ -281,34 +197,6 @@
         }),
         'model_name': 'models/gemini-pro',
         'tools': None,
-      }),
-    ),
-    tuple(
-      '().__str__',
-      tuple(
-      ),
-      dict({
-      }),
-    ),
-    tuple(
-      '().__str__',
-      tuple(
-      ),
-      dict({
-      }),
-    ),
-    tuple(
-      '().__str__',
-      tuple(
-      ),
-      dict({
-      }),
-    ),
-    tuple(
-      '().__str__',
-      tuple(
-      ),
-      dict({
       }),
     ),
     tuple(

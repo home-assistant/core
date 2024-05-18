@@ -1,6 +1,6 @@
 """Test the Google Generative AI Conversation config flow."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from google.api_core.exceptions import ClientError
 from google.rpc.error_details_pb2 import ErrorInfo
@@ -12,16 +12,33 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_MAX_TOKENS,
     CONF_TOP_K,
     CONF_TOP_P,
+    DEFAULT_ALLOW_HASS_ACCESS,
     DEFAULT_CHAT_MODEL,
     DEFAULT_MAX_TOKENS,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
     DOMAIN,
 )
+from homeassistant.const import CONF_ALLOW_HASS_ACCESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def mock_models():
+    """Mock the model list API."""
+    model = Mock(
+        display_name="Gemini 1.5 Pro",
+        supported_generation_methods=["generateContent"],
+    )
+    model.name = DEFAULT_CHAT_MODEL
+    with patch(
+        "homeassistant.components.google_generative_ai_conversation.config_flow.genai.list_models",
+        return_value=[model],
+    ):
+        yield
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -50,7 +67,9 @@ async def test_form(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"api_key": "bla", "allow_hass_access": True},
+            {
+                "api_key": "bla",
+            },
         )
         await hass.async_block_till_done()
 
@@ -62,7 +81,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 async def test_options(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
+    hass: HomeAssistant, mock_config_entry, mock_init_component, mock_models
 ) -> None:
     """Test the options form."""
     options_flow = await hass.config_entries.options.async_init(
@@ -83,6 +102,7 @@ async def test_options(
     assert options["data"][CONF_TOP_P] == DEFAULT_TOP_P
     assert options["data"][CONF_TOP_K] == DEFAULT_TOP_K
     assert options["data"][CONF_MAX_TOKENS] == DEFAULT_MAX_TOKENS
+    assert options["data"][CONF_ALLOW_HASS_ACCESS] == DEFAULT_ALLOW_HASS_ACCESS
 
 
 @pytest.mark.parametrize(
@@ -114,7 +134,9 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"api_key": "bla", "allow_hass_access": True},
+            {
+                "api_key": "bla",
+            },
         )
 
     assert result2["type"] is FlowResultType.FORM

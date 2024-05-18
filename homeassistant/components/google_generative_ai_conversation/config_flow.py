@@ -50,7 +50,6 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_ALLOW_HASS_ACCESS, default=False): bool,
     }
 )
 
@@ -94,9 +93,6 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title="",
                 data=user_input,
-                options={
-                    CONF_ALLOW_HASS_ACCESS: user_input.pop(CONF_ALLOW_HASS_ACCESS)
-                },
             )
 
         return self.async_show_form(
