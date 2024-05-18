@@ -37,7 +37,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
 )
-from .weather_update_coordinator import WeatherUpdateCoordinator
+from .coordinator import WeatherUpdateCoordinator
 
 
 async def async_setup_entry(

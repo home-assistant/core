@@ -20,12 +20,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .const import CONFIG_FLOW_VERSION, OWM_MODE_V25, PLATFORMS
+from .coordinator import WeatherUpdateCoordinator
 from .repairs import async_create_issue, async_delete_issue
-from .weather_update_coordinator import WeatherUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-OpenweathermapConfigEntry = ConfigEntry["OpenweathermapData"]
+type OpenweathermapConfigEntry = ConfigEntry[OpenweathermapData]
 
 
 @dataclass
