@@ -18,7 +18,7 @@ async def test_get_api_no_existing(hass: HomeAssistant) -> None:
 
 async def test_register_api(hass: HomeAssistant) -> None:
     """Test registering an llm api."""
-    api = llm.IntentAPI(
+    api = llm.AssistAPI(
         hass=hass,
         id="test",
         name="Test",
@@ -49,8 +49,8 @@ async def test_call_tool_no_existing(hass: HomeAssistant) -> None:
         )
 
 
-async def test_intent_api(hass: HomeAssistant) -> None:
-    """Test Intent API."""
+async def test_assist_api(hass: HomeAssistant) -> None:
+    """Test Assist API."""
     schema = {
         vol.Optional("area"): cv.string,
         vol.Optional("floor"): cv.string,
@@ -65,7 +65,7 @@ async def test_intent_api(hass: HomeAssistant) -> None:
     intent.async_register(hass, intent_handler)
 
     assert len(llm.async_get_apis(hass)) == 1
-    api = llm.async_get_api(hass, "intent")
+    api = llm.async_get_api(hass, "assist")
     tools = api.async_get_tools()
     assert len(tools) == 1
     tool = tools[0]

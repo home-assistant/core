@@ -23,10 +23,10 @@ from .singleton import singleton
 def _async_get_apis(hass: HomeAssistant) -> dict[str, API]:
     """Get all the LLM APIs."""
     return {
-        "intent": IntentAPI(
+        "assist": AssistAPI(
             hass=hass,
-            id="intent",
-            name="Intents",
+            id="assist",
+            name="Assist",
             prompt_template="Call the intent tools to control the system. Just pass the name to the intent.",
         ),
     }
@@ -160,8 +160,8 @@ class IntentTool(Tool):
         return intent_response.as_dict()
 
 
-class IntentAPI(API):
-    """API exposing intents to LLMs."""
+class AssistAPI(API):
+    """API exposing Assist API to LLMs."""
 
     IGNORE_INTENTS = {
         intent.INTENT_NEVERMIND,
