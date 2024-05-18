@@ -13,8 +13,7 @@ from homeassistant.helpers import config_validation as cv, intent, llm
 async def test_call_tool_no_existing(hass: HomeAssistant) -> None:
     """Test calling an llm tool where no config exists."""
     with pytest.raises(HomeAssistantError):
-        await llm.async_call_tool(
-            hass,
+        await llm.async_get_api(hass, "intent").async_call_tool(
             llm.ToolInput(
                 "test_tool",
                 {},
@@ -27,8 +26,8 @@ async def test_call_tool_no_existing(hass: HomeAssistant) -> None:
         )
 
 
-async def test_intent_tool(hass: HomeAssistant) -> None:
-    """Test IntentTool class."""
+async def test_intent_api(hass: HomeAssistant) -> None:
+    """Test Intent API."""
     schema = {
         vol.Optional("area"): cv.string,
         vol.Optional("floor"): cv.string,
@@ -42,8 +41,11 @@ async def test_intent_tool(hass: HomeAssistant) -> None:
 
     intent.async_register(hass, intent_handler)
 
-    assert len(list(llm.async_get_tools(hass))) == 1
-    tool = list(llm.async_get_tools(hass))[0]
+    assert len(llm.async_get_apis(hass)) == 1
+    api = llm.async_get_api(hass, "intent")
+    tools = api.async_get_tools()
+    assert len(tools) == 1
+    tool = tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
     assert tool.parameters == vol.Schema(intent_handler.slot_schema)
@@ -66,7 +68,7 @@ async def test_intent_tool(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.helpers.intent.async_handle", return_value=intent_response
     ) as mock_intent_handle:
-        response = await llm.async_call_tool(hass, tool_input)
+        response = await api.async_call_tool(tool_input)
 
     mock_intent_handle.assert_awaited_once_with(
         hass,
