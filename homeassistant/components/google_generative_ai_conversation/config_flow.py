@@ -138,11 +138,11 @@ async def google_generative_ai_config_option_schema(
 
     models: list[SelectOptionDict] = [
         SelectOptionDict(
-            label="Free model (Gemini 1.0 Pro)",
+            label="Gemini 1.0 Pro (free in US)",
             value="models/gemini-pro",
         ),
         SelectOptionDict(
-            label="Fastest model (Gemini 1.5 Flash)",
+            label="Gemini 1.5 Flash (fastest)",
             value="models/gemini-1.5-flash-latest",
         ),
     ]
