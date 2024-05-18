@@ -446,7 +446,7 @@ async def test_device_remove_stale(
     assert device_entry is not None
 
     # Remove the device
-    await remove_device(hass, await hass_ws_client(hass), device_entry.id)
+    await remove_device(hass, hass_ws_client, device_entry.id)
 
     # Verify device entry is removed
     device_entry = device_reg.async_get_device(
