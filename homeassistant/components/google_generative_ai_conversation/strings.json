@@ -19,7 +19,7 @@
       "init": {
         "data": {
           "prompt": "Prompt Template",
-          "model": "[%key:common::generic::model%]",
+          "chat_model": "[%key:common::generic::model%]",
           "temperature": "Temperature",
           "top_p": "Top P",
           "top_k": "Top K",

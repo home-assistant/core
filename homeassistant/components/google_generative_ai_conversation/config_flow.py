@@ -137,16 +137,6 @@ async def google_generative_ai_config_option_schema(
     models = await hass.async_add_executor_job(partial(genai.list_models))
     return {
         vol.Optional(
-            CONF_ALLOW_HASS_ACCESS,
-            description={"suggested_value": options.get(CONF_ALLOW_HASS_ACCESS)},
-            default=DEFAULT_ALLOW_HASS_ACCESS,
-        ): bool,
-        vol.Optional(
-            CONF_PROMPT,
-            description={"suggested_value": options.get(CONF_PROMPT)},
-            default=DEFAULT_PROMPT,
-        ): TemplateSelector(),
-        vol.Optional(
             CONF_CHAT_MODEL,
             description={"suggested_value": options.get(CONF_CHAT_MODEL)},
             default=DEFAULT_CHAT_MODEL,
@@ -162,6 +152,16 @@ async def google_generative_ai_config_option_schema(
                 ]
             )
         ),
+        vol.Optional(
+            CONF_ALLOW_HASS_ACCESS,
+            description={"suggested_value": options.get(CONF_ALLOW_HASS_ACCESS)},
+            default=DEFAULT_ALLOW_HASS_ACCESS,
+        ): bool,
+        vol.Optional(
+            CONF_PROMPT,
+            description={"suggested_value": options.get(CONF_PROMPT)},
+            default=DEFAULT_PROMPT,
+        ): TemplateSelector(),
         vol.Optional(
             CONF_TEMPERATURE,
             description={"suggested_value": options.get(CONF_TEMPERATURE)},
