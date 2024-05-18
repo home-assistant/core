@@ -9,4 +9,6 @@ DOMAIN: Final = "brother"
 
 PRINTER_TYPES: Final = ["laser", "ink"]
 
+SNMP_ENGINE: Final = "snmp_engine"
+
 UPDATE_INTERVAL = timedelta(seconds=30)

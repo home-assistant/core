@@ -10,16 +10,13 @@ from pysnmp.hlapi.asyncio.cmdgen import lcd
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import singleton
-from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN
-
-SNMP_ENGINE: HassKey[hlapi.SnmpEngine] = HassKey(DOMAIN)
+from .const import SNMP_ENGINE
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@singleton.singleton("snmp_engine")
+@singleton.singleton(SNMP_ENGINE)
 def get_snmp_engine(hass: HomeAssistant) -> hlapi.SnmpEngine:
     """Get SNMP engine."""
     _LOGGER.debug("Creating SNMP engine")
