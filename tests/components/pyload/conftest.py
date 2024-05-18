@@ -22,20 +22,18 @@ from homeassistant.helpers.typing import ConfigType
 @pytest.fixture(name="pyload_config")
 def mock_pyload_config_entry() -> ConfigType:
     """Mock pyload configuration entry."""
-    return ConfigType(
-        {
-            "sensor": {
-                CONF_PLATFORM: "pyload",
-                CONF_HOST: "localhost",
-                CONF_PORT: 8000,
-                CONF_USERNAME: "username",
-                CONF_PASSWORD: "password",
-                CONF_SSL: True,
-                CONF_MONITORED_VARIABLES: ["speed"],
-                CONF_NAME: "pyload",
-            }
+    return {
+        "sensor": {
+            CONF_PLATFORM: "pyload",
+            CONF_HOST: "localhost",
+            CONF_PORT: 8000,
+            CONF_USERNAME: "username",
+            CONF_PASSWORD: "password",
+            CONF_SSL: True,
+            CONF_MONITORED_VARIABLES: ["speed"],
+            CONF_NAME: "pyload",
         }
-    )
+    }
 
 
 @pytest.fixture
