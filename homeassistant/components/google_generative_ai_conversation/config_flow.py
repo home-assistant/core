@@ -32,6 +32,7 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
+    DEFAULT_ALLOW_HASS_ACCESS,
     DEFAULT_CHAT_MODEL,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
@@ -49,16 +50,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_ALLOW_HASS_ACCESS, default=False): bool,
     }
 )
-
-DEFAULT_OPTIONS = {
-    CONF_PROMPT: DEFAULT_PROMPT,
-    CONF_CHAT_MODEL: DEFAULT_CHAT_MODEL,
-    CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
-    CONF_TOP_P: DEFAULT_TOP_P,
-    CONF_TOP_K: DEFAULT_TOP_K,
-    CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
-    CONF_ALLOW_HASS_ACCESS: False,
-}
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
@@ -129,9 +120,7 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(
-                title="Google Generative AI Conversation", data=user_input
-            )
+            return self.async_create_entry(title="", data=user_input)
         schema = google_generative_ai_config_option_schema(self.config_entry.options)
         return self.async_show_form(
             step_id="init",
@@ -144,6 +133,11 @@ def google_generative_ai_config_option_schema(
 ) -> dict:
     """Return a schema for Google Generative AI completion options."""
     return {
+        vol.Optional(
+            CONF_ALLOW_HASS_ACCESS,
+            description={"suggested_value": options.get(CONF_ALLOW_HASS_ACCESS)},
+            default=DEFAULT_ALLOW_HASS_ACCESS,
+        ): bool,
         vol.Optional(
             CONF_PROMPT,
             description={"suggested_value": options.get(CONF_PROMPT)},

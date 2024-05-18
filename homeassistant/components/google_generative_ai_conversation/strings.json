@@ -23,7 +23,8 @@
           "temperature": "Temperature",
           "top_p": "Top P",
           "top_k": "Top K",
-          "max_tokens": "Maximum tokens to return in response"
+          "max_tokens": "Maximum tokens to return in response",
+          "allow_hass_access": "[%key:common::config_flow::data::allow_hass_access%]"
         }
       }
     }
