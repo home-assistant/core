@@ -20,13 +20,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import BUTTON_TYPE_WOL, CONNECTION_TYPE_LAN, DATA_FRITZ, DOMAIN, MeshRoles
-from .coordinator import (
-    AvmWrapper,
-    FritzData,
-    FritzDevice,
-    FritzDeviceBase,
-    _is_tracked,
-)
+from .coordinator import AvmWrapper, FritzData, FritzDevice, _is_tracked
+from .entity import FritzDeviceBase
 
 _LOGGER = logging.getLogger(__name__)
 
