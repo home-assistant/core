@@ -38,7 +38,7 @@ async def test_full_flow(
         },
     )
 
-    assert result["type"] == FlowResultType.EXTERNAL_STEP
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}/?"
         f"response_type=code&client_id={CLIENT_ID}&"
@@ -69,7 +69,7 @@ async def test_full_flow(
 
         assert len(mock_setup.mock_calls) == 0
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "await_approval_confirmation"
 
         result = await hass.config_entries.flow.async_configure(
@@ -79,7 +79,7 @@ async def test_full_flow(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DOMAIN
     assert "result" in result
     assert result["result"].unique_id == "600"
@@ -109,7 +109,7 @@ async def test_config_non_unique_profile(
         },
     )
 
-    assert result["type"] == FlowResultType.EXTERNAL_STEP
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}/?"
         f"response_type=code&client_id={CLIENT_ID}&"
@@ -134,5 +134,5 @@ async def test_config_non_unique_profile(
         },
     )
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
