@@ -9,9 +9,9 @@ from homeassistant.const import CONF_HOST, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
+from .const import DOMAIN, SNMP_ENGINE
 from .coordinator import BrotherDataUpdateCoordinator
-from .utils import SNMP_ENGINE, get_snmp_engine
+from .utils import get_snmp_engine
 
 PLATFORMS = [Platform.SENSOR]
 
