@@ -15,11 +15,9 @@ if TYPE_CHECKING:
 else:
     from functools import lru_cache
 
-_EnumT = TypeVar("_EnumT", bound=Enum)
-
 
 @lru_cache
-def try_parse_enum(cls: type[_EnumT], value: Any) -> _EnumT | None:
+def try_parse_enum[_EnumT: Enum](cls: type[_EnumT], value: Any) -> _EnumT | None:
     """Try to parse the value into an Enum.
 
     Return None if parsing fails.
