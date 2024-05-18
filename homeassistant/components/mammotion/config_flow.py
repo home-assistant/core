@@ -1,4 +1,6 @@
 """Config flow for Mammotion Luba."""
+import logging
+
 from bleak import BLEDevice
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfo
@@ -7,15 +9,28 @@ from homeassistant.const import CONF_ADDRESS
 from typing import Any
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
 
-class LubaConfigFlow(ConfigFlow, domain=DOMAIN):
+
+class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Mammotion"""
+
+    VERSION = 1
 
     _address: str | None = None
     _discovered_devices: dict[str, BLEDevice] = {}
 
+
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        pass
+
+
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
     ) -> ConfigFlowResult:
+        """Handle the bluetooth discovery step."""
+        _LOGGER.debug("Discovered bluetooth device: %s", discovery_info.as_dict())
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
 
