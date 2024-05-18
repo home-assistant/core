@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
 from typing import Final
 
 import lcn_frontend as lcn_panel
@@ -215,8 +214,8 @@ async def websocket_add_device(
     await async_update_device_config(device_connection, device_config)
 
     # add device_config to config_entry
-    data = deepcopy(dict(config_entry.data))
-    data[CONF_DEVICES].append(device_config)
+    device_configs = [*config_entry.data[CONF_DEVICES], device_config]
+    data = {**config_entry.data, CONF_DEVICES: device_configs}
     hass.config_entries.async_update_entry(config_entry, data=data)
 
     # create/update devices in device registry
@@ -255,8 +254,10 @@ async def websocket_delete_device(
         return
 
     # remove module/group device from config_entry data
-    data = deepcopy(dict(config_entry.data))
-    data[CONF_DEVICES].remove(device_config)
+    device_configs = [
+        dc for dc in config_entry.data[CONF_DEVICES] if dc != device_config
+    ]
+    data = {**config_entry.data, CONF_DEVICES: device_configs}
     hass.config_entries.async_update_entry(config_entry, data=data)
 
     # remove all child devices (and entities) from config_entry data
@@ -336,8 +337,8 @@ async def websocket_add_entity(
     async_add_entities([entity])
 
     # Add entity config to config_entry
-    data = deepcopy(dict(config_entry.data))
-    data[CONF_ENTITIES].append(entity_config)
+    entity_configs = [*config_entry.data[CONF_ENTITIES], entity_config]
+    data = {**config_entry.data, CONF_ENTITIES: entity_configs}
 
     # schedule config_entry for save
     hass.config_entries.async_update_entry(config_entry, data=data)
@@ -381,8 +382,10 @@ async def websocket_delete_entity(
         connection.send_result(msg["id"], False)
         return
 
-    data = deepcopy(dict(config_entry.data))
-    data[CONF_ENTITIES].remove(entity_config)
+    entity_configs = [
+        ec for ec in config_entry.data[CONF_ENTITIES] if ec != entity_config
+    ]
+    data = {**config_entry.data, CONF_ENTITIES: entity_configs}
     hass.config_entries.async_update_entry(config_entry, data=data)
 
     # cleanup registries
@@ -404,7 +407,8 @@ async def async_create_or_update_device_in_config_entry(
         device_connection.is_group,
     )
 
-    data = deepcopy(dict(config_entry.data))
+    device_configs = [*config_entry.data[CONF_DEVICES]]
+    data = {**config_entry.data, CONF_DEVICES: device_configs}
     for device_config in data[CONF_DEVICES]:
         if tuple(device_config[CONF_ADDRESS]) == address:
             break  # device already in config_entry
