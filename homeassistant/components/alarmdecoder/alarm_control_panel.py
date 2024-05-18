@@ -34,6 +34,7 @@ from .const import (
     OPTIONS_ARM,
     SIGNAL_PANEL_MESSAGE,
 )
+from .entity import AlarmDecoderEntity
 
 SERVICE_ALARM_TOGGLE_CHIME = "alarm_toggle_chime"
 
@@ -75,7 +76,7 @@ async def async_setup_entry(
     )
 
 
-class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
+class AlarmDecoderAlarmPanel(AlarmDecoderEntity, AlarmControlPanelEntity):
     """Representation of an AlarmDecoder-based alarm panel."""
 
     _attr_name = "Alarm Panel"
@@ -89,7 +90,8 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
 
     def __init__(self, client, auto_bypass, code_arm_required, alt_night_mode):
         """Initialize the alarm panel."""
-        self._client = client
+        super().__init__(client)
+        self._attr_unique_id = f"{client.serial_number}-panel"
         self._auto_bypass = auto_bypass
         self._attr_code_arm_required = code_arm_required
         self._alt_night_mode = alt_night_mode
