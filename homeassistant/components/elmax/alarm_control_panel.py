@@ -19,6 +19,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_DISARMING,
+    STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import InvalidStateError
@@ -123,6 +124,8 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
         """Return the state of the entity."""
         if self._pending_state is not None:
             return self._pending_state
+        if self._last_state.status == AlarmStatus.TRIGGERED:
+            return ALARM_STATE_TO_HA.get(self._last_state.status)
         if (state := self._last_state) is not None:
             return ALARM_STATE_TO_HA.get(state.armed_status)
         return None
@@ -141,4 +144,5 @@ ALARM_STATE_TO_HA = {
     AlarmArmStatus.ARMED_P2: STATE_ALARM_ARMED_AWAY,
     AlarmArmStatus.ARMED_P1: STATE_ALARM_ARMED_AWAY,
     AlarmArmStatus.NOT_ARMED: STATE_ALARM_DISARMED,
+    AlarmStatus.TRIGGERED: STATE_ALARM_TRIGGERED,
 }
