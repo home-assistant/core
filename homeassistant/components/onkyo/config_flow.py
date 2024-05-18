@@ -23,8 +23,11 @@ from homeassistant.util.network import is_ip_address
 from .const import (
     BRAND_NAME,
     CONF_DEVICE,
+    CONF_LEGACY_MAXIMUM_VOLUME,
+    CONF_LEGACY_RECEIVER_MAXIMUM_VOLUME,
     CONF_MAXIMUM_VOLUME,
     CONF_MAXIMUM_VOLUME_DEFAULT,
+    CONF_PORT_DEFAULT,
     CONF_RECEIVER_MAXIMUM_VOLUME,
     CONF_RECEIVER_MAXIMUM_VOLUME_DEFAULT,
     CONF_SOURCES,
@@ -49,8 +52,13 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_devices: dict[str, eiscp.eISCP] = {}
 
+    def _get_receiver_name(self, model_name: str, identifier: str):
+        return f"{model_name} {identifier}"
+
     def _createOnkyoEntry(self, receiver: eiscp.eISCP):
-        name = f"{receiver.info[EISCP_MODEL_NAME]} {receiver.info[EISCP_IDENTIFIER]}"
+        name = self._get_receiver_name(
+            receiver.info[EISCP_MODEL_NAME], receiver.info[EISCP_IDENTIFIER]
+        )
         entry = self.async_create_entry(
             title=name,
             data={
@@ -78,31 +86,30 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             if not is_ip_address(user_input[CONF_HOST]):
                 errors["base"] = "no_ip"
             else:
-                receiver = None
-                unique_id = None
                 try:
                     receiver = eiscp.eISCP(user_input[CONF_HOST], user_input[CONF_PORT])
-                    unique_id = receiver.info[EISCP_IDENTIFIER]
-                except TypeError:
-                    # Info is None when connection fails
-                    errors["base"] = "cannot_connect"
+                    info = receiver.info
                 finally:
                     if receiver:
                         receiver.disconnect()
 
-                if unique_id:
+                if info:
+                    unique_id = info[EISCP_IDENTIFIER]
                     await self.async_set_unique_id(unique_id, raise_on_progress=False)
                     self._abort_if_unique_id_configured(
                         updates={CONF_HOST: user_input[CONF_HOST]}
                     )
                     return self._createOnkyoEntry(receiver)
 
+                # Info is None when connection fails
+                errors["base"] = "cannot_connect"
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_HOST, default=""): str,
-                    vol.Optional(CONF_PORT, default=60128): cv.port,
+                    vol.Optional(CONF_PORT, default=CONF_PORT_DEFAULT): cv.port,
                 }
             ),
             errors=errors,
@@ -150,6 +157,40 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="pick_device",
             data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_names)}),
         )
+
+    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
+        """Import the yaml config."""
+
+        info = None
+        try:
+            receiver = eiscp.eISCP(user_input[CONF_HOST], CONF_PORT_DEFAULT)
+            info = receiver.info
+        finally:
+            if receiver:
+                receiver.disconnect()
+
+        if info is None:
+            # Info is None when connection fails
+            return self.async_abort(reason="cannot_connect")
+
+        unique_id = info[EISCP_IDENTIFIER]
+        await self.async_set_unique_id(unique_id, raise_on_progress=False)
+        self._abort_if_unique_id_configured()
+
+        user_input[CONF_MODEL] = info[EISCP_MODEL_NAME]
+        user_input[CONF_MODEL] = info[EISCP_MODEL_NAME]
+        user_input[CONF_MAC] = unique_id
+
+        options = {}
+        options[CONF_MAXIMUM_VOLUME] = user_input[CONF_LEGACY_MAXIMUM_VOLUME]
+        options[CONF_RECEIVER_MAXIMUM_VOLUME] = user_input[
+            CONF_LEGACY_RECEIVER_MAXIMUM_VOLUME
+        ]
+        options[CONF_SOURCES] = user_input[CONF_SOURCES]
+
+        title = self._get_receiver_name(info[EISCP_MODEL_NAME], unique_id)
+
+        return self.async_create_entry(title=title, data=user_input, options=options)
 
     @staticmethod
     @callback

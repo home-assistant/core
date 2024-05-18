@@ -15,11 +15,19 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL
-from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+)
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     ATTR_AUDIO_INFORMATION,
@@ -34,6 +42,7 @@ from .const import (
     CONF_SOURCES,
     CONF_SOURCES_DEFAULT,
     DEFAULT_PLAYABLE_SOURCES,
+    DOMAIN,
     HDMI_OUTPUT_ACCEPTED_VALUES,
     MAXIMUM_UPDATE_RETRIES,
     SERVICE_SELECT_HDMI_OUTPUT,
@@ -68,6 +77,52 @@ SUPPORT_ONKYO = (
     | MediaPlayerEntityFeature.VOLUME_MUTE
     | MediaPlayerEntityFeature.VOLUME_STEP
 )
+
+ISSUE_PLACEHOLDER = {"url": "/config/integrations/dashboard/add?domain=onkyo"}
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Support legacy platform configuration."""
+
+    # Trigger YAML import
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
+    )
+    if (
+        result["type"] == FlowResultType.CREATE_ENTRY
+        or result["reason"] == "already_configured"
+    ):
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Onkyo",
+            },
+        )
+    else:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result['reason']}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+            translation_placeholders=ISSUE_PLACEHOLDER,
+        )
 
 
 def _parse_onkyo_payload(payload):
