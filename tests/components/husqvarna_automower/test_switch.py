@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.exceptions import ApiException
-from aioautomower.model import MowerStates, RestrictedReasons
+from aioautomower.model import MowerActivities, MowerStates, RestrictedReasons
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -92,6 +92,71 @@ async def test_switch_commands(
         == "Command couldn't be sent to the command queue: Test error"
     )
     assert len(mocked_method.mock_calls) == 2
+
+
+@pytest.mark.parametrize(
+    ("service", "aioautomower_command"),
+    [
+        ("turn_off", "park_until_further_notice"),
+    ],
+)
+async def test_switch_while_mowing(
+    hass: HomeAssistant,
+    aioautomower_command: str,
+    service: str,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test disable schedule while mowing."""
+    # Check if schedule switch is on when mowing.
+    await setup_integration(hass, mock_config_entry)
+    values = mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower.json", DOMAIN)
+    )
+    values[TEST_MOWER_ID].mower.activity = MowerActivities.MOWING
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    state = hass.states.get("switch.test_mower_1_enable_schedule")
+    assert state.state == "on"
+
+    # Send command for schedule off (park until further notice) and
+    # check if schedule switch is off.
+    await hass.services.async_call(
+        domain="switch",
+        service=service,
+        service_data={"entity_id": "switch.test_mower_1_enable_schedule"},
+        blocking=True,
+    )
+    mocked_method = getattr(mock_automower_client.commands, aioautomower_command)
+    assert len(mocked_method.mock_calls) == 1
+    values[TEST_MOWER_ID].mower.activity = MowerActivities.GOING_HOME
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.test_mower_1_enable_schedule")
+    assert state.state == "off"
+
+    # Check if schedule switch is off, when parked until further notice.
+    values[TEST_MOWER_ID].mower.state = MowerStates.RESTRICTED
+    values[TEST_MOWER_ID].planner.restricted_reason = RestrictedReasons.NOT_APPLICABLE
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.test_mower_1_enable_schedule")
+    assert state.state == "off"
+
+    # Check if schedule switch is on when mowing again.
+    values[TEST_MOWER_ID].mower.activity = MowerActivities.MOWING
+    values[TEST_MOWER_ID].planner.restricted_reason = RestrictedReasons.NONE
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    state = hass.states.get("switch.test_mower_1_enable_schedule")
+    assert state.state == "on"
 
 
 async def test_switch(
