@@ -222,7 +222,7 @@ async def test_function_call(
 
     mock_call_tool.return_value = "Test response"
 
-    mock_tool = llm.Tool()
+    mock_tool = AsyncMock()
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
     mock_tool.parameters = vol.Schema(
@@ -341,7 +341,7 @@ async def test_function_exception(
 
     mock_call_tool.side_effect = HomeAssistantError("Test tool exception")
 
-    mock_tool = llm.Tool()
+    mock_tool = AsyncMock()
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
     mock_tool.parameters = vol.Schema(

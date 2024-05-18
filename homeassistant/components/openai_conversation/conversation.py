@@ -120,11 +120,7 @@ class OpenAIConversationEntity(
 
         client = self.hass.data[DOMAIN][self.entry.entry_id]
 
-        tools: list[dict[str, Any]] | None = [
-            _format_tool(tool) for tool in llm.async_get_tools(self.hass)
-        ]
-        if not tools:
-            tools = None
+        tools = [_format_tool(tool) for tool in llm.async_get_tools(self.hass)] or None
 
         while True:
             try:
