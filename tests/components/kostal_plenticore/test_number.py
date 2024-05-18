@@ -26,7 +26,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 def mock_plenticore_client() -> Generator[ApiClient, None, None]:
     """Return a patched ExtendedApiClient."""
     with patch(
-        "homeassistant.components.kostal_plenticore.helper.ExtendedApiClient",
+        "homeassistant.components.kostal_plenticore.coordinator.ExtendedApiClient",
         autospec=True,
     ) as plenticore_client_class:
         yield plenticore_client_class.return_value
