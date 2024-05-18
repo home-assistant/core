@@ -160,7 +160,7 @@ class _EventDeviceRegistryUpdatedData_Update(TypedDict):
     changes: dict[str, Any]
 
 
-EventDeviceRegistryUpdatedData = (
+type EventDeviceRegistryUpdatedData = (
     _EventDeviceRegistryUpdatedData_CreateRemove
     | _EventDeviceRegistryUpdatedData_Update
 )
