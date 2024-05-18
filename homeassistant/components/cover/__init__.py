@@ -8,7 +8,7 @@ from enum import IntFlag, StrEnum
 import functools as ft
 from functools import cached_property
 import logging
-from typing import Any, ParamSpec, TypeVar, final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -53,9 +53,6 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=15)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-_P = ParamSpec("_P")
-_R = TypeVar("_R")
 
 
 class CoverDeviceClass(StrEnum):
@@ -477,7 +474,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         else:
             await self.async_close_cover_tilt(**kwargs)
 
-    def _get_toggle_function(
+    def _get_toggle_function[**_P, _R](
         self, fns: dict[str, Callable[_P, _R]]
     ) -> Callable[_P, _R]:
         # If we are opening or closing and we support stopping, then we should stop

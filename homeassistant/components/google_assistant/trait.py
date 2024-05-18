@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 import logging
-from typing import Any, TypeVar
+from typing import Any
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -242,10 +242,8 @@ COVER_VALVE_DOMAINS = {cover.DOMAIN, valve.DOMAIN}
 
 FRIENDLY_DOMAIN = {cover.DOMAIN: "Cover", valve.DOMAIN: "Valve"}
 
-_TraitT = TypeVar("_TraitT", bound="_Trait")
 
-
-def register_trait(trait: type[_TraitT]) -> type[_TraitT]:
+def register_trait[_TraitT: _Trait](trait: type[_TraitT]) -> type[_TraitT]:
     """Decorate a class to register a trait."""
     TRAITS.append(trait)
     return trait
