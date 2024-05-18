@@ -1,7 +1,7 @@
 {
   "domain": "unifiprotect",
   "name": "UniFi Protect",
-  "codeowners": ["@AngellusMortis", "@bdraco"],
+  "codeowners": ["@bdraco"],
   "config_flow": true,
   "dependencies": ["http", "repairs"],
   "dhcp": [
