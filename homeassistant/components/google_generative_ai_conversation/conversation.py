@@ -237,7 +237,7 @@ class GoogleGenerativeAIConversationEntity(
                 if str(e):
                     function_response["error_text"] = str(e)
 
-            LOGGER.info("Tool response: %s", function_response)
+            LOGGER.debug("Tool response: %s", function_response)
             chat_request = glm.Content(
                 parts=[
                     glm.Part(
