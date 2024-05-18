@@ -1,7 +1,6 @@
 """KNX entity store schema."""
 
-from enum import Enum, StrEnum, unique
-from typing import Any
+from enum import StrEnum, unique
 
 import voluptuous as vol
 
@@ -10,7 +9,8 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 
 from ..const import SUPPORTED_PLATFORMS_UI, ColorTempModes
-from ..validation import ga_validator, maybe_ga_validator, sync_state_validator
+from ..validation import sync_state_validator
+from .knx_selector import GASelector
 
 BASE_ENTITY_SCHEMA = vol.All(
     {
@@ -38,57 +38,15 @@ BASE_ENTITY_SCHEMA = vol.All(
 )
 
 
-def ga_schema(
-    write: bool = True,
-    state: bool = True,
-    passive: bool = True,
-    write_required: bool = False,
-    state_required: bool = False,
-    dpt: type[Enum] | None = None,
-) -> vol.Schema:
-    """Return a schema for a knx group address selector."""
-    schema: dict[vol.Marker, Any] = {}
-
-    def add_ga_item(key: str, allowed: bool, required: bool) -> None:
-        """Add a group address item to the schema."""
-        if not allowed:
-            schema[vol.Remove(key)] = object
-            return
-        if required:
-            schema[vol.Required(key)] = ga_validator
-        else:
-            schema[vol.Optional(key, default=None)] = maybe_ga_validator
-
-    add_ga_item("write", write, write_required)
-    add_ga_item("state", state, state_required)
-
-    if passive:
-        schema[vol.Optional("passive", default=list)] = vol.Any(
-            [ga_validator],
-            vol.All(  # Coerce `None` to an empty list if passive is allowed
-                vol.IsFalse(), vol.SetTo(list)
-            ),
-        )
-    else:
-        schema[vol.Remove("passive")] = object
-
-    if dpt is not None:
-        schema[vol.Required("dpt")] = vol.In(dpt)
-    else:
-        schema[vol.Remove("dpt")] = object
-
-    return vol.Schema(schema)
-
-
 def optional_ga_schema(
-    key: str, ga_schema_validator: vol.Schema
+    key: str, ga_selector: GASelector
 ) -> dict[vol.Marker, vol.Schema]:
     """Validate group address schema or remove key if no address is set."""
     # frontend will return {key: {"write": None, "state": None}} for unused GA sets
     # -> remove this entirely for optional keys
     # if one GA is set, validate as usual
     return {
-        vol.Optional(key): ga_schema_validator,
+        vol.Optional(key): ga_selector,
         vol.Remove(key): vol.Schema(
             {
                 vol.Optional("write"): None,
@@ -105,7 +63,7 @@ SWITCH_SCHEMA = vol.Schema(
         vol.Required("entity"): BASE_ENTITY_SCHEMA,
         vol.Required("knx"): {
             vol.Optional("invert", default=False): bool,
-            vol.Required("ga_switch"): ga_schema(write_required=True),
+            vol.Required("ga_switch"): GASelector(write_required=True),
             vol.Optional("respond_to_read", default=False): bool,
             vol.Optional("sync_state", default=True): sync_state_validator,
         },
@@ -135,7 +93,7 @@ _COMMON_LIGHT_SCHEMA = vol.Schema(
     {
         vol.Optional("sync_state", default=True): sync_state_validator,
         **optional_ga_schema(
-            "ga_color_temp", ga_schema(write_required=True, dpt=ColorTempModes)
+            "ga_color_temp", GASelector(write_required=True, dpt=ColorTempModes)
         ),
         vol.Optional("color_temp_min", default=2700): vol.All(
             vol.Coerce(int), vol.Range(min=1)
@@ -150,11 +108,11 @@ _COMMON_LIGHT_SCHEMA = vol.Schema(
 _DEFAULT_LIGHT_SCHEMA = _COMMON_LIGHT_SCHEMA.extend(
     {
         vol.Required("_light_color_mode_schema"): LightColorModeSchema.DEFAULT.value,
-        vol.Required("ga_switch"): ga_schema(write_required=True),
-        **optional_ga_schema("ga_brightness", ga_schema(write_required=True)),
+        vol.Required("ga_switch"): GASelector(write_required=True),
+        **optional_ga_schema("ga_brightness", GASelector(write_required=True)),
         **optional_ga_schema(
             "ga_color",
-            ga_schema(write_required=True, dpt=LightColorMode),
+            GASelector(write_required=True, dpt=LightColorMode),
         ),
     }
 )
@@ -162,26 +120,26 @@ _DEFAULT_LIGHT_SCHEMA = _COMMON_LIGHT_SCHEMA.extend(
 _INDIVIDUAL_LIGHT_SCHEMA = _COMMON_LIGHT_SCHEMA.extend(
     {
         vol.Required("_light_color_mode_schema"): LightColorModeSchema.INDIVIDUAL.value,
-        **optional_ga_schema("ga_switch", ga_schema(write_required=True)),
-        **optional_ga_schema("ga_brightness", ga_schema(write_required=True)),
-        vol.Required("ga_red_brightness"): ga_schema(write_required=True),
-        **optional_ga_schema("ga_red_switch", ga_schema(write_required=False)),
-        vol.Required("ga_green_brightness"): ga_schema(write_required=True),
-        **optional_ga_schema("ga_green_switch", ga_schema(write_required=False)),
-        vol.Required("ga_blue_brightness"): ga_schema(write_required=True),
-        **optional_ga_schema("ga_blue_switch", ga_schema(write_required=False)),
-        **optional_ga_schema("ga_white_brightness", ga_schema(write_required=True)),
-        **optional_ga_schema("ga_white_switch", ga_schema(write_required=False)),
+        **optional_ga_schema("ga_switch", GASelector(write_required=True)),
+        **optional_ga_schema("ga_brightness", GASelector(write_required=True)),
+        vol.Required("ga_red_brightness"): GASelector(write_required=True),
+        **optional_ga_schema("ga_red_switch", GASelector(write_required=False)),
+        vol.Required("ga_green_brightness"): GASelector(write_required=True),
+        **optional_ga_schema("ga_green_switch", GASelector(write_required=False)),
+        vol.Required("ga_blue_brightness"): GASelector(write_required=True),
+        **optional_ga_schema("ga_blue_switch", GASelector(write_required=False)),
+        **optional_ga_schema("ga_white_brightness", GASelector(write_required=True)),
+        **optional_ga_schema("ga_white_switch", GASelector(write_required=False)),
     }
 )
 
 _HSV_LIGHT_SCHEMA = _COMMON_LIGHT_SCHEMA.extend(
     {
         vol.Required("_light_color_mode_schema"): LightColorModeSchema.HSV.value,
-        vol.Required("ga_switch"): ga_schema(write_required=True),
-        vol.Required("ga_brightness"): ga_schema(write_required=True),
-        vol.Required("ga_hue"): ga_schema(write_required=True),
-        vol.Required("ga_saturation"): ga_schema(write_required=True),
+        vol.Required("ga_switch"): GASelector(write_required=True),
+        vol.Required("ga_brightness"): GASelector(write_required=True),
+        vol.Required("ga_hue"): GASelector(write_required=True),
+        vol.Required("ga_saturation"): GASelector(write_required=True),
     }
 )
 
