@@ -39,3 +39,5 @@ DEFAULT_TOP_K = 1
 CONF_MAX_TOKENS = "max_tokens"
 DEFAULT_MAX_TOKENS = 150
 DEFAULT_ALLOW_HASS_ACCESS = False
+FREE_CHAT_MODEL = "models/gemini-pro"
+FASTEST_CHAT_MODEL = "models/gemini-1.5-flash-latest"

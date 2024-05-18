@@ -134,24 +134,41 @@ async def google_generative_ai_config_option_schema(
     options: MappingProxyType[str, Any],
 ) -> dict:
     """Return a schema for Google Generative AI completion options."""
-    models = await hass.async_add_executor_job(partial(genai.list_models))
+    api_models = await hass.async_add_executor_job(partial(genai.list_models))
+
+    models: list[SelectOptionDict] = [
+        SelectOptionDict(
+            label="Free model (Gemini 1.0 Pro)",
+            value="models/gemini-pro",
+        ),
+        SelectOptionDict(
+            label="Fastest model (Gemini 1.5 Flash)",
+            value="models/gemini-1.5-flash-latest",
+        ),
+    ]
+    models.extend(
+        SelectOptionDict(
+            label=api_model.display_name,
+            value=api_model.name,
+        )
+        for api_model in sorted(api_models, key=lambda x: x.display_name)
+        if (
+            api_model.name
+            not in (
+                "models/gemini-pro",
+                "models/gemini-1.0-pro",  # duplicate
+                "models/gemini-1.5-flash-latest",
+            )
+            and "generateContent" in api_model.supported_generation_methods
+        )
+    )
+
     return {
         vol.Optional(
             CONF_CHAT_MODEL,
             description={"suggested_value": options.get(CONF_CHAT_MODEL)},
             default=DEFAULT_CHAT_MODEL,
-        ): SelectSelector(
-            SelectSelectorConfig(
-                options=[
-                    SelectOptionDict(
-                        label=model.display_name,
-                        value=model.name,
-                    )
-                    for model in models
-                    if "generateContent" in model.supported_generation_methods
-                ]
-            )
-        ),
+        ): SelectSelector(SelectSelectorConfig(options=models)),
         vol.Optional(
             CONF_ALLOW_HASS_ACCESS,
             description={"suggested_value": options.get(CONF_ALLOW_HASS_ACCESS)},
