@@ -55,23 +55,35 @@ class Tool:
         """Call the tool."""
         raise NotImplementedError
 
+    @callback
+    def async_is_applicable(self, hass: HomeAssistant, tool_input: ToolInput) -> bool:
+        """Check the tool applicability."""
+        return True
+
     def __repr__(self) -> str:
         """Represent a string of a Tool."""
         return f"<{self.__class__.__name__} - {self.name}>"
 
 
 @callback
-def async_get_tools(hass: HomeAssistant) -> Iterable[Tool]:
+def async_get_tools(
+    hass: HomeAssistant, tool_input: ToolInput | None = None
+) -> Iterable[Tool]:
     """Return a list of LLM tools."""
     for intent_handler in intent.async_get(hass):
         if intent_handler.intent_type not in IGNORE_INTENTS:
-            yield IntentTool(intent_handler)
+            tool = IntentTool(intent_handler)
+            if tool_input is not None and not tool.async_is_applicable(
+                hass, tool_input
+            ):
+                continue
+            yield tool
 
 
 @callback
 async def async_call_tool(hass: HomeAssistant, tool_input: ToolInput) -> JsonObjectType:
     """Call a LLM tool, validate args and return the response."""
-    for tool in async_get_tools(hass):
+    for tool in async_get_tools(hass, tool_input):
         if tool.name == tool_input.tool_name:
             break
     else:
@@ -102,6 +114,7 @@ class IntentTool(Tool):
         self.description = f"Execute Home Assistant {self.name} intent"
         if slot_schema := intent_handler.slot_schema:
             self.parameters = vol.Schema(slot_schema)
+        self.intent_handler = intent_handler
 
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput
@@ -120,3 +133,19 @@ class IntentTool(Tool):
             tool_input.assistant,
         )
         return intent_response.as_dict()
+
+    @callback
+    def async_is_applicable(self, hass: HomeAssistant, tool_input: ToolInput) -> bool:
+        """Check the intent applicability."""
+        slots = {key: {"value": val} for key, val in tool_input.tool_args.items()}
+        intent_obj = intent.Intent(
+            hass,
+            platform=tool_input.platform,
+            intent_type=self.name,
+            slots=slots,
+            text_input=tool_input.user_prompt,
+            context=tool_input.context or Context(),
+            language=tool_input.language or "*",
+            assistant=tool_input.assistant,
+        )
+        return self.intent_handler.async_can_handle(intent_obj)
