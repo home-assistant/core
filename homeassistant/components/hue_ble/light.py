@@ -143,17 +143,20 @@ class HaHueBLE(LightEntity):
 
         supported_modes = set()
 
-        if self._light.supports_on_off:
-            supported_modes.add(ColorMode.ONOFF)
-
-        if self._light.supports_brightness:
-            supported_modes.add(ColorMode.BRIGHTNESS)
+        if self._light.supports_colour_xy:
+            supported_modes.add(ColorMode.XY)
 
         if self._light.supports_colour_temp:
             supported_modes.add(ColorMode.COLOR_TEMP)
 
-        if self._light.supports_colour_xy:
-            supported_modes.add(ColorMode.XY)
+        if self._light.supports_brightness and len(supported_modes) == 0:
+            supported_modes.add(ColorMode.BRIGHTNESS)
+
+        if self._light.supports_on_off and len(supported_modes) == 0:
+            supported_modes.add(ColorMode.ONOFF)
+
+        if len(supported_modes) == 0:
+            supported_modes.add(ColorMode.UNKNOWN)
 
         return supported_modes
 
@@ -161,16 +164,20 @@ class HaHueBLE(LightEntity):
     def color_mode(self) -> ColorMode | None:
         """Color mode of the light."""
 
-        if self._light.colour_temp_mode is None:
-            if self._light.supports_brightness:
-                return ColorMode.BRIGHTNESS
+        if self._light.supports_colour_xy:
+            if self._light.supports_colour_temp:
+                if self._light.colour_temp_mode:
+                    return ColorMode.COLOR_TEMP
 
+            return ColorMode.XY
+
+        if self._light.supports_brightness:
+            return ColorMode.BRIGHTNESS
+
+        if self._light.supports_on_off:
             return ColorMode.ONOFF
 
-        if self._light.colour_temp_mode:
-            return ColorMode.COLOR_TEMP
-
-        return ColorMode.XY
+        return ColorMode.UNKNOWN
 
     @property
     def should_poll(self) -> bool:
