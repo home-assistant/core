@@ -135,7 +135,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         return UpdateCoordinatorDataType(data_devices, data_sensors)
 
     async def cleanup_device_tracker_entities(self) -> None:
-        """123."""
+        """Clean old device trackers entities."""
         entity_reg: er.EntityRegistry = er.async_get(self.hass)
 
         ha_entity_reg_list: list[er.RegistryEntry] = er.async_entries_for_config_entry(
