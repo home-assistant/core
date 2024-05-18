@@ -5,10 +5,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from google.api_core.exceptions import ClientError
 import pytest
 from syrupy.assertion import SnapshotAssertion
+import voluptuous as vol
 
 from homeassistant.components import conversation
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import area_registry as ar, device_registry as dr, intent
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    intent,
+    llm,
+)
 
 from tests.common import MockConfigEntry
 
@@ -138,6 +145,176 @@ async def test_default_prompt(
     assert result.response.as_dict()["speech"]["plain"]["speech"] == "Hi there!"
     assert [tuple(mock_call) for mock_call in mock_model.mock_calls] == snapshot
     assert mock_get_tools.called == allow_hass_access
+
+
+@patch(
+    "homeassistant.components.google_generative_ai_conversation.conversation.llm.async_get_tools"
+)
+@patch(
+    "homeassistant.components.google_generative_ai_conversation.conversation.llm.async_call_tool"
+)
+async def test_function_call(
+    mock_call_tool,
+    mock_get_tools,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test that the default prompt works."""
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+
+    agent_id = mock_config_entry.entry_id
+    context = Context()
+
+    mock_tool = AsyncMock()
+    mock_tool.name = "test_tool"
+    mock_tool.description = "Test function"
+    mock_tool.parameters = vol.Schema(
+        {vol.Optional("param1", description="Test parameters"): str}
+    )
+
+    mock_get_tools.return_value = [mock_tool]
+
+    with patch("google.generativeai.GenerativeModel") as mock_model:
+        mock_chat = AsyncMock()
+        mock_model.return_value.start_chat.return_value = mock_chat
+        chat_response = MagicMock()
+        mock_chat.send_message_async.return_value = chat_response
+        mock_part = MagicMock()
+        mock_part.function_call.name = "test_tool"
+        mock_part.function_call.args = {"param1": "test_value"}
+
+        def tool_call(hass, tool_input):
+            mock_part.function_call = False
+            chat_response.text = "Hi there!"
+            return {"result": "Test response"}
+
+        mock_call_tool.side_effect = tool_call
+        chat_response.parts = [mock_part]
+        result = await conversation.async_converse(
+            hass,
+            "Please call the test function",
+            None,
+            context,
+            agent_id=agent_id,
+        )
+
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.as_dict()["speech"]["plain"]["speech"] == "Hi there!"
+    mock_tool_call = mock_chat.send_message_async.mock_calls[1][1][0]
+    mock_tool_call = type(mock_tool_call).to_dict(mock_tool_call)
+    assert mock_tool_call == {
+        "parts": [
+            {
+                "function_response": {
+                    "name": "test_tool",
+                    "response": {
+                        "result": "Test response",
+                    },
+                },
+            },
+        ],
+        "role": "",
+    }
+
+    mock_call_tool.assert_awaited_once_with(
+        hass,
+        llm.ToolInput(
+            tool_name="test_tool",
+            tool_args={"param1": "test_value"},
+            platform="google_generative_ai_conversation",
+            context=context,
+            user_prompt="Please call the test function",
+            language="en",
+            assistant="conversation",
+        ),
+    )
+
+
+@patch(
+    "homeassistant.components.google_generative_ai_conversation.conversation.llm.async_get_tools"
+)
+@patch(
+    "homeassistant.components.google_generative_ai_conversation.conversation.llm.async_call_tool"
+)
+async def test_function_exception(
+    mock_call_tool,
+    mock_get_tools,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test that the default prompt works."""
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+
+    agent_id = mock_config_entry.entry_id
+    context = Context()
+
+    mock_tool = AsyncMock()
+    mock_tool.name = "test_tool"
+    mock_tool.description = "Test function"
+    mock_tool.parameters = vol.Schema(
+        {vol.Optional("param1", description="Test parameters"): str}
+    )
+
+    mock_get_tools.return_value = [mock_tool]
+
+    with patch("google.generativeai.GenerativeModel") as mock_model:
+        mock_chat = AsyncMock()
+        mock_model.return_value.start_chat.return_value = mock_chat
+        chat_response = MagicMock()
+        mock_chat.send_message_async.return_value = chat_response
+        mock_part = MagicMock()
+        mock_part.function_call.name = "test_tool"
+        mock_part.function_call.args = {"param1": "test_value"}
+
+        def tool_call(hass, tool_input):
+            mock_part.function_call = False
+            chat_response.text = "Hi there!"
+            raise HomeAssistantError("Test tool exception")
+
+        mock_call_tool.side_effect = tool_call
+        chat_response.parts = [mock_part]
+        result = await conversation.async_converse(
+            hass,
+            "Please call the test function",
+            None,
+            context,
+            agent_id=agent_id,
+        )
+
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.as_dict()["speech"]["plain"]["speech"] == "Hi there!"
+    mock_tool_call = mock_chat.send_message_async.mock_calls[1][1][0]
+    mock_tool_call = type(mock_tool_call).to_dict(mock_tool_call)
+    assert mock_tool_call == {
+        "parts": [
+            {
+                "function_response": {
+                    "name": "test_tool",
+                    "response": {
+                        "error": "HomeAssistantError",
+                        "error_text": "Test tool exception",
+                    },
+                },
+            },
+        ],
+        "role": "",
+    }
+    mock_call_tool.assert_awaited_once_with(
+        hass,
+        llm.ToolInput(
+            tool_name="test_tool",
+            tool_args={"param1": "test_value"},
+            platform="google_generative_ai_conversation",
+            context=context,
+            user_prompt="Please call the test function",
+            language="en",
+            assistant="conversation",
+        ),
+    )
 
 
 async def test_error_handling(
