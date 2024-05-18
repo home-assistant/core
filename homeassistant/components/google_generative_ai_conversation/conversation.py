@@ -139,8 +139,6 @@ class GoogleGenerativeAIConversationEntity(
 
         if hass_access := self.entry.options.get(CONF_ALLOW_HASS_ACCESS):
             tools = [_format_tool(tool) for tool in llm.async_get_tools(self.hass)]
-            if not tools:
-                tools = None
 
         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
         model = genai.GenerativeModel(
@@ -155,7 +153,7 @@ class GoogleGenerativeAIConversationEntity(
                     CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS
                 ),
             },
-            tools=tools,
+            tools=tools or None,
         )
 
         if user_input.conversation_id in self.history:
@@ -185,7 +183,7 @@ class GoogleGenerativeAIConversationEntity(
 
         chat = model.start_chat(history=messages)
         chat_request = user_input.text
-        while True:
+        for _ in range(5):
             try:
                 chat_response = await chat.send_message_async(chat_request)
             except (
@@ -221,16 +219,16 @@ class GoogleGenerativeAIConversationEntity(
             tool_args = dict(tool_call.args)
 
             LOGGER.debug("Tool call: %s(%s)", tool_call.name, tool_args)
+            tool_input = llm.ToolInput(
+                tool_name=tool_call.name,
+                tool_args=tool_args,
+                platform=DOMAIN,
+                context=user_input.context,
+                user_prompt=user_input.text,
+                language=user_input.language,
+                assistant=conversation.DOMAIN,
+            )
             try:
-                tool_input = llm.ToolInput(
-                    tool_name=tool_call.name,
-                    tool_args=tool_args,
-                    platform=DOMAIN,
-                    context=user_input.context,
-                    user_prompt=user_input.text,
-                    language=user_input.language,
-                    assistant=conversation.DOMAIN,
-                )
                 function_response = await llm.async_call_tool(self.hass, tool_input)
             except (HomeAssistantError, vol.Invalid) as e:
                 function_response = {"error": type(e).__name__}
@@ -247,6 +245,7 @@ class GoogleGenerativeAIConversationEntity(
                     )
                 ]
             )
+
         intent_response.async_set_speech(chat_response.text)
         return conversation.ConversationResult(
             response=intent_response, conversation_id=conversation_id
