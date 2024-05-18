@@ -217,7 +217,7 @@ class GoogleGenerativeAIConversationEntity(
             if not tool_call:
                 break
 
-            LOGGER.info(
+            LOGGER.debug(
                 "Tool call: %s(%s)",
                 tool_call.name,
                 dict(tool_call.args),

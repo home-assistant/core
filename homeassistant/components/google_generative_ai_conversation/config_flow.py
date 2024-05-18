@@ -22,6 +22,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
     TemplateSelector,
 )
 
@@ -121,17 +124,21 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
-        schema = google_generative_ai_config_option_schema(self.config_entry.options)
+        schema = await google_generative_ai_config_option_schema(
+            self.hass, self.config_entry.options
+        )
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(schema),
         )
 
 
-def google_generative_ai_config_option_schema(
+async def google_generative_ai_config_option_schema(
+    hass: HomeAssistant,
     options: MappingProxyType[str, Any],
 ) -> dict:
     """Return a schema for Google Generative AI completion options."""
+    models = await hass.async_add_executor_job(partial(genai.list_models))
     return {
         vol.Optional(
             CONF_ALLOW_HASS_ACCESS,
@@ -147,7 +154,18 @@ def google_generative_ai_config_option_schema(
             CONF_CHAT_MODEL,
             description={"suggested_value": options.get(CONF_CHAT_MODEL)},
             default=DEFAULT_CHAT_MODEL,
-        ): str,
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=[
+                    SelectOptionDict(
+                        label=model.display_name,
+                        value=model.name,
+                    )
+                    for model in models
+                    if "generateContent" in model.supported_generation_methods
+                ]
+            )
+        ),
         vol.Optional(
             CONF_TEMPERATURE,
             description={"suggested_value": options.get(CONF_TEMPERATURE)},
