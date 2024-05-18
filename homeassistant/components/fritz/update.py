@@ -23,7 +23,7 @@ from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class FritzUpdateEntityDescription(UpdateEntityDescription, FritzEntityDescription):
     """Describes Fritz update entity."""
 

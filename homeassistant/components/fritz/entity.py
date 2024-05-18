@@ -88,16 +88,11 @@ class FritzBoxBaseEntity:
         )
 
 
-@dataclass(frozen=True)
-class FritzRequireKeysMixin:
-    """Fritz entity description mix in."""
+@dataclass(frozen=True, kw_only=True)
+class FritzEntityDescription(EntityDescription):
+    """Fritz entity base description."""
 
     value_fn: Callable[[FritzStatus, Any], Any] | None
-
-
-@dataclass(frozen=True)
-class FritzEntityDescription(EntityDescription, FritzRequireKeysMixin):
-    """Fritz entity base description."""
 
 
 class FritzBoxBaseCoordinatorEntity(CoordinatorEntity[AvmWrapper]):
