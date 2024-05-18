@@ -28,12 +28,8 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION
-from .coordinator import (
-    AvmWrapper,
-    ConnectionInfo,
-    FritzBoxBaseCoordinatorEntity,
-    FritzEntityDescription,
-)
+from .coordinator import AvmWrapper, ConnectionInfo
+from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
