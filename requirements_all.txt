@@ -968,7 +968,7 @@ google-cloud-pubsub==2.13.11
 google-cloud-texttospeech==2.12.3
 
 # homeassistant.components.google_generative_ai_conversation
-google-generativeai==0.5.2
+google-generativeai==0.5.4
 
 # homeassistant.components.nest
 google-nest-sdm==3.0.4
