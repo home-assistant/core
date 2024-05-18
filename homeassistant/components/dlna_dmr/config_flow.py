@@ -40,7 +40,7 @@ from .data import get_domain_data
 
 LOGGER = logging.getLogger(__name__)
 
-FlowInput = Mapping[str, Any] | None
+type FlowInput = Mapping[str, Any] | None
 
 
 class ConnectError(IntegrationError):

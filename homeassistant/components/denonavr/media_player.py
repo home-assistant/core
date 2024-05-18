@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 from functools import wraps
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from denonavr import DenonAVR
 from denonavr.const import (
@@ -100,11 +100,6 @@ TELNET_EVENTS = {
     "Z3",
 }
 
-_DenonDeviceT = TypeVar("_DenonDeviceT", bound="DenonDevice")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-
-
 DENON_STATE_MAPPING = {
     STATE_ON: MediaPlayerState.ON,
     STATE_OFF: MediaPlayerState.OFF,
@@ -164,7 +159,7 @@ async def async_setup_entry(
     async_add_entities(entities, update_before_add=True)
 
 
-def async_log_errors(
+def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
     func: Callable[Concatenate[_DenonDeviceT, _P], Awaitable[_R]],
 ) -> Callable[Concatenate[_DenonDeviceT, _P], Coroutine[Any, Any, _R | None]]:
     """Log errors occurred when calling a Denon AVR receiver.
