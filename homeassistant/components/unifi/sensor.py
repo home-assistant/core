@@ -32,7 +32,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     UnitOfTemperature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -40,7 +39,6 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTime,
 )
-
 from homeassistant.core import Event as core_Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -211,35 +209,7 @@ def async_client_wan_monitor_supported_fn(
     if uptime_stats is None:
         return False
 
-    return async_wan_monitor_supported_fn(
-        wan=uptime_stats["WAN"], monitor_target=monitor_target
-    )
-
-
-@callback
-def async_client_wan2_monitor_supported_fn(
-    monitor_target: str, hub: UnifiHub, obj_id: str
-) -> bool:
-    """Determine if a client supports WAN monitoring."""
-    device = hub.api.devices[obj_id]
-
-    uptime_stats = device.uptime_stats
-    if uptime_stats is None:
-        return False
-
-    return async_wan_monitor_supported_fn(
-        wan=uptime_stats["WAN2"], monitor_target=monitor_target
-    )
-
-
-@callback
-def async_wan_monitor_supported_fn(
-    wan: TypedDeviceUptimeStatsWan | None, monitor_target: str
-) -> bool:
-    """Determine if a client supports WAN monitoring."""
-
-    if wan is None:
-        return False
+    wan = uptime_stats["WAN"]
 
     monitors = wan["monitors"]
 
@@ -248,42 +218,9 @@ def async_wan_monitor_supported_fn(
 
 @callback
 def async_client_wan_monitor_latency(
-    monitor_target: str, hub: UnifiHub, device: Device
+    wan: TypedDeviceUptimeStatsWan, monitor_target: str
 ) -> int | None:
     """Retrieve the monitor target from WAN monitors."""
-
-    uptime_stats = device.uptime_stats
-    if uptime_stats is None:
-        return None
-
-    return async_wan_monitor_latency(
-        wan=uptime_stats["WAN"], monitor_target=monitor_target
-    )
-
-
-@callback
-def async_client_wan2_monitor_latency(
-    monitor_target: str, hub: UnifiHub, device: Device
-) -> int | None:
-    """Retrieve the monitor target from WAN monitors."""
-
-    uptime_stats = device.uptime_stats
-    if uptime_stats is None:
-        return None
-
-    return async_wan_monitor_latency(
-        wan=uptime_stats["WAN2"], monitor_target=monitor_target
-    )
-
-
-@callback
-def async_wan_monitor_latency(
-    wan: TypedDeviceUptimeStatsWan | None, monitor_target: str
-) -> int | None:
-    """Retrieve the monitor target from WAN monitors."""
-
-    if wan is None:
-        return None
 
     monitors = wan["monitors"]
 
@@ -292,6 +229,92 @@ def async_wan_monitor_latency(
         return None
 
     return item.get("latency_average", 0)
+
+
+@callback
+def async_device_latency_supported_fn(
+    wan: TypedDeviceUptimeStatsWan | None, monitor_target: str
+) -> bool:
+    """Determine if a device supports WAN latency monitoring."""
+
+    if wan is None:
+        return False
+
+    item = next(
+        (item for item in wan["monitors"] if monitor_target in item["target"]), None
+    )
+
+    return item is not None
+
+
+def make_wan_latency_sensors(
+    supported_wan_fn: Callable[[UnifiHub, str], TypedDeviceUptimeStatsWan],
+    wan_fn: Callable[[UnifiHub, Device], TypedDeviceUptimeStatsWan],
+) -> tuple[UnifiSensorEntityDescription, ...]:
+    """Create WAN latency sensors from WAN monitor data."""
+
+    return (
+        UnifiSensorEntityDescription[Devices, Device](
+            key="Microsoft WAN latency",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.DURATION,
+            entity_registry_enabled_default=False,
+            api_handler_fn=lambda api: api.devices,
+            available_fn=async_device_available_fn,
+            device_info_fn=async_device_device_info_fn,
+            name_fn=lambda _: "Microsoft WAN latency",
+            object_fn=lambda api, obj_id: api.devices[obj_id],
+            supported_fn=lambda hub, obj_id: async_device_latency_supported_fn(
+                supported_wan_fn(hub, obj_id), "microsoft"
+            ),
+            unique_id_fn=lambda hub, obj_id: f"microsoft_wan_latency-{obj_id}",
+            value_fn=lambda hub, device: async_client_wan_monitor_latency(
+                wan_fn(hub, device), "microsoft"
+            ),
+        ),
+        UnifiSensorEntityDescription[Devices, Device](
+            key="Google WAN latency",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.DURATION,
+            entity_registry_enabled_default=False,
+            api_handler_fn=lambda api: api.devices,
+            available_fn=async_device_available_fn,
+            device_info_fn=async_device_device_info_fn,
+            name_fn=lambda _: "Google WAN latency",
+            object_fn=lambda api, obj_id: api.devices[obj_id],
+            supported_fn=lambda hub, obj_id: async_device_latency_supported_fn(
+                supported_wan_fn(hub, obj_id), "google.com"
+            ),
+            unique_id_fn=lambda hub, obj_id: f"google_wan_latency-{obj_id}",
+            value_fn=lambda hub, device: async_client_wan_monitor_latency(
+                wan_fn(hub, device), "google"
+            ),
+        ),
+        UnifiSensorEntityDescription[Devices, Device](
+            key="Cloudflare WAN latency",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.DURATION,
+            entity_registry_enabled_default=False,
+            api_handler_fn=lambda api: api.devices,
+            available_fn=async_device_available_fn,
+            device_info_fn=async_device_device_info_fn,
+            name_fn=lambda _: "Cloudflare WAN latency",
+            object_fn=lambda api, obj_id: api.devices[obj_id],
+            supported_fn=lambda hub, obj_id: async_device_latency_supported_fn(
+                supported_wan_fn(hub, obj_id), "1.1.1.1"
+            ),
+            unique_id_fn=lambda hub, obj_id: f"cloudflare_wan_latency-{obj_id}",
+            value_fn=lambda hub, device: async_client_wan_monitor_latency(
+                wan_fn(hub, device), "1.1.1.1"
+            ),
+        ),
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -556,102 +579,17 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         unique_id_fn=lambda hub, obj_id: f"memory_utilization-{obj_id}",
         value_fn=lambda hub, device: device.system_stats[1],
     ),
-    UnifiSensorEntityDescription[Devices, Device](
-        key="Microsoft WAN latency",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.DURATION,
-        entity_registry_enabled_default=False,
-        api_handler_fn=lambda api: api.devices,
-        available_fn=async_device_available_fn,
-        device_info_fn=async_device_device_info_fn,
-        name_fn=lambda device: "Microsoft WAN latency",
-        object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=partial(async_client_wan_monitor_supported_fn, "microsoft"),
-        unique_id_fn=lambda hub, obj_id: f"microsoft_wan_latency-{obj_id}",
-        value_fn=partial(async_client_wan_monitor_latency, "microsoft"),
-    ),
-    UnifiSensorEntityDescription[Devices, Device](
-        key="Google WAN latency",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.DURATION,
-        entity_registry_enabled_default=False,
-        api_handler_fn=lambda api: api.devices,
-        available_fn=async_device_available_fn,
-        device_info_fn=async_device_device_info_fn,
-        name_fn=lambda device: "Google WAN latency",
-        object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=partial(async_client_wan_monitor_supported_fn, "google"),
-        unique_id_fn=lambda hub, obj_id: f"google_wan_latency-{obj_id}",
-        value_fn=partial(async_client_wan_monitor_latency, "google"),
-    ),
-    UnifiSensorEntityDescription[Devices, Device](
-        key="Cloudflare WAN latency",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.DURATION,
-        entity_registry_enabled_default=False,
-        api_handler_fn=lambda api: api.devices,
-        available_fn=async_device_available_fn,
-        device_info_fn=async_device_device_info_fn,
-        name_fn=lambda device: "Cloudflare WAN latency",
-        object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=partial(async_client_wan_monitor_supported_fn, "1.1.1.1"),
-        unique_id_fn=lambda hub, obj_id: f"cloudflare_wan_latency-{obj_id}",
-        value_fn=partial(async_client_wan_monitor_latency, "1.1.1.1"),
-    ),
-    UnifiSensorEntityDescription[Devices, Device](
-        key="Microsoft WAN2 latency",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.DURATION,
-        entity_registry_enabled_default=False,
-        api_handler_fn=lambda api: api.devices,
-        available_fn=async_device_available_fn,
-        device_info_fn=async_device_device_info_fn,
-        name_fn=lambda device: "Microsoft WAN2 latency",
-        object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=partial(async_client_wan2_monitor_supported_fn, "microsoft"),
-        unique_id_fn=lambda hub, obj_id: f"microsoft_wan_latency-{obj_id}",
-        value_fn=partial(async_client_wan2_monitor_latency, "microsoft"),
-    ),
-    UnifiSensorEntityDescription[Devices, Device](
-        key="Google WAN2 latency",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.DURATION,
-        entity_registry_enabled_default=False,
-        api_handler_fn=lambda api: api.devices,
-        available_fn=async_device_available_fn,
-        device_info_fn=async_device_device_info_fn,
-        name_fn=lambda device: "Google WAN2 latency",
-        object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=partial(async_client_wan2_monitor_supported_fn, "google"),
-        unique_id_fn=lambda hub, obj_id: f"google_wan2_latency-{obj_id}",
-        value_fn=partial(async_client_wan2_monitor_latency, "google"),
-    ),
-    UnifiSensorEntityDescription[Devices, Device](
-        key="Cloudflare WAN2 latency",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.DURATION,
-        entity_registry_enabled_default=False,
-        api_handler_fn=lambda api: api.devices,
-        available_fn=async_device_available_fn,
-        device_info_fn=async_device_device_info_fn,
-        name_fn=lambda device: "Cloudflare WAN2 latency",
-        object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=partial(async_client_wan2_monitor_supported_fn, "1.1.1.1"),
-        unique_id_fn=lambda hub, obj_id: f"cloudflare_wan2_latency-{obj_id}",
-        value_fn=partial(async_client_wan2_monitor_latency, "1.1.1.1"),
-    ),
+)
+
+ENTITY_DESCRIPTIONS += make_wan_latency_sensors(
+    supported_wan_fn=lambda hub, obj_id: hub.api.devices[obj_id].uptime_stats
+    and hub.api.devices[obj_id].uptime_stats["WAN"],
+    wan_fn=lambda hub, device: device.uptime_stats["WAN"],
+)
+
+ENTITY_DESCRIPTIONS += make_wan_latency_sensors(
+    supported_wan_fn=lambda hub, obj_id: hub.api.devices[obj_id].uptime_stats["WAN2"],
+    wan_fn=lambda hub, device: device.uptime_stats["WAN2"],
 )
 
 
