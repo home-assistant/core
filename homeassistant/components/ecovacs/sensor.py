@@ -188,7 +188,7 @@ class EcovacsPositionSensorEntityDescription(SensorEntityDescription):
     position_type: PositionType
 
 
-POSITION_ENTITY_DESCRIPTIONS = tuple(
+POSITION_ENTITY_DESCRIPTIONS: tuple[EcovacsPositionSensorEntityDescription, ...] = (
     EcovacsPositionSensorEntityDescription(
         position_type=position_type,
         key=f"position_{position_type.name.lower()}",
