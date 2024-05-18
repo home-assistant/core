@@ -40,6 +40,10 @@ VALID_POT_ACCOUNTS = {
 ACCOUNT_ERROR = "Pot transfer failed: %s is not an account."
 POT_ERROR = "Pot transfer failed: %s is not a pot."
 NO_POT_ERROR = "Pot transfer failed: No valid pots."
+EXTERNAL_ERROR = (
+    "External error handling pot transfer: one or more transactions failed."
+)
+DEVICE_ERROR = "Pot deposit failed: Couldn't find device with id %s."
 
 
 async def register_services(hass: HomeAssistant) -> None:
@@ -75,9 +79,7 @@ async def register_services(hass: HomeAssistant) -> None:
         )
 
         if not success:
-            _LOGGER.error(
-                "External error handling pot transfer: one or more transactions failed"
-            )
+            _LOGGER.error(EXTERNAL_ERROR)
 
     hass.services.async_register(DOMAIN, SERVICE_POT_TRANSFER, handle_pot_transfer)
 
@@ -141,6 +143,6 @@ async def _get_pot_ids(call: ServiceCall, device_registry: DeviceRegistry) -> li
 async def _get_device(device_registry: DeviceRegistry, device_id: str) -> DeviceEntry:
     device = device_registry.async_get(device_id)
     if not device:
-        _LOGGER.error("Pot deposit failed: Couldn't find device with id %s", device_id)
+        _LOGGER.error(DEVICE_ERROR, device_id)
         raise ValueError
     return device

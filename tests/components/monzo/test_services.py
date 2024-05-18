@@ -10,6 +10,9 @@ from homeassistant.components.monzo.sensor import MonzoSensorEntityDescription
 from homeassistant.components.monzo.services import (
     ACCOUNT_ERROR,
     ATTR_AMOUNT,
+    DEVICE_ERROR,
+    EXTERNAL_ERROR,
+    NO_POT_ERROR,
     POT_ERROR,
     SERVICE_POT_TRANSFER,
     TRANSFER_ACCOUNT,
@@ -188,7 +191,9 @@ async def test_multiple_target_deposit(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@patch("homeassistant.components.monzo.services._LOGGER")
 async def test_transfer_raises_value_error_if_pots_includes_account(
+    logger: MagicMock,
     hass: HomeAssistant,
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
@@ -214,16 +219,17 @@ async def test_transfer_raises_value_error_if_pots_includes_account(
         ATTR_AMOUNT: 1.0,
     }
 
-    mock_logger = MagicMock()
-    with patch("homeassistant.components.monzo.services._LOGGER", mock_logger):
-        await hass.services.async_call(
-            DOMAIN, SERVICE_POT_TRANSFER, service_data, blocking=True
-        )
-        mock_logger.error.assert_called_once_with(POT_ERROR, not_pot["name"])
+    await hass.services.async_call(
+        DOMAIN, SERVICE_POT_TRANSFER, service_data, blocking=True
+    )
+    logger.error.assert_called_once_with(POT_ERROR, not_pot["name"])
+    monzo.user_account.pot_deposit.assert_not_called()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@patch("homeassistant.components.monzo.services._LOGGER")
 async def test_transfer_raises_value_error_if_account_is_pot(
+    logger: MagicMock,
     hass: HomeAssistant,
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
@@ -247,9 +253,103 @@ async def test_transfer_raises_value_error_if_account_is_pot(
         ATTR_AMOUNT: 1.0,
     }
 
-    mock_logger = MagicMock()
-    with patch("homeassistant.components.monzo.services._LOGGER", mock_logger):
-        await hass.services.async_call(
-            DOMAIN, SERVICE_POT_TRANSFER, service_data, blocking=True
-        )
-        mock_logger.error.assert_called_once_with(ACCOUNT_ERROR, not_account["name"])
+    await hass.services.async_call(
+        DOMAIN, SERVICE_POT_TRANSFER, service_data, blocking=True
+    )
+    logger.error.assert_called_once_with(ACCOUNT_ERROR, not_account["name"])
+    monzo.user_account.pot_deposit.assert_not_called()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@patch("homeassistant.components.monzo.services._LOGGER")
+async def test_transfer_raises_value_error_if_no_valid_pots(
+    logger: MagicMock,
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+) -> None:
+    """Test all entities."""
+    await setup_integration(hass, polling_config_entry)
+    device_registry = dr.async_get(hass)
+
+    account_id = TEST_ACCOUNTS[0]["id"]
+    account_device_id = device_registry.async_get_device(
+        identifiers={(DOMAIN, account_id)}
+    ).id
+
+    service_data = {
+        TRANSFER_POTS: [""],
+        TRANSFER_ACCOUNT: account_device_id,
+        TRANSFER_TYPE: TRANSFER_TYPE_WITHDRAWAL,
+        ATTR_AMOUNT: 1.0,
+    }
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_POT_TRANSFER, service_data, blocking=True
+    )
+    logger.error.assert_called_once_with(NO_POT_ERROR)
+    monzo.user_account.pot_deposit.assert_not_called()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@patch("homeassistant.components.monzo.services._LOGGER")
+async def test_external_transfer_failure(
+    logger: MagicMock,
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+) -> None:
+    """Test all entities."""
+    await setup_integration(hass, polling_config_entry)
+    device_registry = dr.async_get(hass)
+
+    account_id = TEST_ACCOUNTS[0]["id"]
+    account_device_id = device_registry.async_get_device(
+        identifiers={(DOMAIN, account_id)}
+    ).id
+    pot_id = TEST_POTS[0]["id"]
+    pot_device_id = device_registry.async_get_device(identifiers={(DOMAIN, pot_id)}).id
+
+    service_data = {
+        TRANSFER_POTS: [pot_device_id],
+        TRANSFER_ACCOUNT: account_device_id,
+        TRANSFER_TYPE: TRANSFER_TYPE_DEPOSIT,
+        ATTR_AMOUNT: 1.0,
+    }
+
+    monzo.user_account.pot_deposit.return_value = False
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_POT_TRANSFER, service_data, blocking=True
+    )
+    logger.error.assert_called_once_with(EXTERNAL_ERROR)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@patch("homeassistant.components.monzo.services._LOGGER")
+async def test_transfer_raises_value_error_if_account_is_not_valid_device(
+    logger: MagicMock,
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+) -> None:
+    """Test all entities."""
+    await setup_integration(hass, polling_config_entry)
+    device_registry = dr.async_get(hass)
+
+    pot_id = TEST_ACCOUNTS[1]["id"]
+    pot_device_id = device_registry.async_get_device(identifiers={(DOMAIN, pot_id)}).id
+
+    invalid_id = "invalid_device_id"
+    service_data = {
+        TRANSFER_POTS: [pot_device_id],
+        TRANSFER_ACCOUNT: invalid_id,
+        TRANSFER_TYPE: TRANSFER_TYPE_DEPOSIT,
+        ATTR_AMOUNT: 1.0,
+    }
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_POT_TRANSFER, service_data, blocking=True
+    )
+    logger.error.assert_called_once_with(DEVICE_ERROR, invalid_id)
+    monzo.user_account.pot_deposit.assert_not_called()
