@@ -19,12 +19,17 @@ from homeassistant.util import ulid
 
 from .const import (
     CONF_CHAT_MODEL,
+    CONF_DANGEROUS_BLOCK_THRESHOLD,
+    CONF_HARASSMENT_BLOCK_THRESHOLD,
+    CONF_HATE_BLOCK_THRESHOLD,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
+    CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
     DEFAULT_CHAT_MODEL,
+    DEFAULT_HARM_BLOCK_THRESHOLD,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
@@ -91,6 +96,20 @@ class GoogleGenerativeAIConversationEntity(
                 "top_k": self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K),
                 "max_output_tokens": self.entry.options.get(
                     CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS
+                ),
+            },
+            safety_settings={
+                "HARASSMENT": self.entry.options.get(
+                    CONF_HARASSMENT_BLOCK_THRESHOLD, DEFAULT_HARM_BLOCK_THRESHOLD
+                ),
+                "HATE": self.entry.options.get(
+                    CONF_HATE_BLOCK_THRESHOLD, DEFAULT_HARM_BLOCK_THRESHOLD
+                ),
+                "SEXUAL": self.entry.options.get(
+                    CONF_SEXUAL_BLOCK_THRESHOLD, DEFAULT_HARM_BLOCK_THRESHOLD
+                ),
+                "DANGEROUS": self.entry.options.get(
+                    CONF_DANGEROUS_BLOCK_THRESHOLD, DEFAULT_HARM_BLOCK_THRESHOLD
                 ),
             },
         )

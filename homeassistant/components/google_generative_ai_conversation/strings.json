@@ -22,7 +22,11 @@
           "temperature": "Temperature",
           "top_p": "Top P",
           "top_k": "Top K",
-          "max_tokens": "Maximum tokens to return in response"
+          "max_tokens": "Maximum tokens to return in response",
+          "harassment_block_threshold": "Negative or harmful comments targeting identity and/or protected attributes",
+          "hate_block_threshold": "Content that is rude, disrespectful, or profane",
+          "secual_block_threshold": "Contains references to sexual acts or other lewd content",
+          "dangerous_block_threshold": "Promotes, facilitates, or encourages harmful acts"
         }
       }
     }

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from functools import partial
 import logging
-import types
 from types import MappingProxyType
 from typing import Any
 
@@ -23,17 +22,25 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
     TemplateSelector,
 )
 
 from .const import (
     CONF_CHAT_MODEL,
+    CONF_DANGEROUS_BLOCK_THRESHOLD,
+    CONF_HARASSMENT_BLOCK_THRESHOLD,
+    CONF_HATE_BLOCK_THRESHOLD,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
+    CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
     DEFAULT_CHAT_MODEL,
+    DEFAULT_HARM_BLOCK_THRESHOLD,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
@@ -47,17 +54,6 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
-    }
-)
-
-DEFAULT_OPTIONS = types.MappingProxyType(
-    {
-        CONF_PROMPT: DEFAULT_PROMPT,
-        CONF_CHAT_MODEL: DEFAULT_CHAT_MODEL,
-        CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
-        CONF_TOP_P: DEFAULT_TOP_P,
-        CONF_TOP_K: DEFAULT_TOP_K,
-        CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
     }
 )
 
@@ -140,12 +136,28 @@ def google_generative_ai_config_option_schema(
     options: MappingProxyType[str, Any],
 ) -> dict:
     """Return a schema for Google Generative AI completion options."""
-    if not options:
-        options = DEFAULT_OPTIONS
+    harm_block_thresholds: list[SelectOptionDict] = [
+        SelectOptionDict(
+            label="Block none",
+            value="BLOCK_NONE",
+        ),
+        SelectOptionDict(
+            label="Block few",
+            value="BLOCK_ONLY_HIGH",
+        ),
+        SelectOptionDict(
+            label="Block some",
+            value="BLOCK_MEDIUM_AND_ABOVE",
+        ),
+        SelectOptionDict(
+            label="Block most",
+            value="BLOCK_LOW_AND_ABOVE",
+        ),
+    ]
     return {
         vol.Optional(
             CONF_PROMPT,
-            description={"suggested_value": options[CONF_PROMPT]},
+            description={"suggested_value": options.get(CONF_PROMPT)},
             default=DEFAULT_PROMPT,
         ): TemplateSelector(),
         vol.Optional(
@@ -157,22 +169,46 @@ def google_generative_ai_config_option_schema(
         ): str,
         vol.Optional(
             CONF_TEMPERATURE,
-            description={"suggested_value": options[CONF_TEMPERATURE]},
+            description={"suggested_value": options.get(CONF_TEMPERATURE)},
             default=DEFAULT_TEMPERATURE,
         ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
         vol.Optional(
             CONF_TOP_P,
-            description={"suggested_value": options[CONF_TOP_P]},
+            description={"suggested_value": options.get(CONF_TOP_P)},
             default=DEFAULT_TOP_P,
         ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
         vol.Optional(
             CONF_TOP_K,
-            description={"suggested_value": options[CONF_TOP_K]},
+            description={"suggested_value": options.get(CONF_TOP_K)},
             default=DEFAULT_TOP_K,
         ): int,
         vol.Optional(
             CONF_MAX_TOKENS,
-            description={"suggested_value": options[CONF_MAX_TOKENS]},
+            description={"suggested_value": options.get(CONF_MAX_TOKENS)},
             default=DEFAULT_MAX_TOKENS,
         ): int,
+        vol.Optional(
+            CONF_HARASSMENT_BLOCK_THRESHOLD,
+            description={
+                "suggested_value": options.get(CONF_HARASSMENT_BLOCK_THRESHOLD)
+            },
+            default=DEFAULT_HARM_BLOCK_THRESHOLD,
+        ): SelectSelector(SelectSelectorConfig(options=harm_block_thresholds)),
+        vol.Optional(
+            CONF_HATE_BLOCK_THRESHOLD,
+            description={"suggested_value": options.get(CONF_HATE_BLOCK_THRESHOLD)},
+            default=DEFAULT_HARM_BLOCK_THRESHOLD,
+        ): SelectSelector(SelectSelectorConfig(options=harm_block_thresholds)),
+        vol.Optional(
+            CONF_SEXUAL_BLOCK_THRESHOLD,
+            description={"suggested_value": options.get(CONF_SEXUAL_BLOCK_THRESHOLD)},
+            default=DEFAULT_HARM_BLOCK_THRESHOLD,
+        ): SelectSelector(SelectSelectorConfig(options=harm_block_thresholds)),
+        vol.Optional(
+            CONF_DANGEROUS_BLOCK_THRESHOLD,
+            description={
+                "suggested_value": options.get(CONF_DANGEROUS_BLOCK_THRESHOLD)
+            },
+            default=DEFAULT_HARM_BLOCK_THRESHOLD,
+        ): SelectSelector(SelectSelectorConfig(options=harm_block_thresholds)),
     }
