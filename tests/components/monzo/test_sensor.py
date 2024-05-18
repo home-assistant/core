@@ -18,12 +18,11 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import setup_integration
 from .conftest import TEST_ACCOUNTS, TEST_POTS
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 from tests.typing import ClientSessionGenerator
 
 EXPECTED_VALUE_GETTERS = {
@@ -66,10 +65,10 @@ async def test_sensor_default_enabled_entities(
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test entities enabled by default."""
     await setup_integration(hass, polling_config_entry)
-    entity_registry: EntityRegistry = er.async_get(hass)
 
     for acc in TEST_ACCOUNTS:
         for sensor_description in ACCOUNT_SENSORS:
@@ -106,16 +105,16 @@ async def test_unavailable_entity(
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
 ) -> None:
     """Test all entities."""
     await setup_integration(hass, polling_config_entry)
 
-    for acc in TEST_ACCOUNTS:
-        for sensor in ACCOUNT_SENSORS:
-            entity_id = await async_get_entity_id(hass, acc["id"], sensor)
-            assert hass.states.get(entity_id) == snapshot
+    await snapshot_platform(
+        hass, entity_registry, snapshot, polling_config_entry.entry_id
+    )
 
 
 async def test_update_failed(
