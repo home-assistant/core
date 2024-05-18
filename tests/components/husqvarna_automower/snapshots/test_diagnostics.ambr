@@ -97,6 +97,10 @@
           'enabled': True,
           'name': 'Springflowers',
         }),
+        'AAAAAAAA-BBBB-CCCC-DDDD-123456789101': dict({
+          'enabled': False,
+          'name': 'Danger Zone',
+        }),
       }),
     }),
     'system': dict({

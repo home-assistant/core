@@ -94,6 +94,50 @@ async def test_switch_commands(
     assert len(mocked_method.mock_calls) == 2
 
 
+@pytest.mark.parametrize(
+    ("service", "boolean"),
+    [
+        ("turn_off", False),
+        ("turn_on", True),
+        ("toggle", False),
+    ],
+)
+async def test_stay_out_zone_switch_commands(
+    hass: HomeAssistant,
+    service: str,
+    boolean: bool,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test switch commands."""
+    await setup_integration(hass, mock_config_entry)
+    mocked_method = AsyncMock()
+    setattr(mock_automower_client.commands, "switch_stay_out_zone", mocked_method)
+    await hass.services.async_call(
+        domain="switch",
+        service=service,
+        service_data={"entity_id": "switch.test_mower_1_enable_danger_zone"},
+        blocking=True,
+    )
+    assert len(mocked_method.mock_calls) == 1
+    mocked_method.assert_called_with(
+        TEST_MOWER_ID, "AAAAAAAA-BBBB-CCCC-DDDD-123456789101", boolean
+    )
+    mocked_method.side_effect = ApiException("Test error")
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            domain="switch",
+            service=service,
+            service_data={"entity_id": "switch.test_mower_1_enable_danger_zone"},
+            blocking=True,
+        )
+    assert (
+        str(exc_info.value)
+        == "Command couldn't be sent to the command queue: Test error"
+    )
+    assert len(mocked_method.mock_calls) == 2
+
+
 async def test_switch(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
