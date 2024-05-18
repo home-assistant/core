@@ -23,20 +23,32 @@ VEHICLE_REDACT = [
     "drive_state_native_longitude",
 ]
 
-ENERGY_REDACT = ["vin"]
+ENERGY_LIVE_REDACT = ["vin"]
+ENERGY_INFO_REDACT = ["installation_date"]
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    vehicles = [x.coordinator.data for x in config_entry.runtime_data.vehicles]
+    vehicles = [
+        {
+            "data": async_redact_data(x.coordinator.data, VEHICLE_REDACT),
+            # Stream diag will go here when implemented
+        }
+        for x in entry.runtime_data.vehicles
+    ]
     energysites = [
-        x.live_coordinator.data for x in config_entry.runtime_data.energysites
+        {
+            "live": async_redact_data(x.live_coordinator.data, ENERGY_LIVE_REDACT),
+            "info": async_redact_data(x.info_coordinator.data, ENERGY_INFO_REDACT),
+        }
+        for x in entry.runtime_data.energysites
     ]
 
     # Return only the relevant children
     return {
-        "vehicles": async_redact_data(vehicles, VEHICLE_REDACT),
-        "energysites": async_redact_data(energysites, ENERGY_REDACT),
+        "vehicles": vehicles,
+        "energysites": energysites,
+        "scopes": entry.runtime_data.scopes,
     }
