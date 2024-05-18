@@ -124,9 +124,9 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
         """Return the state of the entity."""
         if self._pending_state is not None:
             return self._pending_state
-        if self._last_state.status == AlarmStatus.TRIGGERED:
-            return ALARM_STATE_TO_HA.get(self._last_state.status)
         if (state := self._last_state) is not None:
+            if state.status == AlarmStatus.TRIGGERED:
+                return ALARM_STATE_TO_HA.get(AlarmStatus.TRIGGERED)
             return ALARM_STATE_TO_HA.get(state.armed_status)
         return None
 
