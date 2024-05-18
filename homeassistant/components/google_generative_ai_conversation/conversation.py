@@ -216,18 +216,16 @@ class GoogleGenerativeAIConversationEntity(
             if not tool_call:
                 break
 
-            tool_args = dict(tool_call.args)
-
-            LOGGER.debug("Tool call: %s(%s)", tool_call.name, tool_args)
             tool_input = llm.ToolInput(
                 tool_name=tool_call.name,
-                tool_args=tool_args,
+                tool_args=dict(tool_call.args),
                 platform=DOMAIN,
                 context=user_input.context,
                 user_prompt=user_input.text,
                 language=user_input.language,
                 assistant=conversation.DOMAIN,
             )
+            LOGGER.debug("Tool call: %s(%s)", tool_input.name, tool_input.tool_args)
             try:
                 function_response = await llm.async_call_tool(self.hass, tool_input)
             except (HomeAssistantError, vol.Invalid) as e:
