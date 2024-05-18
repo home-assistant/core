@@ -21,11 +21,13 @@ An overview of the areas and the devices in this smart home:
     {%- endif %}
   {%- endfor %}
 {%- endfor %}
-
-Answer the user's questions about the world truthfully.
-
-If the user wants to control a device, reject the request and suggest using the Home Assistant app.
 """
+
+PROMPT_NO_HASS_ACCESS = "If the user wants to control a device, tell them to enable Home Assistant access for the Google configuration."
+PROMPT_HASS_ACCESS = """
+Call the intent tools to control the system. Just pass the name to the intent.
+"""
+
 CONF_CHAT_MODEL = "chat_model"
 DEFAULT_CHAT_MODEL = "models/gemini-pro"
 CONF_TEMPERATURE = "temperature"

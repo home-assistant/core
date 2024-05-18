@@ -35,6 +35,8 @@ from .const import (
     DEFAULT_TOP_P,
     DOMAIN,
     LOGGER,
+    PROMPT_HASS_ACCESS,
+    PROMPT_NO_HASS_ACCESS,
 )
 
 
@@ -135,7 +137,7 @@ class GoogleGenerativeAIConversationEntity(
         """Process a sentence."""
         tools: list[dict[str, Any]] | None = None
 
-        if self.entry.options.get(CONF_ALLOW_HASS_ACCESS):
+        if hass_access := self.entry.options.get(CONF_ALLOW_HASS_ACCESS):
             tools = [_format_tool(tool) for tool in llm.async_get_tools(self.hass)]
             if not tools:
                 tools = None
@@ -155,7 +157,6 @@ class GoogleGenerativeAIConversationEntity(
             },
             tools=tools,
         )
-        LOGGER.debug("Model: %s", model)
 
         if user_input.conversation_id in self.history:
             conversation_id = user_input.conversation_id
@@ -166,7 +167,7 @@ class GoogleGenerativeAIConversationEntity(
 
         intent_response = intent.IntentResponse(language=user_input.language)
         try:
-            prompt = self._async_generate_prompt(raw_prompt)
+            prompt = self._async_generate_prompt(raw_prompt, hass_access)
         except TemplateError as err:
             LOGGER.error("Error rendering prompt: %s", err)
             intent_response.async_set_error(
@@ -253,11 +254,17 @@ class GoogleGenerativeAIConversationEntity(
             response=intent_response, conversation_id=conversation_id
         )
 
-    def _async_generate_prompt(self, raw_prompt: str) -> str:
+    def _async_generate_prompt(self, raw_prompt: str, hass_access: bool) -> str:
         """Generate a prompt for the user."""
-        return template.Template(raw_prompt, self.hass).async_render(
+        prompt = template.Template(raw_prompt, self.hass).async_render(
             {
                 "ha_name": self.hass.config.location_name,
             },
             parse_result=False,
         )
+        prompt += "\n"
+        if hass_access:
+            prompt += PROMPT_HASS_ACCESS
+        else:
+            prompt += PROMPT_NO_HASS_ACCESS
+        return prompt
