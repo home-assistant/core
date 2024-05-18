@@ -16,13 +16,16 @@ from .const import (
     CONF_ZONE_NUMBER,
     CONF_ZONE_RFID,
     CONF_ZONE_TYPE,
+    DATA_AD,
     DEFAULT_ZONE_OPTIONS,
+    DOMAIN,
     OPTIONS_ZONES,
     SIGNAL_REL_MESSAGE,
     SIGNAL_RFX_MESSAGE,
     SIGNAL_ZONE_FAULT,
     SIGNAL_ZONE_RESTORE,
 )
+from .entity import AlarmDecoderEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +44,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up for AlarmDecoder sensor."""
 
+    client = hass.data[DOMAIN][entry.entry_id][DATA_AD]
     zones = entry.options.get(OPTIONS_ZONES, DEFAULT_ZONE_OPTIONS)
 
     entities = []
@@ -53,20 +57,28 @@ async def async_setup_entry(
         relay_addr = zone_info.get(CONF_RELAY_ADDR)
         relay_chan = zone_info.get(CONF_RELAY_CHAN)
         entity = AlarmDecoderBinarySensor(
-            zone_num, zone_name, zone_type, zone_rfid, zone_loop, relay_addr, relay_chan
+            client,
+            zone_num,
+            zone_name,
+            zone_type,
+            zone_rfid,
+            zone_loop,
+            relay_addr,
+            relay_chan,
         )
         entities.append(entity)
 
     async_add_entities(entities)
 
 
-class AlarmDecoderBinarySensor(BinarySensorEntity):
+class AlarmDecoderBinarySensor(AlarmDecoderEntity, BinarySensorEntity):
     """Representation of an AlarmDecoder binary sensor."""
 
     _attr_should_poll = False
 
     def __init__(
         self,
+        client,
         zone_number,
         zone_name,
         zone_type,
@@ -76,6 +88,8 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
         relay_chan,
     ):
         """Initialize the binary_sensor."""
+        super().__init__(client)
+        self._attr_unique_id = f"{client.serial_number}-zone-{zone_number}"
         self._zone_number = int(zone_number)
         self._zone_type = zone_type
         self._attr_name = zone_name
