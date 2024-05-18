@@ -23,6 +23,7 @@ async def test_call_tool_no_existing(hass: HomeAssistant) -> None:
                 None,
                 None,
                 None,
+                None,
             ),
         )
 
@@ -61,6 +62,7 @@ async def test_intent_tool(hass: HomeAssistant) -> None:
         user_prompt="test_text",
         language="*",
         assistant="conversation",
+        api="intent",
     )
 
     with patch(
