@@ -672,54 +672,6 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[yna5x1][sensor.ozmo_950_charger_position:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ozmo_950_charger_position',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Charger Position',
-    'platform': 'ecovacs',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'position_charger',
-    'unique_id': 'E1234567890000000001_position_charger',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[yna5x1][sensor.ozmo_950_charger_position:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Charger Position',
-      'x': 5,
-      'y': 9,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ozmo_950_charger_position',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '{"x": 5, "y": 9}',
-  })
-# ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_cleaning_duration:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -909,54 +861,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '192.168.0.10',
-  })
-# ---
-# name: test_sensors[yna5x1][sensor.ozmo_950_last_position:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ozmo_950_last_position',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Last Position',
-    'platform': 'ecovacs',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'position_deebot',
-    'unique_id': 'E1234567890000000001_position_deebot',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[yna5x1][sensor.ozmo_950_last_position:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Last Position',
-      'x': 1,
-      'y': 5,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ozmo_950_last_position',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '{"x": 1, "y": 5}',
   })
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_main_brush_lifespan:entity-registry]
