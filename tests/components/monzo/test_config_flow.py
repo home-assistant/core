@@ -211,7 +211,7 @@ async def test_config_reauth_profile(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert result
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
 
