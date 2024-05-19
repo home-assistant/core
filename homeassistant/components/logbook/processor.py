@@ -246,7 +246,7 @@ def _humanify(
             domain, describe_event = external_events[event_type]
             try:
                 data = describe_event(event_cache.get(row))
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception(
                     "Error with %s describe event for %s", domain, event_type
                 )
@@ -358,7 +358,7 @@ class ContextAugmenter:
         event = self.event_cache.get(context_row)
         try:
             described = describe_event(event)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error with %s describe event for %s", domain, event_type)
             return
         if name := described.get(LOGBOOK_ENTRY_NAME):

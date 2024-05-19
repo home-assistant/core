@@ -72,7 +72,7 @@ class IdasenDeskConfigFlow(ConfigFlow, domain=DOMAIN):
             except BleakError:
                 _LOGGER.exception("Unexpected Bluetooth error")
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
             else:

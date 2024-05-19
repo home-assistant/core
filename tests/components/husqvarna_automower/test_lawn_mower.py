@@ -71,9 +71,9 @@ async def test_lawn_mower_commands(
     """Test lawn_mower commands."""
     await setup_integration(hass, mock_config_entry)
 
-    getattr(mock_automower_client, aioautomower_command).side_effect = ApiException(
-        "Test error"
-    )
+    getattr(
+        mock_automower_client.commands, aioautomower_command
+    ).side_effect = ApiException("Test error")
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(

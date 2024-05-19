@@ -9,6 +9,7 @@ import functools
 import gc
 import logging
 import os
+import re
 from tempfile import TemporaryDirectory
 import threading
 import time
@@ -109,9 +110,7 @@ async def test_async_add_hass_job_eager_start_coro_suspends(
     async def job_that_suspends():
         await asyncio.sleep(0)
 
-    task = hass._async_add_hass_job(
-        ha.HassJob(ha.callback(job_that_suspends)), eager_start=True
-    )
+    task = hass._async_add_hass_job(ha.HassJob(ha.callback(job_that_suspends)))
     assert not task.done()
     assert task in hass._tasks
     await task
@@ -247,7 +246,7 @@ async def test_async_add_hass_job_eager_start(hass: HomeAssistant) -> None:
     job = ha.HassJob(mycoro, "named coro")
     assert "named coro" in str(job)
     assert job.name == "named coro"
-    task = ha.HomeAssistant._async_add_hass_job(hass, job, eager_start=True)
+    task = ha.HomeAssistant._async_add_hass_job(hass, job)
     assert "named coro" in str(task)
 
 
@@ -263,19 +262,6 @@ async def test_async_add_hass_job_schedule_partial_callback() -> None:
     assert len(hass.add_job.mock_calls) == 0
 
 
-async def test_async_add_hass_job_schedule_coroutinefunction() -> None:
-    """Test that we schedule coroutines and add jobs to the job pool."""
-    hass = MagicMock(loop=MagicMock(wraps=asyncio.get_running_loop()))
-
-    async def job():
-        pass
-
-    ha.HomeAssistant._async_add_hass_job(hass, ha.HassJob(job))
-    assert len(hass.loop.call_soon.mock_calls) == 0
-    assert len(hass.loop.create_task.mock_calls) == 1
-    assert len(hass.add_job.mock_calls) == 0
-
-
 async def test_async_add_hass_job_schedule_corofunction_eager_start() -> None:
     """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock(loop=MagicMock(wraps=asyncio.get_running_loop()))
@@ -287,15 +273,15 @@ async def test_async_add_hass_job_schedule_corofunction_eager_start() -> None:
         "homeassistant.core.create_eager_task", wraps=create_eager_task
     ) as mock_create_eager_task:
         hass_job = ha.HassJob(job)
-        task = ha.HomeAssistant._async_add_hass_job(hass, hass_job, eager_start=True)
+        task = ha.HomeAssistant._async_add_hass_job(hass, hass_job)
         assert len(hass.loop.call_soon.mock_calls) == 0
         assert len(hass.add_job.mock_calls) == 0
         assert mock_create_eager_task.mock_calls
         await task
 
 
-async def test_async_add_hass_job_schedule_partial_coroutinefunction() -> None:
-    """Test that we schedule partial coros and add jobs to the job pool."""
+async def test_async_add_hass_job_schedule_partial_corofunction_eager_start() -> None:
+    """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock(loop=MagicMock(wraps=asyncio.get_running_loop()))
 
     async def job():
@@ -303,10 +289,15 @@ async def test_async_add_hass_job_schedule_partial_coroutinefunction() -> None:
 
     partial = functools.partial(job)
 
-    ha.HomeAssistant._async_add_hass_job(hass, ha.HassJob(partial))
-    assert len(hass.loop.call_soon.mock_calls) == 0
-    assert len(hass.loop.create_task.mock_calls) == 1
-    assert len(hass.add_job.mock_calls) == 0
+    with patch(
+        "homeassistant.core.create_eager_task", wraps=create_eager_task
+    ) as mock_create_eager_task:
+        hass_job = ha.HassJob(partial)
+        task = ha.HomeAssistant._async_add_hass_job(hass, hass_job)
+        assert len(hass.loop.call_soon.mock_calls) == 0
+        assert len(hass.add_job.mock_calls) == 0
+        assert mock_create_eager_task.mock_calls
+        await task
 
 
 async def test_async_add_job_add_hass_threaded_job_to_pool() -> None:
@@ -329,7 +320,7 @@ async def test_async_create_task_schedule_coroutine() -> None:
     async def job():
         pass
 
-    ha.HomeAssistant.async_create_task(hass, job(), eager_start=False)
+    ha.HomeAssistant.async_create_task_internal(hass, job(), eager_start=False)
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
@@ -342,7 +333,7 @@ async def test_async_create_task_eager_start_schedule_coroutine() -> None:
     async def job():
         pass
 
-    ha.HomeAssistant.async_create_task(hass, job(), eager_start=True)
+    ha.HomeAssistant.async_create_task_internal(hass, job(), eager_start=True)
     # Should create the task directly since 3.12 supports eager_start
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.add_job.mock_calls) == 0
@@ -355,7 +346,7 @@ async def test_async_create_task_schedule_coroutine_with_name() -> None:
     async def job():
         pass
 
-    task = ha.HomeAssistant.async_create_task(
+    task = ha.HomeAssistant.async_create_task_internal(
         hass, job(), "named task", eager_start=False
     )
     assert len(hass.loop.call_soon.mock_calls) == 0
@@ -3452,7 +3443,8 @@ async def test_async_fire_thread_safety(hass: HomeAssistant) -> None:
     events = async_capture_events(hass, "test_event")
     hass.bus.async_fire("test_event")
     with pytest.raises(
-        RuntimeError, match="Detected code that calls async_fire from a thread."
+        RuntimeError,
+        match="Detected code that calls hass.bus.async_fire from a thread.",
     ):
         await hass.async_add_executor_job(hass.bus.async_fire, "test_event")
 
@@ -3462,7 +3454,8 @@ async def test_async_fire_thread_safety(hass: HomeAssistant) -> None:
 async def test_async_register_thread_safety(hass: HomeAssistant) -> None:
     """Test async_register thread safety."""
     with pytest.raises(
-        RuntimeError, match="Detected code that calls async_register from a thread."
+        RuntimeError,
+        match="Detected code that calls hass.services.async_register from a thread.",
     ):
         await hass.async_add_executor_job(
             hass.services.async_register,
@@ -3475,8 +3468,37 @@ async def test_async_register_thread_safety(hass: HomeAssistant) -> None:
 async def test_async_remove_thread_safety(hass: HomeAssistant) -> None:
     """Test async_remove thread safety."""
     with pytest.raises(
-        RuntimeError, match="Detected code that calls async_remove from a thread."
+        RuntimeError,
+        match="Detected code that calls hass.services.async_remove from a thread.",
     ):
         await hass.async_add_executor_job(
             hass.services.async_remove, "test_domain", "test_service"
         )
+
+
+async def test_async_create_task_thread_safety(hass: HomeAssistant) -> None:
+    """Test async_create_task thread safety."""
+
+    async def _any_coro():
+        pass
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls hass.async_create_task from a thread.",
+    ):
+        await hass.async_add_executor_job(hass.async_create_task, _any_coro)
+
+
+async def test_thread_safety_message(hass: HomeAssistant) -> None:
+    """Test the thread safety message."""
+    with pytest.raises(
+        RuntimeError,
+        match=re.escape(
+            "Detected code that calls test from a thread other than the event loop, "
+            "which may cause Home Assistant to crash or data to corrupt. For more "
+            "information, see "
+            "https://developers.home-assistant.io/docs/asyncio_thread_safety/#test"
+            ". Please report this issue.",
+        ),
+    ):
+        await hass.async_add_executor_job(hass.verify_event_loop_thread, "test")

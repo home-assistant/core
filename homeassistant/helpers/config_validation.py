@@ -583,7 +583,7 @@ def slug(value: Any) -> str:
 
 
 def schema_with_slug_keys(
-    value_schema: _T | Callable, *, slug_validator: Callable[[Any], str] = slug
+    value_schema: dict | Callable, *, slug_validator: Callable[[Any], str] = slug
 ) -> Callable:
     """Ensure dicts have slugs as keys.
 
@@ -1311,7 +1311,7 @@ SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
 SCRIPT_ACTION_BASE_SCHEMA = {
     vol.Optional(CONF_ALIAS): string,
     vol.Optional(CONF_CONTINUE_ON_ERROR): boolean,
-    vol.Optional(CONF_ENABLED): boolean,
+    vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
 }
 
 EVENT_SCHEMA = vol.Schema(
@@ -1356,7 +1356,7 @@ NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
 
 CONDITION_BASE_SCHEMA = {
     vol.Optional(CONF_ALIAS): string,
-    vol.Optional(CONF_ENABLED): boolean,
+    vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
 }
 
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
@@ -1648,7 +1648,7 @@ TRIGGER_BASE_SCHEMA = vol.Schema(
         vol.Required(CONF_PLATFORM): str,
         vol.Optional(CONF_ID): str,
         vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
-        vol.Optional(CONF_ENABLED): boolean,
+        vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
     }
 )
 
