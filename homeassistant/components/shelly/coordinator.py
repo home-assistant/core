@@ -362,6 +362,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         self, device_: BlockDevice, update_type: BlockUpdateType
     ) -> None:
         """Handle device update."""
+        LOGGER.debug("Shelly %s handle update, type: %s", self.name, update_type)
         if update_type is BlockUpdateType.ONLINE:
             self.entry.async_create_background_task(
                 self.hass,
@@ -596,7 +597,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         if not await self._async_device_connect_task():
             raise UpdateFailed("Device reconnect error")
 
-    async def _async_disconnected(self) -> None:
+    async def _async_disconnected(self, reconnect: bool) -> None:
         """Handle device disconnected."""
         # Sleeping devices send data and disconnect
         # There are no disconnect events for sleeping devices
@@ -608,8 +609,8 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                 return
             self.connected = False
             self._async_run_disconnected_events()
-        # Try to reconnect right away if hass is not stopping
-        if not self.hass.is_stopping:
+        # Try to reconnect right away if triggered by disconnect event
+        if reconnect:
             await self.async_request_refresh()
 
     @callback
@@ -661,6 +662,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self, device_: RpcDevice, update_type: RpcUpdateType
     ) -> None:
         """Handle device update."""
+        LOGGER.debug("Shelly %s handle update, type: %s", self.name, update_type)
         if update_type is RpcUpdateType.ONLINE:
             self.entry.async_create_background_task(
                 self.hass,
@@ -676,7 +678,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         elif update_type is RpcUpdateType.DISCONNECTED:
             self.entry.async_create_background_task(
                 self.hass,
-                self._async_disconnected(),
+                self._async_disconnected(True),
                 "rpc device disconnected",
                 eager_start=True,
             )
@@ -706,7 +708,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                 await self.async_shutdown_device_and_start_reauth()
                 return
         await self.device.shutdown()
-        await self._async_disconnected()
+        await self._async_disconnected(False)
 
     async def _handle_ha_stop(self, _event: Event) -> None:
         """Handle Home Assistant stopping."""
