@@ -31,6 +31,9 @@
     "event": {
       "last_job": {
         "default": "mdi:history"
+      },
+      "last_position": {
+        "default": "mdi:history"
       }
     },
     "number": {
