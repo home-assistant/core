@@ -14,9 +14,9 @@
         },
         "capabilities": {
           "headlights": true,
-          "workAreas": false,
+          "workAreas": true,
           "position": true,
-          "stayOutZones": false
+          "stayOutZones": true
         },
         "mower": {
           "mode": "MAIN_AREA",
@@ -67,6 +67,11 @@
             "workAreaId": 123456,
             "name": "Front lawn",
             "cuttingHeight": 50
+          },
+          {
+            "workAreaId": 654321,
+            "name": "Back lawn",
+            "cuttingHeight": 25
           },
           {
             "workAreaId": 0,

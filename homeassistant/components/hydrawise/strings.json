@@ -2,8 +2,11 @@
   "config": {
     "step": {
       "user": {
+        "title": "Hydrawise Login",
+        "description": "Please provide the username and password for your Hydrawise cloud account:",
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
@@ -13,16 +16,29 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "entity": {
     "binary_sensor": {
       "watering": {
         "name": "Watering"
+      },
+      "rain_sensor": {
+        "name": "Rain sensor"
       }
     },
     "sensor": {
+      "daily_total_water_use": {
+        "name": "Daily total water use"
+      },
+      "daily_active_water_use": {
+        "name": "Daily active water use"
+      },
+      "daily_inactive_water_use": {
+        "name": "Daily inactive water use"
+      },
       "next_cycle": {
         "name": "Next cycle"
       },

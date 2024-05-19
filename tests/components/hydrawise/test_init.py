@@ -19,3 +19,16 @@ async def test_connect_retry(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_update_version(
+    hass: HomeAssistant, mock_config_entry_legacy: MockConfigEntry
+) -> None:
+    """Test updating to the GaphQL API works."""
+    mock_config_entry_legacy.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_legacy.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry_legacy.state is ConfigEntryState.SETUP_ERROR
+
+    # Make sure reauth flow has been initiated
+    assert any(mock_config_entry_legacy.async_get_active_flows(hass, {"reauth"}))

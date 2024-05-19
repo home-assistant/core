@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable, Mapping
 from contextlib import suppress
+from dataclasses import dataclass
 import logging
 import pathlib
 import string
@@ -23,6 +24,8 @@ from homeassistant.loader import (
     bind_hass,
 )
 from homeassistant.util.json import load_json
+
+from . import singleton
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -138,22 +141,34 @@ async def _async_get_component_strings(
     return translations_by_language
 
 
+@dataclass(slots=True)
+class _TranslationsCacheData:
+    """Data for the translation cache.
+
+    This class contains data that is designed to be shared
+    between multiple instances of the translation cache so
+    we only have to load the data once.
+    """
+
+    loaded: dict[str, set[str]]
+    cache: dict[str, dict[str, dict[str, dict[str, str]]]]
+
+
 class _TranslationCache:
     """Cache for flattened translations."""
 
-    __slots__ = ("hass", "loaded", "cache", "lock")
+    __slots__ = ("hass", "cache_data", "lock")
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the cache."""
         self.hass = hass
-        self.loaded: dict[str, set[str]] = {}
-        self.cache: dict[str, dict[str, dict[str, dict[str, str]]]] = {}
+        self.cache_data = _TranslationsCacheData({}, {})
         self.lock = asyncio.Lock()
 
     @callback
     def async_is_loaded(self, language: str, components: set[str]) -> bool:
         """Return if the given components are loaded for the language."""
-        return components.issubset(self.loaded.get(language, set()))
+        return components.issubset(self.cache_data.loaded.get(language, set()))
 
     async def async_load(
         self,
@@ -161,7 +176,7 @@ class _TranslationCache:
         components: set[str],
     ) -> None:
         """Load resources into the cache."""
-        loaded = self.loaded.setdefault(language, set())
+        loaded = self.cache_data.loaded.setdefault(language, set())
         if components_to_load := components - loaded:
             # Translations are never unloaded so if there are no components to load
             # we can skip the lock which reduces contention when multiple different
@@ -191,7 +206,7 @@ class _TranslationCache:
         components: set[str],
     ) -> dict[str, str]:
         """Read resources from the cache."""
-        category_cache = self.cache.get(language, {}).get(category, {})
+        category_cache = self.cache_data.cache.get(language, {}).get(category, {})
         # If only one component was requested, return it directly
         # to avoid merging the dictionaries and keeping additional
         # copies of the same data in memory.
@@ -205,6 +220,7 @@ class _TranslationCache:
 
     async def _async_load(self, language: str, components: set[str]) -> None:
         """Populate the cache for a given set of components."""
+        loaded = self.cache_data.loaded
         _LOGGER.debug(
             "Cache miss for %s: %s",
             language,
@@ -238,7 +254,7 @@ class _TranslationCache:
                 language, components, translation_by_language_strings[language]
             )
 
-            loaded_english_components = self.loaded.setdefault(LOCALE_EN, set())
+            loaded_english_components = loaded.setdefault(LOCALE_EN, set())
             # Since we just loaded english anyway we can avoid loading
             # again if they switch back to english.
             if loaded_english_components.isdisjoint(components):
@@ -247,7 +263,7 @@ class _TranslationCache:
                 )
                 loaded_english_components.update(components)
 
-        self.loaded[language].update(components)
+        loaded[language].update(components)
 
     def _validate_placeholders(
         self,
@@ -302,7 +318,7 @@ class _TranslationCache:
     ) -> None:
         """Extract resources into the cache."""
         resource: dict[str, Any] | str
-        cached = self.cache.setdefault(language, {})
+        cached = self.cache_data.cache.setdefault(language, {})
         categories = {
             category
             for component in translation_strings.values()
@@ -370,11 +386,10 @@ def async_get_cached_translations(
     )
 
 
-@callback
+@singleton.singleton(TRANSLATION_FLATTEN_CACHE)
 def _async_get_translations_cache(hass: HomeAssistant) -> _TranslationCache:
     """Return the translation cache."""
-    cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
-    return cache
+    return _TranslationCache(hass)
 
 
 @callback
@@ -385,7 +400,7 @@ def async_setup(hass: HomeAssistant) -> None:
     """
     cache = _TranslationCache(hass)
     current_language = hass.config.language
-    hass.data[TRANSLATION_FLATTEN_CACHE] = cache
+    _async_get_translations_cache(hass)
 
     @callback
     def _async_load_translations_filter(event_data: Mapping[str, Any]) -> bool:

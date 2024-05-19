@@ -11,6 +11,7 @@ from .const import DEFAULT_FORECAST, DEFAULT_OBSERVATION
 @pytest.fixture
 def mock_simple_nws():
     """Mock pynws SimpleNWS with default values."""
+
     with patch("homeassistant.components.nws.SimpleNWS") as mock_nws:
         instance = mock_nws.return_value
         instance.set_station = AsyncMock(return_value=None)
