@@ -1,30 +1,34 @@
 """Config flow for Mammotion Luba."""
+
 import logging
+from typing import Any
 
 from bleak import BLEDevice
+import voluptuous as vol
+
 from homeassistant.components import bluetooth
-from homeassistant.components.bluetooth import BluetoothServiceInfo
+from homeassistant.components.bluetooth import (
+    BluetoothServiceInfo,
+    async_discovered_service_info,
+)
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
-from typing import Any
+
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Mammotion"""
+    """Handle a config flow for Mammotion."""
 
     VERSION = 1
 
     _address: str | None = None
     _discovered_devices: dict[str, BLEDevice] = {}
 
-
     def __init__(self) -> None:
         """Initialize the config flow."""
-        pass
-
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
@@ -53,9 +57,12 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         device = self._discovered_devices[self._address]
 
         if user_input is not None:
-            return self.async_create_entry(title=device.name, data={
-                CONF_ADDRESS: device.address,
-            })
+            return self.async_create_entry(
+                title=device.name,
+                data={
+                    CONF_ADDRESS: device.address,
+                },
+            )
 
         self._set_confirm_only()
         return self.async_show_form(
@@ -78,6 +85,28 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
                 "name": device.name,
             }
 
-            return self.async_create_entry(title=device.name, data={
-                CONF_ADDRESS: device.address,
-            })
+            return self.async_create_entry(
+                title=device.name,
+                data={
+                    CONF_ADDRESS: device.address,
+                },
+            )
+
+        current_addresses = self._async_current_ids()
+        for discovery_info in async_discovered_service_info(self.hass):
+            address = discovery_info.address
+            if address in current_addresses or address in self._discovered_devices:
+                continue
+
+            self._discovered_devices[address] = (
+                device.title or device.get_device_name() or discovery_info.name
+            )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices),
+                },
+            ),
+        )
