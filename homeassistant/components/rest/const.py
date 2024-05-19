@@ -27,6 +27,8 @@ REST_DATA = "rest_data"
 
 METHODS = ["POST", "GET"]
 
+XML_CONTENT_INDICATORS = ('<?xml version="1.0"?>',)
+XML_FILENAME_EXTENSIONS = (".xml",)
 XML_MIME_TYPES = (
     "application/rss+xml",
     "application/xhtml+xml",

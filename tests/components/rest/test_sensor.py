@@ -479,12 +479,76 @@ async def test_setup_post(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_setup_get_xml(hass: HomeAssistant) -> None:
-    """Test setup with valid xml configuration."""
+async def test_setup_get_xml_content_type(hass: HomeAssistant) -> None:
+    """Test setup with valid xml configuration and an xml http content type."""
     respx.get("http://localhost").respond(
         status_code=HTTPStatus.OK,
         headers={"content-type": "text/xml"},
         content="<dog>123</dog>",
+    )
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.dog }}",
+                "name": "foo",
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
+                "verify_ssl": "true",
+                "timeout": 30,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
+
+    state = hass.states.get("sensor.foo")
+    assert state.state == "123"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfInformation.MEGABYTES
+
+
+@respx.mock
+async def test_setup_get_xml_file_extension(hass: HomeAssistant) -> None:
+    """Test setup with valid xml configuration."""
+    respx.get("http://localhost/file.xml").respond(
+        status_code=HTTPStatus.OK,
+        headers={"content-type": "application/octet-stream"},
+        content="<dog>123</dog>",
+    )
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
+                "resource": "http://localhost/file.xml",
+                "method": "GET",
+                "value_template": "{{ value_json.dog }}",
+                "name": "foo",
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
+                "verify_ssl": "true",
+                "timeout": 30,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
+
+    state = hass.states.get("sensor.foo")
+    assert state.state == "123"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfInformation.MEGABYTES
+
+
+@respx.mock
+async def test_setup_get_xml_content(hass: HomeAssistant) -> None:
+    """Test setup with valid xml configuration."""
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        headers={"content-type": "application/octet-stream"},
+        content='<?xml version="1.0"?><dog>123</dog>',
     )
     assert await async_setup_component(
         hass,
