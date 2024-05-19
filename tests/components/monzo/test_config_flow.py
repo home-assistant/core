@@ -1,7 +1,7 @@
 """Tests for config flow."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from monzopy import AuthorisationExpiredError
@@ -10,7 +10,6 @@ from homeassistant.components.monzo.application_credentials import (
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
-from homeassistant.components.monzo.config_flow import MonzoFlowHandler
 from homeassistant.components.monzo.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -271,12 +270,7 @@ async def test_config_reauth_wrong_account(
     assert result["reason"] == "wrong_account"
 
 
-@patch(
-    "homeassistant.components.monzo.config_flow.MonzoFlowHandler.async_step_reauth",
-    wraps=MonzoFlowHandler.async_step_reauth,
-)
 async def test_api_can_trigger_reauth(
-    step_reauth: MagicMock,
     hass: HomeAssistant,
     polling_config_entry: MockConfigEntry,
     monzo: AsyncMock,
@@ -286,8 +280,13 @@ async def test_api_can_trigger_reauth(
     await setup_integration(hass, polling_config_entry)
 
     monzo.user_account.accounts.side_effect = AuthorisationExpiredError()
-
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    step_reauth.assert_called_once()
+    flows = hass.config_entries.flow.async_progress()
+
+    assert len(flows) == 1
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+    assert flow["context"]["source"] == SOURCE_REAUTH
