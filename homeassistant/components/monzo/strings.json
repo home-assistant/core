@@ -61,5 +61,16 @@
         "name": "[%key:component::monzo::entity::sensor::balance::name%]"
       }
     }
+  },
+  "exceptions": {
+    "invalid_device": {
+      "message": "Pot transfer failed: No device found with id {device_id}."
+    },
+    "invalid_device_model": {
+      "message": "Pot transfer failed: Device {device_name} is not one of {valid_types}."
+    },
+    "external_transfer_failure": {
+      "message": "One or more pot transfers failed due to an external error."
+    }
   }
 }
