@@ -1,13 +1,17 @@
 """Test Onkyo config flow."""
 
+import logging
 from typing import Any
 from unittest import mock
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import eiscp
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components.onkyo.const import (
+    CONF_LEGACY_MAXIMUM_VOLUME,
+    CONF_LEGACY_RECEIVER_MAXIMUM_VOLUME,
     CONF_SOURCES,
     DOMAIN,
     EISCP_IDENTIFIER,
@@ -27,6 +31,19 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 from tests.components.onkyo import setup_integration
+
+MOCK_ONKYO_CONFIG = {
+    CONF_HOST: "127.0.0.1",
+    CONF_NAME: "Receiver test name",
+    CONF_LEGACY_MAXIMUM_VOLUME: 42,
+    CONF_LEGACY_RECEIVER_MAXIMUM_VOLUME: 69,
+    CONF_SOURCES: {
+        "Key_one": "Value-A",
+        "Key_two": "Value-B",
+    },
+}
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def test_no_manual_entry_and_no_devices_discovered(hass: HomeAssistant) -> None:
@@ -177,8 +194,6 @@ async def test_select_manually_discovered_device(hass: HomeAssistant) -> None:
 )
 async def test_options_flow_failures(
     hass: HomeAssistant,
-    # mock_setup_entry: AsyncMock,
-    # opensky_client: AsyncMock,
     config_entry: MockConfigEntry,
     user_input: dict[str, Any],
     error: str,
@@ -226,3 +241,64 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
         "maximum_volume": 42,
         "sources": {},
     }
+
+
+@pytest.mark.parametrize(
+    ("user_input", "error"),
+    [
+        (
+            {CONF_HOST: None},
+            "no_host_defined",
+        ),
+        (
+            {CONF_HOST: "127.0.0.1"},
+            "cannot_connect",
+        ),
+    ],
+)
+@mock.patch("eiscp.eISCP", autospec=eiscp.eISCP)
+async def test_import_fail(
+    mock_receiver: MagicMock,
+    hass: HomeAssistant,
+    user_input: dict[str, Any],
+    error: str,
+) -> None:
+    """Test import flow."""
+
+    client = mock_receiver.return_value
+    client.info = None
+
+    with patch("homeassistant.components.onkyo.config_flow"):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=user_input
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == error
+
+
+@mock.patch("eiscp.eISCP", autospec=eiscp.eISCP)
+async def test_import_success(
+    mock_receiver: MagicMock,
+    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant,
+) -> None:
+    """Test import flow."""
+
+    client = mock_receiver.return_value
+    client.info = {EISCP_IDENTIFIER: "001122334455", EISCP_MODEL_NAME: "Test model"}
+
+    with patch("homeassistant.components.onkyo.config_flow"):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=MOCK_ONKYO_CONFIG,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test model 001122334455"
+    assert result["result"].unique_id == "001122334455"
+    assert result["data"] == MOCK_ONKYO_CONFIG
+    assert len(mock_setup_entry.mock_calls) == 1
