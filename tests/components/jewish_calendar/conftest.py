@@ -1,7 +1,7 @@
 """Common fixtures for the jewish_calendar tests."""
 
 from collections.abc import Generator
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -20,9 +20,9 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[None, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.jewish_calendar.async_setup_entry", return_value=True
-    ):
-        yield
+    ) as mock_setup_entry:
+        yield mock_setup_entry
