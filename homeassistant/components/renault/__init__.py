@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_LOCALE, DOMAIN, PLATFORMS
@@ -56,3 +56,12 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: RenaultConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    return not device_entry.identifiers.intersection(
+        (DOMAIN, vin) for vin in config_entry.runtime_data.vehicles
+    )
