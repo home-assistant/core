@@ -33,21 +33,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_OLD_DISCOVERY,
     DEFAULT_CONF_OLD_DISCOVERY,
-    DEFAULT_DEVICE_NAME,
     DEFAULT_HOST,
     DEFAULT_SSL,
     DEFAULT_USERNAME,
@@ -960,50 +953,6 @@ class FritzData:
     wol_buttons: dict = field(default_factory=dict)
 
 
-class FritzDeviceBase(CoordinatorEntity[AvmWrapper]):
-    """Entity base class for a device connected to a FRITZ!Box device."""
-
-    def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:
-        """Initialize a FRITZ!Box device."""
-        super().__init__(avm_wrapper)
-        self._avm_wrapper = avm_wrapper
-        self._mac: str = device.mac_address
-        self._name: str = device.hostname or DEFAULT_DEVICE_NAME
-
-    @property
-    def name(self) -> str:
-        """Return device name."""
-        return self._name
-
-    @property
-    def ip_address(self) -> str | None:
-        """Return the primary ip address of the device."""
-        if self._mac:
-            return self._avm_wrapper.devices[self._mac].ip_address
-        return None
-
-    @property
-    def mac_address(self) -> str:
-        """Return the mac address of the device."""
-        return self._mac
-
-    @property
-    def hostname(self) -> str | None:
-        """Return hostname of the device."""
-        if self._mac:
-            return self._avm_wrapper.devices[self._mac].hostname
-        return None
-
-    async def async_process_update(self) -> None:
-        """Update device."""
-        raise NotImplementedError
-
-    async def async_on_demand_update(self) -> None:
-        """Update state."""
-        await self.async_process_update()
-        self.async_write_ha_state()
-
-
 class FritzDevice:
     """Representation of a device connected to the FRITZ!Box."""
 
@@ -1100,87 +1049,6 @@ class SwitchInfo(TypedDict):
     callback_update: Callable
     callback_switch: Callable
     init_state: bool
-
-
-class FritzBoxBaseEntity:
-    """Fritz host entity base class."""
-
-    def __init__(self, avm_wrapper: AvmWrapper, device_name: str) -> None:
-        """Init device info class."""
-        self._avm_wrapper = avm_wrapper
-        self._device_name = device_name
-
-    @property
-    def mac_address(self) -> str:
-        """Return the mac address of the main device."""
-        return self._avm_wrapper.mac
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return DeviceInfo(
-            configuration_url=f"http://{self._avm_wrapper.host}",
-            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
-            identifiers={(DOMAIN, self._avm_wrapper.unique_id)},
-            manufacturer="AVM",
-            model=self._avm_wrapper.model,
-            name=self._device_name,
-            sw_version=self._avm_wrapper.current_firmware,
-        )
-
-
-@dataclass(frozen=True)
-class FritzRequireKeysMixin:
-    """Fritz entity description mix in."""
-
-    value_fn: Callable[[FritzStatus, Any], Any] | None
-
-
-@dataclass(frozen=True)
-class FritzEntityDescription(EntityDescription, FritzRequireKeysMixin):
-    """Fritz entity base description."""
-
-
-class FritzBoxBaseCoordinatorEntity(CoordinatorEntity[AvmWrapper]):
-    """Fritz host coordinator entity base class."""
-
-    entity_description: FritzEntityDescription
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        avm_wrapper: AvmWrapper,
-        device_name: str,
-        description: FritzEntityDescription,
-    ) -> None:
-        """Init device info class."""
-        super().__init__(avm_wrapper)
-        self.entity_description = description
-        self._device_name = device_name
-        self._attr_unique_id = f"{avm_wrapper.unique_id}-{description.key}"
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        if self.entity_description.value_fn is not None:
-            self.async_on_remove(
-                await self.coordinator.async_register_entity_updates(
-                    self.entity_description.key, self.entity_description.value_fn
-                )
-            )
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return DeviceInfo(
-            configuration_url=f"http://{self.coordinator.host}",
-            connections={(dr.CONNECTION_NETWORK_MAC, self.coordinator.mac)},
-            identifiers={(DOMAIN, self.coordinator.unique_id)},
-            manufacturer="AVM",
-            model=self.coordinator.model,
-            name=self._device_name,
-            sw_version=self.coordinator.current_firmware,
-        )
 
 
 @dataclass
