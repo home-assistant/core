@@ -189,20 +189,18 @@ async def test_config_reauth_profile(
         OAUTH2_TOKEN,
         json={
             "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
+            "access_token": "new-mock-access-token",
             "type": "Bearer",
             "expires_in": 60,
             "user_id": str(USER_ID),
         },
     )
-    with patch(
-        "homeassistant.components.monzo.config_flow.MonzoFlowHandler.async_update_reload_and_abort"
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-        mock_setup.assert_not_called()
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "await_approval_confirmation"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "await_approval_confirmation"
+    assert polling_config_entry.data["token"]["access_token"] == "mock-access-token"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"confirm": True}
@@ -212,6 +210,7 @@ async def test_config_reauth_profile(
     assert result
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert polling_config_entry.data["token"]["access_token"] == "new-mock-access-token"
 
 
 async def test_config_reauth_wrong_account(
