@@ -16,8 +16,11 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 @pytest.fixture
 def mock_tractive_client() -> Generator[AsyncMock, None, None]:
     """Mock a Tractive client."""
+    trackable_object = load_json_object_fixture("trackable_object.json", DOMAIN)
+    tracker_details = load_json_object_fixture("tracker_details.json", DOMAIN)
+    tracker_hw_info = load_json_object_fixture("tracker_hw_info.json", DOMAIN)
+    tracker_pos_report = load_json_object_fixture("tracker_pos_report.json", DOMAIN)
 
-    trackable_object = load_json_object_fixture("tractive/trackable_object.json")
     with (
         patch(
             "homeassistant.components.tractive.aiotractive.Tractive", autospec=True
@@ -33,7 +36,12 @@ def mock_tractive_client() -> Generator[AsyncMock, None, None]:
                 details=AsyncMock(return_value=trackable_object),
             ),
         ]
-        client.tracker.return_value = Mock(spec=Tracker)
+        client.tracker.return_value = Mock(
+            spec=Tracker,
+            details=AsyncMock(return_value=tracker_details),
+            hw_info=AsyncMock(return_value=tracker_hw_info),
+            pos_report=AsyncMock(return_value=tracker_pos_report),
+        )
 
         yield client
 

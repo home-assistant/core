@@ -21,6 +21,7 @@
     }),
     'trackables': list([
       dict({
+        '_id': '**REDACTED**',
         'details': dict({
           '_id': '**REDACTED**',
           '_type': 'pet_detail',
