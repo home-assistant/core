@@ -634,21 +634,3 @@ async def test_hmip_esi_gas_gas_volume(
     )
 
     assert ha_state.state == "1019.26"
-
-
-async def test_hmip_esi_gas_gas_volume_per_impulse(
-    hass: HomeAssistant, default_mock_hap_factory
-) -> None:
-    """Test ESI-IEC GasVolumePerImpulse."""
-    entity_id = "sensor.esi_gas_gasvolumeperimpulse"
-    entity_name = "esi_gas GasVolumePerImpulse"
-    device_model = "HmIP-ESI"
-    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=["esi_gas"]
-    )
-
-    ha_state, hmip_device = get_and_check_entity_basics(
-        hass, mock_hap, entity_id, entity_name, device_model
-    )
-
-    assert ha_state.state == "0.01"

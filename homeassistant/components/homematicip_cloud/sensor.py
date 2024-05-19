@@ -79,7 +79,6 @@ ESI_TYPE_ENERGY_COUNTER_USAGE_LOW_TARIFF = "ENERGY_COUNTER_USAGE_LOW_TARIFF"
 ESI_TYPE_ENERGY_COUNTER_INPUT_SINGLE_TARIFF = "ENERGY_COUNTER_INPUT_SINGLE_TARIFF"
 ESI_TYPE_CURRENT_GAS_FLOW = "CurrentGasFlow"
 ESI_TYPE_CURRENT_GAS_VOLUME = "GasVolume"
-ESI_TYPE_CURRENT_GAS_VOLUME_PER_IMPULE = "GasVolumePerImpulse"
 
 ILLUMINATION_DEVICE_ATTRIBUTES = {
     "currentIllumination": ATTR_CURRENT_ILLUMINATION,
@@ -495,13 +494,13 @@ SENSORS_ESI = {
             type_fn=lambda device: "CurrentPowerConsumption",
         ),
         HmipEsiSensorEntityDescription(
-            key=ESI_TYPE_ENERGY_COUNTER_INPUT_SINGLE_TARIFF,
+            key=ESI_TYPE_ENERGY_COUNTER_USAGE_HIGH_TARIFF,
             native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
             value_fn=lambda device: device.functional_channel.energyCounterOne,
             exists_fn=lambda channel: channel.energyCounterOne is not None,
-            type_fn=lambda device: ESI_TYPE_ENERGY_COUNTER_INPUT_SINGLE_TARIFF,
+            type_fn=lambda device: ESI_TYPE_ENERGY_COUNTER_USAGE_HIGH_TARIFF,
         ),
     ],
     ESI_CONNECTED_SENSOR_TYPE_GAS: [
@@ -522,15 +521,6 @@ SENSORS_ESI = {
             value_fn=lambda device: device.functional_channel.gasVolume,
             exists_fn=lambda channel: channel.gasVolume is not None,
             type_fn=lambda device: "GasVolume",
-        ),
-        HmipEsiSensorEntityDescription(
-            key=ESI_TYPE_CURRENT_GAS_VOLUME_PER_IMPULE,
-            native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-            device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
-            state_class=SensorStateClass.MEASUREMENT,
-            value_fn=lambda device: device.functional_channel.gasVolumePerImpulse,
-            exists_fn=lambda channel: channel.gasVolumePerImpulse is not None,
-            type_fn=lambda device: "GasVolumePerImpulse",
         ),
     ],
 }
