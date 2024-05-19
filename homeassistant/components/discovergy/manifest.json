@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/discovergy",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": ["pydiscovergy==3.0.0"]
+  "requirements": ["pydiscovergy==3.0.1"]
 }
