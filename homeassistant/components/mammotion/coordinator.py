@@ -7,7 +7,7 @@ import contextlib
 import logging
 from typing import TYPE_CHECKING
 
-import pyluba
+from pyluba.mammotion.devices import MammotionBaseBLEDevice
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.active_update_coordinator import (
@@ -32,9 +32,9 @@ class MammotionDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         hass: HomeAssistant,
         logger: logging.Logger,
         ble_device: BLEDevice,
-        device: mammotion.MammotionLubaDevice,
+        device: MammotionBaseBLEDevice,
         base_unique_id: str,
-        device_name: str
+        device_name: str,
     ) -> None:
         """Initialize global mammotion data updater."""
         super().__init__(
@@ -93,21 +93,22 @@ class MammotionDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
     ) -> None:
         """Handle a Bluetooth event."""
         self.ble_device = service_info.device
-        if not (
-            adv := mammotion.parse_advertisement_data(
-                service_info.device, service_info.advertisement, self.model
-            )
-        ):
-            return
-        if "modelName" in adv.data:
-            self._ready_event.set()
-        _LOGGER.debug(
-            "%s: mammotion Luba data: %s", self.ble_device.address, self.device.data
-        )
-        if not self.device.advertisement_changed(adv) and not self._was_unavailable:
-            return
-        self._was_unavailable = False
-        self.device.update_from_advertisement(adv)
+        print(service_info)
+        # if not (
+        #     adv := parse_advertisement_data(
+        #         service_info.device, service_info.advertisement, self.model
+        #     )
+        # ):
+        #     return
+        # if "modelName" in adv.data:
+        #     self._ready_event.set()
+        # _LOGGER.debug(
+        #     "%s: mammotion Luba data: %s", self.ble_device.address, self.device.data
+        # )
+        # if not self.device.advertisement_changed(adv) and not self._was_unavailable:
+        #     return
+        # self._was_unavailable = False
+        # self.device.update_from_advertisement(adv)
         super()._async_handle_bluetooth_event(service_info, change)
 
     async def async_wait_ready(self) -> bool:

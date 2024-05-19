@@ -1,6 +1,6 @@
 """The Mammotion Luba integration."""
-from __future__ import annotations
 
+from __future__ import annotations
 
 import logging
 
@@ -8,17 +8,12 @@ from pyluba.mammotion.devices import MammotionBaseBLEDevice
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_ADDRESS,
-    CONF_MAC,
-    CONF_NAME,
-    Platform,
-)
+from homeassistant.const import CONF_ADDRESS, CONF_MAC, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN, DEFAULT_RETRY_COUNT, CONF_RETRY_COUNT
+from .const import CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT, DOMAIN
 from .coordinator import MammotionDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.LAWN_MOWER]
@@ -59,10 +54,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     device = MammotionBaseBLEDevice(ble_device)
 
-    coordinator = hass.data[DOMAIN][entry.entry_id] = MammotionDataUpdateCoordinator(hass, _LOGGER, ble_device, device,
-                                                                                     entry.unique_id,
-                                                                                     entry.data.get(CONF_NAME,
-                                                                                                    entry.title))
+    coordinator = hass.data[DOMAIN][entry.entry_id] = MammotionDataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        ble_device,
+        device,
+        entry.unique_id,
+        entry.data.get(CONF_NAME, entry.title),
+    )
 
     entry.async_on_unload(coordinator.async_start())
     if not await coordinator.async_wait_ready():
@@ -73,6 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
