@@ -82,6 +82,20 @@
             "state": {
               "positions_updated": "Positions updated"
             }
+          },
+          "deebot": {
+            "name": "Deebot position",
+            "state": {
+              "x": "X coordinate",
+              "y": "Y coordinate"
+            }
+          },
+          "charger": {
+            "name": "Charger position",
+            "state": {
+              "x": "X coordinate",
+              "y": "Y coordinate"
+            }
           }
         }
       }
