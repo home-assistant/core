@@ -9,6 +9,7 @@ from functools import partial
 from itertools import chain
 import logging
 import logging.handlers
+import mimetypes
 from operator import contains, itemgetter
 import os
 import platform
@@ -84,7 +85,7 @@ from .helpers import (
     template,
     translation,
 )
-from .helpers.dispatcher import async_dispatcher_send
+from .helpers.dispatcher import async_dispatcher_send_internal
 from .helpers.storage import get_internal_store_manager
 from .helpers.system_info import async_get_system_info
 from .helpers.typing import ConfigType
@@ -101,6 +102,7 @@ from .setup import (
     async_setup_component,
 )
 from .util.async_ import create_eager_task
+from .util.hass_dict import HassKey
 from .util.logging import async_activate_log_queue_handler
 from .util.package import async_get_user_site, is_virtual_env
 
@@ -120,7 +122,7 @@ SETUP_ORDER_SORT_KEY = partial(contains, BASE_PLATFORMS)
 ERROR_LOG_FILENAME = "home-assistant.log"
 
 # hass.data key for logging information.
-DATA_REGISTRIES_LOADED = "bootstrap_registries_loaded"
+DATA_REGISTRIES_LOADED: HassKey[None] = HassKey("bootstrap_registries_loaded")
 
 LOG_SLOW_STARTUP_INTERVAL = 60
 SLOW_STARTUP_CHECK_INTERVAL = 1
@@ -370,23 +372,24 @@ def open_hass_ui(hass: core.HomeAssistant) -> None:
         )
 
 
+def _init_blocking_io_modules_in_executor() -> None:
+    """Initialize modules that do blocking I/O in executor."""
+    # Cache the result of platform.uname().processor in the executor.
+    # Multiple modules call this function at startup which
+    # executes a blocking subprocess call. This is a problem for the
+    # asyncio event loop. By priming the cache of uname we can
+    # avoid the blocking call in the event loop.
+    _ = platform.uname().processor
+    # Initialize the mimetypes module to avoid blocking calls
+    # to the filesystem to load the mime.types file.
+    mimetypes.init()
+
+
 async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
-    """Load the registries and cache the result of platform.uname().processor."""
+    """Load the registries and modules that will do blocking I/O."""
     if DATA_REGISTRIES_LOADED in hass.data:
         return
     hass.data[DATA_REGISTRIES_LOADED] = None
-
-    def _cache_uname_processor() -> None:
-        """Cache the result of platform.uname().processor in the executor.
-
-        Multiple modules call this function at startup which
-        executes a blocking subprocess call. This is a problem for the
-        asyncio event loop. By primeing the cache of uname we can
-        avoid the blocking call in the event loop.
-        """
-        _ = platform.uname().processor
-
-    # Load the registries and cache the result of platform.uname().processor
     translation.async_setup(hass)
     entity.async_setup(hass)
     template.async_setup(hass)
@@ -399,7 +402,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
         create_eager_task(floor_registry.async_load(hass)),
         create_eager_task(issue_registry.async_load(hass)),
         create_eager_task(label_registry.async_load(hass)),
-        hass.async_add_executor_job(_cache_uname_processor),
+        hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
         create_eager_task(template.async_load_custom_templates(hass)),
         create_eager_task(restore_state.async_load(hass)),
         create_eager_task(hass.config_entries.async_initialize()),
@@ -426,7 +429,11 @@ async def async_from_config_dict(
     if not all(
         await asyncio.gather(
             *(
-                create_eager_task(async_setup_component(hass, domain, config))
+                create_eager_task(
+                    async_setup_component(hass, domain, config),
+                    name=f"bootstrap setup {domain}",
+                    loop=hass.loop,
+                )
                 for domain in CORE_INTEGRATIONS
             )
         )
@@ -680,7 +687,7 @@ class _WatchPendingSetups:
 
         if remaining_with_setup_started:
             _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
-        elif waiting_tasks := self._hass._active_tasks:  # pylint: disable=protected-access
+        elif waiting_tasks := self._hass._active_tasks:  # noqa: SLF001
             _LOGGER.debug("Waiting on tasks: %s", waiting_tasks)
         self._async_dispatch(remaining_with_setup_started)
         if (
@@ -700,7 +707,7 @@ class _WatchPendingSetups:
     def _async_dispatch(self, remaining_with_setup_started: dict[str, float]) -> None:
         """Dispatch the signal."""
         if remaining_with_setup_started or not self._previous_was_empty:
-            async_dispatcher_send(
+            async_dispatcher_send_internal(
                 self._hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, remaining_with_setup_started
             )
         self._previous_was_empty = not remaining_with_setup_started
@@ -984,7 +991,7 @@ async def _async_set_up_integrations(
         except TimeoutError:
             _LOGGER.warning(
                 "Setup timed out for stage 1 waiting on %s - moving forward",
-                hass._active_tasks,  # pylint: disable=protected-access
+                hass._active_tasks,  # noqa: SLF001
             )
 
     # Add after dependencies when setting up stage 2 domains
@@ -1000,7 +1007,7 @@ async def _async_set_up_integrations(
         except TimeoutError:
             _LOGGER.warning(
                 "Setup timed out for stage 2 waiting on %s - moving forward",
-                hass._active_tasks,  # pylint: disable=protected-access
+                hass._active_tasks,  # noqa: SLF001
             )
 
     # Wrap up startup
@@ -1011,7 +1018,7 @@ async def _async_set_up_integrations(
     except TimeoutError:
         _LOGGER.warning(
             "Setup timed out for bootstrap waiting on %s - moving forward",
-            hass._active_tasks,  # pylint: disable=protected-access
+            hass._active_tasks,  # noqa: SLF001
         )
 
     watcher.async_stop()

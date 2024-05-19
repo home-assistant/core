@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from functools import partial
 import logging
-from typing import Any, TypeVarTuple, overload
+from typing import Any, overload
 
 from homeassistant.core import (
     HassJob,
@@ -20,13 +20,11 @@ from homeassistant.util.logging import catch_log_exception
 # Explicit reexport of 'SignalType' for backwards compatibility
 from homeassistant.util.signal_type import SignalType as SignalType  # noqa: PLC0414
 
-_Ts = TypeVarTuple("_Ts")
-
 _LOGGER = logging.getLogger(__name__)
 DATA_DISPATCHER = "dispatcher"
 
 
-_DispatcherDataType = dict[
+type _DispatcherDataType[*_Ts] = dict[
     SignalType[*_Ts] | str,
     dict[
         Callable[[*_Ts], Any] | Callable[..., Any],
@@ -37,7 +35,7 @@ _DispatcherDataType = dict[
 
 @overload
 @bind_hass
-def dispatcher_connect(
+def dispatcher_connect[*_Ts](
     hass: HomeAssistant, signal: SignalType[*_Ts], target: Callable[[*_Ts], None]
 ) -> Callable[[], None]: ...
 
@@ -50,7 +48,7 @@ def dispatcher_connect(
 
 
 @bind_hass  # type: ignore[misc]  # workaround; exclude typing of 2 overload in func def
-def dispatcher_connect(
+def dispatcher_connect[*_Ts](
     hass: HomeAssistant,
     signal: SignalType[*_Ts],
     target: Callable[[*_Ts], None],
@@ -68,7 +66,7 @@ def dispatcher_connect(
 
 
 @callback
-def _async_remove_dispatcher(
+def _async_remove_dispatcher[*_Ts](
     dispatchers: _DispatcherDataType[*_Ts],
     signal: SignalType[*_Ts] | str,
     target: Callable[[*_Ts], Any] | Callable[..., Any],
@@ -90,7 +88,7 @@ def _async_remove_dispatcher(
 @overload
 @callback
 @bind_hass
-def async_dispatcher_connect(
+def async_dispatcher_connect[*_Ts](
     hass: HomeAssistant, signal: SignalType[*_Ts], target: Callable[[*_Ts], Any]
 ) -> Callable[[], None]: ...
 
@@ -105,7 +103,7 @@ def async_dispatcher_connect(
 
 @callback
 @bind_hass
-def async_dispatcher_connect(
+def async_dispatcher_connect[*_Ts](
     hass: HomeAssistant,
     signal: SignalType[*_Ts] | str,
     target: Callable[[*_Ts], Any] | Callable[..., Any],
@@ -132,7 +130,7 @@ def async_dispatcher_connect(
 
 @overload
 @bind_hass
-def dispatcher_send(
+def dispatcher_send[*_Ts](
     hass: HomeAssistant, signal: SignalType[*_Ts], *args: *_Ts
 ) -> None: ...
 
@@ -143,12 +141,14 @@ def dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None: ...
 
 
 @bind_hass  # type: ignore[misc]  # workaround; exclude typing of 2 overload in func def
-def dispatcher_send(hass: HomeAssistant, signal: SignalType[*_Ts], *args: *_Ts) -> None:
+def dispatcher_send[*_Ts](
+    hass: HomeAssistant, signal: SignalType[*_Ts], *args: *_Ts
+) -> None:
     """Send signal and data."""
-    hass.loop.call_soon_threadsafe(async_dispatcher_send, hass, signal, *args)
+    hass.loop.call_soon_threadsafe(async_dispatcher_send_internal, hass, signal, *args)
 
 
-def _format_err(
+def _format_err[*_Ts](
     signal: SignalType[*_Ts] | str,
     target: Callable[[*_Ts], Any] | Callable[..., Any],
     *args: Any,
@@ -162,7 +162,7 @@ def _format_err(
     )
 
 
-def _generate_job(
+def _generate_job[*_Ts](
     signal: SignalType[*_Ts] | str, target: Callable[[*_Ts], Any] | Callable[..., Any]
 ) -> HassJob[..., None | Coroutine[Any, Any, None]]:
     """Generate a HassJob for a signal and target."""
@@ -179,7 +179,7 @@ def _generate_job(
 @overload
 @callback
 @bind_hass
-def async_dispatcher_send(
+def async_dispatcher_send[*_Ts](
     hass: HomeAssistant, signal: SignalType[*_Ts], *args: *_Ts
 ) -> None: ...
 
@@ -192,16 +192,40 @@ def async_dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None:
 
 @callback
 @bind_hass
-def async_dispatcher_send(
+def async_dispatcher_send[*_Ts](
     hass: HomeAssistant, signal: SignalType[*_Ts] | str, *args: *_Ts
 ) -> None:
     """Send signal and data.
 
     This method must be run in the event loop.
     """
-    if hass.config.debug:
-        hass.verify_event_loop_thread("async_dispatcher_send")
+    # We turned on asyncio debug in April 2024 in the dev containers
+    # in the hope of catching some of the issues that have been
+    # reported. It will take a while to get all the issues fixed in
+    # custom components.
+    #
+    # In 2025.5 we should guard the `verify_event_loop_thread`
+    # check with a check for the `hass.config.debug` flag being set as
+    # long term we don't want to be checking this in production
+    # environments since it is a performance hit.
+    hass.verify_event_loop_thread("async_dispatcher_send")
+    async_dispatcher_send_internal(hass, signal, *args)
 
+
+@callback
+@bind_hass
+def async_dispatcher_send_internal[*_Ts](
+    hass: HomeAssistant, signal: SignalType[*_Ts] | str, *args: *_Ts
+) -> None:
+    """Send signal and data.
+
+    This method is intended to only be used by core internally
+    and should not be considered a stable API. We will make
+    breaking changes to this function in the future and it
+    should not be used in integrations.
+
+    This method must be run in the event loop.
+    """
     if (maybe_dispatchers := hass.data.get(DATA_DISPATCHER)) is None:
         return
     dispatchers: _DispatcherDataType[*_Ts] = maybe_dispatchers

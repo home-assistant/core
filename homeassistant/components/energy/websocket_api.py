@@ -8,7 +8,6 @@ from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import functools
 from itertools import chain
-from types import ModuleType
 from typing import Any, cast
 
 import voluptuous as vol
@@ -34,12 +33,12 @@ from .data import (
 from .types import EnergyPlatform, GetSolarForecastType, SolarForecastType
 from .validate import async_validate
 
-EnergyWebSocketCommandHandler = Callable[
-    [HomeAssistant, websocket_api.ActiveConnection, "dict[str, Any]", "EnergyManager"],
+type EnergyWebSocketCommandHandler = Callable[
+    [HomeAssistant, websocket_api.ActiveConnection, dict[str, Any], EnergyManager],
     None,
 ]
-AsyncEnergyWebSocketCommandHandler = Callable[
-    [HomeAssistant, websocket_api.ActiveConnection, "dict[str, Any]", "EnergyManager"],
+type AsyncEnergyWebSocketCommandHandler = Callable[
+    [HomeAssistant, websocket_api.ActiveConnection, dict[str, Any], EnergyManager],
     Awaitable[None],
 ]
 
@@ -64,13 +63,15 @@ async def async_get_energy_platforms(
 
     @callback
     def _process_energy_platform(
-        hass: HomeAssistant, domain: str, platform: ModuleType
+        hass: HomeAssistant,
+        domain: str,
+        platform: EnergyPlatform,
     ) -> None:
         """Process energy platforms."""
         if not hasattr(platform, "async_get_solar_forecast"):
             return
 
-        platforms[domain] = cast(EnergyPlatform, platform).async_get_solar_forecast
+        platforms[domain] = platform.async_get_solar_forecast
 
     await async_process_integration_platforms(
         hass, DOMAIN, _process_energy_platform, wait_for_platforms=True
