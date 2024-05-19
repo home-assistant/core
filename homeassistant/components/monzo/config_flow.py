@@ -37,11 +37,9 @@ class MonzoFlowHandler(
         if user_input is not None:
             if not self.reauth_entry:
                 return self.async_create_entry(title=DOMAIN, data={**self.oauth_data})
-            self.hass.config_entries.async_update_entry(
+            return self.async_update_reload_and_abort(
                 self.reauth_entry, data={**self.reauth_entry.data, **self.oauth_data}
             )
-            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
 
         data_schema = vol.Schema({vol.Required("confirm"): bool})
 
