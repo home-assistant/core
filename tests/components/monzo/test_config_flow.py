@@ -196,8 +196,7 @@ async def test_config_reauth_profile(
         },
     )
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_update_entry",
-        return_value=True,
+        "homeassistant.components.monzo.config_flow.MonzoFlowHandler.async_update_reload_and_abort"
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
