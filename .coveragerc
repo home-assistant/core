@@ -461,6 +461,7 @@ omit =
     homeassistant/components/freebox/home_base.py
     homeassistant/components/freebox/switch.py
     homeassistant/components/fritz/coordinator.py
+    homeassistant/components/fritz/entity.py
     homeassistant/components/fritz/services.py
     homeassistant/components/fritz/switch.py
     homeassistant/components/fritzbox_callmonitor/__init__.py
@@ -681,6 +682,7 @@ omit =
     homeassistant/components/konnected/panel.py
     homeassistant/components/konnected/switch.py
     homeassistant/components/kostal_plenticore/__init__.py
+    homeassistant/components/kostal_plenticore/coordinator.py
     homeassistant/components/kostal_plenticore/helper.py
     homeassistant/components/kostal_plenticore/select.py
     homeassistant/components/kostal_plenticore/sensor.py
@@ -1020,6 +1022,7 @@ omit =
     homeassistant/components/permobil/entity.py
     homeassistant/components/permobil/sensor.py
     homeassistant/components/philips_js/__init__.py
+    homeassistant/components/philips_js/coordinator.py
     homeassistant/components/philips_js/light.py
     homeassistant/components/philips_js/media_player.py
     homeassistant/components/philips_js/remote.py
