@@ -63,7 +63,7 @@ async def test_full_flow(
             "access_token": "mock-access-token",
             "type": "Bearer",
             "expires_in": 60,
-            "user_id": 600,
+            "user_id": "600",
         },
     )
     with patch(
