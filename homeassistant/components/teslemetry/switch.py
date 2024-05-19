@@ -39,12 +39,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
         scopes=[Scope.VEHICLE_CMDS],
     ),
     TeslemetrySwitchEntityDescription(
-        key="vehicle_state_valet_mode",
-        on_func=lambda api: api.set_valet_mode(on=True),
-        off_func=lambda api: api.set_valet_mode(on=False),
-        scopes=[Scope.VEHICLE_CMDS],
-    ),
-    TeslemetrySwitchEntityDescription(
         key="climate_state_auto_seat_climate_left",
         on_func=lambda api: api.remote_auto_seat_climate_request(Seat.FRONT_LEFT, True),
         off_func=lambda api: api.remote_auto_seat_climate_request(

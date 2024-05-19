@@ -101,11 +101,6 @@ async def test_switch_offline(
             "VehicleSpecific.set_sentry_mode",
             "VehicleSpecific.set_sentry_mode",
         ),
-        (
-            "test_valet_mode",
-            "VehicleSpecific.set_valet_mode",
-            "VehicleSpecific.set_valet_mode",
-        ),
     ],
 )
 async def test_switch_services(hass: HomeAssistant, name, on, off) -> None:
