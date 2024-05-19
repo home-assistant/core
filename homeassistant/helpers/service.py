@@ -68,9 +68,6 @@ from .typing import ConfigType, TemplateVarsType
 if TYPE_CHECKING:
     from .entity import Entity
 
-    _EntityT = TypeVar("_EntityT", bound=Entity)
-
-
 CONF_SERVICE_ENTITY_ID = "entity_id"
 
 _LOGGER = logging.getLogger(__name__)
@@ -434,7 +431,7 @@ def extract_entity_ids(
 
 
 @bind_hass
-async def async_extract_entities(
+async def async_extract_entities[_EntityT: Entity](
     hass: HomeAssistant,
     entities: Iterable[_EntityT],
     service_call: ServiceCall,
@@ -1048,7 +1045,7 @@ async def _handle_entity_call(
         result = await task
 
     if asyncio.iscoroutine(result):
-        _LOGGER.error(
+        _LOGGER.error(  # type: ignore[unreachable]
             (
                 "Service %s for %s incorrectly returns a coroutine object. Await result"
                 " instead in service handler. Report bug to integration author"
