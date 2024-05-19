@@ -10,9 +10,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import EcovacsConfigEntry
-from .const import POSITIONS_UPDATED_EVENT
 from .entity import EcovacsEntity
 from .util import get_name_key
+
+POSITIONS_UPDATED_EVENT = "positions_updated"
+ATTRIBUTE_POSITION_X = "x"
+ATTRIBUTE_POSITION_Y = "y"
 
 
 async def async_setup_entry(
