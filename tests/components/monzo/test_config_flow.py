@@ -1,11 +1,16 @@
 """Tests for config flow."""
 
-from unittest.mock import AsyncMock, patch
+from datetime import timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
+
+from freezegun.api import FrozenDateTimeFactory
+from monzopy import AuthorisationExpiredError
 
 from homeassistant.components.monzo.application_credentials import (
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
+from homeassistant.components.monzo.config_flow import MonzoFlowHandler
 from homeassistant.components.monzo.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -15,7 +20,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from . import setup_integration
 from .conftest import CLIENT_ID, USER_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -266,3 +271,25 @@ async def test_config_reauth_wrong_account(
     assert result
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "wrong_account"
+
+
+@patch(
+    "homeassistant.components.monzo.config_flow.MonzoFlowHandler.async_step_reauth",
+    wraps=MonzoFlowHandler.async_step_reauth,
+)
+async def test_api_can_trigger_reauth(
+    step_reauth: MagicMock,
+    hass: HomeAssistant,
+    polling_config_entry: MockConfigEntry,
+    monzo: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test reauth an existing profile reauthenticates the config entry."""
+    await setup_integration(hass, polling_config_entry)
+
+    monzo.user_account.accounts.side_effect = AuthorisationExpiredError()
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    step_reauth.assert_called_once()
