@@ -583,7 +583,7 @@ def slug(value: Any) -> str:
 
 
 def schema_with_slug_keys(
-    value_schema: _T | Callable, *, slug_validator: Callable[[Any], str] = slug
+    value_schema: dict | Callable, *, slug_validator: Callable[[Any], str] = slug
 ) -> Callable:
     """Ensure dicts have slugs as keys.
 
