@@ -17,7 +17,18 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 
 from tests.common import MockConfigEntry
 from tests.components.enphase_envoy import setup_with_selected_platforms
-from tests.components.enphase_envoy.conftest import ALL_FIXTURES, SENSOR_FIXTURES
+
+SENSOR_FIXTURES = (
+    [
+        pytest.param("envoy", 5, 6, id="envoy"),
+        pytest.param(
+            "envoy_metered_batt_relay", 27, 106, id="envoy_metered_batt_relay"
+        ),
+        pytest.param("envoy_nobatt_metered_3p", 12, 70, id="envoy_nobatt_metered_3p"),
+        pytest.param("envoy_1p_metered", 12, 19, id="envoy_1p_metered"),
+        pytest.param("envoy_tot_cons_metered", 5, 8, id="envoy_tot_cons_metered"),
+    ],
+)
 
 
 @pytest.mark.parametrize(
@@ -89,7 +100,11 @@ async def test_all_enabled_sensors(
         )
 
 
-@pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
+@pytest.mark.parametrize(
+    ("mock_envoy", "entity_count", "enabled_entity_count"),
+    *SENSOR_FIXTURES,
+    indirect=["mock_envoy"],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_production_consumption_data(
     hass: HomeAssistant,
@@ -97,16 +112,17 @@ async def test_sensor_production_consumption_data(
     mock_envoy: AsyncMock,
     entity_registry: AsyncMock,
     serial_number,
+    entity_count: int,
+    enabled_entity_count: int,
 ) -> None:
     """Test enphase_envoy production entities values and names."""
     await setup_with_selected_platforms(hass, config_entry, [Platform.SENSOR])
+    assert len(hass.states.async_all()) == enabled_entity_count
+
     assert entity_registry
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     )
-    if len(entity_entries) == 0:
-        # no entities to test with, other tests test this
-        return
 
     entity_status = {}
     for entity_entry in entity_entries:
@@ -216,7 +232,11 @@ async def test_sensor_production_consumption_data(
             assert f"{entity_base}_{name}" not in entity_status
 
 
-@pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
+@pytest.mark.parametrize(
+    ("mock_envoy", "entity_count", "enabled_entity_count"),
+    *SENSOR_FIXTURES,
+    indirect=["mock_envoy"],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_grid_data(
     hass: HomeAssistant,
@@ -224,15 +244,17 @@ async def test_grid_data(
     mock_envoy: AsyncMock,
     entity_registry: AsyncMock,
     serial_number,
+    entity_count: int,
+    enabled_entity_count: int,
 ) -> None:
     """Test enphase_envoy grid entities values and names."""
     await setup_with_selected_platforms(hass, config_entry, [Platform.SENSOR])
+    assert len(hass.states.async_all()) == enabled_entity_count
+
     assert entity_registry
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     )
-    if len(entity_entries) == 0:
-        return
 
     entity_status = {}
     for entity_entry in entity_entries:
@@ -433,7 +455,11 @@ async def test_grid_data(
             assert f"{entity_base}_{name}" not in entity_status
 
 
-@pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
+@pytest.mark.parametrize(
+    ("mock_envoy", "entity_count", "enabled_entity_count"),
+    *SENSOR_FIXTURES,
+    indirect=["mock_envoy"],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_battery_storage_data(
     hass: HomeAssistant,
@@ -441,16 +467,17 @@ async def test_battery_storage_data(
     mock_envoy: AsyncMock,
     entity_registry: AsyncMock,
     serial_number,
+    entity_count: int,
+    enabled_entity_count: int,
 ) -> None:
     """Test enphase_envoy battery storage ct entities values and names."""
     await setup_with_selected_platforms(hass, config_entry, [Platform.SENSOR])
+    assert len(hass.states.async_all()) == enabled_entity_count
+
     assert entity_registry
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     )
-    if len(entity_entries) == 0:
-        # no entities to test with, other tests test this
-        return
 
     entity_status = {}
     for entity_entry in entity_entries:
@@ -552,23 +579,28 @@ async def test_battery_storage_data(
             assert f"{entity_base}_{name}" not in entity_status
 
 
-@pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
+@pytest.mark.parametrize(
+    ("mock_envoy", "entity_count", "enabled_entity_count"),
+    *SENSOR_FIXTURES,
+    indirect=["mock_envoy"],
+)
 async def test_sensor_inverter_data(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_envoy: AsyncMock,
     entity_registry: AsyncMock,
     serial_number,
+    entity_count: int,
+    enabled_entity_count: int,
 ) -> None:
     """Test enphase_envoy inverter entities values and names."""
     await setup_with_selected_platforms(hass, config_entry, [Platform.SENSOR])
+    assert len(hass.states.async_all()) == entity_count
+
     assert entity_registry
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     )
-    if len(entity_entries) == 0:
-        # no entities to test with, other tests test this
-        return
 
     entity_status = {}
     for entity_entry in entity_entries:
@@ -585,23 +617,28 @@ async def test_sensor_inverter_data(
         assert entity_status[f"{entity_base}_{sn}_last_reported"]
 
 
-@pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
+@pytest.mark.parametrize(
+    ("mock_envoy", "entity_count", "enabled_entity_count"),
+    *SENSOR_FIXTURES,
+    indirect=["mock_envoy"],
+)
 async def test_sensor_encharge_aggregate_data(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_envoy: AsyncMock,
     entity_registry: AsyncMock,
     serial_number,
+    entity_count: int,
+    enabled_entity_count: int,
 ) -> None:
     """Test enphase_envoy encharge aggregate entities values and names."""
     await setup_with_selected_platforms(hass, config_entry, [Platform.SENSOR])
+    assert len(hass.states.async_all()) == entity_count
+
     assert entity_registry
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     )
-    if len(entity_entries) == 0:
-        # no entities to test with, other tests test this
-        return
 
     entity_status = {}
     for entity_entry in entity_entries:
@@ -636,23 +673,28 @@ async def test_sensor_encharge_aggregate_data(
             assert f"{entity_base}_{name}" not in entity_status
 
 
-@pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
+@pytest.mark.parametrize(
+    ("mock_envoy", "entity_count", "enabled_entity_count"),
+    *SENSOR_FIXTURES,
+    indirect=["mock_envoy"],
+)
 async def test_sensor_encharge_enpower_data(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_envoy: AsyncMock,
     entity_registry: AsyncMock,
+    entity_count: int,
+    enabled_entity_count: int,
 ) -> None:
     """Test enphase_envoy enpower entities values and names."""
     await setup_with_selected_platforms(hass, config_entry, [Platform.SENSOR])
     assert entity_registry
+    assert len(hass.states.async_all()) == entity_count
+
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     )
     assert entity_entries
-    if len(entity_entries) == 0:
-        # no entities to test with, other tests test this
-        return
 
     entity_status = {}
     for entity_entry in entity_entries:
@@ -686,22 +728,27 @@ async def test_sensor_encharge_enpower_data(
         )
 
 
-@pytest.mark.parametrize(("mock_envoy"), *ALL_FIXTURES, indirect=["mock_envoy"])
+@pytest.mark.parametrize(
+    ("mock_envoy", "entity_count", "enabled_entity_count"),
+    *SENSOR_FIXTURES,
+    indirect=["mock_envoy"],
+)
 async def test_sensor_encharge_power_data(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_envoy: AsyncMock,
     entity_registry: AsyncMock,
+    entity_count: int,
+    enabled_entity_count: int,
 ) -> None:
     """Test enphase_envoy encharge_power entities values and names."""
     await setup_with_selected_platforms(hass, config_entry, [Platform.SENSOR])
+    assert len(hass.states.async_all()) == entity_count
+
     assert entity_registry
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     )
-    if len(entity_entries) == 0:
-        # no entities to test with, other tests test this
-        return
 
     entity_status = {}
     for entity_entry in entity_entries:

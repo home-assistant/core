@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.components.enphase_envoy import setup_with_selected_platforms
-from tests.components.enphase_envoy.conftest import ALL_FIXTURES
 from tests.typing import ClientSessionGenerator
 
 # Fields to exclude from snapshot as they change each run
@@ -23,6 +22,17 @@ TO_EXCLUDE = {
     "last_changed",
     "last_reported",
 }
+
+# fixture files to test
+ALL_FIXTURES = (
+    [
+        pytest.param("envoy", id="envoy"),
+        pytest.param("envoy_metered_batt_relay", id="envoy_metered_batt_relay"),
+        pytest.param("envoy_nobatt_metered_3p", id="envoy_nobatt_metered_3p"),
+        pytest.param("envoy_1p_metered", id="envoy_1p_metered"),
+        pytest.param("envoy_tot_cons_metered", id="envoy_tot_cons_metered"),
+    ],
+)
 
 
 def limit_diagnostic_attrs(prop, path) -> bool:
