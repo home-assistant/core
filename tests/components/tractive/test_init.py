@@ -2,9 +2,15 @@
 
 from unittest.mock import AsyncMock, patch
 
+from aiotractive.exceptions import TractiveError, UnauthorizedError
+import pytest
+
 from homeassistant.components.tractive.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+
+from . import init_integration
 
 from tests.common import MockConfigEntry
 
@@ -15,11 +21,7 @@ async def test_setup_entry(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a successful setup entry."""
-    mock_config_entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.tractive.TractiveClient.subscribe"):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await init_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -30,20 +32,105 @@ async def test_unload_entry(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test successful unload of entry."""
-    mock_config_entry.add_to_hass(hass)
-
-    with (
-        patch("homeassistant.components.tractive.TractiveClient.subscribe"),
-        patch("homeassistant.components.tractive.TractiveClient.unsubscribe"),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await init_integration(hass, mock_config_entry)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.tractive.TractiveClient.unsubscribe"):
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
+
+
+async def test_auth_failed(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test for setup failure if the auth fails."""
+    mock_tractive_client.authenticate.side_effect = UnauthorizedError
+
+    await init_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_config_not_ready(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test for setup failure if the connection to the service fails."""
+    mock_tractive_client.authenticate.side_effect = TractiveError
+
+    await init_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_config_not_ready_2(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test for setup failure if the connection to the service fails."""
+    mock_tractive_client.trackable_objects.side_effect = TractiveError
+
+    await init_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_trackable_without_details(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a successful setup entry."""
+    mock_tractive_client.trackable_objects.return_value[0].details.return_value = {
+        "device_id": "xyz098"
+    }
+
+    await init_integration(hass, mock_config_entry)
+
+    assert (
+        "Tracker xyz098 has no details and will be skipped. This happens for shared trackers"
+        in caplog.text
+    )
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_trackable_without_device_id(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a successful setup entry."""
+    mock_tractive_client.trackable_objects.return_value[0].details.return_value = {
+        "device_id": None
+    }
+
+    await init_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_unsubscribe_on_ha_stop(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unsuscribe when HA stops."""
+    await init_integration(hass, mock_config_entry)
+
+    with patch(
+        "homeassistant.components.tractive.TractiveClient.unsubscribe"
+    ) as mock_unsuscribe:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+    assert mock_unsuscribe.called
