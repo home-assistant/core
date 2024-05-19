@@ -27,6 +27,7 @@ CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES = 52428800
 ATTR_FILENAMES = "attachments"
 ATTR_URLS = "urls"
 ATTR_VERIFY_SSL = "verify_ssl"
+ATTR_TEXTMODE = "text_mode"
 
 DATA_FILENAMES_SCHEMA = vol.Schema({vol.Required(ATTR_FILENAMES): [cv.string]})
 
@@ -37,10 +38,15 @@ DATA_URLS_SCHEMA = vol.Schema(
     }
 )
 
+DATA_TEXTMODE_SCHEMA = vol.Schema(
+    {vol.Optional(ATTR_TEXTMODE, default="normal"): [cv.string]}
+)
+
 DATA_SCHEMA = vol.Any(
     None,
     DATA_FILENAMES_SCHEMA,
     DATA_URLS_SCHEMA,
+    DATA_TEXTMODE_SCHEMA,
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -100,10 +106,15 @@ class SignalNotificationService(BaseNotificationService):
         attachments_as_bytes = self.get_attachments_as_bytes(
             data, CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES, self._hass
         )
+        text_mode = self.get_text_mode(data)
 
         try:
             self._signal_cli_rest_api.send_message(
-                message, self._recp_nrs, filenames, attachments_as_bytes
+                message,
+                self._recp_nrs,
+                filenames,
+                attachments_as_bytes,
+                text_mode=text_mode,
             )
         except SignalCliRestApiError as ex:
             _LOGGER.error("%s", ex)
@@ -180,3 +191,12 @@ class SignalNotificationService(BaseNotificationService):
             return None
 
         return attachments_as_bytes
+
+    @staticmethod
+    def get_text_mode(data: Any) -> str:
+        """Extract text mode parameter from data."""
+        try:
+            data = DATA_TEXTMODE_SCHEMA(data)
+        except vol.Invalid:
+            return "normal"
+        return data[ATTR_TEXTMODE]
