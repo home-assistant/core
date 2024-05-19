@@ -54,7 +54,7 @@ def format_default(value: StateType) -> tuple[StateType, str | None]:
     if value is not None:
         # Clean up value and infer unit, e.g. -71dBm, 15 dB
         if match := re.match(
-            r"([>=<]*)(?P<value>.+?)\s*(?P<unit>[a-zA-Z]+)\s*$", str(value)
+            r"((&[gl]t;|[><])=?)?(?P<value>.+?)\s*(?P<unit>[a-zA-Z]+)\s*$", str(value)
         ):
             try:
                 value = float(match.group("value"))
