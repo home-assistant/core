@@ -36,7 +36,7 @@ class MonzoFlowHandler(
         """Wait for the user to confirm in-app approval."""
         if user_input is not None:
             if not self.reauth_entry:
-                return self.async_create_entry(title=DOMAIN, data={**self.oauth_data})
+                return self.async_create_entry(title=DOMAIN, data=self.oauth_data)
             return self.async_update_reload_and_abort(
                 self.reauth_entry, data={**self.reauth_entry.data, **self.oauth_data}
             )
