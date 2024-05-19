@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from brother import Brother, SnmpError
+from pysnmp.hlapi.asyncio.cmdgen import lcd
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_TYPE, Platform
@@ -52,6 +53,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> 
     ]
     # We only want to remove the SNMP engine when unloading the last config entry
     if unload_ok and len(loaded_entries) == 1:
+        lcd.unconfigure(hass.data[SNMP_ENGINE], None)
         hass.data.pop(SNMP_ENGINE)
 
     return unload_ok
