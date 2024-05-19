@@ -80,6 +80,7 @@ class EcovacsLastPositionEventEntity(
     entity_description = EventEntityDescription(
         key="last_position",
         translation_key="last_position",
+        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         event_types=[POSITIONS_UPDATED_EVENT],
     )
