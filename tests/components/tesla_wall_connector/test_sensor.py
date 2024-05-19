@@ -21,6 +21,12 @@ async def test_sensors(hass: HomeAssistant) -> None:
             "sensor.tesla_wall_connector_handle_temperature", "25.5", "-1.4"
         ),
         EntityAndExpectedValues(
+            "sensor.tesla_wall_connector_pcba_temperature", "30.5", "-1.2"
+        ),
+        EntityAndExpectedValues(
+            "sensor.tesla_wall_connector_mcu_temperature", "42.0", "-1"
+        ),
+        EntityAndExpectedValues(
             "sensor.tesla_wall_connector_grid_voltage", "230.2", "229.2"
         ),
         EntityAndExpectedValues(
