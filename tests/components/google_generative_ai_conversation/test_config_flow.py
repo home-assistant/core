@@ -12,16 +12,16 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_MAX_TOKENS,
     CONF_TOP_K,
     CONF_TOP_P,
-    DEFAULT_ALLOW_HASS_ACCESS,
     DEFAULT_CHAT_MODEL,
     DEFAULT_MAX_TOKENS,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
     DOMAIN,
 )
-from homeassistant.const import CONF_ALLOW_HASS_ACCESS
+from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import llm
 
 from tests.common import MockConfigEntry
 
@@ -29,14 +29,20 @@ from tests.common import MockConfigEntry
 @pytest.fixture
 def mock_models():
     """Mock the model list API."""
-    model = Mock(
-        display_name="Gemini 1.5 Pro",
+    model_15_flash = Mock(
+        display_name="Gemini 1.5 Flash",
         supported_generation_methods=["generateContent"],
     )
-    model.name = DEFAULT_CHAT_MODEL
+    model_15_flash.name = "models/gemini-1.5-flash-latest"
+
+    model_10_pro = Mock(
+        display_name="Gemini 1.0 Pro",
+        supported_generation_methods=["generateContent"],
+    )
+    model_10_pro.name = "models/gemini-pro"
     with patch(
         "homeassistant.components.google_generative_ai_conversation.config_flow.genai.list_models",
-        return_value=[model],
+        return_value=[model_10_pro],
     ):
         yield
 
@@ -77,6 +83,9 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "api_key": "bla",
     }
+    assert result2["options"] == {
+        CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+    }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -102,7 +111,9 @@ async def test_options(
     assert options["data"][CONF_TOP_P] == DEFAULT_TOP_P
     assert options["data"][CONF_TOP_K] == DEFAULT_TOP_K
     assert options["data"][CONF_MAX_TOKENS] == DEFAULT_MAX_TOKENS
-    assert options["data"][CONF_ALLOW_HASS_ACCESS] == DEFAULT_ALLOW_HASS_ACCESS
+    assert (
+        CONF_LLM_HASS_API not in options["data"]
+    ), "Options flow should not set this key"
 
 
 @pytest.mark.parametrize(

@@ -8,6 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import conversation
+from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -48,7 +49,7 @@ async def test_default_prompt(
             mock_config_entry,
             options={
                 **mock_config_entry.options,
-                "allow_hass_access": True,
+                CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
             },
         )
 
@@ -121,7 +122,7 @@ async def test_default_prompt(
     with (
         patch("google.generativeai.GenerativeModel") as mock_model,
         patch(
-            "homeassistant.components.google_generative_ai_conversation.conversation.llm.async_get_tools",
+            "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI.async_get_tools",
             return_value=[],
         ) as mock_get_tools,
     ):
@@ -148,31 +149,16 @@ async def test_default_prompt(
 
 
 @patch(
-    "homeassistant.components.google_generative_ai_conversation.conversation.llm.async_get_tools"
-)
-@patch(
-    "homeassistant.components.google_generative_ai_conversation.conversation.llm.async_call_tool"
+    "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI.async_get_tools"
 )
 async def test_function_call(
-    mock_call_tool,
     mock_get_tools,
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
 ) -> None:
     """Test that the default prompt works."""
-    entry = MockConfigEntry(title=None)
-    entry.add_to_hass(hass)
-
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        options={
-            **mock_config_entry.options,
-            "allow_hass_access": True,
-        },
-    )
-
-    agent_id = mock_config_entry.entry_id
+    agent_id = mock_config_entry_with_assist.entry_id
     context = Context()
 
     mock_tool = AsyncMock()
@@ -202,7 +188,7 @@ async def test_function_call(
             chat_response.text = "Hi there!"
             return {"result": "Test response"}
 
-        mock_call_tool.side_effect = tool_call
+        mock_tool.async_call.side_effect = tool_call
         chat_response.parts = [mock_part]
         result = await conversation.async_converse(
             hass,
@@ -230,7 +216,7 @@ async def test_function_call(
         "role": "",
     }
 
-    mock_call_tool.assert_awaited_once_with(
+    mock_tool.async_call.assert_awaited_once_with(
         hass,
         llm.ToolInput(
             tool_name="test_tool",
@@ -245,31 +231,16 @@ async def test_function_call(
 
 
 @patch(
-    "homeassistant.components.google_generative_ai_conversation.conversation.llm.async_get_tools"
-)
-@patch(
-    "homeassistant.components.google_generative_ai_conversation.conversation.llm.async_call_tool"
+    "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI.async_get_tools"
 )
 async def test_function_exception(
-    mock_call_tool,
     mock_get_tools,
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
 ) -> None:
     """Test that the default prompt works."""
-    entry = MockConfigEntry(title=None)
-    entry.add_to_hass(hass)
-
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        options={
-            **mock_config_entry.options,
-            "allow_hass_access": True,
-        },
-    )
-
-    agent_id = mock_config_entry.entry_id
+    agent_id = mock_config_entry_with_assist.entry_id
     context = Context()
 
     mock_tool = AsyncMock()
@@ -292,14 +263,14 @@ async def test_function_exception(
         mock_chat.send_message_async.return_value = chat_response
         mock_part = MagicMock()
         mock_part.function_call.name = "test_tool"
-        mock_part.function_call.args = {"param1": "test_value"}
+        mock_part.function_call.args = {"param1": 1}
 
         def tool_call(hass, tool_input):
             mock_part.function_call = False
             chat_response.text = "Hi there!"
             raise HomeAssistantError("Test tool exception")
 
-        mock_call_tool.side_effect = tool_call
+        mock_tool.async_call.side_effect = tool_call
         chat_response.parts = [mock_part]
         result = await conversation.async_converse(
             hass,
@@ -327,11 +298,11 @@ async def test_function_exception(
         ],
         "role": "",
     }
-    mock_call_tool.assert_awaited_once_with(
+    mock_tool.async_call.assert_awaited_once_with(
         hass,
         llm.ToolInput(
             tool_name="test_tool",
-            tool_args={"param1": "test_value"},
+            tool_args={"param1": 1},
             platform="google_generative_ai_conversation",
             context=context,
             user_prompt="Please call the test function",

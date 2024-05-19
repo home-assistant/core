@@ -17,8 +17,9 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_ALLOW_HASS_ACCESS, CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -35,7 +36,6 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
-    DEFAULT_ALLOW_HASS_ACCESS,
     DEFAULT_CHAT_MODEL,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
@@ -93,6 +93,7 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title="",
                 data=user_input,
+                options={CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
             )
 
         return self.async_show_form(
@@ -119,6 +120,8 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
+            if user_input[CONF_LLM_HASS_API] == "none":
+                user_input.pop(CONF_LLM_HASS_API)
             return self.async_create_entry(title="", data=user_input)
         schema = await google_generative_ai_config_option_schema(
             self.hass, self.config_entry.options
@@ -138,11 +141,7 @@ async def google_generative_ai_config_option_schema(
 
     models: list[SelectOptionDict] = [
         SelectOptionDict(
-            label="Gemini 1.0 Pro (free in US)",
-            value="models/gemini-pro",
-        ),
-        SelectOptionDict(
-            label="Gemini 1.5 Flash (fastest)",
+            label="Gemini 1.5 Flash (recommended)",
             value="models/gemini-1.5-flash-latest",
         ),
     ]
@@ -155,12 +154,26 @@ async def google_generative_ai_config_option_schema(
         if (
             api_model.name
             not in (
-                "models/gemini-pro",
-                "models/gemini-1.0-pro",  # duplicate
+                "models/gemini-1.0-pro",  # duplicate of gemini-pro
                 "models/gemini-1.5-flash-latest",
             )
+            and "Vision" not in api_model.display_name
             and "generateContent" in api_model.supported_generation_methods
         )
+    )
+
+    apis: list[SelectOptionDict] = [
+        SelectOptionDict(
+            label="No control",
+            value="none",
+        )
+    ]
+    apis.extend(
+        SelectOptionDict(
+            label=api.name,
+            value=api.id,
+        )
+        for api in llm.async_get_apis(hass)
     )
 
     return {
@@ -170,10 +183,10 @@ async def google_generative_ai_config_option_schema(
             default=DEFAULT_CHAT_MODEL,
         ): SelectSelector(SelectSelectorConfig(options=models)),
         vol.Optional(
-            CONF_ALLOW_HASS_ACCESS,
-            description={"suggested_value": options.get(CONF_ALLOW_HASS_ACCESS)},
-            default=DEFAULT_ALLOW_HASS_ACCESS,
-        ): bool,
+            CONF_LLM_HASS_API,
+            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+            default="none",
+        ): SelectSelector(SelectSelectorConfig(options=apis)),
         vol.Optional(
             CONF_PROMPT,
             description={"suggested_value": options.get(CONF_PROMPT)},

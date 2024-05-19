@@ -13,7 +13,7 @@ from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ALLOW_HASS_ACCESS, MATCH_ALL
+from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import intent, llm, template
@@ -35,9 +35,10 @@ from .const import (
     DEFAULT_TOP_P,
     DOMAIN,
     LOGGER,
-    PROMPT_HASS_ACCESS,
-    PROMPT_NO_HASS_ACCESS,
 )
+
+# Max number of back and forth with the LLM to generate a response
+MAX_TOOL_ITERATIONS = 10
 
 
 async def async_setup_entry(
@@ -135,10 +136,25 @@ class GoogleGenerativeAIConversationEntity(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
+        intent_response = intent.IntentResponse(language=user_input.language)
+        llm_api: llm.LlmApi | None = None
         tools: list[dict[str, Any]] | None = None
 
-        if hass_access := self.entry.options.get(CONF_ALLOW_HASS_ACCESS):
-            tools = [_format_tool(tool) for tool in llm.async_get_tools(self.hass)]
+        if self.entry.options.get(CONF_LLM_HASS_API):
+            try:
+                llm_api = llm.async_get_api(
+                    self.hass, self.entry.options[CONF_LLM_HASS_API]
+                )
+            except HomeAssistantError as err:
+                LOGGER.error("Error getting LLM API: %s", err)
+                intent_response.async_set_error(
+                    intent.IntentResponseErrorCode.UNKNOWN,
+                    f"Error preparing LLM API: {err}",
+                )
+                return conversation.ConversationResult(
+                    response=intent_response, conversation_id=user_input.conversation_id
+                )
+            tools = [_format_tool(tool) for tool in llm_api.async_get_tools()]
 
         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
         model = genai.GenerativeModel(
@@ -163,9 +179,8 @@ class GoogleGenerativeAIConversationEntity(
             conversation_id = ulid.ulid_now()
             messages = [{}, {}]
 
-        intent_response = intent.IntentResponse(language=user_input.language)
         try:
-            prompt = self._async_generate_prompt(raw_prompt, hass_access)
+            prompt = self._async_generate_prompt(raw_prompt, llm_api)
         except TemplateError as err:
             LOGGER.error("Error rendering prompt: %s", err)
             intent_response.async_set_error(
@@ -183,7 +198,8 @@ class GoogleGenerativeAIConversationEntity(
 
         chat = model.start_chat(history=messages)
         chat_request = user_input.text
-        for _ in range(5):
+        # To prevent infinite loops, we limit the number of iterations
+        for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
                 chat_response = await chat.send_message_async(chat_request)
             except (
@@ -229,7 +245,7 @@ class GoogleGenerativeAIConversationEntity(
                 "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
             )
             try:
-                function_response = await llm.async_call_tool(self.hass, tool_input)
+                function_response = await llm_api.async_call_tool(tool_input)
             except (HomeAssistantError, vol.Invalid) as e:
                 function_response = {"error": type(e).__name__}
                 if str(e):
@@ -251,17 +267,17 @@ class GoogleGenerativeAIConversationEntity(
             response=intent_response, conversation_id=conversation_id
         )
 
-    def _async_generate_prompt(self, raw_prompt: str, hass_access: bool) -> str:
+    def _async_generate_prompt(self, raw_prompt: str, llm_api: llm.API | None) -> str:
         """Generate a prompt for the user."""
-        prompt = template.Template(raw_prompt, self.hass).async_render(
+        raw_prompt += "\n"
+        if llm_api:
+            raw_prompt += llm_api.prompt_template
+        else:
+            raw_prompt += llm.PROMPT_NO_API_CONFIGURED
+
+        return template.Template(raw_prompt, self.hass).async_render(
             {
                 "ha_name": self.hass.config.location_name,
             },
             parse_result=False,
         )
-        prompt += "\n"
-        if hass_access:
-            prompt += PROMPT_HASS_ACCESS
-        else:
-            prompt += PROMPT_NO_HASS_ACCESS
-        return prompt

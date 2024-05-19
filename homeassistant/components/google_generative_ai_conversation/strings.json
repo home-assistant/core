@@ -4,7 +4,7 @@
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "allow_hass_access": "[%key:common::config_flow::data::allow_hass_access%]"
+          "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]"
         }
       }
     },
@@ -24,7 +24,7 @@
           "top_p": "Top P",
           "top_k": "Top K",
           "max_tokens": "Maximum tokens to return in response",
-          "allow_hass_access": "[%key:common::config_flow::data::allow_hass_access%]"
+          "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]"
         }
       }
     }
