@@ -39,7 +39,7 @@ async def async_setup_entry(
                 "Reconnected to %s at %s", entry.data[CONF_NAME], entry.data[CONF_HOST]
             )
         else:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Disconnected from %s at %s",
                 entry.data[CONF_NAME],
                 entry.data[CONF_HOST],
