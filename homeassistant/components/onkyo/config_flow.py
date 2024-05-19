@@ -161,9 +161,13 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Import the yaml config."""
 
+        host = user_input.get(CONF_HOST)
+        if host is None:
+            return self.async_abort(reason="no_host_defined")
+
         info = None
         try:
-            receiver = eiscp.eISCP(user_input[CONF_HOST], CONF_PORT_DEFAULT)
+            receiver = eiscp.eISCP(host, CONF_PORT_DEFAULT)
             info = receiver.info
         finally:
             if receiver:
@@ -177,7 +181,6 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id, raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
-        user_input[CONF_MODEL] = info[EISCP_MODEL_NAME]
         user_input[CONF_MODEL] = info[EISCP_MODEL_NAME]
         user_input[CONF_MAC] = unique_id
 

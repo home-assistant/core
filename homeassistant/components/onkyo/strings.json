@@ -50,6 +50,10 @@
       "title": "The Onkyo YAML configuration import failed",
       "description": "Configuring Onkyo using YAML is being removed but there was a connection error importing your YAML configuration.\n\nEnsure the connection to the receiver works and restart Home Assistant to try again or remove the Onkyo YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
     },
+    "deprecated_yaml_import_issue_no_host_defined": {
+      "title": "The Onkyo YAML configuration import failed",
+      "description": "Configuring Onkyo using YAML is being removed but there was no host defined in your existing YAML configuration and could therefore not be imported.\n\nSpecify a receiver and restart Home Assistant to try again or remove the Onkyo YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    },
     "deprecated_yaml_import_issue_unknown": {
       "title": "The Onkyo YAML configuration import failed",
       "description": "Configuring Onkyo using YAML is being removed but there was an unknown error when trying to import the YAML configuration.\n\nEnsure the imported configuration is correct and remove the Onkyo YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."

@@ -9,6 +9,7 @@ import eiscp
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -16,7 +17,7 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     HomeAssistant,
@@ -35,6 +36,9 @@ from .const import (
     ATTR_PRESET,
     ATTR_VIDEO_INFORMATION,
     ATTR_VIDEO_OUT,
+    BRAND_NAME,
+    CONF_LEGACY_MAXIMUM_VOLUME,
+    CONF_LEGACY_RECEIVER_MAXIMUM_VOLUME,
     CONF_MAXIMUM_VOLUME,
     CONF_MAXIMUM_VOLUME_DEFAULT,
     CONF_RECEIVER_MAXIMUM_VOLUME,
@@ -76,6 +80,23 @@ SUPPORT_ONKYO = (
     | MediaPlayerEntityFeature.VOLUME_SET
     | MediaPlayerEntityFeature.VOLUME_MUTE
     | MediaPlayerEntityFeature.VOLUME_STEP
+)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=BRAND_NAME): cv.string,
+        vol.Optional(
+            CONF_LEGACY_MAXIMUM_VOLUME, default=CONF_MAXIMUM_VOLUME_DEFAULT
+        ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
+        vol.Optional(
+            CONF_LEGACY_RECEIVER_MAXIMUM_VOLUME,
+            default=CONF_RECEIVER_MAXIMUM_VOLUME_DEFAULT,
+        ): cv.positive_int,
+        vol.Optional(CONF_SOURCES, default=CONF_SOURCES_DEFAULT): {
+            cv.string: cv.string
+        },
+    }
 )
 
 ISSUE_PLACEHOLDER = {"url": "/config/integrations/dashboard/add?domain=onkyo"}
