@@ -137,7 +137,7 @@ class GoogleGenerativeAIConversationEntity(
     ) -> conversation.ConversationResult:
         """Process a sentence."""
         intent_response = intent.IntentResponse(language=user_input.language)
-        llm_api: llm.LlmApi | None = None
+        llm_api: llm.API | None = None
         tools: list[dict[str, Any]] | None = None
 
         if self.entry.options.get(CONF_LLM_HASS_API):
@@ -229,7 +229,7 @@ class GoogleGenerativeAIConversationEntity(
             self.history[conversation_id] = chat.history
             tool_call = chat_response.parts[0].function_call
 
-            if not tool_call:
+            if not tool_call or not llm_api:
                 break
 
             tool_input = llm.ToolInput(
