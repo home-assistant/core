@@ -15,8 +15,9 @@ from homeassistant.const import (
     CONF_TIME_ZONE,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "jewish_calendar"
@@ -83,6 +84,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Jewish Calendar component."""
     if DOMAIN not in config:
         return True
+
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        is_fixable=False,
+        breaks_in_ha_version="2024.10.0",
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": DEFAULT_NAME,
+        },
+    )
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
