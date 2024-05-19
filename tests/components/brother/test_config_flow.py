@@ -254,7 +254,11 @@ async def test_zeroconf_confirm_create_entry(
     assert result["data"][CONF_TYPE] == "laser"
 
 
-async def test_reconfigure_successful(hass: HomeAssistant, mock_brother_client: AsyncMock, mock_config_entry: MockConfigEntry) -> None:
+async def test_reconfigure_successful(
+    hass: HomeAssistant,
+    mock_brother_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test starting a reconfigure flow."""
     await init_integration(hass, mock_config_entry)
 
@@ -292,7 +296,11 @@ async def test_reconfigure_successful(hass: HomeAssistant, mock_brother_client: 
     ],
 )
 async def test_reconfigure_not_successful(
-    hass: HomeAssistant, exc: Exception, base_error: str, mock_brother_client: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    exc: Exception,
+    base_error: str,
+    mock_brother_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test starting a reconfigure flow but no connection found."""
     await init_integration(hass, mock_config_entry)
@@ -335,7 +343,11 @@ async def test_reconfigure_not_successful(
     }
 
 
-async def test_reconfigure_invalid_hostname(hass: HomeAssistant, mock_brother_client: AsyncMock, mock_config_entry: MockConfigEntry) -> None:
+async def test_reconfigure_invalid_hostname(
+    hass: HomeAssistant,
+    mock_brother_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test starting a reconfigure flow but no connection found."""
     await init_integration(hass, mock_config_entry)
 
@@ -361,7 +373,11 @@ async def test_reconfigure_invalid_hostname(hass: HomeAssistant, mock_brother_cl
     assert result["errors"] == {CONF_HOST: "wrong_host"}
 
 
-async def test_reconfigure_not_the_same_device(hass: HomeAssistant, mock_brother_client: AsyncMock, mock_config_entry: MockConfigEntry) -> None:
+async def test_reconfigure_not_the_same_device(
+    hass: HomeAssistant,
+    mock_brother_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test starting the reconfiguration process, but with a different printer."""
     await init_integration(hass, mock_config_entry)
 
