@@ -134,7 +134,7 @@ async def test_devices_in_dr(
 @pytest.mark.parametrize(
     ("device_fixture", "entities"),
     [
-        ("yna5x1", 28),
+        ("yna5x1", 27),
         ("5xu9h3", 24),
     ],
 )

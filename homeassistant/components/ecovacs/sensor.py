@@ -4,15 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import json
 from typing import Generic
 
-from deebot_client.capabilities import (
-    Capabilities,
-    CapabilityEvent,
-    CapabilityLifeSpan,
-    VacuumCapabilities,
-)
+from deebot_client.capabilities import Capabilities, CapabilityEvent, CapabilityLifeSpan
 from deebot_client.events import (
     BatteryEvent,
     ErrorEvent,
@@ -20,8 +14,6 @@ from deebot_client.events import (
     LifeSpan,
     LifeSpanEvent,
     NetworkInfoEvent,
-    PositionsEvent,
-    PositionType,
     StatsEvent,
     TotalStatsEvent,
 )
@@ -45,12 +37,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import EcovacsConfigEntry
-from .const import (
-    ATTRIBUTE_POSITION_X,
-    ATTRIBUTE_POSITION_Y,
-    SUPPORTED_LIFESPANS,
-    SUPPORTED_POSITION_TYPES,
-)
+from .const import SUPPORTED_LIFESPANS
 from .entity import (
     CapabilityDevice,
     EcovacsCapabilityEntityDescription,
@@ -181,24 +168,6 @@ LIFESPAN_ENTITY_DESCRIPTIONS = tuple(
 )
 
 
-@dataclass(kw_only=True, frozen=True)
-class EcovacsPositionSensorEntityDescription(SensorEntityDescription):
-    """Ecovacs position sensor entity description."""
-
-    position_type: PositionType
-
-
-POSITION_ENTITY_DESCRIPTIONS: tuple[EcovacsPositionSensorEntityDescription, ...] = (
-    EcovacsPositionSensorEntityDescription(
-        position_type=position_type,
-        key=f"position_{position_type.name.lower()}",
-        translation_key=f"position_{position_type.name.lower()}",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    )
-    for position_type in SUPPORTED_POSITION_TYPES
-)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EcovacsConfigEntry,
@@ -215,12 +184,6 @@ async def async_setup_entry(
         for device in controller.devices(Capabilities)
         for description in LIFESPAN_ENTITY_DESCRIPTIONS
         if description.component in device.capabilities.life_span.types
-    )
-    entities.extend(
-        EcovacsPositionSensor(device, capability.position, description)
-        for device in controller.devices(VacuumCapabilities)
-        if (capability := device.capabilities.map)
-        for description in POSITION_ENTITY_DESCRIPTIONS
     )
     entities.extend(
         EcovacsErrorSensor(device, capability)
@@ -270,32 +233,6 @@ class EcovacsLifespanSensor(
             if event.type == self.entity_description.component:
                 self._attr_native_value = self.entity_description.value_fn(event)
                 self.async_write_ha_state()
-
-        self._subscribe(self._capability.event, on_event)
-
-
-class EcovacsPositionSensor(
-    EcovacsDescriptionEntity[Capabilities, CapabilityEvent[PositionsEvent]],
-    SensorEntity,
-):
-    """Position sensor."""
-
-    entity_description: EcovacsPositionSensorEntityDescription
-
-    async def async_added_to_hass(self) -> None:
-        """Set up the event listeners now that hass is ready."""
-        await super().async_added_to_hass()
-
-        async def on_event(event: PositionsEvent) -> None:
-            for position in event.positions:
-                if position.type == self.entity_description.position_type:
-                    coordinates = {
-                        ATTRIBUTE_POSITION_X: position.x,
-                        ATTRIBUTE_POSITION_Y: position.y,
-                    }
-                    self._attr_native_value = json.dumps(coordinates)
-                    self._attr_extra_state_attributes = coordinates
-                    self.async_write_ha_state()
 
         self._subscribe(self._capability.event, on_event)
 

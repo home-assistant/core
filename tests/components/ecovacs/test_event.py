@@ -2,8 +2,14 @@
 
 from datetime import timedelta
 
-from deebot_client.capabilities import Capabilities
-from deebot_client.events import CleanJobStatus, ReportStatsEvent
+from deebot_client.capabilities import Capabilities, VacuumCapabilities
+from deebot_client.events import (
+    CleanJobStatus,
+    Position,
+    PositionsEvent,
+    PositionType,
+    ReportStatsEvent,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
@@ -95,3 +101,42 @@ async def test_last_job(
         assert (state := hass.states.get(state.entity_id))
         assert state.state == "2024-03-20T00:10:00.000+00:00"
         assert state.attributes[ATTR_EVENT_TYPE] == "manually_stopped"
+
+
+async def test_last_position(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
+    controller: EcovacsController,
+) -> None:
+    """Test last position event entity."""
+    freezer.move_to("2024-03-20T00:00:00+00:00")
+    entity_id = "event.ozmo_950_last_position"
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
+
+    assert (entity_entry := entity_registry.async_get(state.entity_id))
+    assert entity_entry == snapshot(name=f"{entity_id}-entity_entry")
+    assert entity_entry.device_id
+
+    device = next(controller.devices(VacuumCapabilities))
+
+    assert (device_entry := device_registry.async_get(entity_entry.device_id))
+    assert device_entry.identifiers == {(DOMAIN, device.device_info["did"])}
+
+    event_bus = device.events
+    await notify_and_wait(
+        hass,
+        event_bus,
+        PositionsEvent(
+            [
+                Position(PositionType.CHARGER, 1, 5),
+                Position(PositionType.DEEBOT, 5, 9),
+            ]
+        ),
+    )
+
+    assert (state := hass.states.get(state.entity_id))
+    assert state == snapshot(name=f"{entity_id}-state")

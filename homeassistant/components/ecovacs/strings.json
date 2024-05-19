@@ -74,6 +74,16 @@
             }
           }
         }
+      },
+      "last_position": {
+        "name": "Last position",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "positions_updated": "Positions updated"
+            }
+          }
+        }
       }
     },
     "image": {
@@ -121,12 +131,6 @@
       },
       "network_ssid": {
         "name": "Wi-Fi SSID"
-      },
-      "position_deebot": {
-        "name": "Last Position"
-      },
-      "position_charger": {
-        "name": "Charger Position"
       },
       "stats_area": {
         "name": "Area cleaned"

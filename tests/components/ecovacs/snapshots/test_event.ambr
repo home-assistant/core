@@ -57,3 +57,65 @@
     'state': '2024-03-20T00:00:00.000+00:00',
   })
 # ---
+# name: test_last_position[event.ozmo_950_last_position-entity_entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'positions_updated',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'event.ozmo_950_last_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last position',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_position',
+    'unique_id': 'E1234567890000000001_last_position',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_last_position[event.ozmo_950_last_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'charger': dict({
+        'x': 1,
+        'y': 5,
+      }),
+      'deebot': dict({
+        'x': 5,
+        'y': 9,
+      }),
+      'event_type': 'positions_updated',
+      'event_types': list([
+        'positions_updated',
+      ]),
+      'friendly_name': 'Ozmo 950 Last position',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.ozmo_950_last_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-03-20T00:00:00.000+00:00',
+  })
+# ---
