@@ -23,7 +23,7 @@ from tests.common import MockConfigEntry
 
 CONFIG = {CONF_HOST: "127.0.0.1", CONF_TYPE: "laser"}
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+pytestmark = pytest.mark.usefixtures("mock_setup_entry", "mock_unload_entry")
 
 
 async def test_show_form(hass: HomeAssistant) -> None:
