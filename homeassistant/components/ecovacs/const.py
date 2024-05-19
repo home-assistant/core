@@ -2,7 +2,7 @@
 
 from enum import StrEnum
 
-from deebot_client.events import LifeSpan, PositionType
+from deebot_client.events import LifeSpan
 
 DOMAIN = "ecovacs"
 
@@ -17,11 +17,6 @@ SUPPORTED_LIFESPANS = (
     LifeSpan.FILTER,
     LifeSpan.LENS_BRUSH,
     LifeSpan.SIDE_BRUSH,
-)
-
-SUPPORTED_POSITON_TYPES = (
-    PositionType.CHARGER,
-    PositionType.DEEBOT,
 )
 
 

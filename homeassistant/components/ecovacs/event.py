@@ -2,7 +2,12 @@
 
 from deebot_client.capabilities import Capabilities, CapabilityEvent, VacuumCapabilities
 from deebot_client.device import Device
-from deebot_client.events import CleanJobStatus, PositionsEvent, ReportStatsEvent
+from deebot_client.events import (
+    CleanJobStatus,
+    PositionsEvent,
+    PositionType,
+    ReportStatsEvent,
+)
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.const import EntityCategory
@@ -13,9 +18,13 @@ from . import EcovacsConfigEntry
 from .entity import EcovacsEntity
 from .util import get_name_key
 
-POSITIONS_UPDATED_EVENT = "positions_updated"
 ATTRIBUTE_POSITION_X = "x"
 ATTRIBUTE_POSITION_Y = "y"
+POSITIONS_UPDATED_EVENT = "positions_updated"
+SUPPORTED_POSITION_TYPES = (
+    PositionType.CHARGER,
+    PositionType.DEEBOT,
+)
 
 
 async def async_setup_entry(
@@ -101,6 +110,7 @@ class EcovacsLastPositionEventEntity(
                     "y": position.y,
                 }
                 for position in event.positions
+                if position.type in SUPPORTED_POSITION_TYPES
             }
             self._trigger_event(POSITIONS_UPDATED_EVENT, event_data)
             self.async_write_ha_state()
