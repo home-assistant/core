@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import cast
 
-from kasa import Feature, Device
+from kasa import Device, Feature
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,

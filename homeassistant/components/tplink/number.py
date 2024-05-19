@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
 
-from kasa import Feature, Device, SmartPlug
+from kasa import Device, Feature
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry

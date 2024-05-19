@@ -8,9 +8,9 @@ from typing import Any
 from kasa import (
     AuthenticationException,
     Credentials,
+    Device,
     DeviceConfig,
     Discover,
-    Device,
     KasaException,
     TimeoutException,
 )
@@ -375,9 +375,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except TimeoutException:
             # Try connect() to legacy devices if discovery fails
-            self._discovered_device = await Device.connect(
-                config=DeviceConfig(host)
-            )
+            self._discovered_device = await Device.connect(config=DeviceConfig(host))
         else:
             if self._discovered_device.config.uses_http:
                 self._discovered_device.config.http_client = (

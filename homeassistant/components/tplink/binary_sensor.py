@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from kasa import Feature, Device
+from kasa import Device, Feature
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,

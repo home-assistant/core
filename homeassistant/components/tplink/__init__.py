@@ -11,9 +11,9 @@ from aiohttp import ClientSession
 from kasa import (
     AuthenticationException,
     Credentials,
+    Device,
     DeviceConfig,
     Discover,
-    Device,
     KasaException,
 )
 from kasa.httpclient import get_cookie_jar

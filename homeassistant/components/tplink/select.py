@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from kasa import Feature, Device
+from kasa import Device, Feature
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
