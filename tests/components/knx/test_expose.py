@@ -242,7 +242,9 @@ async def test_expose_cooldown(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.assert_write("1/1/8", (3,))
 
 
-async def test_expose_value_template(hass: HomeAssistant, knx: KNXTestKit) -> None:
+async def test_expose_value_template(
+    hass: HomeAssistant, knx: KNXTestKit, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test an expose with value_template."""
     entity_id = "fake.entity"
     attribute = "brightness"
@@ -279,6 +281,13 @@ async def test_expose_value_template(hass: HomeAssistant, knx: KNXTestKit) -> No
     await hass.async_block_till_done()
     await knx.assert_write(binary_address, True)
     await knx.assert_write(percent_address, (0,))
+
+    # Change attribute to null (eg. light brightness)
+    hass.states.async_set(entity_id, "off", {attribute: None})
+    await hass.async_block_till_done()
+    # without explicit `None`-handling or default value this fails with
+    # TypeError: unsupported operand type(s) for -: 'int' and 'NoneType'
+    assert "Error rendering value template for KNX expose" in caplog.text
 
 
 async def test_expose_conversion_exception(

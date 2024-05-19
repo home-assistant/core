@@ -26,6 +26,7 @@ from homeassistant.core import (
     State,
     callback,
 )
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, StateType
@@ -135,7 +136,18 @@ class KNXExposeSensor:
             value = state.state
 
         if self.value_template is not None:
-            value = self.value_template.async_render_with_possible_json_value(value)
+            try:
+                value = self.value_template.async_render_with_possible_json_value(
+                    value, error_value=None
+                )
+            except (TemplateError, TypeError, ValueError) as err:
+                _LOGGER.warning(
+                    "Error rendering value template for KNX expose %s %s: %s",
+                    self.device.name,
+                    self.value_template.template,
+                    err,
+                )
+                return None
 
         if self.expose_type == "binary":
             if value in (1, STATE_ON, "True"):
