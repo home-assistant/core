@@ -370,8 +370,8 @@ class QNAPMemorySensor(QNAPSensor):
         if self.entity_description.key == "memory_percent_used":
             return used / total * 100
 
-    # Deprecated since Home Assistant 2024.2.0
-    # Can be removed completely in 2024.8.0
+    # Deprecated since Home Assistant 2024.6.0
+    # Can be removed completely in 2024.12.0
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
@@ -404,8 +404,8 @@ class QNAPNetworkSensor(QNAPSensor):
         if self.entity_description.key == "network_rx":
             return data["rx"]
 
-    # Deprecated since Home Assistant 2024.2.0
-    # Can be removed completely in 2024.8.0
+    # Deprecated since Home Assistant 2024.6.0
+    # Can be removed completely in 2024.12.0
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
@@ -442,8 +442,8 @@ class QNAPSystemSensor(QNAPSensor):
             )
             return dt_util.now() - uptime_duration
 
-    # Deprecated since Home Assistant 2024.2.0
-    # Can be removed completely in 2024.8.0
+    # Deprecated since Home Assistant 2024.6.0
+    # Can be removed completely in 2024.12.0
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
@@ -511,8 +511,8 @@ class QNAPVolumeSensor(QNAPSensor):
         if self.entity_description.key == "volume_percentage_used":
             return used_gb / total_gb * 100
 
-    # Deprecated since Home Assistant 2024.2.0
-    # Can be removed completely in 2024.8.0
+    # Deprecated since Home Assistant 2024.6.0
+    # Can be removed completely in 2024.12.0
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
