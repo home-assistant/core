@@ -90,6 +90,43 @@ async def manager(hass: HomeAssistant) -> config_entries.ConfigEntries:
     return manager
 
 
+async def test_setup_retry_race(hass: HomeAssistant) -> None:
+    """Test handling setup retry when a config entry has been reloaded."""
+    attempts = 0
+
+    async def setup_entry(hass, entry):
+        """Mock setup entry."""
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise ConfigEntryNotReady
+        await asyncio.sleep(0.1)
+        return True
+
+    mock_integration(hass, MockModule("comp", async_setup_entry=setup_entry))
+    mock_platform(hass, "comp.config_flow", None)
+
+    entry = MockConfigEntry(domain="comp")
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+
+    # Ensure setup retry has started, but do not block until its
+    # done so we can trigger a reload before its complete
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+    assert entry.setup_lock.locked()
+    assert entry._async_cancel_retry_setup is None
+
+    hass.config_entries.async_schedule_reload(entry.entry_id)
+    assert entry.state is config_entries.ConfigEntryState.SETUP_IN_PROGRESS
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+    await hass.async_block_till_done()
+
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
 async def test_call_setup_entry(hass: HomeAssistant) -> None:
     """Test we call <component>.setup_entry."""
     entry = MockConfigEntry(domain="comp")
