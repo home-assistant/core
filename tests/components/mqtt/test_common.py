@@ -65,9 +65,9 @@ _SENTINEL = object()
 
 DISCOVERY_COUNT = len(MQTT)
 
-_MqttMessageType = list[tuple[str, str]]
-_AttributesType = list[tuple[str, Any]]
-_StateDataType = list[tuple[_MqttMessageType, str | None, _AttributesType | None]]
+type _MqttMessageType = list[tuple[str, str]]
+type _AttributesType = list[tuple[str, Any]]
+type _StateDataType = list[tuple[_MqttMessageType, str | None, _AttributesType | None]]
 
 
 def help_all_subscribe_calls(mqtt_client_mock: MqttMockPahoClient) -> list[Any]:

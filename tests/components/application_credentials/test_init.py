@@ -213,7 +213,7 @@ class Client:
         return resp.get("result")
 
 
-ClientFixture = Callable[[], Client]
+type ClientFixture = Callable[[], Client]
 
 
 @pytest.fixture

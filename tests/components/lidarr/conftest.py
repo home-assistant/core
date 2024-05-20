@@ -32,7 +32,7 @@ MOCK_INPUT = {CONF_URL: URL, CONF_VERIFY_SSL: False}
 
 CONF_DATA = MOCK_INPUT | {CONF_API_KEY: API_KEY}
 
-ComponentSetup = Callable[[], Awaitable[None]]
+type ComponentSetup = Callable[[], Awaitable[None]]
 
 
 def mock_error(

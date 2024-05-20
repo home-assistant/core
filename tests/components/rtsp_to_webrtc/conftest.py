@@ -23,7 +23,7 @@ SERVER_URL = "http://127.0.0.1:8083"
 CONFIG_ENTRY_DATA = {"server_url": SERVER_URL}
 
 # Typing helpers
-ComponentSetup = Callable[[], Awaitable[None]]
+type ComponentSetup = Callable[[], Awaitable[None]]
 type AsyncYieldFixture[_T] = AsyncGenerator[_T, None]
 
 

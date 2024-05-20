@@ -41,7 +41,7 @@ CONF_DHCP_FLOW_NEW_IP = dhcp.DhcpServiceInfo(
     hostname="dsp-w215",
 )
 
-ComponentSetup = Callable[[], Awaitable[None]]
+type ComponentSetup = Callable[[], Awaitable[None]]
 
 
 def create_entry(hass: HomeAssistant, unique_id: str | None = None) -> MockConfigEntry:

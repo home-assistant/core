@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 from tests.components.twitch import TwitchMock
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-ComponentSetup = Callable[[TwitchMock | None], Awaitable[None]]
+type ComponentSetup = Callable[[TwitchMock | None], Awaitable[None]]
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"

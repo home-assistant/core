@@ -20,7 +20,7 @@ from tests.components.lastfm import (
     MockUser,
 )
 
-ComponentSetup = Callable[[MockConfigEntry, MockUser], Awaitable[None]]
+type ComponentSetup = Callable[[MockConfigEntry, MockUser], Awaitable[None]]
 
 
 @pytest.fixture(name="config_entry")

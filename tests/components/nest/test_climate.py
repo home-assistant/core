@@ -52,7 +52,7 @@ from .conftest import FakeAuth
 
 from tests.components.climate import common
 
-CreateEvent = Callable[[dict[str, Any]], Awaitable[None]]
+type CreateEvent = Callable[[dict[str, Any]], Awaitable[None]]
 
 EVENT_ID = "some-event-id"
 

@@ -108,7 +108,7 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
     await hass.async_block_till_done()
 
 
-GetEventsFn = Callable[[str, str], Awaitable[list[dict[str, Any]]]]
+type GetEventsFn = Callable[[str, str], Awaitable[list[dict[str, Any]]]]
 
 
 @pytest.fixture(name="get_events")
@@ -169,7 +169,7 @@ class Client:
         return resp.get("result")
 
 
-ClientFixture = Callable[[], Awaitable[Client]]
+type ClientFixture = Callable[[], Awaitable[Client]]
 
 
 @pytest.fixture

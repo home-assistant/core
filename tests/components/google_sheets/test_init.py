@@ -25,7 +25,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_SHEET_ID = "google-sheet-it"
 
-ComponentSetup = Callable[[], Awaitable[None]]
+type ComponentSetup = Callable[[], Awaitable[None]]
 
 
 @pytest.fixture(name="scopes")
