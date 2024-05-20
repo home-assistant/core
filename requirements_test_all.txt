@@ -557,10 +557,10 @@ construct==2.10.68
 croniter==2.0.2
 
 # homeassistant.components.crownstone
-crownstone-cloud==1.4.9
+crownstone-cloud==1.4.11
 
 # homeassistant.components.crownstone
-crownstone-sse==2.0.4
+crownstone-sse==2.0.5
 
 # homeassistant.components.crownstone
 crownstone-uart==2.1.0
