@@ -1044,6 +1044,10 @@ omit =
     homeassistant/components/plex/view.py
     homeassistant/components/plum_lightpad/light.py
     homeassistant/components/pocketcasts/sensor.py
+    homeassistant/components/point/__init__.py
+    homeassistant/components/point/alarm_control_panel.py
+    homeassistant/components/point/binary_sensor.py
+    homeassistant/components/point/sensor.py
     homeassistant/components/powerwall/__init__.py
     homeassistant/components/progettihwsw/__init__.py
     homeassistant/components/progettihwsw/binary_sensor.py
@@ -1407,6 +1411,13 @@ omit =
     homeassistant/components/telegram_bot/__init__.py
     homeassistant/components/telegram_bot/polling.py
     homeassistant/components/telegram_bot/webhooks.py
+    homeassistant/components/tellduslive/__init__.py
+    homeassistant/components/tellduslive/binary_sensor.py
+    homeassistant/components/tellduslive/cover.py
+    homeassistant/components/tellduslive/entry.py
+    homeassistant/components/tellduslive/light.py
+    homeassistant/components/tellduslive/sensor.py
+    homeassistant/components/tellduslive/switch.py
     homeassistant/components/tellstick/*
     homeassistant/components/telnet/switch.py
     homeassistant/components/temper/sensor.py
