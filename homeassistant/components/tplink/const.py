@@ -21,4 +21,9 @@ ATTR_TOTAL_ENERGY_KWH: Final = "total_energy_kwh"
 
 CONF_DEVICE_CONFIG: Final = "device_config"
 
-PLATFORMS: Final = [Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS: Final = [
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
