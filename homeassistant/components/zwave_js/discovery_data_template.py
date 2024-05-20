@@ -362,8 +362,8 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
     """Data template class for Z-Wave Sensor entities."""
 
     @staticmethod
-    def find_key_from_matching_set[T: Enum](
-        enum_value: T, set_map: Mapping[str, list[T]]
+    def find_key_from_matching_set[_T: Enum](
+        enum_value: _T, set_map: Mapping[str, list[_T]]
     ) -> str | None:
         """Find a key in a set map that matches a given enum value."""
         for key, value_set in set_map.items():
