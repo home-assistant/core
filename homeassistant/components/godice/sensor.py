@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_DICE, DOMAIN, MANUFACTURER, MODEL
+from .const import DOMAIN, MANUFACTURER, MODEL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,8 +44,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Setups Dice sensors."""
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    dice = data[DATA_DICE]
+    dice = config_entry.runtime_data.dice
     device_info = DeviceInfo(
         identifiers={(DOMAIN, config_entry.data[const.CONF_ADDRESS])},
         name=config_entry.data[const.CONF_NAME],

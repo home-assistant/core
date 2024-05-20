@@ -7,11 +7,7 @@ from unittest.mock import patch
 
 import godice
 
-from homeassistant.components.godice.const import (
-    DATA_DISCONNECTED_BY_REQUEST_FLAG,
-    DOMAIN,
-    SCAN_INTERVAL,
-)
+from homeassistant.components.godice.const import SCAN_INTERVAL
 from homeassistant.components.godice.sensor import (
     BATTERY_SENSOR_DESCR,
     COLOR_SENSOR_DESCR,
@@ -41,12 +37,15 @@ async def test_sensor_reading(hass: HomeAssistant, config_entry, fake_dice) -> N
     fake_dice.get_battery_level.return_value = battery_level
     fake_dice.get_color.return_value = color
 
-    with patch(
-        "godice.create",
-        return_value=fake_dice,
-    ), patch(
-        "homeassistant.components.bluetooth.async_ble_device_from_address",
-        return_value=GODICE_DEVICE_SERVICE_INFO,
+    with (
+        patch(
+            "godice.create",
+            return_value=fake_dice,
+        ),
+        patch(
+            "homeassistant.components.bluetooth.async_ble_device_from_address",
+            return_value=GODICE_DEVICE_SERVICE_INFO,
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -109,35 +108,36 @@ async def test_reloading_on_connection_lost(
     hass: HomeAssistant, config_entry, fake_dice
 ) -> None:
     """Verify integration gets reloaded when connection to GoDice is lost."""
-    with patch(
-        "godice.create",
-        return_value=fake_dice,
-    ), patch(
-        "bleak.BleakClient",
-        return_value=None,
-    ) as bleak_client, patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload",
-        return_value=None,
-    ) as mock_reload, patch(
-        "homeassistant.components.bluetooth.async_ble_device_from_address",
-        return_value=GODICE_DEVICE_SERVICE_INFO,
+    with (
+        patch(
+            "godice.create",
+            return_value=fake_dice,
+        ),
+        patch(
+            "bleak.BleakClient",
+            return_value=None,
+        ) as bleak_client,
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload",
+            return_value=None,
+        ) as mock_reload,
+        patch(
+            "homeassistant.components.bluetooth.async_ble_device_from_address",
+            return_value=GODICE_DEVICE_SERVICE_INFO,
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         disconnect_cb = bleak_client.call_args.kwargs["disconnected_callback"]
 
         # no reloading when disconnected by request
-        hass.data[DOMAIN][config_entry.entry_id][
-            DATA_DISCONNECTED_BY_REQUEST_FLAG
-        ] = True
+        config_entry.runtime_data.disconnected_by_request_flag = True
         disconnect_cb(None)
         await hass.async_block_till_done()
         mock_reload.assert_not_called()
 
         # reloading when connection is lost
-        hass.data[DOMAIN][config_entry.entry_id][
-            DATA_DISCONNECTED_BY_REQUEST_FLAG
-        ] = False
+        config_entry.runtime_data.disconnected_by_request_flag = False
         disconnect_cb(None)
         await hass.async_block_till_done()
         mock_reload.assert_called()

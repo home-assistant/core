@@ -16,6 +16,7 @@ GODICE_DEVICE_SERVICE_INFO = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(local_name="GoDice"),
     time=0,
     connectable=True,
+    tx_power=-127,
 )
 
 ANOTHER_DEVICE_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -30,4 +31,5 @@ ANOTHER_DEVICE_SERVICE_INFO = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(local_name="Not GoDice"),
     time=0,
     connectable=True,
+    tx_power=-127,
 )
