@@ -111,33 +111,3 @@ async def test_number_services(hass: HomeAssistant, mock_vehicle_data) -> None:
         state = hass.states.get(entity_id)
         assert state.state == "88"
         call.assert_called_once()
-
-    entity_id = "number.test_speed_limit"
-    with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.speed_limit_set_limit",
-        return_value=COMMAND_OK,
-    ) as call:
-        await hass.services.async_call(
-            NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 60},
-            blocking=True,
-        )
-        state = hass.states.get(entity_id)
-        assert state.state == "60.0"
-        call.assert_called_once()
-
-    entity_id = "number.test_speed_limit_2"
-    with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.speed_limit_set_limit",
-        return_value=COMMAND_OK,
-    ) as call:
-        await hass.services.async_call(
-            NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 100},
-            blocking=True,
-        )
-        state = hass.states.get(entity_id)
-        assert state.state == "100.0"
-        call.assert_called_once()

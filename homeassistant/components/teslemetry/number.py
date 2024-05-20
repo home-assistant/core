@@ -15,16 +15,10 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    PERCENTAGE,
-    PRECISION_WHOLE,
-    UnitOfElectricCurrent,
-    UnitOfSpeed,
-)
+from homeassistant.const import PERCENTAGE, PRECISION_WHOLE, UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
-from homeassistant.util.unit_conversion import SpeedConverter
 
 from .entity import TeslemetryEnergyInfoEntity, TeslemetryVehicleEntity
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
@@ -104,22 +98,6 @@ async def async_setup_entry(
 
     async_add_entities(
         chain(
-            (  # Add imperial speed limit entities
-                TeslemetryImperialSpeedNumberEntity(
-                    hass,
-                    vehicle,
-                    entry.runtime_data.scopes,
-                )
-                for vehicle in entry.runtime_data.vehicles
-            ),
-            (  # Add metric speed limit entities
-                TeslemetryMetricSpeedNumberEntity(
-                    hass,
-                    vehicle,
-                    entry.runtime_data.scopes,
-                )
-                for vehicle in entry.runtime_data.vehicles
-            ),
             (  # Add vehicle entities
                 TeslemetryVehicleNumberEntity(
                     vehicle,
@@ -181,110 +159,6 @@ class TeslemetryVehicleNumberEntity(TeslemetryVehicleEntity, NumberEntity):
         self.raise_for_scope()
         await self.wake_up_if_asleep()
         await self.handle_command(self.entity_description.func(self.api, value))
-        self._attr_native_value = value
-        self.async_write_ha_state()
-
-
-class TeslemetryImperialSpeedNumberEntity(TeslemetryVehicleEntity, NumberEntity):
-    """Number entity for speed limit in MPH."""
-
-    device_class = NumberDeviceClass.SPEED
-    native_unit_of_measurement = UnitOfSpeed.MILES_PER_HOUR
-    mode = NumberMode.BOX
-    _attr_entity_registry_enabled_default = False
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        data: TeslemetryVehicleData,
-        scopes: list[Scope],
-    ) -> None:
-        """Initialize the Number entity."""
-        self.hass = hass
-        self.scoped = Scope.VEHICLE_CMDS in scopes
-
-        super().__init__(data, "vehicle_state_speed_limit_mode_current_limit_mph")
-
-    def _async_update_attrs(self) -> None:
-        """Update the attributes of the entity."""
-        if self._value is None:
-            self._attr_native_value = None
-        else:
-            self._attr_native_value = self._value
-        self._attr_native_min_value = self.get_number(
-            "vehicle_state_speed_limit_mode_min_limit_mph", 50
-        )
-        self._attr_native_max_value = self.get_number(
-            "vehicle_state_speed_limit_mode_max_limit_mph", 120
-        )
-
-    async def async_set_native_value(self, value: float) -> None:
-        """Set new value."""
-        self.raise_for_scope()
-        await self.wake_up_if_asleep()
-        await self.handle_command(self.api.speed_limit_set_limit(value))
-        self._attr_native_value = value
-        self.async_write_ha_state()
-
-
-class TeslemetryMetricSpeedNumberEntity(TeslemetryVehicleEntity, NumberEntity):
-    """Number entity for speed limit in KMPH."""
-
-    device_class = NumberDeviceClass.SPEED
-    mode = NumberMode.BOX
-    native_unit_of_measurement = UnitOfSpeed.KILOMETERS_PER_HOUR
-    _attr_entity_registry_enabled_default = False
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        data: TeslemetryVehicleData,
-        scopes: list[Scope],
-    ) -> None:
-        """Initialize the Number entity."""
-        self.hass = hass
-        self.scoped = Scope.VEHICLE_CMDS in scopes
-
-        # Handle Metric
-        self.convert_to = SpeedConverter.converter_factory(
-            UnitOfSpeed.MILES_PER_HOUR, UnitOfSpeed.KILOMETERS_PER_HOUR
-        )
-        self.convert_from = SpeedConverter.converter_factory(
-            UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.MILES_PER_HOUR
-        )
-
-        super().__init__(data, "vehicle_state_speed_limit_mode_current_limit_kph")
-
-    def _async_update_attrs(self) -> None:
-        """Update the attributes of the entity."""
-
-        if (
-            value := self.get("vehicle_state_speed_limit_mode_current_limit_mph")
-            is None
-        ):
-            self._attr_native_value = None
-        else:
-            self._attr_native_value = round(self.convert_to(value), 1)
-        self._attr_native_min_value = round(
-            self.convert_to(
-                self.get_number("vehicle_state_speed_limit_mode_min_limit_mph", 50)
-            ),
-            1,
-        )
-        self._attr_native_max_value = round(
-            self.convert_to(
-                self.get_number("vehicle_state_speed_limit_mode_max_limit_mph", 120)
-            ),
-            1,
-        )
-
-    async def async_set_native_value(self, value: float) -> None:
-        """Set new value."""
-        self.raise_for_scope()
-        await self.wake_up_if_asleep()
-        await self.handle_command(
-            self.api.speed_limit_set_limit(round(self.convert_from(value), 4))
-        )
         self._attr_native_value = value
         self.async_write_ha_state()
 
