@@ -26,6 +26,8 @@ from tests.common import (
     snapshot_platform,
 )
 
+TEST_ZONE_ID = "AAAAAAAA-BBBB-CCCC-DDDD-123456789101"
+
 
 async def test_switch_states(
     hass: HomeAssistant,
@@ -95,40 +97,49 @@ async def test_switch_commands(
 
 
 @pytest.mark.parametrize(
-    ("service", "boolean"),
+    ("service", "boolean", "excepted_state"),
     [
-        ("turn_off", False),
-        ("turn_on", True),
-        ("toggle", False),
+        ("turn_off", False, "off"),
+        ("turn_on", True, "on"),
+        ("toggle", True, "on"),
     ],
 )
 async def test_stay_out_zone_switch_commands(
     hass: HomeAssistant,
     service: str,
     boolean: bool,
+    excepted_state: str,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test switch commands."""
+    entity_id = "switch.test_mower_1_enable_danger_zone"
     await setup_integration(hass, mock_config_entry)
+    values = mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower.json", DOMAIN)
+    )
+    values[TEST_MOWER_ID].stay_out_zones.zones[TEST_ZONE_ID].enabled = boolean
+    mock_automower_client.get_status.return_value = values
     mocked_method = AsyncMock()
     setattr(mock_automower_client.commands, "switch_stay_out_zone", mocked_method)
     await hass.services.async_call(
         domain="switch",
         service=service,
-        service_data={"entity_id": "switch.test_mower_1_enable_danger_zone"},
+        service_data={"entity_id": entity_id},
         blocking=True,
     )
     assert len(mocked_method.mock_calls) == 1
-    mocked_method.assert_called_with(
-        TEST_MOWER_ID, "AAAAAAAA-BBBB-CCCC-DDDD-123456789101", boolean
-    )
+    mocked_method.assert_called_with(TEST_MOWER_ID, TEST_ZONE_ID, boolean)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == excepted_state
+
     mocked_method.side_effect = ApiException("Test error")
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             domain="switch",
             service=service,
-            service_data={"entity_id": "switch.test_mower_1_enable_danger_zone"},
+            service_data={"entity_id": entity_id},
             blocking=True,
         )
     assert (

@@ -1,10 +1,17 @@
 """Creates a switch entity for the mower."""
 
+import asyncio
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioautomower.exceptions import ApiException
-from aioautomower.model import MowerActivities, MowerStates, RestrictedReasons
+from aioautomower.model import (
+    MowerActivities,
+    MowerStates,
+    RestrictedReasons,
+    StayOutZones,
+    Zone,
+)
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -120,14 +127,24 @@ class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
     ) -> None:
         """Set up Automower switch."""
         super().__init__(mower_id, coordinator)
-        if self.mower_attributes.stay_out_zones is not None:
-            self._zone = self.mower_attributes.stay_out_zones
-        self.stay_out_zone = self._zone.zones[stay_out_zone_uid]
+        self.coordinator = coordinator
         self.stay_out_zone_uid = stay_out_zone_uid
         self._attr_unique_id = (
             f"{self.mower_id}_{self._attr_translation_key}_{stay_out_zone_uid}"
         )
         self._attr_translation_placeholders = {"stay_out_zone": self.stay_out_zone.name}
+
+    @property
+    def stay_out_zones(self) -> StayOutZones:
+        """Return all stay out zones."""
+        if TYPE_CHECKING:
+            assert self.mower_attributes.stay_out_zones is not None
+        return self.mower_attributes.stay_out_zones
+
+    @property
+    def stay_out_zone(self) -> Zone:
+        """Return the specific stay out zone."""
+        return self.stay_out_zones.zones[self.stay_out_zone_uid]
 
     @property
     def is_on(self) -> bool:
@@ -137,7 +154,7 @@ class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
     @property
     def available(self) -> bool:
         """Return True if the device is available and the zones are not `dirty`."""
-        return super().available and not self._zone.dirty
+        return super().available and not self.stay_out_zones.dirty
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
@@ -145,6 +162,10 @@ class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
             await self.coordinator.api.commands.switch_stay_out_zone(
                 self.mower_id, self.stay_out_zone_uid, False
             )
+            # As there are no updates from the websocket regarding stay out zone changes,
+            # we need to wait 5s and then poll the API.
+            await asyncio.sleep(5)
+            await self.coordinator.async_request_refresh()
         except ApiException as exception:
             raise HomeAssistantError(
                 f"Command couldn't be sent to the command queue: {exception}"
@@ -156,6 +177,10 @@ class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
             await self.coordinator.api.commands.switch_stay_out_zone(
                 self.mower_id, self.stay_out_zone_uid, True
             )
+            # As there are no updates from the websocket regarding stay out zone changes,
+            # we need to wait 5s and then poll the API.
+            await asyncio.sleep(5)
+            await self.coordinator.async_request_refresh()
         except ApiException as exception:
             raise HomeAssistantError(
                 f"Command couldn't be sent to the command queue: {exception}"
