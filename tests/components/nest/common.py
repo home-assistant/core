@@ -19,7 +19,7 @@ from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.components.nest import DOMAIN
 
 # Typing helpers
-PlatformSetup = Callable[[], Awaitable[None]]
+type PlatformSetup = Callable[[], Awaitable[None]]
 type YieldFixture[_T] = Generator[_T, None, None]
 
 WEB_AUTH_DOMAIN = DOMAIN
