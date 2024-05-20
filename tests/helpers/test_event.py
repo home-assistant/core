@@ -49,7 +49,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, async_fire_time_changed_exact
 
-DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
+DEFAULT_TIME_ZONE = dt_util.get_default_time_zone()
 
 
 async def test_track_point_in_time(hass: HomeAssistant) -> None:

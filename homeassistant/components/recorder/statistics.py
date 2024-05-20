@@ -952,7 +952,7 @@ def reduce_day_ts_factory() -> (
 
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
-        datetime.fromtimestamp, tz=dt_util.DEFAULT_TIME_ZONE
+        datetime.fromtimestamp, tz=dt_util.get_default_time_zone()
     )
 
     def _same_day_ts(time1: float, time2: float) -> bool:
@@ -1000,7 +1000,7 @@ def reduce_week_ts_factory() -> (
 
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
-        datetime.fromtimestamp, tz=dt_util.DEFAULT_TIME_ZONE
+        datetime.fromtimestamp, tz=dt_util.get_default_time_zone()
     )
 
     def _same_week_ts(time1: float, time2: float) -> bool:
@@ -1058,7 +1058,7 @@ def reduce_month_ts_factory() -> (
 
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
-        datetime.fromtimestamp, tz=dt_util.DEFAULT_TIME_ZONE
+        datetime.fromtimestamp, tz=dt_util.get_default_time_zone()
     )
 
     def _same_month_ts(time1: float, time2: float) -> bool:

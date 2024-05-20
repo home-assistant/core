@@ -5,7 +5,7 @@ from __future__ import annotations
 import bisect
 from contextlib import suppress
 import datetime as dt
-from functools import partial
+from functools import lru_cache, partial
 import re
 from typing import Any, Literal, overload
 import zoneinfo
@@ -75,6 +75,7 @@ POSTGRES_INTERVAL_RE = re.compile(
 )
 
 
+@lru_cache(maxsize=1)
 def get_default_time_zone() -> dt.tzinfo:
     """Get the default time zone."""
     return DEFAULT_TIME_ZONE
@@ -91,6 +92,7 @@ def set_default_time_zone(time_zone: dt.tzinfo) -> None:
     assert isinstance(time_zone, dt.tzinfo)
 
     DEFAULT_TIME_ZONE = time_zone
+    get_default_time_zone.cache_clear()
 
 
 def get_time_zone(time_zone_str: str) -> dt.tzinfo | None:

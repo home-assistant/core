@@ -38,7 +38,7 @@ def _truncate_timeline(timeline: Timeline, max_events: int) -> Timeline:
     truncated = list(itertools.islice(upcoming, max_events))
     return Timeline(
         [
-            SortableItemValue(event.timespan_of(dt_util.DEFAULT_TIME_ZONE), event)
+            SortableItemValue(event.timespan_of(dt_util.get_default_time_zone()), event)
             for event in truncated
         ]
     )
@@ -73,7 +73,7 @@ class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
         timeline = await self.sync.store_service.async_get_timeline(
-            dt_util.DEFAULT_TIME_ZONE
+            dt_util.get_default_time_zone()
         )
         self._upcoming_timeline = _truncate_timeline(timeline, MAX_UPCOMING_EVENTS)
         return timeline

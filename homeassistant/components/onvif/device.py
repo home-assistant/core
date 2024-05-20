@@ -251,7 +251,7 @@ class ONVIFDevice:
 
         LOGGER.debug("%s: Device time: %s", self.name, device_time)
 
-        tzone = dt_util.DEFAULT_TIME_ZONE
+        tzone = dt_util.get_default_time_zone()
         cdate = device_time.LocalDateTime
         if device_time.UTCDateTime:
             tzone = dt_util.UTC

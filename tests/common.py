@@ -235,7 +235,7 @@ async def async_test_home_assistant(
     orig_async_add_job = hass.async_add_job
     orig_async_add_executor_job = hass.async_add_executor_job
     orig_async_create_task_internal = hass.async_create_task_internal
-    orig_tz = dt_util.DEFAULT_TIME_ZONE
+    orig_tz = dt_util.get_default_time_zone()
 
     def async_add_job(target, *args, eager_start: bool = False):
         """Add job."""
@@ -364,7 +364,7 @@ async def async_test_home_assistant(
     yield hass
 
     # Restore timezone, it is set when creating the hass object
-    dt_util.DEFAULT_TIME_ZONE = orig_tz
+    dt_util.set_default_time_zone(orig_tz)
 
 
 def async_mock_service(
