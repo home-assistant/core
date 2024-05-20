@@ -2976,8 +2976,8 @@ class Config:
         report(
             "set the time zone using set_time_zone instead of async_set_time_zone"
             " which will stop working in Home Assistant 2025.6",
-            error_if_core=False,
-            error_if_integration=False,
+            error_if_core=True,
+            error_if_integration=True,
         )
         if time_zone := dt_util.get_time_zone(time_zone_str):
             self.time_zone = time_zone_str
