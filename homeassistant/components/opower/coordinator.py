@@ -238,6 +238,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         else:
             if cost_reads:
                 start = cost_reads[0].start_time
+            assert start
             start = max(start, end - timedelta(days=3 * 365))
         daily_cost_reads = await self.api.async_get_cost_reads(
             account, AggregateType.DAY, start, end
@@ -249,6 +250,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         if start_time is None:
             start = end - timedelta(days=2 * 30)
         else:
+            assert start
             start = max(start, end - timedelta(days=2 * 30))
         hourly_cost_reads = await self.api.async_get_cost_reads(
             account, AggregateType.HOUR, start, end
