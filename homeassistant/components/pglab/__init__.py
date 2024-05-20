@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from pypglab.mqtt import Client, Sub_State, Subcribe_CallBack
+from pypglab.mqtt import (
+    Client as PyPGLabMqttClient,
+    Sub_State as PyPGLabSubState,
+    Subcribe_CallBack as PyPGLaSubscribeCallBack,
+)
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import ReceiveMessage
@@ -25,8 +29,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PGLABConfigEntry) -> boo
 
     # define the call back for pglab module to subscribe to a mqtt message
     async def mqtt_subscribe(
-        sub_state: Sub_State, topic: str, callback_func: Subcribe_CallBack
-    ) -> Sub_State:
+        sub_state: PyPGLabSubState, topic: str, callback_func: PyPGLaSubscribeCallBack
+    ) -> PyPGLabSubState:
         async def discovery_message_received(msg: ReceiveMessage) -> None:
             callback_func(msg.topic, msg.payload)
 
@@ -41,11 +45,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PGLABConfigEntry) -> boo
         await async_subscribe_topics(hass, sub_state)
         return sub_state
 
-    async def mqtt_unsubscribe(sub_state: Sub_State) -> None:
+    async def mqtt_unsubscribe(sub_state: PyPGLabSubState) -> None:
         async_unsubscribe_topics(hass, sub_state)
 
     # create a mqtt client for pglab used for pglab python module
-    pglab_mqtt = Client(mqtt_publish, mqtt_subscribe, mqtt_unsubscribe)
+    pglab_mqtt = PyPGLabMqttClient(mqtt_publish, mqtt_subscribe, mqtt_unsubscribe)
 
     # setup PG LAB device discovery
     await create_discovery(hass, entry, pglab_mqtt)

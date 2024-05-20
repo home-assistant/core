@@ -5,8 +5,8 @@ from dataclasses import dataclass
 import json
 from typing import Any
 
-from pypglab.device import Device
-from pypglab.mqtt import Client
+from pypglab.device import Device as PyPGLabDevice
+from pypglab.mqtt import Client as PyPGLabMqttClient
 
 from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.components.mqtt.subscription import (
@@ -61,7 +61,7 @@ def get_device_id_from_discovery_topic(topic: str) -> str | None:
 class DiscoverDeviceInfo:
     """It's keeping information of the PGLAB discovered device."""
 
-    def __init__(self, pglab_device: Device) -> None:
+    def __init__(self, pglab_device: PyPGLabDevice) -> None:
         """Initialize the device discovery info."""
 
         # hash string that represent the device actual configuration,
@@ -98,7 +98,9 @@ class PGLabDiscovery:
         self._discovered: dict[str, DiscoverDeviceInfo] = {}
         self._disconnect_platform: list = []
 
-    async def __build_device(self, mqtt: Client, msg: ReceiveMessage) -> Device:
+    async def __build_device(
+        self, mqtt: PyPGLabMqttClient, msg: ReceiveMessage
+    ) -> PyPGLabDevice:
         """Build a PG LAB device."""
 
         # check if the discovery message is in valid jason format
@@ -121,7 +123,7 @@ class PGLabDiscovery:
             return None
 
         # build and configure the PG LAB device
-        pglab_device = Device()
+        pglab_device = PyPGLabDevice()
         if not await pglab_device.config(mqtt, payload):
             _LOGGER.warning("Error during setup of new discovered device")
             return None
@@ -155,7 +157,7 @@ class PGLabDiscovery:
         del self._discovered[device_id]
 
     async def start(
-        self, hass: HomeAssistant, mqtt: Client, entry: PGLABConfigEntry
+        self, hass: HomeAssistant, mqtt: PyPGLabMqttClient, entry: PGLABConfigEntry
     ) -> None:
         """Start to discovery a device."""
 
@@ -261,7 +263,9 @@ class PGLabDiscovery:
 
 
 # create an instance of the discovery PG LAB devices
-async def create_discovery(hass: HomeAssistant, entry: PGLABConfigEntry, mqtt: Client):
+async def create_discovery(
+    hass: HomeAssistant, entry: PGLABConfigEntry, mqtt: PyPGLabMqttClient
+):
     """Create and initialize a discovery instance."""
 
     pglab_discovery = PGLabDiscovery()

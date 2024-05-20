@@ -2,22 +2,26 @@
 
 from __future__ import annotations
 
-from pypglab.device import Device
-from pypglab.entity import Entity
+from pypglab.device import Device as PyPGLabDevice
+from pypglab.entity import Entity as PyPGLabEntity
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
-from homeassistant.helpers.entity import Entity as HA_Entity
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 from .discovery import PGLabDiscovery
 
 
-class BaseEntity(HA_Entity):
+class PgLabEntity(Entity):
     """Representation of a PGLAB entity in Home Assistant."""
 
     def __init__(
-        self, discovery: PGLabDiscovery, platform: str, device: Device, entity: Entity
+        self,
+        discovery: PGLabDiscovery,
+        platform: str,
+        device: PyPGLabDevice,
+        entity: PyPGLabEntity,
     ) -> None:
         """Initialize the class."""
 
