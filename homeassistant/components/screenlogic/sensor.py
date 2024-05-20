@@ -135,12 +135,36 @@ SUPPORTED_INTELLICHEM_SENSORS = [
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
+        key=VALUE.CALCIUM_HARDNESS,
+        entity_registry_enabled_default=False,  # Superseded by number entity
+    ),
+    ScreenLogicPushSensorDescription(
+        subscription_code=CODE.CHEMISTRY_CHANGED,
+        data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
+        key=VALUE.CYA,
+        entity_registry_enabled_default=False,  # Superseded by number entity
+    ),
+    ScreenLogicPushSensorDescription(
+        subscription_code=CODE.CHEMISTRY_CHANGED,
+        data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
         key=VALUE.ORP_SETPOINT,
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
         key=VALUE.PH_SETPOINT,
+    ),
+    ScreenLogicPushSensorDescription(
+        subscription_code=CODE.CHEMISTRY_CHANGED,
+        data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
+        key=VALUE.TOTAL_ALKALINITY,
+        entity_registry_enabled_default=False,  # Superseded by number entity
+    ),
+    ScreenLogicPushSensorDescription(
+        subscription_code=CODE.CHEMISTRY_CHANGED,
+        data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
+        key=VALUE.SALT_TDS_PPM,
+        entity_registry_enabled_default=False,  # Superseded by number entity
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
@@ -198,13 +222,6 @@ SUPPORTED_SCG_SENSORS = [
         data_root=(DEVICE.SCG, GROUP.CONFIGURATION),
         key=VALUE.SUPER_CHLOR_TIMER,
     ),
-]
-
-REMOVED_SENSORS = [
-    (DEVICE.INTELLICHEM, GROUP.CONFIGURATION, VALUE.CALCIUM_HARDNESS),
-    (DEVICE.INTELLICHEM, GROUP.CONFIGURATION, VALUE.CYA),
-    (DEVICE.INTELLICHEM, GROUP.CONFIGURATION, VALUE.TOTAL_ALKALINITY),
-    (DEVICE.INTELLICHEM, GROUP.CONFIGURATION, VALUE.SALT_TDS_PPM),
 ]
 
 
@@ -275,9 +292,6 @@ async def async_setup_entry(
                 scg_sensor_description, entity_category=EntityCategory.DIAGNOSTIC
             )
             entities.append(ScreenLogicSensor(coordinator, scg_sensor_description))
-
-    for sensor_data_path in REMOVED_SENSORS:
-        cleanup_excluded_entity(coordinator, DOMAIN, sensor_data_path)
 
     async_add_entities(entities)
 
