@@ -152,6 +152,7 @@ class-const-naming-style = "any"
 # too-many-ancestors - it's too strict.
 # wrong-import-order - isort guards this
 # consider-using-f-string - str.format sometimes more readable
+# possibly-used-before-assignment - too many errors / not necessarily issues
 # ---
 # Pylint CodeStyle plugin
 # consider-using-namedtuple-or-dataclass - too opinionated
@@ -176,6 +177,7 @@ disable = [
     "consider-using-f-string",
     "consider-using-namedtuple-or-dataclass",
     "consider-using-assignment-expr",
+    "possibly-used-before-assignment",
 
     # Handled by ruff
     # Ref: <https://github.com/astral-sh/ruff/issues/970>
