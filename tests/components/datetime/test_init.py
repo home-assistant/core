@@ -18,7 +18,7 @@ DEFAULT_VALUE = datetime(2020, 1, 1, 12, 0, 0, tzinfo=UTC)
 
 async def test_datetime(hass: HomeAssistant) -> None:
     """Test date/time entity."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     setup_test_component_platform(
         hass,
         DOMAIN,

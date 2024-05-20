@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 import os
 from pathlib import Path
 import sqlite3
+import threading
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -843,9 +844,7 @@ async def test_periodic_db_cleanups(
     assert str(text_obj) == "PRAGMA wal_checkpoint(TRUNCATE);"
 
 
-@patch("homeassistant.components.recorder.pool.check_loop")
 async def test_write_lock_db(
-    skip_check_loop,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     tmp_path: Path,
@@ -864,6 +863,7 @@ async def test_write_lock_db(
         with instance.engine.connect() as connection:
             connection.execute(text("DROP TABLE events;"))
 
+    instance.recorder_and_worker_thread_ids.add(threading.get_ident())
     with util.write_lock_db_sqlite(instance), pytest.raises(OperationalError):
         # Database should be locked now, try writing SQL command
         # This needs to be called in another thread since
@@ -872,7 +872,7 @@ async def test_write_lock_db(
         # in the same thread as the one holding the lock since it
         # would be allowed to proceed as the goal is to prevent
         # all the other threads from accessing the database
-        await hass.async_add_executor_job(_drop_table)
+        await instance.async_add_executor_job(_drop_table)
 
 
 def test_is_second_sunday() -> None:
