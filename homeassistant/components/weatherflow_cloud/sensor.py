@@ -46,8 +46,8 @@ class WeatherFlowCloudSensorEntityDescription(
     ) = None
 
 
-def wind_direction_icon_fn(degree: int) -> str:
-    """Return a wind icon based on the degrees."""
+def wind_angle_icon_fn(degree: int) -> str:
+    """Return a wind icon based on the current direction (in degrees) the wind is blowing."""
     degree = degree % 360  # Normalize degrees
 
     if degree < 23:
@@ -186,9 +186,7 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         extra_state_attributes_fn=lambda data: {
             "cardinal": str(data.observation.obs[0].wind_cardinal_direction),
         },
-        icon_fn=lambda data: wind_direction_icon_fn(
-            data.observation.obs[0].wind_direction
-        ),
+        icon_fn=lambda data: wind_angle_icon_fn(data.observation.obs[0].wind_direction),
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="wind_direction_cardinal",
@@ -213,7 +211,7 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
             "NNW",
         ],
         value_fn=lambda data: str(data.observation.obs[0].wind_cardinal_direction),
-        icon_fn=lambda data: wind_direction_icon_fn(  # The wind direction icon function is more precise so lets use it again here
+        icon_fn=lambda data: wind_angle_icon_fn(  # The wind direction icon function is more precise so lets use it again here
             data.observation.obs[0].wind_direction
         ),
     ),

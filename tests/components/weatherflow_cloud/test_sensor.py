@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeassistant.components.weatherflow_cloud.sensor import wind_direction_icon_fn
+from homeassistant.components.weatherflow_cloud.sensor import wind_angle_icon_fn
 
 
 @pytest.mark.parametrize(
@@ -47,5 +47,5 @@ from homeassistant.components.weatherflow_cloud.sensor import wind_direction_ico
 )
 def test_wind_direction_icon_fn_and_cardinal(wind_direction, expected_icon):
     """Test the cardinal directions are correct."""
-    direction_icon = wind_direction_icon_fn(wind_direction)
+    direction_icon = wind_angle_icon_fn(wind_direction)
     assert direction_icon == expected_icon
