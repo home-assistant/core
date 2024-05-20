@@ -2970,7 +2970,8 @@ class Config:
 
         It will be removed in Home Assistant 2025.6.
         """
-        from homeassistant.helpers.frame import report
+        # report is imported here to avoid a circular import
+        from .helpers.frame import report  # pylint: disable=import-outside-toplevel
 
         report(
             "set the time zone using set_time_zone instead of async_set_time_zone"
