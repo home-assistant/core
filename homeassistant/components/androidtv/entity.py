@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from androidtv.exceptions import LockNotAcquiredException
 
@@ -34,15 +34,13 @@ PREFIX_FIRETV = "Fire TV"
 
 _LOGGER = logging.getLogger(__name__)
 
-_ADBDeviceT = TypeVar("_ADBDeviceT", bound="AndroidTVEntity")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-
-_FuncType = Callable[Concatenate[_ADBDeviceT, _P], Awaitable[_R]]
-_ReturnFuncType = Callable[Concatenate[_ADBDeviceT, _P], Coroutine[Any, Any, _R | None]]
+type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], Awaitable[_R]]
+type _ReturnFuncType[_T, **_P, _R] = Callable[
+    Concatenate[_T, _P], Coroutine[Any, Any, _R | None]
+]
 
 
-def adb_decorator(
+def adb_decorator[_ADBDeviceT: AndroidTVEntity, **_P, _R](
     override_available: bool = False,
 ) -> Callable[[_FuncType[_ADBDeviceT, _P, _R]], _ReturnFuncType[_ADBDeviceT, _P, _R]]:
     """Wrap ADB methods and catch exceptions.
@@ -89,7 +87,7 @@ def adb_decorator(
                 await self.aftv.adb_close()
                 self._attr_available = False
                 return None
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception as err:  # noqa: BLE001
                 # An unforeseen exception occurred. Close the ADB connection so that
                 # it doesn't happen over and over again.
                 if self.available:

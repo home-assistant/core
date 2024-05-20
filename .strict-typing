@@ -48,6 +48,7 @@ homeassistant.components.adax.*
 homeassistant.components.adguard.*
 homeassistant.components.aftership.*
 homeassistant.components.air_quality.*
+homeassistant.components.airgradient.*
 homeassistant.components.airly.*
 homeassistant.components.airnow.*
 homeassistant.components.airq.*
@@ -83,6 +84,7 @@ homeassistant.components.api.*
 homeassistant.components.apple_tv.*
 homeassistant.components.apprise.*
 homeassistant.components.aprs.*
+homeassistant.components.apsystems.*
 homeassistant.components.aqualogic.*
 homeassistant.components.aquostv.*
 homeassistant.components.aranet.*
@@ -300,6 +302,7 @@ homeassistant.components.minecraft_server.*
 homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
+homeassistant.components.monzo.*
 homeassistant.components.moon.*
 homeassistant.components.mopeka.*
 homeassistant.components.motionmount.*
@@ -338,7 +341,6 @@ homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
 homeassistant.components.ping.*
 homeassistant.components.plugwise.*
-homeassistant.components.poolsense.*
 homeassistant.components.powerwall.*
 homeassistant.components.private_ble_device.*
 homeassistant.components.prometheus.*

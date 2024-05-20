@@ -92,7 +92,7 @@ SQUEEZEBOX_MODE = {
 }
 
 
-async def start_server_discovery(hass):
+async def start_server_discovery(hass: HomeAssistant) -> None:
     """Start a server discovery task."""
 
     def _discovered_server(server):
@@ -110,8 +110,9 @@ async def start_server_discovery(hass):
     hass.data.setdefault(DOMAIN, {})
     if DISCOVERY_TASK not in hass.data[DOMAIN]:
         _LOGGER.debug("Adding server discovery task for squeezebox")
-        hass.data[DOMAIN][DISCOVERY_TASK] = hass.async_create_task(
-            async_discover(_discovered_server)
+        hass.data[DOMAIN][DISCOVERY_TASK] = hass.async_create_background_task(
+            async_discover(_discovered_server),
+            name="squeezebox server discovery",
         )
 
 

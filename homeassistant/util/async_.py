@@ -7,17 +7,14 @@ from collections.abc import Awaitable, Callable, Coroutine
 import concurrent.futures
 import logging
 import threading
-from typing import Any, TypeVar, TypeVarTuple
+from typing import Any
 
 _LOGGER = logging.getLogger(__name__)
 
 _SHUTDOWN_RUN_CALLBACK_THREADSAFE = "_shutdown_run_callback_threadsafe"
 
-_T = TypeVar("_T")
-_Ts = TypeVarTuple("_Ts")
 
-
-def create_eager_task(
+def create_eager_task[_T](
     coro: Coroutine[Any, Any, _T],
     *,
     name: str | None = None,
@@ -45,7 +42,7 @@ def cancelling(task: Future[Any]) -> bool:
     return bool((cancelling_ := getattr(task, "cancelling", None)) and cancelling_())
 
 
-def run_callback_threadsafe(
+def run_callback_threadsafe[_T, *_Ts](
     loop: AbstractEventLoop, callback: Callable[[*_Ts], _T], *args: *_Ts
 ) -> concurrent.futures.Future[_T]:
     """Submit a callback object to a given event loop.
@@ -61,7 +58,7 @@ def run_callback_threadsafe(
         """Run callback and store result."""
         try:
             future.set_result(callback(*args))
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:  # noqa: BLE001
             if future.set_running_or_notify_cancel():
                 future.set_exception(exc)
             else:

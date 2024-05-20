@@ -164,8 +164,8 @@ from . import indieauth, login_flow, mfa_setup_flow
 DOMAIN = "auth"
 STRICT_CONNECTION_URL = "/auth/strict_connection/temp_token"
 
-StoreResultType = Callable[[str, Credentials], str]
-RetrieveResultType = Callable[[str, str], Credentials | None]
+type StoreResultType = Callable[[str, Credentials], str]
+type RetrieveResultType = Callable[[str, str], Credentials | None]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -651,7 +651,7 @@ def websocket_delete_all_refresh_tokens(
             continue
         try:
             hass.auth.async_remove_refresh_token(token)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             getLogger(__name__).exception("Error during refresh token removal")
             remove_failed = True
 

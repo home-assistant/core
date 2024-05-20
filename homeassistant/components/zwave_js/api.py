@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 import dataclasses
 from functools import partial, wraps
-from typing import Any, Concatenate, Literal, ParamSpec, cast
+from typing import Any, Concatenate, Literal, cast
 
 from aiohttp import web, web_exceptions, web_request
 import voluptuous as vol
@@ -75,7 +75,6 @@ from .config_validation import BITMASK_SCHEMA
 from .const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     DATA_CLIENT,
-    DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     USER_AGENT,
 )
@@ -84,8 +83,6 @@ from .helpers import (
     async_get_node_from_device_id,
     get_device_id,
 )
-
-_P = ParamSpec("_P")
 
 DATA_UNSUBSCRIBE = "unsubs"
 
@@ -285,7 +282,7 @@ async def _async_get_entry(
         )
         return None, None, None
 
-    client: Client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+    client: Client = entry.runtime_data[DATA_CLIENT]
 
     if client.driver is None:
         connection.send_error(
@@ -363,7 +360,7 @@ def async_get_node(
     return async_get_node_func
 
 
-def async_handle_failed_command(
+def async_handle_failed_command[**_P](
     orig_func: Callable[
         Concatenate[HomeAssistant, ActiveConnection, dict[str, Any], _P],
         Coroutine[Any, Any, None],

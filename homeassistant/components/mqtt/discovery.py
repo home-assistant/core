@@ -123,11 +123,11 @@ def set_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> 
 
 @callback
 def async_log_discovery_origin_info(
-    message: str, discovery_payload: MQTTDiscoveryPayload
+    message: str, discovery_payload: MQTTDiscoveryPayload, level: int = logging.INFO
 ) -> None:
     """Log information about the discovery and origin."""
     if CONF_ORIGIN not in discovery_payload:
-        _LOGGER.info(message)
+        _LOGGER.log(level, message)
         return
     origin_info: MqttOriginInfo = discovery_payload[CONF_ORIGIN]
     sw_version_log = ""
@@ -136,7 +136,8 @@ def async_log_discovery_origin_info(
     support_url_log = ""
     if support_url := origin_info.get("support_url"):
         support_url_log = f", support URL: {support_url}"
-    _LOGGER.info(
+    _LOGGER.log(
+        level,
         "%s from external application %s%s%s",
         message,
         origin_info["name"],
@@ -232,7 +233,7 @@ async def async_start(  # noqa: C901
                     key = ORIGIN_ABBREVIATIONS.get(key, key)
                     origin_info[key] = origin_info.pop(abbreviated_key)
                 MQTT_ORIGIN_INFO_SCHEMA(discovery_payload[CONF_ORIGIN])
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 _LOGGER.warning(
                     "Unable to parse origin information "
                     "from discovery message, got %s",
@@ -343,7 +344,7 @@ async def async_start(  # noqa: C901
         elif already_discovered:
             # Dispatch update
             message = f"Component has already been discovered: {component} {discovery_id}, sending update"
-            async_log_discovery_origin_info(message, payload)
+            async_log_discovery_origin_info(message, payload, logging.DEBUG)
             async_dispatcher_send(
                 hass, MQTT_DISCOVERY_UPDATED.format(*discovery_hash), payload
             )
