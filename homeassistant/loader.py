@@ -98,7 +98,7 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
     # Added in 2024.5.5 because of
     # https://github.com/sh00t2kill/dolphin-robot/issues/185
     "mydolphin_plus": BlockedIntegration(
-        AwesomeVersion("1.0.13b2"), "crashes Home Assistant"
+        AwesomeVersion("1.0.13"), "crashes Home Assistant"
     ),
 }
 
