@@ -174,7 +174,6 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         coordinator: TPLinkDataUpdateCoordinator,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(device, coordinator)
         # For backwards compat with pyHS100
         if device.is_dimmer:
             # Dimmers used to use the switch format since
@@ -184,6 +183,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             self._attr_unique_id = legacy_device_id(device)
         else:
             self._attr_unique_id = device.mac.replace(":", "").upper()
+        super().__init__(device, coordinator)
         modes: set[ColorMode] = {ColorMode.ONOFF}
         if device.is_variable_color_temp:
             modes.add(ColorMode.COLOR_TEMP)

@@ -160,9 +160,9 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
         has_parent: bool = False,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(device, coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{legacy_device_id(device)}_{description.key}"
+        super().__init__(device, coordinator)
         if has_parent:
             assert device.alias
             self._attr_translation_placeholders = {"device_name": device.alias}
