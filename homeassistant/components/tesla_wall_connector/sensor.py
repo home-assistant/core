@@ -85,7 +85,6 @@ WALL_CONNECTOR_SENSORS = [
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
     ),
     WallConnectorSensorDescription(
         key="mcu_temp_c",
@@ -95,7 +94,6 @@ WALL_CONNECTOR_SENSORS = [
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
     ),
     WallConnectorSensorDescription(
         key="grid_v",
