@@ -19,19 +19,20 @@ from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
 )
-from homeassistant.util.dt import utcnow
 
-from .const import CONF_STATION, DOMAIN, UPDATE_TIME_PERIOD
+from .const import (
+    CONF_STATION,
+    DEBOUNCE_TIME,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    RETRY_INTERVAL,
+    RETRY_STOP,
+)
+from .coordinator import NWSObservationDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
-
-DEFAULT_SCAN_INTERVAL = datetime.timedelta(minutes=10)
-RETRY_INTERVAL = datetime.timedelta(minutes=1)
-RETRY_STOP = datetime.timedelta(minutes=10)
-
-DEBOUNCE_TIME = 10 * 60  # in seconds
 
 NWSConfigEntry = ConfigEntry["NWSData"]
 
@@ -46,7 +47,7 @@ class NWSData:
     """Data for the National Weather Service integration."""
 
     api: SimpleNWS
-    coordinator_observation: TimestampDataUpdateCoordinator[None]
+    coordinator_observation: NWSObservationDataUpdateCoordinator
     coordinator_forecast: TimestampDataUpdateCoordinator[None]
     coordinator_forecast_hourly: TimestampDataUpdateCoordinator[None]
 
@@ -63,25 +64,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
     # set_station only does IO when station is None
     nws_data = SimpleNWS(latitude, longitude, api_key, client_session)
     await nws_data.set_station(station)
-
-    def async_setup_update_observation(
-        retry_interval: datetime.timedelta | float,
-        retry_stop: datetime.timedelta | float,
-    ) -> Callable[[], Awaitable[None]]:
-        async def update_observation() -> None:
-            """Retrieve recent observations."""
-            try:
-                await call_with_retry(
-                    nws_data.update_observation,
-                    retry_interval,
-                    retry_stop,
-                    retry_no_data=True,
-                    start_time=utcnow() - UPDATE_TIME_PERIOD,
-                )
-            except NwsNoDataError as err:
-                raise UpdateFailed("No data returned.") from err
-
-        return update_observation
 
     def async_setup_update_forecast(
         retry_interval: datetime.timedelta | float,
@@ -119,18 +101,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
 
         return update_forecast_hourly
 
-    # Don't use retries in setup
-    coordinator_observation = TimestampDataUpdateCoordinator(
+    coordinator_observation = NWSObservationDataUpdateCoordinator(
         hass,
-        _LOGGER,
-        name=f"NWS observation station {station}",
-        update_method=async_setup_update_observation(0, 0),
-        update_interval=DEFAULT_SCAN_INTERVAL,
-        request_refresh_debouncer=debounce.Debouncer(
-            hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
-        ),
+        nws_data,
     )
 
+    # Don't use retries in setup
     coordinator_forecast = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
@@ -165,9 +141,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
     await coordinator_forecast_hourly.async_refresh()
 
     # Use retries
-    coordinator_observation.update_method = async_setup_update_observation(
-        RETRY_INTERVAL, RETRY_STOP
-    )
     coordinator_forecast.update_method = async_setup_update_forecast(
         RETRY_INTERVAL, RETRY_STOP
     )

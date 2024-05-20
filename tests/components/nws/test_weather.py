@@ -10,6 +10,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import nws
+from homeassistant.components.nws.const import (
+    DEFAULT_SCAN_INTERVAL,
+    OBSERVATION_VALID_TIME,
+)
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
@@ -115,6 +119,57 @@ async def test_none_values(hass: HomeAssistant, mock_simple_nws, no_sensor) -> N
         assert data.get(key) is None
 
 
+async def test_data_caching_error_observation(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_simple_nws,
+    no_sensor,
+    caplog,
+) -> None:
+    """Test caching of data with errors."""
+    with (
+        patch("homeassistant.components.nws.coordinator.RETRY_STOP", 0),
+        patch("homeassistant.components.nws.coordinator.RETRY_INTERVAL", 0),
+    ):
+        instance = mock_simple_nws.return_value
+
+        entry = MockConfigEntry(
+            domain=nws.DOMAIN,
+            data=NWS_CONFIG,
+        )
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("weather.abc")
+        assert state.state == "sunny"
+
+        # data is still valid even when update fails
+        instance.update_observation.side_effect = NwsNoDataError("Test")
+
+        freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=100))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("weather.abc")
+        assert state.state == "sunny"
+
+        assert (
+            "NWS observation update failed, but data still valid. Last success: "
+            in caplog.text
+        )
+
+        # data is no longer valid after OBSERVATION_VALID_TIME
+        freezer.tick(OBSERVATION_VALID_TIME + timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("weather.abc")
+        assert state.state == STATE_UNAVAILABLE
+
+        assert "Error fetching NWS observation station ABC data: Test" in caplog.text
+
+
 async def test_no_data_error_observation(
     hass: HomeAssistant, mock_simple_nws, no_sensor, caplog
 ) -> None:
@@ -130,10 +185,7 @@ async def test_no_data_error_observation(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (
-        "Error fetching NWS observation station ABC data: No data returned"
-        in caplog.text
-    )
+    assert "Error fetching NWS observation station ABC data: Test" in caplog.text
 
 
 async def test_no_data_error_forecast(
@@ -251,7 +303,7 @@ async def test_error_observation(
 ) -> None:
     """Test error during update observation."""
     utc_time = dt_util.utcnow()
-    with patch("homeassistant.components.nws.utcnow") as mock_utc:
+    with patch("homeassistant.components.nws.coordinator.utcnow") as mock_utc:
         mock_utc.return_value = utc_time
         instance = mock_simple_nws.return_value
         # first update fails
