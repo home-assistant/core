@@ -1,7 +1,5 @@
 """The tests for the media_player platform."""
 
-import asyncio
-
 import pytest
 
 from homeassistant.components.media_player import (
@@ -19,7 +17,7 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
     entity_registry as er,
@@ -539,59 +537,79 @@ async def test_manual_pause_unpause(
     hass.states.async_set(device_2.entity_id, STATE_PLAYING, attributes=attributes)
 
     # Pause both devices by voice
+    context = Context()
     calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PAUSE)
     response = await intent.async_handle(
         hass,
         "test",
         media_player_intent.INTENT_MEDIA_PAUSE,
+        context=context,
     )
     await hass.async_block_till_done()
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 2
 
-    hass.states.async_set(device_1.entity_id, STATE_PAUSED, attributes=attributes)
-    hass.states.async_set(device_2.entity_id, STATE_PAUSED, attributes=attributes)
+    hass.states.async_set(
+        device_1.entity_id, STATE_PAUSED, attributes=attributes, context=context
+    )
+    hass.states.async_set(
+        device_2.entity_id, STATE_PAUSED, attributes=attributes, context=context
+    )
 
     # Unpause both devices by voice
+    context = Context()
     calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PLAY)
     response = await intent.async_handle(
         hass,
         "test",
         media_player_intent.INTENT_MEDIA_UNPAUSE,
+        context=context,
     )
     await hass.async_block_till_done()
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 2
 
-    hass.states.async_set(device_1.entity_id, STATE_PLAYING, attributes=attributes)
-    hass.states.async_set(device_2.entity_id, STATE_PLAYING, attributes=attributes)
+    hass.states.async_set(
+        device_1.entity_id, STATE_PLAYING, attributes=attributes, context=context
+    )
+    hass.states.async_set(
+        device_2.entity_id, STATE_PLAYING, attributes=attributes, context=context
+    )
 
     # Pause the first device by voice
+    context = Context()
     calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PAUSE)
     response = await intent.async_handle(
         hass,
         "test",
         media_player_intent.INTENT_MEDIA_PAUSE,
         {"name": {"value": "device 1"}},
+        context=context,
     )
     await hass.async_block_till_done()
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": device_1.entity_id}
 
-    hass.states.async_set(device_1.entity_id, STATE_PAUSED, attributes=attributes)
+    hass.states.async_set(
+        device_1.entity_id, STATE_PAUSED, attributes=attributes, context=context
+    )
 
     # "Manually" pause the second device (outside of voice)
-    await asyncio.sleep(0.2)
-    hass.states.async_set(device_2.entity_id, STATE_PAUSED, attributes=attributes)
+    context = Context()
+    hass.states.async_set(
+        device_2.entity_id, STATE_PAUSED, attributes=attributes, context=context
+    )
 
     # Unpause with no constraints.
     # Should resume the more recently (manually) paused device.
+    context = Context()
     calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PLAY)
     response = await intent.async_handle(
         hass,
         "test",
         media_player_intent.INTENT_MEDIA_UNPAUSE,
+        context=context,
     )
     await hass.async_block_till_done()
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
