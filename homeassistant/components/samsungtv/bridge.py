@@ -8,7 +8,7 @@ from asyncio.exceptions import TimeoutError as AsyncioTimeoutError
 from collections.abc import Callable, Iterable, Mapping
 import contextlib
 from datetime import datetime, timedelta
-from typing import Any, Generic, TypeVar, cast
+from typing import Any, cast
 
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
@@ -84,9 +84,6 @@ ENCRYPTED_MODEL_USES_POWER_OFF = {"H6400", "H6410"}
 ENCRYPTED_MODEL_USES_POWER = {"JU6400", "JU641D"}
 
 REST_EXCEPTIONS = (HttpApiError, AsyncioTimeoutError, ResponseError)
-
-_RemoteT = TypeVar("_RemoteT", SamsungTVWSAsyncRemote, SamsungTVEncryptedWSAsyncRemote)
-_CommandT = TypeVar("_CommandT", SamsungTVCommand, SamsungTVEncryptedCommand)
 
 
 def mac_from_device_info(info: dict[str, Any]) -> str | None:
@@ -393,7 +390,10 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             LOGGER.debug("Could not establish connection")
 
 
-class SamsungTVWSBaseBridge(SamsungTVBridge, Generic[_RemoteT, _CommandT]):
+class SamsungTVWSBaseBridge[
+    _RemoteT: (SamsungTVWSAsyncRemote, SamsungTVEncryptedWSAsyncRemote),
+    _CommandT: (SamsungTVCommand, SamsungTVEncryptedCommand),
+](SamsungTVBridge):
     """The Bridge for WebSocket TVs (v1/v2)."""
 
     def __init__(
