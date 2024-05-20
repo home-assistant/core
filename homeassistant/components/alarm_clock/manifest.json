@@ -1,0 +1,8 @@
+{
+  "domain": "alarm_clock",
+  "name": "Alarm Clock",
+  "codeowners": ["@Nezz"],
+  "documentation": "https://www.home-assistant.io/integrations/alarm_clock",
+  "integration_type": "helper",
+  "quality_scale": "internal"
+}

@@ -1,0 +1,45 @@
+{
+  "entity_component": {
+    "_": {
+      "name": "Alarm Clock",
+      "state": {
+        "on": "[%key:common::state::on%]",
+        "off": "[%key:common::state::off%]"
+      },
+      "state_attributes": {
+        "alarm_time": {
+          "name": "Time"
+        },
+        "editable": {
+          "name": "[%key:common::generic::ui_managed%]",
+          "state": {
+            "true": "[%key:common::state::yes%]",
+            "false": "[%key:common::state::no%]"
+          }
+        },
+        "repeat_days": {
+          "name": "Repeat"
+        },
+        "next_alarm": {
+          "name": "next_alarm"
+        }
+      }
+    }
+  },
+  "services": {
+    "turn_on": {
+      "name": "[%key:common::action::turn_on%]",
+      "description": "Turns on the alarm.",
+      "fields": {
+        "alarm_time": {
+          "name": "Time",
+          "description": "Time for the alarm to go off. [optional]"
+        }
+      }
+    },
+    "turn_off": {
+      "name": "[%key:common::action::turn_off%]",
+      "description": "Turns off the alarm."
+    }
+  }
+}

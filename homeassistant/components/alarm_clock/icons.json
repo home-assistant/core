@@ -1,0 +1,6 @@
+{
+  "services": {
+    "turn_on": "mdi:alarm",
+    "turn_off": "mdi:alarm-off"
+  }
+}
