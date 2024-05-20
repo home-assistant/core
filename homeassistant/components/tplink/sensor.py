@@ -1,11 +1,11 @@
-"""Support for TPLink HS100/HS110/HS200 smart switch energy sensors."""
+"""Support for TPLink sensor entities."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import cast
 
-from kasa import Device, DeviceType
+from kasa import Device, Feature
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -32,7 +32,11 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import TPLinkDataUpdateCoordinator
-from .entity import CoordinatedTPLinkEntity
+from .entity import (
+    CoordinatedTPLinkEntity,
+    _description_for_feature,
+    _entities_for_device,
+)
 from .models import TPLinkData
 
 
@@ -111,13 +115,21 @@ def _async_sensors_for_device(
     device: Device,
     coordinator: TPLinkDataUpdateCoordinator,
     parent: Device | None = None,
-) -> list[SmartPlugSensor]:
+) -> list[CoordinatedTPLinkEntity]:
     """Generate the sensors for the device."""
-    return [
-        SmartPlugSensor(device, coordinator, description, parent)
-        for description in ENERGY_SENSORS
-        if async_emeter_from_device(device, description) is not None
+    sensors: list[CoordinatedTPLinkEntity] = []
+    if device.has_emeter:
+        sensors = [
+            SmartPlugSensor(device, coordinator, description, parent=parent)
+            for description in ENERGY_SENSORS
+            if async_emeter_from_device(device, description) is not None
+        ]
+    new_sensors: list[CoordinatedTPLinkEntity] = [
+        Sensor(device, coordinator, feat, parent=parent)
+        for feat in device.features.values()
+        if feat.type == Feature.Sensor
     ]
+    return sensors + new_sensors
 
 
 async def async_setup_entry(
@@ -129,29 +141,75 @@ async def async_setup_entry(
     data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
     parent_coordinator = data.parent_coordinator
     children_coordinators = data.children_coordinators
-    entities: list[SmartPlugSensor] = []
-    parent = parent_coordinator.device
-    if not parent.has_emeter:
-        return
+    entities: list[CoordinatedTPLinkEntity] = []
+    device = parent_coordinator.device
 
-    if parent.children:
-        # Historically we only add the children if the device is a strip
-        for idx, child in enumerate(parent.children):
-            # Only iot strips have child coordinators
-            if children_coordinators:
-                coordinator = children_coordinators[idx]
-            else:
-                coordinator = parent_coordinator
-            entities.extend(_async_sensors_for_device(child, coordinator, parent))
-    else:
-        entities.extend(_async_sensors_for_device(parent, parent_coordinator))
+    for idx, child in enumerate(device.children):
+        # TODO: nicer way for multi-coordinator updates.
+        from kasa import SmartStrip  # noqa: C0415
+
+        if isinstance(device, SmartStrip):
+            entities.extend(
+                _async_sensors_for_device(
+                    child, children_coordinators[idx], parent=device
+                )
+            )
+        else:
+            entities.extend(
+                _entities_for_device(
+                    child,
+                    feature_type=Feature.Sensor,
+                    entity_class=Sensor,
+                    coordinator=parent_coordinator,
+                    parent=device,
+                )
+            )
+
+    entities.extend(
+        _entities_for_device(
+            device,
+            feature_type=Feature.Sensor,
+            entity_class=Sensor,
+            coordinator=parent_coordinator,
+        )
+    )
 
     async_add_entities(entities)
 
 
-class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
-    """Representation of a TPLink Smart Plug energy sensor."""
+class Sensor(CoordinatedTPLinkEntity, SensorEntity):
+    """Representation of a feature-based TPLink sensor."""
 
+    def __init__(
+        self,
+        device: Device,
+        coordinator: TPLinkDataUpdateCoordinator,
+        feature: Feature,
+        parent: Device | None = None,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(device, coordinator, feature=feature, parent=parent)
+        self._feature: Feature
+        self.entity_description = _description_for_feature(
+            SensorEntityDescription, feature, native_unit_of_measurement=feature.unit
+        )
+
+        # TODO: define `options` if type==Choice
+        #  Requires the enum device class to be set. Cannot be combined with state_class or native_unit_of_measurement.
+
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update the entity's attributes."""
+        value = self._feature.value
+        if value is not None and self._feature.precision_hint is not None:
+            value = round(cast(float, value), self._feature.precision_hint)
+        self._attr_native_value = value
+
+
+class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
+    """Representation of a TPLink sensor."""
+
+    # TODO: get rid of the old sensor impl.
     entity_description: TPLinkSensorEntityDescription
 
     def __init__(
@@ -164,6 +222,7 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
         """Initialize the switch."""
         self.entity_description = description
         super().__init__(device, coordinator, parent=parent)
+
         if parent is not None:
             assert device.alias
             self._attr_translation_placeholders = {"device_name": device.alias}
