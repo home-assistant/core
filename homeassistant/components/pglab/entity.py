@@ -37,17 +37,14 @@ class PgLabEntity(Entity):
 
         # Information about the devices that is partially visible in the UI.
         self._attr_device_info = DeviceInfo(
-            {
-                "identifiers": {(DOMAIN, device.id)},
-                # If desired, the name for the device could be different to the entity
-                "name": device.name,
-                "sw_version": device.firmware_version,
-                "hw_version": device.hardware_version,
-                "model": device.type,
-                "manufacturer": device.manufactor,
-                "configuration_url": f"http://{device.ip}/",
-                "connections": {(CONNECTION_NETWORK_MAC, device.mac)},
-            }
+            identifiers={(DOMAIN, device.id)},
+            name=device.name,
+            sw_version=device.firmware_version,
+            hw_version=device.hardware_version,
+            model=device.type,
+            manufacturer=device.manufactor,
+            configuration_url=f"http://{device.ip}/",
+            connections={(CONNECTION_NETWORK_MAC, device.mac)},
         )
 
     async def async_added_to_hass(self) -> None:
