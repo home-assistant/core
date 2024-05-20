@@ -9,7 +9,7 @@ from enum import Enum
 from functools import cache, partial
 import logging
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeGuard, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypedDict, TypeGuard, cast
 
 import voluptuous as vol
 
@@ -78,8 +78,6 @@ SERVICE_DESCRIPTION_CACHE: HassKey[dict[tuple[str, str], dict[str, Any] | None]]
 ALL_SERVICE_DESCRIPTIONS_CACHE: HassKey[
     tuple[set[tuple[str, str]], dict[str, dict[str, Any]]]
 ] = HassKey("all_service_descriptions_cache")
-
-_T = TypeVar("_T")
 
 
 @cache
@@ -1153,7 +1151,7 @@ def verify_domain_control(
     return decorator
 
 
-class ReloadServiceHelper(Generic[_T]):
+class ReloadServiceHelper[_T]:
     """Helper for reload services.
 
     The helper has the following purposes:
