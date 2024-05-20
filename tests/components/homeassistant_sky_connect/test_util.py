@@ -95,7 +95,7 @@ def test_get_zha_device_path() -> None:
 
 
 def test_get_zha_device_path_ignored_discovery() -> None:
-    """Test extracting the ZHA device path from am ignored ZHA discovery."""
+    """Test extracting the ZHA device path from an ignored ZHA discovery."""
     config_entry = MockConfigEntry(
         domain="zha",
         unique_id="some_unique_id",
