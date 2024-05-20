@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
-PegelOnlineConfigEntry = ConfigEntry[PegelOnlineDataUpdateCoordinator]
+type PegelOnlineConfigEntry = ConfigEntry[PegelOnlineDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PegelOnlineConfigEntry) -> bool:
