@@ -8,7 +8,7 @@ LOGGER = logging.getLogger(__package__)
 ATTR_ATTRIBUTION = "Weather data delivered by WeatherFlow/Tempest REST Api"
 MANUFACTURER = "WeatherFlow"
 
-ICON_MAP = {
+STATE_MAP = {
     "clear-day": "sunny",
     "clear-night": "clear-night",
     "cloudy": "cloudy",
