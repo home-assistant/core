@@ -7115,6 +7115,12 @@
     }
   },
   "helper": {
+    "alarm_clock": {
+      "name": "Alarm Clock",
+      "integration_type": "helper",
+      "config_flow": false,
+      "iot_class": "local_push"
+    },
     "counter": {
       "integration_type": "helper",
       "config_flow": false

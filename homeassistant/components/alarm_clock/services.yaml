@@ -1,0 +1,14 @@
+# Describes the format for available alarm clock services
+
+turn_on:
+  target:
+    entity:
+      domain: alarm_clock
+  fields:
+    alarm_time:
+      example: "09:00:00"
+
+turn_off:
+  target:
+    entity:
+      domain: alarm_clock
