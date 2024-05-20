@@ -15,7 +15,7 @@ from homeassistant.helpers.device_registry import async_get as get_dev_reg
 from homeassistant.setup import async_setup_component
 
 from . import setup_samsungtv_entry
-from .test_media_player import ENTITY_ID, MOCK_ENTRYDATA_ENCRYPTED_WS
+from .const import MOCK_ENTRYDATA_ENCRYPTED_WS
 
 from tests.common import MockConfigEntry, async_get_device_automations
 
@@ -48,6 +48,7 @@ async def test_if_fires_on_turn_on_request(
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    entity_id = "media_player.fake"
 
     device_reg = get_dev_reg(hass)
     device = device_reg.async_get_device(identifiers={(DOMAIN, "any")})
@@ -75,12 +76,12 @@ async def test_if_fires_on_turn_on_request(
                 {
                     "trigger": {
                         "platform": "samsungtv.turn_on",
-                        "entity_id": ENTITY_ID,
+                        "entity_id": entity_id,
                     },
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": ENTITY_ID,
+                            "some": entity_id,
                             "id": "{{ trigger.id }}",
                         },
                     },
@@ -90,14 +91,14 @@ async def test_if_fires_on_turn_on_request(
     )
 
     await hass.services.async_call(
-        "media_player", "turn_on", {"entity_id": ENTITY_ID}, blocking=True
+        "media_player", "turn_on", {"entity_id": entity_id}, blocking=True
     )
     await hass.async_block_till_done()
 
     assert len(calls) == 2
     assert calls[0].data["some"] == device.id
     assert calls[0].data["id"] == 0
-    assert calls[1].data["some"] == ENTITY_ID
+    assert calls[1].data["some"] == entity_id
     assert calls[1].data["id"] == 0
 
 

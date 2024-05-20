@@ -42,7 +42,6 @@ from homeassistant.components.samsungtv.const import (
     DOMAIN as SAMSUNGTV_DOMAIN,
     ENCRYPTED_WEBSOCKET_PORT,
     METHOD_ENCRYPTED_WEBSOCKET,
-    METHOD_LEGACY,
     METHOD_WEBSOCKET,
     TIMEOUT_WEBSOCKET,
 )
@@ -82,6 +81,8 @@ import homeassistant.util.dt as dt_util
 
 from . import async_wait_config_entry_reload, setup_samsungtv_entry
 from .const import (
+    MOCK_CONFIG,
+    MOCK_ENTRY_WS_WITH_MAC,
     MOCK_ENTRYDATA_ENCRYPTED_WS,
     SAMPLE_DEVICE_INFO_FRAME,
     SAMPLE_DEVICE_INFO_WIFI,
@@ -91,12 +92,6 @@ from .const import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake"
-MOCK_CONFIG = {
-    CONF_HOST: "fake_host",
-    CONF_NAME: "fake",
-    CONF_PORT: 55000,
-    CONF_METHOD: METHOD_LEGACY,
-}
 MOCK_CONFIGWS = {
     CONF_HOST: "fake_host",
     CONF_NAME: "fake",
@@ -120,17 +115,6 @@ MOCK_ENTRY_WS = {
     CONF_PORT: 8001,
     CONF_TOKEN: "123456789",
     CONF_SSDP_RENDERING_CONTROL_LOCATION: "https://any",
-}
-
-
-MOCK_ENTRY_WS_WITH_MAC = {
-    CONF_IP_ADDRESS: "test",
-    CONF_HOST: "fake_host",
-    CONF_METHOD: "websocket",
-    CONF_MAC: "aa:bb:cc:dd:ee:ff",
-    CONF_NAME: "fake",
-    CONF_PORT: 8002,
-    CONF_TOKEN: "123456789",
 }
 
 
@@ -1048,7 +1032,7 @@ async def test_turn_on_wol(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     with patch(
-        "homeassistant.components.samsungtv.media_player.send_magic_packet"
+        "homeassistant.components.samsungtv.entity.send_magic_packet"
     ) as mock_send_magic_packet:
         await hass.services.async_call(
             DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
@@ -1060,7 +1044,7 @@ async def test_turn_on_wol(hass: HomeAssistant) -> None:
 async def test_turn_on_without_turnon(hass: HomeAssistant, remote: Mock) -> None:
     """Test turn on."""
     await setup_samsungtv_entry(hass, MOCK_CONFIG)
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="does not support this service"):
         await hass.services.async_call(
             DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
         )
