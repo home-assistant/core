@@ -20,7 +20,6 @@ from async_upnp_client.exceptions import (
 from async_upnp_client.profiles.dlna import DmrDevice
 from async_upnp_client.utils import async_get_local_ip
 import voluptuous as vol
-from wakeonlan import send_magic_packet
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -30,19 +29,16 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.trigger import PluggableAction
 from homeassistant.util.async_ import create_eager_task
 
 from . import SamsungTVConfigEntry
 from .bridge import SamsungTVBridge, SamsungTVWSBridge
 from .const import CONF_SSDP_RENDERING_CONTROL_LOCATION, DOMAIN, LOGGER
 from .entity import SamsungTVEntity
-from .triggers.turn_on import async_get_turn_on_trigger
 
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
 
@@ -90,11 +86,9 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         """Initialize the Samsung device."""
         super().__init__(bridge=bridge, config_entry=config_entry)
         self._config_entry = config_entry
-        self._host: str | None = config_entry.data[CONF_HOST]
         self._ssdp_rendering_control_location: str | None = config_entry.data.get(
             CONF_SSDP_RENDERING_CONTROL_LOCATION
         )
-        self._turn_on = PluggableAction(self.async_write_ha_state)
         # Assume that the TV is in Play mode
         self._playing: bool = True
 
@@ -123,7 +117,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         """Flag media player features that are supported."""
         # `turn_on` triggers are not yet registered during initialisation,
         # so this property needs to be dynamic
-        if self._turn_on:
+        if self._turn_on_action:
             return self._attr_supported_features | MediaPlayerEntityFeature.TURN_ON
         return self._attr_supported_features
 
@@ -326,21 +320,10 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
             return False
         return (
             self.state == MediaPlayerState.ON
-            or bool(self._turn_on)
+            or bool(self._turn_on_action)
             or self._mac is not None
             or self._bridge.power_off_in_progress
         )
-
-    async def async_added_to_hass(self) -> None:
-        """Connect and subscribe to dispatcher signals and state updates."""
-        await super().async_added_to_hass()
-
-        if (entry := self.registry_entry) and entry.device_id:
-            self.async_on_remove(
-                self._turn_on.async_register(
-                    self.hass, async_get_turn_on_trigger(entry.device_id)
-                )
-            )
 
     async def async_turn_off(self) -> None:
         """Turn off media player."""
@@ -416,17 +399,10 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
             keys=[f"KEY_{digit}" for digit in media_id] + ["KEY_ENTER"]
         )
 
-    def _wake_on_lan(self) -> None:
-        """Wake the device via wake on lan."""
-        send_magic_packet(self._mac, ip_address=self._host)
-        # If the ip address changed since we last saw the device
-        # broadcast a packet as well
-        send_magic_packet(self._mac)
-
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
-        if self._turn_on:
-            await self._turn_on.async_run(self.hass, self._context)
+        if self._turn_on_action:
+            await self._turn_on_action.async_run(self.hass, self._context)
         elif self._mac:
             await self.hass.async_add_executor_job(self._wake_on_lan)
 
