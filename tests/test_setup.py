@@ -1102,6 +1102,11 @@ async def test_async_get_setup_timings(hass) -> None:
         "sensor": 1,
         "filter": 2,
     }
+    assert setup.async_get_domain_setup_times(hass, "filter") == {
+        "123456": {
+            setup.SetupPhases.PLATFORM_SETUP: 2,
+        },
+    }
 
 
 async def test_setup_config_entry_from_yaml(

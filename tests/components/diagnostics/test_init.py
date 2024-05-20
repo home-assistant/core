@@ -93,6 +93,7 @@ async def test_download_diagnostics(
 
     assert await _get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "home_assistant": hass_sys_info,
+        "setup_times": {},
         "custom_components": {
             "test": {
                 "documentation": "http://example.com",
@@ -256,6 +257,7 @@ async def test_download_diagnostics(
             "requirements": [],
         },
         "data": {"device": "info"},
+        "setup_times": {},
     }
 
 
