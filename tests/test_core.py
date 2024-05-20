@@ -3502,3 +3502,16 @@ async def test_thread_safety_message(hass: HomeAssistant) -> None:
         ),
     ):
         await hass.async_add_executor_job(hass.verify_event_loop_thread, "test")
+
+
+async def test_set_time_zone_deprecated(hass: HomeAssistant) -> None:
+    """Test set_time_zone is deprecated."""
+    with pytest.raises(
+        RuntimeError,
+        match=re.escape(
+            "Detected code that set the time zone using set_time_zone instead of "
+            "async_set_time_zone which will stop working in Home Assistant 2025.6. "
+            "Please report this issue.",
+        ),
+    ):
+        await hass.config.set_time_zone("America/New_York")

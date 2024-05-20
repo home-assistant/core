@@ -602,7 +602,7 @@ async def test_get_significant_states_with_initial(
     includes an attribute change, but only the state updates for
     media player (attribute changes are not significant and not returned).
     """
-    hass.config.set_time_zone(time_zone)
+    await hass.config.async_set_time_zone(time_zone)
     zero, four, states = record_states(hass)
     await async_wait_recording_done(hass)
 

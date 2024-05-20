@@ -67,7 +67,7 @@ def mock_forecast_solar(hass) -> Generator[None, MagicMock, None]:
         autospec=True,
     ) as forecast_solar_mock:
         forecast_solar = forecast_solar_mock.return_value
-        now = datetime(2021, 6, 27, 6, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+        now = datetime(2021, 6, 27, 6, 0, tzinfo=dt_util.get_default_time_zone())
 
         estimate = MagicMock(spec=models.Estimate)
         estimate.now.return_value = now
@@ -79,10 +79,10 @@ def mock_forecast_solar(hass) -> Generator[None, MagicMock, None]:
         estimate.energy_production_tomorrow = 200000
         estimate.power_production_now = 300000
         estimate.power_highest_peak_time_today = datetime(
-            2021, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE
+            2021, 6, 27, 13, 0, tzinfo=dt_util.get_default_time_zone()
         )
         estimate.power_highest_peak_time_tomorrow = datetime(
-            2021, 6, 27, 14, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE
+            2021, 6, 27, 14, 0, tzinfo=dt_util.get_default_time_zone()
         )
         estimate.energy_current_hour = 800000
 
@@ -96,16 +96,16 @@ def mock_forecast_solar(hass) -> Generator[None, MagicMock, None]:
             1: 900000,
         }.get
         estimate.watts = {
-            datetime(2021, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 10,
-            datetime(2022, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 100,
+            datetime(2021, 6, 27, 13, 0, tzinfo=dt_util.get_default_time_zone()): 10,
+            datetime(2022, 6, 27, 13, 0, tzinfo=dt_util.get_default_time_zone()): 100,
         }
         estimate.wh_days = {
-            datetime(2021, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 20,
-            datetime(2022, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 200,
+            datetime(2021, 6, 27, 13, 0, tzinfo=dt_util.get_default_time_zone()): 20,
+            datetime(2022, 6, 27, 13, 0, tzinfo=dt_util.get_default_time_zone()): 200,
         }
         estimate.wh_period = {
-            datetime(2021, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 30,
-            datetime(2022, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 300,
+            datetime(2021, 6, 27, 13, 0, tzinfo=dt_util.get_default_time_zone()): 30,
+            datetime(2022, 6, 27, 13, 0, tzinfo=dt_util.get_default_time_zone()): 300,
         }
 
         forecast_solar.estimate.return_value = estimate

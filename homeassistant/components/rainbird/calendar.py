@@ -73,7 +73,7 @@ class RainBirdCalendarEntity(
         schedule = self.coordinator.data
         if not schedule:
             return None
-        cursor = schedule.timeline_tz(dt_util.DEFAULT_TIME_ZONE).active_after(
+        cursor = schedule.timeline_tz(dt_util.get_default_time_zone()).active_after(
             dt_util.now()
         )
         program_event = next(cursor, None)

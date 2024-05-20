@@ -2951,16 +2951,38 @@ class Config:
             "debug": self.debug,
         }
 
-    def set_time_zone(self, time_zone_str: str) -> None:
+    async def async_set_time_zone(self, time_zone_str: str) -> None:
         """Help to set the time zone."""
+        if time_zone := await dt_util.async_get_time_zone(time_zone_str):
+            self.time_zone = time_zone_str
+            dt_util.set_default_time_zone(time_zone)
+        else:
+            raise ValueError(f"Received invalid time zone {time_zone_str}")
+
+    def set_time_zone(self, time_zone_str: str) -> None:
+        """Set the time zone.
+
+        This is a legacy method that should not be used in new code.
+        Use async_set_time_zone instead.
+
+        It will be removed in Home Assistant 2025.6.
+        """
+        # report is imported here to avoid a circular import
+        from .helpers.frame import report  # pylint: disable=import-outside-toplevel
+
+        report(
+            "set the time zone using set_time_zone instead of async_set_time_zone"
+            " which will stop working in Home Assistant 2025.6",
+            error_if_core=True,
+            error_if_integration=True,
+        )
         if time_zone := dt_util.get_time_zone(time_zone_str):
             self.time_zone = time_zone_str
             dt_util.set_default_time_zone(time_zone)
         else:
             raise ValueError(f"Received invalid time zone {time_zone_str}")
 
-    @callback
-    def _update(
+    async def _async_update(
         self,
         *,
         source: ConfigSource,
@@ -2993,7 +3015,7 @@ class Config:
         if location_name is not None:
             self.location_name = location_name
         if time_zone is not None:
-            self.set_time_zone(time_zone)
+            await self.async_set_time_zone(time_zone)
         if external_url is not _UNDEF:
             self.external_url = cast(str | None, external_url)
         if internal_url is not _UNDEF:
@@ -3013,7 +3035,7 @@ class Config:
             _raise_issue_if_no_country,
         )
 
-        self._update(source=ConfigSource.STORAGE, **kwargs)
+        await self._async_update(source=ConfigSource.STORAGE, **kwargs)
         await self._async_store()
         self.hass.bus.async_fire_internal(EVENT_CORE_CONFIG_UPDATE, kwargs)
 
@@ -3039,7 +3061,7 @@ class Config:
         ):
             _LOGGER.warning("Invalid internal_url set. It's not allowed to have a path")
 
-        self._update(
+        await self._async_update(
             source=ConfigSource.STORAGE,
             latitude=data.get("latitude"),
             longitude=data.get("longitude"),

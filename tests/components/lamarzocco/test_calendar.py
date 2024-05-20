@@ -33,7 +33,7 @@ async def test_calendar_events(
 ) -> None:
     """Test the calendar."""
 
-    test_time = datetime(2024, 1, 12, 11, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+    test_time = datetime(2024, 1, 12, 11, tzinfo=dt_util.get_default_time_zone())
     freezer.move_to(test_time)
 
     await async_init_integration(hass, mock_config_entry)
@@ -86,8 +86,8 @@ async def test_calendar_edge_cases(
     end_date: datetime,
 ) -> None:
     """Test edge cases."""
-    start_date = start_date.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
-    end_date = end_date.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
+    start_date = start_date.replace(tzinfo=dt_util.get_default_time_zone())
+    end_date = end_date.replace(tzinfo=dt_util.get_default_time_zone())
 
     # set schedule to be only on Sunday, 07:00 - 07:30
     mock_lamarzocco.schedule[2]["enable"] = "Disabled"
@@ -124,7 +124,7 @@ async def test_no_calendar_events_global_disable(
     """Assert no events when global auto on/off is disabled."""
 
     mock_lamarzocco.current_status["global_auto"] = "Disabled"
-    test_time = datetime(2024, 1, 12, 11, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+    test_time = datetime(2024, 1, 12, 11, tzinfo=dt_util.get_default_time_zone())
     freezer.move_to(test_time)
 
     await async_init_integration(hass, mock_config_entry)

@@ -1455,7 +1455,9 @@ def hass_recorder(
             ) -> HomeAssistant:
                 """Set up with params."""
                 if timezone is not None:
-                    hass.config.set_time_zone(timezone)
+                    asyncio.run_coroutine_threadsafe(
+                        hass.config.async_set_time_zone(timezone), hass.loop
+                    ).result()
                 init_recorder_component(hass, config, recorder_db_url)
                 hass.start()
                 hass.block_till_done()
