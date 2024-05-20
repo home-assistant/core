@@ -88,6 +88,7 @@
         "access_token": "Access token",
         "api_key": "API key",
         "api_token": "API token",
+        "llm_hass_api": "Control Home Assistant",
         "ssl": "Uses an SSL certificate",
         "verify_ssl": "Verify SSL certificate",
         "elevation": "Elevation",

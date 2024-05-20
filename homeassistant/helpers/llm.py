@@ -17,18 +17,17 @@ from homeassistant.util.json import JsonObjectType
 from . import intent
 from .singleton import singleton
 
+LLM_API_ASSIST = "assist"
+
+PROMPT_NO_API_CONFIGURED = "If the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant."
+
 
 @singleton("llm")
 @callback
 def _async_get_apis(hass: HomeAssistant) -> dict[str, API]:
     """Get all the LLM APIs."""
     return {
-        "assist": AssistAPI(
-            hass=hass,
-            id="assist",
-            name="Assist",
-            prompt_template="Call the intent tools to control the system. Just pass the name to the intent.",
-        ),
+        LLM_API_ASSIST: AssistAPI(hass=hass),
     }
 
 
@@ -169,6 +168,15 @@ class AssistAPI(API):
         INTENT_GET_WEATHER,
         INTENT_GET_TEMPERATURE,
     }
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Init the class."""
+        super().__init__(
+            hass=hass,
+            id=LLM_API_ASSIST,
+            name="Assist",
+            prompt_template="Call the intent tools to control the system. Just pass the name to the intent.",
+        )
 
     @callback
     def async_get_tools(self) -> list[Tool]:
