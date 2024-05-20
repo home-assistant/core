@@ -18,6 +18,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
+    CONF_DEVICE_ID,
     CONF_NAME,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
@@ -101,7 +102,10 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
 def options_schema(domain: str) -> vol.Schema:
     """Generate options schema."""
     return vol.Schema(
-        {vol.Required(CONF_STATE): selector.TemplateSelector()}
+        {
+            vol.Required(CONF_STATE): selector.TemplateSelector(),
+            vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
+        }
         | generate_schema(domain, "option"),
     )
 
@@ -112,6 +116,7 @@ def config_schema(domain: str) -> vol.Schema:
         {
             vol.Required(CONF_NAME): selector.TextSelector(),
             vol.Required(CONF_STATE): selector.TemplateSelector(),
+            vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
         }
         | generate_schema(domain, "config"),
     )

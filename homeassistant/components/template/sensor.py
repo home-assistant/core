@@ -25,6 +25,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
+    CONF_DEVICE_ID,
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_FRIENDLY_NAME,
     CONF_FRIENDLY_NAME_TEMPLATE,
@@ -40,7 +41,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    selector,
+    template,
+)
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.trigger_template_entity import TEMPLATE_SENSOR_BASE_SCHEMA
@@ -86,6 +93,7 @@ SENSOR_SCHEMA = vol.All(
         {
             vol.Required(CONF_STATE): cv.template,
             vol.Optional(ATTR_LAST_RESET): cv.template,
+            vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
         }
     )
     .extend(TEMPLATE_SENSOR_BASE_SCHEMA.schema)
@@ -264,6 +272,13 @@ class SensorTemplate(TemplateEntity, SensorEntity):
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass
             )
+        if (device_id := config.get(CONF_DEVICE_ID)) is not None:
+            dev_reg = dr.async_get(hass)
+            if (device := dev_reg.async_get(device_id)) is not None:
+                self._attr_device_info = DeviceInfo(
+                    connections=device.connections,
+                    identifiers=device.identifiers,
+                )
 
     @callback
     def _async_setup_templates(self) -> None:

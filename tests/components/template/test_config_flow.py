@@ -11,6 +11,7 @@ from homeassistant.components.template import DOMAIN, async_setup_entry
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -120,6 +121,65 @@ async def test_config_flow(
     assert state.state == template_state
     for key in extra_attrs:
         assert state.attributes[key] == extra_attrs[key]
+
+
+@pytest.mark.parametrize(
+    (
+        "template_type",
+        "state_template",
+    ),
+    [
+        (
+            "sensor",
+            "{{ 15 }}",
+        ),
+        (
+            "binary_sensor",
+            "{{ false }}",
+        ),
+    ],
+)
+async def test_config_flow_device(
+    hass: HomeAssistant,
+    template_type: str,
+    state_template: str,
+) -> None:
+    """Test remove the device registry configuration entry when the device changes."""
+
+    device_registry = dr.async_get(hass)
+
+    # Configure a device registry
+    entry_device = MockConfigEntry()
+    entry_device.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry_device.entry_id,
+        identifiers={("test", "identifier_test1")},
+        connections={("mac", "20:31:32:33:34:01")},
+    )
+    await hass.async_block_till_done()
+
+    device_id = device.id
+    assert device_id is not None
+
+    # Setup the config entry
+    sensor_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "template_type": template_type,
+            "name": "Teste",
+            "state": state_template,
+            "device_id": device_id,
+        },
+        title="Template",
+    )
+    sensor_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(sensor_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Confirm that the configuration entry has been added to the device registry
+    current_device = device_registry.async_get(device_id=device_id)
+    assert sensor_config_entry.entry_id in current_device.config_entries
 
 
 def get_suggested(schema, key):
@@ -852,3 +912,185 @@ async def test_option_flow_sensor_preview_config_entry_removed(
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"] == {"code": "home_assistant_error", "message": "Unknown error"}
+
+
+async def test_options_flow_change_device_sensor(hass: HomeAssistant) -> None:
+    """Test remove the device registry configuration entry when the device changes."""
+
+    device_registry = dr.async_get(hass)
+
+    # Configure a device registry
+    entry_device1 = MockConfigEntry()
+    entry_device1.add_to_hass(hass)
+    device1 = device_registry.async_get_or_create(
+        config_entry_id=entry_device1.entry_id,
+        identifiers={("test", "identifier_test1")},
+        connections={("mac", "20:31:32:33:34:01")},
+    )
+    entry_device2 = MockConfigEntry()
+    entry_device2.add_to_hass(hass)
+    device2 = device_registry.async_get_or_create(
+        config_entry_id=entry_device1.entry_id,
+        identifiers={("test", "identifier_test2")},
+        connections={("mac", "20:31:32:33:34:02")},
+    )
+    await hass.async_block_till_done()
+
+    device_id1 = device1.id
+    assert device_id1 is not None
+
+    device_id2 = device2.id
+    assert device_id2 is not None
+
+    # Setup the config entry (sensor)
+    sensor_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "template_type": "sensor",
+            "name": "Teste",
+            "state": "{{15}}",
+            "device_id": device_id1,
+        },
+        title="Sensor template",
+    )
+    sensor_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(sensor_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Confirm that the configuration entry has been added to the device 1 registry (current)
+    current_device = device_registry.async_get(device_id=device_id1)
+    assert sensor_config_entry.entry_id in current_device.config_entries
+
+    # Change configuration options to use device 2 and reload the integration
+    result = await hass.config_entries.options.async_init(sensor_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "state": "{{15}}",
+            "device_id": device_id2,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    # Confirm that the configuration entry has been removed from the device 1 registry (previous)
+    previous_device = device_registry.async_get(device_id=device_id1)
+    assert sensor_config_entry.entry_id not in previous_device.config_entries
+
+    # Confirm that the configuration entry has been added to the device 2 registry (current)
+    current_device = device_registry.async_get(device_id=device_id2)
+    assert sensor_config_entry.entry_id in current_device.config_entries
+
+    result = await hass.config_entries.options.async_init(sensor_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "state": "{{15}}",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    # Confirm that the configuration entry has been removed from the device 2 registry (previous)
+    previous_device = device_registry.async_get(device_id=device_id2)
+    assert sensor_config_entry.entry_id not in previous_device.config_entries
+
+    # Confirm that there is no device with the helper configuration entry
+    assert (
+        dr.async_entries_for_config_entry(device_registry, sensor_config_entry.entry_id)
+        == []
+    )
+
+
+async def test_options_change_device_binary_sensor(hass: HomeAssistant) -> None:
+    """Test remove the device registry configuration entry when the device changes."""
+
+    device_registry = dr.async_get(hass)
+
+    # Configure a device registry
+    entry_device1 = MockConfigEntry()
+    entry_device1.add_to_hass(hass)
+    device1 = device_registry.async_get_or_create(
+        config_entry_id=entry_device1.entry_id,
+        identifiers={("test", "identifier_test1")},
+        connections={("mac", "20:31:32:33:34:01")},
+    )
+    entry_device2 = MockConfigEntry()
+    entry_device2.add_to_hass(hass)
+    device2 = device_registry.async_get_or_create(
+        config_entry_id=entry_device1.entry_id,
+        identifiers={("test", "identifier_test2")},
+        connections={("mac", "20:31:32:33:34:02")},
+    )
+    await hass.async_block_till_done()
+
+    device_id1 = device1.id
+    assert device_id1 is not None
+
+    device_id2 = device2.id
+    assert device_id2 is not None
+
+    # Setup the config entry (binary_sensor)
+    sensor_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "template_type": "binary_sensor",
+            "name": "Teste",
+            "state": "{{15}}",
+            "device_id": device_id1,
+        },
+        title="Binary sensor template",
+    )
+    sensor_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(sensor_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Confirm that the configuration entry has been added to the device 1 registry (current)
+    current_device = device_registry.async_get(device_id=device_id1)
+    assert sensor_config_entry.entry_id in current_device.config_entries
+
+    # Change configuration options to use device 2 and reload the integration
+    result = await hass.config_entries.options.async_init(sensor_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "state": "{{15}}",
+            "device_id": device_id2,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    # Confirm that the configuration entry has been removed from the device 1 registry (previous)
+    previous_device = device_registry.async_get(device_id=device_id1)
+    assert sensor_config_entry.entry_id not in previous_device.config_entries
+
+    # Confirm that the configuration entry has been added to the device 2 registry (current)
+    current_device = device_registry.async_get(device_id=device_id2)
+    assert sensor_config_entry.entry_id in current_device.config_entries
+
+    result = await hass.config_entries.options.async_init(sensor_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "state": "{{15}}",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    # Confirm that the configuration entry has been removed from the device 2 registry (previous)
+    previous_device = device_registry.async_get(device_id=device_id2)
+    assert sensor_config_entry.entry_id not in previous_device.config_entries
+
+    # Confirm that there is no device with the helper configuration entry
+    assert (
+        dr.async_entries_for_config_entry(device_registry, sensor_config_entry.entry_id)
+        == []
+    )

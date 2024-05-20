@@ -7,10 +7,10 @@ import logging
 
 from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_UNIQUE_ID, SERVICE_RELOAD
+from homeassistant.const import CONF_DEVICE_ID, CONF_UNIQUE_ID, SERVICE_RELOAD
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import discovery
+from homeassistant.helpers import device_registry as dr, discovery
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
@@ -57,16 +57,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
+    hass.data[DOMAIN] = {}
     await hass.config_entries.async_forward_entry_setups(
         entry, (entry.options["template_type"],)
     )
+    hass.data[DOMAIN][entry.entry_id] = {
+        CONF_DEVICE_ID: entry.options.get(CONF_DEVICE_ID, None),
+    }
     entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
     return True
 
 
 async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update listener, called when the config entry options are changed."""
+    old_device = hass.data[DOMAIN][entry.entry_id][CONF_DEVICE_ID]
+
     await hass.config_entries.async_reload(entry.entry_id)
+
+    if old_device != entry.options.get(CONF_DEVICE_ID, None):
+        device_registry = dr.async_get(hass)
+        device_registry.async_update_device(
+            old_device, remove_config_entry_id=entry.entry_id
+        )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
