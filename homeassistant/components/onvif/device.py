@@ -257,7 +257,7 @@ class ONVIFDevice:
             tzone = dt_util.UTC
             cdate = device_time.UTCDateTime
         elif device_time.TimeZone:
-            tzone = dt_util.get_time_zone(device_time.TimeZone.TZ) or tzone
+            tzone = await dt_util.async_get_time_zone(device_time.TimeZone.TZ) or tzone
 
         if cdate is None:
             LOGGER.warning("%s: Could not retrieve date/time on this camera", self.name)

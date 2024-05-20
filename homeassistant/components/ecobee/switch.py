@@ -30,7 +30,12 @@ async def async_setup_entry(
 
     async_add_entities(
         (
-            EcobeeVentilator20MinSwitch(data, index)
+            EcobeeVentilator20MinSwitch(
+                data,
+                index,
+                await dt_util.async_get_time_zone(thermostat["location"]["timeZone"])
+                or dt_util.get_default_time_zone(),
+            )
             for index, thermostat in enumerate(data.ecobee.thermostats)
             if thermostat["settings"]["ventilatorType"] != "none"
         ),
@@ -48,15 +53,14 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
         self,
         data: EcobeeData,
         thermostat_index: int,
+        operating_timezone: dt_util.dt.tzinfo,
     ) -> None:
         """Initialize ecobee ventilator platform."""
         super().__init__(data, thermostat_index)
         self._attr_unique_id = f"{self.base_unique_id}_ventilator_20m_timer"
         self._attr_is_on = False
         self.update_without_throttle = False
-        self._operating_timezone = dt_util.get_time_zone(
-            self.thermostat["location"]["timeZone"]
-        )
+        self._operating_timezone = operating_timezone
 
     async def async_update(self) -> None:
         """Get the latest state from the thermostat."""
