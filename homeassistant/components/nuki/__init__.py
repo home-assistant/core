@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import Generic, TypeVar
 
 from aiohttp import web
 from pynuki import NukiBridge, NukiLock, NukiOpener
@@ -42,8 +41,6 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import CONF_ENCRYPT_TOKEN, DEFAULT_TIMEOUT, DOMAIN, ERROR_STATES
 from .helpers import NukiWebhookException, parse_id
-
-_NukiDeviceT = TypeVar("_NukiDeviceT", bound=NukiDevice)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -360,7 +357,7 @@ class NukiCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enfo
         return events
 
 
-class NukiEntity(CoordinatorEntity[NukiCoordinator], Generic[_NukiDeviceT]):
+class NukiEntity[_NukiDeviceT: NukiDevice](CoordinatorEntity[NukiCoordinator]):
     """An entity using CoordinatorEntity.
 
     The CoordinatorEntity class provides:
