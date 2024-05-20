@@ -75,6 +75,11 @@ POSTGRES_INTERVAL_RE = re.compile(
 )
 
 
+def get_default_time_zone() -> dt.tzinfo:
+    """Get the default time zone."""
+    return DEFAULT_TIME_ZONE
+
+
 def set_default_time_zone(time_zone: dt.tzinfo) -> None:
     """Set a default time zone to be used when none is specified.
 
