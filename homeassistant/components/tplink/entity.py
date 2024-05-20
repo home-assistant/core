@@ -255,8 +255,9 @@ def _entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
     return entities
 
 
+# TODO: use typing.Unpack or find a better way to pass platform-specific kwargs
 def _description_for_feature[_D: EntityDescription](
-    desc_cls: type[_D], feature: Feature
+    desc_cls: type[_D], feature: Feature, **kwargs: Any
 ) -> _D:
     """Return description object for the given feature.
 
@@ -270,4 +271,5 @@ def _description_for_feature[_D: EntityDescription](
         name=feature.name,
         # TODO: Setting an icon overrides the icon set by translations
         # icon=feature.icon,
+        **kwargs,
     )
