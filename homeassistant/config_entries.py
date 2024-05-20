@@ -718,7 +718,7 @@ class ConfigEntry(Generic[_DataT]):
     ) -> None:
         """Raise exception if the wrong exception is raised in a forwarded platform."""
         report(
-            f"raises exception {type(exc)} {exc} in forwarded platform"
+            f"raises exception {type(exc)} {exc} in forwarded platform. Raise before forwarding instead."
             f" {integration.domain}",
             error_if_core=True,
             error_if_integration=True,
