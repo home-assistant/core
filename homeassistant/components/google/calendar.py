@@ -341,11 +341,11 @@ class GoogleCalendarEntity(
         if isinstance(dtstart, datetime):
             start = DateOrDatetime(
                 date_time=dt_util.as_local(dtstart),
-                timezone=str(dt_util.DEFAULT_TIME_ZONE),
+                timezone=str(dt_util.get_default_time_zone()),
             )
             end = DateOrDatetime(
                 date_time=dt_util.as_local(dtend),
-                timezone=str(dt_util.DEFAULT_TIME_ZONE),
+                timezone=str(dt_util.get_default_time_zone()),
             )
         else:
             start = DateOrDatetime(date=dtstart)
