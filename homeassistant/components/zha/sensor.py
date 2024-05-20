@@ -57,17 +57,11 @@ class Sensor(ZHAEntity, SensorEntity):
         super().__init__(entity_data, **kwargs)
         entity = self.entity_data.entity
 
-        if (
-            hasattr(entity, "_attr_device_class")
-            and entity._attr_device_class is not None
-        ):
-            self._attr_device_class = SensorDeviceClass(entity._attr_device_class.value)
+        if entity.device_class is not None:
+            self._attr_device_class = SensorDeviceClass(entity.device_class)
 
-        if (
-            hasattr(entity, "_attr_state_class")
-            and entity._attr_state_class is not None
-        ):
-            self._attr_state_class = SensorStateClass(entity._attr_state_class.value)
+        if entity.state_class is not None:
+            self._attr_state_class = SensorStateClass(entity.state_class)
 
         if hasattr(entity.info_object, "unit") and entity.info_object.unit is not None:
             self._attr_native_unit_of_measurement = entity.info_object.unit
