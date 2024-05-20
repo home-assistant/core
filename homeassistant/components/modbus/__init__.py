@@ -96,6 +96,8 @@ from .const import (
     CONF_NAN_VALUE,
     CONF_PARITY,
     CONF_PRECISION,
+    CONF_PULSE,
+    CONF_PULSE_DELAY,
     CONF_RETRIES,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
@@ -240,6 +242,8 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 vol.Optional(CONF_DELAY, default=0): cv.positive_int,
             }
         ),
+        vol.Optional(CONF_PULSE, default=False): cv.boolean,
+        vol.Optional(CONF_PULSE_DELAY, default=50): cv.positive_int,
     }
 )
 

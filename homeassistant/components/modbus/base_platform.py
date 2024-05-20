@@ -49,6 +49,8 @@ from .const import (
     CONF_MIN_VALUE,
     CONF_NAN_VALUE,
     CONF_PRECISION,
+    CONF_PULSE,
+    CONF_PULSE_DELAY,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_STATE_OFF,
@@ -301,6 +303,9 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
             self._state_off = config[CONF_VERIFY].get(CONF_STATE_OFF, self._command_off)
         else:
             self._verify_active = False
+        if CONF_PULSE in config:
+            self._pulse = config[CONF_PULSE]
+            self._pulse_delay = config[CONF_PULSE_DELAY] / 1000
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -322,6 +327,10 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
             return
 
         self._attr_available = True
+
+        if self._pulse:
+            async_call_later(self.hass, self._pulse_delay, self.async_modbus_off)
+
         if not self._verify_active:
             self._attr_is_on = command == self.command_on
             self.async_write_ha_state()
@@ -334,7 +343,18 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Set switch off."""
+        if self._pulse:
+            await self.async_turn(self.command_on)
+            async_call_later(self.hass, self._pulse_delay, self.async_modbus_off)
+            return
         await self.async_turn(self._command_off)
+
+    async def async_modbus_off(self, now: datetime | None = None) -> None:
+        """Send command off to modbus address on pulse."""
+        # remark "now" is a dummy parameter to avoid problems with
+        await self._hub.async_pb_call(
+            self._slave, self._address, self._command_off, self._write_type
+        )
 
     async def async_update(self, now: datetime | None = None) -> None:
         """Update the entity state."""
