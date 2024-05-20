@@ -97,7 +97,7 @@ async def test_only_chime_devices(
     caplog,
 ) -> None:
     """Tests the update service works correctly if only chimes are returned."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
     requests_mock.get(
         "https://api.ring.com/clients_api/ring_devices",
