@@ -9,7 +9,7 @@ from enum import Enum
 from functools import cache, partial
 import logging
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeGuard, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypedDict, TypeGuard, cast
 
 import voluptuous as vol
 
@@ -68,9 +68,6 @@ from .typing import ConfigType, TemplateVarsType
 if TYPE_CHECKING:
     from .entity import Entity
 
-    _EntityT = TypeVar("_EntityT", bound=Entity)
-
-
 CONF_SERVICE_ENTITY_ID = "entity_id"
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,8 +78,6 @@ SERVICE_DESCRIPTION_CACHE: HassKey[dict[tuple[str, str], dict[str, Any] | None]]
 ALL_SERVICE_DESCRIPTIONS_CACHE: HassKey[
     tuple[set[tuple[str, str]], dict[str, dict[str, Any]]]
 ] = HassKey("all_service_descriptions_cache")
-
-_T = TypeVar("_T")
 
 
 @cache
@@ -434,7 +429,7 @@ def extract_entity_ids(
 
 
 @bind_hass
-async def async_extract_entities(
+async def async_extract_entities[_EntityT: Entity](
     hass: HomeAssistant,
     entities: Iterable[_EntityT],
     service_call: ServiceCall,
@@ -1048,7 +1043,7 @@ async def _handle_entity_call(
         result = await task
 
     if asyncio.iscoroutine(result):
-        _LOGGER.error(
+        _LOGGER.error(  # type: ignore[unreachable]
             (
                 "Service %s for %s incorrectly returns a coroutine object. Await result"
                 " instead in service handler. Report bug to integration author"
@@ -1156,7 +1151,7 @@ def verify_domain_control(
     return decorator
 
 
-class ReloadServiceHelper(Generic[_T]):
+class ReloadServiceHelper[_T]:
     """Helper for reload services.
 
     The helper has the following purposes:

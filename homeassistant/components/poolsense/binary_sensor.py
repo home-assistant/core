@@ -7,7 +7,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -36,12 +35,10 @@ async def async_setup_entry(
     """Defer sensor setup to the shared sensor module."""
     coordinator = config_entry.runtime_data
 
-    entities = [
-        PoolSenseBinarySensor(coordinator, config_entry.data[CONF_EMAIL], description)
+    async_add_entities(
+        PoolSenseBinarySensor(coordinator, description)
         for description in BINARY_SENSOR_TYPES
-    ]
-
-    async_add_entities(entities, False)
+    )
 
 
 class PoolSenseBinarySensor(PoolSenseEntity, BinarySensorEntity):

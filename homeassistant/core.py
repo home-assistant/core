@@ -38,10 +38,8 @@ from typing import (
     Final,
     Generic,
     NotRequired,
-    ParamSpec,
     Self,
     TypedDict,
-    TypeVarTuple,
     cast,
     overload,
 )
@@ -131,17 +129,11 @@ FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT = 60
 CLOSE_STAGE_SHUTDOWN_TIMEOUT = 30
 
 
-_T = TypeVar("_T")
-_R = TypeVar("_R")
-_R_co = TypeVar("_R_co", covariant=True)
-_P = ParamSpec("_P")
-_Ts = TypeVarTuple("_Ts")
 # Internal; not helpers.typing.UNDEFINED due to circular dependency
 _UNDEF: dict[Any, Any] = {}
 _SENTINEL = object()
-_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 _DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=Mapping[str, Any])
-CALLBACK_TYPE = Callable[[], None]
+type CALLBACK_TYPE = Callable[[], None]
 
 CORE_STORAGE_KEY = "core.config"
 CORE_STORAGE_VERSION = 1
@@ -152,8 +144,8 @@ DOMAIN = "homeassistant"
 # How long to wait to log tasks that are blocking
 BLOCK_LOG_TIMEOUT = 60
 
-ServiceResponse = JsonObjectType | None
-EntityServiceResponse = dict[str, ServiceResponse]
+type ServiceResponse = JsonObjectType | None
+type EntityServiceResponse = dict[str, ServiceResponse]
 
 
 class ConfigSource(enum.StrEnum):
@@ -234,7 +226,7 @@ def validate_state(state: str) -> str:
     return state
 
 
-def callback(func: _CallableT) -> _CallableT:
+def callback[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     """Annotation to mark method as safe to call from within the event loop."""
     setattr(func, "_hass_callback", True)
     return func
@@ -309,7 +301,7 @@ class HassJobType(enum.Enum):
     Executor = 3
 
 
-class HassJob(Generic[_P, _R_co]):
+class HassJob[**_P, _R_co]:
     """Represent a job to be run later.
 
     We check the callable type in advance
@@ -562,7 +554,7 @@ class HomeAssistant:
         self.bus.async_fire_internal(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire_internal(EVENT_HOMEASSISTANT_STARTED)
 
-    def add_job(
+    def add_job[*_Ts](
         self, target: Callable[[*_Ts], Any] | Coroutine[Any, Any, Any], *args: *_Ts
     ) -> None:
         """Add a job to be executed by the event loop or by an executor.
@@ -580,15 +572,13 @@ class HomeAssistant:
                 functools.partial(self.async_create_task, target, eager_start=True)
             )
             return
-        if TYPE_CHECKING:
-            target = cast(Callable[[*_Ts], Any], target)
         self.loop.call_soon_threadsafe(
             functools.partial(self._async_add_hass_job, HassJob(target), *args)
         )
 
     @overload
     @callback
-    def async_add_job(
+    def async_add_job[_R, *_Ts](
         self,
         target: Callable[[*_Ts], Coroutine[Any, Any, _R]],
         *args: *_Ts,
@@ -597,7 +587,7 @@ class HomeAssistant:
 
     @overload
     @callback
-    def async_add_job(
+    def async_add_job[_R, *_Ts](
         self,
         target: Callable[[*_Ts], Coroutine[Any, Any, _R] | _R],
         *args: *_Ts,
@@ -606,7 +596,7 @@ class HomeAssistant:
 
     @overload
     @callback
-    def async_add_job(
+    def async_add_job[_R](
         self,
         target: Coroutine[Any, Any, _R],
         *args: Any,
@@ -614,7 +604,7 @@ class HomeAssistant:
     ) -> asyncio.Future[_R] | None: ...
 
     @callback
-    def async_add_job(
+    def async_add_job[_R, *_Ts](
         self,
         target: Callable[[*_Ts], Coroutine[Any, Any, _R] | _R]
         | Coroutine[Any, Any, _R],
@@ -648,17 +638,11 @@ class HomeAssistant:
         if asyncio.iscoroutine(target):
             return self.async_create_task(target, eager_start=eager_start)
 
-        # This code path is performance sensitive and uses
-        # if TYPE_CHECKING to avoid the overhead of constructing
-        # the type used for the cast. For history see:
-        # https://github.com/home-assistant/core/pull/71960
-        if TYPE_CHECKING:
-            target = cast(Callable[[*_Ts], Coroutine[Any, Any, _R] | _R], target)
         return self._async_add_hass_job(HassJob(target), *args)
 
     @overload
     @callback
-    def async_add_hass_job(
+    def async_add_hass_job[_R](
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R]],
         *args: Any,
@@ -668,7 +652,7 @@ class HomeAssistant:
 
     @overload
     @callback
-    def async_add_hass_job(
+    def async_add_hass_job[_R](
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
@@ -677,7 +661,7 @@ class HomeAssistant:
     ) -> asyncio.Future[_R] | None: ...
 
     @callback
-    def async_add_hass_job(
+    def async_add_hass_job[_R](
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
@@ -708,7 +692,7 @@ class HomeAssistant:
 
     @overload
     @callback
-    def _async_add_hass_job(
+    def _async_add_hass_job[_R](
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R]],
         *args: Any,
@@ -717,7 +701,7 @@ class HomeAssistant:
 
     @overload
     @callback
-    def _async_add_hass_job(
+    def _async_add_hass_job[_R](
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
@@ -725,7 +709,7 @@ class HomeAssistant:
     ) -> asyncio.Future[_R] | None: ...
 
     @callback
-    def _async_add_hass_job(
+    def _async_add_hass_job[_R](
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
@@ -783,7 +767,7 @@ class HomeAssistant:
         )
 
     @callback
-    def async_create_task(
+    def async_create_task[_R](
         self,
         target: Coroutine[Any, Any, _R],
         name: str | None = None,
@@ -809,7 +793,7 @@ class HomeAssistant:
         return self.async_create_task_internal(target, name, eager_start)
 
     @callback
-    def async_create_task_internal(
+    def async_create_task_internal[_R](
         self,
         target: Coroutine[Any, Any, _R],
         name: str | None = None,
@@ -840,7 +824,7 @@ class HomeAssistant:
         return task
 
     @callback
-    def async_create_background_task(
+    def async_create_background_task[_R](
         self, target: Coroutine[Any, Any, _R], name: str, eager_start: bool = True
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
@@ -872,7 +856,7 @@ class HomeAssistant:
         return task
 
     @callback
-    def async_add_executor_job(
+    def async_add_executor_job[*_Ts, _T](
         self, target: Callable[[*_Ts], _T], *args: *_Ts
     ) -> asyncio.Future[_T]:
         """Add an executor job from within the event loop."""
@@ -886,7 +870,7 @@ class HomeAssistant:
         return task
 
     @callback
-    def async_add_import_executor_job(
+    def async_add_import_executor_job[*_Ts, _T](
         self, target: Callable[[*_Ts], _T], *args: *_Ts
     ) -> asyncio.Future[_T]:
         """Add an import executor job from within the event loop.
@@ -897,7 +881,7 @@ class HomeAssistant:
 
     @overload
     @callback
-    def async_run_hass_job(
+    def async_run_hass_job[_R](
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R]],
         *args: Any,
@@ -906,7 +890,7 @@ class HomeAssistant:
 
     @overload
     @callback
-    def async_run_hass_job(
+    def async_run_hass_job[_R](
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
@@ -914,7 +898,7 @@ class HomeAssistant:
     ) -> asyncio.Future[_R] | None: ...
 
     @callback
-    def async_run_hass_job(
+    def async_run_hass_job[_R](
         self,
         hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R],
         *args: Any,
@@ -943,24 +927,24 @@ class HomeAssistant:
 
     @overload
     @callback
-    def async_run_job(
+    def async_run_job[_R, *_Ts](
         self, target: Callable[[*_Ts], Coroutine[Any, Any, _R]], *args: *_Ts
     ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
-    def async_run_job(
+    def async_run_job[_R, *_Ts](
         self, target: Callable[[*_Ts], Coroutine[Any, Any, _R] | _R], *args: *_Ts
     ) -> asyncio.Future[_R] | None: ...
 
     @overload
     @callback
-    def async_run_job(
+    def async_run_job[_R](
         self, target: Coroutine[Any, Any, _R], *args: Any
     ) -> asyncio.Future[_R] | None: ...
 
     @callback
-    def async_run_job(
+    def async_run_job[_R, *_Ts](
         self,
         target: Callable[[*_Ts], Coroutine[Any, Any, _R] | _R]
         | Coroutine[Any, Any, _R],
@@ -987,12 +971,6 @@ class HomeAssistant:
         if asyncio.iscoroutine(target):
             return self.async_create_task(target, eager_start=True)
 
-        # This code path is performance sensitive and uses
-        # if TYPE_CHECKING to avoid the overhead of constructing
-        # the type used for the cast. For history see:
-        # https://github.com/home-assistant/core/pull/71960
-        if TYPE_CHECKING:
-            target = cast(Callable[[*_Ts], Coroutine[Any, Any, _R] | _R], target)
         return self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self, wait_background_tasks: bool = False) -> None:
@@ -2972,16 +2950,38 @@ class Config:
             "debug": self.debug,
         }
 
-    def set_time_zone(self, time_zone_str: str) -> None:
+    async def async_set_time_zone(self, time_zone_str: str) -> None:
         """Help to set the time zone."""
+        if time_zone := await dt_util.async_get_time_zone(time_zone_str):
+            self.time_zone = time_zone_str
+            dt_util.set_default_time_zone(time_zone)
+        else:
+            raise ValueError(f"Received invalid time zone {time_zone_str}")
+
+    def set_time_zone(self, time_zone_str: str) -> None:
+        """Set the time zone.
+
+        This is a legacy method that should not be used in new code.
+        Use async_set_time_zone instead.
+
+        It will be removed in Home Assistant 2025.6.
+        """
+        # report is imported here to avoid a circular import
+        from .helpers.frame import report  # pylint: disable=import-outside-toplevel
+
+        report(
+            "set the time zone using set_time_zone instead of async_set_time_zone"
+            " which will stop working in Home Assistant 2025.6",
+            error_if_core=True,
+            error_if_integration=True,
+        )
         if time_zone := dt_util.get_time_zone(time_zone_str):
             self.time_zone = time_zone_str
             dt_util.set_default_time_zone(time_zone)
         else:
             raise ValueError(f"Received invalid time zone {time_zone_str}")
 
-    @callback
-    def _update(
+    async def _async_update(
         self,
         *,
         source: ConfigSource,
@@ -3014,7 +3014,7 @@ class Config:
         if location_name is not None:
             self.location_name = location_name
         if time_zone is not None:
-            self.set_time_zone(time_zone)
+            await self.async_set_time_zone(time_zone)
         if external_url is not _UNDEF:
             self.external_url = cast(str | None, external_url)
         if internal_url is not _UNDEF:
@@ -3034,7 +3034,7 @@ class Config:
             _raise_issue_if_no_country,
         )
 
-        self._update(source=ConfigSource.STORAGE, **kwargs)
+        await self._async_update(source=ConfigSource.STORAGE, **kwargs)
         await self._async_store()
         self.hass.bus.async_fire_internal(EVENT_CORE_CONFIG_UPDATE, kwargs)
 
@@ -3060,7 +3060,7 @@ class Config:
         ):
             _LOGGER.warning("Invalid internal_url set. It's not allowed to have a path")
 
-        self._update(
+        await self._async_update(
             source=ConfigSource.STORAGE,
             latitude=data.get("latitude"),
             longitude=data.get("longitude"),

@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable, Generator
 import copy
 from dataclasses import dataclass, field
 import time
-from typing import Any, TypeVar
+from typing import Any
 
 from google_nest_sdm.auth import AbstractAuth
 from google_nest_sdm.device import Device
@@ -19,9 +19,8 @@ from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.components.nest import DOMAIN
 
 # Typing helpers
-PlatformSetup = Callable[[], Awaitable[None]]
-_T = TypeVar("_T")
-YieldFixture = Generator[_T, None, None]
+type PlatformSetup = Callable[[], Awaitable[None]]
+type YieldFixture[_T] = Generator[_T, None, None]
 
 WEB_AUTH_DOMAIN = DOMAIN
 APP_AUTH_DOMAIN = f"{DOMAIN}.installed"

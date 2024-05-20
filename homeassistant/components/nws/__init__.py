@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
-NWSConfigEntry = ConfigEntry["NWSData"]
+type NWSConfigEntry = ConfigEntry[NWSData]
 
 
 def base_unique_id(latitude: float, longitude: float) -> str:

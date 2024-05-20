@@ -400,9 +400,6 @@
       "ptz_pan_position": {
         "name": "PTZ pan position"
       },
-      "battery_percent": {
-        "name": "Battery percentage"
-      },
       "battery_temperature": {
         "name": "Battery temperature"
       },
