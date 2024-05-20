@@ -17,7 +17,7 @@ import pathlib
 import threading
 import time
 from types import FrameType, ModuleType
-from typing import Any, NoReturn, TypeVar
+from typing import Any, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
@@ -199,10 +199,7 @@ def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
     loop.close()
 
 
-_T = TypeVar("_T", bound=Mapping[str, Any] | Sequence[Any])
-
-
-class StoreWithoutWriteLoad(storage.Store[_T]):
+class StoreWithoutWriteLoad[_T: (Mapping[str, Any] | Sequence[Any])](storage.Store[_T]):
     """Fake store that does not write or load. Used for testing."""
 
     async def async_save(self, *args: Any, **kwargs: Any) -> None:

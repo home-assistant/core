@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import UserDict
 from collections.abc import Mapping, Sequence, ValuesView
-from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal
 
 from homeassistant.core import CoreState, HomeAssistant, callback
 
@@ -16,11 +16,7 @@ SAVE_DELAY = 10
 SAVE_DELAY_LONG = 180
 
 
-_DataT = TypeVar("_DataT")
-_StoreDataT = TypeVar("_StoreDataT", bound=Mapping[str, Any] | Sequence[Any])
-
-
-class BaseRegistryItems(UserDict[str, _DataT], ABC):
+class BaseRegistryItems[_DataT](UserDict[str, _DataT], ABC):
     """Base class for registry items."""
 
     data: dict[str, _DataT]
@@ -65,7 +61,7 @@ class BaseRegistryItems(UserDict[str, _DataT], ABC):
         super().__delitem__(key)
 
 
-class BaseRegistry(ABC, Generic[_StoreDataT]):
+class BaseRegistry[_StoreDataT: Mapping[str, Any] | Sequence[Any]](ABC):
     """Class to implement a registry."""
 
     hass: HomeAssistant

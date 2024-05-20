@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVarTuple
-
-_Ts = TypeVarTuple("_Ts")
+from typing import Any
 
 
 @dataclass(frozen=True)
-class _SignalTypeBase(Generic[*_Ts]):
+class _SignalTypeBase[*_Ts]:
     """Generic base class for SignalType."""
 
     name: str
@@ -30,12 +28,12 @@ class _SignalTypeBase(Generic[*_Ts]):
 
 
 @dataclass(frozen=True, eq=False)
-class SignalType(_SignalTypeBase[*_Ts]):
+class SignalType[*_Ts](_SignalTypeBase[*_Ts]):
     """Generic string class for signal to improve typing."""
 
 
 @dataclass(frozen=True, eq=False)
-class SignalTypeFormat(_SignalTypeBase[*_Ts]):
+class SignalTypeFormat[*_Ts](_SignalTypeBase[*_Ts]):
     """Generic string class for signal. Requires call to 'format' before use."""
 
     def format(self, *args: Any, **kwargs: Any) -> SignalType[*_Ts]:
