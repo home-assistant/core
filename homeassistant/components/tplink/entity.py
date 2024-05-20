@@ -265,6 +265,12 @@ def _description_for_feature[_D: EntityDescription](
     which additional parameters are passed.
     """
 
+    # Disable all debug features that are not explicitly enabled.
+    if "entity_registry_enabled_default" not in kwargs:
+        kwargs["entity_registry_enabled_default"] = (
+            feature.category is not Feature.Category.Debug
+        )
+
     return desc_cls(
         key=feature.id,
         translation_key=feature.id,
