@@ -99,9 +99,9 @@ UNSUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
 RECONNECT_INTERVAL_SECONDS = 10
 
-SocketType = socket.socket | ssl.SSLSocket | Any
+type SocketType = socket.socket | ssl.SSLSocket | Any
 
-SubscribePayloadType = str | bytes  # Only bytes if encoding is None
+type SubscribePayloadType = str | bytes  # Only bytes if encoding is None
 
 
 def publish(
@@ -540,6 +540,14 @@ class MQTT:
 
     def _increase_socket_buffer_size(self, sock: SocketType) -> None:
         """Increase the socket buffer size."""
+        if not hasattr(sock, "setsockopt") and hasattr(sock, "_socket"):
+            # The WebsocketWrapper does not wrap setsockopt
+            # so we need to get the underlying socket
+            # Remove this once
+            # https://github.com/eclipse/paho.mqtt.python/pull/843
+            # is available.
+            sock = sock._socket  # noqa: SLF001
+
         new_buffer_size = PREFERRED_BUFFER_SIZE
         while True:
             try:
