@@ -137,6 +137,7 @@ tests: &tests
   - tests/syrupy.py
   - tests/test_util/**
   - tests/testing_config/**
+  - tests/typing.py
   - tests/util/**
 
 other: &other
