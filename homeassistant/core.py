@@ -2973,7 +2973,8 @@ class Config:
         from homeassistant.helpers.frame import report
 
         report(
-            "set the time zone using set_time_zone instead of async_set_time_zone which will stop working in Home Assistant 2025.6",
+            "set the time zone using set_time_zone instead of async_set_time_zone"
+            " which will stop working in Home Assistant 2025.6",
             error_if_core=False,
             error_if_integration=False,
         )
