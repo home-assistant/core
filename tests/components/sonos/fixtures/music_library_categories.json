@@ -33,7 +33,7 @@
     "title": "Tracks",
     "item_id": "A:TRACKS",
     "parent_id": "A:",
-    "item_class": "object.container"
+    "item_class": "'object.container.playlistContainer'"
   },
   {
     "title": "Playlists",

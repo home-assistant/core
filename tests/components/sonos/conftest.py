@@ -316,19 +316,20 @@ def sonos_favorites_fixture() -> SearchResult:
 class MockMusicServiceItem:
     """Mocks a Soco MusicServiceItem."""
 
-    def __init__(self, title: str, item_id: str, parent_id: str, item_class: str):
+    def __init__(
+        self,
+        title: str,
+        item_id: str,
+        parent_id: str,
+        item_class: str,
+        album_art_uri: None | str = None,
+    ):
         """Initialize the mock item."""
         self.title = title
         self.item_id = item_id
         self.item_class = item_class
         self.parent_id = parent_id
-
-    @property
-    def album_art_uri(self) -> str:
-        """Album Art.  Album ART URIs come back double URL encoded."""
-        if self.item_class == "object.container.album.musicAlbum":
-            return "http://192.168.42.2:1400/getaa?u=x-file-cifs%3a%2f%2f192.168.42.100%2fmusic%2fThe%2520Beatles%2fA%2520Hard%2520Day's%2520Night%2f01%2520A%2520Hard%2520Day's%2520Night%25201.m4a&v=53"
-        return None
+        self.album_art_uri = album_art_uri
 
 
 def list_from_json_fixture(file_name: str) -> list[MockMusicServiceItem]:
@@ -336,7 +337,11 @@ def list_from_json_fixture(file_name: str) -> list[MockMusicServiceItem]:
     item_list = load_json_value_fixture(file_name, "sonos")
     return [
         MockMusicServiceItem(
-            item["title"], item["item_id"], item["parent_id"], item["item_class"]
+            item["title"],
+            item["item_id"],
+            item["parent_id"],
+            item["item_class"],
+            item.get("album_art_uri"),
         )
         for item in item_list
     ]
