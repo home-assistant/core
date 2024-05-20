@@ -18,12 +18,13 @@ async def test_get_api_no_existing(hass: HomeAssistant) -> None:
 
 async def test_register_api(hass: HomeAssistant) -> None:
     """Test registering an llm api."""
-    api = llm.AssistAPI(
-        hass=hass,
-        id="test",
-        name="Test",
-        prompt_template="Test",
-    )
+
+    class MyAPI(llm.API):
+        def async_get_tools(self) -> list[llm.Tool]:
+            """Return a list of tools."""
+            return []
+
+    api = MyAPI(hass=hass, id="test", name="Test", prompt_template="")
     llm.async_register_api(hass, api)
 
     assert llm.async_get_api(hass, "test") is api
