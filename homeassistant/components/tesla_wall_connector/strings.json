@@ -37,7 +37,7 @@
           "not_connected": "Vehicle not connected",
           "connected": "Vehicle connected",
           "ready": "Ready to charge",
-          "negotiating": "Negotiating connection",
+          "negociating": "Negociating connection",
           "error": "Error",
           "charging_finished": "Charging finished",
           "waiting_car": "Waiting for car",
