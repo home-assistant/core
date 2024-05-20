@@ -121,6 +121,17 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Pick Thread or Zigbee firmware."""
+        return self.async_show_menu(
+            step_id="pick_firmware",
+            menu_options=[
+                STEP_PICK_FIRMWARE_THREAD,
+                STEP_PICK_FIRMWARE_ZIGBEE,
+            ],
+            description_placeholders=self._get_translation_placeholders(),
+        )
+
+    async def _probe_firmware_type(self) -> bool:
+        """Probe the firmware currently on the device."""
         assert self._usb_info is not None
 
         self._probed_firmware_type = await probe_silabs_firmware_type(
@@ -134,29 +145,22 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             ),
         )
 
-        if self._probed_firmware_type not in (
+        return self._probed_firmware_type in (
             ApplicationType.EZSP,
             ApplicationType.SPINEL,
             ApplicationType.CPC,
-        ):
-            return self.async_abort(
-                reason="unsupported_firmware",
-                description_placeholders=self._get_translation_placeholders(),
-            )
-
-        return self.async_show_menu(
-            step_id="pick_firmware",
-            menu_options=[
-                STEP_PICK_FIRMWARE_THREAD,
-                STEP_PICK_FIRMWARE_ZIGBEE,
-            ],
-            description_placeholders=self._get_translation_placeholders(),
         )
 
     async def async_step_pick_firmware_zigbee(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Pick Zigbee firmware."""
+        if not await self._probe_firmware_type():
+            return self.async_abort(
+                reason="unsupported_firmware",
+                description_placeholders=self._get_translation_placeholders(),
+            )
+
         # Allow the stick to be used with ZHA without flashing
         if self._probed_firmware_type == ApplicationType.EZSP:
             return await self.async_step_confirm_zigbee()
@@ -372,6 +376,12 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Pick Thread firmware."""
+        if not await self._probe_firmware_type():
+            return self.async_abort(
+                reason="unsupported_firmware",
+                description_placeholders=self._get_translation_placeholders(),
+            )
+
         # We install the OTBR addon no matter what, since it is required to use Thread
         if not is_hassio(self.hass):
             return self.async_abort(
