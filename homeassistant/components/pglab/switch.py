@@ -8,19 +8,17 @@ from pypglab.device import Device
 from pypglab.relay import Relay
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CREATE_NEW_ENTITY, DISCONNECT_COMPONENT, DOMAIN
+from .discovery import PGLABConfigEntry, PGLabDiscovery
 from .entity import BaseEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: PGLABConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches for device."""
@@ -28,22 +26,28 @@ async def async_setup_entry(
     @callback
     def async_discover(pglab_device: Device, pglab_relay: Relay) -> None:
         """Discover and add a PG LAB Relay."""
-        pglab_switch = PgLab_Switch(pglab_device, pglab_relay)
+        pglab_discovery = config_entry.runtime_data
+        pglab_switch = PgLab_Switch(pglab_discovery, pglab_device, pglab_relay)
         async_add_entities([pglab_switch])
 
-    hass.data[DOMAIN][DISCONNECT_COMPONENT[Platform.SWITCH]] = async_dispatcher_connect(
-        hass, CREATE_NEW_ENTITY[Platform.SWITCH], async_discover
-    )
+    # register the callback to create the switch entity when discovered
+    pglab_discovery = config_entry.runtime_data
+    await pglab_discovery.register_platform(hass, Platform.SWITCH, async_discover)
 
 
 class PgLab_Switch(BaseEntity, SwitchEntity):
     """A PG LAB switch."""
 
-    def __init__(self, pglab_device: Device, pglab_relay: Relay) -> None:
+    def __init__(
+        self, pglab_discovery: PGLabDiscovery, pglab_device: Device, pglab_relay: Relay
+    ) -> None:
         """Initialize the Switch class."""
 
         super().__init__(
-            platform=Platform.SWITCH, device=pglab_device, entity=pglab_relay
+            discovery=pglab_discovery,
+            platform=Platform.SWITCH,
+            device=pglab_device,
+            entity=pglab_relay,
         )
 
         self._attr_unique_id = f"{pglab_device.id}_relay{pglab_relay.id}_switch"

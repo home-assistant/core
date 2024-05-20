@@ -11,23 +11,12 @@ from homeassistant.components.mqtt.subscription import (
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DEVICE_ALREADY_DISCOVERED, DISCONNECT_COMPONENT, DOMAIN
-from .discovery import create_discovery
-
-# The discovery instance
-DISCOVERY_INSTANCE = "pglab_discovery_instance"
-
-# Supported platforms
-PLATFORMS = [
-    Platform.SWITCH,
-]
+from .discovery import PGLABConfigEntry, create_discovery
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PGLABConfigEntry) -> bool:
     """Set up PG LAB Electronics integration from a config entry."""
 
     # define the call back for pglab  module to publish a mqtt message
@@ -58,36 +47,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # create a mqtt client for pglab used for pglab python module
     pglab_mqtt = Client(mqtt_publish, mqtt_subscribe, mqtt_unsubscribe)
 
-    hass.data[DOMAIN] = {DEVICE_ALREADY_DISCOVERED: {}}
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    pglab_discovery = await create_discovery(hass, entry, pglab_mqtt)
-    hass.data[DOMAIN][DISCOVERY_INSTANCE] = pglab_discovery
+    # setup PG LAB device discovery
+    await create_discovery(hass, entry, pglab_mqtt)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PGLABConfigEntry) -> bool:
     """Unload a config entry."""
 
-    # cleanup platforms
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if not unload_ok:
-        return False
-
     # stop pglab device discovery
-    pglab_discovery = hass.data[DOMAIN][DISCOVERY_INSTANCE]
-    if pglab_discovery:
-        await pglab_discovery.stop(hass)
-
-    # cleanup subscriptions
-    for platform in PLATFORMS:
-        # disconnect a specific platform for creation
-        disconnect_platform = hass.data[DOMAIN][DISCONNECT_COMPONENT[platform]]
-        disconnect_platform()
-
-    # remove all pglab data from HA
-    hass.data.pop(DOMAIN)
+    pglab_discovery = entry.runtime_data
+    await pglab_discovery.stop(hass, entry)
 
     return True

@@ -1,6 +1,9 @@
 """Discovery a PG LAB Electronics devices."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
 import json
+from typing import Any
 
 from pypglab.device import Device
 from pypglab.mqtt import Client
@@ -17,16 +20,26 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 
-from .const import (
-    _LOGGER,
-    CREATE_NEW_ENTITY,
-    DEVICE_ALREADY_DISCOVERED,
-    DISCOVERY_TOPIC,
-    DOMAIN,
-)
+from .const import _LOGGER, DISCOVERY_TOPIC, DOMAIN
+
+# Supported platforms
+PLATFORMS = [
+    Platform.SWITCH,
+]
+
+# Used to create a new component entity
+CREATE_NEW_ENTITY = {
+    Platform.SWITCH: "pglab_create_new_entity_switch",
+}
+
+# Define custom PG LAB Config entry
+PGLABConfigEntry = ConfigEntry["PGLabDiscovery"]
 
 
 def get_device_id_from_discovery_topic(topic: str) -> str | None:
@@ -43,31 +56,6 @@ def get_device_id_from_discovery_topic(topic: str) -> str | None:
         return None
 
     return split_topic[2]
-
-
-def clean_discovered_device(hass: HomeAssistant, device_id: str) -> None:
-    """Destroy the device and any enties connected with the device."""
-
-    if device_id not in hass.data[DOMAIN][DEVICE_ALREADY_DISCOVERED]:
-        return
-
-    discovery_info = hass.data[DOMAIN][DEVICE_ALREADY_DISCOVERED][device_id]
-
-    # destroy all entities connected with the device
-    entity_registry = er.async_get(hass)
-    for platform, entityid in discovery_info.entities:
-        entity_id = entity_registry.async_get_entity_id(platform, DOMAIN, entityid)
-        if entity_id:
-            entity_registry.async_remove(entity_id)
-
-    # destroy the device
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
-    if device_entry:
-        device_registry.async_remove_device(device_entry.id)
-
-    # clean the discovery info
-    del hass.data[DOMAIN][DEVICE_ALREADY_DISCOVERED][device_id]
 
 
 class DiscoverDeviceInfo:
@@ -98,7 +86,8 @@ class DiscoverDeviceInfo:
         return self._entities
 
 
-class Discovery:
+@dataclass
+class PGLabDiscovery:
     """PG LAB Discovery class. Discovery a pglab/discovert/[device]/config."""
 
     def __init__(self) -> None:
@@ -106,6 +95,8 @@ class Discovery:
         self._substate: dict[str, EntitySubscription] = {}
         self._discovery_topic = DISCOVERY_TOPIC
         self._mqtt_client = None
+        self._discovered: dict[str, DiscoverDeviceInfo] = {}
+        self._disconnect_platform: list = []
 
     async def __build_device(self, mqtt: Client, msg: ReceiveMessage) -> Device:
         """Build a PG LAB device."""
@@ -137,8 +128,34 @@ class Discovery:
 
         return pglab_device
 
+    def __clean_discovered_device(self, hass: HomeAssistant, device_id: str) -> None:
+        """Destroy the device and any enties connected with the device."""
+
+        if device_id not in self._discovered:
+            return
+
+        discovery_info = self._discovered[device_id]
+
+        # destroy all entities connected with the device
+        entity_registry = er.async_get(hass)
+        for platform, entityid in discovery_info.entities:
+            entity_id = entity_registry.async_get_entity_id(platform, DOMAIN, entityid)
+            if entity_id:
+                entity_registry.async_remove(entity_id)
+
+        # destroy the device
+        device_registry = dr.async_get(hass)
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, device_id)}
+        )
+        if device_entry:
+            device_registry.async_remove_device(device_entry.id)
+
+        # clean the discovery info
+        del self._discovered[device_id]
+
     async def start(
-        self, hass: HomeAssistant, mqtt: Client, entry: ConfigEntry
+        self, hass: HomeAssistant, mqtt: Client, entry: PGLABConfigEntry
     ) -> None:
         """Start to discovery a device."""
 
@@ -155,7 +172,7 @@ class Discovery:
 
                 # if we have a valid topic device_id clean every thing relative to the device
                 if device_id:
-                    clean_discovered_device(hass, device_id)
+                    self.__clean_discovered_device(hass, device_id)
 
                 return
 
@@ -174,12 +191,10 @@ class Discovery:
             )
 
             # do some checking if previous entities must be updated
-            if pglab_device.id in hass.data[DOMAIN][DEVICE_ALREADY_DISCOVERED]:
+            if pglab_device.id in self._discovered:
                 # the device is already been discover
                 # get the old discovery info data
-                discovery_info = hass.data[DOMAIN][DEVICE_ALREADY_DISCOVERED][
-                    pglab_device.id
-                ]
+                discovery_info = self._discovered[pglab_device.id]
 
                 if discovery_info.hash == pglab_device.hash:
                     # best case!!! there is nothing to do ... the device
@@ -192,13 +207,11 @@ class Discovery:
                 )
 
                 # something is changed ... all previous entities must be destroy and re-create
-                clean_discovered_device(hass, pglab_device.id)
+                self.__clean_discovered_device(hass, pglab_device.id)
 
             # add a new device
             discovery_info = DiscoverDeviceInfo(pglab_device)
-            hass.data[DOMAIN][DEVICE_ALREADY_DISCOVERED][pglab_device.id] = (
-                discovery_info
-            )
+            self._discovered[pglab_device.id] = discovery_info
 
             # create all new relay entities
             for r in pglab_device.relays:
@@ -214,21 +227,47 @@ class Discovery:
             }
         }
 
+        # forward setup all HA supported platforms
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
         self._mqtt_client = mqtt
         self._substate = async_prepare_subscribe_topics(hass, self._substate, topics)
         await async_subscribe_topics(hass, self._substate)
 
-    async def stop(self, hass: HomeAssistant) -> None:
-        """Stop to discovery a device."""
+    async def register_platform(
+        self, hass: HomeAssistant, platform: Platform, target: Callable[..., Any]
+    ):
+        """Register a callback to create entity of a specific HA platform."""
+        disconnect_callback = async_dispatcher_connect(
+            hass, CREATE_NEW_ENTITY[platform], target
+        )
+        self._disconnect_platform.append(disconnect_callback)
+
+    async def stop(self, hass: HomeAssistant, entry: PGLABConfigEntry) -> None:
+        """Stop to discovery PG LAB devices."""
+        await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+        # disconnect all registered platforms
+        for disconnect_callback in self._disconnect_platform:
+            disconnect_callback()
+
         async_unsubscribe_topics(hass, self._substate)
+
+    async def add_entity(self, entity: Entity, device_id: str):
+        """Save a new PG LAB Device entity."""
+        if device_id in self._discovered:
+            discovery_info = self._discovered[device_id]
+            discovery_info.add_entity(entity)
 
 
 # create an instance of the discovery PG LAB devices
-async def create_discovery(
-    hass: HomeAssistant, entry: ConfigEntry, mqtt: Client
-) -> Discovery:
+async def create_discovery(hass: HomeAssistant, entry: PGLABConfigEntry, mqtt: Client):
     """Create and initialize a discovery instance."""
 
-    discovery = Discovery()
-    await discovery.start(hass, mqtt, entry)
-    return discovery
+    pglab_discovery = PGLabDiscovery()
+
+    # store the discovery instance
+    entry.runtime_data = pglab_discovery
+
+    # start to discovery PG Lab devices
+    await pglab_discovery.start(hass, mqtt, entry)

@@ -9,13 +9,16 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity as HA_Entity
 
-from .const import DEVICE_ALREADY_DISCOVERED, DOMAIN
+from .const import DOMAIN
+from .discovery import PGLabDiscovery
 
 
 class BaseEntity(HA_Entity):
     """Representation of a PGLAB entity in Home Assistant."""
 
-    def __init__(self, platform: str, device: Device, entity: Entity) -> None:
+    def __init__(
+        self, discovery: PGLabDiscovery, platform: str, device: Device, entity: Entity
+    ) -> None:
         """Initialize the class."""
 
         super().__init__()
@@ -23,6 +26,7 @@ class BaseEntity(HA_Entity):
         self._id = entity.id
         self._device_id = device.id
         self._entity = entity
+        self._discovery = discovery
 
         # Set the state update
         self._entity.add_state_update(self.state_updated)
@@ -44,10 +48,11 @@ class BaseEntity(HA_Entity):
 
     async def async_added_to_hass(self) -> None:
         """Update the device discovery info."""
-        discovery_info = self.hass.data[DOMAIN][DEVICE_ALREADY_DISCOVERED][
-            self._device_id
-        ]
-        discovery_info.add_entity(self)
+
+        # inform PG LAB discovery instance that a new entity is available
+        # this it's important to know in case the device needs to be reconfigure
+        # and the entity can be potentially destroy
+        await self._discovery.add_entity(self, self._device_id)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe when removed."""
