@@ -23,7 +23,7 @@ from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_PROMPT, DEFAULT_CHAT_MODEL, DOMAIN, LOGGER
+from .const import CONF_PROMPT, DOMAIN, LOGGER
 
 SERVICE_GENERATE_CONTENT = "generate_content"
 CONF_IMAGE_FILENAME = "image_filename"
@@ -97,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     genai.configure(api_key=entry.data[CONF_API_KEY])
 
     try:
-        await hass.async_add_executor_job(partial(genai.get_model, DEFAULT_CHAT_MODEL))
+        await hass.async_add_executor_job(partial(genai.list_models))
     except ClientError as err:
         if err.reason == "API_KEY_INVALID":
             LOGGER.error("Invalid API key: %s", err)

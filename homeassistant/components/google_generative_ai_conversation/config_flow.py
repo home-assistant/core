@@ -157,7 +157,7 @@ async def google_generative_ai_config_option_schema(
                 "models/gemini-1.0-pro",  # duplicate of gemini-pro
                 "models/gemini-1.5-flash-latest",
             )
-            and "Vision" not in api_model.display_name
+            and "vision" not in api_model.name
             and "generateContent" in api_model.supported_generation_methods
         )
     )
