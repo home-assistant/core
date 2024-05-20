@@ -94,7 +94,7 @@ async def test_setup_retry_race(hass: HomeAssistant) -> None:
     """Test handling setup retry when a config entry has been reloaded."""
     attempts = 0
 
-    async def setup_entry(hass, entry):
+    async def async_setup_entry(hass, entry):
         """Mock setup entry."""
         nonlocal attempts
         attempts += 1
@@ -103,7 +103,18 @@ async def test_setup_retry_race(hass: HomeAssistant) -> None:
         await asyncio.sleep(0.1)
         return True
 
-    mock_integration(hass, MockModule("comp", async_setup_entry=setup_entry))
+    async def async_unload_entry(hass, entry):
+        """Mock unload entry."""
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=async_unload_entry,
+        ),
+    )
     mock_platform(hass, "comp.config_flow", None)
 
     entry = MockConfigEntry(domain="comp")
