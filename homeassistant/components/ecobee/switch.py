@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import tzinfo
 import logging
 from typing import Any
-import zoneinfo
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -30,17 +30,17 @@ async def async_setup_entry(
     data: EcobeeData = hass.data[DOMAIN]
 
     async_add_entities(
-        (
+        [
             EcobeeVentilator20MinSwitch(
                 data,
                 index,
-                await dt_util.async_get_time_zone(thermostat["location"]["timeZone"])
+                (await dt_util.async_get_time_zone(thermostat["location"]["timeZone"]))
                 or dt_util.get_default_time_zone(),
             )
             for index, thermostat in enumerate(data.ecobee.thermostats)
             if thermostat["settings"]["ventilatorType"] != "none"
-        ),
-        True,
+        ],
+        update_before_add=True,
     )
 
 
@@ -54,7 +54,7 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
         self,
         data: EcobeeData,
         thermostat_index: int,
-        operating_timezone: zoneinfo.ZoneInfo,
+        operating_timezone: tzinfo,
     ) -> None:
         """Initialize ecobee ventilator platform."""
         super().__init__(data, thermostat_index)
