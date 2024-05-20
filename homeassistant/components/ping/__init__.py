@@ -1,4 +1,5 @@
 """The ping component."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -19,7 +20,7 @@ from .helpers import PingDataICMPLib, PingDataSubProcess
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.platform_only_config_schema(DOMAIN)
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER, Platform.SENSOR]
 
 
 @dataclass(slots=True)

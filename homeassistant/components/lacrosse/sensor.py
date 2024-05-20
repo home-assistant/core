@@ -1,4 +1,5 @@
 """Support for LaCrosse sensor components."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta

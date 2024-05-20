@@ -1,4 +1,5 @@
 """Support the Universal Devices ISY/IoX controllers."""
+
 from __future__ import annotations
 
 import asyncio

@@ -68,6 +68,11 @@
           "high_charge_period": "High charge period"
         }
       }
+    },
+    "switch": {
+      "auto_charge": {
+        "name": "Auto charge"
+      }
     }
   }
 }

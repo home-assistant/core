@@ -1,4 +1,5 @@
 """Support for SimpliSafe alarm control panels."""
+
 from __future__ import annotations
 
 from simplipy.errors import SimplipyError

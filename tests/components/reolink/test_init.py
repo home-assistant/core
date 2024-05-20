@@ -1,10 +1,11 @@
 """Test the Reolink init."""
+
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
-from reolink_aio.exceptions import ReolinkError
+from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
 from homeassistant.components.reolink import FIRMWARE_UPDATE_INTERVAL, const
 from homeassistant.config import async_process_ha_core_config
@@ -50,6 +51,11 @@ pytestmark = pytest.mark.usefixtures("reolink_connect", "reolink_platforms")
             ConfigEntryState.SETUP_RETRY,
         ),
         (
+            "get_states",
+            AsyncMock(side_effect=CredentialsInvalidError("Test error")),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
             "supported",
             Mock(return_value=False),
             ConfigEntryState.LOADED,
@@ -67,7 +73,7 @@ async def test_failures_parametrized(
     """Test outcomes when changing errors."""
     setattr(reolink_connect, attr, value)
     assert await hass.config_entries.async_setup(config_entry.entry_id) is (
-        expected == ConfigEntryState.LOADED
+        expected is ConfigEntryState.LOADED
     )
     await hass.async_block_till_done()
 
@@ -87,7 +93,7 @@ async def test_firmware_error_twice(
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.UPDATE}.{TEST_NVR_NAME}_firmware"
     assert hass.states.is_state(entity_id, STATE_OFF)
@@ -235,12 +241,14 @@ async def test_https_repair_issue(
         hass, {"country": "GB", "internal_url": "https://test_homeassistant_address"}
     )
 
-    with patch(
-        "homeassistant.components.reolink.host.FIRST_ONVIF_TIMEOUT", new=0
-    ), patch(
-        "homeassistant.components.reolink.host.FIRST_ONVIF_LONG_POLL_TIMEOUT", new=0
-    ), patch(
-        "homeassistant.components.reolink.host.ReolinkHost._async_long_polling",
+    with (
+        patch("homeassistant.components.reolink.host.FIRST_ONVIF_TIMEOUT", new=0),
+        patch(
+            "homeassistant.components.reolink.host.FIRST_ONVIF_LONG_POLL_TIMEOUT", new=0
+        ),
+        patch(
+            "homeassistant.components.reolink.host.ReolinkHost._async_long_polling",
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -260,12 +268,14 @@ async def test_ssl_repair_issue(
         hass, {"country": "GB", "internal_url": "http://test_homeassistant_address"}
     )
 
-    with patch(
-        "homeassistant.components.reolink.host.FIRST_ONVIF_TIMEOUT", new=0
-    ), patch(
-        "homeassistant.components.reolink.host.FIRST_ONVIF_LONG_POLL_TIMEOUT", new=0
-    ), patch(
-        "homeassistant.components.reolink.host.ReolinkHost._async_long_polling",
+    with (
+        patch("homeassistant.components.reolink.host.FIRST_ONVIF_TIMEOUT", new=0),
+        patch(
+            "homeassistant.components.reolink.host.FIRST_ONVIF_LONG_POLL_TIMEOUT", new=0
+        ),
+        patch(
+            "homeassistant.components.reolink.host.ReolinkHost._async_long_polling",
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -298,12 +308,14 @@ async def test_webhook_repair_issue(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test repairs issue is raised when the webhook url is unreachable."""
-    with patch(
-        "homeassistant.components.reolink.host.FIRST_ONVIF_TIMEOUT", new=0
-    ), patch(
-        "homeassistant.components.reolink.host.FIRST_ONVIF_LONG_POLL_TIMEOUT", new=0
-    ), patch(
-        "homeassistant.components.reolink.host.ReolinkHost._async_long_polling",
+    with (
+        patch("homeassistant.components.reolink.host.FIRST_ONVIF_TIMEOUT", new=0),
+        patch(
+            "homeassistant.components.reolink.host.FIRST_ONVIF_LONG_POLL_TIMEOUT", new=0
+        ),
+        patch(
+            "homeassistant.components.reolink.host.ReolinkHost._async_long_polling",
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

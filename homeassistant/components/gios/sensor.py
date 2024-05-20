@@ -1,4 +1,5 @@
 """Support for the GIOS service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -14,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import GiosDataUpdateCoordinator
+from . import GiosConfigEntry
 from .const import (
     ATTR_AQI,
     ATTR_C6H6,
@@ -38,6 +38,7 @@ from .const import (
     MANUFACTURER,
     URL,
 )
+from .coordinator import GiosDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -158,13 +159,12 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: GiosConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add a GIOS entities from a config_entry."""
     name = entry.data[CONF_NAME]
 
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
+    coordinator = entry.runtime_data.coordinator
     # Due to the change of the attribute name of one sensor, it is necessary to migrate
     # the unique_id to the new name.
     entity_registry = er.async_get(hass)
@@ -229,11 +229,11 @@ class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        available = super().available
         sensor_data = getattr(self.coordinator.data, self.entity_description.key)
+        available = super().available and bool(sensor_data)
 
         # Sometimes the API returns sensor data without indexes
-        if self.entity_description.subkey:
+        if self.entity_description.subkey and available:
             return available and bool(sensor_data.index)
 
-        return available and bool(sensor_data)
+        return available

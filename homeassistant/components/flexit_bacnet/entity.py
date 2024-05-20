@@ -1,4 +1,5 @@
 """Base entity for the Flexit Nordic (BACnet) integration."""
+
 from __future__ import annotations
 
 from flexit_bacnet import FlexitBACnet

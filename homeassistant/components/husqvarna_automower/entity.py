@@ -28,9 +28,10 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
         self.mower_id = mower_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mower_id)},
-            name=self.mower_attributes.system.name,
             manufacturer="Husqvarna",
             model=self.mower_attributes.system.model,
+            name=self.mower_attributes.system.name,
+            serial_number=self.mower_attributes.system.serial_number,
             suggested_area="Garden",
         )
 
@@ -38,3 +39,12 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
     def mower_attributes(self) -> MowerAttributes:
         """Get the mower attributes of the current mower."""
         return self.coordinator.data[self.mower_id]
+
+
+class AutomowerControlEntity(AutomowerBaseEntity):
+    """AutomowerControlEntity, for dynamic availability."""
+
+    @property
+    def available(self) -> bool:
+        """Return True if the device is available."""
+        return super().available and self.mower_attributes.metadata.connected

@@ -1,4 +1,5 @@
 """Support for Roborock button."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -17,19 +18,12 @@ from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockEntity
 
 
-@dataclass(frozen=True)
-class RoborockButtonDescriptionMixin:
-    """Define an entity description mixin for button entities."""
+@dataclass(frozen=True, kw_only=True)
+class RoborockButtonDescription(ButtonEntityDescription):
+    """Describes a Roborock button entity."""
 
     command: RoborockCommand
     param: list | dict | None
-
-
-@dataclass(frozen=True)
-class RoborockButtonDescription(
-    ButtonEntityDescription, RoborockButtonDescriptionMixin
-):
-    """Describes a Roborock button entity."""
 
 
 CONSUMABLE_BUTTON_DESCRIPTIONS = [

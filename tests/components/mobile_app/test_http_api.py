@@ -1,4 +1,5 @@
 """Tests for the mobile_app HTTP API."""
+
 from binascii import unhexlify
 from http import HTTPStatus
 import json

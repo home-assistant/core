@@ -1,4 +1,5 @@
 """HomeKit controller session fixtures."""
+
 import datetime
 import unittest.mock
 

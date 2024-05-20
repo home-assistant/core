@@ -1,6 +1,5 @@
 """Tests for rainbird calendar platform."""
 
-
 from collections.abc import Awaitable, Callable
 import datetime
 from http import HTTPStatus
@@ -88,7 +87,7 @@ async def setup_config_entry(
 ) -> list[Platform]:
     """Fixture to setup the config entry."""
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 @pytest.fixture(autouse=True)
@@ -126,7 +125,7 @@ def get_events_fixture(
         )
         assert response.status == HTTPStatus.OK
         results = await response.json()
-        return [{k: event[k] for k in {"summary", "start", "end"}} for event in results]
+        return [{k: event[k] for k in ("summary", "start", "end")} for event in results]
 
     return _fetch
 
@@ -192,7 +191,7 @@ async def test_event_state(
     freezer.move_to(freeze_time)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get(TEST_ENTITY)
     assert state is not None
@@ -204,7 +203,6 @@ async def test_event_state(
         "description": "",
         "location": "",
         "friendly_name": "Rain Bird Controller",
-        "icon": "mdi:sprinkler",
     }
     assert state.state == expected_state
 
@@ -248,7 +246,6 @@ async def test_no_schedule(
     assert state.state == "unavailable"
     assert state.attributes == {
         "friendly_name": "Rain Bird Controller",
-        "icon": "mdi:sprinkler",
     }
 
     client = await hass_client()
@@ -276,7 +273,6 @@ async def test_program_schedule_disabled(
     assert state.state == "off"
     assert state.attributes == {
         "friendly_name": "Rain Bird Controller",
-        "icon": "mdi:sprinkler",
     }
 
 
@@ -299,7 +295,7 @@ async def test_no_unique_id(
     responses.insert(0, mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE))
 
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get(TEST_ENTITY)
     assert state is not None

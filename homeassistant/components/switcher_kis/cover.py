@@ -1,4 +1,5 @@
 """Switcher integration Cover platform."""
+
 from __future__ import annotations
 
 import logging
@@ -22,8 +23,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SwitcherDataUpdateCoordinator
 from .const import SIGNAL_DEVICE_ADD
+from .coordinator import SwitcherDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -125,6 +126,6 @@ class SwitcherCoverEntity(
         """Move the cover to a specific position."""
         await self._async_call_api(API_SET_POSITON, kwargs[ATTR_POSITION])
 
-    async def async_stop_cover(self, **_kwargs: Any) -> None:
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._async_call_api(API_STOP)

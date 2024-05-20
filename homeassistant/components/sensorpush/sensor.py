@@ -1,4 +1,5 @@
 """Support for sensorpush ble sensors."""
+
 from __future__ import annotations
 
 from sensorpush_ble import DeviceClass, DeviceKey, SensorUpdate, Units
@@ -116,7 +117,9 @@ async def async_setup_entry(
 
 
 class SensorPushBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[float | int | None]],
+    PassiveBluetoothProcessorEntity[
+        PassiveBluetoothDataProcessor[float | int | None, SensorUpdate]
+    ],
     SensorEntity,
 ):
     """Representation of a sensorpush ble sensor."""

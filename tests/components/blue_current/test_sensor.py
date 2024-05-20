@@ -1,4 +1,5 @@
 """The tests for Blue current sensors."""
+
 from datetime import datetime
 
 import pytest

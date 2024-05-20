@@ -1,4 +1,5 @@
 """Test KNX switch."""
+
 from homeassistant.components.knx.const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,

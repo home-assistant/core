@@ -1,4 +1,5 @@
 """Sensor entities for Tami4Edge."""
+
 import logging
 
 from Tami4EdgeAPI import Tami4EdgeAPI
@@ -25,41 +26,34 @@ ENTITY_DESCRIPTIONS = [
     SensorEntityDescription(
         key="uv_last_replacement",
         translation_key="uv_last_replacement",
-        icon="mdi:calendar",
         device_class=SensorDeviceClass.DATE,
     ),
     SensorEntityDescription(
         key="uv_upcoming_replacement",
         translation_key="uv_upcoming_replacement",
-        icon="mdi:calendar",
         device_class=SensorDeviceClass.DATE,
     ),
     SensorEntityDescription(
         key="uv_status",
         translation_key="uv_status",
-        icon="mdi:clipboard-check-multiple",
     ),
     SensorEntityDescription(
         key="filter_last_replacement",
         translation_key="filter_last_replacement",
-        icon="mdi:calendar",
         device_class=SensorDeviceClass.DATE,
     ),
     SensorEntityDescription(
         key="filter_upcoming_replacement",
         translation_key="filter_upcoming_replacement",
-        icon="mdi:calendar",
         device_class=SensorDeviceClass.DATE,
     ),
     SensorEntityDescription(
         key="filter_status",
         translation_key="filter_status",
-        icon="mdi:clipboard-check-multiple",
     ),
     SensorEntityDescription(
         key="filter_litters_passed",
         translation_key="filter_litters_passed",
-        icon="mdi:water",
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.WATER,
         native_unit_of_measurement=UnitOfVolume.LITERS,
@@ -75,17 +69,14 @@ async def async_setup_entry(
     api: Tami4EdgeAPI = data[API]
     coordinator: Tami4EdgeWaterQualityCoordinator = data[COORDINATOR]
 
-    entities = []
-    for entity_description in ENTITY_DESCRIPTIONS:
-        entities.append(
-            Tami4EdgeSensorEntity(
-                coordinator=coordinator,
-                api=api,
-                entity_description=entity_description,
-            )
+    async_add_entities(
+        Tami4EdgeSensorEntity(
+            coordinator=coordinator,
+            api=api,
+            entity_description=entity_description,
         )
-
-    async_add_entities(entities)
+        for entity_description in ENTITY_DESCRIPTIONS
+    )
 
 
 class Tami4EdgeSensorEntity(

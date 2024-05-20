@@ -1,4 +1,5 @@
 """Tests for the auth models."""
+
 from homeassistant.auth import models, permissions
 
 

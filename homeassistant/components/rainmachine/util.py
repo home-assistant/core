@@ -1,4 +1,5 @@
 """Define RainMachine utilities."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Iterable
@@ -120,7 +121,8 @@ class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):  # pylint: 
             self.config_entry.entry_id
         )
 
-    async def async_initialize(self) -> None:
+    @callback
+    def async_initialize(self) -> None:
         """Initialize the coordinator."""
 
         @callback

@@ -1,9 +1,10 @@
 """The tests for the image_processing component."""
+
 from unittest.mock import PropertyMock, patch
 
 import pytest
 
-import homeassistant.components.http as http
+from homeassistant.components import http
 import homeassistant.components.image_processing as ip
 from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.core import HomeAssistant
@@ -102,7 +103,7 @@ async def test_get_image_from_camera(
 
 
 @patch(
-    "homeassistant.components.camera.async_get_image",
+    "homeassistant.components.image_processing.async_get_image",
     side_effect=HomeAssistantError(),
 )
 async def test_get_image_without_exists_camera(
@@ -179,3 +180,22 @@ async def test_face_event_call_no_confidence(
     assert event_data[0]["confidence"] == 98.34
     assert event_data[0]["gender"] == "male"
     assert event_data[0]["entity_id"] == "image_processing.demo_face"
+
+
+async def test_update_missing_camera(
+    hass: HomeAssistant,
+    aiohttp_unused_port_factory,
+    enable_custom_integrations: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test when entity does not set camera."""
+    await setup_image_processing(hass, aiohttp_unused_port_factory)
+
+    with patch(
+        "custom_components.test.image_processing.TestImageProcessing.camera_entity",
+        new_callable=PropertyMock(return_value=None),
+    ):
+        common.async_scan(hass, entity_id="image_processing.test")
+        await hass.async_block_till_done()
+
+    assert "No camera entity id was set by the image processing entity" in caplog.text

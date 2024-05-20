@@ -1,4 +1,5 @@
 """Test the Climate significant change platform."""
+
 import pytest
 
 from homeassistant.components.climate import (

@@ -1,4 +1,5 @@
 """Test the Z-Wave JS binary sensor platform."""
+
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
@@ -118,9 +119,7 @@ async def test_disabled_legacy_sensor(
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Test enabling legacy entity
-    updated_entry = registry.async_update_entity(
-        entry.entity_id, **{"disabled_by": None}
-    )
+    updated_entry = registry.async_update_entity(entry.entity_id, disabled_by=None)
     assert updated_entry != entry
     assert updated_entry.disabled is False
 
@@ -273,7 +272,7 @@ async def test_config_parameter_binary_sensor(
     assert entity_entry.entity_category == EntityCategory.DIAGNOSTIC
 
     updated_entry = ent_reg.async_update_entity(
-        binary_sensor_entity_id, **{"disabled_by": None}
+        binary_sensor_entity_id, disabled_by=None
     )
     assert updated_entry != entity_entry
     assert updated_entry.disabled is False

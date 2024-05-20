@@ -1,4 +1,5 @@
 """Binary Sensor platform for Tessie integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -33,7 +34,7 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
         is_on=lambda x: x == TessieState.ONLINE,
     ),
     TessieBinarySensorEntityDescription(
-        key="charge_state_battery_heater_on",
+        key="climate_state_battery_heater",
         device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -92,7 +93,7 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
     ),
     TessieBinarySensorEntityDescription(
         key="vehicle_state_is_user_present",
-        device_class=BinarySensorDeviceClass.PRESENCE,
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
     ),
     TessieBinarySensorEntityDescription(
         key="vehicle_state_tpms_soft_warning_fl",

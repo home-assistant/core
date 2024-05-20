@@ -1,23 +1,27 @@
 """Support for the SamsungTV remote."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
 from typing import Any
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, LOGGER
+from . import SamsungTVConfigEntry
+from .const import LOGGER
 from .entity import SamsungTVEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SamsungTVConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Samsung TV from a config entry."""
-    bridge = hass.data[DOMAIN][entry.entry_id]
+    bridge = entry.runtime_data
     async_add_entities([SamsungTVRemote(bridge=bridge, config_entry=entry)])
 
 
@@ -46,3 +50,14 @@ class SamsungTVRemote(SamsungTVEntity, RemoteEntity):
 
         for _ in range(num_repeats):
             await self._bridge.async_send_keys(command_list)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the remote on."""
+        if self._turn_on_action:
+            await self._turn_on_action.async_run(self.hass, self._context)
+        elif self._mac:
+            await self.hass.async_add_executor_job(self._wake_on_lan)
+        else:
+            raise HomeAssistantError(
+                f"Entity {self.entity_id} does not support this service."
+            )

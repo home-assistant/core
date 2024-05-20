@@ -1,4 +1,5 @@
 """Tests for rpi_power config flow."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.rpi_power.const import DOMAIN
@@ -17,13 +18,13 @@ async def test_setup(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": SOURCE_USER},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert not result["errors"]
 
     with patch(MODULE, return_value=MagicMock()):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_not_supported(hass: HomeAssistant) -> None:
@@ -35,7 +36,7 @@ async def test_not_supported(hass: HomeAssistant) -> None:
 
     with patch(MODULE, return_value=None):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
@@ -46,7 +47,7 @@ async def test_onboarding(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": "onboarding"},
         )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_onboarding_not_supported(hass: HomeAssistant) -> None:
@@ -56,5 +57,5 @@ async def test_onboarding_not_supported(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": "onboarding"},
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"

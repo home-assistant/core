@@ -1,4 +1,5 @@
 """Support for Keenetic routers as device tracker."""
+
 from __future__ import annotations
 
 import logging

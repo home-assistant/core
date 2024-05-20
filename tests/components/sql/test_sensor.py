@@ -1,4 +1,5 @@
 """The test for the sql sensor platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -152,9 +153,12 @@ async def test_query_mssql_no_result(
         "column": "value",
         "name": "count_tables",
     }
-    with patch("homeassistant.components.sql.sensor.sqlalchemy"), patch(
-        "homeassistant.components.sql.sensor.sqlalchemy.text",
-        return_value=sql_text("SELECT TOP 1 5 as value where 1=2"),
+    with (
+        patch("homeassistant.components.sql.sensor.sqlalchemy"),
+        patch(
+            "homeassistant.components.sql.sensor.sqlalchemy.text",
+            return_value=sql_text("SELECT TOP 1 5 as value where 1=2"),
+        ),
     ):
         await init_integration(hass, config)
 
@@ -247,7 +251,7 @@ async def test_invalid_url_on_update(
             hass,
             dt_util.utcnow() + timedelta(minutes=1),
         )
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "sqlite://****:****@homeassistant.local" in caplog.text
 
@@ -286,7 +290,7 @@ async def test_templates_with_yaml(
         hass,
         dt_util.utcnow() + timedelta(minutes=1),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.get_values_with_template")
     assert state.state == "5"
@@ -300,7 +304,7 @@ async def test_templates_with_yaml(
         hass,
         dt_util.utcnow() + timedelta(minutes=2),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.get_values_with_template")
     assert state.state == STATE_UNAVAILABLE
@@ -313,7 +317,7 @@ async def test_templates_with_yaml(
         hass,
         dt_util.utcnow() + timedelta(minutes=3),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.get_values_with_template")
     assert state.state == "5"
@@ -487,7 +491,7 @@ async def test_no_issue_when_view_has_the_text_entity_id_in_it(
             hass,
             dt_util.utcnow() + timedelta(minutes=1),
         )
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         "Query contains entity_id but does not reference states_meta" not in caplog.text
@@ -621,7 +625,7 @@ async def test_query_recover_from_rollback(
     ):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert "sqlite3.OperationalError" in caplog.text
 
     state = hass.states.get("sensor.select_value_sql_query")
@@ -630,8 +634,18 @@ async def test_query_recover_from_rollback(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.select_value_sql_query")
     assert state.state == "5"
     assert state.attributes.get("value") == 5
+
+
+async def test_setup_without_recorder(hass: HomeAssistant) -> None:
+    """Test the SQL sensor without recorder."""
+
+    assert await async_setup_component(hass, DOMAIN, YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.get_value")
+    assert state.state == "5"

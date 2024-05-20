@@ -1,22 +1,211 @@
 {
   "entity": {
+    "binary_sensor": {
+      "charge_state_scheduled_charging_pending": {
+        "default": "mdi:battery-clock"
+      },
+      "charge_state_trip_charging": {
+        "default": "mdi:car-clock"
+      },
+      "climate_state_auto_seat_climate_left": {
+        "default": "mdi:car-seat",
+        "state": {
+          "on": "mdi:car-seat-heater"
+        }
+      },
+      "climate_state_auto_seat_climate_right": {
+        "default": "mdi:car-seat",
+        "state": {
+          "on": "mdi:car-seat-heater"
+        }
+      },
+      "climate_state_auto_steering_wheel_heat": {
+        "default": "mdi:steering"
+      },
+      "vehicle_state_dashcam_state": {
+        "default": "mdi:camera-off",
+        "state": {
+          "on": "mdi:camera"
+        }
+      },
+      "vehicle_state_is_user_present": {
+        "default": "mdi:account-outline",
+        "state": {
+          "on": "mdi:account"
+        }
+      },
+      "vehicle_state_tpms_soft_warning_fl": {
+        "default": "mdi:tire",
+        "state": {
+          "on": "mdi:car-tire-alert"
+        }
+      },
+      "vehicle_state_tpms_soft_warning_fr": {
+        "default": "mdi:tire",
+        "state": {
+          "on": "mdi:car-tire-alert"
+        }
+      },
+      "vehicle_state_tpms_soft_warning_rl": {
+        "default": "mdi:tire",
+        "state": {
+          "on": "mdi:car-tire-alert"
+        }
+      },
+      "vehicle_state_tpms_soft_warning_rr": {
+        "default": "mdi:tire",
+        "state": {
+          "on": "mdi:car-tire-alert"
+        }
+      }
+    },
+    "button": {
+      "wake": {
+        "default": "mdi:sleep-off"
+      },
+      "flash_lights": {
+        "default": "mdi:flashlight"
+      },
+      "honk": {
+        "default": "mdi:bullhorn"
+      },
+      "trigger_homelink": {
+        "default": "mdi:garage"
+      },
+      "enable_keyless_driving": {
+        "default": "mdi:car-key"
+      },
+      "boombox": {
+        "default": "mdi:volume-high"
+      }
+    },
+    "climate": {
+      "primary": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "off": "mdi:fan",
+              "on": "mdi:thermometer-auto",
+              "dog": "mdi:paw",
+              "camp": "mdi:tent"
+            }
+          }
+        }
+      }
+    },
+    "device_tracker": {
+      "location": {
+        "default": "mdi:car",
+        "state": {
+          "not_home": "mdi:car-arrow-right"
+        }
+      },
+      "route": {
+        "default": "mdi:map-marker",
+        "state": {
+          "home": "mdi:home-map-marker"
+        }
+      }
+    },
+    "select": {
+      "climate_state_seat_heater_left": {
+        "default": "mdi:car-seat",
+        "state": {
+          "low": "mdi:car-seat-heater",
+          "medium": "mdi:car-seat-heater",
+          "high": "mdi:car-seat-heater"
+        }
+      },
+      "climate_state_seat_heater_right": {
+        "default": "mdi:car-seat",
+        "state": {
+          "low": "mdi:car-seat-heater",
+          "medium": "mdi:car-seat-heater",
+          "high": "mdi:car-seat-heater"
+        }
+      },
+      "climate_state_seat_heater_rear_left": {
+        "default": "mdi:car-seat",
+        "state": {
+          "low": "mdi:car-seat-heater",
+          "medium": "mdi:car-seat-heater",
+          "high": "mdi:car-seat-heater"
+        }
+      },
+      "climate_state_seat_heater_rear_center": {
+        "default": "mdi:car-seat",
+        "state": {
+          "low": "mdi:car-seat-heater",
+          "medium": "mdi:car-seat-heater",
+          "high": "mdi:car-seat-heater"
+        }
+      },
+      "climate_state_seat_heater_rear_right": {
+        "default": "mdi:car-seat",
+        "state": {
+          "low": "mdi:car-seat-heater",
+          "medium": "mdi:car-seat-heater",
+          "high": "mdi:car-seat-heater"
+        }
+      },
+      "climate_state_seat_heater_third_row_left": {
+        "default": "mdi:car-seat",
+        "state": {
+          "low": "mdi:car-seat-heater",
+          "medium": "mdi:car-seat-heater",
+          "high": "mdi:car-seat-heater"
+        }
+      },
+      "climate_state_seat_heater_third_row_right": {
+        "default": "mdi:car-seat",
+        "state": {
+          "low": "mdi:car-seat-heater",
+          "medium": "mdi:car-seat-heater",
+          "high": "mdi:car-seat-heater"
+        }
+      }
+    },
     "sensor": {
+      "charge_state_charging_state": {
+        "default": "mdi:ev-station"
+      },
+      "charge_state_minutes_to_full_charge": {
+        "default": "mdi:clock-end"
+      },
       "drive_state_shift_state": {
         "default": "mdi:car-shift-pattern"
+      },
+      "vehicle_state_odometer": {
+        "default": "mdi:counter"
+      },
+      "drive_state_active_route_traffic_minutes_delay": {
+        "default": "mdi:clock-alert-outline"
+      },
+      "drive_state_active_route_miles_to_arrival": {
+        "default": "mdi:map-marker-distance"
+      },
+      "drive_state_active_route_minutes_to_arrival": {
+        "default": "mdi:timer-marker-outline"
       },
       "drive_state_active_route_destination": {
         "default": "mdi:map-marker"
       }
     },
-    "binary_sensor": {
-      "climate_state_auto_seat_climate_left": {
-        "default": "mdi:car-seat-heater"
+    "switch": {
+      "climate_state_defrost_mode": {
+        "default": "mdi:car-defrost-front"
       },
-      "climate_state_auto_seat_climate_right": {
-        "default": "mdi:car-seat-heater"
+      "vehicle_state_sentry_mode": {
+        "default": "mdi:radiobox-marked"
       },
-      "climate_state_auto_steering_wheel_heat": {
+      "climate_state_steering_wheel_heater": {
         "default": "mdi:steering"
+      },
+      "vehicle_state_valet_mode": {
+        "default": "mdi:bow-tie"
+      },
+      "charge_state_charge_enable_request": {
+        "default": "mdi:ev-plug-ccs2"
       }
     }
   }

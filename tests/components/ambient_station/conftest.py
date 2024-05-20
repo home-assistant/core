@@ -1,4 +1,5 @@
 """Define test fixtures for Ambient PWS."""
+
 import json
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -52,10 +53,13 @@ def data_station_fixture():
 @pytest.fixture(name="mock_aioambient")
 async def mock_aioambient_fixture(api):
     """Define a fixture to patch aioambient."""
-    with patch(
-        "homeassistant.components.ambient_station.config_flow.API",
-        return_value=api,
-    ), patch("aioambient.websocket.Websocket.connect"):
+    with (
+        patch(
+            "homeassistant.components.ambient_station.config_flow.API",
+            return_value=api,
+        ),
+        patch("aioambient.websocket.Websocket.connect"),
+    ):
         yield
 
 

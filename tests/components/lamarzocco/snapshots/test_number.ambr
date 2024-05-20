@@ -13,6 +13,7 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_coffee_target_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '95',
   })
@@ -39,6 +40,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -67,6 +70,7 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_steam_target_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '128',
   })
@@ -93,6 +97,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -121,6 +127,7 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_steam_target_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '128',
   })
@@ -147,6 +154,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -175,6 +184,7 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_tea_water_duration',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1023',
   })
@@ -201,6 +211,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -229,6 +241,7 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_tea_water_duration',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1023',
   })
@@ -255,6 +268,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -282,6 +297,7 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_dose_key_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1023',
   })
@@ -299,6 +315,7 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_dose_key_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1023',
   })
@@ -316,6 +333,7 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_dose_key_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1023',
   })
@@ -333,6 +351,7 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_dose_key_4',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1023',
   })
@@ -351,6 +370,7 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_prebrew_off_time_key_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
@@ -369,6 +389,7 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_prebrew_off_time_key_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
@@ -387,6 +408,7 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_prebrew_off_time_key_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
@@ -405,6 +427,7 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_prebrew_off_time_key_4',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
@@ -423,6 +446,7 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_prebrew_on_time_key_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
   })
@@ -441,6 +465,7 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_prebrew_on_time_key_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
   })
@@ -459,6 +484,7 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_prebrew_on_time_key_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
   })
@@ -477,6 +503,7 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_prebrew_on_time_key_4',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
   })
@@ -495,6 +522,7 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_preinfusion_time_key_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -513,6 +541,7 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_preinfusion_time_key_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -531,6 +560,7 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_preinfusion_time_key_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -549,6 +579,7 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_preinfusion_time_key_4',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -567,6 +598,7 @@
     'context': <ANY>,
     'entity_id': 'number.lm01234_prebrew_off_time',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
@@ -593,6 +625,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -621,6 +655,7 @@
     'context': <ANY>,
     'entity_id': 'number.mr01234_prebrew_off_time',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
@@ -647,6 +682,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -675,6 +712,7 @@
     'context': <ANY>,
     'entity_id': 'number.lm01234_prebrew_on_time',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
   })
@@ -701,6 +739,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -729,6 +769,7 @@
     'context': <ANY>,
     'entity_id': 'number.mr01234_prebrew_on_time',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
   })
@@ -755,6 +796,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -783,6 +826,7 @@
     'context': <ANY>,
     'entity_id': 'number.lm01234_preinfusion_time',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -809,6 +853,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -837,6 +883,7 @@
     'context': <ANY>,
     'entity_id': 'number.mr01234_preinfusion_time',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
@@ -863,6 +910,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),

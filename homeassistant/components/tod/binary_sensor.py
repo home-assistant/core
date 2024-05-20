@@ -1,4 +1,5 @@
 """Support for representing current time of the day as binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -35,7 +36,7 @@ from .const import (
     CONF_BEFORE_TIME,
 )
 
-SunEventType = Literal["sunrise", "sunset"]
+type SunEventType = Literal["sunrise", "sunset"]
 
 _LOGGER = logging.getLogger(__name__)
 

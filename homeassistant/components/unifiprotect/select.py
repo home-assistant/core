@@ -1,4 +1,5 @@
 """Component providing select entities for UniFi Protect."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -41,10 +42,17 @@ from .utils import async_dispatch_id as _ufpd, async_get_light_motion_current
 _LOGGER = logging.getLogger(__name__)
 _KEY_LIGHT_MOTION = "light_motion"
 
+HDR_MODES = [
+    {"id": "always", "name": "Always On"},
+    {"id": "off", "name": "Always Off"},
+    {"id": "auto", "name": "Auto"},
+]
+
 INFRARED_MODES = [
     {"id": IRLEDMode.AUTO.value, "name": "Auto"},
     {"id": IRLEDMode.ON.value, "name": "Always Enable"},
     {"id": IRLEDMode.AUTO_NO_LED.value, "name": "Auto (Filter Only, no LED's)"},
+    {"id": IRLEDMode.CUSTOM.value, "name": "Auto (Custom Lux)"},
     {"id": IRLEDMode.OFF.value, "name": "Always Disable"},
 ]
 
@@ -129,8 +137,10 @@ def _get_doorbell_options(api: ProtectApiClient) -> list[dict[str, Any]]:
 
 def _get_paired_camera_options(api: ProtectApiClient) -> list[dict[str, Any]]:
     options = [{"id": TYPE_EMPTY_VALUE, "name": "Not Paired"}]
-    for camera in api.bootstrap.cameras.values():
-        options.append({"id": camera.id, "name": camera.display_name or camera.type})
+    options.extend(
+        {"id": camera.id, "name": camera.display_name or camera.type}
+        for camera in api.bootstrap.cameras.values()
+    )
 
     return options
 
@@ -224,6 +234,17 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_set_method="set_chime_type",
         ufp_perm=PermRequired.WRITE,
     ),
+    ProtectSelectEntityDescription(
+        key="hdr_mode",
+        name="HDR Mode",
+        icon="mdi:brightness-7",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="feature_flags.has_hdr",
+        ufp_options=HDR_MODES,
+        ufp_value="hdr_mode_display",
+        ufp_set_method="set_hdr_mode",
+        ufp_perm=PermRequired.WRITE,
+    ),
 )
 
 LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
@@ -306,7 +327,8 @@ async def async_setup_entry(
     """Set up number entities for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         entities = async_all_device_entities(
             data,
             ProtectSelects,

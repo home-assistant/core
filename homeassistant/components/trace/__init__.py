@@ -1,4 +1,5 @@
 """Support for script and automation tracing and debugging."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -39,7 +40,7 @@ TRACE_CONFIG_SCHEMA = {
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-TraceData = dict[str, LimitedSizeDict[str, BaseTrace]]
+type TraceData = dict[str, LimitedSizeDict[str, BaseTrace]]
 
 
 @callback
@@ -110,13 +111,9 @@ async def async_list_contexts(
 
 def _get_debug_traces(hass: HomeAssistant, key: str) -> list[dict[str, Any]]:
     """Return a serializable list of debug traces for a script or automation."""
-    traces: list[dict[str, Any]] = []
-
     if traces_for_key := _get_data(hass).get(key):
-        for trace in traces_for_key.values():
-            traces.append(trace.as_short_dict())
-
-    return traces
+        return [trace.as_short_dict() for trace in traces_for_key.values()]
+    return []
 
 
 async def async_list_traces(
@@ -176,7 +173,7 @@ async def async_restore_traces(hass: HomeAssistant) -> None:
         restored_traces = {}
 
     for key, traces in restored_traces.items():
-        # Add stored traces in reversed order to priorize the newest traces
+        # Add stored traces in reversed order to prioritize the newest traces
         for json_trace in reversed(traces):
             if (
                 (stored_traces := _get_data(hass).get(key))
@@ -188,7 +185,7 @@ async def async_restore_traces(hass: HomeAssistant) -> None:
             try:
                 trace = RestoredTrace(json_trace)
             # Catch any exception to not blow up if the stored trace is invalid
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Failed to restore trace")
                 continue
             _async_store_restored_trace(hass, trace)

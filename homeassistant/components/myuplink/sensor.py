@@ -27,7 +27,7 @@ from homeassistant.helpers.typing import StateType
 from . import MyUplinkDataCoordinator
 from .const import DOMAIN
 from .entity import MyUplinkEntity
-from .helpers import find_matching_platform
+from .helpers import find_matching_platform, skip_entity
 
 DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "°C": SensorEntityDescription(
@@ -81,10 +81,10 @@ DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "m3/h": SensorEntityDescription(
         key="airflow",
+        translation_key="airflow",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-        icon="mdi:weather-windy",
     ),
     "s": SensorEntityDescription(
         key="seconds",
@@ -101,22 +101,22 @@ CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SensorEntityDescription]] = {
     "NIBEF": {
         "43108": SensorEntityDescription(
             key="fan_mode",
-            icon="mdi:fan",
+            translation_key="fan_mode",
         ),
         "43427": SensorEntityDescription(
             key="status_compressor",
+            translation_key="status_compressor",
             device_class=SensorDeviceClass.ENUM,
-            icon="mdi:heat-pump-outline",
         ),
         "49993": SensorEntityDescription(
             key="elect_add",
+            translation_key="elect_add",
             device_class=SensorDeviceClass.ENUM,
-            icon="mdi:heat-wave",
         ),
         "49994": SensorEntityDescription(
             key="priority",
+            translation_key="priority",
             device_class=SensorDeviceClass.ENUM,
-            icon="mdi:priority-high",
         ),
     },
     "NIBE": {},
@@ -155,6 +155,8 @@ async def async_setup_entry(
     # Setup device point sensors
     for device_id, point_data in coordinator.data.points.items():
         for point_id, device_point in point_data.items():
+            if skip_entity(device_point.category, device_point):
+                continue
             if find_matching_platform(device_point) == Platform.SENSOR:
                 description = get_description(device_point)
                 entity_class = MyUplinkDevicePointSensor
@@ -206,7 +208,8 @@ class MyUplinkDevicePointSensor(MyUplinkEntity, SensorEntity):
 
         # Internal properties
         self.point_id = device_point.parameter_id
-        self._attr_name = device_point.parameter_name.replace("\u002d", "")
+        # Remove soft hyphens
+        self._attr_name = device_point.parameter_name.replace("\u00ad", "")
 
         if entity_description is not None:
             self.entity_description = entity_description

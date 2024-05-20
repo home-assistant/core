@@ -1,4 +1,5 @@
 """Define test fixtures for RainMachine."""
+
 import json
 from unittest.mock import AsyncMock, patch
 
@@ -129,13 +130,16 @@ def data_zones_fixture():
 @pytest.fixture(name="setup_rainmachine")
 async def setup_rainmachine_fixture(hass, client, config):
     """Define a fixture to set up RainMachine."""
-    with patch(
-        "homeassistant.components.rainmachine.Client", return_value=client
-    ), patch(
-        "homeassistant.components.rainmachine.config_flow.Client", return_value=client
-    ), patch(
-        "homeassistant.components.rainmachine.PLATFORMS",
-        [],
+    with (
+        patch("homeassistant.components.rainmachine.Client", return_value=client),
+        patch(
+            "homeassistant.components.rainmachine.config_flow.Client",
+            return_value=client,
+        ),
+        patch(
+            "homeassistant.components.rainmachine.PLATFORMS",
+            [],
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

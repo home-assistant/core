@@ -1,4 +1,5 @@
 """Test configuration for the ZHA component."""
+
 from collections.abc import Callable, Generator
 import itertools
 import time
@@ -38,9 +39,10 @@ from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 FIXTURE_GRP_ID = 0x1001
 FIXTURE_GRP_NAME = "fixture group"
+COUNTER_NAMES = ["counter_1", "counter_2", "counter_3"]
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def disable_request_retry_delay():
     """Disable ZHA request retrying delay to speed up failures."""
 
@@ -51,7 +53,7 @@ def disable_request_retry_delay():
         yield
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def globally_load_quirks():
     """Load quirks automatically so that ZHA tests run deterministically in isolation.
 
@@ -155,12 +157,7 @@ async def zigpy_app_controller():
             zigpy.config.CONF_NWK_BACKUP_ENABLED: False,
             zigpy.config.CONF_TOPO_SCAN_ENABLED: False,
             zigpy.config.CONF_OTA: {
-                zigpy.config.CONF_OTA_IKEA: False,
-                zigpy.config.CONF_OTA_INOVELLI: False,
-                zigpy.config.CONF_OTA_LEDVANCE: False,
-                zigpy.config.CONF_OTA_SALUS: False,
-                zigpy.config.CONF_OTA_SONOFF: False,
-                zigpy.config.CONF_OTA_THIRDREALITY: False,
+                zigpy.config.CONF_OTA_ENABLED: False,
             },
         }
     )
@@ -173,6 +170,10 @@ async def zigpy_app_controller():
     app.state.network_info.extended_pan_id = app.state.node_info.ieee
     app.state.network_info.channel = 15
     app.state.network_info.network_key.key = zigpy.types.KeyData(range(16))
+    app.state.counters = zigpy.state.CounterGroups()
+    app.state.counters["ezsp_counters"] = zigpy.state.CounterGroup("ezsp_counters")
+    for name in COUNTER_NAMES:
+        app.state.counters["ezsp_counters"][name].increment()
 
     # Create a fake coordinator device
     dev = app.add_device(nwk=app.state.node_info.nwk, ieee=app.state.node_info.ieee)
@@ -226,12 +227,15 @@ def mock_zigpy_connect(
     zigpy_app_controller: ControllerApplication,
 ) -> Generator[ControllerApplication, None, None]:
     """Patch the zigpy radio connection with our mock application."""
-    with patch(
-        "bellows.zigbee.application.ControllerApplication.new",
-        return_value=zigpy_app_controller,
-    ), patch(
-        "bellows.zigbee.application.ControllerApplication",
-        return_value=zigpy_app_controller,
+    with (
+        patch(
+            "bellows.zigbee.application.ControllerApplication.new",
+            return_value=zigpy_app_controller,
+        ),
+        patch(
+            "bellows.zigbee.application.ControllerApplication",
+            return_value=zigpy_app_controller,
+        ),
     ):
         yield zigpy_app_controller
 
@@ -418,12 +422,11 @@ def zha_device_mock(
         zigpy_device = zigpy_device_mock(
             endpoints, ieee, manufacturer, model, node_desc, patch_cluster=patch_cluster
         )
-        zha_device = zha_core_device.ZHADevice(
+        return zha_core_device.ZHADevice(
             hass,
             zigpy_device,
             ZHAGateway(hass, {}, config_entry),
         )
-        return zha_device
 
     return _zha_device
 
@@ -542,6 +545,5 @@ def core_rs(hass_storage):
                 }
             ],
         }
-        return
 
     return _storage

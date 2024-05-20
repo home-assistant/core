@@ -1,4 +1,5 @@
 """Support for MotionMount binary sensors."""
+
 import motionmount
 
 from homeassistant.components.binary_sensor import (

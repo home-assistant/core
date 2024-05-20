@@ -1,4 +1,5 @@
 """Tests for the Zamg config flow."""
+
 from unittest.mock import MagicMock
 
 from zamg.exceptions import ZamgApiError
@@ -22,14 +23,14 @@ async def test_full_user_flow_implementation(
         context={"source": SOURCE_USER},
     )
     assert result.get("step_id") == "user"
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     LOGGER.debug(result)
     assert result.get("data_schema") != ""
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_STATION_ID: TEST_STATION_ID},
     )
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert "data" in result
     assert result["data"][CONF_STATION_ID] == TEST_STATION_ID
     assert "result" in result
@@ -47,7 +48,7 @@ async def test_error_closest_station(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "cannot_connect"
 
 
@@ -62,7 +63,7 @@ async def test_error_update(
         context={"source": SOURCE_USER},
     )
     assert result.get("step_id") == "user"
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     LOGGER.debug(result)
     assert result.get("data_schema") != ""
     mock_zamg.update.side_effect = ZamgApiError
@@ -70,7 +71,7 @@ async def test_error_update(
         result["flow_id"],
         user_input={CONF_STATION_ID: TEST_STATION_ID},
     )
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "cannot_connect"
 
 
@@ -86,12 +87,12 @@ async def test_user_flow_duplicate(
     )
 
     assert result.get("step_id") == "user"
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_STATION_ID: TEST_STATION_ID},
     )
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert "data" in result
     assert result["data"][CONF_STATION_ID] == TEST_STATION_ID
     assert "result" in result
@@ -102,10 +103,10 @@ async def test_user_flow_duplicate(
         context={"source": SOURCE_USER},
     )
     assert result.get("step_id") == "user"
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_STATION_ID: TEST_STATION_ID},
     )
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"

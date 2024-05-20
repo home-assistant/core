@@ -1,10 +1,11 @@
 """Implement the Google Smart Home traits."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 import logging
-from typing import Any, TypeVar
+from typing import Any
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -241,10 +242,8 @@ COVER_VALVE_DOMAINS = {cover.DOMAIN, valve.DOMAIN}
 
 FRIENDLY_DOMAIN = {cover.DOMAIN: "Cover", valve.DOMAIN: "Valve"}
 
-_TraitT = TypeVar("_TraitT", bound="_Trait")
 
-
-def register_trait(trait: type[_TraitT]) -> type[_TraitT]:
+def register_trait[_TraitT: _Trait](trait: type[_TraitT]) -> type[_TraitT]:
     """Decorate a class to register a trait."""
     TRAITS.append(trait)
     return trait
@@ -1926,9 +1925,7 @@ class ModesTrait(_Trait):
             # Shortcut since all domains are currently unique
             break
 
-        payload = {"availableModes": modes}
-
-        return payload
+        return {"availableModes": modes}
 
     def query_attributes(self):
         """Return current modes."""
@@ -1942,9 +1939,7 @@ class ModesTrait(_Trait):
         elif self.state.domain == media_player.DOMAIN:
             if media_player.ATTR_SOUND_MODE_LIST in attrs:
                 mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
-        elif self.state.domain == input_select.DOMAIN:
-            mode_settings["option"] = self.state.state
-        elif self.state.domain == select.DOMAIN:
+        elif self.state.domain in (input_select.DOMAIN, select.DOMAIN):
             mode_settings["option"] = self.state.state
         elif self.state.domain == humidifier.DOMAIN:
             if ATTR_MODE in attrs:
@@ -2105,9 +2100,7 @@ class InputSelectorTrait(_Trait):
             for source in sourcelist
         ]
 
-        payload = {"availableInputs": inputs, "orderedInputs": True}
-
-        return payload
+        return {"availableInputs": inputs, "orderedInputs": True}
 
     def query_attributes(self):
         """Return current modes."""
@@ -2708,10 +2701,9 @@ class SensorStateTrait(_Trait):
     name = TRAIT_SENSOR_STATE
     commands: list[str] = []
 
-    def _air_quality_description_for_aqi(self, aqi):
-        if aqi is None or aqi.isnumeric() is False:
+    def _air_quality_description_for_aqi(self, aqi: float | None) -> str:
+        if aqi is None or aqi < 0:
             return "unknown"
-        aqi = int(aqi)
         if aqi <= 50:
             return "healthy"
         if aqi <= 100:
@@ -2766,11 +2758,17 @@ class SensorStateTrait(_Trait):
         if device_class is None or data is None:
             return {}
 
-        sensor_data = {"name": data[0], "rawValue": self.state.state}
+        try:
+            value = float(self.state.state)
+        except ValueError:
+            value = None
+        if self.state.state == STATE_UNKNOWN:
+            value = None
+        sensor_data = {"name": data[0], "rawValue": value}
 
         if device_class == sensor.SensorDeviceClass.AQI:
             sensor_data["currentSensorState"] = self._air_quality_description_for_aqi(
-                self.state.state
+                value
             )
 
         return {"currentSensorStateData": [sensor_data]}

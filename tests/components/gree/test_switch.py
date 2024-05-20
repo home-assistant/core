@@ -1,4 +1,5 @@
 """Tests for gree component."""
+
 from unittest.mock import patch
 
 from greeclimate.exceptions import DeviceTimeoutError

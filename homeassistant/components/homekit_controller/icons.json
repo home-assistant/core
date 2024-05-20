@@ -1,0 +1,53 @@
+{
+  "entity": {
+    "button": {
+      "setup": {
+        "default": "mdi:cog"
+      }
+    },
+    "number": {
+      "spray_quantity": {
+        "default": "mdi:water"
+      },
+      "elevation": {
+        "default": "mdi:elevation-rise"
+      },
+      "volume": {
+        "default": "mdi:volume-high"
+      },
+      "duration": {
+        "default": "mdi:timer"
+      },
+      "sensitivity": {
+        "default": "mdi:knob"
+      }
+    },
+    "select": {
+      "temperature_display_units": {
+        "default": "mdi:thermometer"
+      }
+    },
+    "sensor": {
+      "valve_position": {
+        "default": "mdi:pipe-valve"
+      }
+    },
+    "switch": {
+      "pairing_mode": {
+        "default": "mdi:lock-open"
+      },
+      "lock_physical_controls": {
+        "default": "mdi:lock-open"
+      },
+      "mute": {
+        "default": "mdi:volume-mute"
+      },
+      "sleep_mode": {
+        "default": "mdi:power-sleep"
+      },
+      "valve": {
+        "default": "mdi:water"
+      }
+    }
+  }
+}

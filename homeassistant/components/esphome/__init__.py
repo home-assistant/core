@@ -1,4 +1,5 @@
 """Support for esphome devices."""
+
 from __future__ import annotations
 
 from aioesphomeapi import APIClient

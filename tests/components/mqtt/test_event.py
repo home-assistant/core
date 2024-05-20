@@ -1,4 +1,5 @@
 """The tests for the MQTT event platform."""
+
 import copy
 import json
 from unittest.mock import patch
@@ -8,7 +9,7 @@ import pytest
 
 from homeassistant.components import event, mqtt
 from homeassistant.components.mqtt.event import MQTT_EVENT_ATTRIBUTES_BLOCKED
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -62,13 +63,6 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def event_platform_only():
-    """Only setup the event platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.EVENT]):
-        yield
 
 
 @pytest.mark.freeze_time("2023-08-01 00:00:00+00:00")
@@ -469,12 +463,12 @@ async def test_discovery_update_event_template(
     config2["name"] = "Milk"
     config1["state_topic"] = "event/state1"
     config2["state_topic"] = "event/state1"
-    config1[
-        "value_template"
-    ] = '{"event_type": "press", "val": "{{ value_json.val | int }}"}'
-    config2[
-        "value_template"
-    ] = '{"event_type": "press", "val": "{{ value_json.val | int * 2 }}"}'
+    config1["value_template"] = (
+        '{"event_type": "press", "val": "{{ value_json.val | int }}"}'
+    )
+    config2["value_template"] = (
+        '{"event_type": "press", "val": "{{ value_json.val | int * 2 }}"}'
+    )
 
     async_fire_mqtt_message(hass, "homeassistant/event/bla/config", json.dumps(config1))
     await hass.async_block_till_done()

@@ -1,4 +1,5 @@
 """Closures cluster handlers module for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -95,8 +96,7 @@ class DoorLockClusterHandler(ClusterHandler):
     async def async_get_user_code(self, code_slot: int) -> int:
         """Get the user code from the code slot."""
 
-        result = await self.get_pin_code(code_slot - 1)
-        return result
+        return await self.get_pin_code(code_slot - 1)
 
     async def async_clear_user_code(self, code_slot: int) -> None:
         """Clear the code slot."""
@@ -116,8 +116,7 @@ class DoorLockClusterHandler(ClusterHandler):
     async def async_get_user_type(self, code_slot: int) -> str:
         """Get user type."""
 
-        result = await self.get_user_type(code_slot - 1)
-        return result
+        return await self.get_user_type(code_slot - 1)
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(Shade.cluster_id)

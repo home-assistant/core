@@ -1,4 +1,5 @@
 """Binary sensor platform for mobile_app."""
+
 from typing import Any
 
 from homeassistant.components.binary_sensor import BinarySensorEntity

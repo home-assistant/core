@@ -1,4 +1,5 @@
 """Test the Energy websocket API."""
+
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
@@ -89,6 +90,7 @@ async def test_save_preferences(
     mock_energy_platform,
 ) -> None:
     """Test we can save preferences."""
+    await hass.async_block_till_done()
     client = await hass_ws_client(hass)
 
     # Test saving default prefs is also valid.
@@ -283,6 +285,7 @@ async def test_get_solar_forecast(
     entry.add_to_hass(hass)
 
     manager = await data.async_get_manager(hass)
+
     manager.data = data.EnergyManager.default_preferences()
     manager.data["energy_sources"].append(
         {
@@ -292,6 +295,7 @@ async def test_get_solar_forecast(
         }
     )
     client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
 
     await client.send_json({"id": 5, "type": "energy/solar_forecast"})
 

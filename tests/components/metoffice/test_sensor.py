@@ -1,4 +1,5 @@
 """The tests for the Met Office sensor component."""
+
 import datetime
 import json
 
@@ -30,7 +31,7 @@ async def test_one_sensor_site_running(
 ) -> None:
     """Test the Met Office sensor platform."""
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(load_fixture("metoffice.json"))
+    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
     all_sites = json.dumps(mock_json["all_sites"])
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
@@ -79,7 +80,7 @@ async def test_two_sensor_sites_running(
     """Test we handle two sets of sensors running for two different sites."""
 
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(load_fixture("metoffice.json"))
+    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
     all_sites = json.dumps(mock_json["all_sites"])
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])

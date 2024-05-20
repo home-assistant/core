@@ -1,4 +1,5 @@
 """Test Xiaomi BLE events."""
+
 import pytest
 
 from homeassistant.components import automation
@@ -68,6 +69,58 @@ async def test_event_button_press(hass: HomeAssistant) -> None:
     assert len(events) == 1
     assert events[0].data["address"] == "54:EF:44:E3:9C:BC"
     assert events[0].data["event_type"] == "press"
+    assert events[0].data["event_properties"] is None
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_event_unlock_outside_the_door(hass: HomeAssistant) -> None:
+    """Make sure that a unlock outside the door event is fired."""
+    mac = "D7:1F:44:EB:8A:91"
+    entry = await _async_setup_xiaomi_device(hass, mac)
+    events = async_capture_events(hass, "xiaomi_ble_event")
+
+    # Emit button press event
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            mac,
+            b"PD\x9e\x06C\x91\x8a\xebD\x1f\xd7\x0b\x00\t" b" \x02\x00\x01\x80|D/a",
+        ),
+    )
+
+    # wait for the event
+    await hass.async_block_till_done()
+    assert len(events) == 1
+    assert events[0].data["address"] == "D7:1F:44:EB:8A:91"
+    assert events[0].data["event_type"] == "unlock_outside_the_door"
+    assert events[0].data["event_properties"] is None
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_event_successful_fingerprint_match_the_door(hass: HomeAssistant) -> None:
+    """Make sure that a successful fingerprint match event is fired."""
+    mac = "D7:1F:44:EB:8A:91"
+    entry = await _async_setup_xiaomi_device(hass, mac)
+    events = async_capture_events(hass, "xiaomi_ble_event")
+
+    # Emit button press event
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            mac,
+            b"PD\x9e\x06B\x91\x8a\xebD\x1f\xd7" b"\x06\x00\x05\xff\xff\xff\xff\x00",
+        ),
+    )
+
+    # wait for the event
+    await hass.async_block_till_done()
+    assert len(events) == 1
+    assert events[0].data["address"] == "D7:1F:44:EB:8A:91"
+    assert events[0].data["event_type"] == "match_successful"
     assert events[0].data["event_properties"] is None
 
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -192,6 +245,47 @@ async def test_get_triggers_double_button(hass: HomeAssistant) -> None:
         CONF_DEVICE_ID: device.id,
         CONF_TYPE: "button_right",
         CONF_SUBTYPE: "long_press",
+        "metadata": {},
+    }
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
+    assert expected_trigger in triggers
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_get_triggers_lock(hass: HomeAssistant) -> None:
+    """Test that we get the expected triggers from a Xiaomi BLE lock with fingerprint scanner."""
+    mac = "98:0C:33:A3:04:3D"
+    data = {"bindkey": "54d84797cb77f9538b224b305c877d1e"}
+    entry = await _async_setup_xiaomi_device(hass, mac, data)
+    events = async_capture_events(hass, "xiaomi_ble_event")
+
+    # Emit unlock inside the door event so it creates the device in the registry
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            mac,
+            b"\x48\x55\xc2\x11\x16\x50\x68\xb6\xfe\x3c\x87"
+            b"\x80\x95\xc8\xa5\x83\x4f\x00\x00\x00\x46\x32\x21\xc6",
+        ),
+    )
+
+    # wait for the event
+    await hass.async_block_till_done()
+    assert len(events) == 1
+
+    dev_reg = async_get_dev_reg(hass)
+    device = dev_reg.async_get_device(identifiers={get_device_id(mac)})
+    assert device
+    expected_trigger = {
+        CONF_PLATFORM: "device",
+        CONF_DOMAIN: DOMAIN,
+        CONF_DEVICE_ID: device.id,
+        CONF_TYPE: "fingerprint",
+        CONF_SUBTYPE: "skin_is_too_dry",
         "metadata": {},
     }
     triggers = await async_get_device_automations(
@@ -428,7 +522,7 @@ async def test_if_fires_on_motion_detected(hass: HomeAssistant, calls) -> None:
     # Creates the device in the registry
     inject_bluetooth_service_info_bleak(
         hass,
-        make_advertisement(mac, b"@0\xdd\x03$\x0A\x10\x01\x64"),
+        make_advertisement(mac, b"@0\xdd\x03$\x0a\x10\x01\x64"),
     )
 
     # wait for the device being created

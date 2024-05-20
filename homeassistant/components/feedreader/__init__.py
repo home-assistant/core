@@ -1,4 +1,5 @@
 """Support for RSS/Atom feeds."""
+
 from __future__ import annotations
 
 from calendar import timegm
@@ -116,7 +117,7 @@ class FeedManager:
     def _update(self) -> struct_time | None:
         """Update the feed and publish new entries to the event bus."""
         _LOGGER.debug("Fetching new data from feed %s", self._url)
-        self._feed: feedparser.FeedParserDict = feedparser.parse(  # type: ignore[no-redef]
+        self._feed = feedparser.parse(
             self._url,
             etag=None if not self._feed else self._feed.get("etag"),
             modified=None if not self._feed else self._feed.get("modified"),

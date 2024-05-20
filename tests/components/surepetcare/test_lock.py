@@ -1,4 +1,5 @@
 """The tests for the Sure Petcare lock platform."""
+
 import pytest
 from surepy.exceptions import SurePetcareError
 

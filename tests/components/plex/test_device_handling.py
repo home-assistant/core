@@ -1,4 +1,5 @@
 """Tests for handling the device registry."""
+
 import requests_mock
 
 from homeassistant.components.plex.const import DOMAIN

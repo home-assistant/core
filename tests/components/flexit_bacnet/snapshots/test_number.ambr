@@ -21,6 +21,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -49,6 +51,7 @@
     'context': <ANY>,
     'entity_id': 'number.device_name_away_extract_fan_setpoint',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30',
   })
@@ -75,6 +78,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -103,6 +108,7 @@
     'context': <ANY>,
     'entity_id': 'number.device_name_away_supply_fan_setpoint',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40',
   })
@@ -129,6 +135,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -157,6 +165,7 @@
     'context': <ANY>,
     'entity_id': 'number.device_name_cooker_hood_extract_fan_setpoint',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '90',
   })
@@ -183,6 +192,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -211,6 +222,7 @@
     'context': <ANY>,
     'entity_id': 'number.device_name_cooker_hood_supply_fan_setpoint',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
@@ -237,6 +249,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -265,6 +279,7 @@
     'context': <ANY>,
     'entity_id': 'number.device_name_fireplace_extract_fan_setpoint',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
@@ -291,6 +306,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -319,6 +336,7 @@
     'context': <ANY>,
     'entity_id': 'number.device_name_fireplace_supply_fan_setpoint',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
@@ -345,6 +363,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -373,6 +393,7 @@
     'context': <ANY>,
     'entity_id': 'number.device_name_high_extract_fan_setpoint',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '70',
   })
@@ -399,6 +420,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -427,6 +450,7 @@
     'context': <ANY>,
     'entity_id': 'number.device_name_high_supply_fan_setpoint',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '80',
   })
@@ -453,6 +477,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -481,6 +507,7 @@
     'context': <ANY>,
     'entity_id': 'number.device_name_home_extract_fan_setpoint',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50',
   })
@@ -507,6 +534,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -535,6 +564,7 @@
     'context': <ANY>,
     'entity_id': 'number.device_name_home_supply_fan_setpoint',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '60',
   })

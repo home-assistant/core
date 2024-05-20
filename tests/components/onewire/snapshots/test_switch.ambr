@@ -30,6 +30,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2405',
       'name': '05.111111111111',
@@ -59,6 +61,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -85,6 +89,7 @@
       'context': <ANY>,
       'entity_id': 'switch.05_111111111111_programmed_input_output',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -109,6 +114,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS18S20',
       'name': '10.111111111111',
@@ -147,6 +154,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2406',
       'name': '12.111111111111',
@@ -176,6 +185,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -205,6 +216,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -234,6 +247,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -263,6 +278,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -289,6 +306,7 @@
       'context': <ANY>,
       'entity_id': 'switch.12_111111111111_programmed_input_output_a',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -301,6 +319,7 @@
       'context': <ANY>,
       'entity_id': 'switch.12_111111111111_programmed_input_output_b',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -313,6 +332,7 @@
       'context': <ANY>,
       'entity_id': 'switch.12_111111111111_latch_a',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -325,9 +345,22 @@
       'context': <ANY>,
       'entity_id': 'switch.12_111111111111_latch_b',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
+  ])
+# ---
+# name: test_switches[16.111111111111]
+  list([
+  ])
+# ---
+# name: test_switches[16.111111111111].1
+  list([
+  ])
+# ---
+# name: test_switches[16.111111111111].2
+  list([
   ])
 # ---
 # name: test_switches[1D.111111111111]
@@ -349,6 +382,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2423',
       'name': '1D.111111111111',
@@ -387,6 +422,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2409',
       'name': '1F.111111111111',
@@ -413,6 +450,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2423',
       'name': '1D.111111111111',
@@ -451,6 +490,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS1822',
       'name': '22.111111111111',
@@ -489,6 +530,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2438',
       'name': '26.111111111111',
@@ -518,6 +561,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -544,6 +589,7 @@
       'context': <ANY>,
       'entity_id': 'switch.26_111111111111_current_a_d_control',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -568,6 +614,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS18B20',
       'name': '28.111111111111',
@@ -606,6 +654,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS18B20',
       'name': '28.222222222222',
@@ -644,6 +694,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS18B20',
       'name': '28.222222222223',
@@ -682,6 +734,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2408',
       'name': '29.111111111111',
@@ -711,6 +765,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -740,6 +796,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -769,6 +827,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -798,6 +858,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -827,6 +889,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -856,6 +920,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -885,6 +951,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -914,6 +982,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -943,6 +1013,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -972,6 +1044,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1001,6 +1075,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1030,6 +1106,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1059,6 +1137,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1088,6 +1168,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1117,6 +1199,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1146,6 +1230,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1172,6 +1258,7 @@
       'context': <ANY>,
       'entity_id': 'switch.29_111111111111_programmed_input_output_0',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -1184,6 +1271,7 @@
       'context': <ANY>,
       'entity_id': 'switch.29_111111111111_programmed_input_output_1',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -1196,6 +1284,7 @@
       'context': <ANY>,
       'entity_id': 'switch.29_111111111111_programmed_input_output_2',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -1203,13 +1292,14 @@
       'attributes': ReadOnlyDict({
         'device_file': '/29.111111111111/PIO.3',
         'friendly_name': '29.111111111111 Programmed input-output 3',
-        'raw_value': 0.0,
+        'raw_value': None,
       }),
       'context': <ANY>,
       'entity_id': 'switch.29_111111111111_programmed_input_output_3',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': 'off',
+      'state': 'unknown',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -1220,6 +1310,7 @@
       'context': <ANY>,
       'entity_id': 'switch.29_111111111111_programmed_input_output_4',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -1232,6 +1323,7 @@
       'context': <ANY>,
       'entity_id': 'switch.29_111111111111_programmed_input_output_5',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -1244,6 +1336,7 @@
       'context': <ANY>,
       'entity_id': 'switch.29_111111111111_programmed_input_output_6',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -1256,6 +1349,7 @@
       'context': <ANY>,
       'entity_id': 'switch.29_111111111111_programmed_input_output_7',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -1268,6 +1362,7 @@
       'context': <ANY>,
       'entity_id': 'switch.29_111111111111_latch_0',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -1280,6 +1375,7 @@
       'context': <ANY>,
       'entity_id': 'switch.29_111111111111_latch_1',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -1292,6 +1388,7 @@
       'context': <ANY>,
       'entity_id': 'switch.29_111111111111_latch_2',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -1304,6 +1401,7 @@
       'context': <ANY>,
       'entity_id': 'switch.29_111111111111_latch_3',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -1316,6 +1414,7 @@
       'context': <ANY>,
       'entity_id': 'switch.29_111111111111_latch_4',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -1328,6 +1427,7 @@
       'context': <ANY>,
       'entity_id': 'switch.29_111111111111_latch_5',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -1340,6 +1440,7 @@
       'context': <ANY>,
       'entity_id': 'switch.29_111111111111_latch_6',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -1352,6 +1453,7 @@
       'context': <ANY>,
       'entity_id': 'switch.29_111111111111_latch_7',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -1376,6 +1478,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2760',
       'name': '30.111111111111',
@@ -1414,6 +1518,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2413',
       'name': '3A.111111111111',
@@ -1443,6 +1549,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1472,6 +1580,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1498,6 +1608,7 @@
       'context': <ANY>,
       'entity_id': 'switch.3a_111111111111_programmed_input_output_a',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -1510,6 +1621,7 @@
       'context': <ANY>,
       'entity_id': 'switch.3a_111111111111_programmed_input_output_b',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -1534,6 +1646,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS1825',
       'name': '3B.111111111111',
@@ -1572,6 +1686,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS28EA00',
       'name': '42.111111111111',
@@ -1610,6 +1726,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Embedded Data Systems',
       'model': 'EDS0068',
       'name': '7E.111111111111',
@@ -1648,6 +1766,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Embedded Data Systems',
       'model': 'EDS0066',
       'name': '7E.222222222222',
@@ -1665,6 +1785,90 @@
 # ---
 # name: test_switches[7E.222222222222].2
   list([
+  ])
+# ---
+# name: test_switches[A6.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          'A6.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2438',
+      'name': 'A6.111111111111',
+      'name_by_user': None,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switches[A6.111111111111].1
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.a6_111111111111_current_a_d_control',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Current A/D control',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'iad',
+      'unique_id': '/A6.111111111111/IAD',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_switches[A6.111111111111].2
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/A6.111111111111/IAD',
+        'friendly_name': 'A6.111111111111 Current A/D control',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.a6_111111111111_current_a_d_control',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
   ])
 # ---
 # name: test_switches[EF.111111111111]
@@ -1686,6 +1890,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Hobby Boards',
       'model': 'HobbyBoards_EF',
       'name': 'EF.111111111111',
@@ -1724,6 +1930,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Hobby Boards',
       'model': 'HB_MOISTURE_METER',
       'name': 'EF.111111111112',
@@ -1753,6 +1961,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1782,6 +1992,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1811,6 +2023,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1840,6 +2054,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1869,6 +2085,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1898,6 +2116,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1927,6 +2147,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1956,6 +2178,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1982,6 +2206,7 @@
       'context': <ANY>,
       'entity_id': 'switch.ef_111111111112_leaf_sensor_0',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -1994,6 +2219,7 @@
       'context': <ANY>,
       'entity_id': 'switch.ef_111111111112_leaf_sensor_1',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -2006,6 +2232,7 @@
       'context': <ANY>,
       'entity_id': 'switch.ef_111111111112_leaf_sensor_2',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -2018,6 +2245,7 @@
       'context': <ANY>,
       'entity_id': 'switch.ef_111111111112_leaf_sensor_3',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -2030,6 +2258,7 @@
       'context': <ANY>,
       'entity_id': 'switch.ef_111111111112_moisture_sensor_0',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -2042,6 +2271,7 @@
       'context': <ANY>,
       'entity_id': 'switch.ef_111111111112_moisture_sensor_1',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -2054,6 +2284,7 @@
       'context': <ANY>,
       'entity_id': 'switch.ef_111111111112_moisture_sensor_2',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -2066,6 +2297,7 @@
       'context': <ANY>,
       'entity_id': 'switch.ef_111111111112_moisture_sensor_3',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -2090,6 +2322,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Hobby Boards',
       'model': 'HB_HUB',
       'name': 'EF.111111111113',
@@ -2119,6 +2353,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2148,6 +2384,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2177,6 +2415,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2206,6 +2446,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2232,6 +2474,7 @@
       'context': <ANY>,
       'entity_id': 'switch.ef_111111111113_hub_branch_0',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -2244,6 +2487,7 @@
       'context': <ANY>,
       'entity_id': 'switch.ef_111111111113_hub_branch_1',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -2256,6 +2500,7 @@
       'context': <ANY>,
       'entity_id': 'switch.ef_111111111113_hub_branch_2',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -2268,6 +2513,7 @@
       'context': <ANY>,
       'entity_id': 'switch.ef_111111111113_hub_branch_3',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),

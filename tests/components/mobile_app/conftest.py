@@ -1,4 +1,5 @@
 """Tests for mobile_app component."""
+
 from http import HTTPStatus
 
 import pytest

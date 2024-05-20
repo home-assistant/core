@@ -1,4 +1,5 @@
 """Data template classes for discovery used to generate additional data for setup."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping

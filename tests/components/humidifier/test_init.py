@@ -1,4 +1,5 @@
 """The tests for the humidifier component."""
+
 from enum import Enum
 from types import ModuleType
 from unittest.mock import MagicMock
@@ -48,10 +49,7 @@ async def test_sync_turn_off(hass: HomeAssistant) -> None:
 
 
 def _create_tuples(enum: Enum, constant_prefix: str) -> list[tuple[Enum, str]]:
-    result = []
-    for enum in enum:
-        result.append((enum, constant_prefix))
-    return result
+    return [(enum_field, constant_prefix) for enum_field in enum]
 
 
 @pytest.mark.parametrize(

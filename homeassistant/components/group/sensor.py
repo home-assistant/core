@@ -52,8 +52,8 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
-from . import DOMAIN as GROUP_DOMAIN, GroupEntity
-from .const import CONF_IGNORE_NON_NUMERIC
+from .const import CONF_IGNORE_NON_NUMERIC, DOMAIN as GROUP_DOMAIN
+from .entity import GroupEntity
 
 DEFAULT_NAME = "Sensor Group"
 
@@ -66,6 +66,7 @@ ATTR_MEDIAN = "median"
 ATTR_LAST = "last"
 ATTR_LAST_ENTITY_ID = "last_entity_id"
 ATTR_RANGE = "range"
+ATTR_STDEV = "stdev"
 ATTR_SUM = "sum"
 ATTR_PRODUCT = "product"
 SENSOR_TYPES = {
@@ -75,6 +76,7 @@ SENSOR_TYPES = {
     ATTR_MEDIAN: "median",
     ATTR_LAST: "last",
     ATTR_RANGE: "range",
+    ATTR_STDEV: "stdev",
     ATTR_SUM: "sum",
     ATTR_PRODUCT: "product",
 }
@@ -250,6 +252,16 @@ def calc_range(
     return {}, value
 
 
+def calc_stdev(
+    sensor_values: list[tuple[str, float, State]],
+) -> tuple[dict[str, str | None], float]:
+    """Calculate standard deviation value."""
+    result = (sensor_value for _, sensor_value, _ in sensor_values)
+
+    value: float = statistics.stdev(result)
+    return {}, value
+
+
 def calc_sum(
     sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float]:
@@ -284,6 +296,7 @@ CALC_TYPES: dict[
     "median": calc_median,
     "last": calc_last,
     "range": calc_range,
+    "stdev": calc_stdev,
     "sum": calc_sum,
     "product": calc_product,
 }
@@ -396,7 +409,7 @@ class SensorGroup(GroupEntity, SensorEntity):
                         self._state_incorrect.add(entity_id)
                         _LOGGER.warning(
                             "Unable to use state. Only entities with correct unit of measurement"
-                            " is supported when having a device class,"
+                            " is supported,"
                             " entity %s, value %s with device class %s"
                             " and unit of measurement %s excluded from calculation in %s",
                             entity_id,
@@ -548,19 +561,28 @@ class SensorGroup(GroupEntity, SensorEntity):
 
         # Ensure only valid unit of measurements for the specific device class can be used
         if (
-            # Test if uom's in device class is convertible
-            (device_class := self.device_class) in UNIT_CONVERTERS
-            and all(
-                uom in UNIT_CONVERTERS[device_class].VALID_UNITS
-                for uom in unit_of_measurements
+            (
+                # Test if uom's in device class is convertible
+                (device_class := self.device_class) in UNIT_CONVERTERS
+                and all(
+                    uom in UNIT_CONVERTERS[device_class].VALID_UNITS
+                    for uom in unit_of_measurements
+                )
             )
-        ) or (
-            # Test if uom's in device class is not convertible
-            device_class
-            and device_class not in UNIT_CONVERTERS
-            and device_class in DEVICE_CLASS_UNITS
-            and all(
-                uom in DEVICE_CLASS_UNITS[device_class] for uom in unit_of_measurements
+            or (
+                # Test if uom's in device class is not convertible
+                device_class
+                and device_class not in UNIT_CONVERTERS
+                and device_class in DEVICE_CLASS_UNITS
+                and all(
+                    uom in DEVICE_CLASS_UNITS[device_class]
+                    for uom in unit_of_measurements
+                )
+            )
+            or (
+                # Test no device class and all uom's are same
+                device_class is None
+                and all(x == unit_of_measurements[0] for x in unit_of_measurements)
             )
         ):
             async_delete_issue(
@@ -608,6 +630,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         """Return valid units.
 
         If device class is set and compatible unit of measurements.
+        If device class is not set, use one unit of measurement.
         """
         if (
             device_class := self.device_class
@@ -621,4 +644,6 @@ class SensorGroup(GroupEntity, SensorEntity):
         ):
             valid_uoms: set = DEVICE_CLASS_UNITS[device_class]
             return valid_uoms
+        if device_class is None and self.native_unit_of_measurement:
+            return {self.native_unit_of_measurement}
         return set()

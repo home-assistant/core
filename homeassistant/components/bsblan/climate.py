@@ -1,4 +1,5 @@
 """BSBLAN platform to control a compatible Climate Device."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -17,6 +18,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -26,7 +28,7 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util.enum import try_parse_enum
 
 from . import HomeAssistantBSBLANData
-from .const import ATTR_TARGET_TEMPERATURE, DOMAIN, LOGGER
+from .const import ATTR_TARGET_TEMPERATURE, DOMAIN
 from .entity import BSBLANEntity
 
 PARALLEL_UPDATES = 1
@@ -147,7 +149,11 @@ class BSBLANClimate(
         if self.hvac_mode == HVACMode.AUTO:
             await self.async_set_data(preset_mode=preset_mode)
         else:
-            LOGGER.error("Can't set preset mode when hvac mode is not auto")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="set_preset_mode_error",
+                translation_placeholders={"preset_mode": preset_mode},
+            )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
@@ -168,6 +174,10 @@ class BSBLANClimate(
                 data[ATTR_HVAC_MODE] = kwargs[ATTR_PRESET_MODE]
         try:
             await self.client.thermostat(**data)
-        except BSBLANError:
-            LOGGER.error("An error occurred while updating the BSBLAN device")
+        except BSBLANError as err:
+            raise HomeAssistantError(
+                "An error occurred while updating the BSBLAN device",
+                translation_domain=DOMAIN,
+                translation_key="set_data_error",
+            ) from err
         await self.coordinator.async_request_refresh()

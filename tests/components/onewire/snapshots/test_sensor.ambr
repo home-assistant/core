@@ -30,6 +30,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2405',
       'name': '05.111111111111',
@@ -68,6 +70,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS18S20',
       'name': '10.111111111111',
@@ -99,6 +103,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -128,6 +134,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.10_111111111111_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '25.1',
     }),
@@ -152,6 +159,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2406',
       'name': '12.111111111111',
@@ -183,6 +192,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -214,6 +225,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -243,6 +256,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.12_111111111111_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '25.1',
     }),
@@ -258,9 +272,22 @@
       'context': <ANY>,
       'entity_id': 'sensor.12_111111111111_pressure',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '1025.1',
     }),
+  ])
+# ---
+# name: test_sensors[16.111111111111]
+  list([
+  ])
+# ---
+# name: test_sensors[16.111111111111].1
+  list([
+  ])
+# ---
+# name: test_sensors[16.111111111111].2
+  list([
   ])
 # ---
 # name: test_sensors[1D.111111111111]
@@ -282,6 +309,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2423',
       'name': '1D.111111111111',
@@ -313,6 +342,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -344,6 +375,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -372,6 +405,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.1d_111111111111_counter_a',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '251123',
     }),
@@ -386,6 +420,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.1d_111111111111_counter_b',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '248125',
     }),
@@ -410,6 +445,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2409',
       'name': '1F.111111111111',
@@ -436,6 +473,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2423',
       'name': '1D.111111111111',
@@ -467,6 +506,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -498,6 +539,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -526,6 +569,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.1d_111111111111_counter_a',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '251123',
     }),
@@ -540,6 +584,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.1d_111111111111_counter_b',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '248125',
     }),
@@ -564,6 +609,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS1822',
       'name': '22.111111111111',
@@ -595,6 +642,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -624,6 +673,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.22_111111111111_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -648,6 +698,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2438',
       'name': '26.111111111111',
@@ -679,6 +731,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -710,6 +764,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -741,6 +797,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -772,6 +830,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -803,6 +863,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -834,6 +896,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -865,6 +929,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -896,6 +962,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -927,6 +995,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -958,6 +1028,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -989,6 +1061,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1018,6 +1092,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.26_111111111111_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '25.1',
     }),
@@ -1033,6 +1108,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.26_111111111111_humidity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '72.8',
     }),
@@ -1048,6 +1124,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.26_111111111111_hih3600_humidity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '73.8',
     }),
@@ -1063,6 +1140,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.26_111111111111_hih4000_humidity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '74.8',
     }),
@@ -1078,6 +1156,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.26_111111111111_hih5030_humidity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '75.8',
     }),
@@ -1093,6 +1172,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.26_111111111111_htm1735_humidity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -1108,6 +1188,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.26_111111111111_pressure',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '969.3',
     }),
@@ -1123,6 +1204,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.26_111111111111_illuminance',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '65.9',
     }),
@@ -1138,6 +1220,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.26_111111111111_vad_voltage',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '3.0',
     }),
@@ -1153,6 +1236,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.26_111111111111_vdd_voltage',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '4.7',
     }),
@@ -1168,6 +1252,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.26_111111111111_vis_voltage_difference',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '0.1',
     }),
@@ -1192,6 +1277,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS18B20',
       'name': '28.111111111111',
@@ -1223,6 +1310,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1252,6 +1341,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.28_111111111111_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '27.0',
     }),
@@ -1276,6 +1366,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS18B20',
       'name': '28.222222222222',
@@ -1307,6 +1399,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1336,6 +1430,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.28_222222222222_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '27.0',
     }),
@@ -1360,6 +1455,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS18B20',
       'name': '28.222222222223',
@@ -1391,6 +1488,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1420,6 +1519,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.28_222222222223_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '27.0',
     }),
@@ -1444,6 +1544,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2408',
       'name': '29.111111111111',
@@ -1482,6 +1584,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2760',
       'name': '30.111111111111',
@@ -1513,6 +1617,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1544,6 +1650,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1575,6 +1683,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1606,6 +1716,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1635,6 +1747,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.30_111111111111_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '27.0',
     }),
@@ -1650,6 +1763,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.30_111111111111_thermocouple_k_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '173.8',
     }),
@@ -1665,6 +1779,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.30_111111111111_voltage',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '3.0',
     }),
@@ -1680,6 +1795,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.30_111111111111_vis_voltage_gradient',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '0.1',
     }),
@@ -1704,6 +1820,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2413',
       'name': '3A.111111111111',
@@ -1742,6 +1860,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS1825',
       'name': '3B.111111111111',
@@ -1773,6 +1893,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1802,6 +1924,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.3b_111111111111_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '28.2',
     }),
@@ -1826,6 +1949,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS28EA00',
       'name': '42.111111111111',
@@ -1857,6 +1982,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1886,6 +2013,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.42_111111111111_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '29.1',
     }),
@@ -1910,6 +2038,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Embedded Data Systems',
       'model': 'EDS0068',
       'name': '7E.111111111111',
@@ -1941,6 +2071,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1972,6 +2104,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2003,6 +2137,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2034,6 +2170,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2063,6 +2201,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.7e_111111111111_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '13.9',
     }),
@@ -2078,6 +2217,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.7e_111111111111_pressure',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '1012.2',
     }),
@@ -2093,6 +2233,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.7e_111111111111_illuminance',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '65.9',
     }),
@@ -2108,6 +2249,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.7e_111111111111_humidity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '41.4',
     }),
@@ -2132,6 +2274,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Embedded Data Systems',
       'model': 'EDS0066',
       'name': '7E.222222222222',
@@ -2163,6 +2307,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2194,6 +2340,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2223,6 +2371,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.7e_222222222222_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '13.9',
     }),
@@ -2238,8 +2387,588 @@
       'context': <ANY>,
       'entity_id': 'sensor.7e_222222222222_pressure',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '1012.2',
+    }),
+  ])
+# ---
+# name: test_sensors[A6.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          'A6.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2438',
+      'name': 'A6.111111111111',
+      'name_by_user': None,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_sensors[A6.111111111111].1
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.a6_111111111111_temperature',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+      'original_icon': None,
+      'original_name': 'Temperature',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': '/A6.111111111111/temperature',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.a6_111111111111_humidity',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+      'original_icon': None,
+      'original_name': 'Humidity',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': '/A6.111111111111/humidity',
+      'unit_of_measurement': '%',
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.a6_111111111111_hih3600_humidity',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+      'original_icon': None,
+      'original_name': 'HIH3600 humidity',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'humidity_hih3600',
+      'unique_id': '/A6.111111111111/HIH3600/humidity',
+      'unit_of_measurement': '%',
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.a6_111111111111_hih4000_humidity',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+      'original_icon': None,
+      'original_name': 'HIH4000 humidity',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'humidity_hih4000',
+      'unique_id': '/A6.111111111111/HIH4000/humidity',
+      'unit_of_measurement': '%',
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.a6_111111111111_hih5030_humidity',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+      'original_icon': None,
+      'original_name': 'HIH5030 humidity',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'humidity_hih5030',
+      'unique_id': '/A6.111111111111/HIH5030/humidity',
+      'unit_of_measurement': '%',
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.a6_111111111111_htm1735_humidity',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+      'original_icon': None,
+      'original_name': 'HTM1735 humidity',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'humidity_htm1735',
+      'unique_id': '/A6.111111111111/HTM1735/humidity',
+      'unit_of_measurement': '%',
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.a6_111111111111_pressure',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+      'original_icon': None,
+      'original_name': 'Pressure',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': '/A6.111111111111/B1-R1-A/pressure',
+      'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.a6_111111111111_illuminance',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
+      'original_icon': None,
+      'original_name': 'Illuminance',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': '/A6.111111111111/S3-R1-A/illuminance',
+      'unit_of_measurement': 'lx',
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.a6_111111111111_vad_voltage',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+      'original_icon': None,
+      'original_name': 'VAD voltage',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'voltage_vad',
+      'unique_id': '/A6.111111111111/VAD',
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.a6_111111111111_vdd_voltage',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+      'original_icon': None,
+      'original_name': 'VDD voltage',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'voltage_vdd',
+      'unique_id': '/A6.111111111111/VDD',
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.a6_111111111111_vis_voltage_difference',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+      'original_icon': None,
+      'original_name': 'VIS voltage difference',
+      'platform': 'onewire',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'voltage_vis',
+      'unique_id': '/A6.111111111111/vis',
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+  ])
+# ---
+# name: test_sensors[A6.111111111111].2
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'temperature',
+        'device_file': '/A6.111111111111/temperature',
+        'friendly_name': 'A6.111111111111 Temperature',
+        'raw_value': 25.123,
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.a6_111111111111_temperature',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '25.1',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'humidity',
+        'device_file': '/A6.111111111111/humidity',
+        'friendly_name': 'A6.111111111111 Humidity',
+        'raw_value': 72.7563,
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': '%',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.a6_111111111111_humidity',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '72.8',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'humidity',
+        'device_file': '/A6.111111111111/HIH3600/humidity',
+        'friendly_name': 'A6.111111111111 HIH3600 humidity',
+        'raw_value': 73.7563,
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': '%',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.a6_111111111111_hih3600_humidity',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '73.8',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'humidity',
+        'device_file': '/A6.111111111111/HIH4000/humidity',
+        'friendly_name': 'A6.111111111111 HIH4000 humidity',
+        'raw_value': 74.7563,
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': '%',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.a6_111111111111_hih4000_humidity',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '74.8',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'humidity',
+        'device_file': '/A6.111111111111/HIH5030/humidity',
+        'friendly_name': 'A6.111111111111 HIH5030 humidity',
+        'raw_value': 75.7563,
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': '%',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.a6_111111111111_hih5030_humidity',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '75.8',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'humidity',
+        'device_file': '/A6.111111111111/HTM1735/humidity',
+        'friendly_name': 'A6.111111111111 HTM1735 humidity',
+        'raw_value': None,
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': '%',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.a6_111111111111_htm1735_humidity',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'pressure',
+        'device_file': '/A6.111111111111/B1-R1-A/pressure',
+        'friendly_name': 'A6.111111111111 Pressure',
+        'raw_value': 969.265,
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.a6_111111111111_pressure',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '969.3',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'illuminance',
+        'device_file': '/A6.111111111111/S3-R1-A/illuminance',
+        'friendly_name': 'A6.111111111111 Illuminance',
+        'raw_value': 65.8839,
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': 'lx',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.a6_111111111111_illuminance',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '65.9',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'voltage',
+        'device_file': '/A6.111111111111/VAD',
+        'friendly_name': 'A6.111111111111 VAD voltage',
+        'raw_value': 2.97,
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.a6_111111111111_vad_voltage',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '3.0',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'voltage',
+        'device_file': '/A6.111111111111/VDD',
+        'friendly_name': 'A6.111111111111 VDD voltage',
+        'raw_value': 4.74,
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.a6_111111111111_vdd_voltage',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '4.7',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'voltage',
+        'device_file': '/A6.111111111111/vis',
+        'friendly_name': 'A6.111111111111 VIS voltage difference',
+        'raw_value': 0.12,
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.a6_111111111111_vis_voltage_difference',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '0.1',
     }),
   ])
 # ---
@@ -2262,6 +2991,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Hobby Boards',
       'model': 'HobbyBoards_EF',
       'name': 'EF.111111111111',
@@ -2293,6 +3024,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2324,6 +3057,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2355,6 +3090,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2384,6 +3121,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.ef_111111111111_humidity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '67.7',
     }),
@@ -2399,6 +3137,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.ef_111111111111_raw_humidity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '65.5',
     }),
@@ -2414,6 +3153,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.ef_111111111111_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '25.1',
     }),
@@ -2438,6 +3178,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Hobby Boards',
       'model': 'HB_MOISTURE_METER',
       'name': 'EF.111111111112',
@@ -2469,6 +3211,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2500,6 +3244,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2531,6 +3277,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2562,6 +3310,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2591,6 +3341,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.ef_111111111112_wetness_0',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '41.7',
     }),
@@ -2606,6 +3357,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.ef_111111111112_wetness_1',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '42.5',
     }),
@@ -2621,6 +3373,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.ef_111111111112_moisture_2',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '43.1',
     }),
@@ -2636,6 +3389,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.ef_111111111112_moisture_3',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '44.1',
     }),
@@ -2660,6 +3414,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Hobby Boards',
       'model': 'HB_HUB',
       'name': 'EF.111111111113',

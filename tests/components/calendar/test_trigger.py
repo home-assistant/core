@@ -6,6 +6,7 @@ tests use a fixture that mocks out events returned by the calendar entity,
 and create events using a relative time offset and then advance the clock
 forward exercising the triggers.
 """
+
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Callable, Generator
@@ -19,17 +20,16 @@ import zoneinfo
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components import calendar
-import homeassistant.components.automation as automation
+from homeassistant.components import automation, calendar
 from homeassistant.components.calendar.trigger import EVENT_END, EVENT_START
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .conftest import MockCalendarEntity, create_mock_platform
+from .conftest import MockCalendarEntity
 
-from tests.common import async_fire_time_changed, async_mock_service
+from tests.common import MockConfigEntry, async_fire_time_changed, async_mock_service
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class FakeSchedule:
     """Test fixture class for return events in a specific date range."""
 
     def __init__(self, hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-        """Initiailize FakeSchedule."""
+        """Initialize FakeSchedule."""
         self.hass = hass
         self.freezer = freezer
 
@@ -105,10 +105,11 @@ def mock_test_entity(test_entities: list[MockCalendarEntity]) -> MockCalendarEnt
 async def mock_setup_platform(
     hass: HomeAssistant,
     mock_setup_integration: Any,
-    test_entities: list[MockCalendarEntity],
+    config_entry: MockConfigEntry,
 ) -> None:
     """Fixture to setup platforms used in the test."""
-    await create_mock_platform(hass, test_entities)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @asynccontextmanager
@@ -745,3 +746,65 @@ async def test_event_start_trigger_dst(
                 "calendar_event": event3_data,
             },
         ]
+
+
+async def test_config_entry_reload(
+    hass: HomeAssistant,
+    calls: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entities: list[MockCalendarEntity],
+    setup_platform: None,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the a calendar trigger after a config entry reload.
+
+    This sets ups a config entry, sets up an automation for an entity in that
+    config entry, then reloads the config entry. This reproduces a bug where
+    the automation kept a reference to the specific entity which would be
+    invalid after a config entry was reloaded.
+    """
+    async with create_automation(hass, EVENT_START):
+        assert len(calls()) == 0
+
+        assert await hass.config_entries.async_reload(config_entry.entry_id)
+
+        # Ensure the reloaded entity has events upcoming.
+        test_entity = test_entities[1]
+        event_data = test_entity.create_event(
+            start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+            end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
+        )
+
+        await fake_schedule.fire_until(
+            datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
+        )
+
+    assert calls() == [
+        {
+            "platform": "calendar",
+            "event": EVENT_START,
+            "calendar_event": event_data,
+        }
+    ]
+
+
+async def test_config_entry_unload(
+    hass: HomeAssistant,
+    calls: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entities: list[MockCalendarEntity],
+    setup_platform: None,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an automation that references a calendar entity that is unloaded."""
+    async with create_automation(hass, EVENT_START):
+        assert len(calls()) == 0
+
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+
+        await fake_schedule.fire_until(
+            datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
+        )
+
+    assert "Entity does not exist calendar.calendar_2" in caplog.text

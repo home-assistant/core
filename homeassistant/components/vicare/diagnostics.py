@@ -1,4 +1,5 @@
 """Diagnostics support for ViCare."""
+
 from __future__ import annotations
 
 import json
@@ -18,12 +19,15 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data = []
-    for device in hass.data[DOMAIN][entry.entry_id][DEVICE_LIST]:
-        data.append(
-            json.loads(await hass.async_add_executor_job(device.config.dump_secure))
-        )
+
+    def dump_devices() -> list[dict[str, Any]]:
+        """Dump devices."""
+        return [
+            json.loads(device.config.dump_secure())
+            for device in hass.data[DOMAIN][entry.entry_id][DEVICE_LIST]
+        ]
+
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
-        "data": data,
+        "data": await hass.async_add_executor_job(dump_devices),
     }

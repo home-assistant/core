@@ -1,6 +1,5 @@
 """Tests for Google Tasks todo platform."""
 
-
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import json
@@ -157,7 +156,7 @@ def create_response_object(api_response: dict | list) -> tuple[Response, bytes]:
 
 
 def create_batch_response_object(
-    content_ids: list[str], api_responses: list[dict | list | Response]
+    content_ids: list[str], api_responses: list[dict | list | Response | None]
 ) -> tuple[Response, bytes]:
     """Create a batch response in the multipart/mixed format."""
     assert len(api_responses) == len(content_ids)
@@ -167,7 +166,7 @@ def create_batch_response_object(
         body = ""
         if isinstance(api_response, Response):
             status = api_response.status
-        else:
+        elif api_response is not None:
             body = json.dumps(api_response)
         content.extend(
             [
@@ -195,7 +194,7 @@ def create_batch_response_object(
 
 
 def create_batch_response_handler(
-    api_responses: list[dict | list | Response],
+    api_responses: list[dict | list | Response | None],
 ) -> Callable[[Any], tuple[Response, bytes]]:
     """Create a fake http2lib response handler that supports generating batch responses.
 
@@ -599,11 +598,11 @@ async def test_partial_update_status(
                 [
                     LIST_TASK_LIST_RESPONSE,
                     LIST_TASKS_RESPONSE_MULTIPLE,
-                    [EMPTY_RESPONSE, EMPTY_RESPONSE, EMPTY_RESPONSE],  # Delete batch
+                    [None, None, None],  # Delete batch empty responses
                     LIST_TASKS_RESPONSE,  # refresh after delete
                 ]
             )
-        )
+        ),
     ],
 )
 async def test_delete_todo_list_item(

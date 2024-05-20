@@ -1,4 +1,5 @@
 """Constants for the SolarEdge Monitoring API."""
+
 from datetime import timedelta
 import logging
 

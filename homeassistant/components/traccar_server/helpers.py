@@ -1,4 +1,5 @@
 """Helper functions for the Traccar Server integration."""
+
 from __future__ import annotations
 
 from pytraccar import DeviceModel, GeofenceModel

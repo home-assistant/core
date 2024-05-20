@@ -1,4 +1,5 @@
 """Fixtures for websocket tests."""
+
 import pytest
 
 from homeassistant.components.websocket_api.auth import TYPE_AUTH_REQUIRED

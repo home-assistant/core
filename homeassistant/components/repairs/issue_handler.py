@@ -1,4 +1,5 @@
 """The repairs integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -102,10 +103,13 @@ async def async_process_repairs_platforms(hass: HomeAssistant) -> None:
     """Start processing repairs platforms."""
     hass.data[DOMAIN]["platforms"] = {}
 
-    await async_process_integration_platforms(hass, DOMAIN, _register_repairs_platform)
+    await async_process_integration_platforms(
+        hass, DOMAIN, _register_repairs_platform, wait_for_platforms=True
+    )
 
 
-async def _register_repairs_platform(
+@callback
+def _register_repairs_platform(
     hass: HomeAssistant, integration_domain: str, platform: RepairsProtocol
 ) -> None:
     """Register a repairs platform."""

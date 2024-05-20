@@ -1,4 +1,5 @@
 """Cluster handlers module for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine, Iterator
@@ -6,7 +7,7 @@ import contextlib
 from enum import Enum
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, ParamSpec, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 import zigpy.exceptions
 import zigpy.util
@@ -50,10 +51,8 @@ _LOGGER = logging.getLogger(__name__)
 RETRYABLE_REQUEST_DECORATOR = zigpy.util.retryable_request(tries=3)
 UNPROXIED_CLUSTER_METHODS = {"general_command"}
 
-
-_P = ParamSpec("_P")
-_FuncType = Callable[_P, Awaitable[Any]]
-_ReturnFuncType = Callable[_P, Coroutine[Any, Any, Any]]
+type _FuncType[**_P] = Callable[_P, Awaitable[Any]]
+type _ReturnFuncType[**_P] = Callable[_P, Coroutine[Any, Any, Any]]
 
 
 @contextlib.contextmanager
@@ -74,7 +73,7 @@ def wrap_zigpy_exceptions() -> Iterator[None]:
         raise HomeAssistantError(message) from exc
 
 
-def retry_request(func: _FuncType[_P]) -> _ReturnFuncType[_P]:
+def retry_request[**_P](func: _FuncType[_P]) -> _ReturnFuncType[_P]:
     """Send a request with retries and wrap expected zigpy exceptions."""
 
     @functools.wraps(func)
@@ -334,9 +333,9 @@ class ClusterHandler(LogMixin):
             return
 
         for record in res:
-            event_data[self.cluster.find_attribute(record.attrid).name][
-                "status"
-            ] = record.status.name
+            event_data[self.cluster.find_attribute(record.attrid).name]["status"] = (
+                record.status.name
+            )
         failed = [
             self.cluster.find_attribute(record.attrid).name
             for record in res
@@ -555,7 +554,7 @@ class ClusterHandler(LogMixin):
     def log(self, level, msg, *args, **kwargs):
         """Log a message."""
         msg = f"[%s:%s]: {msg}"
-        args = (self._endpoint.device.nwk, self._id) + args
+        args = (self._endpoint.device.nwk, self._id, *args)
         _LOGGER.log(level, msg, *args, **kwargs)
 
     def __getattr__(self, name):
@@ -582,7 +581,7 @@ class ZDOClusterHandler(LogMixin):
         self._cluster = device.device.endpoints[0]
         self._zha_device = device
         self._status = ClusterHandlerStatus.CREATED
-        self._unique_id = f"{str(device.ieee)}:{device.name}_ZDO"
+        self._unique_id = f"{device.ieee!s}:{device.name}_ZDO"
         self._cluster.add_listener(self)
 
     @property
@@ -619,7 +618,7 @@ class ZDOClusterHandler(LogMixin):
     def log(self, level, msg, *args, **kwargs):
         """Log a message."""
         msg = f"[%s:ZDO](%s): {msg}"
-        args = (self._zha_device.nwk, self._zha_device.model) + args
+        args = (self._zha_device.nwk, self._zha_device.model, *args)
         _LOGGER.log(level, msg, *args, **kwargs)
 
 
@@ -627,8 +626,9 @@ class ClientClusterHandler(ClusterHandler):
     """ClusterHandler for Zigbee client (output) clusters."""
 
     @callback
-    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
+    def attribute_updated(self, attrid: int, value: Any, timestamp: Any) -> None:
         """Handle an attribute updated on this cluster."""
+        super().attribute_updated(attrid, value, timestamp)
 
         try:
             attr_name = self._cluster.attributes[attrid].name

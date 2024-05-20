@@ -1,4 +1,5 @@
 """The tests for recording streams."""
+
 import asyncio
 from datetime import timedelta
 from io import BytesIO
@@ -100,15 +101,16 @@ async def test_record_path_not_allowed(hass: HomeAssistant, h264_video) -> None:
     """Test where the output path is not allowed by home assistant configuration."""
 
     stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
-    with patch.object(
-        hass.config, "is_allowed_path", return_value=False
-    ), pytest.raises(HomeAssistantError):
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=False),
+        pytest.raises(HomeAssistantError),
+    ):
         await stream.async_record("/example/path")
 
 
 def add_parts_to_segment(segment, source):
     """Add relevant part data to segment for testing recorder."""
-    moof_locs = list(find_box(source.getbuffer(), b"moof")) + [len(source.getbuffer())]
+    moof_locs = [*find_box(source.getbuffer(), b"moof"), len(source.getbuffer())]
     segment.init = source.getbuffer()[: moof_locs[0]].tobytes()
     segment.parts = [
         Part(
@@ -148,9 +150,11 @@ async def test_recorder_discontinuity(
             provider_ready.set()
             return provider
 
-    with patch.object(hass.config, "is_allowed_path", return_value=True), patch(
-        "homeassistant.components.stream.Stream", wraps=MockStream
-    ), patch("homeassistant.components.stream.recorder.RecorderOutput.recv"):
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        patch("homeassistant.components.stream.Stream", wraps=MockStream),
+        patch("homeassistant.components.stream.recorder.RecorderOutput.recv"),
+    ):
         stream = create_stream(hass, "blank", {}, dynamic_stream_settings())
         make_recording = hass.async_create_task(stream.async_record(filename))
         await provider_ready.wait()
@@ -236,6 +240,7 @@ async def test_record_stream_audio(
         # Fire the IdleTimer
         future = dt_util.utcnow() + timedelta(seconds=30)
         async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
 
         await make_recording
 

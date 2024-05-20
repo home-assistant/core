@@ -1,9 +1,8 @@
 """Support for hunter douglas shades."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable, Iterable
-from contextlib import suppress
 from dataclasses import replace
 from datetime import datetime, timedelta
 import logging
@@ -57,14 +56,22 @@ async def async_setup_entry(
     pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
     coordinator: PowerviewShadeUpdateCoordinator = pv_entry.coordinator
 
+    async def _async_initial_refresh() -> None:
+        """Force position refresh shortly after adding.
+
+        Legacy shades can become out of sync with hub when moved
+        using physical remotes. This also allows reducing speed
+        of calls to older generation hubs in an effort to
+        prevent hub crashes.
+        """
+
+        for shade in pv_entry.shade_data.values():
+            _LOGGER.debug("Initial refresh of shade: %s", shade.name)
+            async with coordinator.radio_operation_lock:
+                await shade.refresh(suppress_timeout=True)  # default 15 second timeout
+
     entities: list[ShadeEntity] = []
     for shade in pv_entry.shade_data.values():
-        # The shade may be out of sync with the hub
-        # so we force a refresh when we add it if possible
-        with suppress(TimeoutError):
-            async with asyncio.timeout(1):
-                await shade.refresh()
-        coordinator.data.update_shade_position(shade.id, shade.current_position)
         room_name = getattr(pv_entry.room_data.get(shade.room_id), ATTR_NAME, "")
         entities.extend(
             create_powerview_shade_entity(
@@ -73,6 +80,13 @@ async def async_setup_entry(
         )
 
     async_add_entities(entities)
+
+    # background the fetching of state for initial launch
+    entry.async_create_background_task(
+        hass,
+        _async_initial_refresh(),
+        f"powerview {entry.title} initial shade refresh",
+    )
 
 
 class PowerViewShadeBase(ShadeEntity, CoverEntity):
@@ -194,7 +208,8 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     async def _async_execute_move(self, move: ShadePosition) -> None:
         """Execute a move that can affect multiple positions."""
         _LOGGER.debug("Move request %s: %s", self.name, move)
-        response = await self._shade.move(move)
+        async with self.coordinator.radio_operation_lock:
+            response = await self._shade.move(move)
         _LOGGER.debug("Move response %s: %s", self.name, response)
 
         # Process the response from the hub (including new positions)
@@ -305,9 +320,10 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
             # error if are already have one in flight
             return
         # suppress timeouts caused by hub nightly reboot
-        with suppress(asyncio.TimeoutError):
-            async with asyncio.timeout(5):
-                await self._shade.refresh()
+        async with self.coordinator.radio_operation_lock:
+            await self._shade.refresh(
+                suppress_timeout=True
+            )  # default 15 second timeout
         _LOGGER.debug("Process update %s: %s", self.name, self._shade.current_position)
         self._async_update_shade_data(self._shade.current_position)
 
@@ -500,6 +516,22 @@ class PowerViewShadeTiltOnly(PowerViewShadeWithTiltBase):
         if self._shade.is_supported(MOTION_STOP):
             self._attr_supported_features |= CoverEntityFeature.STOP_TILT
         self._max_tilt = self._shade.shade_limits.tilt_max
+
+    @property
+    def current_cover_position(self) -> int:
+        """Return the current position of cover."""
+        # allows using parent class with no other alterations
+        return CLOSED_POSITION
+
+    @property
+    def transition_steps(self) -> int:
+        """Return the steps to make a move."""
+        return self.positions.tilt
+
+    @property
+    def is_closed(self) -> bool:
+        """Return if the cover is closed."""
+        return self.positions.tilt <= CLOSED_POSITION
 
 
 class PowerViewShadeTopDown(PowerViewShadeBase):
@@ -962,6 +994,11 @@ TYPE_TO_CLASSES = {
     ),
     10: (
         PowerViewShadeDualOverlappedCombinedTilt,
+        PowerViewShadeDualOverlappedFront,
+        PowerViewShadeDualOverlappedRear,
+    ),
+    11: (
+        PowerViewShadeDualOverlappedCombined,
         PowerViewShadeDualOverlappedFront,
         PowerViewShadeDualOverlappedRear,
     ),

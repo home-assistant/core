@@ -1,4 +1,5 @@
 """Config flow for Switchbot."""
+
 from __future__ import annotations
 
 import logging
@@ -18,7 +19,12 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_PASSWORD,
@@ -26,7 +32,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 
 from .const import (
     CONF_ENCRYPTION_KEY,
@@ -78,7 +84,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         _LOGGER.debug("Discovered bluetooth device: %s", discovery_info.as_dict())
         await self.async_set_unique_id(format_unique_id(discovery_info.address))
@@ -109,7 +115,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_create_entry_from_discovery(
         self, user_input: dict[str, Any]
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Create an entry from a discovery."""
         assert self._discovered_adv is not None
         discovery = self._discovered_adv
@@ -126,7 +132,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm a single device."""
         assert self._discovered_adv is not None
         if user_input is not None:
@@ -143,7 +149,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_password(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the password step."""
         assert self._discovered_adv is not None
         if user_input is not None:
@@ -162,7 +168,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_lock_auth(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the SwitchBot API auth step."""
         errors = {}
         assert self._discovered_adv is not None
@@ -204,7 +210,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_lock_choose_method(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the SwitchBot API chose method step."""
         assert self._discovered_adv is not None
 
@@ -218,7 +224,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_lock_key(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the encryption key step."""
         errors = {}
         assert self._discovered_adv is not None
@@ -285,7 +291,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step to pick discovered device."""
         errors: dict[str, str] = {}
         device_adv: SwitchBotAdvertisement | None = None
@@ -335,7 +341,7 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage Switchbot options."""
         if user_input is not None:
             # Update common entity options for all other entities.

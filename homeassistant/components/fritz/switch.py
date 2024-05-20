@@ -1,4 +1,5 @@
 """Switches for AVM Fritz!Box functions."""
+
 from __future__ import annotations
 
 import logging
@@ -16,15 +17,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .common import (
-    AvmWrapper,
-    FritzBoxBaseEntity,
-    FritzData,
-    FritzDevice,
-    FritzDeviceBase,
-    SwitchInfo,
-    device_filter_out_from_trackers,
-)
 from .const import (
     DATA_FRITZ,
     DOMAIN,
@@ -35,6 +27,14 @@ from .const import (
     WIFI_STANDARD,
     MeshRoles,
 )
+from .coordinator import (
+    AvmWrapper,
+    FritzData,
+    FritzDevice,
+    SwitchInfo,
+    device_filter_out_from_trackers,
+)
+from .entity import FritzBoxBaseEntity, FritzDeviceBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -288,7 +288,7 @@ class FritzBoxBaseCoordinatorSwitch(CoordinatorEntity[AvmWrapper], SwitchEntity)
     @property
     def data(self) -> dict[str, Any]:
         """Return entity data from coordinator data."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def available(self) -> bool:
@@ -297,7 +297,7 @@ class FritzBoxBaseCoordinatorSwitch(CoordinatorEntity[AvmWrapper], SwitchEntity)
 
     async def _async_handle_turn_on_off(self, turn_on: bool) -> None:
         """Handle switch state change request."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""

@@ -1,4 +1,5 @@
 """Demo platform that offers a fake button entity."""
+
 from __future__ import annotations
 
 from homeassistant.components import persistent_notification
@@ -21,7 +22,9 @@ async def async_setup_entry(
         [
             DemoButton(
                 unique_id="2_ch_power_strip",
-                device_name="2CH Power strip",
+                device_name=None,
+                device_translation_key="n_ch_power_strip",
+                device_translation_placeholders={"number_of_sockets": "2"},
                 entity_name="Restart",
             ),
         ]
@@ -37,7 +40,9 @@ class DemoButton(ButtonEntity):
     def __init__(
         self,
         unique_id: str,
-        device_name: str,
+        device_name: str | None,
+        device_translation_key: str | None,
+        device_translation_placeholders: dict[str, str] | None,
         entity_name: str | None,
     ) -> None:
         """Initialize the Demo button entity."""
@@ -45,6 +50,8 @@ class DemoButton(ButtonEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             name=device_name,
+            translation_key=device_translation_key,
+            translation_placeholders=device_translation_placeholders,
         )
         self._attr_name = entity_name
 

@@ -1,4 +1,5 @@
 """Tests for the Huawei LTE switches."""
+
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.huawei_lte.const import DOMAIN

@@ -1,4 +1,5 @@
 """Support for AlarmDecoder devices."""
+
 from datetime import timedelta
 import logging
 
@@ -127,6 +128,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     await open_connection()
+
+    await controller.is_init()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -1,8 +1,8 @@
 """Tests for WiZ binary_sensor platform."""
 
-from homeassistant import config_entries
 from homeassistant.components import wiz
 from homeassistant.components.wiz.binary_sensor import OCCUPANCY_UNIQUE_ID
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -70,7 +70,7 @@ async def test_binary_sensor_restored_from_registry(hass: HomeAssistant) -> None
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == config_entries.ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_binary_sensor_never_created_no_error_on_unload(
@@ -80,4 +80,4 @@ async def test_binary_sensor_never_created_no_error_on_unload(
     _, entry = await async_setup_integration(hass)
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == config_entries.ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED

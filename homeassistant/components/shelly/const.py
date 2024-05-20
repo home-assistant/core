@@ -1,4 +1,5 @@
 """Constants for the Shelly integration."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -30,17 +31,23 @@ DOMAIN: Final = "shelly"
 
 LOGGER: Logger = getLogger(__package__)
 
-DATA_CONFIG_ENTRY: Final = "config_entry"
 CONF_COAP_PORT: Final = "coap_port"
-DEFAULT_COAP_PORT: Final = 5683
 FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
 
-# max light transition time in milliseconds
-MAX_TRANSITION_TIME: Final = 5000
+# max BLOCK light transition time in milliseconds (min=0)
+BLOCK_MAX_TRANSITION_TIME_MS: Final = 5000
+
+# min RPC light transition time in seconds (max=10800, limited by light entity to 6553)
+RPC_MIN_TRANSITION_TIME_SEC = 0.5
 
 RGBW_MODELS: Final = (
     MODEL_BULB,
     MODEL_RGBW2,
+)
+
+MOTION_MODELS: Final = (
+    MODEL_MOTION,
+    MODEL_MOTION_2,
 )
 
 MODELS_SUPPORTING_LIGHT_TRANSITION: Final = (
@@ -231,3 +238,5 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
 )
 
 CONF_GEN = "gen"
+
+SHELLY_PLUS_RGBW_CHANNELS = 4

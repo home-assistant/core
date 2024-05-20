@@ -1,9 +1,10 @@
 """Provide functionality to interact with the vlc telnet interface."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from aiovlc.client import Client
 from aiovlc.exceptions import AuthError, CommandError, ConnectError
@@ -24,27 +25,25 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import DATA_AVAILABLE, DATA_VLC, DEFAULT_NAME, DOMAIN, LOGGER
+from . import VlcConfigEntry
+from .const import DEFAULT_NAME, DOMAIN, LOGGER
 
 MAX_VOLUME = 500
 
-_VlcDeviceT = TypeVar("_VlcDeviceT", bound="VlcDevice")
-_P = ParamSpec("_P")
-
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: VlcConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the vlc platform."""
     # CONF_NAME is only present in imported YAML.
     name = entry.data.get(CONF_NAME) or DEFAULT_NAME
-    vlc = hass.data[DOMAIN][entry.entry_id][DATA_VLC]
-    available = hass.data[DOMAIN][entry.entry_id][DATA_AVAILABLE]
+    vlc = entry.runtime_data.vlc
+    available = entry.runtime_data.available
 
     async_add_entities([VlcDevice(entry, vlc, name, available)], True)
 
 
-def catch_vlc_errors(
+def catch_vlc_errors[_VlcDeviceT: VlcDevice, **_P](
     func: Callable[Concatenate[_VlcDeviceT, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_VlcDeviceT, _P], Coroutine[Any, Any, None]]:
     """Catch VLC errors."""
@@ -57,7 +56,6 @@ def catch_vlc_errors(
         except CommandError as err:
             LOGGER.error("Command error: %s", err)
         except ConnectError as err:
-            # pylint: disable=protected-access
             if self._attr_available:
                 LOGGER.error("Connection error: %s", err)
                 self._attr_available = False

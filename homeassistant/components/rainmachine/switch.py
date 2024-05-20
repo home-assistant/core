@@ -1,11 +1,12 @@
 """Component providing support for RainMachine programs and zones."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from regenmaschine.errors import RainMachineError
 import voluptuous as vol
@@ -109,11 +110,7 @@ VEGETATION_MAP = {
 }
 
 
-_T = TypeVar("_T", bound="RainMachineBaseSwitch")
-_P = ParamSpec("_P")
-
-
-def raise_on_request_error(
+def raise_on_request_error[_T: RainMachineBaseSwitch, **_P](
     func: Callable[Concatenate[_T, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
     """Define a decorator to raise on a request error."""

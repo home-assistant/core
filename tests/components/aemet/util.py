@@ -1,10 +1,11 @@
 """Tests for the AEMET OpenData integration."""
+
 from typing import Any
 from unittest.mock import patch
 
 from aemet_opendata.const import ATTR_DATA
 
-from homeassistant.components.aemet import DOMAIN
+from homeassistant.components.aemet.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 
@@ -63,6 +64,7 @@ async def async_init_integration(hass: HomeAssistant):
             CONF_LONGITUDE: "-3.72935236",
             CONF_NAME: "AEMET",
         },
+        entry_id="7442b231f139e813fc1939281123f220",
     )
     config_entry.add_to_hass(hass)
 

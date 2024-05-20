@@ -1,4 +1,5 @@
 """Adds config flow for Brother Printer."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,10 +7,10 @@ from typing import Any
 from brother import Brother, SnmpError, UnsupportedModelError
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TYPE
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.network import is_host_valid
 
 from .const import DOMAIN, PRINTER_TYPES
@@ -23,7 +24,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Brother Printer."""
 
     VERSION = 1
@@ -35,14 +36,14 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 
         if user_input is not None:
             try:
                 if not is_host_valid(user_input[CONF_HOST]):
-                    raise InvalidHost()
+                    raise InvalidHost
 
                 snmp_engine = get_snmp_engine(self.hass)
 
@@ -58,7 +59,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=title, data=user_input)
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
-            except ConnectionError:
+            except (ConnectionError, TimeoutError):
                 errors["base"] = "cannot_connect"
             except SnmpError:
                 errors["base"] = "snmp_error"
@@ -71,7 +72,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self.host = discovery_info.host
 
@@ -88,7 +89,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.brother.async_update()
         except UnsupportedModelError:
             return self.async_abort(reason="unsupported_model")
-        except (ConnectionError, SnmpError):
+        except (ConnectionError, SnmpError, TimeoutError):
             return self.async_abort(reason="cannot_connect")
 
         # Check if already configured
@@ -107,7 +108,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by zeroconf."""
         if user_input is not None:
             title = f"{self.brother.model} {self.brother.serial}"
@@ -127,5 +128,5 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class InvalidHost(exceptions.HomeAssistantError):
+class InvalidHost(HomeAssistantError):
     """Error to indicate that hostname/IP address is invalid."""

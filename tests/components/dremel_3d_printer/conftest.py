@@ -1,4 +1,5 @@
 """Configure tests for the Dremel 3D Printer integration."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 

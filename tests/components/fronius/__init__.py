@@ -1,4 +1,5 @@
 """Tests for the Fronius integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -120,22 +121,8 @@ async def enable_all_entities(hass, freezer, config_entry_id, time_till_next_upd
         for entry in entities
         if entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     ]:
-        registry.async_update_entity(entry.entity_id, **{"disabled_by": None})
+        registry.async_update_entity(entry.entity_id, disabled_by=None)
     await hass.async_block_till_done()
     freezer.tick(time_till_next_update)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-
-
-async def remove_device(ws_client, device_id, config_entry_id):
-    """Remove config entry from a device."""
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": config_entry_id,
-            "device_id": device_id,
-        }
-    )
-    response = await ws_client.receive_json()
-    return response["success"]

@@ -1,4 +1,5 @@
 """Tests for the TechnoVE integration."""
+
 from unittest.mock import patch
 
 from homeassistant.const import Platform

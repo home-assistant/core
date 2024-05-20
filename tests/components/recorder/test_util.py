@@ -1,9 +1,10 @@
 """Test util methods."""
-from collections.abc import Callable
+
 from datetime import UTC, datetime, timedelta
 import os
 from pathlib import Path
 import sqlite3
+import threading
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -14,7 +15,7 @@ from sqlalchemy.sql.elements import TextClause
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import util
+from homeassistant.components.recorder import Recorder, util
 from homeassistant.components.recorder.const import DOMAIN, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import RecorderRuns
 from homeassistant.components.recorder.history.modern import (
@@ -36,37 +37,56 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
 from homeassistant.util import dt as dt_util
 
-from .common import corrupt_db_file, run_information_with_session, wait_recording_done
+from .common import (
+    async_wait_recording_done,
+    corrupt_db_file,
+    run_information_with_session,
+)
 
 from tests.common import async_test_home_assistant
 from tests.typing import RecorderInstanceGenerator
 
 
-def test_session_scope_not_setup(hass_recorder: Callable[..., HomeAssistant]) -> None:
+@pytest.fixture
+async def mock_recorder_before_hass(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """Set up recorder."""
+
+
+@pytest.fixture
+def setup_recorder(recorder_mock: Recorder) -> None:
+    """Set up recorder."""
+
+
+async def test_session_scope_not_setup(
+    hass: HomeAssistant,
+    setup_recorder: None,
+) -> None:
     """Try to create a session scope when not setup."""
-    hass = hass_recorder()
-    with patch.object(
-        util.get_instance(hass), "get_session", return_value=None
-    ), pytest.raises(RuntimeError), util.session_scope(hass=hass):
+    with (
+        patch.object(util.get_instance(hass), "get_session", return_value=None),
+        pytest.raises(RuntimeError),
+        util.session_scope(hass=hass),
+    ):
         pass
 
 
-def test_recorder_bad_execute(hass_recorder: Callable[..., HomeAssistant]) -> None:
+async def test_recorder_bad_execute(hass: HomeAssistant, setup_recorder: None) -> None:
     """Bad execute, retry 3 times."""
     from sqlalchemy.exc import SQLAlchemyError
 
-    hass_recorder()
-
     def to_native(validate_entity_id=True):
         """Raise exception."""
-        raise SQLAlchemyError()
+        raise SQLAlchemyError
 
     mck1 = MagicMock()
     mck1.to_native = to_native
 
-    with pytest.raises(SQLAlchemyError), patch(
-        "homeassistant.components.recorder.core.time.sleep"
-    ) as e_mock:
+    with (
+        pytest.raises(SQLAlchemyError),
+        patch("homeassistant.components.recorder.core.time.sleep") as e_mock,
+    ):
         util.execute((mck1,), to_native=True)
 
     assert e_mock.call_count == 2
@@ -145,12 +165,15 @@ async def test_last_run_was_recently_clean(
     thirty_min_future_time = dt_util.utcnow() + timedelta(minutes=30)
 
     async with async_test_home_assistant() as hass:
-        with patch(
-            "homeassistant.components.recorder.util.last_run_was_recently_clean",
-            wraps=_last_run_was_recently_clean,
-        ) as last_run_was_recently_clean_mock, patch(
-            "homeassistant.components.recorder.core.dt_util.utcnow",
-            return_value=thirty_min_future_time,
+        with (
+            patch(
+                "homeassistant.components.recorder.util.last_run_was_recently_clean",
+                wraps=_last_run_was_recently_clean,
+            ) as last_run_was_recently_clean_mock,
+            patch(
+                "homeassistant.components.recorder.core.dt_util.utcnow",
+                return_value=thirty_min_future_time,
+            ),
         ):
             await async_setup_recorder_instance(hass, config)
             last_run_was_recently_clean_mock.assert_called_once()
@@ -693,15 +716,13 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
     assert database_engine.optimizer.slow_range_in_select is False
 
 
-def test_basic_sanity_check(
-    hass_recorder: Callable[..., HomeAssistant], recorder_db_url
+async def test_basic_sanity_check(
+    hass: HomeAssistant, setup_recorder: None, recorder_db_url
 ) -> None:
     """Test the basic sanity checks with a missing table."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite
         return
-
-    hass = hass_recorder()
 
     cursor = util.get_instance(hass).engine.raw_connection().cursor()
 
@@ -713,8 +734,9 @@ def test_basic_sanity_check(
         util.basic_sanity_check(cursor)
 
 
-def test_combined_checks(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_combined_checks(
+    hass: HomeAssistant,
+    setup_recorder: None,
     caplog: pytest.LogCaptureFixture,
     recorder_db_url,
 ) -> None:
@@ -723,7 +745,6 @@ def test_combined_checks(
         # This test is specific for SQLite
         return
 
-    hass = hass_recorder()
     instance = util.get_instance(hass)
     instance.db_retry_wait = 0
 
@@ -751,17 +772,23 @@ def test_combined_checks(
         assert "restarted cleanly and passed the basic sanity check" in caplog.text
 
     caplog.clear()
-    with patch(
-        "homeassistant.components.recorder.util.last_run_was_recently_clean",
-        side_effect=sqlite3.DatabaseError,
-    ), pytest.raises(sqlite3.DatabaseError):
+    with (
+        patch(
+            "homeassistant.components.recorder.util.last_run_was_recently_clean",
+            side_effect=sqlite3.DatabaseError,
+        ),
+        pytest.raises(sqlite3.DatabaseError),
+    ):
         util.run_checks_on_open_db("fake_db_path", cursor)
 
     caplog.clear()
-    with patch(
-        "homeassistant.components.recorder.util.last_run_was_recently_clean",
-        side_effect=sqlite3.DatabaseError,
-    ), pytest.raises(sqlite3.DatabaseError):
+    with (
+        patch(
+            "homeassistant.components.recorder.util.last_run_was_recently_clean",
+            side_effect=sqlite3.DatabaseError,
+        ),
+        pytest.raises(sqlite3.DatabaseError),
+    ):
         util.run_checks_on_open_db("fake_db_path", cursor)
 
     cursor.execute("DROP TABLE events;")
@@ -775,12 +802,10 @@ def test_combined_checks(
         util.run_checks_on_open_db("fake_db_path", cursor)
 
 
-def test_end_incomplete_runs(
-    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+async def test_end_incomplete_runs(
+    hass: HomeAssistant, setup_recorder: None, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Ensure we can end incomplete runs."""
-    hass = hass_recorder()
-
     with session_scope(hass=hass) as session:
         run_info = run_information_with_session(session)
         assert isinstance(run_info, RecorderRuns)
@@ -801,15 +826,14 @@ def test_end_incomplete_runs(
     assert "Ended unfinished session" in caplog.text
 
 
-def test_periodic_db_cleanups(
-    hass_recorder: Callable[..., HomeAssistant], recorder_db_url
+async def test_periodic_db_cleanups(
+    hass: HomeAssistant, setup_recorder: None, recorder_db_url
 ) -> None:
     """Test periodic db cleanups."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite
         return
 
-    hass = hass_recorder()
     with patch.object(util.get_instance(hass).engine, "connect") as connect_mock:
         util.periodic_db_cleanups(util.get_instance(hass))
 
@@ -820,9 +844,7 @@ def test_periodic_db_cleanups(
     assert str(text_obj) == "PRAGMA wal_checkpoint(TRUNCATE);"
 
 
-@patch("homeassistant.components.recorder.pool.check_loop")
 async def test_write_lock_db(
-    skip_check_loop,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     tmp_path: Path,
@@ -841,6 +863,7 @@ async def test_write_lock_db(
         with instance.engine.connect() as connection:
             connection.execute(text("DROP TABLE events;"))
 
+    instance.recorder_and_worker_thread_ids.add(threading.get_ident())
     with util.write_lock_db_sqlite(instance), pytest.raises(OperationalError):
         # Database should be locked now, try writing SQL command
         # This needs to be called in another thread since
@@ -849,7 +872,7 @@ async def test_write_lock_db(
         # in the same thread as the one holding the lock since it
         # would be allowed to proceed as the goal is to prevent
         # all the other threads from accessing the database
-        await hass.async_add_executor_job(_drop_table)
+        await instance.async_add_executor_job(_drop_table)
 
 
 def test_is_second_sunday() -> None:
@@ -881,15 +904,15 @@ def test_build_mysqldb_conv() -> None:
 
 
 @patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
-def test_execute_stmt_lambda_element(
-    hass_recorder: Callable[..., HomeAssistant],
+async def test_execute_stmt_lambda_element(
+    hass: HomeAssistant,
+    setup_recorder: None,
 ) -> None:
     """Test executing with execute_stmt_lambda_element."""
-    hass = hass_recorder()
     instance = recorder.get_instance(hass)
-    hass.states.set("sensor.on", "on")
+    hass.states.async_set("sensor.on", "on")
     new_state = hass.states.get("sensor.on")
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     now = dt_util.utcnow()
     tomorrow = now + timedelta(days=1)
     one_week_from_now = now + timedelta(days=7)
@@ -912,7 +935,7 @@ def test_execute_stmt_lambda_element(
         start_time_ts = dt_util.utcnow().timestamp()
         stmt = lambda_stmt(
             lambda: _get_single_entity_start_time_stmt(
-                start_time_ts, metadata_id, False, False
+                start_time_ts, metadata_id, False, False, False
             )
         )
         rows = util.execute_stmt_lambda_element(session, stmt)
@@ -1027,14 +1050,14 @@ async def test_resolve_period(hass: HomeAssistant) -> None:
 
 def test_chunked_or_all():
     """Test chunked_or_all can iterate chunk sizes larger than the passed in collection."""
-    all = []
+    all_items = []
     incoming = (1, 2, 3, 4)
     for chunk in chunked_or_all(incoming, 2):
         assert len(chunk) == 2
-        all.extend(chunk)
-    assert all == [1, 2, 3, 4]
+        all_items.extend(chunk)
+    assert all_items == [1, 2, 3, 4]
 
-    all = []
+    all_items = []
     incoming = (1, 2, 3, 4)
     for chunk in chunked_or_all(incoming, 5):
         assert len(chunk) == 4
@@ -1042,5 +1065,5 @@ def test_chunked_or_all():
         # collection since we want to avoid copying the collection
         # if we don't need to
         assert chunk is incoming
-        all.extend(chunk)
-    assert all == [1, 2, 3, 4]
+        all_items.extend(chunk)
+    assert all_items == [1, 2, 3, 4]

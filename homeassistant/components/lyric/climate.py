@@ -1,4 +1,5 @@
 """Support for Honeywell Lyric climate platform."""
+
 from __future__ import annotations
 
 import asyncio
@@ -125,23 +126,22 @@ async def async_setup_entry(
     """Set up the Honeywell Lyric climate platform based on a config entry."""
     coordinator: DataUpdateCoordinator[Lyric] = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
-
-    for location in coordinator.data.locations:
-        for device in location.devices:
-            entities.append(
-                LyricClimate(
-                    coordinator,
-                    ClimateEntityDescription(
-                        key=f"{device.macID}_thermostat",
-                        name=device.name,
-                    ),
-                    location,
-                    device,
-                )
+    async_add_entities(
+        (
+            LyricClimate(
+                coordinator,
+                ClimateEntityDescription(
+                    key=f"{device.macID}_thermostat",
+                    name=device.name,
+                ),
+                location,
+                device,
             )
-
-    async_add_entities(entities, True)
+            for location in coordinator.data.locations
+            for device in location.devices
+        ),
+        True,
+    )
 
     platform = entity_platform.async_get_current_platform()
 

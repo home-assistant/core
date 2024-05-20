@@ -1,5 +1,583 @@
 # serializer version: 1
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_area_cleaned:entity-registry]
+# name: test_sensors[5xu9h3][sensor.goat_g1_area_cleaned:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.goat_g1_area_cleaned',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Area cleaned',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'stats_area',
+    'unique_id': '8516fbb1-17f1-4194-0000000_stats_area',
+    'unit_of_measurement': 'm²',
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_area_cleaned:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Goat G1 Area cleaned',
+      'unit_of_measurement': 'm²',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.goat_g1_area_cleaned',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_battery:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.goat_g1_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '8516fbb1-17f1-4194-0000000_battery_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_battery:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Goat G1 Battery',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.goat_g1_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_blade_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.goat_g1_blade_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Blade lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifespan_blade',
+    'unique_id': '8516fbb1-17f1-4194-0000000_lifespan_blade',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_blade_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Goat G1 Blade lifespan',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.goat_g1_blade_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_cleaning_duration:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.goat_g1_cleaning_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Cleaning duration',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'stats_time',
+    'unique_id': '8516fbb1-17f1-4194-0000000_stats_time',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_cleaning_duration:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Goat G1 Cleaning duration',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.goat_g1_cleaning_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.0',
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_error:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.goat_g1_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Error',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'error',
+    'unique_id': '8516fbb1-17f1-4194-0000000_error',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_error:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'description': 'NoError: Robot is operational',
+      'friendly_name': 'Goat G1 Error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.goat_g1_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_ip_address:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.goat_g1_ip_address',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IP address',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_ip',
+    'unique_id': '8516fbb1-17f1-4194-0000000_network_ip',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_ip_address:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Goat G1 IP address',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.goat_g1_ip_address',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '192.168.0.10',
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_lens_brush_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.goat_g1_lens_brush_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lens brush lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifespan_lens_brush',
+    'unique_id': '8516fbb1-17f1-4194-0000000_lifespan_lens_brush',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_lens_brush_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Goat G1 Lens brush lifespan',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.goat_g1_lens_brush_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_total_area_cleaned:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.goat_g1_total_area_cleaned',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total area cleaned',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_stats_area',
+    'unique_id': '8516fbb1-17f1-4194-0000000_total_stats_area',
+    'unit_of_measurement': 'm²',
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_total_area_cleaned:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Goat G1 Total area cleaned',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'm²',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.goat_g1_total_area_cleaned',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60',
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_total_cleaning_duration:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.goat_g1_total_cleaning_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Total cleaning duration',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_stats_time',
+    'unique_id': '8516fbb1-17f1-4194-0000000_total_stats_time',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_total_cleaning_duration:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Goat G1 Total cleaning duration',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.goat_g1_total_cleaning_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40.000',
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_total_cleanings:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.goat_g1_total_cleanings',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total cleanings',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_stats_cleanings',
+    'unique_id': '8516fbb1-17f1-4194-0000000_total_stats_cleanings',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_total_cleanings:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Goat G1 Total cleanings',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.goat_g1_total_cleanings',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '123',
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_wi_fi_rssi:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.goat_g1_wi_fi_rssi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wi-Fi RSSI',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_rssi',
+    'unique_id': '8516fbb1-17f1-4194-0000000_network_rssi',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_wi_fi_rssi:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Goat G1 Wi-Fi RSSI',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.goat_g1_wi_fi_rssi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-62',
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_wi_fi_ssid:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.goat_g1_wi_fi_ssid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wi-Fi SSID',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_ssid',
+    'unique_id': '8516fbb1-17f1-4194-0000000_network_ssid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[5xu9h3][sensor.goat_g1_wi_fi_ssid:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Goat G1 Wi-Fi SSID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.goat_g1_wi_fi_ssid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Testnetwork',
+  })
+# ---
+# name: test_sensors[yna5x1][sensor.ozmo_950_area_cleaned:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -16,6 +594,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -30,7 +610,7 @@
     'unit_of_measurement': 'm²',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_area_cleaned:state]
+# name: test_sensors[yna5x1][sensor.ozmo_950_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ozmo 950 Area cleaned',
@@ -39,11 +619,12 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_area_cleaned',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_battery:entity-registry]
+# name: test_sensors[yna5x1][sensor.ozmo_950_battery:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -60,6 +641,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -74,7 +657,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_battery:state]
+# name: test_sensors[yna5x1][sensor.ozmo_950_battery:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -84,11 +667,12 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_battery',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_cleaning_duration:entity-registry]
+# name: test_sensors[yna5x1][sensor.ozmo_950_cleaning_duration:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -105,6 +689,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor.private': dict({
@@ -122,7 +708,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_cleaning_duration:state]
+# name: test_sensors[yna5x1][sensor.ozmo_950_cleaning_duration:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -132,11 +718,12 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_cleaning_duration',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5.0',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_error:entity-registry]
+# name: test_sensors[yna5x1][sensor.ozmo_950_error:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -153,6 +740,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -167,7 +756,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_error:state]
+# name: test_sensors[yna5x1][sensor.ozmo_950_error:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'description': 'NoError: Robot is operational',
@@ -176,11 +765,12 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_error',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_filter_lifespan:entity-registry]
+# name: test_sensors[yna5x1][sensor.ozmo_950_filter_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -197,6 +787,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -211,7 +803,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_filter_lifespan:state]
+# name: test_sensors[yna5x1][sensor.ozmo_950_filter_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ozmo 950 Filter lifespan',
@@ -220,11 +812,12 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_filter_lifespan',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '56',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_ip_address:entity-registry]
+# name: test_sensors[yna5x1][sensor.ozmo_950_ip_address:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -241,6 +834,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -255,7 +850,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_ip_address:state]
+# name: test_sensors[yna5x1][sensor.ozmo_950_ip_address:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ozmo 950 IP address',
@@ -263,11 +858,12 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_ip_address',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '192.168.0.10',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_main_brush_lifespan:entity-registry]
+# name: test_sensors[yna5x1][sensor.ozmo_950_main_brush_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -284,6 +880,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -298,7 +896,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_main_brush_lifespan:state]
+# name: test_sensors[yna5x1][sensor.ozmo_950_main_brush_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ozmo 950 Main brush lifespan',
@@ -307,11 +905,12 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_main_brush_lifespan',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '80',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_side_brushes_lifespan:entity-registry]
+# name: test_sensors[yna5x1][sensor.ozmo_950_side_brushes_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -328,6 +927,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -342,7 +943,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_side_brushes_lifespan:state]
+# name: test_sensors[yna5x1][sensor.ozmo_950_side_brushes_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ozmo 950 Side brushes lifespan',
@@ -351,11 +952,12 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_side_brushes_lifespan',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_total_area_cleaned:entity-registry]
+# name: test_sensors[yna5x1][sensor.ozmo_950_total_area_cleaned:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -374,6 +976,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -388,7 +992,7 @@
     'unit_of_measurement': 'm²',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_total_area_cleaned:state]
+# name: test_sensors[yna5x1][sensor.ozmo_950_total_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ozmo 950 Total area cleaned',
@@ -398,11 +1002,12 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_total_area_cleaned',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '60',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_total_cleaning_duration:entity-registry]
+# name: test_sensors[yna5x1][sensor.ozmo_950_total_cleaning_duration:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -421,6 +1026,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor.private': dict({
@@ -438,7 +1045,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_total_cleaning_duration:state]
+# name: test_sensors[yna5x1][sensor.ozmo_950_total_cleaning_duration:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -449,11 +1056,12 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_total_cleaning_duration',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.000',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_total_cleanings:entity-registry]
+# name: test_sensors[yna5x1][sensor.ozmo_950_total_cleanings:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -472,6 +1080,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -486,7 +1096,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_total_cleanings:state]
+# name: test_sensors[yna5x1][sensor.ozmo_950_total_cleanings:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ozmo 950 Total cleanings',
@@ -495,11 +1105,12 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_total_cleanings',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '123',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_wi_fi_rssi:entity-registry]
+# name: test_sensors[yna5x1][sensor.ozmo_950_wi_fi_rssi:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -516,6 +1127,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -530,7 +1143,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_wi_fi_rssi:state]
+# name: test_sensors[yna5x1][sensor.ozmo_950_wi_fi_rssi:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ozmo 950 Wi-Fi RSSI',
@@ -538,11 +1151,12 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_wi_fi_rssi',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-62',
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_wi_fi_ssid:entity-registry]
+# name: test_sensors[yna5x1][sensor.ozmo_950_wi_fi_ssid:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -559,6 +1173,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -573,7 +1189,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[yna5x1-entity_ids0][sensor.ozmo_950_wi_fi_ssid:state]
+# name: test_sensors[yna5x1][sensor.ozmo_950_wi_fi_ssid:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ozmo 950 Wi-Fi SSID',
@@ -581,6 +1197,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_wi_fi_ssid',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Testnetwork',
   })

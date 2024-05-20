@@ -1,4 +1,5 @@
 """Constants for the Alexa integration."""
+
 from collections import OrderedDict
 
 from homeassistant.components import climate

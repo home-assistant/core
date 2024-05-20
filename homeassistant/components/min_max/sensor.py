@@ -1,4 +1,5 @@
 """Support for displaying minimal, maximal, mean or median values."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -22,20 +23,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    EventType,
-    StateType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import PLATFORMS
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
@@ -257,7 +250,7 @@ class MinMaxSensor(SensorEntity):
         # Replay current state of source entities
         for entity_id in self._entity_ids:
             state = self.hass.states.get(entity_id)
-            state_event: EventType[EventStateChangedData] = EventType(
+            state_event: Event[EventStateChangedData] = Event(
                 "", {"entity_id": entity_id, "new_state": state, "old_state": None}
             )
             self._async_min_max_sensor_state_listener(state_event, update_state=False)
@@ -292,7 +285,7 @@ class MinMaxSensor(SensorEntity):
 
     @callback
     def _async_min_max_sensor_state_listener(
-        self, event: EventType[EventStateChangedData], update_state: bool = True
+        self, event: Event[EventStateChangedData], update_state: bool = True
     ) -> None:
         """Handle the sensor state changes."""
         new_state = event.data["new_state"]

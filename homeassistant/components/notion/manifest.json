@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["aionotion"],
-  "requirements": ["aionotion==2024.02.1"]
+  "requirements": ["aionotion==2024.03.0"]
 }

@@ -1,4 +1,5 @@
 """Test significant change helper."""
+
 import pytest
 
 from homeassistant.components.sensor import SensorDeviceClass
@@ -17,9 +18,9 @@ async def checker_fixture(hass):
     ):
         return abs(float(old_state) - float(new_state)) > 4
 
-    hass.data[significant_change.DATA_FUNCTIONS][
-        "test_domain"
-    ] = async_check_significant_change
+    hass.data[significant_change.DATA_FUNCTIONS]["test_domain"] = (
+        async_check_significant_change
+    )
     return checker
 
 

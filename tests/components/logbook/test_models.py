@@ -1,4 +1,5 @@
 """The tests for the logbook component models."""
+
 from unittest.mock import Mock
 
 from homeassistant.components.logbook.models import LazyEventPartialState

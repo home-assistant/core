@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable, Generator
 import copy
 from dataclasses import dataclass, field
 import time
-from typing import Any, TypeVar
+from typing import Any
 
 from google_nest_sdm.auth import AbstractAuth
 from google_nest_sdm.device import Device
@@ -20,8 +20,7 @@ from homeassistant.components.nest import DOMAIN
 
 # Typing helpers
 PlatformSetup = Callable[[], Awaitable[None]]
-_T = TypeVar("_T")
-YieldFixture = Generator[_T, None, None]
+type YieldFixture[_T] = Generator[_T, None, None]
 
 WEB_AUTH_DOMAIN = DOMAIN
 APP_AUTH_DOMAIN = f"{DOMAIN}.installed"
@@ -148,7 +147,9 @@ class CreateDevice:
         self.data = {"traits": {}}
 
     def create(
-        self, raw_traits: dict[str, Any] = None, raw_data: dict[str, Any] = None
+        self,
+        raw_traits: dict[str, Any] | None = None,
+        raw_data: dict[str, Any] | None = None,
     ) -> None:
         """Create a new device with the specifeid traits."""
         data = copy.deepcopy(self.data)

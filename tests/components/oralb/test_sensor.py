@@ -58,9 +58,12 @@ async def test_sensors(
     # Fastforward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch_bluetooth_time(
-        monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with (
+        patch_bluetooth_time(
+            monotonic_now,
+        ),
+        patch_all_discovered_devices([]),
+    ):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()
@@ -107,9 +110,12 @@ async def test_sensors_io_series_4(
     # Fast-forward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch_bluetooth_time(
-        monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with (
+        patch_bluetooth_time(
+            monotonic_now,
+        ),
+        patch_all_discovered_devices([]),
+    ):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()

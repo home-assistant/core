@@ -1,24 +1,16 @@
 """NextBus sensor."""
+
 from __future__ import annotations
 
 from itertools import chain
 import logging
 from typing import cast
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
-    SensorDeviceClass,
-    SensorEntity,
-)
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_STOP
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utc_from_timestamp
 
@@ -27,43 +19,6 @@ from .coordinator import NextBusDataUpdateCoordinator
 from .util import listify, maybe_first
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_AGENCY): cv.string,
-        vol.Required(CONF_ROUTE): cv.string,
-        vol.Required(CONF_STOP): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Initialize nextbus import from config."""
-    async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        is_fixable=False,
-        breaks_in_ha_version="2024.4.0",
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "NextBus",
-        },
-    )
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
 
 
 async def async_setup_entry(
@@ -105,7 +60,7 @@ class NextBusDepartureSensor(
     """
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
-    _attr_icon = "mdi:bus"
+    _attr_translation_key = "nextbus"
 
     def __init__(
         self,
@@ -127,11 +82,13 @@ class NextBusDepartureSensor(
 
     def _log_debug(self, message, *args):
         """Log debug message with prefix."""
-        _LOGGER.debug(":".join((self.agency, self.route, self.stop, message)), *args)
+        msg = f"{self.agency}:{self.route}:{self.stop}:{message}"
+        _LOGGER.debug(msg, *args)
 
     def _log_err(self, message, *args):
         """Log error message with prefix."""
-        _LOGGER.error(":".join((self.agency, self.route, self.stop, message)), *args)
+        msg = f"{self.agency}:{self.route}:{self.stop}:{message}"
+        _LOGGER.error(msg, *args)
 
     async def async_added_to_hass(self) -> None:
         """Read data from coordinator after adding to hass."""
