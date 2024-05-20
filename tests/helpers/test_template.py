@@ -131,7 +131,11 @@ async def test_template_render_missing_hass(hass: HomeAssistant) -> None:
 
 
 async def test_template_render_info_collision(hass: HomeAssistant) -> None:
-    """Test template render info collision."""
+    """Test template render info collision.
+
+    This usually means the template is being rendered
+    in the wrong thread.
+    """
     hass.states.async_set("sensor.test", "23")
     template_str = "{{ states('sensor.test') }}"
     template_obj = template.Template(template_str, None)
