@@ -538,17 +538,7 @@ class HomeAssistantSkyConnectConfigFlow(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm a discovery."""
-        self._set_confirm_only()
-
-        # Without confirmation, discovery can automatically progress into parts of the
-        # config flow logic that interacts with hardware.
-        if user_input is not None:
-            return await self.async_step_pick_firmware()
-
-        return self.async_show_form(
-            step_id="confirm",
-            description_placeholders=self._get_translation_placeholders(),
-        )
+        return await self.async_step_pick_firmware()
 
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
