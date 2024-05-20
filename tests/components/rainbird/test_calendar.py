@@ -22,7 +22,7 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 TEST_ENTITY = "calendar.rain_bird_controller"
-GetEventsFn = Callable[[str, str], Awaitable[dict[str, Any]]]
+type GetEventsFn = Callable[[str, str], Awaitable[dict[str, Any]]]
 
 SCHEDULE_RESPONSES = [
     # Current controller status
