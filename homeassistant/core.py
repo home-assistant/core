@@ -857,7 +857,7 @@ class HomeAssistant:
         return task
 
     @callback
-    def async_add_executor_job[_T, *_Ts](
+    def async_add_executor_job[*_Ts, _T](
         self, target: Callable[[*_Ts], _T], *args: *_Ts
     ) -> asyncio.Future[_T]:
         """Add an executor job from within the event loop."""
@@ -871,7 +871,7 @@ class HomeAssistant:
         return task
 
     @callback
-    def async_add_import_executor_job[_T, *_Ts](
+    def async_add_import_executor_job[*_Ts, _T](
         self, target: Callable[[*_Ts], _T], *args: *_Ts
     ) -> asyncio.Future[_T]:
         """Add an import executor job from within the event loop.
