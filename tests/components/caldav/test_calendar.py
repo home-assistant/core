@@ -315,10 +315,10 @@ def mock_tz() -> str | None:
 
 
 @pytest.fixture(autouse=True)
-def set_tz(hass: HomeAssistant, tz: str | None) -> None:
+async def set_tz(hass: HomeAssistant, tz: str | None) -> None:
     """Fixture to set the default TZ to the one requested."""
     if tz is not None:
-        hass.config.set_time_zone(tz)
+        await hass.config.async_set_time_zone(tz)
 
 
 @pytest.fixture(autouse=True)

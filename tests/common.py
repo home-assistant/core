@@ -282,7 +282,7 @@ async def async_test_home_assistant(
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
     hass.config.elevation = 0
-    hass.config.set_time_zone("US/Pacific")
+    await hass.config.async_set_time_zone("US/Pacific")
     hass.config.units = METRIC_SYSTEM
     hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
