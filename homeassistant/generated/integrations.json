@@ -188,7 +188,7 @@
     },
     "alarmdecoder": {
       "name": "AlarmDecoder",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -408,6 +408,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "apsystems": {
+      "name": "APsystems",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "aqualogic": {
       "name": "AquaLogic",
       "integration_type": "hub",
@@ -560,7 +566,7 @@
     },
     "aurora_abb_powerone": {
       "name": "Aurora ABB PowerOne Solar PV",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2106,7 +2112,7 @@
       "iot_class": "cloud_polling"
     },
     "generic": {
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -2265,7 +2271,7 @@
           "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling",
-          "name": "Google Generative AI Conversation"
+          "name": "Google Generative AI"
         },
         "google_mail": {
           "integration_type": "service",
@@ -4858,7 +4864,7 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "rainforest": {
+    "rainforest_automation": {
       "name": "Rainforest Automation",
       "integrations": {
         "rainforest_eagle": {
@@ -6852,7 +6858,7 @@
     },
     "wyoming": {
       "name": "Wyoming Protocol",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_push"
     },

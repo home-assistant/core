@@ -13,7 +13,7 @@ from matter_server.client.models.node import MatterEndpoint
 from homeassistant.const import Platform
 from homeassistant.helpers.entity import EntityDescription
 
-SensorValueTypes = type[
+type SensorValueTypes = type[
     clusters.uint | int | clusters.Nullable | clusters.float32 | float
 ]
 

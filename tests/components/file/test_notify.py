@@ -32,8 +32,13 @@ async def test_bad_config(hass: HomeAssistant) -> None:
     ("domain", "service", "params"),
     [
         (notify.DOMAIN, "test", {"message": "one, two, testing, testing"}),
+        (
+            notify.DOMAIN,
+            "send_message",
+            {"entity_id": "notify.test", "message": "one, two, testing, testing"},
+        ),
     ],
-    ids=["legacy"],
+    ids=["legacy", "entity"],
 )
 @pytest.mark.parametrize(
     ("timestamp", "config"),
@@ -46,6 +51,7 @@ async def test_bad_config(hass: HomeAssistant) -> None:
                         "name": "test",
                         "platform": "file",
                         "filename": "mock_file",
+                        "timestamp": False,
                     }
                 ]
             },
@@ -277,6 +283,16 @@ async def test_legacy_notify_file_not_allowed(
 
 
 @pytest.mark.parametrize(
+    ("service", "params"),
+    [
+        ("test", {"message": "one, two, testing, testing"}),
+        (
+            "send_message",
+            {"entity_id": "notify.test", "message": "one, two, testing, testing"},
+        ),
+    ],
+)
+@pytest.mark.parametrize(
     ("data", "is_allowed"),
     [
         (
@@ -295,12 +311,12 @@ async def test_notify_file_write_access_failed(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_is_allowed_path: MagicMock,
+    service: str,
+    params: dict[str, Any],
     data: dict[str, Any],
 ) -> None:
     """Test the notify file fails."""
     domain = notify.DOMAIN
-    service = "test"
-    params = {"message": "one, two, testing, testing"}
 
     entry = MockConfigEntry(
         domain=DOMAIN, data=data, title=f"test [{data['file_path']}]"

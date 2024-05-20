@@ -31,6 +31,95 @@
         }
       }
     },
+    "select": {
+      "climate_state_seat_heater_left": {
+        "name": "Seat heater front left",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium",
+          "off": "Off"
+        }
+      },
+      "climate_state_seat_heater_rear_center": {
+        "name": "Seat heater rear center",
+        "state": {
+          "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_seat_heater_rear_left": {
+        "name": "Seat heater rear left",
+        "state": {
+          "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_seat_heater_rear_right": {
+        "name": "Seat heater rear right",
+        "state": {
+          "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_seat_heater_right": {
+        "name": "Seat heater front right",
+        "state": {
+          "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_seat_heater_third_row_left": {
+        "name": "Seat heater third row left",
+        "state": {
+          "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_seat_heater_third_row_right": {
+        "name": "Seat heater third row right",
+        "state": {
+          "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_steering_wheel_heat_level": {
+        "name": "Steering wheel heater",
+        "state": {
+          "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
+          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "components_customer_preferred_export_rule": {
+        "name": "Allow export",
+        "state": {
+          "battery_ok": "Battery",
+          "never": "Never",
+          "pv_only": "Solar only"
+        }
+      },
+      "default_real_mode": {
+        "name": "Operation mode",
+        "state": {
+          "autonomous": "Autonomous",
+          "backup": "Backup",
+          "self_consumption": "Self consumption"
+        }
+      }
+    },
     "sensor": {
       "battery_power": {
         "name": "Battery power"

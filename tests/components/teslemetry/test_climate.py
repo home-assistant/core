@@ -27,6 +27,7 @@ from homeassistant.helpers import entity_registry as er
 from . import assert_entities, setup_platform
 from .const import (
     COMMAND_ERRORS,
+    COMMAND_IGNORED_REASON,
     METADATA_NOSCOPE,
     VEHICLE_DATA_ALT,
     WAKE_UP_ASLEEP,
@@ -134,8 +135,7 @@ async def test_climate_offline(
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
 
-@pytest.mark.parametrize("response", COMMAND_ERRORS)
-async def test_errors(hass: HomeAssistant, response: str) -> None:
+async def test_invalid_error(hass: HomeAssistant) -> None:
     """Tests service error is handled."""
 
     await setup_platform(hass, platforms=[Platform.CLIMATE])
@@ -157,13 +157,41 @@ async def test_errors(hass: HomeAssistant, response: str) -> None:
         mock_on.assert_called_once()
         assert error.from_exception == InvalidCommand
 
+
+@pytest.mark.parametrize("response", COMMAND_ERRORS)
+async def test_errors(hass: HomeAssistant, response: str) -> None:
+    """Tests service reason is handled."""
+
+    await setup_platform(hass, platforms=[Platform.CLIMATE])
+    entity_id = "climate.test_climate"
+
     with (
         patch(
             "homeassistant.components.teslemetry.VehicleSpecific.auto_conditioning_start",
             return_value=response,
         ) as mock_on,
-        pytest.raises(HomeAssistantError) as error,
+        pytest.raises(HomeAssistantError),
     ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: [entity_id]},
+            blocking=True,
+        )
+        mock_on.assert_called_once()
+
+
+async def test_ignored_error(
+    hass: HomeAssistant,
+) -> None:
+    """Tests ignored error is handled."""
+
+    await setup_platform(hass, [Platform.CLIMATE])
+    entity_id = "climate.test_climate"
+    with patch(
+        "homeassistant.components.teslemetry.VehicleSpecific.auto_conditioning_start",
+        return_value=COMMAND_IGNORED_REASON,
+    ) as mock_on:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_TURN_ON,

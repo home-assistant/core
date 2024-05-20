@@ -3,15 +3,14 @@
 from typing import Any
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import AdvantageAirDataConfigEntry
 from .const import (
     ADVANTAGE_AIR_AUTOFAN_ENABLED,
     ADVANTAGE_AIR_STATE_OFF,
     ADVANTAGE_AIR_STATE_ON,
-    DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
 from .entity import AdvantageAirAcEntity, AdvantageAirThingEntity
 from .models import AdvantageAirData
@@ -19,12 +18,12 @@ from .models import AdvantageAirData
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AdvantageAirDataConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AdvantageAir switch platform."""
 
-    instance: AdvantageAirData = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
+    instance = config_entry.runtime_data
 
     entities: list[SwitchEntity] = []
     if aircons := instance.coordinator.data.get("aircons"):

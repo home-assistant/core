@@ -16,19 +16,18 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import AdvantageAirDataConfigEntry
 from .const import (
     ADVANTAGE_AIR_AUTOFAN_ENABLED,
     ADVANTAGE_AIR_STATE_CLOSE,
     ADVANTAGE_AIR_STATE_OFF,
     ADVANTAGE_AIR_STATE_ON,
     ADVANTAGE_AIR_STATE_OPEN,
-    DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
 from .entity import AdvantageAirAcEntity, AdvantageAirZoneEntity
 from .models import AdvantageAirData
@@ -76,12 +75,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AdvantageAirDataConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AdvantageAir climate platform."""
 
-    instance: AdvantageAirData = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
+    instance = config_entry.runtime_data
 
     entities: list[ClimateEntity] = []
     if aircons := instance.coordinator.data.get("aircons"):
