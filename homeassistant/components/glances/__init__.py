@@ -100,7 +100,7 @@ async def get_api(hass: HomeAssistant, entry_data: dict[str, Any]) -> Glances:
             )
         _LOGGER.debug("Connected to Glances API v%s", version)
         return api
-    raise ServerVersionMismatch("Could not connect to Glances API version 2 or 3")
+    raise ServerVersionMismatch("Could not connect to Glances API version 2, 3 or 4")
 
 
 class ServerVersionMismatch(HomeAssistantError):
