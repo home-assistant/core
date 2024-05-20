@@ -7,7 +7,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from kasa.exceptions import AuthenticationException
+from kasa import AuthenticationException
 import pytest
 
 from homeassistant import setup
