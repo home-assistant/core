@@ -2,8 +2,6 @@
 
 from functools import partial
 
-from pytest_unordered import unordered
-
 from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.components.media_player.const import MediaClass, MediaType
 from homeassistant.components.sonos.media_browser import (
@@ -143,7 +141,7 @@ async def test_browse_media_root(
             "children_media_class": None,
         },
     ]
-    assert response["result"]["children"] == unordered(expected_children)
+    assert response["result"]["children"] == expected_children
 
 
 async def test_browse_media_library(
@@ -240,7 +238,7 @@ async def test_browse_media_library(
             "children_media_class": None,
         },
     ]
-    assert response["result"]["children"] == unordered(expected_children)
+    assert response["result"]["children"] == expected_children
 
 
 async def test_browse_media_library_albums(
@@ -298,5 +296,5 @@ async def test_browse_media_library_albums(
             "children_media_class": None,
         },
     ]
-    assert response["result"]["children"] == unordered(expected_children)
+    assert response["result"]["children"] == expected_children
     assert soco_mock.music_library.browse_by_idstring.call_count == 1
