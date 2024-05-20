@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import TypeVar, cast
+from typing import cast
 
 from aiopyarr import (
     Command,
@@ -26,21 +26,20 @@ import homeassistant.util.dt as dt_util
 
 from .const import CONF_UPCOMING_DAYS, CONF_WANTED_MAX_ITEMS, DOMAIN, LOGGER
 
-SonarrDataT = TypeVar(
-    "SonarrDataT",
-    bound=(
-        list[SonarrCalendar]
-        | list[Command]
-        | list[Diskspace]
-        | SonarrQueue
-        | list[SonarrSeries]
-        | SystemStatus
-        | SonarrWantedMissing
-    ),
+type _DataType = (
+    list[SonarrCalendar]
+    | list[Command]
+    | list[Diskspace]
+    | SonarrQueue
+    | list[SonarrSeries]
+    | SystemStatus
+    | SonarrWantedMissing
 )
 
 
-class SonarrDataUpdateCoordinator(DataUpdateCoordinator[SonarrDataT]):
+class SonarrDataUpdateCoordinator[SonarrDataT: _DataType](
+    DataUpdateCoordinator[SonarrDataT]
+):
     """Data update coordinator for the Sonarr integration."""
 
     config_entry: ConfigEntry
