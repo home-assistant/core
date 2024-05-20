@@ -1,5 +1,6 @@
 """Tests for the TP-Link component."""
 
+from collections import namedtuple
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from kasa import (
@@ -9,12 +10,12 @@ from kasa import (
     EncryptType,
     SmartBulb,
     SmartDevice,
+    SmartDeviceException,
     SmartDimmer,
     SmartLightStrip,
     SmartPlug,
     SmartStrip,
 )
-from kasa.exceptions import SmartDeviceException
 from kasa.protocol import BaseProtocol
 
 from homeassistant.components.tplink import (
@@ -28,6 +29,8 @@ from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+ColorTempRange = namedtuple("ColorTempRange", ["min", "max"])
 
 MODULE = "homeassistant.components.tplink"
 MODULE_CONFIG_FLOW = "homeassistant.components.tplink.config_flow"
@@ -111,6 +114,9 @@ def _mocked_bulb(
     bulb.brightness = 50
     bulb.color_temp = 4000
     bulb.is_color = True
+    bulb.is_variable_color_temp = True
+    bulb.is_dimmable = True
+    bulb.is_brightness = True
     bulb.is_strip = False
     bulb.is_plug = False
     bulb.is_dimmer = False
@@ -120,8 +126,7 @@ def _mocked_bulb(
     bulb.effect_list = None
     bulb.hsv = (10, 30, 5)
     bulb.device_id = mac
-    bulb.valid_temperature_range.min = 4000
-    bulb.valid_temperature_range.max = 9000
+    bulb.valid_temperature_range = ColorTempRange(min=4000, max=9000)
     bulb.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
     bulb.turn_off = AsyncMock()
     bulb.turn_on = AsyncMock()
@@ -152,6 +157,9 @@ def _mocked_smart_light_strip() -> SmartLightStrip:
     strip.brightness = 50
     strip.color_temp = 4000
     strip.is_color = True
+    strip.is_variable_color_temp = True
+    strip.is_dimmable = True
+    strip.is_brightness = True
     strip.is_strip = False
     strip.is_plug = False
     strip.is_dimmer = False
@@ -161,8 +169,7 @@ def _mocked_smart_light_strip() -> SmartLightStrip:
     strip.effect_list = ["Effect1", "Effect2"]
     strip.hsv = (10, 30, 5)
     strip.device_id = MAC_ADDRESS
-    strip.valid_temperature_range.min = 4000
-    strip.valid_temperature_range.max = 9000
+    strip.valid_temperature_range = ColorTempRange(min=4000, max=9000)
     strip.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
     strip.turn_off = AsyncMock()
     strip.turn_on = AsyncMock()
@@ -195,8 +202,7 @@ def _mocked_dimmer() -> SmartDimmer:
     dimmer.effect_list = None
     dimmer.hsv = (10, 30, 5)
     dimmer.device_id = MAC_ADDRESS
-    dimmer.valid_temperature_range.min = 4000
-    dimmer.valid_temperature_range.max = 9000
+    dimmer.valid_temperature_range = ColorTempRange(min=4000, max=9000)
     dimmer.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
     dimmer.turn_off = AsyncMock()
     dimmer.turn_on = AsyncMock()
