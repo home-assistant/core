@@ -15,8 +15,9 @@ from aioautomower.model import (
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -61,6 +62,7 @@ async def async_setup_entry(
                     )
                     for stay_out_zone_uid in _stay_out_zones.zones
                 )
+            async_remove_entities(hass, coordinator, entry, mower_id)
     async_add_entities(entities)
 
 
@@ -130,7 +132,7 @@ class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
         self.coordinator = coordinator
         self.stay_out_zone_uid = stay_out_zone_uid
         self._attr_unique_id = (
-            f"{self.mower_id}_{self._attr_translation_key}_{stay_out_zone_uid}"
+            f"{self.mower_id}_{stay_out_zone_uid}_{self._attr_translation_key}"
         )
         self._attr_translation_placeholders = {"stay_out_zone": self.stay_out_zone.name}
 
@@ -185,3 +187,27 @@ class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
             raise HomeAssistantError(
                 f"Command couldn't be sent to the command queue: {exception}"
             ) from exception
+
+
+@callback
+def async_remove_entities(
+    hass: HomeAssistant,
+    coordinator: AutomowerDataUpdateCoordinator,
+    config_entry: ConfigEntry,
+    mower_id: str,
+) -> None:
+    """Remove deleted stay-out-zones from Home Assistant."""
+    entity_reg = er.async_get(hass)
+    active_zones = set()
+    _zones = coordinator.data[mower_id].stay_out_zones
+    if _zones is not None:
+        for zones_uid in _zones.zones:
+            uid = f"{mower_id}_{zones_uid}_stay_out_zones"
+            active_zones.add(uid)
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_reg, config_entry.entry_id
+        ):
+            if entity_entry.unique_id.split("_")[0] == mower_id:
+                if entity_entry.unique_id.endswith("stay_out_zones"):
+                    if entity_entry.unique_id not in active_zones:
+                        entity_reg.async_remove(entity_entry.entity_id)
