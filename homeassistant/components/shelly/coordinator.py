@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, Generic, TypeVar, cast
+from typing import Any, cast
 
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
@@ -70,8 +70,6 @@ from .utils import (
     update_device_fw_info,
 )
 
-_DeviceT = TypeVar("_DeviceT", bound="BlockDevice|RpcDevice")
-
 
 @dataclass
 class ShellyEntryData:
@@ -86,7 +84,9 @@ class ShellyEntryData:
 type ShellyConfigEntry = ConfigEntry[ShellyEntryData]
 
 
-class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
+class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
+    DataUpdateCoordinator[None]
+):
     """Coordinator for a Shelly device."""
 
     def __init__(
