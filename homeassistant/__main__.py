@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import suppress
 import faulthandler
 import os
 import sys
@@ -208,8 +209,10 @@ def main() -> int:
         exit_code = runner.run(runtime_conf)
         faulthandler.disable()
 
-    if os.path.getsize(fault_file_name) == 0:
-        os.remove(fault_file_name)
+    # It's possible for the fault file to disappear, so suppress obvious errors
+    with suppress(FileNotFoundError):
+        if os.path.getsize(fault_file_name) == 0:
+            os.remove(fault_file_name)
 
     check_threads()
 

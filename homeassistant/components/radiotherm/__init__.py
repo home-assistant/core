@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Coroutine
-from typing import Any, TypeVar
+from typing import Any
 from urllib.error import URLError
 
 from radiotherm.validate import RadiothermTstatError
@@ -20,10 +20,8 @@ from .util import async_set_time
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SWITCH]
 
-_T = TypeVar("_T")
 
-
-async def _async_call_or_raise_not_ready(
+async def _async_call_or_raise_not_ready[_T](
     coro: Coroutine[Any, Any, _T], host: str
 ) -> _T:
     """Call a coro or raise ConfigEntryNotReady."""

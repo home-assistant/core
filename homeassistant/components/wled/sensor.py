@@ -28,7 +28,7 @@ from homeassistant.util.dt import utcnow
 
 from . import WLEDConfigEntry
 from .coordinator import WLEDDataUpdateCoordinator
-from .models import WLEDEntity
+from .entity import WLEDEntity
 
 
 @dataclass(frozen=True, kw_only=True)

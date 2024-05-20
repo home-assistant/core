@@ -82,16 +82,26 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+MIN_BUFFER_SIZE = 131072  # Minimum buffer size to use if preferred size fails
+PREFERRED_BUFFER_SIZE = 2097152  # Set receive buffer size to 2MB
+
 DISCOVERY_COOLDOWN = 5
-INITIAL_SUBSCRIBE_COOLDOWN = 3.0
+# The initial subscribe cooldown controls how long to wait to group
+# subscriptions together. This is to avoid making too many subscribe
+# requests in a short period of time. If the number is too low, the
+# system will be flooded with subscribe requests. If the number is too
+# high, we risk being flooded with responses to the subscribe requests
+# which can exceed the receive buffer size of the socket. To mitigate
+# this, we increase the receive buffer size of the socket as well.
+INITIAL_SUBSCRIBE_COOLDOWN = 0.5
 SUBSCRIBE_COOLDOWN = 0.1
 UNSUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
 RECONNECT_INTERVAL_SECONDS = 10
 
-SocketType = socket.socket | ssl.SSLSocket | Any
+type SocketType = socket.socket | ssl.SSLSocket | Any
 
-SubscribePayloadType = str | bytes  # Only bytes if encoding is None
+type SubscribePayloadType = str | bytes  # Only bytes if encoding is None
 
 
 def publish(
@@ -427,6 +437,7 @@ class MQTT:
                 hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self._async_ha_stop),
             )
         )
+        self._socket_buffersize: int | None = None
 
     @callback
     def _async_ha_started(self, _hass: HomeAssistant) -> None:
@@ -527,6 +538,37 @@ class MQTT:
                 self.hass, self._misc_loop(), name="mqtt misc loop"
             )
 
+    def _increase_socket_buffer_size(self, sock: SocketType) -> None:
+        """Increase the socket buffer size."""
+        if not hasattr(sock, "setsockopt") and hasattr(sock, "_socket"):
+            # The WebsocketWrapper does not wrap setsockopt
+            # so we need to get the underlying socket
+            # Remove this once
+            # https://github.com/eclipse/paho.mqtt.python/pull/843
+            # is available.
+            sock = sock._socket  # noqa: SLF001
+
+        new_buffer_size = PREFERRED_BUFFER_SIZE
+        while True:
+            try:
+                # Some operating systems do not allow us to set the preferred
+                # buffer size. In that case we try some other size options.
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, new_buffer_size)
+            except OSError as err:
+                if new_buffer_size <= MIN_BUFFER_SIZE:
+                    _LOGGER.warning(
+                        "Unable to increase the socket buffer size to %s; "
+                        "The connection may be unstable if the MQTT broker "
+                        "sends data at volume or a large amount of subscriptions "
+                        "need to be processed: %s",
+                        new_buffer_size,
+                        err,
+                    )
+                    return
+                new_buffer_size //= 2
+            else:
+                return
+
     def _on_socket_open(
         self, client: mqtt.Client, userdata: Any, sock: SocketType
     ) -> None:
@@ -543,6 +585,7 @@ class MQTT:
         fileno = sock.fileno()
         _LOGGER.debug("%s: connection opened %s", self.config_entry.title, fileno)
         if fileno > -1:
+            self._increase_socket_buffer_size(sock)
             self.loop.add_reader(sock, partial(self._async_reader_callback, client))
         self._async_start_misc_loop()
 
@@ -921,7 +964,7 @@ class MQTT:
 
         self.connected = True
         async_dispatcher_send(self.hass, MQTT_CONNECTED)
-        _LOGGER.info(
+        _LOGGER.debug(
             "Connected to MQTT server %s:%s (%s)",
             self.conf[CONF_BROKER],
             self.conf.get(CONF_PORT, DEFAULT_PORT),

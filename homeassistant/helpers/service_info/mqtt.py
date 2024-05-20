@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from homeassistant.data_entry_flow import BaseServiceInfo
 
-ReceivePayloadType = str | bytes
+type ReceivePayloadType = str | bytes
 
 
 @dataclass(slots=True)
