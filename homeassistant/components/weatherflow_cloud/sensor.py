@@ -49,23 +49,25 @@ class WeatherFlowCloudSensorEntityDescription(
 def wind_direction_icon_fn(degree: int) -> str:
     """Return a wind icon based on the degrees."""
     degree = degree % 360  # Normalize degrees
-    direction_ranges = {
-        range(23): "mdi:arrow-up-thin",
-        range(23, 68): "mdi:arrow-top-right-thin",
-        range(68, 113): "mdi:arrow-right-thin",
-        range(113, 158): "mdi:arrow-bottom-right-thin",
-        range(158, 203): "mdi:arrow-down-thin",
-        range(203, 248): "mdi:arrow-bottom-left-thin",
-        range(248, 293): "mdi:arrow-left-thin",
-        range(293, 338): "mdi:arrow-top-left-thin",
-        range(338, 361): "mdi:arrow-up-thin",
-    }
 
-    for degree_range, icon in direction_ranges.items():
-        if degree in degree_range:
-            return icon
+    if degree < 23:
+        return "mdi:arrow-up-thin"
+    if degree < 68:
+        return "mdi:arrow-top-right-thin"
+    if degree < 113:
+        return "mdi:arrow-right-thin"
+    if degree < 158:
+        return "mdi:arrow-bottom-right-thin"
+    if degree < 203:
+        return "mdi:arrow-down-thin"
+    if degree < 248:
+        return "mdi:arrow-bottom-left-thin"
+    if degree < 293:
+        return "mdi:arrow-left-thin"
+    if degree < 338:
+        return "mdi:arrow-top-left-thin"
 
-    return "mdi:compass-outline"
+    return "mdi:arrow-up-thin"
 
 
 WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
