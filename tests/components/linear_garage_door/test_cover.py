@@ -1,221 +1,124 @@
 """Test Linear Garage Door cover."""
 
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import AsyncMock
+
+from freezegun.api import FrozenDateTimeFactory
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
+)
+from homeassistant.components.linear_garage_door import DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    Platform,
 )
-from homeassistant.components.linear_garage_door.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers import entity_registry as er
 
-from .util import async_init_integration
+from . import setup_integration
 
-from tests.common import async_fire_time_changed
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+    snapshot_platform,
+)
 
 
-async def test_data(hass: HomeAssistant) -> None:
+async def test_covers(
+    hass: HomeAssistant,
+    mock_linear: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test that data gets parsed and returned appropriately."""
 
-    await async_init_integration(hass)
+    await setup_integration(hass, mock_config_entry, [Platform.COVER])
 
-    assert hass.data[DOMAIN]
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert entries
-    assert len(entries) == 1
-    assert entries[0].state is ConfigEntryState.LOADED
-    assert hass.states.get("cover.test_garage_1").state == STATE_OPEN
-    assert hass.states.get("cover.test_garage_2").state == STATE_CLOSED
-    assert hass.states.get("cover.test_garage_3").state == STATE_OPENING
-    assert hass.states.get("cover.test_garage_4").state == STATE_CLOSING
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_open_cover(hass: HomeAssistant) -> None:
+async def test_open_cover(
+    hass: HomeAssistant, mock_linear: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
     """Test that opening the cover works as intended."""
 
-    await async_init_integration(hass)
+    await setup_integration(hass, mock_config_entry, [Platform.COVER])
 
-    with patch(
-        "homeassistant.components.linear_garage_door.coordinator.Linear.operate_device"
-    ) as operate_device:
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: "cover.test_garage_1"},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: "cover.test_garage_1"},
+        blocking=True,
+    )
 
-    assert operate_device.call_count == 0
+    assert mock_linear.operate_device.call_count == 0
 
-    with (
-        patch(
-            "homeassistant.components.linear_garage_door.coordinator.Linear.login",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.linear_garage_door.coordinator.Linear.operate_device",
-            return_value=None,
-        ) as operate_device,
-        patch(
-            "homeassistant.components.linear_garage_door.coordinator.Linear.close",
-            return_value=True,
-        ),
-    ):
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: "cover.test_garage_2"},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: "cover.test_garage_2"},
+        blocking=True,
+    )
 
-    assert operate_device.call_count == 1
-    with (
-        patch(
-            "homeassistant.components.linear_garage_door.coordinator.Linear.login",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.linear_garage_door.coordinator.Linear.get_devices",
-            return_value=[
-                {
-                    "id": "test1",
-                    "name": "Test Garage 1",
-                    "subdevices": ["GDO", "Light"],
-                },
-                {
-                    "id": "test2",
-                    "name": "Test Garage 2",
-                    "subdevices": ["GDO", "Light"],
-                },
-            ],
-        ),
-        patch(
-            "homeassistant.components.linear_garage_door.coordinator.Linear.get_device_state",
-            side_effect=lambda id: {
-                "test1": {
-                    "GDO": {"Open_B": "true", "Open_P": "100"},
-                    "Light": {"On_B": "true", "On_P": "100"},
-                },
-                "test2": {
-                    "GDO": {"Open_B": "false", "Opening_P": "0"},
-                    "Light": {"On_B": "false", "On_P": "0"},
-                },
-                "test3": {
-                    "GDO": {"Open_B": "false", "Opening_P": "0"},
-                    "Light": {"On_B": "false", "On_P": "0"},
-                },
-                "test4": {
-                    "GDO": {"Open_B": "true", "Opening_P": "100"},
-                    "Light": {"On_B": "true", "On_P": "100"},
-                },
-            }[id],
-        ),
-        patch(
-            "homeassistant.components.linear_garage_door.coordinator.Linear.close",
-            return_value=True,
-        ),
-    ):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
-        await hass.async_block_till_done()
-
-    assert hass.states.get("cover.test_garage_2").state == STATE_OPENING
+    assert mock_linear.operate_device.call_count == 1
 
 
-async def test_close_cover(hass: HomeAssistant) -> None:
+async def test_close_cover(
+    hass: HomeAssistant, mock_linear: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
     """Test that closing the cover works as intended."""
 
-    await async_init_integration(hass)
+    await setup_integration(hass, mock_config_entry, [Platform.COVER])
 
-    with patch(
-        "homeassistant.components.linear_garage_door.coordinator.Linear.operate_device"
-    ) as operate_device:
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: "cover.test_garage_2"},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: "cover.test_garage_2"},
+        blocking=True,
+    )
 
-    assert operate_device.call_count == 0
+    assert mock_linear.operate_device.call_count == 0
 
-    with (
-        patch(
-            "homeassistant.components.linear_garage_door.coordinator.Linear.login",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.linear_garage_door.coordinator.Linear.operate_device",
-            return_value=None,
-        ) as operate_device,
-        patch(
-            "homeassistant.components.linear_garage_door.coordinator.Linear.close",
-            return_value=True,
-        ),
-    ):
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: "cover.test_garage_1"},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: "cover.test_garage_1"},
+        blocking=True,
+    )
 
-    assert operate_device.call_count == 1
-    with (
-        patch(
-            "homeassistant.components.linear_garage_door.coordinator.Linear.login",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.linear_garage_door.coordinator.Linear.get_devices",
-            return_value=[
-                {
-                    "id": "test1",
-                    "name": "Test Garage 1",
-                    "subdevices": ["GDO", "Light"],
-                },
-                {
-                    "id": "test2",
-                    "name": "Test Garage 2",
-                    "subdevices": ["GDO", "Light"],
-                },
-            ],
-        ),
-        patch(
-            "homeassistant.components.linear_garage_door.coordinator.Linear.get_device_state",
-            side_effect=lambda id: {
-                "test1": {
-                    "GDO": {"Open_B": "true", "Opening_P": "100"},
-                    "Light": {"On_B": "true", "On_P": "100"},
-                },
-                "test2": {
-                    "GDO": {"Open_B": "false", "Open_P": "0"},
-                    "Light": {"On_B": "false", "On_P": "0"},
-                },
-                "test3": {
-                    "GDO": {"Open_B": "false", "Opening_P": "0"},
-                    "Light": {"On_B": "false", "On_P": "0"},
-                },
-                "test4": {
-                    "GDO": {"Open_B": "true", "Opening_P": "100"},
-                    "Light": {"On_B": "true", "On_P": "100"},
-                },
-            }[id],
-        ),
-        patch(
-            "homeassistant.components.linear_garage_door.coordinator.Linear.close",
-            return_value=True,
-        ),
-    ):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
-        await hass.async_block_till_done()
+    assert mock_linear.operate_device.call_count == 1
+
+
+async def test_update_cover_state(
+    hass: HomeAssistant,
+    mock_linear: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that closing the cover works as intended."""
+
+    await setup_integration(hass, mock_config_entry, [Platform.COVER])
+
+    assert hass.states.get("cover.test_garage_1").state == STATE_OPEN
+    assert hass.states.get("cover.test_garage_2").state == STATE_CLOSED
+
+    device_states = load_json_object_fixture("get_device_state_1.json", DOMAIN)
+    mock_linear.get_device_state.side_effect = lambda device_id: device_states[
+        device_id
+    ]
+
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
 
     assert hass.states.get("cover.test_garage_1").state == STATE_CLOSING
+    assert hass.states.get("cover.test_garage_2").state == STATE_OPENING

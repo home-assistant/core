@@ -73,9 +73,11 @@ DATA_SETUP_TIME: HassKey[
     defaultdict[str, defaultdict[str | None, defaultdict[SetupPhases, float]]]
 ] = HassKey("setup_time")
 
-DATA_DEPS_REQS = "deps_reqs_processed"
+DATA_DEPS_REQS: HassKey[set[str]] = HassKey("deps_reqs_processed")
 
-DATA_PERSISTENT_ERRORS = "bootstrap_persistent_errors"
+DATA_PERSISTENT_ERRORS: HassKey[dict[str, str | None]] = HassKey(
+    "bootstrap_persistent_errors"
+)
 
 NOTIFY_FOR_TRANSLATION_KEYS = [
     "config_validation_err",
@@ -200,6 +202,7 @@ async def _async_process_dependencies(
         or create_eager_task(
             async_setup_component(hass, dep, config),
             name=f"setup {dep} as dependency of {integration.domain}",
+            loop=hass.loop,
         )
         for dep in integration.dependencies
         if dep not in hass.config.components
@@ -298,7 +301,7 @@ async def _async_setup_component(
         # If for some reason the background task in bootstrap was too slow
         # or the integration was added after bootstrap, we will load them here.
         load_translations_task = create_eager_task(
-            translation.async_load_integrations(hass, integration_set)
+            translation.async_load_integrations(hass, integration_set), loop=hass.loop
         )
     # Validate all dependencies exist and there are no circular dependencies
     if not await integration.resolve_dependencies():
@@ -446,7 +449,11 @@ async def _async_setup_component(
             *(
                 create_eager_task(
                     entry.async_setup_locked(hass, integration=integration),
-                    name=f"config entry setup {entry.title} {entry.domain} {entry.entry_id}",
+                    name=(
+                        f"config entry setup {entry.title} {entry.domain} "
+                        f"{entry.entry_id}"
+                    ),
+                    loop=hass.loop,
                 )
                 for entry in entries
             )

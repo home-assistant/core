@@ -13,7 +13,7 @@ from functools import cached_property, partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import Any, Literal, TypedDict, TypeVar, cast
+from typing import Any, Literal, TypedDict, cast
 
 import async_interrupt
 import voluptuous as vol
@@ -81,6 +81,7 @@ from homeassistant.core import (
 from homeassistant.util import slugify
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import utcnow
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.signal_type import SignalType, SignalTypeFormat
 
 from . import condition, config_validation as cv, service, template
@@ -88,6 +89,7 @@ from .condition import ConditionCheckerType, trace_condition_function
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
 from .event import async_call_later, async_track_template
 from .script_variables import ScriptVariables
+from .template import Template
 from .trace import (
     TraceElement,
     async_trace_path,
@@ -108,8 +110,6 @@ from .trigger import async_initialize_triggers, async_validate_trigger_config
 from .typing import UNDEFINED, ConfigType, UndefinedType
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
-
-_T = TypeVar("_T")
 
 SCRIPT_MODE_PARALLEL = "parallel"
 SCRIPT_MODE_QUEUED = "queued"
@@ -133,9 +133,11 @@ DEFAULT_MAX_EXCEEDED = "WARNING"
 ATTR_CUR = "current"
 ATTR_MAX = "max"
 
-DATA_SCRIPTS = "helpers.script"
-DATA_SCRIPT_BREAKPOINTS = "helpers.script_breakpoints"
-DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED = "helpers.script_not_allowed"
+DATA_SCRIPTS: HassKey[list[ScriptData]] = HassKey("helpers.script")
+DATA_SCRIPT_BREAKPOINTS: HassKey[dict[str, dict[str, set[str]]]] = HassKey(
+    "helpers.script_breakpoints"
+)
+DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED: HassKey[None] = HassKey("helpers.script_not_allowed")
 RUN_ID_ANY = "*"
 NODE_ANY = "*"
 
@@ -156,6 +158,13 @@ SCRIPT_DEBUG_CONTINUE_STOP: SignalTypeFormat[Literal["continue", "stop"]] = (
 SCRIPT_DEBUG_CONTINUE_ALL = "script_debug_continue_all"
 
 script_stack_cv: ContextVar[list[int] | None] = ContextVar("script_stack", default=None)
+
+
+class ScriptData(TypedDict):
+    """Store data related to script instance."""
+
+    instance: Script
+    started_before_shutdown: bool
 
 
 class ScriptStoppedError(Exception):
@@ -490,12 +499,24 @@ class _ScriptRun:
 
                 action = cv.determine_script_action(self._action)
 
-                if not self._action.get(CONF_ENABLED, True):
-                    self._log(
-                        "Skipped disabled step %s", self._action.get(CONF_ALIAS, action)
-                    )
-                    trace_set_result(enabled=False)
-                    return
+                if CONF_ENABLED in self._action:
+                    enabled = self._action[CONF_ENABLED]
+                    if isinstance(enabled, Template):
+                        try:
+                            enabled = enabled.async_render(limited=True)
+                        except exceptions.TemplateError as ex:
+                            self._handle_exception(
+                                ex,
+                                continue_on_error,
+                                self._log_exceptions or log_exceptions,
+                            )
+                    if not enabled:
+                        self._log(
+                            "Skipped disabled step %s",
+                            self._action.get(CONF_ALIAS, action),
+                        )
+                        trace_set_result(enabled=False)
+                        return
 
                 handler = f"_async_{action}_step"
                 try:
@@ -690,7 +711,9 @@ class _ScriptRun:
         else:
             wait_var["remaining"] = None
 
-    async def _async_run_long_action(self, long_task: asyncio.Task[_T]) -> _T | None:
+    async def _async_run_long_action[_T](
+        self, long_task: asyncio.Task[_T]
+    ) -> _T | None:
         """Run a long task while monitoring for stop request."""
         try:
             async with async_interrupt.interrupt(self._stop, ScriptStoppedError, None):
@@ -899,7 +922,7 @@ class _ScriptRun:
             count = len(items)
             for iteration, item in enumerate(items, 1):
                 set_repeat_var(iteration, count, item)
-                extra_msg = f" of {count} with item: {repr(item)}"
+                extra_msg = f" of {count} with item: {item!r}"
                 if self._stop.done():
                     break
                 await async_run_sequence(iteration, extra_msg)
@@ -1288,7 +1311,7 @@ async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> 
         )
 
 
-_VarsType = dict[str, Any] | MappingProxyType
+type _VarsType = dict[str, Any] | MappingProxyType
 
 
 def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:

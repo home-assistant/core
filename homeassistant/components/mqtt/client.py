@@ -82,16 +82,26 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+MIN_BUFFER_SIZE = 131072  # Minimum buffer size to use if preferred size fails
+PREFERRED_BUFFER_SIZE = 2097152  # Set receive buffer size to 2MB
+
 DISCOVERY_COOLDOWN = 5
-INITIAL_SUBSCRIBE_COOLDOWN = 3.0
+# The initial subscribe cooldown controls how long to wait to group
+# subscriptions together. This is to avoid making too many subscribe
+# requests in a short period of time. If the number is too low, the
+# system will be flooded with subscribe requests. If the number is too
+# high, we risk being flooded with responses to the subscribe requests
+# which can exceed the receive buffer size of the socket. To mitigate
+# this, we increase the receive buffer size of the socket as well.
+INITIAL_SUBSCRIBE_COOLDOWN = 0.5
 SUBSCRIBE_COOLDOWN = 0.1
 UNSUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
 RECONNECT_INTERVAL_SECONDS = 10
 
-SocketType = socket.socket | ssl.SSLSocket | Any
+type SocketType = socket.socket | ssl.SSLSocket | Any
 
-SubscribePayloadType = str | bytes  # Only bytes if encoding is None
+type SubscribePayloadType = str | bytes  # Only bytes if encoding is None
 
 
 def publish(
@@ -316,7 +326,7 @@ class EnsureJobAfterCooldown:
         self._loop = asyncio.get_running_loop()
         self._timeout = timeout
         self._callback = callback_job
-        self._task: asyncio.Future | None = None
+        self._task: asyncio.Task | None = None
         self._timer: asyncio.TimerHandle | None = None
 
     def set_timeout(self, timeout: float) -> None:
@@ -331,28 +341,23 @@ class EnsureJobAfterCooldown:
             _LOGGER.error("%s", ha_error)
 
     @callback
-    def _async_task_done(self, task: asyncio.Future) -> None:
+    def _async_task_done(self, task: asyncio.Task) -> None:
         """Handle task done."""
         self._task = None
 
     @callback
-    def _async_execute(self) -> None:
+    def async_execute(self) -> asyncio.Task:
         """Execute the job."""
         if self._task:
             # Task already running,
             # so we schedule another run
             self.async_schedule()
-            return
+            return self._task
 
         self._async_cancel_timer()
         self._task = create_eager_task(self._async_job())
         self._task.add_done_callback(self._async_task_done)
-
-    async def async_fire(self) -> None:
-        """Execute the job immediately."""
-        if self._task:
-            await self._task
-        self._async_execute()
+        return self._task
 
     @callback
     def _async_cancel_timer(self) -> None:
@@ -367,7 +372,7 @@ class EnsureJobAfterCooldown:
         # We want to reschedule the timer in the future
         # every time this is called.
         self._async_cancel_timer()
-        self._timer = self._loop.call_later(self._timeout, self._async_execute)
+        self._timer = self._loop.call_later(self._timeout, self.async_execute)
 
     async def async_cleanup(self) -> None:
         """Cleanup any pending task."""
@@ -432,6 +437,7 @@ class MQTT:
                 hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self._async_ha_stop),
             )
         )
+        self._socket_buffersize: int | None = None
 
     @callback
     def _async_ha_started(self, _hass: HomeAssistant) -> None:
@@ -495,6 +501,9 @@ class MQTT:
         mqttc.on_subscribe = self._async_mqtt_on_callback
         mqttc.on_unsubscribe = self._async_mqtt_on_callback
 
+        # suppress exceptions at callback
+        mqttc.suppress_exceptions = True
+
         if will := self.conf.get(CONF_WILL_MESSAGE, DEFAULT_WILL):
             will_message = PublishMessage(**will)
             mqttc.will_set(
@@ -529,6 +538,37 @@ class MQTT:
                 self.hass, self._misc_loop(), name="mqtt misc loop"
             )
 
+    def _increase_socket_buffer_size(self, sock: SocketType) -> None:
+        """Increase the socket buffer size."""
+        if not hasattr(sock, "setsockopt") and hasattr(sock, "_socket"):
+            # The WebsocketWrapper does not wrap setsockopt
+            # so we need to get the underlying socket
+            # Remove this once
+            # https://github.com/eclipse/paho.mqtt.python/pull/843
+            # is available.
+            sock = sock._socket  # noqa: SLF001
+
+        new_buffer_size = PREFERRED_BUFFER_SIZE
+        while True:
+            try:
+                # Some operating systems do not allow us to set the preferred
+                # buffer size. In that case we try some other size options.
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, new_buffer_size)
+            except OSError as err:
+                if new_buffer_size <= MIN_BUFFER_SIZE:
+                    _LOGGER.warning(
+                        "Unable to increase the socket buffer size to %s; "
+                        "The connection may be unstable if the MQTT broker "
+                        "sends data at volume or a large amount of subscriptions "
+                        "need to be processed: %s",
+                        new_buffer_size,
+                        err,
+                    )
+                    return
+                new_buffer_size //= 2
+            else:
+                return
+
     def _on_socket_open(
         self, client: mqtt.Client, userdata: Any, sock: SocketType
     ) -> None:
@@ -545,6 +585,7 @@ class MQTT:
         fileno = sock.fileno()
         _LOGGER.debug("%s: connection opened %s", self.config_entry.title, fileno)
         if fileno > -1:
+            self._increase_socket_buffer_size(sock)
             self.loop.add_reader(sock, partial(self._async_reader_callback, client))
         self._async_start_misc_loop()
 
@@ -844,8 +885,9 @@ class MQTT:
         subscription_list = list(subscriptions.items())
         result, mid = self._mqttc.subscribe(subscription_list)
 
-        for topic, qos in subscriptions.items():
-            _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            for topic, qos in subscriptions.items():
+                _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
         self._last_subscribe = time.monotonic()
 
         if result == 0:
@@ -863,8 +905,9 @@ class MQTT:
 
         result, mid = self._mqttc.unsubscribe(topics)
         _raise_on_error(result)
-        for topic in topics:
-            _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            for topic in topics:
+                _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
 
         await self._async_wait_for_mid(mid)
 
@@ -877,7 +920,7 @@ class MQTT:
         await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
         # Update subscribe cooldown period to a shorter time
         # and make sure we flush the debouncer
-        await self._subscribe_debouncer.async_fire()
+        await self._subscribe_debouncer.async_execute()
         self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
         await self.async_publish(
             topic=birth_message.topic,
@@ -921,7 +964,7 @@ class MQTT:
 
         self.connected = True
         async_dispatcher_send(self.hass, MQTT_CONNECTED)
-        _LOGGER.info(
+        _LOGGER.debug(
             "Connected to MQTT server %s:%s (%s)",
             self.conf[CONF_BROKER],
             self.conf.get(CONF_PORT, DEFAULT_PORT),
@@ -987,10 +1030,21 @@ class MQTT:
     def _async_mqtt_on_message(
         self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
     ) -> None:
-        topic = msg.topic
-        # msg.topic is a property that decodes the topic to a string
-        # every time it is accessed. Save the result to avoid
-        # decoding the same topic multiple times.
+        try:
+            # msg.topic is a property that decodes the topic to a string
+            # every time it is accessed. Save the result to avoid
+            # decoding the same topic multiple times.
+            topic = msg.topic
+        except UnicodeDecodeError:
+            bare_topic: bytes = getattr(msg, "_topic")
+            _LOGGER.warning(
+                "Skipping received%s message on invalid topic %s (qos=%s): %s",
+                " retained" if msg.retain else "",
+                bare_topic,
+                msg.qos,
+                msg.payload[0:8192],
+            )
+            return
         _LOGGER.debug(
             "Received%s message on %s (qos=%s): %s",
             " retained" if msg.retain else "",
