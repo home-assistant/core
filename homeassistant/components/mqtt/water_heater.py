@@ -63,6 +63,7 @@ from .const import (
     CONF_TEMP_STATE_TEMPLATE,
     CONF_TEMP_STATE_TOPIC,
     DEFAULT_OPTIMISTIC,
+    PAYLOAD_NONE,
 )
 from .mixins import async_setup_entity_entry_helper
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
@@ -261,8 +262,20 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
         """Handle receiving operation mode via MQTT."""
         payload = self.render_template(msg, CONF_MODE_STATE_TEMPLATE)
 
-        if payload not in self._config[CONF_MODE_LIST]:
-            _LOGGER.error("Invalid %s mode: %s", CONF_MODE_LIST, payload)
+        if not payload.strip():  # No output from template, ignore
+            _LOGGER.debug(
+                "Ignoring empty payload '%s' for attr '%s' "
+                "after rendering for topic %s",
+                payload,
+                attr,
+                msg.topic,
+            )
+            return
+
+        if payload == PAYLOAD_NONE:
+            setattr(self, attr, None)
+        elif payload not in self._config[mode_list]:
+            _LOGGER.warning("Invalid %s mode: %s", mode_list, payload)
         else:
             if TYPE_CHECKING:
                 assert isinstance(payload, str)
