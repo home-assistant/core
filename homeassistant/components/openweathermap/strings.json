@@ -34,7 +34,14 @@
   "issues": {
     "deprecated_v25": {
       "title": "OpenWeatherMap API V2.5 deprecated",
-      "description": "OWM API v2.5 will be closed in June 2024; migrate all your OpenWeatherMap integration to mode v3.0 (active subscription required). Read documentation for more information."
+      "fix_flow": {
+        "step": {
+          "migrate": {
+            "title": "OpenWeatherMap API V2.5 deprecated",
+            "description": "OWM API v2.5 will be closed in June 2024.\nYou need to migrate all your OpenWeatherMap integration to mode v3.0.\n\nBefore the migration, you must have active subscription (be aware subscripiton activation take up to 2h). After your subscription is activated click **Submit** to migrate the integration to API V3.0. Read documentation for more information."
+          }
+        }
+      }
     }
   }
 }
