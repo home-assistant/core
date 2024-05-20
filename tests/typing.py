@@ -30,6 +30,6 @@ MqttMockHAClient = MagicMock
 """MagicMock for `homeassistant.components.mqtt.MQTT`."""
 MqttMockHAClientGenerator = Callable[..., Coroutine[Any, Any, MqttMockHAClient]]
 """MagicMock generator for `homeassistant.components.mqtt.MQTT`."""
-type RecorderInstanceGenerator = Callable[..., Coroutine[Any, Any, "Recorder"]]
+type RecorderInstanceGenerator = Callable[..., Coroutine[Any, Any, Recorder]]
 """Instance generator for `homeassistant.components.recorder.Recorder`."""
 WebSocketGenerator = Callable[..., Coroutine[Any, Any, MockHAClientWebSocket]]
