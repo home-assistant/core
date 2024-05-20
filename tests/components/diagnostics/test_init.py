@@ -257,6 +257,7 @@ async def test_download_diagnostics(
             "requirements": [],
         },
         "data": {"device": "info"},
+        "setup_times": {},
     }
 
 
