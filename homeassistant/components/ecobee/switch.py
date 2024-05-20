@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+import zoneinfo
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -53,7 +54,7 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
         self,
         data: EcobeeData,
         thermostat_index: int,
-        operating_timezone: dt_util.dt.tzinfo,
+        operating_timezone: zoneinfo.ZoneInfo,
     ) -> None:
         """Initialize ecobee ventilator platform."""
         super().__init__(data, thermostat_index)
