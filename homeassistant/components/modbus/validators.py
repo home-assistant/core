@@ -405,13 +405,13 @@ def validate_entity(
     addr += f"_{inx}"
     loc_addr: set[str] = {addr}
     if CONF_TARGET_TEMP in entity:
+        regCounter = regCounter + 1
         if isinstance(entity[CONF_TARGET_TEMP], int):
             loc_addr.add(f"{hub_name}{entity[CONF_TARGET_TEMP]}_{inx}")
-            regCounter = regCounter + 1
         else:
             for reg in entity[CONF_TARGET_TEMP]:
-                regCounter = regCounter + 1
                 loc_addr.add(f"{hub_name}{reg}_{inx}")
+            regCounter = regCounter + len(loc_addr) - 2
     if CONF_HVAC_MODE_REGISTER in entity:
         regCounter = regCounter + 1
         loc_addr.add(f"{hub_name}{entity[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS]}_{inx}")
