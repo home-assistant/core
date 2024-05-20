@@ -31,7 +31,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             # Not a PG LAB Electronics discovery message
             return self.async_abort(reason="invalid_discovery_info")
         if not discovery_info.payload:
-            # Empty payload, unexpesd payload
+            # Empty payload, Unexpected payload
             return self.async_abort(reason="invalid_discovery_info")
 
         # "pglab/discovery/#" is hardcoded in manifest.json
