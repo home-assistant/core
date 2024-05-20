@@ -40,15 +40,14 @@ class LastPaused:
 
     def update(self, context: Context | None, entity_ids: Iterable[str]) -> None:
         """Update last paused group."""
-        self.timestamp = time.time()
         self.context = context
-        self.entity_ids.clear()
-        self.entity_ids.update(entity_ids)
+        self.entity_ids = set(entity_ids)
+        if self.entity_ids:
+            self.timestamp = time.time()
 
-    @property
-    def is_set(self) -> bool:
-        """Return True if group is set."""
-        return (self.timestamp is not None) and bool(self.entity_ids)
+    def __bool__(self) -> bool:
+        """Return True if timestamp is set."""
+        return self.timestamp is not None
 
 
 async def async_setup_intents(hass: HomeAssistant) -> None:
@@ -142,11 +141,7 @@ class MediaUnpauseHandler(intent.ServiceIntentHandler):
         match_preferences: intent.MatchTargetsPreferences | None = None,
     ) -> intent.IntentResponse:
         """Unpause last paused media players."""
-        if (
-            match_result.is_match
-            and (not match_constraints.name)
-            and self.last_paused.is_set
-        ):
+        if match_result.is_match and (not match_constraints.name) and self.last_paused:
             assert self.last_paused.timestamp is not None
 
             # Check for a media player that was paused more recently than the
