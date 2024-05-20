@@ -48,9 +48,9 @@ async def test_config_flow_cannot_probe_firmware(
             DOMAIN, context={"source": "usb"}, data=usb_data
         )
 
-        # Probing fails
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+            result["flow_id"],
+            user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
         )
 
         assert result["type"] == FlowResultType.ABORT
@@ -71,20 +71,20 @@ async def test_config_flow_zigbee_not_hassio_wrong_firmware(
         DOMAIN, context={"source": "usb"}, data=usb_data
     )
 
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
-        return_value=ApplicationType.SPINEL,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-
     with (
         patch(
             "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
             return_value=False,
         ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+            return_value=ApplicationType.SPINEL,
+        ),
     ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
@@ -107,14 +107,6 @@ async def test_config_flow_zigbee_flasher_addon_already_running(
         DOMAIN, context={"source": "usb"}, data=usb_data
     )
 
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
-        return_value=ApplicationType.SPINEL,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-
     mock_flasher_manager = Mock(spec_set=get_zigbee_flasher_addon_manager(hass))
     mock_flasher_manager.addon_name = "Silicon Labs Flasher"
     mock_flasher_manager.async_get_addon_info.return_value = AddonInfo(
@@ -135,7 +127,15 @@ async def test_config_flow_zigbee_flasher_addon_already_running(
             "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
             return_value=True,
         ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+            return_value=ApplicationType.SPINEL,
+        ),
     ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
@@ -160,14 +160,6 @@ async def test_config_flow_zigbee_flasher_addon_info_fails(
         DOMAIN, context={"source": "usb"}, data=usb_data
     )
 
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
-        return_value=ApplicationType.SPINEL,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-
     mock_flasher_manager = Mock(spec_set=get_zigbee_flasher_addon_manager(hass))
     mock_flasher_manager.addon_name = "Silicon Labs Flasher"
     mock_flasher_manager.async_get_addon_info.side_effect = AddonError()
@@ -181,7 +173,14 @@ async def test_config_flow_zigbee_flasher_addon_info_fails(
             "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
             return_value=True,
         ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+            return_value=ApplicationType.SPINEL,
+        ),
     ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
@@ -206,14 +205,6 @@ async def test_config_flow_zigbee_flasher_addon_install_fails(
         DOMAIN, context={"source": "usb"}, data=usb_data
     )
 
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
-        return_value=ApplicationType.SPINEL,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-
     mock_flasher_manager = Mock(spec_set=get_zigbee_flasher_addon_manager(hass))
     mock_flasher_manager.addon_name = "Silicon Labs Flasher"
     mock_flasher_manager.async_get_addon_info.return_value = AddonInfo(
@@ -237,7 +228,15 @@ async def test_config_flow_zigbee_flasher_addon_install_fails(
             "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
             return_value=True,
         ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+            return_value=ApplicationType.SPINEL,
+        ),
     ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
@@ -261,14 +260,6 @@ async def test_config_flow_zigbee_flasher_addon_set_config_fails(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "usb"}, data=usb_data
     )
-
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
-        return_value=ApplicationType.SPINEL,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
 
     mock_flasher_manager = Mock(spec_set=get_zigbee_flasher_addon_manager(hass))
     mock_flasher_manager.addon_name = "Silicon Labs Flasher"
@@ -294,7 +285,14 @@ async def test_config_flow_zigbee_flasher_addon_set_config_fails(
             "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
             return_value=True,
         ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+            return_value=ApplicationType.SPINEL,
+        ),
     ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
@@ -321,14 +319,6 @@ async def test_config_flow_zigbee_flasher_run_fails(
         DOMAIN, context={"source": "usb"}, data=usb_data
     )
 
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
-        return_value=ApplicationType.SPINEL,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-
     mock_flasher_manager = Mock(spec_set=get_zigbee_flasher_addon_manager(hass))
     mock_flasher_manager.addon_name = "Silicon Labs Flasher"
     mock_flasher_manager.async_get_addon_info.return_value = AddonInfo(
@@ -353,7 +343,14 @@ async def test_config_flow_zigbee_flasher_run_fails(
             "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
             return_value=True,
         ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+            return_value=ApplicationType.SPINEL,
+        ),
     ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
@@ -379,14 +376,6 @@ async def test_config_flow_zigbee_flasher_uninstall_fails(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "usb"}, data=usb_data
     )
-
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
-        return_value=ApplicationType.SPINEL,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
 
     mock_flasher_manager = Mock(spec_set=get_zigbee_flasher_addon_manager(hass))
     mock_flasher_manager.addon_name = "Silicon Labs Flasher"
@@ -417,7 +406,14 @@ async def test_config_flow_zigbee_flasher_uninstall_fails(
             "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
             return_value=True,
         ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+            return_value=ApplicationType.SPINEL,
+        ),
     ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
@@ -448,20 +444,20 @@ async def test_config_flow_thread_not_hassio(
         DOMAIN, context={"source": "usb"}, data=usb_data
     )
 
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
-        return_value=ApplicationType.EZSP,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-
     with (
         patch(
             "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
             return_value=False,
         ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+            return_value=ApplicationType.EZSP,
+        ),
     ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
@@ -484,14 +480,6 @@ async def test_config_flow_thread_addon_info_fails(
         DOMAIN, context={"source": "usb"}, data=usb_data
     )
 
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
-        return_value=ApplicationType.EZSP,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-
     mock_otbr_manager = Mock(spec_set=get_otbr_addon_manager(hass))
     mock_otbr_manager.addon_name = "OpenThread Border Router"
     mock_otbr_manager.async_get_addon_info.side_effect = AddonError()
@@ -505,7 +493,14 @@ async def test_config_flow_thread_addon_info_fails(
             "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
             return_value=True,
         ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+            return_value=ApplicationType.EZSP,
+        ),
     ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
@@ -530,14 +525,6 @@ async def test_config_flow_thread_addon_already_running(
         DOMAIN, context={"source": "usb"}, data=usb_data
     )
 
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
-        return_value=ApplicationType.EZSP,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-
     mock_otbr_manager = Mock(spec_set=get_otbr_addon_manager(hass))
     mock_otbr_manager.addon_name = "OpenThread Border Router"
     mock_otbr_manager.async_get_addon_info.return_value = AddonInfo(
@@ -559,7 +546,14 @@ async def test_config_flow_thread_addon_already_running(
             "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
             return_value=True,
         ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+            return_value=ApplicationType.EZSP,
+        ),
     ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
@@ -584,14 +578,6 @@ async def test_config_flow_thread_addon_install_fails(
         DOMAIN, context={"source": "usb"}, data=usb_data
     )
 
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
-        return_value=ApplicationType.EZSP,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-
     mock_otbr_manager = Mock(spec_set=get_otbr_addon_manager(hass))
     mock_otbr_manager.addon_name = "OpenThread Border Router"
     mock_otbr_manager.async_get_addon_info.return_value = AddonInfo(
@@ -613,7 +599,14 @@ async def test_config_flow_thread_addon_install_fails(
             "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
             return_value=True,
         ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+            return_value=ApplicationType.EZSP,
+        ),
     ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
@@ -637,14 +630,6 @@ async def test_config_flow_thread_addon_set_config_fails(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "usb"}, data=usb_data
     )
-
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
-        return_value=ApplicationType.EZSP,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
 
     mock_otbr_manager = Mock(spec_set=get_otbr_addon_manager(hass))
     mock_otbr_manager.addon_name = "OpenThread Border Router"
@@ -670,7 +655,14 @@ async def test_config_flow_thread_addon_set_config_fails(
             "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
             return_value=True,
         ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+            return_value=ApplicationType.EZSP,
+        ),
     ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
@@ -697,14 +689,6 @@ async def test_config_flow_thread_flasher_run_fails(
         DOMAIN, context={"source": "usb"}, data=usb_data
     )
 
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
-        return_value=ApplicationType.EZSP,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-
     mock_otbr_manager = Mock(spec_set=get_otbr_addon_manager(hass))
     mock_otbr_manager.addon_name = "OpenThread Border Router"
     mock_otbr_manager.async_get_addon_info.return_value = AddonInfo(
@@ -729,7 +713,14 @@ async def test_config_flow_thread_flasher_run_fails(
             "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
             return_value=True,
         ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+            return_value=ApplicationType.EZSP,
+        ),
     ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
@@ -755,14 +746,6 @@ async def test_config_flow_thread_flasher_uninstall_fails(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "usb"}, data=usb_data
     )
-
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
-        return_value=ApplicationType.EZSP,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
 
     mock_otbr_manager = Mock(spec_set=get_otbr_addon_manager(hass))
     mock_otbr_manager.addon_name = "OpenThread Border Router"
@@ -793,7 +776,14 @@ async def test_config_flow_thread_flasher_uninstall_fails(
             "homeassistant.components.homeassistant_sky_connect.config_flow.is_hassio",
             return_value=True,
         ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.config_flow.probe_silabs_firmware_type",
+            return_value=ApplicationType.EZSP,
+        ),
     ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
