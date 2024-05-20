@@ -91,7 +91,7 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(
-                title="",
+                title="Google Generative AI",
                 data=user_input,
                 options={CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
             )
