@@ -57,9 +57,9 @@ BLE_AVAILABILITY_CHECK_INTERVAL = 1800  # seconds
 
 _LOGGER = logging.getLogger(__name__)
 
-AddAccessoryCb = Callable[[Accessory], bool]
-AddServiceCb = Callable[[Service], bool]
-AddCharacteristicCb = Callable[[Characteristic], bool]
+type AddAccessoryCb = Callable[[Accessory], bool]
+type AddServiceCb = Callable[[Service], bool]
+type AddCharacteristicCb = Callable[[Characteristic], bool]
 
 
 def valid_serial_number(serial: str) -> bool:

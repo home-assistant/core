@@ -13,6 +13,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER, TeslemetryState
 from .coordinator import (
+    TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
@@ -21,7 +22,9 @@ from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 class TeslemetryEntity(
     CoordinatorEntity[
-        TeslemetryVehicleDataCoordinator | TeslemetryEnergySiteLiveCoordinator
+        TeslemetryVehicleDataCoordinator
+        | TeslemetryEnergySiteLiveCoordinator
+        | TeslemetryEnergySiteInfoCoordinator
     ]
 ):
     """Parent class for all Teslemetry entities."""
@@ -31,7 +34,8 @@ class TeslemetryEntity(
     def __init__(
         self,
         coordinator: TeslemetryVehicleDataCoordinator
-        | TeslemetryEnergySiteLiveCoordinator,
+        | TeslemetryEnergySiteLiveCoordinator
+        | TeslemetryEnergySiteInfoCoordinator,
         api: VehicleSpecific | EnergySpecific,
         key: str,
     ) -> None:
@@ -70,10 +74,9 @@ class TeslemetryEntity(
         """Handle a command."""
         try:
             result = await command
-            LOGGER.debug("Command result: %s", result)
         except TeslaFleetError as e:
-            LOGGER.debug("Command error: %s", e.message)
             raise HomeAssistantError(f"Teslemetry command failed, {e.message}") from e
+        LOGGER.debug("Command result: %s", result)
         return result
 
     def _handle_coordinator_update(self) -> None:
@@ -84,6 +87,11 @@ class TeslemetryEntity(
     @abstractmethod
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
+
+    def raise_for_scope(self):
+        """Raise an error if a scope is not available."""
+        if not self.scoped:
+            raise ServiceValidationError("Missing required scope")
 
 
 class TeslemetryVehicleEntity(TeslemetryEntity):
@@ -133,28 +141,22 @@ class TeslemetryVehicleEntity(TeslemetryEntity):
         """Handle a vehicle command."""
         result = await super().handle_command(command)
         if (response := result.get("response")) is None:
-            if message := result.get("error"):
+            if error := result.get("error"):
                 # No response with error
-                LOGGER.info("Command failure: %s", message)
-                raise HomeAssistantError(message)
+                raise HomeAssistantError(error)
             # No response without error (unexpected)
-            LOGGER.error("Unknown response: %s", response)
-            raise HomeAssistantError("Unknown response")
-        if (message := response.get("result")) is not True:
-            if message := response.get("reason"):
+            raise HomeAssistantError(f"Unknown response: {response}")
+        if (result := response.get("result")) is not True:
+            if reason := response.get("reason"):
+                if reason in ("already_set", "not_charging", "requested"):
+                    # Reason is acceptable
+                    return result
                 # Result of false with reason
-                LOGGER.info("Command failure: %s", message)
-                raise HomeAssistantError(message)
+                raise HomeAssistantError(reason)
             # Result of false without reason (unexpected)
-            LOGGER.error("Unknown response: %s", response)
-            raise HomeAssistantError("Unknown response")
+            raise HomeAssistantError("Command failed with no reason")
         # Response with result of true
         return result
-
-    def raise_for_scope(self):
-        """Raise an error if a scope is not available."""
-        if not self.scoped:
-            raise ServiceValidationError("Missing required scope")
 
 
 class TeslemetryEnergyLiveEntity(TeslemetryEntity):
@@ -170,6 +172,21 @@ class TeslemetryEnergyLiveEntity(TeslemetryEntity):
         self._attr_device_info = data.device
 
         super().__init__(data.live_coordinator, data.api, key)
+
+
+class TeslemetryEnergyInfoEntity(TeslemetryEntity):
+    """Parent class for Teslemetry Energy Site Info Entities."""
+
+    def __init__(
+        self,
+        data: TeslemetryEnergyData,
+        key: str,
+    ) -> None:
+        """Initialize common aspects of a Teslemetry Energy Site Info entity."""
+        self._attr_unique_id = f"{data.id}-{key}"
+        self._attr_device_info = data.device
+
+        super().__init__(data.info_coordinator, data.api, key)
 
 
 class TeslemetryWallConnectorEntity(

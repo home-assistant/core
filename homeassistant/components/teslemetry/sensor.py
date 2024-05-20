@@ -34,8 +34,8 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.variance import ignore_variance
 
-from .const import DOMAIN
 from .entity import (
+    TeslemetryEnergyInfoEntity,
     TeslemetryEnergyLiveEntity,
     TeslemetryVehicleEntity,
     TeslemetryWallConnectorEntity,
@@ -401,36 +401,50 @@ WALL_CONNECTOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+ENERGY_INFO_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="vpp_backup_reserve_percent",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(key="version"),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Teslemetry sensor platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
         chain(
             (  # Add vehicles
                 TeslemetryVehicleSensorEntity(vehicle, description)
-                for vehicle in data.vehicles
+                for vehicle in entry.runtime_data.vehicles
                 for description in VEHICLE_DESCRIPTIONS
             ),
             (  # Add vehicles time sensors
                 TeslemetryVehicleTimeSensorEntity(vehicle, description)
-                for vehicle in data.vehicles
+                for vehicle in entry.runtime_data.vehicles
                 for description in VEHICLE_TIME_DESCRIPTIONS
             ),
             (  # Add energy site live
                 TeslemetryEnergyLiveSensorEntity(energysite, description)
-                for energysite in data.energysites
+                for energysite in entry.runtime_data.energysites
                 for description in ENERGY_LIVE_DESCRIPTIONS
                 if description.key in energysite.live_coordinator.data
             ),
             (  # Add wall connectors
                 TeslemetryWallConnectorSensorEntity(energysite, din, description)
-                for energysite in data.energysites
+                for energysite in entry.runtime_data.energysites
                 for din in energysite.live_coordinator.data.get("wall_connectors", {})
                 for description in WALL_CONNECTOR_DESCRIPTIONS
+            ),
+            (  # Add energy site info
+                TeslemetryEnergyInfoSensorEntity(energysite, description)
+                for energysite in entry.runtime_data.energysites
+                for description in ENERGY_INFO_DESCRIPTIONS
+                if description.key in energysite.info_coordinator.data
             ),
         )
     )
@@ -522,6 +536,26 @@ class TeslemetryWallConnectorSensorEntity(TeslemetryWallConnectorEntity, SensorE
             din,
             description.key,
         )
+
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the sensor."""
+        self._attr_available = not self.is_none
+        self._attr_native_value = self._value
+
+
+class TeslemetryEnergyInfoSensorEntity(TeslemetryEnergyInfoEntity, SensorEntity):
+    """Base class for Teslemetry energy site metric sensors."""
+
+    entity_description: SensorEntityDescription
+
+    def __init__(
+        self,
+        data: TeslemetryEnergyData,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        self.entity_description = description
+        super().__init__(data, description.key)
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""

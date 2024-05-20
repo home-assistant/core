@@ -145,7 +145,7 @@ BINARY_SENSOR_DESCRIPTIONS = {
 
 def sensor_update_to_bluetooth_data_update(
     sensor_update: SensorUpdate,
-) -> PassiveBluetoothDataUpdate:
+) -> PassiveBluetoothDataUpdate[bool | None]:
     """Convert a binary sensor update to a bluetooth data update."""
     return PassiveBluetoothDataUpdate(
         devices={
@@ -193,7 +193,7 @@ async def async_setup_entry(
 
 
 class BTHomeBluetoothBinarySensorEntity(
-    PassiveBluetoothProcessorEntity[BTHomePassiveBluetoothDataProcessor],
+    PassiveBluetoothProcessorEntity[BTHomePassiveBluetoothDataProcessor[bool | None]],
     BinarySensorEntity,
 ):
     """Representation of a BTHome binary sensor."""

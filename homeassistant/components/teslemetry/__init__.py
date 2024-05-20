@@ -20,6 +20,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN, MODELS
 from .coordinator import (
+    TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
@@ -27,6 +28,7 @@ from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
 
 PLATFORMS: Final = [
     Platform.CLIMATE,
+    Platform.SELECT,
     Platform.SENSOR,
 ]
 
@@ -83,6 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             site_id = product["energy_site_id"]
             api = EnergySpecific(teslemetry.energy, site_id)
             live_coordinator = TeslemetryEnergySiteLiveCoordinator(hass, api)
+            info_coordinator = TeslemetryEnergySiteInfoCoordinator(hass, api, product)
             device = DeviceInfo(
                 identifiers={(DOMAIN, str(site_id))},
                 manufacturer="Tesla",
@@ -94,6 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 TeslemetryEnergyData(
                     api=api,
                     live_coordinator=live_coordinator,
+                    info_coordinator=info_coordinator,
                     id=site_id,
                     device=device,
                 )
@@ -109,12 +113,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             energysite.live_coordinator.async_config_entry_first_refresh()
             for energysite in energysites
         ),
+        *(
+            energysite.info_coordinator.async_config_entry_first_refresh()
+            for energysite in energysites
+        ),
     )
 
     # Setup Platforms
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = TeslemetryData(
-        vehicles, energysites, scopes
-    )
+    entry.runtime_data = TeslemetryData(vehicles, energysites, scopes)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -122,6 +128,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Teslemetry Config."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

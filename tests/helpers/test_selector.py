@@ -282,6 +282,8 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
         {"filter": [{"supported_features": ["blah"]}]},
         # Unknown feature enum
         {"filter": [{"supported_features": ["blah.FooEntityFeature.blah"]}]},
+        # Unknown feature enum
+        {"filter": [{"supported_features": ["light.FooEntityFeature.blah"]}]},
         # Unknown feature enum member
         {"filter": [{"supported_features": ["light.LightEntityFeature.blah"]}]},
     ],
