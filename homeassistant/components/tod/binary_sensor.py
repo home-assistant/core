@@ -148,7 +148,7 @@ class TodSensor(BinarySensorEntity):
             assert self._time_after is not None
             assert self._time_before is not None
             assert self._next_update is not None
-        if time_zone := dt_util.get_time_zone(self.hass.config.time_zone):
+        if time_zone := dt_util.get_default_time_zone():
             return {
                 ATTR_AFTER: self._time_after.astimezone(time_zone).isoformat(),
                 ATTR_BEFORE: self._time_before.astimezone(time_zone).isoformat(),
@@ -160,9 +160,7 @@ class TodSensor(BinarySensorEntity):
         """Convert naive time from config to utc_datetime with current day."""
         # get the current local date from utc time
         current_local_date = (
-            dt_util.utcnow()
-            .astimezone(dt_util.get_time_zone(self.hass.config.time_zone))
-            .date()
+            dt_util.utcnow().astimezone(dt_util.get_default_time_zone()).date()
         )
         # calculate utc datetime corresponding to local time
         return dt_util.as_utc(datetime.combine(current_local_date, naive_time))
