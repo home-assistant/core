@@ -12,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
-
 PLATFORMS = [Platform.SENSOR]
 
 
@@ -64,7 +62,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolaxConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: SolaxConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
