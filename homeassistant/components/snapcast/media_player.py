@@ -207,10 +207,10 @@ class SnapcastBaseDevice(MediaPlayerEntity):
         await self._device.restore()
         self.async_write_ha_state()
 
-    def _get_metadata(self, key):
+    def _get_metadata(self, key, default=None):
         """Get metadata from the current stream."""
         if metadata := self._server.stream(self.current_group.stream).metadata:
-            return metadata.get(key, None)
+            return metadata.get(key, default)
 
         return None
 
@@ -227,10 +227,7 @@ class SnapcastBaseDevice(MediaPlayerEntity):
     @property
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
-        if artists := self._get_metadata("artist"):
-            return artists[0]
-
-        return None
+        return self._get_metadata("artist", [None])[0]
 
     @property
     def media_album_name(self) -> str | None:
@@ -240,10 +237,7 @@ class SnapcastBaseDevice(MediaPlayerEntity):
     @property
     def media_album_artist(self) -> str | None:
         """Album artist of current playing media, music track only."""
-        if artists := self._get_metadata("albumArtist"):
-            return artists[0]
-
-        return None
+        return self._get_metadata("albumArtist", [None])[0]
 
     @property
     def media_track(self) -> int | None:
