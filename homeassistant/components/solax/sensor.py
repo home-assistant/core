@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-
-from solax import InverterResponse
 from solax.units import Units
 
 from homeassistant.components.sensor import (
@@ -25,16 +22,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SolaxConfigEntry
 from .const import DOMAIN, MANUFACTURER
+from .coordinator import SolaxDataUpdateCoordinator
 
 DEFAULT_PORT = 80
-SCAN_INTERVAL = timedelta(seconds=30)
 
 
 SENSOR_DESCRIPTIONS: dict[tuple[Units, bool], SensorEntityDescription] = {
@@ -131,7 +125,7 @@ class InverterSensorEntity(CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[InverterResponse],
+        coordinator: SolaxDataUpdateCoordinator,
         manufacturer: str,
         uid: str,
         serial: str,
