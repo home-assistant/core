@@ -24,8 +24,6 @@ class PgLabEntity(Entity):
     ) -> None:
         """Initialize the class."""
 
-        super().__init__()
-
         self._id = entity.id
         self._device_id = device.id
         self._entity = entity
