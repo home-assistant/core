@@ -19,7 +19,6 @@ class PgLabEntity(Entity):
     def __init__(
         self,
         discovery: PGLabDiscovery,
-        platform: str,
         device: PyPGLabDevice,
         entity: PyPGLabEntity,
     ) -> None:

@@ -48,7 +48,6 @@ class PgLabSwitch(PgLabEntity, SwitchEntity):
 
         super().__init__(
             discovery=pglab_discovery,
-            platform=Platform.SWITCH,
             device=pglab_device,
             entity=pglab_relay,
         )
