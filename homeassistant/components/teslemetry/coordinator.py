@@ -80,7 +80,9 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except VehicleOffline:
             self.data["state"] = TeslemetryState.OFFLINE
             return self.data
-        except (InvalidToken, Forbidden, SubscriptionRequired) as e:
+        except InvalidToken as e:
+            raise ConfigEntryAuthFailed from e
+        except SubscriptionRequired as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
