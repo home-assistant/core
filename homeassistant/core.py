@@ -38,7 +38,6 @@ from typing import (
     Final,
     Generic,
     NotRequired,
-    ParamSpec,
     Self,
     TypedDict,
     cast,
@@ -131,8 +130,6 @@ CLOSE_STAGE_SHUTDOWN_TIMEOUT = 30
 
 
 _R = TypeVar("_R")
-_R_co = TypeVar("_R_co", covariant=True)
-_P = ParamSpec("_P")
 # Internal; not helpers.typing.UNDEFINED due to circular dependency
 _UNDEF: dict[Any, Any] = {}
 _SENTINEL = object()
@@ -305,7 +302,7 @@ class HassJobType(enum.Enum):
     Executor = 3
 
 
-class HassJob(Generic[_P, _R_co]):
+class HassJob[**_P, _R_co]:
     """Represent a job to be run later.
 
     We check the callable type in advance
