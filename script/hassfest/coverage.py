@@ -114,10 +114,9 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
                 )
                 continue
 
-            if (
-                path.parts[-1] in {"*", "const.py"}
-                and Path(f"tests/components/{integration.domain}/__init__.py").exists()
-            ):
+            if (last_part := path.parts[-1]) in {"*", "const.py"} and Path(
+                f"tests/components/{integration.domain}/__init__.py"
+            ).exists():
                 integration.add_error(
                     "coverage",
                     f"has tests and should not use {last_part} in .coveragerc file",
