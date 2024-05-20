@@ -224,8 +224,8 @@ async def test_browse_media_library(
             "media_class": "track",
             "media_content_type": "track",
             "media_content_id": "A:TRACKS",
-            "can_play": False,
-            "can_expand": False,
+            "can_play": True,
+            "can_expand": True,
             "thumbnail": None,
             "children_media_class": None,
         },
@@ -240,7 +240,6 @@ async def test_browse_media_library(
             "children_media_class": None,
         },
     ]
-
     assert response["result"]["children"] == unordered(expected_children)
 
 
@@ -299,6 +298,5 @@ async def test_browse_media_library_albums(
             "children_media_class": None,
         },
     ]
-
     assert response["result"]["children"] == unordered(expected_children)
     assert soco_mock.music_library.browse_by_idstring.call_count == 1

@@ -329,7 +329,7 @@ class MockMusicServiceItem:
         self.item_id = item_id
         self.item_class = item_class
         self.parent_id = parent_id
-        self.album_art_uri = album_art_uri
+        self.album_art_uri: None | str = album_art_uri
 
 
 def list_from_json_fixture(file_name: str) -> list[MockMusicServiceItem]:
@@ -337,10 +337,10 @@ def list_from_json_fixture(file_name: str) -> list[MockMusicServiceItem]:
     item_list = load_json_value_fixture(file_name, "sonos")
     return [
         MockMusicServiceItem(
-            item["title"],
-            item["item_id"],
-            item["parent_id"],
-            item["item_class"],
+            item.get("title"),
+            item.get("item_id"),
+            item.get("parent_id"),
+            item.get("item_class"),
             item.get("album_art_uri"),
         )
         for item in item_list
