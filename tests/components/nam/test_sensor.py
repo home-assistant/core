@@ -39,7 +39,7 @@ async def test_sensor(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test states of the air_quality."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2024-04-20 12:00:00+00:00")
 
     with patch("homeassistant.components.nam.PLATFORMS", [Platform.SENSOR]):
