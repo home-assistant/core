@@ -718,36 +718,27 @@ class ConfigEntry(Generic[_DataT]):
         # has started so we do not block shutdown
         if not hass.is_stopping:
             hass.async_create_background_task(
-                self._async_setup_again_locked(hass),
+                self.async_setup_locked(hass),
                 f"config entry retry {self.domain} {self.title}",
                 eager_start=True,
             )
-
-    async def _async_setup_again_locked(self, hass: HomeAssistant) -> None:
-        """Schedule setup again while holding the setup lock."""
-        async with self.setup_lock:
-            if (state := self.state) in (
-                ConfigEntryState.LOADED,
-                ConfigEntryState.SETUP_IN_PROGRESS,
-            ):
-                # If something reloaded the config entry while
-                # we were waiting for the lock, we should not
-                # set it up again.
-                _LOGGER.debug(
-                    "Not setting up %s (%s %s) again, already %s",
-                    self.title,
-                    self.domain,
-                    self.entry_id,
-                    state,
-                )
-                return
-            await self.async_setup(hass)
 
     async def async_setup_locked(
         self, hass: HomeAssistant, integration: loader.Integration | None = None
     ) -> None:
         """Set up while holding the setup lock."""
         async with self.setup_lock:
+            if self.state is ConfigEntryState.LOADED:
+                # If something loaded the config entry while
+                # we were waiting for the lock, we should not
+                # set it up again.
+                _LOGGER.debug(
+                    "Not setting up %s (%s %s) again, already loaded",
+                    self.title,
+                    self.domain,
+                    self.entry_id,
+                )
+                return
             await self.async_setup(hass, integration=integration)
 
     @callback

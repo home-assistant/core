@@ -90,17 +90,29 @@ async def manager(hass: HomeAssistant) -> config_entries.ConfigEntries:
     return manager
 
 
-async def test_setup_retry_race(hass: HomeAssistant) -> None:
-    """Test handling setup retry when a config entry has been reloaded."""
+async def test_setup_race_only_setup_once(hass: HomeAssistant) -> None:
+    """Test ensure that config entries are only setup once."""
     attempts = 0
+    slow_config_entry_setup_future = hass.loop.create_future()
+    fast_config_entry_setup_future = hass.loop.create_future()
+    slow_setup_future = hass.loop.create_future()
+
+    async def async_setup(hass, config):
+        """Mock setup."""
+        await slow_setup_future
+        return True
 
     async def async_setup_entry(hass, entry):
         """Mock setup entry."""
+        slow = entry.data["slow"]
+        if slow:
+            await slow_config_entry_setup_future
+            return True
         nonlocal attempts
         attempts += 1
         if attempts == 1:
             raise ConfigEntryNotReady
-        await asyncio.sleep(0.1)
+        await fast_config_entry_setup_future
         return True
 
     async def async_unload_entry(hass, entry):
@@ -111,31 +123,54 @@ async def test_setup_retry_race(hass: HomeAssistant) -> None:
         hass,
         MockModule(
             "comp",
+            async_setup=async_setup,
             async_setup_entry=async_setup_entry,
             async_unload_entry=async_unload_entry,
         ),
     )
     mock_platform(hass, "comp.config_flow", None)
 
-    entry = MockConfigEntry(domain="comp")
+    entry = MockConfigEntry(domain="comp", data={"slow": False})
     entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
+    entry2 = MockConfigEntry(domain="comp", data={"slow": True})
+    entry2.add_to_hass(hass)
+    await entry2.setup_lock.acquire()
+
+    async def _async_reload_entry(entry: MockConfigEntry):
+        async with entry.setup_lock:
+            await entry.async_unload(hass)
+            await entry.async_setup(hass)
+
+    hass.async_create_task(_async_reload_entry(entry2))
+
+    setup_task = hass.async_create_task(async_setup_component(hass, "comp", {}))
+    entry2.setup_lock.release()
+
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert entry2.state is config_entries.ConfigEntryState.NOT_LOADED
+
+    assert "comp" not in hass.config.components
+    slow_setup_future.set_result(None)
+    await asyncio.sleep(0)
+    assert "comp" in hass.config.components
+
     assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+    assert entry2.state is config_entries.ConfigEntryState.SETUP_IN_PROGRESS
 
-    # Ensure setup retry has started, but do not block until its
-    # done so we can trigger a reload before its complete
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
-    assert entry.setup_lock.locked()
-    assert entry._async_cancel_retry_setup is None
-
-    hass.config_entries.async_schedule_reload(entry.entry_id)
-    assert entry.state is config_entries.ConfigEntryState.SETUP_IN_PROGRESS
-
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+    fast_config_entry_setup_future.set_result(None)
+    # Make sure setup retry is started
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+    slow_config_entry_setup_future.set_result(None)
     await hass.async_block_till_done()
 
     assert entry.state is config_entries.ConfigEntryState.LOADED
+    await hass.async_block_till_done()
+
+    assert attempts == 2
+    await hass.async_block_till_done()
+    assert setup_task.done()
+    assert entry2.state is config_entries.ConfigEntryState.LOADED
 
 
 async def test_call_setup_entry(hass: HomeAssistant) -> None:
