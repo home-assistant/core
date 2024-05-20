@@ -1194,7 +1194,7 @@ async def test_set_preset_mode_pessimistic(
 
     async_fire_mqtt_message(hass, "preset-mode-state", "None")
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") is None
+    assert state.attributes.get("preset_mode") == "none"
 
     async_fire_mqtt_message(hass, "preset-mode-state", "home")
     state = hass.states.get(ENTITY_CLIMATE)
