@@ -716,7 +716,7 @@ class ConfigEntry(Generic[_DataT]):
     def _raise_for_exception_in_forwarded_platform(
         self, exc: Exception, integration: loader.Integration
     ) -> None:
-        """Raise exception if it was raised in a forwarded platform."""
+        """Raise exception if the wrong exception is raised in a forwarded platform."""
         report(
             f"raises exception {type(exc)} {exc} in forwarded platform"
             f" {integration.domain}",
