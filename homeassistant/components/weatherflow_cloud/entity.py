@@ -8,6 +8,17 @@ from .const import ATTR_ATTRIBUTION, DOMAIN, MANUFACTURER
 from .coordinator import WeatherFlowCloudDataUpdateCoordinator
 
 
+def get_station_device_info(station_name: str, station_id: int) -> DeviceInfo:
+    """Generate attr_device_info from station name/id.."""
+    return DeviceInfo(
+        name=station_name,
+        entry_type=DeviceEntryType.SERVICE,
+        identifiers={(DOMAIN, f"{station_id}")},
+        manufacturer=MANUFACTURER,
+        configuration_url=f"https://tempestwx.com/station/{station_id}/grid",
+    )
+
+
 class WeatherFlowCloudEntity(CoordinatorEntity[WeatherFlowCloudDataUpdateCoordinator]):
     """Base entity class to use for sensors."""
 
@@ -29,10 +40,4 @@ class WeatherFlowCloudEntity(CoordinatorEntity[WeatherFlowCloudDataUpdateCoordin
 
         self._attr_unique_id = f"{station_name}_cloud_{description.key}"
 
-        self._attr_device_info = DeviceInfo(
-            name=self.coordinator.data[self.station_id].station.name,
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{station_id}")},
-            manufacturer=MANUFACTURER,
-            configuration_url=f"https://tempestwx.com/station/{station_id}/grid",
-        )
+        self._attr_device_info = get_station_device_info(station_name, station_id)
