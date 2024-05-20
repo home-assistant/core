@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, Literal, TypeVar, cast
+from typing import Any, Literal
 
 from pytraccar import DeviceModel, GeofenceModel, PositionModel
 
@@ -24,11 +24,9 @@ from .const import DOMAIN
 from .coordinator import TraccarServerCoordinator
 from .entity import TraccarServerEntity
 
-_T = TypeVar("_T")
-
 
 @dataclass(frozen=True, kw_only=True)
-class TraccarServerSensorEntityDescription(Generic[_T], SensorEntityDescription):
+class TraccarServerSensorEntityDescription[_T](SensorEntityDescription):
     """Describe Traccar Server sensor entity."""
 
     data_key: Literal["position", "device", "geofence", "attributes"]
@@ -37,7 +35,9 @@ class TraccarServerSensorEntityDescription(Generic[_T], SensorEntityDescription)
     value_fn: Callable[[_T], StateType]
 
 
-TRACCAR_SERVER_SENSOR_ENTITY_DESCRIPTIONS = (
+TRACCAR_SERVER_SENSOR_ENTITY_DESCRIPTIONS: tuple[
+    TraccarServerSensorEntityDescription[Any], ...
+] = (
     TraccarServerSensorEntityDescription[PositionModel](
         key="attributes.batteryLevel",
         data_key="position",
@@ -91,18 +91,18 @@ async def async_setup_entry(
         TraccarServerSensor(
             coordinator=coordinator,
             device=entry["device"],
-            description=cast(TraccarServerSensorEntityDescription, description),
+            description=description,
         )
         for entry in coordinator.data.values()
         for description in TRACCAR_SERVER_SENSOR_ENTITY_DESCRIPTIONS
     )
 
 
-class TraccarServerSensor(TraccarServerEntity, SensorEntity):
+class TraccarServerSensor[_T](TraccarServerEntity, SensorEntity):
     """Represent a tracked device."""
 
     _attr_has_entity_name = True
-    entity_description: TraccarServerSensorEntityDescription
+    entity_description: TraccarServerSensorEntityDescription[_T]
 
     def __init__(
         self,

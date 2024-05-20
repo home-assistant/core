@@ -18,7 +18,7 @@ import re
 from socket import (  # type: ignore[attr-defined]  # private, not in typeshed
     _GLOBAL_DEFAULT_TIMEOUT,
 )
-from typing import Any, TypeVar, cast, overload
+from typing import Any, cast, overload
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -139,9 +139,6 @@ longitude = vol.All(
 gps = vol.ExactSequence([latitude, longitude])
 sun_event = vol.All(vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE))
 port = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
-
-# typing typevar
-_T = TypeVar("_T")
 
 
 def path(value: Any) -> str:
@@ -288,14 +285,14 @@ def ensure_list(value: None) -> list[Any]: ...
 
 
 @overload
-def ensure_list(value: list[_T]) -> list[_T]: ...
+def ensure_list[_T](value: list[_T]) -> list[_T]: ...
 
 
 @overload
-def ensure_list(value: list[_T] | _T) -> list[_T]: ...
+def ensure_list[_T](value: list[_T] | _T) -> list[_T]: ...
 
 
-def ensure_list(value: _T | None) -> list[_T] | list[Any]:
+def ensure_list[_T](value: _T | None) -> list[_T] | list[Any]:
     """Wrap value in list if it is not one."""
     if value is None:
         return []
@@ -540,7 +537,7 @@ def time_period_seconds(value: float | str) -> timedelta:
 time_period = vol.Any(time_period_str, time_period_seconds, timedelta, time_period_dict)
 
 
-def match_all(value: _T) -> _T:
+def match_all[_T](value: _T) -> _T:
     """Validate that matches all values."""
     return value
 
@@ -556,7 +553,7 @@ positive_time_period_dict = vol.All(time_period_dict, positive_timedelta)
 positive_time_period = vol.All(time_period, positive_timedelta)
 
 
-def remove_falsy(value: list[_T]) -> list[_T]:
+def remove_falsy[_T](value: list[_T]) -> list[_T]:
     """Remove falsy values from a list."""
     return [v for v in value if v]
 
