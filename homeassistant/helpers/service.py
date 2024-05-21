@@ -669,15 +669,11 @@ async def async_get_all_descriptions(
 
     # See if there are new services not seen before.
     # Any service that we saw before already has an entry in description_cache.
-    domains_with_missing_services: set[str] = set()
-    all_services: set[tuple[str, str]] = set()
-    for domain, services_by_domain in services.items():
-        for service_name in services_by_domain:
-            cache_key = (domain, service_name)
-            all_services.add(cache_key)
-            if cache_key not in descriptions_cache:
-                domains_with_missing_services.add(domain)
-
+    all_services = {
+        (domain, service_name)
+        for domain, services_by_domain in services.items()
+        for service_name in services_by_domain
+    }
     # If we have a complete cache, check if it is still valid
     all_cache: tuple[set[tuple[str, str]], dict[str, dict[str, Any]]] | None
     if all_cache := hass.data.get(ALL_SERVICE_DESCRIPTIONS_CACHE):
@@ -694,7 +690,9 @@ async def async_get_all_descriptions(
     # add the new ones to the cache without their descriptions
     services = {domain: service.copy() for domain, service in services.items()}
 
-    if domains_with_missing_services:
+    if domains_with_missing_services := {
+        domain for domain, _ in all_services.difference(descriptions_cache)
+    }:
         ints_or_excs = await async_get_integrations(hass, domains_with_missing_services)
         integrations: list[Integration] = []
         for domain, int_or_exc in ints_or_excs.items():
