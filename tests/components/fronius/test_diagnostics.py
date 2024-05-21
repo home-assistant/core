@@ -16,7 +16,7 @@ async def test_diagnostics(
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     snapshot: SnapshotAssertion,
-):
+) -> None:
     """Test diagnostics."""
     mock_responses(aioclient_mock)
     entry = await setup_fronius_integration(hass)
