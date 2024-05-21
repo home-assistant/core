@@ -778,7 +778,7 @@ getmac==0.9.4
 gios==4.0.0
 
 # homeassistant.components.glances
-glances-api==0.6.0
+glances-api==0.7.0
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
