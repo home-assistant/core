@@ -2701,7 +2701,7 @@ temperusb==1.6.1
 tesla-fleet-api==0.4.9
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.5.1
+tesla-powerwall==0.5.2
 
 # homeassistant.components.tesla_wall_connector
 tesla-wall-connector==1.0.2
