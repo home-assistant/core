@@ -15,12 +15,7 @@ from types import ModuleType
 from typing import Any, Final, TypedDict
 
 from . import config as conf_util, core, loader, requirements
-from .const import (
-    EVENT_COMPONENT_LOADED,
-    EVENT_HOMEASSISTANT_START,
-    PLATFORM_FORMAT,
-    Platform,
-)
+from .const import EVENT_COMPONENT_LOADED, EVENT_HOMEASSISTANT_START, PLATFORM_FORMAT
 from .core import (
     CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -44,7 +39,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_COMPONENT: Final = "component"
 
-BASE_PLATFORMS = {platform.value for platform in Platform}
 
 # DATA_SETUP is a dict, indicating domains which are currently
 # being setup or which failed to setup:
@@ -637,16 +631,7 @@ def _async_when_setup(
 @core.callback
 def async_get_loaded_integrations(hass: core.HomeAssistant) -> set[str]:
     """Return the complete list of loaded integrations."""
-    integrations: set[str] = {
-        platform_dot_domain[0]
-        for component in hass.config.components.difference(
-            hass.config.top_level_components
-        )
-        if (platform_dot_domain := component.partition("."))
-        and platform_dot_domain[2] in BASE_PLATFORMS
-    }
-    integrations.update(hass.config.top_level_components)
-    return integrations
+    return hass.config.all_components
 
 
 class SetupPhases(StrEnum):
