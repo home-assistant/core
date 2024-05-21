@@ -104,7 +104,7 @@ DISCOVERY_SCHEMAS = [
             measurement_to_ha=lambda x: (x & 1 == 1) if x is not None else None,
         ),
         entity_class=MatterBinarySensor,
-        required_attributes=(clusters.OccupancySensing.Attributes.WaterLeak,),
+        required_attributes=(clusters.BooleanState.Attributes.StateValue,),
     ),
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
