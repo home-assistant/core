@@ -16,6 +16,7 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import conversation
+from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -29,6 +30,9 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("agent_id", [None, "conversation.openai"])
+@pytest.mark.parametrize(
+    "config_entry_options", [{}, {CONF_LLM_HASS_API: llm.LLM_API_ASSIST}]
+)
 async def test_default_prompt(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -37,6 +41,7 @@ async def test_default_prompt(
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
     agent_id: str,
+    config_entry_options: dict,
 ) -> None:
     """Test that the default prompt works."""
     entry = MockConfigEntry(title=None)
@@ -46,6 +51,14 @@ async def test_default_prompt(
 
     if agent_id is None:
         agent_id = mock_config_entry.entry_id
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            **mock_config_entry.options,
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+        },
+    )
 
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -207,20 +220,18 @@ async def test_conversation_agent(
     assert agent.supported_languages == "*"
 
 
-@patch("homeassistant.components.openai_conversation.conversation.llm.async_get_tools")
-@patch("homeassistant.components.openai_conversation.conversation.llm.async_call_tool")
+@patch(
+    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI.async_get_tools"
+)
 async def test_function_call(
-    mock_call_tool,
     mock_get_tools,
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
 ) -> None:
     """Test function call from the assistant."""
-    entry = MockConfigEntry(title=None)
-    entry.add_to_hass(hass)
-
-    mock_call_tool.return_value = "Test response"
+    agent_id = mock_config_entry_with_assist.entry_id
+    context = Context()
 
     mock_tool = AsyncMock()
     mock_tool.name = "test_tool"
@@ -228,6 +239,7 @@ async def test_function_call(
     mock_tool.parameters = vol.Schema(
         {vol.Optional("param1", description="Test parameters"): str}
     )
+    mock_tool.async_call.return_value = "Test response"
 
     mock_get_tools.return_value = [mock_tool]
 
@@ -290,8 +302,6 @@ async def test_function_call(
             ),
         )
 
-    context = Context()
-
     with patch(
         "openai.resources.chat.completions.AsyncCompletions.create",
         new_callable=AsyncMock,
@@ -302,7 +312,7 @@ async def test_function_call(
             "Please call the test function",
             None,
             context,
-            agent_id=mock_config_entry.entry_id,
+            agent_id=agent_id,
         )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -312,7 +322,7 @@ async def test_function_call(
         "name": "test_tool",
         "content": '"Test response"',
     }
-    mock_call_tool.assert_awaited_once_with(
+    mock_tool.async_call.assert_awaited_once_with(
         hass,
         llm.ToolInput(
             tool_name="test_tool",
@@ -326,20 +336,18 @@ async def test_function_call(
     )
 
 
-@patch("homeassistant.components.openai_conversation.conversation.llm.async_get_tools")
-@patch("homeassistant.components.openai_conversation.conversation.llm.async_call_tool")
+@patch(
+    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI.async_get_tools"
+)
 async def test_function_exception(
-    mock_call_tool,
     mock_get_tools,
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
 ) -> None:
     """Test function call with exception."""
-    entry = MockConfigEntry(title=None)
-    entry.add_to_hass(hass)
-
-    mock_call_tool.side_effect = HomeAssistantError("Test tool exception")
+    agent_id = mock_config_entry_with_assist.entry_id
+    context = Context()
 
     mock_tool = AsyncMock()
     mock_tool.name = "test_tool"
@@ -347,6 +355,7 @@ async def test_function_exception(
     mock_tool.parameters = vol.Schema(
         {vol.Optional("param1", description="Test parameters"): str}
     )
+    mock_tool.async_call.side_effect = HomeAssistantError("Test tool exception")
 
     mock_get_tools.return_value = [mock_tool]
 
@@ -409,8 +418,6 @@ async def test_function_exception(
             ),
         )
 
-    context = Context()
-
     with patch(
         "openai.resources.chat.completions.AsyncCompletions.create",
         new_callable=AsyncMock,
@@ -421,7 +428,7 @@ async def test_function_exception(
             "Please call the test function",
             None,
             context,
-            agent_id=mock_config_entry.entry_id,
+            agent_id=agent_id,
         )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -431,7 +438,7 @@ async def test_function_exception(
         "name": "test_tool",
         "content": '{"error": "HomeAssistantError", "error_text": "Test tool exception"}',
     }
-    mock_call_tool.assert_awaited_once_with(
+    mock_tool.async_call.assert_awaited_once_with(
         hass,
         llm.ToolInput(
             tool_name="test_tool",
