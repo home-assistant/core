@@ -141,11 +141,20 @@ class KNXClimate(KnxEntity, ClimateEntity):
         """Initialize of a KNX climate device."""
         super().__init__(_create_climate(xknx, config))
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_ON
-        )
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         if self._device.supports_on_off:
-            self._attr_supported_features |= ClimateEntityFeature.TURN_OFF
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
+        if (
+            self._device.mode is not None
+            and len(self._device.mode.controller_modes) >= 2
+            and HVACControllerMode.OFF in self._device.mode.controller_modes
+        ):
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
+
         if self.preset_modes:
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
         self._attr_target_temperature_step = self._device.temperature_step
@@ -158,6 +167,8 @@ class KNXClimate(KnxEntity, ClimateEntity):
         self.default_hvac_mode: HVACMode = config[
             ClimateSchema.CONF_DEFAULT_CONTROLLER_MODE
         ]
+        # non-OFF HVAC mode to be used when turning on the device without on_off address
+        self._last_hvac_mode: HVACMode = self.default_hvac_mode
 
     @property
     def current_temperature(self) -> float | None:
@@ -181,6 +192,34 @@ class KNXClimate(KnxEntity, ClimateEntity):
         temp = self._device.target_temperature_max
         return temp if temp is not None else super().max_temp
 
+    async def async_turn_on(self) -> None:
+        """Turn the entity on."""
+        if self._device.supports_on_off:
+            await self._device.turn_on()
+            self.async_write_ha_state()
+            return
+
+        if self._device.mode is not None and self._device.mode.supports_controller_mode:
+            knx_controller_mode = HVACControllerMode(
+                CONTROLLER_MODES_INV.get(self._last_hvac_mode)
+            )
+            await self._device.mode.set_controller_mode(knx_controller_mode)
+            self.async_write_ha_state()
+
+    async def async_turn_off(self) -> None:
+        """Turn the entity off."""
+        if self._device.supports_on_off:
+            await self._device.turn_off()
+            self.async_write_ha_state()
+            return
+
+        if (
+            self._device.mode is not None
+            and HVACControllerMode.OFF in self._device.mode.controller_modes
+        ):
+            await self._device.mode.set_controller_mode(HVACControllerMode.OFF)
+            self.async_write_ha_state()
+
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -194,9 +233,12 @@ class KNXClimate(KnxEntity, ClimateEntity):
         if self._device.supports_on_off and not self._device.is_on:
             return HVACMode.OFF
         if self._device.mode is not None and self._device.mode.supports_controller_mode:
-            return CONTROLLER_MODES.get(
+            hvac_mode = CONTROLLER_MODES.get(
                 self._device.mode.controller_mode.value, self.default_hvac_mode
             )
+            if hvac_mode is not HVACMode.OFF:
+                self._last_hvac_mode = hvac_mode
+            return hvac_mode
         return self.default_hvac_mode
 
     @property
@@ -234,21 +276,23 @@ class KNXClimate(KnxEntity, ClimateEntity):
         return None
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set operation mode."""
-        if self._device.supports_on_off and hvac_mode == HVACMode.OFF:
-            await self._device.turn_off()
-        else:
-            if self._device.supports_on_off and not self._device.is_on:
-                await self._device.turn_on()
-            if (
-                self._device.mode is not None
-                and self._device.mode.supports_controller_mode
-            ):
-                knx_controller_mode = HVACControllerMode(
-                    CONTROLLER_MODES_INV.get(hvac_mode)
-                )
+        """Set controller mode."""
+        if self._device.mode is not None and self._device.mode.supports_controller_mode:
+            knx_controller_mode = HVACControllerMode(
+                CONTROLLER_MODES_INV.get(hvac_mode)
+            )
+            if knx_controller_mode in self._device.mode.controller_modes:
                 await self._device.mode.set_controller_mode(knx_controller_mode)
-        self.async_write_ha_state()
+                self.async_write_ha_state()
+                return
+
+        if self._device.supports_on_off:
+            if hvac_mode == HVACMode.OFF:
+                await self._device.turn_off()
+            elif not self._device.is_on:
+                # for default hvac mode, otherwise above would have triggered
+                await self._device.turn_on()
+            self.async_write_ha_state()
 
     @property
     def preset_mode(self) -> str | None:
