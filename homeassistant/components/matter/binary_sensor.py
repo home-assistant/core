@@ -98,6 +98,17 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
+            key="WaterLeakSensor",
+            device_class=BinarySensorDeviceClass.WATERLEAK,
+            # The first bit = if occupied
+            measurement_to_ha=lambda x: (x & 1 == 1) if x is not None else None,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.OccupancySensing.Attributes.WaterLeak,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
             key="BatteryChargeLevel",
             device_class=BinarySensorDeviceClass.BATTERY,
             entity_category=EntityCategory.DIAGNOSTIC,
