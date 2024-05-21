@@ -51,6 +51,12 @@
       "handle_temp_c": {
         "name": "Handle temperature"
       },
+      "pcba_temp_c": {
+        "name": "PCB temperature"
+      },
+      "mcu_temp_c": {
+        "name": "MCU temperature"
+      },
       "grid_v": {
         "name": "Grid voltage"
       },
