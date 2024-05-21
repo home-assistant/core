@@ -30,8 +30,8 @@ def _async_get_cutting_height(data: MowerAttributes) -> int:
     """Return the cutting height."""
     if TYPE_CHECKING:
         # Sensor does not get created if it is None
-        assert data.cutting_height is not None
-    return data.cutting_height
+        assert data.settings.cutting_height is not None
+    return data.settings.cutting_height
 
 
 @callback
@@ -84,7 +84,7 @@ NUMBER_TYPES: tuple[AutomowerNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         native_min_value=1,
         native_max_value=9,
-        exists_fn=lambda data: data.cutting_height is not None,
+        exists_fn=lambda data: data.settings.cutting_height is not None,
         value_fn=_async_get_cutting_height,
         set_value_fn=async_set_cutting_height,
     ),
