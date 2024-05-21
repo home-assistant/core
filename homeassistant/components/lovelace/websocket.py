@@ -11,6 +11,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.json import json_fragment
 
 from .const import CONF_URL_PATH, DOMAIN, ConfigNotFound
 from .dashboard import LovelaceStorage
@@ -86,9 +87,9 @@ async def websocket_lovelace_config(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
     config: LovelaceStorage,
-) -> dict[str, Any]:
+) -> json_fragment:
     """Send Lovelace UI config over WebSocket configuration."""
-    return await config.async_load(msg["force"])
+    return await config.async_json(msg["force"])
 
 
 @websocket_api.require_admin
