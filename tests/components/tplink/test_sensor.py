@@ -2,6 +2,8 @@
 
 from unittest.mock import Mock
 
+from kasa import Module
+
 from homeassistant.components import tplink
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.const import CONF_HOST
@@ -9,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import MAC_ADDRESS, _mocked_bulb, _mocked_plug, _patch_connect, _patch_discovery
+from . import MAC_ADDRESS, _mocked_device, _patch_connect, _patch_discovery
 
 from tests.common import MockConfigEntry
 
@@ -20,8 +22,7 @@ async def test_color_light_with_an_emeter(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    bulb = _mocked_bulb()
-    bulb.color_temp = None
+    bulb = _mocked_device(alias="my_bulb", modules=[Module.Light])
     bulb.has_emeter = True
     bulb.emeter_realtime = Mock(
         power=None,
@@ -60,8 +61,7 @@ async def test_plug_with_an_emeter(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    plug = _mocked_plug()
-    plug.color_temp = None
+    plug = _mocked_device(alias="my_plug", modules=[Module.Led])
     plug.has_emeter = True
     plug.emeter_realtime = Mock(
         power=100.06,
@@ -95,8 +95,7 @@ async def test_color_light_no_emeter(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    bulb = _mocked_bulb()
-    bulb.color_temp = None
+    bulb = _mocked_device(alias="my_bulb", modules=[Module.Light])
     bulb.has_emeter = False
     with _patch_discovery(device=bulb), _patch_connect(device=bulb):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -124,8 +123,7 @@ async def test_sensor_unique_id(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    plug = _mocked_plug()
-    plug.color_temp = None
+    plug = _mocked_device(alias="my_plug", modules=[Module.Led])
     plug.has_emeter = True
     plug.emeter_realtime = Mock(
         power=100,

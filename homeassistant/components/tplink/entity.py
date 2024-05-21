@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Coroutine
 from typing import Any, Concatenate
 
-from kasa import AuthenticationException, Device, KasaException, TimeoutException
+from kasa import AuthenticationError, Device, KasaException, TimeoutError
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -24,7 +24,7 @@ def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
     async def _async_wrap(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         try:
             await func(self, *args, **kwargs)
-        except AuthenticationException as ex:
+        except AuthenticationError as ex:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -34,7 +34,7 @@ def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
                     "exc": str(ex),
                 },
             ) from ex
-        except TimeoutException as ex:
+        except TimeoutError as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_timeout",

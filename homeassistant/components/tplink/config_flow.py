@@ -6,13 +6,13 @@ from collections.abc import Mapping
 from typing import Any
 
 from kasa import (
-    AuthenticationException,
+    AuthenticationError,
     Credentials,
     Device,
     DeviceConfig,
     Discover,
     KasaException,
-    TimeoutException,
+    TimeoutError,
 )
 import voluptuous as vol
 
@@ -129,7 +129,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             await self._async_try_discover_and_update(
                 host, credentials, raise_on_progress=True
             )
-        except AuthenticationException:
+        except AuthenticationError:
             return await self.async_step_discovery_auth_confirm()
         except KasaException:
             return self.async_abort(reason="cannot_connect")
@@ -149,7 +149,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 device = await self._async_try_connect(
                     self._discovered_device, credentials
                 )
-            except AuthenticationException:
+            except AuthenticationError:
                 pass  # Authentication exceptions should continue to the rest of the step
             else:
                 self._discovered_device = device
@@ -165,7 +165,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 device = await self._async_try_connect(
                     self._discovered_device, credentials
                 )
-            except AuthenticationException as ex:
+            except AuthenticationError as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
                 placeholders["error"] = str(ex)
             except KasaException as ex:
@@ -229,7 +229,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 device = await self._async_try_discover_and_update(
                     host, credentials, raise_on_progress=False
                 )
-            except AuthenticationException:
+            except AuthenticationError:
                 return await self.async_step_user_auth_confirm()
             except KasaException as ex:
                 errors["base"] = "cannot_connect"
@@ -261,7 +261,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 device = await self._async_try_connect(
                     self._discovered_device, credentials
                 )
-            except AuthenticationException as ex:
+            except AuthenticationError as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
                 placeholders["error"] = str(ex)
             except KasaException as ex:
@@ -298,7 +298,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 device = await self._async_try_connect(
                     self._discovered_device, credentials
                 )
-            except AuthenticationException:
+            except AuthenticationError:
                 return await self.async_step_user_auth_confirm()
             except KasaException:
                 return self.async_abort(reason="cannot_connect")
@@ -373,7 +373,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovered_device = await Discover.discover_single(
                 host, credentials=credentials
             )
-        except TimeoutException:
+        except TimeoutError:
             # Try connect() to legacy devices if discovery fails
             self._discovered_device = await Device.connect(config=DeviceConfig(host))
         else:
@@ -440,7 +440,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                     credentials=credentials,
                     raise_on_progress=True,
                 )
-            except AuthenticationException as ex:
+            except AuthenticationError as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
                 placeholders["error"] = str(ex)
             except KasaException as ex:
