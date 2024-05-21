@@ -89,6 +89,28 @@ async def test_occupancy_sensor(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_leak_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    leak_sensor_node: MatterNode,
+) -> None:
+    """Test occupancy sensor."""
+    state = hass.states.get("binary_sensor.mock_leak_sensor_leak")
+    assert state
+    assert state.state == "on"
+
+    set_node_attribute(leak_sensor_node, 1, 1031, 0, 0)
+    await trigger_subscription_callback(
+        hass, matter_client, data=(leak_sensor_node.node_id, "1/1031/0", 0)
+    )
+
+    state = hass.states.get("binary_sensor.mock_leak_sensor_leak")
+    assert state
+    assert state.state == "off"
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_battery_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
