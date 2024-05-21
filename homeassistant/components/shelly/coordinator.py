@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, Generic, TypeVar, cast
+from typing import Any, cast
 
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
@@ -63,15 +63,12 @@ from .const import (
 )
 from .utils import (
     async_create_issue_unsupported_firmware,
-    async_shutdown_device,
     get_block_device_sleep_period,
     get_device_entry_gen,
     get_http_port,
     get_rpc_device_wakeup_period,
     update_device_fw_info,
 )
-
-_DeviceT = TypeVar("_DeviceT", bound="BlockDevice|RpcDevice")
 
 
 @dataclass
@@ -87,7 +84,9 @@ class ShellyEntryData:
 type ShellyConfigEntry = ConfigEntry[ShellyEntryData]
 
 
-class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
+class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
+    DataUpdateCoordinator[None]
+):
     """Coordinator for a Shelly device."""
 
     def __init__(
@@ -114,6 +113,10 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
             function=self._async_reload_entry,
         )
         entry.async_on_unload(self._debounced_reload.async_shutdown)
+
+        entry.async_on_unload(
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
+        )
 
     @property
     def model(self) -> str:
@@ -150,6 +153,15 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
             configuration_url=f"http://{self.entry.data[CONF_HOST]}:{get_http_port(self.entry.data)}",
         )
         self.device_id = device_entry.id
+
+    async def shutdown(self) -> None:
+        """Shutdown the coordinator."""
+        await self.device.shutdown()
+
+    async def _handle_ha_stop(self, _event: Event) -> None:
+        """Handle Home Assistant stopping."""
+        LOGGER.debug("Stopping RPC device coordinator for %s", self.name)
+        await self.shutdown()
 
     async def _async_device_connect_task(self) -> bool:
         """Connect to a Shelly device task."""
@@ -206,7 +218,7 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
         # not running disconnect events since we have auth error
         # and won't be able to send commands to the device
         self.last_update_success = False
-        await async_shutdown_device(self.device)
+        await self.shutdown()
         self.entry.async_start_reauth(self.hass)
 
 
@@ -236,9 +248,6 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
 
         entry.async_on_unload(
             self.async_add_listener(self._async_device_updates_handler)
-        )
-        entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
         )
 
     @callback
@@ -407,16 +416,6 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         super().async_setup(pending_platforms)
         self.device.subscribe_updates(self._async_handle_update)
 
-    def shutdown(self) -> None:
-        """Shutdown the coordinator."""
-        self.device.shutdown()
-
-    @callback
-    def _handle_ha_stop(self, _event: Event) -> None:
-        """Handle Home Assistant stopping."""
-        LOGGER.debug("Stopping block device coordinator for %s", self.name)
-        self.shutdown()
-
 
 class ShellyRestCoordinator(ShellyCoordinatorBase[BlockDevice]):
     """Coordinator for a Shelly REST device."""
@@ -473,9 +472,6 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._ota_event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
 
-        entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
-        )
         entry.async_on_unload(entry.add_update_listener(self._async_update_listener))
 
     def update_sleep_period(self) -> bool:
@@ -705,15 +701,10 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             try:
                 await async_stop_scanner(self.device)
             except InvalidAuthError:
-                await self.async_shutdown_device_and_start_reauth()
+                self.entry.async_start_reauth(self.hass)
                 return
-        await self.device.shutdown()
+        await super().shutdown()
         await self._async_disconnected(False)
-
-    async def _handle_ha_stop(self, _event: Event) -> None:
-        """Handle Home Assistant stopping."""
-        LOGGER.debug("Stopping RPC device coordinator for %s", self.name)
-        await self.shutdown()
 
 
 class ShellyRpcPollingCoordinator(ShellyCoordinatorBase[RpcDevice]):

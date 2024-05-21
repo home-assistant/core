@@ -811,3 +811,11 @@ def async_get_setup_timings(hass: core.HomeAssistant) -> dict[str, float]:
         domain_timings[domain] = total_top_level + group_max
 
     return domain_timings
+
+
+@callback
+def async_get_domain_setup_times(
+    hass: core.HomeAssistant, domain: str
+) -> Mapping[str | None, dict[SetupPhases, float]]:
+    """Return timing data for each integration."""
+    return _setup_times(hass).get(domain, {})

@@ -6,7 +6,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 import logging
-from typing import TypeVar, cast
+from typing import cast
 
 from aiohttp.client_exceptions import ClientError
 from pykoplenti import (
@@ -28,7 +28,6 @@ from .const import DOMAIN
 from .helper import get_hostname_id
 
 _LOGGER = logging.getLogger(__name__)
-_DataT = TypeVar("_DataT")
 
 
 class Plenticore:
@@ -160,7 +159,7 @@ class DataUpdateCoordinatorMixin:
         return True
 
 
-class PlenticoreUpdateCoordinator(DataUpdateCoordinator[_DataT]):
+class PlenticoreUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Base implementation of DataUpdateCoordinator for Plenticore data."""
 
     def __init__(
@@ -238,7 +237,7 @@ class SettingDataUpdateCoordinator(
         return await client.get_setting_values(self._fetch)
 
 
-class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator[_DataT]):
+class PlenticoreSelectUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Base implementation of DataUpdateCoordinator for Plenticore data."""
 
     def __init__(

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, TypedDict, TypeVar, cast
+from typing import Any, TypedDict, cast
 
 from pydeconz.interfaces.groups import GroupHandler
 from pydeconz.interfaces.lights import LightHandler
@@ -86,8 +86,6 @@ XMAS_LIGHT_EFFECTS = [
     "waves",
 ]
 
-_LightDeviceT = TypeVar("_LightDeviceT", bound=Group | Light)
-
 
 class SetStateAttributes(TypedDict, total=False):
     """Attributes available with set state call."""
@@ -167,7 +165,9 @@ async def async_setup_entry(
     )
 
 
-class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
+class DeconzBaseLight[_LightDeviceT: Group | Light](
+    DeconzDevice[_LightDeviceT], LightEntity
+):
     """Representation of a deCONZ light."""
 
     TYPE = DOMAIN
