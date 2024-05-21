@@ -138,7 +138,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal."""
-        self.coordinator.async_extra_update = self._async_extra_update
+        self.coordinator.async_extra_update = None
         await self._async_shutdown_dmr()
 
     @callback
