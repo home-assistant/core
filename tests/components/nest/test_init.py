@@ -32,6 +32,7 @@ from .common import (
     TEST_CONFIG_LEGACY,
     TEST_CONFIGFLOW_APP_CREDS,
     FakeSubscriber,
+    PlatformSetup,
     YieldFixture,
 )
 
@@ -239,6 +240,23 @@ async def test_remove_entry(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert not entries
+
+
+async def test_home_assistant_stop(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    subscriber: FakeSubscriber,
+) -> None:
+    """Test successful subscriber shutdown when HomeAssistant stops."""
+    await setup_platform()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.state is ConfigEntryState.LOADED
+
+    await hass.async_stop()
+    assert subscriber.stop_calls == 1
 
 
 async def test_remove_entry_delete_subscriber_failure(

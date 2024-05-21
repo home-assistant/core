@@ -90,6 +90,8 @@ TEST_CONFIG_ENTRY_LEGACY = NestTestConfig(
 class FakeSubscriber(GoogleNestSubscriber):
     """Fake subscriber that supplies a FakeDeviceManager."""
 
+    stop_calls = 0
+
     def __init__(self):
         """Initialize Fake Subscriber."""
         self._device_manager = DeviceManager()
@@ -121,7 +123,7 @@ class FakeSubscriber(GoogleNestSubscriber):
 
     def stop_async(self):
         """No-op to stop the subscriber."""
-        return None
+        self.stop_calls += 1
 
     async def async_receive_event(self, event_message: EventMessage):
         """Simulate a received pubsub message, invoked by tests."""
