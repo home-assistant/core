@@ -173,7 +173,7 @@ def async_format_manifest(manifest: Manifest) -> Manifest:
     manifest_copy = manifest.copy()
     if "codeowners" in manifest_copy:
         manifest_copy["codeowners"] = [
-            codeowner.replace("@", "") for codeowner in manifest_copy["codeowners"]
+            codeowner.lstrip("@") for codeowner in manifest_copy["codeowners"]
         ]
     return manifest_copy
 
