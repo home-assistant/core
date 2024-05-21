@@ -1,4 +1,5 @@
 """The tests for the PG LAB Electronics  discovery device."""
+
 import json
 
 from homeassistant.core import HomeAssistant
