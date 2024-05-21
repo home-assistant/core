@@ -86,7 +86,7 @@ async def websocket_lovelace_config(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
     config: LovelaceStorage,
-) -> None:
+) -> dict[str, Any]:
     """Send Lovelace UI config over WebSocket configuration."""
     return await config.async_load(msg["force"])
 
@@ -137,7 +137,7 @@ def websocket_lovelace_dashboards(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Delete Lovelace UI configuration."""
+    """Send Lovelace dashboard configuration."""
     connection.send_result(
         msg["id"],
         [
