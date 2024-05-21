@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 import getmac
 
 from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -134,6 +134,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) ->
                 "Token and session id are required in encrypted mode"
             )
     bridge = await _async_create_bridge_with_updated_data(hass, entry)
+
+    @callback
+    def _access_denied() -> None:
+        """Access denied callback."""
+        LOGGER.debug("Access denied in getting remote object")
+        hass.create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={
+                    "source": SOURCE_REAUTH,
+                    "entry_id": entry.entry_id,
+                },
+                data=entry.data,
+            )
+        )
+
+    bridge.register_reauth_callback(_access_denied)
 
     # Ensure updates get saved against the config_entry
     @callback
