@@ -43,7 +43,7 @@ class ScreenLogicNumberDescription(
     """Describes a ScreenLogic number entity."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ScreenLogicPushNumberDescription(
     ScreenLogicNumberDescription,
     ScreenLogicPushEntityDescription,
