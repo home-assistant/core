@@ -1,6 +1,8 @@
 """Helpers for config validation using voluptuous."""
 
-from __future__ import annotations
+# PEP 563 seems to break typing.get_type_hints when used
+# with PEP 695 syntax. Fixed in Python 3.13.
+# from __future__ import annotations
 
 from collections.abc import Callable, Hashable
 import contextlib
