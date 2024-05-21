@@ -105,11 +105,6 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         self._dmr_device: DmrDevice | None = None
         self._upnp_server: AiohttpNotifyServer | None = None
 
-        # Set initial state from coordinator
-        self._attr_state = (
-            MediaPlayerState.ON if coordinator.is_on else MediaPlayerState.OFF
-        )
-
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
@@ -135,6 +130,11 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         await super().async_added_to_hass()
         await self._async_extra_update()
         self.coordinator.async_extra_update = self._async_extra_update
+        if self.coordinator.is_on:
+            self._attr_state = MediaPlayerState.ON
+            self._update_from_upnp()
+        else:
+            self._attr_state = MediaPlayerState.OFF
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal."""
