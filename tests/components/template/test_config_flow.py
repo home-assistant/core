@@ -167,7 +167,7 @@ async def test_config_flow_device(
         domain=DOMAIN,
         options={
             "template_type": template_type,
-            "name": "Teste",
+            "name": "Test",
             "state": state_template,
             "device_id": device_id,
         },
@@ -914,7 +914,27 @@ async def test_option_flow_sensor_preview_config_entry_removed(
     assert msg["error"] == {"code": "home_assistant_error", "message": "Unknown error"}
 
 
-async def test_options_flow_change_device(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    (
+        "template_type",
+        "state_template",
+    ),
+    [
+        (
+            "sensor",
+            "{{ 15 }}",
+        ),
+        (
+            "binary_sensor",
+            "{{ false }}",
+        ),
+    ],
+)
+async def test_options_flow_change_device(
+    hass: HomeAssistant,
+    template_type: str,
+    state_template: str,
+) -> None:
     """Test remove the device registry configuration entry when the device changes."""
 
     device_registry = dr.async_get(hass)
@@ -947,9 +967,9 @@ async def test_options_flow_change_device(hass: HomeAssistant) -> None:
         data={},
         domain=DOMAIN,
         options={
-            "template_type": "sensor",
-            "name": "Teste",
-            "state": "{{15}}",
+            "template_type": template_type,
+            "name": "Test",
+            "state": state_template,
             "device_id": device_id1,
         },
         title="Sensor template",
@@ -967,22 +987,22 @@ async def test_options_flow_change_device(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "state": "{{15}}",
+            "state": state_template,
             "device_id": device_id2,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "template_type": "sensor",
-        "name": "Teste",
-        "state": "{{15}}",
+        "template_type": template_type,
+        "name": "Test",
+        "state": state_template,
         "device_id": device_id2,
     }
     assert template_config_entry.data == {}
     assert template_config_entry.options == {
-        "template_type": "sensor",
-        "name": "Teste",
-        "state": "{{15}}",
+        "template_type": template_type,
+        "name": "Test",
+        "state": state_template,
         "device_id": device_id2,
     }
 
@@ -995,20 +1015,20 @@ async def test_options_flow_change_device(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "state": "{{15}}",
+            "state": state_template,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "template_type": "sensor",
-        "name": "Teste",
-        "state": "{{15}}",
+        "template_type": template_type,
+        "name": "Test",
+        "state": state_template,
     }
     assert template_config_entry.data == {}
     assert template_config_entry.options == {
-        "template_type": "sensor",
-        "name": "Teste",
-        "state": "{{15}}",
+        "template_type": template_type,
+        "name": "Test",
+        "state": state_template,
     }
 
     # Change to link to device 1
@@ -1020,21 +1040,21 @@ async def test_options_flow_change_device(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "state": "{{15}}",
+            "state": state_template,
             "device_id": device_id1,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "template_type": "sensor",
-        "name": "Teste",
-        "state": "{{15}}",
+        "template_type": template_type,
+        "name": "Test",
+        "state": state_template,
         "device_id": device_id1,
     }
     assert template_config_entry.data == {}
     assert template_config_entry.options == {
-        "template_type": "sensor",
-        "name": "Teste",
-        "state": "{{15}}",
+        "template_type": template_type,
+        "name": "Test",
+        "state": state_template,
         "device_id": device_id1,
     }
