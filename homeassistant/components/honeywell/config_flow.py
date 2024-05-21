@@ -86,7 +86,6 @@ class HoneywellConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.entry.data,
             ),
             errors=errors,
-            description_placeholders={"name": "Honeywell"},
         )
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
