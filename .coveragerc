@@ -1720,10 +1720,6 @@ omit =
     homeassistant/components/zeroconf/models.py
     homeassistant/components/zeroconf/usage.py
     homeassistant/components/zestimate/sensor.py
-    homeassistant/components/zeversolar/__init__.py
-    homeassistant/components/zeversolar/coordinator.py
-    homeassistant/components/zeversolar/entity.py
-    homeassistant/components/zeversolar/sensor.py
     homeassistant/components/zha/core/cluster_handlers/*
     homeassistant/components/zha/core/device.py
     homeassistant/components/zha/core/gateway.py
