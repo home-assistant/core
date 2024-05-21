@@ -27,8 +27,8 @@ from homeassistant.util import dt as dt_util
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-ApiResult = Callable[[dict[str, Any]], None]
-ComponentSetup = Callable[[], Awaitable[bool]]
+type ApiResult = Callable[[dict[str, Any]], None]
+type ComponentSetup = Callable[[], Awaitable[bool]]
 type AsyncYieldFixture[_T] = AsyncGenerator[_T, None]
 
 
