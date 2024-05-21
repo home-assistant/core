@@ -13,12 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .common import (
-    DirectPanel,
-    ElmaxCoordinator,
-    build_direct_ssl_context,
-    get_direct_api_url,
-)
+from .common import DirectPanel, build_direct_ssl_context, get_direct_api_url
 from .const import (
     CONF_ELMAX_MODE,
     CONF_ELMAX_MODE_CLOUD,
@@ -35,6 +30,7 @@ from .const import (
     ELMAX_PLATFORMS,
     POLLING_SECONDS,
 )
+from .coordinator import ElmaxCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

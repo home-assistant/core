@@ -16,7 +16,7 @@ from .errors import AuthenticationRequired, CannotConnect
 from .hub import UnifiHub, get_unifi_api
 from .services import async_setup_services
 
-UnifiConfigEntry = ConfigEntry[UnifiHub]
+type UnifiConfigEntry = ConfigEntry[UnifiHub]
 
 SAVE_DELAY = 10
 STORAGE_KEY = "unifi_data"

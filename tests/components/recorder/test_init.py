@@ -1027,7 +1027,7 @@ async def run_tasks_at_time(hass: HomeAssistant, test_time: datetime) -> None:
 async def test_auto_purge(hass: HomeAssistant, setup_recorder: None) -> None:
     """Test periodic purge scheduling."""
     timezone = "Europe/Copenhagen"
-    hass.config.set_time_zone(timezone)
+    await hass.config.async_set_time_zone(timezone)
     tz = dt_util.get_time_zone(timezone)
 
     # Purging is scheduled to happen at 4:12am every day. Exercise this behavior by
@@ -1089,7 +1089,7 @@ async def test_auto_purge_auto_repack_on_second_sunday(
 ) -> None:
     """Test periodic purge scheduling does a repack on the 2nd sunday."""
     timezone = "Europe/Copenhagen"
-    hass.config.set_time_zone(timezone)
+    await hass.config.async_set_time_zone(timezone)
     tz = dt_util.get_time_zone(timezone)
 
     # Purging is scheduled to happen at 4:12am every day. Exercise this behavior by
@@ -1132,7 +1132,7 @@ async def test_auto_purge_auto_repack_disabled_on_second_sunday(
 ) -> None:
     """Test periodic purge scheduling does not auto repack on the 2nd sunday if disabled."""
     timezone = "Europe/Copenhagen"
-    hass.config.set_time_zone(timezone)
+    await hass.config.async_set_time_zone(timezone)
     await async_setup_recorder_instance(hass, {CONF_AUTO_REPACK: False})
     tz = dt_util.get_time_zone(timezone)
 
@@ -1176,7 +1176,7 @@ async def test_auto_purge_no_auto_repack_on_not_second_sunday(
 ) -> None:
     """Test periodic purge scheduling does not do a repack unless its the 2nd sunday."""
     timezone = "Europe/Copenhagen"
-    hass.config.set_time_zone(timezone)
+    await hass.config.async_set_time_zone(timezone)
     tz = dt_util.get_time_zone(timezone)
 
     # Purging is scheduled to happen at 4:12am every day. Exercise this behavior by
@@ -1220,7 +1220,7 @@ async def test_auto_purge_disabled(
 ) -> None:
     """Test periodic db cleanup still run when auto purge is disabled."""
     timezone = "Europe/Copenhagen"
-    hass.config.set_time_zone(timezone)
+    await hass.config.async_set_time_zone(timezone)
     await async_setup_recorder_instance(hass, {CONF_AUTO_PURGE: False})
     tz = dt_util.get_time_zone(timezone)
 
@@ -1262,7 +1262,7 @@ async def test_auto_statistics(
 ) -> None:
     """Test periodic statistics scheduling."""
     timezone = "Europe/Copenhagen"
-    hass.config.set_time_zone(timezone)
+    await hass.config.async_set_time_zone(timezone)
     tz = dt_util.get_time_zone(timezone)
 
     stats_5min = []
