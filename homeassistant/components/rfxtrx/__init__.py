@@ -6,7 +6,7 @@ import binascii
 from collections.abc import Callable, Mapping
 import copy
 import logging
-from typing import Any, NamedTuple, TypeVarTuple, cast
+from typing import Any, NamedTuple, cast
 
 import RFXtrx as rfxtrxmod
 import voluptuous as vol
@@ -54,8 +54,6 @@ DEFAULT_OFF_DELAY = 2.0
 
 SIGNAL_EVENT = f"{DOMAIN}_event"
 CONNECT_TIMEOUT = 30.0
-
-_Ts = TypeVarTuple("_Ts")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -573,7 +571,7 @@ class RfxtrxCommandEntity(RfxtrxEntity):
         """Initialzie a switch or light device."""
         super().__init__(device, device_id, event=event)
 
-    async def _async_send(
+    async def _async_send[*_Ts](
         self, fun: Callable[[rfxtrxmod.PySerialTransport, *_Ts], None], *args: *_Ts
     ) -> None:
         rfx_object: rfxtrxmod.Connect = self.hass.data[DOMAIN][DATA_RFXOBJECT]

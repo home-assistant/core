@@ -24,7 +24,7 @@ from .conftest import ComponentSetup, YieldFixture
 
 from tests.common import MockConfigEntry
 
-DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
+DEFAULT_TIME_ZONE = dt_util.get_default_time_zone()
 TEST_TZ_NAME = "Pacific/Auckland"
 TEST_TIMEZONE = zoneinfo.ZoneInfo(TEST_TZ_NAME)
 
