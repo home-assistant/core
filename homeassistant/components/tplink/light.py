@@ -139,14 +139,16 @@ async def async_setup_entry(
     data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
     parent_coordinator = data.parent_coordinator
     device = parent_coordinator.device
-    if Module.LightEffect in device.modules:
+    if (
+        effect_module := device.modules.get(Module.LightEffect)
+    ) and effect_module.has_custom_effects:
         async_add_entities(
             [
                 TPLinkSmartLightStrip(
                     device,
                     parent_coordinator,
                     device.modules[Module.Light],
-                    device.modules[Module.LightEffect],
+                    effect_module,
                 )
             ]
         )

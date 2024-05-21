@@ -153,6 +153,7 @@ def _mocked_light_module() -> Light:
 def _mocked_light_effect_module() -> LightEffect:
     effect = MagicMock(auto_spec=LightEffect, name="Mocked light effect")
     effect.has_effects = True
+    effect.has_custom_effects = True
     effect.effect = "Effect1"
     effect.effect_list = ["Off", "Effect1", "Effect2"]
     effect.set_effect = AsyncMock()
