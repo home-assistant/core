@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 import logging
 
 from homeassistant import config as conf_util
@@ -20,6 +21,16 @@ from .const import CONF_TRIGGER, DOMAIN, PLATFORMS
 from .coordinator import TriggerUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass
+class TemplateData:
+    """Runtime configuration data."""
+
+    device: str | None = None
+
+
+TemplateConfigEntry = ConfigEntry[TemplateData]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -57,24 +68,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    hass.data[DOMAIN] = {}
+    entry.runtime_data = TemplateData(
+        device=entry.options.get(CONF_DEVICE_ID, None),
+    )
     await hass.config_entries.async_forward_entry_setups(
         entry, (entry.options["template_type"],)
     )
-    hass.data[DOMAIN][entry.entry_id] = {
-        CONF_DEVICE_ID: entry.options.get(CONF_DEVICE_ID, None),
-    }
     entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
     return True
 
 
 async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update listener, called when the config entry options are changed."""
-    old_device = hass.data[DOMAIN][entry.entry_id][CONF_DEVICE_ID]
+    old_device = entry.runtime_data.device
 
     await hass.config_entries.async_reload(entry.entry_id)
 
-    if old_device != entry.options.get(CONF_DEVICE_ID, None):
+    if old_device != entry.options.get(CONF_DEVICE_ID, None) and old_device is not None:
         device_registry = dr.async_get(hass)
         device_registry.async_update_device(
             old_device, remove_config_entry_id=entry.entry_id
