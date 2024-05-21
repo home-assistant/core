@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_default_prompt[False-None]
+# name: test_default_prompt[config_entry_options0-None]
   list([
     tuple(
       '',
@@ -58,7 +58,7 @@
     ),
   ])
 # ---
-# name: test_default_prompt[False-conversation.google_generative_ai_conversation]
+# name: test_default_prompt[config_entry_options0-conversation.google_generative_ai_conversation]
   list([
     tuple(
       '',
@@ -117,7 +117,7 @@
     ),
   ])
 # ---
-# name: test_default_prompt[True-None]
+# name: test_default_prompt[config_entry_options1-None]
   list([
     tuple(
       '',
@@ -176,7 +176,7 @@
     ),
   ])
 # ---
-# name: test_default_prompt[True-conversation.google_generative_ai_conversation]
+# name: test_default_prompt[config_entry_options1-conversation.google_generative_ai_conversation]
   list([
     tuple(
       '',
