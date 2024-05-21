@@ -34,9 +34,10 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
     CONF_STRUCTURE,
+    EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -196,8 +197,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_config_reload() -> None:
         await hass.config_entries.async_reload(entry.entry_id)
 
-    callback = SignalUpdateCallback(hass, async_config_reload)
-    subscriber.set_update_callback(callback.async_handle_event)
+    update_callback = SignalUpdateCallback(hass, async_config_reload)
+    subscriber.set_update_callback(update_callback.async_handle_event)
     try:
         await subscriber.start_async()
     except AuthException as err:
@@ -217,6 +218,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ApiException as err:
         subscriber.stop_async()
         raise ConfigEntryNotReady(f"Device manager error: {err!s}") from err
+
+    @callback
+    def on_hass_stop(_: Event) -> None:
+        """Close connection when hass stops."""
+        subscriber.stop_async()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
 
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_SUBSCRIBER: subscriber,
