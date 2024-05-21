@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -21,16 +23,16 @@ class SamsungTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     def __init__(self, hass: HomeAssistant, bridge: SamsungTVBridge) -> None:
         """Initialize the coordinator."""
-        self.bridge = bridge
-        self.is_on: bool | None = False
-
-        interval = timedelta(seconds=SCAN_INTERVAL)
         super().__init__(
             hass,
             LOGGER,
             name=DOMAIN,
-            update_interval=interval,
+            update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
+
+        self.bridge = bridge
+        self.is_on: bool | None = False
+        self.async_extra_update: Callable[[], Coroutine[Any, Any, None]] | None = None
 
     async def _async_update_data(self) -> None:
         """Fetch data from SamsungTV bridge."""
@@ -43,3 +45,6 @@ class SamsungTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
             self.is_on = await self.bridge.async_is_on()
         if self.is_on != old_state:
             LOGGER.debug("TV %s state updated to %s", self.bridge.host, self.is_on)
+
+        if self.async_extra_update:
+            await self.async_extra_update()

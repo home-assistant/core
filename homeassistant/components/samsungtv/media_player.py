@@ -130,6 +130,12 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         self._update_sources()
         self._app_list_event.set()
 
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        await self._async_extra_update()
+        self.coordinator.async_extra_update = self._async_extra_update
+
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal."""
         await self._async_shutdown_dmr()
@@ -144,7 +150,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
             self._attr_state = MediaPlayerState.OFF
         self.async_write_ha_state()
 
-    async def async_update(self) -> None:
+    async def _async_extra_update(self) -> None:
         """Update state of device."""
         if not self.coordinator.is_on:
             if self._dmr_device and self._dmr_device.is_subscribed:
@@ -305,6 +311,8 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         await self._bridge.async_power_off()
+        self.coordinator.is_on = False
+        self.coordinator.async_update_listeners()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level on the media player."""
