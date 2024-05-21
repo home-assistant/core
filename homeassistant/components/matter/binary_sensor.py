@@ -98,7 +98,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
-            key="WaterLeakSensor",
+            key="WaterLeakDetector",
             device_class=BinarySensorDeviceClass.MOISTURE,
             # The first bit = if occupied
             measurement_to_ha=lambda x: (x & 1 == 1) if x is not None else None,
