@@ -266,6 +266,13 @@ class Store(Generic[_T]):
         """Return the config path."""
         return self.hass.config.path(STORAGE_DIR, self.key)
 
+    def make_read_only(self) -> None:
+        """Make the store read-only.
+
+        This method is irreversible.
+        """
+        self._read_only = True
+
     async def async_load(self) -> _T | None:
         """Load data.
 

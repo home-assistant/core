@@ -109,18 +109,16 @@ class IssueRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
 class IssueRegistry(BaseRegistry):
     """Class to hold a registry of issues."""
 
-    def __init__(self, hass: HomeAssistant, *, read_only: bool = False) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the issue registry."""
         self.hass = hass
         self.issues: dict[tuple[str, str], IssueEntry] = {}
-        self._read_only = read_only
         self._store = IssueRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
             STORAGE_KEY,
             atomic_writes=True,
             minor_version=STORAGE_VERSION_MINOR,
-            read_only=read_only,
         )
 
     @callback
@@ -245,6 +243,14 @@ class IssueRegistry(BaseRegistry):
 
         return issue
 
+    @callback
+    def make_read_only(self) -> None:
+        """Make the registry read-only.
+
+        This method is irreversible.
+        """
+        self._store.make_read_only()
+
     async def async_load(self) -> None:
         """Load the issue registry."""
         data = await self._store.async_load()
@@ -305,21 +311,15 @@ class IssueRegistry(BaseRegistry):
 @singleton(DATA_REGISTRY)
 def async_get(hass: HomeAssistant) -> IssueRegistry:
     """Get issue registry."""
-    return IssueRegistry(hass, read_only=False)
-
-
-@callback
-@singleton(DATA_REGISTRY)
-def async_get_read_only(hass: HomeAssistant) -> IssueRegistry:
-    """Get issue registry in read only for the check config script."""
-    return IssueRegistry(hass, read_only=True)
+    return IssueRegistry(hass)
 
 
 async def async_load(hass: HomeAssistant, *, read_only: bool = False) -> None:
     """Load issue registry."""
+    ir = async_get(hass)
     if read_only:  # only used in for check config script
-        return await async_get_read_only(hass).async_load()
-    return await async_get(hass).async_load()
+        ir.make_read_only()
+    return await ir.async_load()
 
 
 @callback
