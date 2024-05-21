@@ -68,6 +68,7 @@ from .const import (
     CONF_IGNORE_ATTRIBUTES,
     CONF_MEASUREMENT_ATTR,
     CONF_ORG,
+    CONF_OVERRIDE_EVENT_TIMESTAMP,
     CONF_OVERRIDE_MEASUREMENT,
     CONF_PRECISION,
     CONF_RETRY_COUNT,
@@ -209,6 +210,7 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
     default_measurement = conf.get(CONF_DEFAULT_MEASUREMENT)
     measurement_attr: str = conf[CONF_MEASUREMENT_ATTR]
     override_measurement = conf.get(CONF_OVERRIDE_MEASUREMENT)
+    override_event_timestamp = conf.get(CONF_OVERRIDE_EVENT_TIMESTAMP)
     global_ignore_attributes = set(conf[CONF_IGNORE_ATTRIBUTES])
     component_config = EntityValues(
         conf[CONF_COMPONENT_CONFIG],
@@ -272,7 +274,11 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
                 CONF_DOMAIN: state.domain,
                 CONF_ENTITY_ID: state.object_id,
             },
-            INFLUX_CONF_TIME: event.time_fired,
+            INFLUX_CONF_TIME: state.attributes.get(
+                "override_event_timestamp", event.time_fired
+            )
+            if override_event_timestamp
+            else event.time_fired,
             INFLUX_CONF_FIELDS: {},
         }
         if _include_state:

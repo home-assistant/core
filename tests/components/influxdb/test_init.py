@@ -1007,6 +1007,60 @@ async def test_event_listener_default_measurement(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
+async def test_override_event_timestamp(
+    hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
+) -> None:
+    """Test the event listener with override_event_timestamp."""
+    config = {
+        "override_measurement": "state",
+        "override_event_timestamp": True,
+        "ignore_attributes": ["override_event_timestamp"],
+    }
+    config.update(config_ext)
+    await _setup(hass, mock_client, config, get_write_api)
+
+    attrs = {
+        "unit_of_measurement": "foobars",
+        "override_event_timestamp": "2010-09-08T12:34:56+00:00",
+    }
+    body = [
+        {
+            "measurement": "state",
+            "tags": {"domain": "fake", "entity_id": "entity_id"},
+            "time": "2010-09-08T12:34:56+00:00",
+            "fields": {
+                "state": "foo",
+                "unit_of_measurement_str": "foobars",
+            },
+        }
+    ]
+    hass.states.async_set("fake.entity_id", "foo", attrs)
+    await hass.async_block_till_done()
+    await async_wait_for_queue_to_process(hass)
+
+    write_api = get_write_api(mock_client)
+    assert write_api.call_count == 1
+    assert write_api.call_args == get_mock_call(body)
+
+
+@pytest.mark.parametrize(
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
 async def test_event_listener_unit_of_measurement_field(
     hass: HomeAssistant, mock_client, config_ext, get_write_api, get_mock_call
 ) -> None:
