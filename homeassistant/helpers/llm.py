@@ -136,7 +136,9 @@ class IntentTool(Tool):
     ) -> None:
         """Init the class."""
         self.name = intent_handler.intent_type
-        self.description = f"Execute Home Assistant {self.name} intent"
+        self.description = (
+            intent_handler.description or f"Execute Home Assistant {self.name} intent"
+        )
         if slot_schema := intent_handler.slot_schema:
             self.parameters = vol.Schema(slot_schema)
 
