@@ -1419,6 +1419,7 @@ async def test_device_id(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     assert device_entry is not None
+    assert device_entry.id is not None
 
     template_config_entry = MockConfigEntry(
         data={},
@@ -1427,6 +1428,7 @@ async def test_device_id(hass: HomeAssistant) -> None:
             "name": "My template",
             "state": "{{10 > 8}}",
             "template_type": "binary_sensor",
+            "device_id": device_entry.id,
         },
         title="My template",
     )
@@ -1437,4 +1439,4 @@ async def test_device_id(hass: HomeAssistant) -> None:
 
     template_entity = entity_registry.async_get("binary_sensor.my_template")
     assert template_entity is not None
-    assert template_entity.device_id == device_entry.device_id
+    assert template_entity.device_id == device_entry.id
