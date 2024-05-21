@@ -1122,3 +1122,57 @@ async def test_device_id_in_handler(hass: HomeAssistant, init_components) -> Non
     )
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert handler.device_id == device_id
+
+
+async def test_name_wildcard_lower_priority(
+    hass: HomeAssistant, init_components
+) -> None:
+    """Test that the default agent does not prioritize a {name} slot when it's a wildcard."""
+
+    class OrderBeerIntentHandler(intent.IntentHandler):
+        intent_type = "OrderBeer"
+
+        def __init__(self) -> None:
+            super().__init__()
+            self.triggered = False
+
+        async def async_handle(
+            self, intent_obj: intent.Intent
+        ) -> intent.IntentResponse:
+            self.triggered = True
+            return intent_obj.create_response()
+
+    class OrderFoodIntentHandler(intent.IntentHandler):
+        intent_type = "OrderFood"
+
+        def __init__(self) -> None:
+            super().__init__()
+            self.triggered = False
+
+        async def async_handle(
+            self, intent_obj: intent.Intent
+        ) -> intent.IntentResponse:
+            self.triggered = True
+            return intent_obj.create_response()
+
+    beer_handler = OrderBeerIntentHandler()
+    food_handler = OrderFoodIntentHandler()
+    intent.async_register(hass, beer_handler)
+    intent.async_register(hass, food_handler)
+
+    # Matches OrderBeer because more literal text is matched ("a")
+    result = await conversation.async_converse(
+        hass, "I'd like to order a stout please", None, Context(), None
+    )
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert beer_handler.triggered
+    assert not food_handler.triggered
+
+    # Matches OrderFood because "cookie" is not in the beer styles list
+    beer_handler.triggered = False
+    result = await conversation.async_converse(
+        hass, "I'd like to order a cookie please", None, Context(), None
+    )
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert not beer_handler.triggered
+    assert food_handler.triggered

@@ -35,7 +35,7 @@ from . import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-_SlotsType = dict[str, Any]
+type _SlotsType = dict[str, Any]
 
 INTENT_TURN_OFF = "HassTurnOff"
 INTENT_TURN_ON = "HassTurnOn"
@@ -85,6 +85,12 @@ def async_remove(hass: HomeAssistant, intent_type: str) -> None:
         return
 
     intents.pop(intent_type, None)
+
+
+@callback
+def async_get(hass: HomeAssistant) -> Iterable[IntentHandler]:
+    """Return registered intents."""
+    return hass.data.get(DATA_KEY, {}).values()
 
 
 @bind_hass
@@ -718,8 +724,13 @@ class IntentHandler:
     """Intent handler registration."""
 
     intent_type: str
-    slot_schema: vol.Schema | None = None
     platforms: Iterable[str] | None = []
+    description: str | None = None
+
+    @property
+    def slot_schema(self) -> dict | None:
+        """Return a slot schema."""
+        return None
 
     @callback
     def async_can_handle(self, intent_obj: Intent) -> bool:
@@ -761,14 +772,6 @@ class DynamicServiceIntentHandler(IntentHandler):
     Service specific intent handler that calls a service by name/entity_id.
     """
 
-    slot_schema = {
-        vol.Any("name", "area", "floor"): cv.string,
-        vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
-    }
-
     # We use a small timeout in service calls to (hopefully) pass validation
     # checks, but not try to wait for the call to fully complete.
     service_timeout: float = 0.2
@@ -782,6 +785,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         required_domains: set[str] | None = None,
         required_features: int | None = None,
         required_states: set[str] | None = None,
+        description: str | None = None,
     ) -> None:
         """Create Service Intent Handler."""
         self.intent_type = intent_type
@@ -789,6 +793,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         self.required_domains = required_domains
         self.required_features = required_features
         self.required_states = required_states
+        self.description = description
 
         self.required_slots: dict[tuple[str, str], vol.Schema] = {}
         if required_slots:
@@ -809,33 +814,33 @@ class DynamicServiceIntentHandler(IntentHandler):
                 self.optional_slots[key] = value_schema
 
     @cached_property
-    def _slot_schema(self) -> vol.Schema:
-        """Create validation schema for slots (with extra required slots)."""
-        if self.slot_schema is None:
-            raise ValueError("Slot schema is not defined")
+    def slot_schema(self) -> dict:
+        """Return a slot schema."""
+        slot_schema = {
+            vol.Any("name", "area", "floor"): cv.string,
+            vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional("preferred_area_id"): cv.string,
+            vol.Optional("preferred_floor_id"): cv.string,
+        }
 
-        if self.required_slots or self.optional_slots:
-            slot_schema = {
-                **self.slot_schema,
-                **{
-                    vol.Required(key[0]): schema
-                    for key, schema in self.required_slots.items()
-                },
-                **{
-                    vol.Optional(key[0]): schema
-                    for key, schema in self.optional_slots.items()
-                },
-            }
-        else:
-            slot_schema = self.slot_schema
+        if self.required_slots:
+            slot_schema.update(
+                {
+                    vol.Required(key[0]): validator
+                    for key, validator in self.required_slots.items()
+                }
+            )
 
-        return vol.Schema(
-            {
-                key: SLOT_SCHEMA.extend({"value": validator})
-                for key, validator in slot_schema.items()
-            },
-            extra=vol.ALLOW_EXTRA,
-        )
+        if self.optional_slots:
+            slot_schema.update(
+                {
+                    vol.Optional(key[0]): validator
+                    for key, validator in self.optional_slots.items()
+                }
+            )
+
+        return slot_schema
 
     @abstractmethod
     def get_domain_and_service(
@@ -1074,6 +1079,7 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         required_domains: set[str] | None = None,
         required_features: int | None = None,
         required_states: set[str] | None = None,
+        description: str | None = None,
     ) -> None:
         """Create service handler."""
         super().__init__(
@@ -1084,6 +1090,7 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
             required_domains=required_domains,
             required_features=required_features,
             required_states=required_states,
+            description=description,
         )
         self.domain = domain
         self.service = service

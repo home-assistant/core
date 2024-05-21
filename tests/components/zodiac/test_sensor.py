@@ -44,7 +44,7 @@ async def test_zodiac_day(
     hass: HomeAssistant, now: datetime, sign: str, element: str, modality: str
 ) -> None:
     """Test the zodiac sensor."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     MockConfigEntry(
         domain=DOMAIN,
     ).add_to_hass(hass)

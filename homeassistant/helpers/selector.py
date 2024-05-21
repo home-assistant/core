@@ -6,7 +6,7 @@ from collections.abc import Callable, Mapping, Sequence
 from enum import StrEnum
 from functools import cache
 import importlib
-from typing import Any, Generic, Literal, Required, TypedDict, TypeVar, cast
+from typing import Any, Literal, Required, TypedDict, cast
 from uuid import UUID
 
 import voluptuous as vol
@@ -20,8 +20,6 @@ from homeassistant.util.yaml import dumper
 from . import config_validation as cv
 
 SELECTORS: decorator.Registry[str, type[Selector]] = decorator.Registry()
-
-_T = TypeVar("_T", bound=Mapping[str, Any])
 
 
 def _get_selector_class(config: Any) -> type[Selector]:
@@ -62,7 +60,7 @@ def validate_selector(config: Any) -> dict:
     }
 
 
-class Selector(Generic[_T]):
+class Selector[_T: Mapping[str, Any]]:
     """Base class for selectors."""
 
     CONFIG_SCHEMA: Callable
