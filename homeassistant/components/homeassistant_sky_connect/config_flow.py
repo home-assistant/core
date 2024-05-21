@@ -124,8 +124,8 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         return self.async_show_menu(
             step_id="pick_firmware",
             menu_options=[
-                STEP_PICK_FIRMWARE_THREAD,
                 STEP_PICK_FIRMWARE_ZIGBEE,
+                STEP_PICK_FIRMWARE_THREAD,
             ],
             description_placeholders=self._get_translation_placeholders(),
         )
