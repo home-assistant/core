@@ -124,8 +124,6 @@ class OpenAIConversationEntity(
             try:
                 prompt = self._async_generate_prompt(
                     raw_prompt,
-                    user_input.device_id,
-                    user_input.context.user_id,
                     llm_api,
                 )
             except TemplateError as err:
@@ -218,8 +216,6 @@ class OpenAIConversationEntity(
     def _async_generate_prompt(
         self,
         raw_prompt: str,
-        device_id: str | None,
-        user_id: str | None,
         llm_api: llm.API | None,
     ) -> str:
         """Generate a prompt for the user."""
@@ -232,8 +228,6 @@ class OpenAIConversationEntity(
         return template.Template(raw_prompt, self.hass).async_render(
             {
                 "ha_name": self.hass.config.location_name,
-                "device_id": device_id,
-                "user_id": user_id,
             },
             parse_result=False,
         )
