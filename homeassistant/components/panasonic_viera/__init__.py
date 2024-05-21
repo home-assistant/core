@@ -177,7 +177,7 @@ class Remote:
             self._control = None
             self.state = STATE_OFF
             self.available = self._on_action is not None
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("An unknown error occurred")
             self._control = None
             self.state = STATE_OFF
@@ -264,7 +264,7 @@ class Remote:
             self.available = self._on_action is not None
             await self.async_create_remote_control()
             return None
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("An unknown error occurred")
             self.state = STATE_OFF
             self.available = self._on_action is not None

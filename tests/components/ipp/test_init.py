@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyipp import IPPConnectionError
 
-from homeassistant.components.ipp.const import DOMAIN
+from homeassistant.components.ipp.coordinator import IPPDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -37,10 +37,9 @@ async def test_load_unload_config_entry(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.entry_id in hass.data[DOMAIN]
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert isinstance(mock_config_entry.runtime_data, IPPDataUpdateCoordinator)
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_config_entry.entry_id not in hass.data[DOMAIN]
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED

@@ -11,7 +11,7 @@ from . import ClientMock
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
-ComponentSetup = Callable[[], Awaitable[ClientMock]]
+type ComponentSetup = Callable[[], Awaitable[ClientMock]]
 
 DOMAIN = "twinkly"
 

@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from aemet_opendata.const import ATTR_DATA
 
-from homeassistant.components.aemet import DOMAIN
+from homeassistant.components.aemet.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 

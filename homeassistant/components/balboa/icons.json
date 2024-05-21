@@ -20,12 +20,22 @@
         }
       }
     },
+    "climate": {
+      "balboa": {
+        "default": "mdi:hot-tub"
+      }
+    },
     "fan": {
       "pump": {
         "default": "mdi:pump",
         "state": {
           "off": "mdi:pump-off"
         }
+      }
+    },
+    "select": {
+      "temperature_range": {
+        "default": "mdi:thermometer-lines"
       }
     }
   }

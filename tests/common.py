@@ -17,11 +17,12 @@ import pathlib
 import threading
 import time
 from types import FrameType, ModuleType
-from typing import Any, NoReturn, TypeVar
+from typing import Any, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
 import pytest
+from syrupy import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
@@ -37,7 +38,7 @@ from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
 from homeassistant.config import async_process_component_config
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, _DataT
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -198,10 +199,7 @@ def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
     loop.close()
 
 
-_T = TypeVar("_T", bound=Mapping[str, Any] | Sequence[Any])
-
-
-class StoreWithoutWriteLoad(storage.Store[_T]):
+class StoreWithoutWriteLoad[_T: (Mapping[str, Any] | Sequence[Any])](storage.Store[_T]):
     """Fake store that does not write or load. Used for testing."""
 
     async def async_save(self, *args: Any, **kwargs: Any) -> None:
@@ -233,8 +231,8 @@ async def async_test_home_assistant(
 
     orig_async_add_job = hass.async_add_job
     orig_async_add_executor_job = hass.async_add_executor_job
-    orig_async_create_task = hass.async_create_task
-    orig_tz = dt_util.DEFAULT_TIME_ZONE
+    orig_async_create_task_internal = hass.async_create_task_internal
+    orig_tz = dt_util.get_default_time_zone()
 
     def async_add_job(target, *args, eager_start: bool = False):
         """Add job."""
@@ -262,18 +260,18 @@ async def async_test_home_assistant(
 
         return orig_async_add_executor_job(target, *args)
 
-    def async_create_task(coroutine, name=None, eager_start=False):
+    def async_create_task_internal(coroutine, name=None, eager_start=True):
         """Create task."""
         if isinstance(coroutine, Mock) and not isinstance(coroutine, AsyncMock):
             fut = asyncio.Future()
             fut.set_result(None)
             return fut
 
-        return orig_async_create_task(coroutine, name, eager_start)
+        return orig_async_create_task_internal(coroutine, name, eager_start)
 
     hass.async_add_job = async_add_job
     hass.async_add_executor_job = async_add_executor_job
-    hass.async_create_task = async_create_task
+    hass.async_create_task_internal = async_create_task_internal
 
     hass.data[loader.DATA_CUSTOM_COMPONENTS] = {}
 
@@ -281,7 +279,7 @@ async def async_test_home_assistant(
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
     hass.config.elevation = 0
-    hass.config.set_time_zone("US/Pacific")
+    await hass.config.async_set_time_zone("US/Pacific")
     hass.config.units = METRIC_SYSTEM
     hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
@@ -299,7 +297,6 @@ async def async_test_home_assistant(
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP,
         hass.config_entries._async_shutdown,
-        run_immediately=True,
     )
 
     # Load the registries
@@ -356,16 +353,15 @@ async def async_test_home_assistant(
     @callback
     def clear_instance(event):
         """Clear global instance."""
-        INSTANCES.remove(hass)
+        # Give aiohttp one loop iteration to close
+        hass.loop.call_soon(INSTANCES.remove, hass)
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_CLOSE, clear_instance, run_immediately=False
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
 
     yield hass
 
     # Restore timezone, it is set when creating the hass object
-    dt_util.DEFAULT_TIME_ZONE = orig_tz
+    dt_util.set_default_time_zone(orig_tz)
 
 
 def async_mock_service(
@@ -451,10 +447,11 @@ def async_fire_mqtt_message(
     msg.payload = payload
     msg.qos = qos
     msg.retain = retain
+    msg.timestamp = time.monotonic()
 
     mqtt_data: MqttData = hass.data["mqtt"]
     assert mqtt_data.client
-    mqtt_data.client._mqtt_handle_message(msg)
+    mqtt_data.client._async_mqtt_on_message(Mock(), None, msg)
 
 
 fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
@@ -589,12 +586,12 @@ def json_round_trip(obj: Any) -> Any:
 def mock_state_change_event(
     hass: HomeAssistant, new_state: State, old_state: State | None = None
 ) -> None:
-    """Mock state change envent."""
-    event_data = {"entity_id": new_state.entity_id, "new_state": new_state}
-
-    if old_state:
-        event_data["old_state"] = old_state
-
+    """Mock state change event."""
+    event_data = {
+        "entity_id": new_state.entity_id,
+        "new_state": new_state,
+        "old_state": old_state,
+    }
     hass.bus.fire(EVENT_STATE_CHANGED, event_data, context=new_state.context)
 
 
@@ -632,6 +629,7 @@ def mock_registry(
         registry.entities[key] = entry
 
     hass.data[er.DATA_REGISTRY] = registry
+    er.async_get.cache_clear()
     return registry
 
 
@@ -655,6 +653,7 @@ def mock_area_registry(
         registry.areas[key] = entry
 
     hass.data[ar.DATA_REGISTRY] = registry
+    ar.async_get.cache_clear()
     return registry
 
 
@@ -683,6 +682,7 @@ def mock_device_registry(
     registry.deleted_devices = dr.DeviceRegistryItems()
 
     hass.data[dr.DATA_REGISTRY] = registry
+    dr.async_get.cache_clear()
     return registry
 
 
@@ -918,9 +918,7 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
         def _async_on_stop(_: Event) -> None:
             self.async_shutdown()
 
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _async_on_stop, run_immediately=True
-        )
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_stop)
 
 
 class MockToggleEntity(entity.ToggleEntity):
@@ -972,40 +970,42 @@ class MockToggleEntity(entity.ToggleEntity):
             return None
 
 
-class MockConfigEntry(config_entries.ConfigEntry):
+class MockConfigEntry(config_entries.ConfigEntry[_DataT]):
     """Helper for creating config entries that adds some defaults."""
+
+    runtime_data: _DataT
 
     def __init__(
         self,
         *,
-        domain="test",
         data=None,
-        version=1,
-        minor_version=1,
+        disabled_by=None,
+        domain="test",
         entry_id=None,
-        source=config_entries.SOURCE_USER,
-        title="Mock Title",
-        state=None,
-        options={},
+        minor_version=1,
+        options=None,
         pref_disable_new_entities=None,
         pref_disable_polling=None,
-        unique_id=None,
-        disabled_by=None,
         reason=None,
+        source=config_entries.SOURCE_USER,
+        state=None,
+        title="Mock Title",
+        unique_id=None,
+        version=1,
     ) -> None:
         """Initialize a mock config entry."""
         kwargs = {
-            "entry_id": entry_id or uuid_util.random_uuid_hex(),
-            "domain": domain,
             "data": data or {},
+            "disabled_by": disabled_by,
+            "domain": domain,
+            "entry_id": entry_id or uuid_util.random_uuid_hex(),
+            "minor_version": minor_version,
+            "options": options or {},
             "pref_disable_new_entities": pref_disable_new_entities,
             "pref_disable_polling": pref_disable_polling,
-            "options": options,
-            "version": version,
-            "minor_version": minor_version,
             "title": title,
             "unique_id": unique_id,
-            "disabled_by": disabled_by,
+            "version": version,
         }
         if source is not None:
             kwargs["source"] = source
@@ -1174,6 +1174,7 @@ def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
     _LOGGER.debug("Restore cache: %s", data.last_states)
     assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
 
+    restore_state.async_get.cache_clear()
     hass.data[key] = data
 
 
@@ -1201,6 +1202,7 @@ def mock_restore_cache_with_extra_data(
     _LOGGER.debug("Restore cache: %s", data.last_states)
     assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
 
+    restore_state.async_get.cache_clear()
     hass.data[key] = data
 
 
@@ -1493,7 +1495,7 @@ def async_capture_events(hass: HomeAssistant, event_name: str) -> list[Event]:
     def capture_events(event: Event) -> None:
         events.append(event)
 
-    hass.bus.async_listen(event_name, capture_events, run_immediately=True)
+    hass.bus.async_listen(event_name, capture_events)
 
     return events
 
@@ -1527,12 +1529,12 @@ class _HA_ANY:
 
     _other = _SENTINEL
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Test equal."""
         self._other = other
         return True
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         """Test not equal."""
         self._other = other
         return False
@@ -1738,3 +1740,22 @@ def setup_test_component_platform(
 
     mock_platform(hass, f"test.{domain}", platform, built_in=built_in)
     return platform
+
+
+async def snapshot_platform(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    config_entry_id: str,
+) -> None:
+    """Snapshot a platform."""
+    entity_entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
+    assert entity_entries
+    assert (
+        len({entity_entry.domain for entity_entry in entity_entries}) == 1
+    ), "Please limit the loaded platforms to 1 platform."
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert entity_entry.disabled_by is None, "Please enable all entities."
+        assert (state := hass.states.get(entity_entry.entity_id))
+        assert state == snapshot(name=f"{entity_entry.entity_id}-state")

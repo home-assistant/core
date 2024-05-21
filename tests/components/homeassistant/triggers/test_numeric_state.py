@@ -980,16 +980,13 @@ async def test_template_string(hass: HomeAssistant, calls, below) -> None:
                 "action": {
                     "service": "test.automation",
                     "data_template": {
-                        "some": "{{ trigger.%s }}"
-                        % "}} - {{ trigger.".join(
-                            (
-                                "platform",
-                                "entity_id",
-                                "below",
-                                "above",
-                                "from_state.state",
-                                "to_state.state",
-                            )
+                        "some": (
+                            "{{ trigger.platform }}"
+                            " - {{ trigger.entity_id }}"
+                            " - {{ trigger.below }}"
+                            " - {{ trigger.above }}"
+                            " - {{ trigger.from_state.state }}"
+                            " - {{ trigger.to_state.state }}"
                         )
                     },
                 },
@@ -1346,9 +1343,10 @@ async def test_wait_template_with_trigger(hass: HomeAssistant, calls, above) -> 
                     {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "{{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                ("platform", "entity_id", "to_state.state")
+                            "some": (
+                                "{{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.to_state.state }}"
                             )
                         },
                     },

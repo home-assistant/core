@@ -47,3 +47,4 @@ async def test_subscription_repair_issues(
     sub_callback(event)
     await hass.async_block_till_done()
     assert not issue_registry.async_get_issue(DOMAIN, SUB_FAIL_ISSUE_ID)
+    await hass.async_block_till_done(wait_background_tasks=True)

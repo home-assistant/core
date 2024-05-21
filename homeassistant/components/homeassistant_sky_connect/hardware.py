@@ -25,7 +25,7 @@ def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
                 pid=entry.data["pid"],
                 serial_number=entry.data["serial_number"],
                 manufacturer=entry.data["manufacturer"],
-                description=entry.data["description"],
+                description=entry.data["product"],
             ),
             name=get_hardware_variant(entry).full_name,
             url=DOCUMENTATION_URL,
