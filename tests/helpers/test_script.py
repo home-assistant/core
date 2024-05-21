@@ -3580,15 +3580,20 @@ async def test_sequence(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     await script_obj.async_run(MappingProxyType({"what": "world"}), Context())
 
     assert len(events) == 3
-    assert events[0].data["sequence"] == "group"
-    assert events[0].data["action"] == "1"
-    assert events[0].data["what"] == "world"
-    assert events[1].data["sequence"] == "group"
-    assert events[1].data["action"] == "2"
-    assert events[1].data["what"] == "world"
-    assert "sequence" not in events[2].data
-    assert events[2].data["action"] == "2"
-    assert events[2].data["what"] == "world"
+    assert events[0].data == {
+        "sequence": "group",
+        "action": "1",
+        "what": "world",
+    }
+    assert events[1].data == {
+        "sequence": "group",
+        "action": "2",
+        "what": "world",
+    }
+    assert events[2].data == {
+        "action": "2",
+        "what": "world",
+    }
 
     assert (
         "Test Name: Sequential group: Executing step sequence group, action 1"
