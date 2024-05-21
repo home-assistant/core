@@ -201,7 +201,7 @@ aioaseko==0.1.1
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.5.0
+aioautomower==2024.5.1
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.0.0
@@ -688,7 +688,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.21.2
+dbus-fast==2.21.3
 
 # homeassistant.components.debugpy
 debugpy==1.8.1
@@ -2701,7 +2701,7 @@ temperusb==1.6.1
 tesla-fleet-api==0.4.9
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.5.1
+tesla-powerwall==0.5.2
 
 # homeassistant.components.tesla_wall_connector
 tesla-wall-connector==1.0.2
