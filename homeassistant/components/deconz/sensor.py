@@ -11,6 +11,7 @@ from pydeconz.interfaces.sensors import SensorResources
 from pydeconz.models.event import EventType
 from pydeconz.models.sensor import SensorBase as PydeconzSensorBase
 from pydeconz.models.sensor.air_quality import AirQuality
+from pydeconz.models.sensor.carbon_dioxide import CarbonDioxide
 from pydeconz.models.sensor.consumption import Consumption
 from pydeconz.models.sensor.daylight import DAYLIGHT_STATUS, Daylight
 from pydeconz.models.sensor.formaldehyde import Formaldehyde
@@ -77,6 +78,7 @@ ATTR_EVENT_ID = "event_id"
 T = TypeVar(
     "T",
     AirQuality,
+    CarbonDioxide,
     Consumption,
     Daylight,
     Formaldehyde,
@@ -156,6 +158,16 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    ),
+    DeconzSensorDescription[CarbonDioxide](
+        key="carbon_dioxide",
+        supported_fn=lambda device: True,
+        update_key="measured_value",
+        value_fn=lambda device: device.carbon_dioxide,
+        instance_check=CarbonDioxide,
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
     ),
     DeconzSensorDescription[Consumption](
         key="consumption",

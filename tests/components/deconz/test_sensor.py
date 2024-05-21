@@ -275,6 +275,49 @@ TEST_DATA = [
             "next_state": "50",
         },
     ),
+    (  # Carbon dioxide sensor
+        {
+            "capabilities": {
+                "measured_value": {
+                    "unit": "PPB",
+                }
+            },
+            "config": {
+                "on": True,
+                "reachable": True,
+            },
+            "etag": "dc3a3788ddd2a2d175ead376ea4d814c",
+            "lastannounced": None,
+            "lastseen": "2024-02-02T21:13Z",
+            "manufacturername": "_TZE200_dwcarsat",
+            "modelid": "TS0601",
+            "name": "CarbonDioxide 35",
+            "state": {
+                "lastupdated": "2024-02-02T21:14:37.745",
+                "measured_value": 370,
+            },
+            "type": "ZHACarbonDioxide",
+            "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-01-040d",
+        },
+        {
+            "entity_count": 1,
+            "device_count": 3,
+            "entity_id": "sensor.carbondioxide_35",
+            "unique_id": "xx:xx:xx:xx:xx:xx:xx:xx-01-040d-carbon_dioxide",
+            "state": "370",
+            "entity_category": None,
+            "device_class": SensorDeviceClass.CO2,
+            "state_class": CONCENTRATION_PARTS_PER_MILLION,
+            "attributes": {
+                "device_class": "carbon_dioxide",
+                "friendly_name": "CarbonDioxide 35",
+                "state_class": SensorStateClass.MEASUREMENT,
+                "unit_of_measurement": CONCENTRATION_PARTS_PER_MILLION,
+            },
+            "websocket_event": {"state": {"measured_value": 500}},
+            "next_state": "500",
+        },
+    ),
     (  # Consumption sensor
         {
             "config": {"on": True, "reachable": True},
