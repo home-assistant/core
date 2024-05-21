@@ -127,7 +127,7 @@ def mock_owm_client():
 def mock_config_flow_owm_client():
     """Mock config_flow OWMClient."""
     with patch(
-        "homeassistant.components.openweathermap.config_flow.OWMClient",
+        "homeassistant.components.openweathermap.utils.OWMClient",
     ) as config_flow_owm_client_mock:
         yield config_flow_owm_client_mock
 
