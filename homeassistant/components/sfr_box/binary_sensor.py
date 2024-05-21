@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, TypeVar
 
 from sfrbox_api.models import DslInfo, FtthInfo, SystemInfo, WanInfo
 
@@ -24,11 +23,9 @@ from .const import DOMAIN
 from .coordinator import SFRDataUpdateCoordinator
 from .models import DomainData
 
-_T = TypeVar("_T")
-
 
 @dataclass(frozen=True, kw_only=True)
-class SFRBoxBinarySensorEntityDescription(BinarySensorEntityDescription, Generic[_T]):
+class SFRBoxBinarySensorEntityDescription[_T](BinarySensorEntityDescription):
     """Description for SFR Box binary sensors."""
 
     value_fn: Callable[[_T], bool | None]
@@ -87,7 +84,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SFRBoxBinarySensor(
+class SFRBoxBinarySensor[_T](
     CoordinatorEntity[SFRDataUpdateCoordinator[_T]], BinarySensorEntity
 ):
     """SFR Box sensor."""
