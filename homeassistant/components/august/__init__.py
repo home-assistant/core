@@ -7,7 +7,7 @@ from collections.abc import Callable, Coroutine, Iterable, ValuesView
 from datetime import datetime
 from itertools import chain
 import logging
-from typing import Any, ParamSpec, TypeVar
+from typing import Any
 
 from aiohttp import ClientError, ClientResponseError
 from yalexs.activity import ActivityTypes
@@ -36,9 +36,6 @@ from .gateway import AugustGateway
 from .subscriber import AugustSubscriberMixin
 from .util import async_create_august_clientsession
 
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-
 _LOGGER = logging.getLogger(__name__)
 
 API_CACHED_ATTRS = {
@@ -49,7 +46,7 @@ API_CACHED_ATTRS = {
 }
 YALEXS_BLE_DOMAIN = "yalexs_ble"
 
-AugustConfigEntry = ConfigEntry["AugustData"]
+type AugustConfigEntry = ConfigEntry[AugustData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -403,7 +400,7 @@ class AugustData(AugustSubscriberMixin):
             hyper_bridge,
         )
 
-    async def _async_call_api_op_requires_bridge(
+    async def _async_call_api_op_requires_bridge[**_P, _R](
         self,
         device_id: str,
         func: Callable[_P, Coroutine[Any, Any, _R]],
