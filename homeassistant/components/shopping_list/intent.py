@@ -22,6 +22,7 @@ class AddItemIntent(intent.IntentHandler):
     """Handle AddItem intents."""
 
     intent_type = INTENT_ADD_ITEM
+    description = "Adds an item to the shopping list"
     slot_schema = {"item": cv.string}
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -39,6 +40,7 @@ class ListTopItemsIntent(intent.IntentHandler):
     """Handle AddItem intents."""
 
     intent_type = INTENT_LAST_ITEMS
+    description = "List the top five items on the shopping list"
     slot_schema = {"item": cv.string}
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:

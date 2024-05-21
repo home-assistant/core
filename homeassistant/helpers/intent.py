@@ -35,7 +35,7 @@ from . import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-_SlotsType = dict[str, Any]
+type _SlotsType = dict[str, Any]
 
 INTENT_TURN_OFF = "HassTurnOff"
 INTENT_TURN_ON = "HassTurnOn"
@@ -725,6 +725,7 @@ class IntentHandler:
 
     intent_type: str
     platforms: Iterable[str] | None = []
+    description: str | None = None
 
     @property
     def slot_schema(self) -> dict | None:
@@ -784,6 +785,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         required_domains: set[str] | None = None,
         required_features: int | None = None,
         required_states: set[str] | None = None,
+        description: str | None = None,
     ) -> None:
         """Create Service Intent Handler."""
         self.intent_type = intent_type
@@ -791,6 +793,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         self.required_domains = required_domains
         self.required_features = required_features
         self.required_states = required_states
+        self.description = description
 
         self.required_slots: dict[tuple[str, str], vol.Schema] = {}
         if required_slots:
@@ -1076,6 +1079,7 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         required_domains: set[str] | None = None,
         required_features: int | None = None,
         required_states: set[str] | None = None,
+        description: str | None = None,
     ) -> None:
         """Create service handler."""
         super().__init__(
@@ -1086,6 +1090,7 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
             required_domains=required_domains,
             required_features=required_features,
             required_states=required_states,
+            description=description,
         )
         self.domain = domain
         self.service = service
