@@ -637,15 +637,14 @@ def _async_when_setup(
 @core.callback
 def async_get_loaded_integrations(hass: core.HomeAssistant) -> set[str]:
     """Return the complete list of loaded integrations."""
-    integrations = set()
-    for component in hass.config.components:
-        if "." not in component:
-            integrations.add(component)
-            continue
-        platform, _, domain = component.partition(".")
-        if domain in BASE_PLATFORMS:
-            integrations.add(platform)
-    return integrations
+    return {
+        platform_dot_domain[0]
+        for component in hass.config.components.difference(
+            hass.config.top_level_components
+        )
+        if (platform_dot_domain := component.partition("."))
+        and platform_dot_domain[2] in BASE_PLATFORMS
+    } | hass.config.top_level_components
 
 
 class SetupPhases(StrEnum):
