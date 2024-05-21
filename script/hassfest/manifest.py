@@ -117,7 +117,6 @@ NO_IOT_CLASS = [
 # https://github.com/home-assistant/developers.home-assistant/pull/1512
 NO_DIAGNOSTICS = [
     "dlna_dms",
-    "fronius",
     "gdacs",
     "geonetnz_quakes",
     "google_assistant_sdk",

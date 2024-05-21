@@ -25,6 +25,7 @@ async def setup_fronius_integration(
     """Create the Fronius integration."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        entry_id="f1e2b9837e8adaed6fa682acaa216fd8",
         unique_id=unique_id,  # has to match mocked logger unique_id
         data={
             CONF_HOST: MOCK_HOST,
