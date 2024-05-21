@@ -25,6 +25,7 @@ from homeassistant.helpers import (
     intent,
     llm,
 )
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -450,6 +451,59 @@ async def test_function_exception(
             assistant="conversation",
         ),
     )
+
+
+async def test_assist_api_tools_conversion(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test that we are able to convert actual tools from Assist API."""
+    for component in [
+        "intent",
+        "todo",
+        "light",
+        "shopping_list",
+        "humidifier",
+        "climate",
+        "media_player",
+        "vacuum",
+        "cover",
+        "weather",
+    ]:
+        assert await async_setup_component(hass, component, {})
+
+    agent_id = mock_config_entry_with_assist.entry_id
+    with patch(
+        "openai.resources.chat.completions.AsyncCompletions.create",
+        new_callable=AsyncMock,
+        return_value=ChatCompletion(
+            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+            choices=[
+                Choice(
+                    finish_reason="stop",
+                    index=0,
+                    message=ChatCompletionMessage(
+                        content="Hello, how can I help you?",
+                        role="assistant",
+                        function_call=None,
+                        tool_calls=None,
+                    ),
+                )
+            ],
+            created=1700000000,
+            model="gpt-3.5-turbo-0613",
+            object="chat.completion",
+            system_fingerprint=None,
+            usage=CompletionUsage(
+                completion_tokens=9, prompt_tokens=8, total_tokens=17
+            ),
+        ),
+    ) as mock_create:
+        await conversation.async_converse(hass, "hello", None, None, agent_id=agent_id)
+
+    tools = mock_create.mock_calls[0][2]["tools"]
+    assert tools
 
 
 async def test_unknown_hass_api(
