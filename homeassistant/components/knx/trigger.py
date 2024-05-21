@@ -97,8 +97,10 @@ async def async_attach_trigger(
         if dst_addresses and telegram.destination_address not in dst_addresses:
             return
 
-        if trigger_transcoder is not None and (
-            payload_apci in (GroupValueWrite, GroupValueResponse)
+        if (
+            trigger_transcoder is not None
+            and payload_apci in (GroupValueWrite, GroupValueResponse)
+            and trigger_transcoder.value_type != telegram_dict["dpt_name"]
         ):
             decoded_payload = decode_telegram_payload(
                 payload=telegram.payload.value,  # type: ignore[union-attr]  # checked via payload_apci
