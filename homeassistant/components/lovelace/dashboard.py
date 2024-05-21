@@ -7,12 +7,13 @@ import logging
 import os
 from pathlib import Path
 import time
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
 from homeassistant.components.frontend import DATA_PANELS
 from homeassistant.const import CONF_FILENAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, storage
 from homeassistant.util.yaml import Secrets, load_yaml_dict
@@ -42,11 +43,13 @@ _LOGGER = logging.getLogger(__name__)
 class LovelaceConfig(ABC):
     """Base class for Lovelace config."""
 
-    def __init__(self, hass, url_path, config):
+    def __init__(
+        self, hass: HomeAssistant, url_path: str | None, config: dict[str, Any] | None
+    ) -> None:
         """Initialize Lovelace config."""
         self.hass = hass
         if config:
-            self.config = {**config, CONF_URL_PATH: url_path}
+            self.config: dict[str, Any] | None = {**config, CONF_URL_PATH: url_path}
         else:
             self.config = None
 
@@ -65,7 +68,7 @@ class LovelaceConfig(ABC):
         """Return the config info."""
 
     @abstractmethod
-    async def async_load(self, force):
+    async def async_load(self, force: bool) -> dict[str, Any]:
         """Load config."""
 
     async def async_save(self, config):
@@ -85,10 +88,10 @@ class LovelaceConfig(ABC):
 class LovelaceStorage(LovelaceConfig):
     """Class to handle Storage based Lovelace config."""
 
-    def __init__(self, hass, config):
+    def __init__(self, hass: HomeAssistant, config: dict[str, Any] | None) -> None:
         """Initialize Lovelace config based on storage helper."""
         if config is None:
-            url_path = None
+            url_path: str | None = None
             storage_key = CONFIG_STORAGE_KEY_DEFAULT
         else:
             url_path = config[CONF_URL_PATH]
@@ -96,8 +99,10 @@ class LovelaceStorage(LovelaceConfig):
 
         super().__init__(hass, url_path, config)
 
-        self._store = storage.Store(hass, CONFIG_STORAGE_VERSION, storage_key)
-        self._data = None
+        self._store = storage.Store[dict[str, Any]](
+            hass, CONFIG_STORAGE_VERSION, storage_key
+        )
+        self._data: dict[str, Any] | None = None
 
     @property
     def mode(self) -> str:
@@ -114,13 +119,15 @@ class LovelaceStorage(LovelaceConfig):
 
         return _config_info(self.mode, self._data["config"])
 
-    async def async_load(self, force):
+    async def async_load(self, force: bool) -> dict[str, Any]:
         """Load config."""
         if self.hass.config.recovery_mode:
             raise ConfigNotFound
 
         if self._data is None:
             await self._load()
+            if TYPE_CHECKING:
+                assert self._data is not None
 
         if (config := self._data["config"]) is None:
             raise ConfigNotFound
