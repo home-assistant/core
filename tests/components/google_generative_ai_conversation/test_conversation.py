@@ -198,6 +198,7 @@ async def test_function_call(
             None,
             context,
             agent_id=agent_id,
+            device_id="test_device",
         )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -228,6 +229,7 @@ async def test_function_call(
             user_prompt="Please call the test function",
             language="en",
             assistant="conversation",
+            device_id="test_device",
         ),
     )
 
@@ -280,6 +282,7 @@ async def test_function_exception(
             None,
             context,
             agent_id=agent_id,
+            device_id="test_device",
         )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -310,6 +313,7 @@ async def test_function_exception(
             user_prompt="Please call the test function",
             language="en",
             assistant="conversation",
+            device_id="test_device",
         ),
     )
 
