@@ -23,8 +23,8 @@ CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 REDIRECT_URI = "https://example.com/auth/external/callback"
 
-YieldFixture = Generator[AsyncMock, None, None]
-ComponentSetup = Callable[[], Awaitable[bool]]
+type YieldFixture = Generator[AsyncMock, None, None]
+type ComponentSetup = Callable[[], Awaitable[bool]]
 
 
 @pytest.fixture(autouse=True)
