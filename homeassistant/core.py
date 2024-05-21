@@ -55,6 +55,7 @@ from .const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
+    BASE_PLATFORMS,
     COMPRESSED_STATE_ATTRIBUTES,
     COMPRESSED_STATE_CONTEXT,
     COMPRESSED_STATE_LAST_CHANGED,
@@ -2769,16 +2770,27 @@ class _ComponentSet(set[str]):
 
     The top level components set only contains the top level components.
 
+    The all components set contains all components, including platform
+    based components.
+
     """
 
-    def __init__(self, top_level_components: set[str]) -> None:
+    def __init__(
+        self, top_level_components: set[str], all_components: set[str]
+    ) -> None:
         """Initialize the component set."""
         self._top_level_components = top_level_components
+        self._all_components = all_components
 
     def add(self, component: str) -> None:
         """Add a component to the store."""
         if "." not in component:
             self._top_level_components.add(component)
+            self._all_components.add(component)
+        else:
+            platform, _, domain = component.partition(".")
+            if domain in BASE_PLATFORMS:
+                self._all_components.add(platform)
         return super().add(component)
 
     def remove(self, component: str) -> None:
@@ -2831,8 +2843,14 @@ class Config:
         # and should not be modified directly
         self.top_level_components: set[str] = set()
 
+        # Set of all loaded components including platform
+        # based components
+        self.all_components: set[str] = set()
+
         # Set of loaded components
-        self.components: _ComponentSet = _ComponentSet(self.top_level_components)
+        self.components: _ComponentSet = _ComponentSet(
+            self.top_level_components, self.all_components
+        )
 
         # API (HTTP) server configuration
         self.api: ApiConfig | None = None
