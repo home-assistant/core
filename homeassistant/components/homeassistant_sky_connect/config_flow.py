@@ -670,17 +670,16 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
         """Pick Thread firmware."""
         assert self._usb_info is not None
 
-        zha_entries = self.hass.config_entries.async_entries(
+        for zha_entry in self.hass.config_entries.async_entries(
             ZHA_DOMAIN,
             include_ignore=False,
             include_disabled=True,
-        )
-
-        if zha_entries and get_zha_device_path(zha_entries[0]) == self._usb_info.device:
-            raise AbortFlow(
-                "zha_still_using_stick",
-                description_placeholders=self._get_translation_placeholders(),
-            )
+        ):
+            if get_zha_device_path(zha_entry) == self._usb_info.device:
+                raise AbortFlow(
+                    "zha_still_using_stick",
+                    description_placeholders=self._get_translation_placeholders(),
+                )
 
         return await super().async_step_pick_firmware_thread(user_input)
 
