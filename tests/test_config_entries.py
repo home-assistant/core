@@ -5398,3 +5398,76 @@ async def test_reload_during_setup(hass: HomeAssistant) -> None:
     await setup_task
     await reload_task
     assert setup_calls == 2
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [
+        ConfigEntryError,
+        ConfigEntryAuthFailed,
+        ConfigEntryNotReady,
+    ],
+)
+async def test_raise_wrong_exception_in_forwarded_platform(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    exc: Exception,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that we can remove an entry."""
+
+    async def mock_setup_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock setting up entry."""
+        await hass.config_entries.async_forward_entry_setups(entry, ["light"])
+        return True
+
+    async def mock_unload_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock unloading an entry."""
+        result = await hass.config_entries.async_unload_platforms(entry, ["light"])
+        assert result
+        return result
+
+    mock_remove_entry = AsyncMock(return_value=None)
+
+    async def mock_setup_entry_platform(
+        hass: HomeAssistant,
+        entry: config_entries.ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Mock setting up platform."""
+        raise exc
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=mock_unload_entry,
+            async_remove_entry=mock_remove_entry,
+        ),
+    )
+    mock_platform(
+        hass, "test.light", MockPlatform(async_setup_entry=mock_setup_entry_platform)
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    entry = MockConfigEntry(domain="test", entry_id="test2")
+    entry.add_to_manager(manager)
+
+    # Setup entry
+    await manager.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    exc_type_name = type(exc()).__name__
+    assert (
+        f"test raises exception {exc_type_name} in forwarded platform light;"
+        in caplog.text
+    )
+    assert (
+        f"Instead raise {exc_type_name} before calling async_forward_entry_setups"
+        in caplog.text
+    )
