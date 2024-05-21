@@ -76,6 +76,7 @@ async def register_services(hass: HomeAssistant) -> None:
 def _get_api(
     call: ServiceCall, device_registry: DeviceRegistry, hass: HomeAssistant
 ) -> AuthenticatedMonzoAPI:
+    """Get the API from the config entry associated with the chosen pot."""
     first_pot = device_registry.async_get(call.data[TRANSFER_POTS][0])
     if first_pot is None:
         raise ServiceValidationError(
@@ -91,6 +92,7 @@ def _get_api(
 async def _get_account_id(
     call: ServiceCall, api: AuthenticatedMonzoAPI, device_registry: DeviceRegistry
 ) -> str:
+    """Get the Monzo account ID from the device, defaulting to current account."""
     return (
         await _get_current_account_id(api)
         if TRANSFER_ACCOUNT not in call.data
@@ -101,6 +103,7 @@ async def _get_account_id(
 
 
 async def _get_current_account_id(api: AuthenticatedMonzoAPI) -> str:
+    """Get the current account ID from the Monzo API."""
     curent_account_id: str = next(
         acc["id"]
         for acc in (await api.user_account.accounts())
@@ -113,6 +116,7 @@ async def _get_current_account_id(api: AuthenticatedMonzoAPI) -> str:
 async def _get_account_id_from_device(
     device_registry: DeviceRegistry, device_id: str, valid_account_types: set[str]
 ) -> str:
+    """Get the Monzo account ID for a given device."""
     device = await _get_device(device_registry, device_id)
     if device.model not in valid_account_types:
         raise ServiceValidationError(
@@ -128,6 +132,7 @@ async def _get_account_id_from_device(
 
 
 async def _get_pot_ids(call: ServiceCall, device_registry: DeviceRegistry) -> list[str]:
+    """Get the Monzo account IDs for the selected pots in the ServiceCall."""
     return await asyncio.gather(
         *[
             _get_account_id_from_device(device_registry, acc, VALID_POT_ACCOUNTS)
@@ -137,6 +142,7 @@ async def _get_pot_ids(call: ServiceCall, device_registry: DeviceRegistry) -> li
 
 
 async def _get_device(device_registry: DeviceRegistry, device_id: str) -> DeviceEntry:
+    """Get a device from the DeviceRegistry or raise a ServiceValidationError."""
     device = device_registry.async_get(device_id)
     if not device:
         raise ServiceValidationError(
