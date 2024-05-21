@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from pyopenweathermap import OWMClient, RequestError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -31,6 +30,7 @@ from .const import (
     LANGUAGES,
     OWM_MODES,
 )
+from .utils import validate_api_key
 
 
 class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -59,16 +59,9 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(f"{latitude}-{longitude}")
             self._abort_if_unique_id_configured()
 
-            api_key_valid = None
-            try:
-                owm_client = OWMClient(user_input[CONF_API_KEY], mode)
-                api_key_valid = await owm_client.validate_key()
-            except RequestError as error:
-                errors["base"] = "cannot_connect"
-                description_placeholders["error"] = str(error)
-
-            if api_key_valid is False:
-                errors["base"] = "invalid_api_key"
+            errors, description_placeholders = await validate_api_key(
+                user_input[CONF_API_KEY], mode
+            )
 
             if not errors:
                 return self.async_create_entry(

@@ -5,11 +5,12 @@ from typing import cast
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import RepairsFlow
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODE
+from homeassistant.const import CONF_API_KEY, CONF_MODE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN, OWM_MODE_V30
+from .utils import validate_api_key
 
 
 class DeprecatedV25RepairFlow(RepairsFlow):
@@ -24,19 +25,28 @@ class DeprecatedV25RepairFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
-        return await self.async_step_migrate()
+        return self.async_show_form(step_id="migrate")
 
     async def async_step_migrate(
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the migrate step of a fix flow."""
-        if user_input is None:
-            return self.async_show_form(step_id="migrate")
-
+        errors, description_placeholders = {}, {}
         new_options = {**self.entry.options, CONF_MODE: OWM_MODE_V30}
-        self.hass.config_entries.async_update_entry(self.entry, options=new_options)
-        await self.hass.config_entries.async_reload(self.entry.entry_id)
-        return self.async_create_entry(data={})
+
+        errors, description_placeholders = await validate_api_key(
+            self.entry.data[CONF_API_KEY], OWM_MODE_V30
+        )
+        if not errors:
+            self.hass.config_entries.async_update_entry(self.entry, options=new_options)
+            await self.hass.config_entries.async_reload(self.entry.entry_id)
+            return self.async_create_entry(data={})
+
+        return self.async_show_form(
+            step_id="migrate",
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
 
 
 async def async_create_fix_flow(
