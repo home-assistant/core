@@ -1,17 +1,21 @@
 """Tests for the Elmax alarm control panels."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.elmax import ElmaxCoordinator
+from homeassistant.components.elmax import POLLING_SECONDS
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.dt import utcnow
 
 from . import init_integration
 
-from tests.common import snapshot_platform
+from tests.common import async_fire_time_changed, snapshot_platform
+
+WAIT = timedelta(seconds=POLLING_SECONDS)
 
 
 async def test_alarm_control_panels(
@@ -37,15 +41,12 @@ async def test_elmax_entity_update_callback(
     with patch(
         "homeassistant.components.elmax.ELMAX_PLATFORMS", [Platform.ALARM_CONTROL_PANEL]
     ):
-        entry = await init_integration(hass)
-    coordinator: ElmaxCoordinator = hass.data[entry.domain][entry.entry_id]
-
+        await init_integration(hass)
     pre_update_state = hass.states.get(
         "alarm_control_panel.direct_panel_https_1_1_1_1_443_api_v2_area_1"
     )
     assert pre_update_state.state == "unknown"
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + WAIT)
     new_state = hass.states.get(
         "alarm_control_panel.direct_panel_https_1_1_1_1_443_api_v2_area_1"
     )
