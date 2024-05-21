@@ -450,3 +450,25 @@ async def test_function_exception(
             assistant="conversation",
         ),
     )
+
+
+async def test_unknown_hass_api(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    mock_init_component,
+) -> None:
+    """Test when we reference an API that no longer exists."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            **mock_config_entry.options,
+            CONF_LLM_HASS_API: "non-existing",
+        },
+    )
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+    )
+
+    assert result == snapshot
