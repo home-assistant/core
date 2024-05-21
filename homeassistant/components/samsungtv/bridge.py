@@ -165,6 +165,7 @@ class SamsungTVBridge(ABC):
         self.host = host
         self.token: str | None = None
         self.session_id: str | None = None
+        self.auth_failed: bool = False
         self._reauth_callback: CALLBACK_TYPE | None = None
         self._update_config_entry: Callable[[Mapping[str, Any]], None] | None = None
         self._app_list_callback: Callable[[dict[str, str]], None] | None = None
@@ -335,6 +336,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             # A removed auth will lead to socket timeout because waiting
             # for auth popup is just an open socket
             except AccessDenied:
+                self.auth_failed = True
                 self._notify_reauth_callback()
                 raise
             except (ConnectionClosed, OSError):
@@ -607,6 +609,7 @@ class SamsungTVWSBridge(
                     self.host,
                     repr(err),
                 )
+                self.auth_failed = True
                 self._notify_reauth_callback()
                 self._remote = None
             except ConnectionClosedError as err:

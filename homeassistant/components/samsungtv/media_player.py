@@ -28,7 +28,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -37,7 +37,7 @@ from homeassistant.util.async_ import create_eager_task
 
 from . import SamsungTVConfigEntry
 from .bridge import SamsungTVBridge, SamsungTVWSBridge
-from .const import CONF_SSDP_RENDERING_CONTROL_LOCATION, DOMAIN, LOGGER
+from .const import CONF_SSDP_RENDERING_CONTROL_LOCATION, LOGGER
 from .entity import SamsungTVEntity
 
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
@@ -105,8 +105,6 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         if self._ssdp_rendering_control_location:
             self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_SET
 
-        self._auth_failed = False
-        self._bridge.register_reauth_callback(self.access_denied)
         self._bridge.register_app_list_callback(self._app_list_callback)
 
         self._dmr_device: DmrDevice | None = None
@@ -132,28 +130,13 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         self._update_sources()
         self._app_list_event.set()
 
-    def access_denied(self) -> None:
-        """Access denied callback."""
-        LOGGER.debug("Access denied in getting remote object")
-        self._auth_failed = True
-        self.hass.create_task(
-            self.hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={
-                    "source": SOURCE_REAUTH,
-                    "entry_id": self._config_entry.entry_id,
-                },
-                data=self._config_entry.data,
-            )
-        )
-
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal."""
         await self._async_shutdown_dmr()
 
     async def async_update(self) -> None:
         """Update state of device."""
-        if self._auth_failed or self.hass.is_stopping:
+        if self._bridge.auth_failed or self.hass.is_stopping:
             return
         old_state = self._attr_state
         if self._bridge.power_off_in_progress:
@@ -316,7 +299,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
     @property
     def available(self) -> bool:
         """Return the availability of the device."""
-        if self._auth_failed:
+        if self._bridge.auth_failed:
             return False
         return (
             self.state == MediaPlayerState.ON
