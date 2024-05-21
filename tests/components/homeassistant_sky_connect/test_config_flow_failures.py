@@ -25,13 +25,14 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("usb_data", "model"),
+    ("usb_data", "model", "next_step"),
     [
-        (USB_DATA_ZBT1, "Home Assistant Connect ZBT-1"),
+        (USB_DATA_ZBT1, "Home Assistant Connect ZBT-1", STEP_PICK_FIRMWARE_ZIGBEE),
+        (USB_DATA_ZBT1, "Home Assistant Connect ZBT-1", STEP_PICK_FIRMWARE_THREAD),
     ],
 )
 async def test_config_flow_cannot_probe_firmware(
-    usb_data: usb.UsbServiceInfo, model: str, hass: HomeAssistant
+    usb_data: usb.UsbServiceInfo, model: str, next_step: str, hass: HomeAssistant
 ) -> None:
     """Test failure case when firmware cannot be probed."""
 
@@ -46,7 +47,7 @@ async def test_config_flow_cannot_probe_firmware(
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
+            user_input={"next_step_id": next_step},
         )
 
         assert result["type"] == FlowResultType.ABORT
