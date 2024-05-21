@@ -28,7 +28,6 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -36,8 +35,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.async_ import create_eager_task
 
 from . import SamsungTVConfigEntry
-from .bridge import SamsungTVBridge, SamsungTVWSBridge
+from .bridge import SamsungTVWSBridge
 from .const import CONF_SSDP_RENDERING_CONTROL_LOCATION, LOGGER
+from .coordinator import SamsungTVDataUpdateCoordinator
 from .entity import SamsungTVEntity
 
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
@@ -67,8 +67,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Samsung TV from a config entry."""
-    bridge = entry.runtime_data
-    async_add_entities([SamsungTVDevice(bridge, entry)], True)
+    coordinator = entry.runtime_data
+    async_add_entities([SamsungTVDevice(coordinator)])
 
 
 class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
@@ -78,16 +78,11 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
     _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.TV
 
-    def __init__(
-        self,
-        bridge: SamsungTVBridge,
-        config_entry: ConfigEntry,
-    ) -> None:
+    def __init__(self, coordinator: SamsungTVDataUpdateCoordinator) -> None:
         """Initialize the Samsung device."""
-        super().__init__(bridge=bridge, config_entry=config_entry)
-        self._config_entry = config_entry
-        self._ssdp_rendering_control_location: str | None = config_entry.data.get(
-            CONF_SSDP_RENDERING_CONTROL_LOCATION
+        super().__init__(coordinator=coordinator)
+        self._ssdp_rendering_control_location: str | None = (
+            coordinator.config_entry.data.get(CONF_SSDP_RENDERING_CONTROL_LOCATION)
         )
         # Assume that the TV is in Play mode
         self._playing: bool = True
@@ -109,6 +104,11 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
 
         self._dmr_device: DmrDevice | None = None
         self._upnp_server: AiohttpNotifyServer | None = None
+
+        # Set initial state from coordinator
+        self._attr_state = (
+            MediaPlayerState.ON if coordinator.is_on else MediaPlayerState.OFF
+        )
 
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
@@ -134,23 +134,19 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         """Handle removal."""
         await self._async_shutdown_dmr()
 
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle data update."""
+        if self.coordinator.is_on:
+            self._attr_state = MediaPlayerState.ON
+            self._update_from_upnp()
+        else:
+            self._attr_state = MediaPlayerState.OFF
+        self.async_write_ha_state()
+
     async def async_update(self) -> None:
         """Update state of device."""
-        if self._bridge.auth_failed or self.hass.is_stopping:
-            return
-        old_state = self._attr_state
-        if self._bridge.power_off_in_progress:
-            self._attr_state = MediaPlayerState.OFF
-        else:
-            self._attr_state = (
-                MediaPlayerState.ON
-                if await self._bridge.async_is_on()
-                else MediaPlayerState.OFF
-            )
-        if self._attr_state != old_state:
-            LOGGER.debug("TV %s state updated to %s", self._host, self.state)
-
-        if self._attr_state != MediaPlayerState.ON:
+        if not self.coordinator.is_on:
             if self._dmr_device and self._dmr_device.is_subscribed:
                 await self._dmr_device.async_unsubscribe_services()
             return
@@ -167,8 +163,6 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
 
         if startup_tasks:
             await asyncio.gather(*startup_tasks)
-
-        self._update_from_upnp()
 
     @callback
     def _update_from_upnp(self) -> bool:
