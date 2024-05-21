@@ -977,7 +977,7 @@ google-nest-sdm==3.0.4
 googlemaps==2.5.1
 
 # homeassistant.components.slide
-goslide-api==0.5.1
+goslide-api==0.6.8
 
 # homeassistant.components.tailwind
 gotailwind==0.2.3

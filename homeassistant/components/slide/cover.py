@@ -1,17 +1,42 @@
-"""Support for Slide slides."""
+"""Support for Slide covers."""
 
 from __future__ import annotations
 
 import logging
 from typing import Any
 
+from goslideapi import GoSlideLocal
+import voluptuous as vol
+
 from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
-from homeassistant.const import ATTR_ID, STATE_CLOSED, STATE_CLOSING, STATE_OPENING
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_ID,
+    CONF_HOST,
+    CONF_PASSWORD,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import API, DEFAULT_OFFSET, DOMAIN, SLIDES
+from .const import (
+    API,
+    ATTR_TOUCHGO,
+    CONF_API_VERSION,
+    CONF_INVERT_POSITION,
+    DEFAULT_OFFSET,
+    DOMAIN,
+    SERVICE_CALIBRATE,
+)
+
+SERVICE_SCHEMA_CALIBRATE = {
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,33 +49,99 @@ async def async_setup_platform(
 ) -> None:
     """Set up cover(s) for Slide platform."""
 
-    if discovery_info is None:
+    _LOGGER.debug("Initializing Slide cover(s)")
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_CALIBRATE,
+        SERVICE_SCHEMA_CALIBRATE,
+        "async_calibrate",
+    )
+
+    if API not in hass.data[DOMAIN]:
+        hass.data[DOMAIN][API] = GoSlideLocal()
+
+    if discovery_info:
+        cover = discovery_info
+        _LOGGER.debug(
+            "Trying to setup Slide '%s', config=%s",
+            cover[CONF_HOST],
+            str(cover),
+        )
+
+        await hass.data[DOMAIN][API].slide_add(
+            cover[CONF_HOST], cover[CONF_PASSWORD], cover[CONF_API_VERSION]
+        )
+
+        slide_info = await hass.data[DOMAIN][API].slide_info(cover[CONF_HOST])
+
+        if slide_info is not None:
+            _LOGGER.debug("Setup Slide '%s' successful", cover[CONF_HOST])
+
+            async_add_entities(
+                [
+                    SlideCover(
+                        hass.data[DOMAIN][API],
+                        slide_info,
+                        cover[CONF_HOST],
+                        cover[CONF_INVERT_POSITION],
+                    )
+                ]
+            )
+        else:
+            _LOGGER.error("Unable to setup Slide '%s'", cover[CONF_HOST])
+
         return
 
-    entities = []
-
-    for slide in hass.data[DOMAIN][SLIDES].values():
-        _LOGGER.debug("Setting up Slide entity: %s", slide)
-        entities.append(SlideCover(hass.data[DOMAIN][API], slide))
-
-    async_add_entities(entities)
+    if not config:
+        _LOGGER.error("Something wrong in 'cover:' section?")
+        return
 
 
 class SlideCover(CoverEntity):
-    """Representation of a Slide cover."""
+    """Representation of a Slide Local API cover."""
 
     _attr_assumed_state = True
     _attr_device_class = CoverDeviceClass.CURTAIN
 
-    def __init__(self, api, slide):
+    def __init__(
+        self, api: GoSlideLocal, slide_info: dict[str, Any], host: str, invert: bool
+    ) -> None:
         """Initialize the cover."""
         self._api = api
-        self._slide = slide
-        self._id = slide["id"]
-        self._attr_extra_state_attributes = {ATTR_ID: self._id}
-        self._attr_unique_id = slide["mac"]
-        self._attr_name = slide["name"]
-        self._invert = slide["invert"]
+        self._slide: dict[str, Any] = {}
+        self._slide["pos"] = None
+        self._slide["state"] = None
+        self._slide["online"] = False
+        self._slide["touchgo"] = False
+        self._unique_id: str | None = None
+
+        self.parsedata(slide_info)
+
+        self._id = host
+        self._invert = invert
+        self._name = host
+        if self._unique_id is None:
+            _LOGGER.error(
+                "Unable to setup Slide Local '%s', the MAC is missing in the Slide response",
+                self._id,
+            )
+            return
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return the device unique id."""
+        return self._unique_id
+
+    @property
+    def name(self) -> str:
+        """Return the device name."""
+        return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        return {ATTR_ID: self._id, ATTR_TOUCHGO: self._slide["touchgo"]}
 
     @property
     def is_opening(self) -> bool:
@@ -77,7 +168,8 @@ class SlideCover(CoverEntity):
     @property
     def current_cover_position(self) -> int | None:
         """Return the current position of cover shutter."""
-        if (pos := self._slide["pos"]) is not None:
+        pos = self._slide["pos"]
+        if pos is not None:
             if (1 - pos) <= DEFAULT_OFFSET or pos <= DEFAULT_OFFSET:
                 pos = round(pos)
             if not self._invert:
@@ -101,6 +193,7 @@ class SlideCover(CoverEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
+
         position = kwargs[ATTR_POSITION] / 100
         if not self._invert:
             position = 1 - position
@@ -112,3 +205,52 @@ class SlideCover(CoverEntity):
                 self._slide["state"] = STATE_OPENING
 
         await self._api.slide_set_position(self._id, position)
+
+    async def async_update(self) -> None:
+        """Update slide information."""
+
+        slide = await self._api.slide_info(self._id)
+        self.parsedata(slide)
+
+    def parsedata(self, slide) -> None:
+        """Parse slide information."""
+
+        self._slide["online"] = False
+
+        if slide is None:
+            _LOGGER.error("Slide '%s' returned no data (offline?)", self._id)
+            return
+
+        if "pos" in slide:
+            if self._unique_id is None:
+                self._unique_id = slide["slide_id"]
+            oldpos = self._slide.get("pos")
+            self._slide["online"] = True
+            self._slide["touchgo"] = slide["touch_go"]
+            self._slide["pos"] = slide["pos"]
+            self._slide["pos"] = max(0, min(1, self._slide["pos"]))
+
+            if oldpos is None or oldpos == self._slide["pos"]:
+                self._slide["state"] = (
+                    STATE_CLOSED
+                    if self._slide["pos"] > (1 - DEFAULT_OFFSET)
+                    else STATE_OPEN
+                )
+            elif oldpos < self._slide["pos"]:
+                self._slide["state"] = (
+                    STATE_CLOSED
+                    if self._slide["pos"] >= (1 - DEFAULT_OFFSET)
+                    else STATE_CLOSING
+                )
+            else:
+                self._slide["state"] = (
+                    STATE_OPEN
+                    if self._slide["pos"] <= DEFAULT_OFFSET
+                    else STATE_OPENING
+                )
+        else:
+            _LOGGER.error("Slide '%s' has invalid data %s", self._id, str(slide))
+
+    async def async_calibrate(self) -> None:
+        """Calibrate the Slide."""
+        await self._api.slide_calibrate(self._id)

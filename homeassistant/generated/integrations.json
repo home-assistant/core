@@ -5477,7 +5477,7 @@
       "name": "Slide",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "cloud_polling"
+      "iot_class": "local_polling"
     },
     "slimproto": {
       "name": "SlimProto (Squeezebox players)",
