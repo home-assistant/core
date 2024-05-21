@@ -108,21 +108,21 @@ class TelegramNotificationService(BaseNotificationService):
             for photo_data in photos:
                 service_data.update(photo_data)
                 self.hass.services.call(DOMAIN, "send_photo", service_data=service_data)
-            return
+            return None
         if data is not None and ATTR_VIDEO in data:
             videos = data.get(ATTR_VIDEO)
             videos = videos if isinstance(videos, list) else [videos]
             for video_data in videos:
                 service_data.update(video_data)
                 self.hass.services.call(DOMAIN, "send_video", service_data=service_data)
-            return
+            return None
         if data is not None and ATTR_VOICE in data:
             voices = data.get(ATTR_VOICE)
             voices = voices if isinstance(voices, list) else [voices]
             for voice_data in voices:
                 service_data.update(voice_data)
                 self.hass.services.call(DOMAIN, "send_voice", service_data=service_data)
-            return
+            return None
         if data is not None and ATTR_LOCATION in data:
             service_data.update(data.get(ATTR_LOCATION))
             return self.hass.services.call(
