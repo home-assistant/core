@@ -6,13 +6,12 @@ from collections.abc import Iterable
 from typing import Any
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SamsungTVConfigEntry
 from .const import LOGGER
-from .coordinator import SamsungTVDataUpdateCoordinator
 from .entity import SamsungTVEntity
 
 
@@ -31,19 +30,6 @@ class SamsungTVRemote(SamsungTVEntity, RemoteEntity):
 
     _attr_name = None
     _attr_should_poll = False
-
-    def __init__(self, coordinator: SamsungTVDataUpdateCoordinator) -> None:
-        """Initialize the Samsung device."""
-        super().__init__(coordinator=coordinator)
-
-        # Set initial state from coordinator
-        self._attr_is_on = coordinator.is_on
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle data update."""
-        self._attr_is_on = self.coordinator.is_on
-        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
