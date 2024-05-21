@@ -18,6 +18,7 @@ from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 
 from .registry import BaseRegistry
+from .singleton import singleton
 from .storage import Store
 
 DATA_REGISTRY: HassKey[IssueRegistry] = HassKey("issue_registry")
@@ -301,16 +302,24 @@ class IssueRegistry(BaseRegistry):
 
 
 @callback
+@singleton(DATA_REGISTRY)
 def async_get(hass: HomeAssistant) -> IssueRegistry:
     """Get issue registry."""
-    return hass.data[DATA_REGISTRY]
+    return IssueRegistry(hass, read_only=False)
+
+
+@callback
+@singleton(DATA_REGISTRY)
+def async_get_read_only(hass: HomeAssistant) -> IssueRegistry:
+    """Get issue registry in read only for the check config script."""
+    return IssueRegistry(hass, read_only=True)
 
 
 async def async_load(hass: HomeAssistant, *, read_only: bool = False) -> None:
     """Load issue registry."""
-    assert DATA_REGISTRY not in hass.data
-    hass.data[DATA_REGISTRY] = IssueRegistry(hass, read_only=read_only)
-    await hass.data[DATA_REGISTRY].async_load()
+    if read_only:  # only used in for check config script
+        return await async_get_read_only(hass).async_load()
+    return await async_get(hass).async_load()
 
 
 @callback
