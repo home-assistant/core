@@ -201,7 +201,7 @@ aioaseko==0.1.1
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.5.0
+aioautomower==2024.5.1
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.0.0
@@ -673,10 +673,10 @@ construct==2.10.68
 croniter==2.0.2
 
 # homeassistant.components.crownstone
-crownstone-cloud==1.4.9
+crownstone-cloud==1.4.11
 
 # homeassistant.components.crownstone
-crownstone-sse==2.0.4
+crownstone-sse==2.0.5
 
 # homeassistant.components.crownstone
 crownstone-uart==2.1.0
@@ -688,7 +688,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.21.2
+dbus-fast==2.21.3
 
 # homeassistant.components.debugpy
 debugpy==1.8.1
@@ -783,7 +783,7 @@ eliqonline==1.2.2
 elkm1-lib==2.2.7
 
 # homeassistant.components.elmax
-elmax-api==0.0.4
+elmax-api==0.0.5
 
 # homeassistant.components.elvia
 elvia==0.1.0
@@ -2013,7 +2013,7 @@ pynobo==1.8.1
 pynuki==1.6.3
 
 # homeassistant.components.nws
-pynws[retry]==1.7.0
+pynws[retry]==1.8.1
 
 # homeassistant.components.nx584
 pynx584==0.5
@@ -2701,7 +2701,7 @@ temperusb==1.6.1
 tesla-fleet-api==0.4.9
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.5.1
+tesla-powerwall==0.5.2
 
 # homeassistant.components.tesla_wall_connector
 tesla-wall-connector==1.0.2
@@ -2825,6 +2825,9 @@ voip-utils==0.1.0
 # homeassistant.components.volkszaehler
 volkszaehler==0.4.0
 
+# homeassistant.components.google_generative_ai_conversation
+voluptuous-openapi==0.0.3
+
 # homeassistant.components.volvooncall
 volvooncall==0.10.3
 
@@ -2875,7 +2878,7 @@ wiffi==1.1.2
 wirelesstagpy==0.8.1
 
 # homeassistant.components.wled
-wled==0.17.1
+wled==0.18.0
 
 # homeassistant.components.wolflink
 wolf-comm==0.0.8

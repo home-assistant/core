@@ -1127,7 +1127,7 @@ async def test_statistics_during_period_in_the_past(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test statistics_during_period in the past."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     now = dt_util.utcnow().replace()
 
     hass.config.units = US_CUSTOMARY_SYSTEM
