@@ -1422,7 +1422,9 @@ class EventBus:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
-        self._listeners: dict[EventType[Any] | str, list[_FilterableJobType[Any]]] = {}
+        self._listeners: defaultdict[
+            EventType[Any] | str, list[_FilterableJobType[Any]]
+        ] = defaultdict(list)
         self._match_all_listeners: list[_FilterableJobType[Any]] = []
         self._listeners[MATCH_ALL] = self._match_all_listeners
         self._hass = hass
@@ -1615,7 +1617,7 @@ class EventBus:
         event_type: EventType[_DataT] | str,
         filterable_job: _FilterableJobType[_DataT],
     ) -> CALLBACK_TYPE:
-        self._listeners.setdefault(event_type, []).append(filterable_job)
+        self._listeners[event_type].append(filterable_job)
         return functools.partial(
             self._async_remove_listener, event_type, filterable_job
         )
