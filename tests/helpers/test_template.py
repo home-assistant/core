@@ -119,6 +119,33 @@ def assert_result_info(
         assert not hasattr(info, "_domains")
 
 
+async def test_template_render_missing_hass(hass: HomeAssistant) -> None:
+    """Test template render when hass is not set."""
+    hass.states.async_set("sensor.test", "23")
+    template_str = "{{ states('sensor.test') }}"
+    template_obj = template.Template(template_str, None)
+    template._render_info.set(template.RenderInfo(template_obj))
+
+    with pytest.raises(RuntimeError, match="hass not set while rendering"):
+        template_obj.async_render_to_info()
+
+
+async def test_template_render_info_collision(hass: HomeAssistant) -> None:
+    """Test template render info collision.
+
+    This usually means the template is being rendered
+    in the wrong thread.
+    """
+    hass.states.async_set("sensor.test", "23")
+    template_str = "{{ states('sensor.test') }}"
+    template_obj = template.Template(template_str, None)
+    template_obj.hass = hass
+    template._render_info.set(template.RenderInfo(template_obj))
+
+    with pytest.raises(RuntimeError, match="RenderInfo already set while rendering"):
+        template_obj.async_render_to_info()
+
+
 def test_template_equality() -> None:
     """Test template comparison and hashing."""
     template_one = template.Template("{{ template_one }}")
