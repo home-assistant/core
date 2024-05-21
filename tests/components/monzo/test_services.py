@@ -65,7 +65,7 @@ async def test_basic_deposit(
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
 ) -> None:
-    """Test all entities."""
+    """Test basic deposit with pot_transfer."""
     await setup_integration(hass, polling_config_entry)
     device_registry = dr.async_get(hass)
 
@@ -96,7 +96,7 @@ async def test_basic_withdrawal(
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
 ) -> None:
-    """Test all entities."""
+    """Test basic withdrawal with pot_transfer."""
     await setup_integration(hass, polling_config_entry)
     device_registry = dr.async_get(hass)
 
@@ -127,7 +127,7 @@ async def test_deposit_default_account(
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
 ) -> None:
-    """Test all entities."""
+    """Test deposit with pot_transfer without specifying an account."""
     await setup_integration(hass, polling_config_entry)
     device_registry = dr.async_get(hass)
 
@@ -154,7 +154,7 @@ async def test_multiple_target_deposit(
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
 ) -> None:
-    """Test all entities."""
+    """Test pot_transfer with multiple target pots."""
     await setup_integration(hass, polling_config_entry)
     device_registry = dr.async_get(hass)
 
@@ -182,12 +182,12 @@ async def test_multiple_target_deposit(
         monzo.user_account.pot_deposit.assert_any_call(account_id, pot_id, 1.0 * 100)
 
 
-async def test_transfer_raises_value_error_if_pots_includes_account(
+async def test_transfer_raises_validation_error_if_pots_includes_account(
     hass: HomeAssistant,
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
 ) -> None:
-    """Test all entities."""
+    """Test pot_transfer raises ServiceValidationError if selected pots includes an account."""
     await setup_integration(hass, polling_config_entry)
     device_registry = dr.async_get(hass)
 
@@ -214,12 +214,12 @@ async def test_transfer_raises_value_error_if_pots_includes_account(
         )
 
 
-async def test_transfer_raises_value_error_if_account_is_pot(
+async def test_transfer_raises_validation_error_if_account_is_pot(
     hass: HomeAssistant,
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
 ) -> None:
-    """Test all entities."""
+    """Test pot_transfer raises ServiceValidationError if selected account is a pot."""
     await setup_integration(hass, polling_config_entry)
     device_registry = dr.async_get(hass)
 
@@ -244,12 +244,12 @@ async def test_transfer_raises_value_error_if_account_is_pot(
         )
 
 
-async def test_transfer_raises_value_error_if_no_valid_pots(
+async def test_transfer_raises_validation_error_if_no_valid_pots(
     hass: HomeAssistant,
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
 ) -> None:
-    """Test all entities."""
+    """Test pot_transfer raises ServiceValidationError if no valid pots selected."""
     await setup_integration(hass, polling_config_entry)
     device_registry = dr.async_get(hass)
 
@@ -276,7 +276,7 @@ async def test_external_transfer_failure(
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
 ) -> None:
-    """Test all entities."""
+    """Test pot_transfer raises HomeAssistantError if transfer fails externally."""
     await setup_integration(hass, polling_config_entry)
     device_registry = dr.async_get(hass)
 
@@ -307,7 +307,7 @@ async def test_transfer_raises_value_error_if_account_is_not_valid_device(
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
 ) -> None:
-    """Test all entities."""
+    """Test pot_transfer raises ServiceValidationError if account is not a valid device."""
     await setup_integration(hass, polling_config_entry)
     device_registry = dr.async_get(hass)
 
