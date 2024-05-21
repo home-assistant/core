@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/glances",
   "iot_class": "local_polling",
   "loggers": ["glances_api"],
-  "requirements": ["glances-api==0.6.0"]
+  "requirements": ["glances-api==0.7.0"]
 }

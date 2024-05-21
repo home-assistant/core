@@ -3,7 +3,6 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Generic, TypeVar
 
 from tplink_omada_client import OmadaSiteClient
 from tplink_omada_client.exceptions import OmadaClientException
@@ -13,10 +12,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 _LOGGER = logging.getLogger(__name__)
 
-T = TypeVar("T")
 
-
-class OmadaCoordinator(DataUpdateCoordinator[dict[str, T]], Generic[T]):
+class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):
     """Coordinator for synchronizing bulk Omada data."""
 
     def __init__(
@@ -35,7 +32,7 @@ class OmadaCoordinator(DataUpdateCoordinator[dict[str, T]], Generic[T]):
         )
         self.omada_client = omada_client
 
-    async def _async_update_data(self) -> dict[str, T]:
+    async def _async_update_data(self) -> dict[str, _T]:
         """Fetch data from API endpoint."""
         try:
             async with asyncio.timeout(10):
@@ -43,6 +40,6 @@ class OmadaCoordinator(DataUpdateCoordinator[dict[str, T]], Generic[T]):
         except OmadaClientException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-    async def poll_update(self) -> dict[str, T]:
+    async def poll_update(self) -> dict[str, _T]:
         """Poll the current data from the controller."""
         raise NotImplementedError("Update method not implemented")

@@ -1484,8 +1484,8 @@ build.json @home-assistant/supervisor
 /tests/components/unifi/ @Kane610
 /homeassistant/components/unifi_direct/ @tofuSCHNITZEL
 /homeassistant/components/unifiled/ @florisvdk
-/homeassistant/components/unifiprotect/ @AngellusMortis @bdraco
-/tests/components/unifiprotect/ @AngellusMortis @bdraco
+/homeassistant/components/unifiprotect/ @bdraco
+/tests/components/unifiprotect/ @bdraco
 /homeassistant/components/upb/ @gwww
 /tests/components/upb/ @gwww
 /homeassistant/components/upc_connect/ @pvizeli @fabaff

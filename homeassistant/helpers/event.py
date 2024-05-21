@@ -12,7 +12,7 @@ from functools import partial, wraps
 import logging
 from random import randint
 import time
-from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar
 
 from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
@@ -93,7 +93,6 @@ RANDOM_MICROSECOND_MIN = 50000
 RANDOM_MICROSECOND_MAX = 500000
 
 _TypedDictT = TypeVar("_TypedDictT", bound=Mapping[str, Any])
-_P = ParamSpec("_P")
 
 
 @dataclass(slots=True, frozen=True)
@@ -168,7 +167,7 @@ class TrackTemplateResult:
     result: Any
 
 
-def threaded_listener_factory(
+def threaded_listener_factory[**_P](
     async_factory: Callable[Concatenate[HomeAssistant, _P], Any],
 ) -> Callable[Concatenate[HomeAssistant, _P], CALLBACK_TYPE]:
     """Convert an async event helper to a threaded one."""
@@ -1262,7 +1261,7 @@ class TrackTemplateResultInfo:
         self.hass.async_run_hass_job(self._job, event, updates)
 
 
-TrackTemplateResultListener = Callable[
+type TrackTemplateResultListener = Callable[
     [
         Event[EventStateChangedData] | None,
         list[TrackTemplateResult],
