@@ -15,7 +15,12 @@ from types import ModuleType
 from typing import Any, Final, TypedDict
 
 from . import config as conf_util, core, loader, requirements
-from .const import EVENT_COMPONENT_LOADED, EVENT_HOMEASSISTANT_START, PLATFORM_FORMAT
+from .const import (
+    BASE_PLATFORMS,  # noqa: F401
+    EVENT_COMPONENT_LOADED,
+    EVENT_HOMEASSISTANT_START,
+    PLATFORM_FORMAT,
+)
 from .core import (
     CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
