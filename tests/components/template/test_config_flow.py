@@ -161,25 +161,51 @@ async def test_config_flow_device(
     device_id = device.id
     assert device_id is not None
 
-    # Setup the config entry
-    sensor_config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options={
-            "template_type": template_type,
-            "name": "Test",
-            "state": state_template,
-            "device_id": device_id,
-        },
-        title="Template",
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    sensor_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(sensor_config_entry.entry_id)
-    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.MENU
 
-    # Confirm that the configuration entry has been added to the device registry
-    current_device = device_registry.async_get(device_id=device_id)
-    assert sensor_config_entry.entry_id in current_device.config_entries
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": template_type},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == template_type
+
+    with patch(
+        "homeassistant.components.template.async_setup_entry", wraps=async_setup_entry
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "name": "My template",
+                "state": state_template,
+                "device_id": device_id,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "My template"
+    assert result["data"] == {}
+    assert result["options"] == {
+        "name": "My template",
+        "state": state_template,
+        "template_type": template_type,
+        "device_id": device_id,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert config_entry.data == {}
+    assert config_entry.options == {
+        "name": "My template",
+        "state": state_template,
+        "template_type": template_type,
+        "device_id": device_id,
+    }
 
 
 def get_suggested(schema, key):
