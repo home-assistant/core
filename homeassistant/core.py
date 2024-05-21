@@ -55,6 +55,7 @@ from .const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
+    BASE_PLATFORMS,
     COMPRESSED_STATE_ATTRIBUTES,
     COMPRESSED_STATE_CONTEXT,
     COMPRESSED_STATE_LAST_CHANGED,
@@ -1422,7 +1423,9 @@ class EventBus:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
-        self._listeners: dict[EventType[Any] | str, list[_FilterableJobType[Any]]] = {}
+        self._listeners: defaultdict[
+            EventType[Any] | str, list[_FilterableJobType[Any]]
+        ] = defaultdict(list)
         self._match_all_listeners: list[_FilterableJobType[Any]] = []
         self._listeners[MATCH_ALL] = self._match_all_listeners
         self._hass = hass
@@ -1615,7 +1618,7 @@ class EventBus:
         event_type: EventType[_DataT] | str,
         filterable_job: _FilterableJobType[_DataT],
     ) -> CALLBACK_TYPE:
-        self._listeners.setdefault(event_type, []).append(filterable_job)
+        self._listeners[event_type].append(filterable_job)
         return functools.partial(
             self._async_remove_listener, event_type, filterable_job
         )
@@ -2767,16 +2770,27 @@ class _ComponentSet(set[str]):
 
     The top level components set only contains the top level components.
 
+    The all components set contains all components, including platform
+    based components.
+
     """
 
-    def __init__(self, top_level_components: set[str]) -> None:
+    def __init__(
+        self, top_level_components: set[str], all_components: set[str]
+    ) -> None:
         """Initialize the component set."""
         self._top_level_components = top_level_components
+        self._all_components = all_components
 
     def add(self, component: str) -> None:
         """Add a component to the store."""
         if "." not in component:
             self._top_level_components.add(component)
+            self._all_components.add(component)
+        else:
+            platform, _, domain = component.partition(".")
+            if domain in BASE_PLATFORMS:
+                self._all_components.add(platform)
         return super().add(component)
 
     def remove(self, component: str) -> None:
@@ -2829,8 +2843,14 @@ class Config:
         # and should not be modified directly
         self.top_level_components: set[str] = set()
 
+        # Set of all loaded components including platform
+        # based components
+        self.all_components: set[str] = set()
+
         # Set of loaded components
-        self.components: _ComponentSet = _ComponentSet(self.top_level_components)
+        self.components: _ComponentSet = _ComponentSet(
+            self.top_level_components, self.all_components
+        )
 
         # API (HTTP) server configuration
         self.api: ApiConfig | None = None
