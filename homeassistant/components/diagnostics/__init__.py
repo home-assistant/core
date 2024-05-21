@@ -23,7 +23,11 @@ from homeassistant.helpers.json import (
 )
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_custom_components, async_get_integration
+from homeassistant.loader import (
+    Manifest,
+    async_get_custom_components,
+    async_get_integration,
+)
 from homeassistant.setup import async_get_domain_setup_times
 from homeassistant.util.json import format_unserializable_data
 
@@ -157,6 +161,23 @@ def handle_get(
     )
 
 
+@callback
+def async_format_manifest(manifest: Manifest) -> Manifest:
+    """Format manifest for diagnostics.
+
+    Remove the @ from codeowners so that
+    when users download the diagnostics and paste
+    the codeowners into the repository, it will
+    not notify the users in the codeowners file.
+    """
+    manifest_copy = manifest.copy()
+    if "codeowners" in manifest_copy:
+        manifest_copy["codeowners"] = [
+            codeowner.lstrip("@") for codeowner in manifest_copy["codeowners"]
+        ]
+    return manifest_copy
+
+
 async def _async_get_json_file_response(
     hass: HomeAssistant,
     data: Mapping[str, Any],
@@ -182,7 +203,7 @@ async def _async_get_json_file_response(
     payload = {
         "home_assistant": hass_sys_info,
         "custom_components": custom_components,
-        "integration_manifest": integration.manifest,
+        "integration_manifest": async_format_manifest(integration.manifest),
         "setup_times": async_get_domain_setup_times(hass, domain),
         "data": data,
     }
