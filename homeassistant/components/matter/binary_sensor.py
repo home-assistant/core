@@ -100,8 +100,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterBinarySensorEntityDescription(
             key="WaterLeakDetector",
             device_class=BinarySensorDeviceClass.MOISTURE,
-            # The first bit = if occupied
-            measurement_to_ha=lambda x: (x & 1 == 1) if x is not None else None,
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.BooleanState.Attributes.StateValue,),
