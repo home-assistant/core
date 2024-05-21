@@ -16,6 +16,8 @@ from .discovery import PGLabDiscovery
 class PgLabEntity(Entity):
     """Representation of a PGLAB entity in Home Assistant."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         discovery: PGLabDiscovery,

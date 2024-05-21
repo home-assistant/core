@@ -38,6 +38,8 @@ async def async_setup_entry(
 class PgLabSwitch(PgLabEntity, SwitchEntity):
     """A PG LAB switch."""
 
+    _attr_translation_key = "relay"
+
     def __init__(
         self,
         pglab_discovery: PGLabDiscovery,
@@ -52,8 +54,8 @@ class PgLabSwitch(PgLabEntity, SwitchEntity):
             entity=pglab_relay,
         )
 
-        self._attr_unique_id = f"{pglab_device.id}_relay{pglab_relay.id}_switch"
-        self._attr_name = f"{pglab_device.name}_relay{pglab_relay.id}"
+        self._attr_unique_id = f"{pglab_device.id}_relay{pglab_relay.id}"
+        self._attr_translation_placeholders = {"relay_id": pglab_relay.id}
 
         self._relay = pglab_relay
 

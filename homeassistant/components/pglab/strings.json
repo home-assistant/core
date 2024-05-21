@@ -16,5 +16,12 @@
     "error": {
       "invalid_discovery_topic": "Invalid discovery topic prefix."
     }
+  },
+  "entity": {
+    "switch": {
+      "relay": {
+        "name": "Relay {relay_id}"
+      }
+    }
   }
 }
