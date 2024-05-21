@@ -113,6 +113,24 @@ NO_IOT_CLASS = [
     "websocket_api",
     "zone",
 ]
+# Grandfather rule for older integrations
+# https://github.com/home-assistant/developers.home-assistant/pull/1512
+NO_DIAGNOSTICS = [
+    "dlna_dms",
+    "fronius",
+    "gdacs",
+    "geonetnz_quakes",
+    "google_assistant_sdk",
+    "hyperion",
+    "modbus",
+    "nightscout",
+    "pvpc_hourly_pricing",
+    "risco",
+    "smarttub",
+    "songpal",
+    "vizio",
+    "yeelight",
+]
 
 
 def documentation_url(value: str) -> str:
@@ -348,15 +366,36 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
             "Virtual integration points to non-existing supported_by integration",
         )
 
-    if (
-        (quality_scale := integration.manifest.get("quality_scale"))
-        and QualityScale[quality_scale.upper()] > QualityScale.SILVER
-        and not integration.manifest.get("codeowners")
-    ):
-        integration.add_error(
-            "manifest",
-            f"{quality_scale} integration does not have a code owner",
-        )
+    if (quality_scale := integration.manifest.get("quality_scale")) and QualityScale[
+        quality_scale.upper()
+    ] > QualityScale.SILVER:
+        if not integration.manifest.get("codeowners"):
+            integration.add_error(
+                "manifest",
+                f"{quality_scale} integration does not have a code owner",
+            )
+        if (
+            domain not in NO_DIAGNOSTICS
+            and not (integration.path / "diagnostics.py").exists()
+        ):
+            integration.add_error(
+                "manifest",
+                f"{quality_scale} integration does not implement diagnostics",
+            )
+
+    if domain in NO_DIAGNOSTICS:
+        if quality_scale and QualityScale[quality_scale.upper()] < QualityScale.GOLD:
+            integration.add_error(
+                "manifest",
+                "{quality_scale} integration should be "
+                "removed from NO_DIAGNOSTICS in script/hassfest/manifest.py",
+            )
+        elif (integration.path / "diagnostics.py").exists():
+            integration.add_error(
+                "manifest",
+                "Implements diagnostics and can be "
+                "removed from NO_DIAGNOSTICS in script/hassfest/manifest.py",
+            )
 
     if not integration.core:
         validate_version(integration)

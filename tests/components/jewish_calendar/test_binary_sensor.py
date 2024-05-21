@@ -184,7 +184,7 @@ async def test_issur_melacha_sensor(
     time_zone = dt_util.get_time_zone(tzname)
     test_time = now.replace(tzinfo=time_zone)
 
-    hass.config.set_time_zone(tzname)
+    await hass.config.async_set_time_zone(tzname)
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
@@ -272,7 +272,7 @@ async def test_issur_melacha_sensor_update(
     time_zone = dt_util.get_time_zone(tzname)
     test_time = now.replace(tzinfo=time_zone)
 
-    hass.config.set_time_zone(tzname)
+    await hass.config.async_set_time_zone(tzname)
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 

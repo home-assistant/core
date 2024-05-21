@@ -9,7 +9,7 @@ import dataclasses
 from functools import wraps
 from http import HTTPStatus
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 import aiohttp
 from aiohttp import web
@@ -116,11 +116,7 @@ def async_setup(hass: HomeAssistant) -> None:
     )
 
 
-_HassViewT = TypeVar("_HassViewT", bound=HomeAssistantView)
-_P = ParamSpec("_P")
-
-
-def _handle_cloud_errors(
+def _handle_cloud_errors[_HassViewT: HomeAssistantView, **_P](
     handler: Callable[
         Concatenate[_HassViewT, web.Request, _P], Awaitable[web.Response]
     ],

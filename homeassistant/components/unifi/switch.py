@@ -38,13 +38,13 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.entity_registry as er
 
+from . import UnifiConfigEntry
 from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
 from .entity import (
     HandlerT,
@@ -270,12 +270,12 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
 
 
 @callback
-def async_update_unique_id(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+def async_update_unique_id(hass: HomeAssistant, config_entry: UnifiConfigEntry) -> None:
     """Normalize switch unique ID to have a prefix rather than midfix.
 
     Introduced with release 2023.12.
     """
-    hub: UnifiHub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
     ent_reg = er.async_get(hass)
 
     @callback
@@ -299,12 +299,12 @@ def async_update_unique_id(hass: HomeAssistant, config_entry: ConfigEntry) -> No
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: UnifiConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches for UniFi Network integration."""
     async_update_unique_id(hass, config_entry)
-    UnifiHub.get_hub(hass, config_entry).entity_loader.register_platform(
+    config_entry.runtime_data.entity_loader.register_platform(
         async_add_entities,
         UnifiSwitchEntity,
         ENTITY_DESCRIPTIONS,

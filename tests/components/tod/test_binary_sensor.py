@@ -22,11 +22,11 @@ def hass_time_zone():
 
 
 @pytest.fixture(autouse=True)
-def setup_fixture(hass, hass_time_zone):
+async def setup_fixture(hass, hass_time_zone):
     """Set up things to be run when tests are started."""
     hass.config.latitude = 50.27583
     hass.config.longitude = 18.98583
-    hass.config.set_time_zone(hass_time_zone)
+    await hass.config.async_set_time_zone(hass_time_zone)
 
 
 @pytest.fixture

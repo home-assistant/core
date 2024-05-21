@@ -84,6 +84,7 @@ homeassistant.components.api.*
 homeassistant.components.apple_tv.*
 homeassistant.components.apprise.*
 homeassistant.components.aprs.*
+homeassistant.components.apsystems.*
 homeassistant.components.aqualogic.*
 homeassistant.components.aquostv.*
 homeassistant.components.aranet.*
@@ -340,7 +341,6 @@ homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
 homeassistant.components.ping.*
 homeassistant.components.plugwise.*
-homeassistant.components.poolsense.*
 homeassistant.components.powerwall.*
 homeassistant.components.private_ble_device.*
 homeassistant.components.prometheus.*
