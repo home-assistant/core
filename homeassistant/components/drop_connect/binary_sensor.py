@@ -39,7 +39,7 @@ PENDING_NOTIFICATION = "pending_notification"
 POWER = "power"
 PUMP_STATUS = "pump"
 RESERVE_IN_USE = "reserve_in_use"
-SENSOR = "sensor"
+ALERT_SENSOR = "alert_sensor"
 SALT_LOW = "salt"
 
 
@@ -78,8 +78,8 @@ BINARY_SENSORS: list[DROPBinarySensorEntityDescription] = [
         value_fn=lambda device: device.drop_api.pump_status(),
     ),
     DROPBinarySensorEntityDescription(
-        key=SENSOR,
-        translation_key=SENSOR,
+        key=ALERT_SENSOR,
+        translation_key=ALERT_SENSOR,
         device_class=BinarySensorDeviceClass.PROBLEM,
         value_fn=lambda device: device.drop_api.sensor_high(),
     ),
@@ -93,7 +93,7 @@ BINARY_SENSORS: list[DROPBinarySensorEntityDescription] = [
 
 # Defines which binary sensors are used by each device type
 DEVICE_BINARY_SENSORS: dict[str, list[str]] = {
-    DEV_ALERT: [SENSOR, POWER],
+    DEV_ALERT: [ALERT_SENSOR, POWER],
     DEV_HUB: [LEAK_DETECTED, PENDING_NOTIFICATION],
     DEV_LEAK_DETECTOR: [LEAK_DETECTED],
     DEV_PROTECTION_VALVE: [LEAK_DETECTED],

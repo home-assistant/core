@@ -74,8 +74,8 @@
     'platform': 'drop_connect',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'sensor',
-    'unique_id': 'DROP-1_C0FFEE_81_sensor',
+    'translation_key': 'alert_sensor',
+    'unique_id': 'DROP-1_C0FFEE_81_alert_sensor',
     'unit_of_measurement': None,
   })
 # ---
