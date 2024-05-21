@@ -22,7 +22,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import InvalidStateError
+from homeassistant.exceptions import HomeAssistantError, InvalidStateError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -94,6 +94,10 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
                 command=AreaCommand.ARM_TOTALLY,
                 extra_payload={"code": code},
             )
+        except ElmaxApiError as err:
+            raise HomeAssistantError(
+                "Failed to arm the alarm. An API error occurred."
+            ) from err
         finally:
             await self.coordinator.async_refresh()
 
@@ -114,8 +118,10 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
             )
         except ElmaxApiError as err:
             if err.status_code == 403:
-                raise ValueError("Invalid disarm code specified") from err
-            raise
+                raise HomeAssistantError("Invalid disarm code specified.") from err
+            raise HomeAssistantError(
+                "Failed to disarm the alarm. An API error occurred."
+            ) from err
         finally:
             await self.coordinator.async_refresh()
 
