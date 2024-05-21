@@ -34,12 +34,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 # Binary sensor type constants
+ALERT_SENSOR = "alert_sensor"
 LEAK_DETECTED = "leak"
 PENDING_NOTIFICATION = "pending_notification"
 POWER = "power"
 PUMP_STATUS = "pump"
 RESERVE_IN_USE = "reserve_in_use"
-ALERT_SENSOR = "alert_sensor"
 SALT_LOW = "salt"
 
 
