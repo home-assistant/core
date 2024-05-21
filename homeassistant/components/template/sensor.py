@@ -272,13 +272,14 @@ class SensorTemplate(TemplateEntity, SensorEntity):
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass
             )
-        if (device_id := config.get(CONF_DEVICE_ID)) is not None:
-            dev_reg = dr.async_get(hass)
-            if (device := dev_reg.async_get(device_id)) is not None:
-                self._attr_device_info = DeviceInfo(
-                    connections=device.connections,
-                    identifiers=device.identifiers,
-                )
+        dev_reg = dr.async_get(hass)
+        if (device_id := config.get(CONF_DEVICE_ID)) is not None and (
+            device := dev_reg.async_get(device_id)
+        ) is not None:
+            self._attr_device_info = DeviceInfo(
+                connections=device.connections,
+                identifiers=device.identifiers,
+            )
 
     @callback
     def _async_setup_templates(self) -> None:
