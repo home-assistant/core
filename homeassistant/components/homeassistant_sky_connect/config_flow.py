@@ -641,15 +641,7 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options flow."""
-        # Don't probe the running firmware, we load it from the config entry
-        return self.async_show_menu(
-            step_id="pick_firmware",
-            menu_options=[
-                STEP_PICK_FIRMWARE_THREAD,
-                STEP_PICK_FIRMWARE_ZIGBEE,
-            ],
-            description_placeholders=self._get_translation_placeholders(),
-        )
+        return await self.async_step_pick_firmware()
 
     async def async_step_pick_firmware_zigbee(
         self, user_input: dict[str, Any] | None = None
