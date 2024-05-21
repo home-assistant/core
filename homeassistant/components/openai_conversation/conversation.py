@@ -9,7 +9,7 @@ from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import MATCH_ALL
+from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import intent, llm, template
@@ -30,6 +30,9 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+
+# Max number of back and forth with the LLM to generate a response
+MAX_TOOL_ITERATIONS = 10
 
 
 async def async_setup_entry(
@@ -87,6 +90,26 @@ class OpenAIConversationEntity(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
+        intent_response = intent.IntentResponse(language=user_input.language)
+        llm_api: llm.API | None = None
+        tools: list[dict[str, Any]] | None = None
+
+        if self.entry.options.get(CONF_LLM_HASS_API):
+            try:
+                llm_api = llm.async_get_api(
+                    self.hass, self.entry.options[CONF_LLM_HASS_API]
+                )
+            except HomeAssistantError as err:
+                LOGGER.error("Error getting LLM API: %s", err)
+                intent_response.async_set_error(
+                    intent.IntentResponseErrorCode.UNKNOWN,
+                    f"Error preparing LLM API: {err}",
+                )
+                return conversation.ConversationResult(
+                    response=intent_response, conversation_id=user_input.conversation_id
+                )
+            tools = [_format_tool(tool) for tool in llm_api.async_get_tools()]
+
         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
         model = self.entry.options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL)
         max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
@@ -100,7 +123,10 @@ class OpenAIConversationEntity(
             conversation_id = ulid.ulid_now()
             try:
                 prompt = self._async_generate_prompt(
-                    raw_prompt, user_input.device_id, user_input.context.user_id
+                    raw_prompt,
+                    user_input.device_id,
+                    user_input.context.user_id,
+                    llm_api,
                 )
             except TemplateError as err:
                 LOGGER.error("Error rendering prompt: %s", err)
@@ -120,9 +146,8 @@ class OpenAIConversationEntity(
 
         client = self.hass.data[DOMAIN][self.entry.entry_id]
 
-        tools = [_format_tool(tool) for tool in llm.async_get_tools(self.hass)] or None
-
-        while True:
+        # To prevent infinite loops, we limit the number of iterations
+        for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
                 result = await client.chat.completions.create(
                     model=model,
@@ -148,32 +173,31 @@ class OpenAIConversationEntity(
             messages.append(response)
             tool_calls = response.tool_calls
 
-            if not tool_calls:
+            if not tool_calls or not llm_api:
                 break
 
             for tool_call in tool_calls:
-                LOGGER.info(
-                    "Tool call: %s(%s)",
-                    tool_call.function.name,
-                    tool_call.function.arguments,
+                tool_input = llm.ToolInput(
+                    tool_name=tool_call.function.name,
+                    tool_args=json.loads(tool_call.function.arguments),
+                    platform=DOMAIN,
+                    context=user_input.context,
+                    user_prompt=user_input.text,
+                    language=user_input.language,
+                    assistant=conversation.DOMAIN,
                 )
+                LOGGER.debug(
+                    "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
+                )
+
                 try:
-                    tool_input = llm.ToolInput(
-                        tool_name=tool_call.function.name,
-                        tool_args=json.loads(tool_call.function.arguments),
-                        platform=DOMAIN,
-                        context=user_input.context,
-                        user_prompt=user_input.text,
-                        language=user_input.language,
-                        assistant=conversation.DOMAIN,
-                    )
-                    tool_response = await llm.async_call_tool(self.hass, tool_input)
+                    tool_response = await llm_api.async_call_tool(tool_input)
                 except (HomeAssistantError, vol.Invalid) as e:
                     tool_response = {"error": type(e).__name__}
                     if str(e):
                         tool_response["error_text"] = str(e)
 
-                LOGGER.info("Tool response: %s", tool_response)
+                LOGGER.debug("Tool response: %s", tool_response)
                 messages.append(
                     {
                         "role": "tool",
@@ -192,9 +216,19 @@ class OpenAIConversationEntity(
         )
 
     def _async_generate_prompt(
-        self, raw_prompt: str, device_id: str | None, user_id: str | None
+        self,
+        raw_prompt: str,
+        device_id: str | None,
+        user_id: str | None,
+        llm_api: llm.API | None,
     ) -> str:
         """Generate a prompt for the user."""
+        raw_prompt += "\n"
+        if llm_api:
+            raw_prompt += llm_api.prompt_template
+        else:
+            raw_prompt += llm.PROMPT_NO_API_CONFIGURED
+
         return template.Template(raw_prompt, self.hass).async_render(
             {
                 "ha_name": self.hass.config.location_name,
