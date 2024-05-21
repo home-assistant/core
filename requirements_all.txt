@@ -1032,7 +1032,7 @@ ha-ffmpeg==3.2.0
 ha-iotawattpy==0.1.2
 
 # homeassistant.components.philips_js
-ha-philipsjs==3.2.0
+ha-philipsjs==3.2.1
 
 # homeassistant.components.habitica
 habitipy==0.3.1
