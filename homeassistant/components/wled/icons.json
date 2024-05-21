@@ -17,6 +17,9 @@
       "preset": {
         "default": "mdi:playlist-play"
       },
+      "effect": {
+        "default": "mdi:playlist-play"
+      },
       "playlist": {
         "default": "mdi:play-speed"
       },
