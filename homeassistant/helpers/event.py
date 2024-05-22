@@ -1776,7 +1776,6 @@ class _TrackUTCTimeChange:
         # time when the timer was scheduled
         utc_now = time_tracker_utcnow()
         localized_now = dt_util.as_local(utc_now) if self.local else utc_now
-        hass.async_run_hass_job(self.job, localized_now, background=True)
         if TYPE_CHECKING:
             assert self._pattern_time_change_listener_job is not None
         self._cancel_callback = async_track_point_in_utc_time(
@@ -1784,6 +1783,7 @@ class _TrackUTCTimeChange:
             self._pattern_time_change_listener_job,
             self._calculate_next(utc_now + timedelta(seconds=1)),
         )
+        hass.async_run_hass_job(self.job, localized_now, background=True)
 
     @callback
     def async_cancel(self) -> None:
