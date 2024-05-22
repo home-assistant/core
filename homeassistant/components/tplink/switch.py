@@ -42,7 +42,7 @@ async def async_setup_entry(
         coordinator=parent_coordinator,
     )
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
 
 class Switch(CoordinatedTPLinkEntity, SwitchEntity):
@@ -66,6 +66,7 @@ class Switch(CoordinatedTPLinkEntity, SwitchEntity):
         self.entity_description = _description_for_feature(
             SwitchEntityDescription, feature
         )
+        self._async_update_attrs()
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
