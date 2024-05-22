@@ -715,3 +715,25 @@ async def test_ws_remove_expiry_date_refresh_token(
     assert result["success"], result
     refresh_token = hass.auth.async_get_refresh_token(refresh_token.id)
     assert refresh_token.expire_at is None
+
+
+async def test_ws_remove_expiry_date_refresh_token_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_access_token: str,
+) -> None:
+    """Test removing expiry date from a invalid refresh token returns error."""
+    assert await async_setup_component(hass, "auth", {"http": {}})
+
+    ws_client = await hass_ws_client(hass, hass_access_token)
+
+    await ws_client.send_json_auto_id(
+        {"type": "auth/remove_expiry_date_refresh_token", "refresh_token_id": "invalid"}
+    )
+
+    result = await ws_client.receive_json()
+    assert result, result["success"] is False
+    assert result["error"] == {
+        "code": "invalid_token_id",
+        "message": "Received invalid token",
+    }
