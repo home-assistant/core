@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from androidtvremote2 import AndroidTVRemote, ConnectionClosed
 
 from homeassistant.config_entries import ConfigEntry
@@ -26,10 +28,7 @@ class AndroidTVRemoteBaseEntity(Entity):
         self._api = api
         self._host = config_entry.data[CONF_HOST]
         self._name = config_entry.data[CONF_NAME]
-        self._app_id_to_name = config_entry.options.get(CONF_APPS, {})
-        self._app_name_to_id = {
-            value: key for key, value in self._app_id_to_name.items() if value
-        }
+        self._apps: dict[str, Any] = config_entry.options.get(CONF_APPS, {})
         self._attr_unique_id = config_entry.unique_id
         self._attr_is_on = api.is_on
         device_info = api.device_info

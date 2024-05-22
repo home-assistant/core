@@ -49,6 +49,7 @@
         "data": {
           "app_name": "Application Name",
           "app_id": "Application ID",
+          "app_icon": "Application Icon",
           "app_delete": "Check to delete this application"
         }
       }

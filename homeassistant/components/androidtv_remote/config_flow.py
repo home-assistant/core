@@ -30,13 +30,12 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_APPS, CONF_ENABLE_IME, DOMAIN
+from .const import CONF_APP_ICON, CONF_APP_NAME, CONF_APPS, CONF_ENABLE_IME, DOMAIN
 from .helpers import create_api, get_enable_ime
 
 APPS_NEW_ID = "NewApp"
 CONF_APP_DELETE = "app_delete"
 CONF_APP_ID = "app_id"
-CONF_APP_NAME = "app_name"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -243,7 +242,10 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 return await self.async_step_apps(None, sel_app)
             return self._save_config(user_input)
 
-        apps_list = {k: f"{v} ({k})" if v else k for k, v in self._apps.items()}
+        apps_list = {
+            k: f"{v[CONF_APP_NAME]} ({k})" if CONF_APP_NAME in v else k
+            for k, v in self._apps.items()
+        }
         apps = [SelectOptionDict(value=APPS_NEW_ID, label="Add new")] + [
             SelectOptionDict(value=k, label=v) for k, v in apps_list.items()
         ]
@@ -278,17 +280,33 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 if user_input.get(CONF_APP_DELETE, False):
                     self._apps.pop(app_id)
                 else:
-                    self._apps[app_id] = user_input.get(CONF_APP_NAME, "")
+                    self._apps[app_id] = {
+                        CONF_APP_NAME: user_input.get(CONF_APP_NAME, ""),
+                        CONF_APP_ICON: user_input.get(CONF_APP_ICON, ""),
+                    }
 
         return await self.async_step_init()
 
     @callback
     def _async_apps_form(self, app_id: str) -> ConfigFlowResult:
         """Return configuration form for apps."""
+
         app_schema = {
             vol.Optional(
                 CONF_APP_NAME,
-                description={"suggested_value": self._apps.get(app_id, "")},
+                description={
+                    "suggested_value": self._apps[app_id].get(CONF_APP_NAME, "")
+                    if app_id in self._apps
+                    else ""
+                },
+            ): str,
+            vol.Optional(
+                CONF_APP_ICON,
+                description={
+                    "suggested_value": self._apps[app_id].get(CONF_APP_ICON, "")
+                    if app_id in self._apps
+                    else ""
+                },
             ): str,
         }
         if app_id == APPS_NEW_ID:

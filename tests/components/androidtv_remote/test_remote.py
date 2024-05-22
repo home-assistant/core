@@ -19,7 +19,9 @@ async def test_remote_receives_push_updates(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
     """Test the Android TV Remote receives push updates and state is updated."""
-    mock_config_entry.options = {"apps": {"com.google.android.youtube.tv": "YouTube"}}
+    mock_config_entry.options = {
+        "apps": {"com.google.android.youtube.tv": {"app_name": "YouTube"}}
+    }
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
@@ -51,7 +53,9 @@ async def test_remote_toggles(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
     """Test the Android TV Remote toggles."""
-    mock_config_entry.options = {"apps": {"com.google.android.youtube.tv": "YouTube"}}
+    mock_config_entry.options = {
+        "apps": {"com.google.android.youtube.tv": {"app_name": "YouTube"}}
+    }
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED

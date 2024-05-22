@@ -11,9 +11,10 @@ from homeassistant.components.androidtv_remote.config_flow import (
     APPS_NEW_ID,
     CONF_APP_DELETE,
     CONF_APP_ID,
-    CONF_APP_NAME,
 )
 from homeassistant.components.androidtv_remote.const import (
+    CONF_APP_ICON,
+    CONF_APP_NAME,
     CONF_APPS,
     CONF_ENABLE_IME,
     DOMAIN,
@@ -952,6 +953,7 @@ async def test_options_flow(
         user_input={
             CONF_APP_ID: "app1",
             CONF_APP_NAME: "App1",
+            CONF_APP_ICON: "Icon1",
         },
     )
     assert result["type"] is FlowResultType.FORM
@@ -972,6 +974,7 @@ async def test_options_flow(
         result["flow_id"],
         user_input={
             CONF_APP_NAME: "Application1",
+            CONF_APP_ICON: "Icon1",
         },
     )
     assert result["type"] is FlowResultType.FORM
@@ -982,7 +985,7 @@ async def test_options_flow(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_config_entry.options == {
-        CONF_APPS: {"app1": "Application1"},
+        CONF_APPS: {"app1": {CONF_APP_NAME: "Application1", CONF_APP_ICON: "Icon1"}},
         CONF_ENABLE_IME: True,
     }
     await hass.async_block_till_done()
