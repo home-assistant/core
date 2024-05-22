@@ -43,8 +43,8 @@ Path("homeassistant/generated/amazon_polly.py").write_text(
             "SUPPORTED_REGIONS": supported_regions,
         },
         annotations={
-            "SUPPORTED_VOICES": "set[str]",
-            "SUPPORTED_REGIONS": "set[str]",
+            "SUPPORTED_VOICES": "Final[set[str]]",
+            "SUPPORTED_REGIONS": "Final[set[str]]",
         },
         generator="script.amazon_polly",
     )
