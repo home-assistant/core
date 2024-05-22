@@ -40,6 +40,7 @@ ERROR_STATES = [
     MowerStates.STOPPED,
     MowerStates.OFF,
 ]
+EXECUTION_TIME = 5
 
 
 async def async_setup_entry(
@@ -165,8 +166,7 @@ class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
                 self.mower_id, self.stay_out_zone_uid, False
             )
             # As there are no updates from the websocket regarding stay out zone changes,
-            # we need to wait 5s and then poll the API.
-            await asyncio.sleep(5)
+            # we need to wait until the command is executed and then poll the API.
             await self.coordinator.async_request_refresh()
         except ApiException as exception:
             raise HomeAssistantError(
@@ -180,8 +180,8 @@ class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
                 self.mower_id, self.stay_out_zone_uid, True
             )
             # As there are no updates from the websocket regarding stay out zone changes,
-            # we need to wait 5s and then poll the API.
-            await asyncio.sleep(5)
+            # we need to wait until the command is executed and then poll the API.
+            await asyncio.sleep(EXECUTION_TIME)
             await self.coordinator.async_request_refresh()
         except ApiException as exception:
             raise HomeAssistantError(
