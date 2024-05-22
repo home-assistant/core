@@ -165,14 +165,15 @@ class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
             await self.coordinator.api.commands.switch_stay_out_zone(
                 self.mower_id, self.stay_out_zone_uid, False
             )
-            # As there are no updates from the websocket regarding stay out zone changes,
-            # we need to wait until the command is executed and then poll the API.
-            await asyncio.sleep(EXECUTION_TIME)
-            await self.coordinator.async_request_refresh()
         except ApiException as exception:
             raise HomeAssistantError(
                 f"Command couldn't be sent to the command queue: {exception}"
             ) from exception
+        else:
+            # As there are no updates from the websocket regarding stay out zone changes,
+            # we need to wait until the command is executed and then poll the API.
+            await asyncio.sleep(EXECUTION_TIME)
+            await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
@@ -180,14 +181,15 @@ class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
             await self.coordinator.api.commands.switch_stay_out_zone(
                 self.mower_id, self.stay_out_zone_uid, True
             )
-            # As there are no updates from the websocket regarding stay out zone changes,
-            # we need to wait until the command is executed and then poll the API.
-            await asyncio.sleep(EXECUTION_TIME)
-            await self.coordinator.async_request_refresh()
         except ApiException as exception:
             raise HomeAssistantError(
                 f"Command couldn't be sent to the command queue: {exception}"
             ) from exception
+        else:
+            # As there are no updates from the websocket regarding stay out zone changes,
+            # we need to wait until the command is executed and then poll the API.
+            await asyncio.sleep(EXECUTION_TIME)
+            await self.coordinator.async_request_refresh()
 
 
 @callback
