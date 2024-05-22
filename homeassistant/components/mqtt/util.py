@@ -84,9 +84,9 @@ async def async_forward_entry_setup_and_setup_discovery(
 
 def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
     """Return true when the MQTT config entry is enabled."""
-    if not bool(hass.config_entries.async_entries(DOMAIN)):
-        return None
-    return not bool(hass.config_entries.async_entries(DOMAIN)[0].disabled_by)
+    return hass.config_entries.async_has_entries(
+        DOMAIN, include_disabled=False, include_ignore=False
+    )
 
 
 async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
