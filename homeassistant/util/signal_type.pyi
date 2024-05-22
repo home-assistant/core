@@ -3,12 +3,6 @@
 
 from typing import Any, assert_type
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-
 __all__ = [
     "SignalType",
     "SignalTypeFormat",
@@ -37,6 +31,12 @@ def _test_signal_type_typing() -> None:  # noqa: PYI048
 
     This is tested during the mypy run. Do not move it to 'tests'!
     """
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.dispatcher import (
+        async_dispatcher_connect,
+        async_dispatcher_send,
+    )
+
     hass: HomeAssistant
     def test_func(a: int) -> None: ...
     def test_func_other(a: int, b: str) -> None: ...
