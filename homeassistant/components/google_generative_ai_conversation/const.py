@@ -24,7 +24,9 @@ An overview of the areas and the devices in this smart home:
 """
 
 CONF_CHAT_MODEL = "chat_model"
-DEFAULT_CHAT_MODEL = "models/gemini-pro"
+RECOMMENDED_CHAT_MODEL_LABEL = "Recommended (Gemini 1.5 Flash)"
+RECOMMENDED_CHAT_MODEL_VALUE = "__recommended__"
+RECOMMENDED_CHAT_MODEL = "models/gemini-1.5-flash-latest"
 CONF_TEMPERATURE = "temperature"
 DEFAULT_TEMPERATURE = 0.9
 CONF_TOP_P = "top_p"

@@ -12,11 +12,11 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_MAX_TOKENS,
     CONF_TOP_K,
     CONF_TOP_P,
-    DEFAULT_CHAT_MODEL,
     DEFAULT_MAX_TOKENS,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
     DOMAIN,
+    RECOMMENDED_CHAT_MODEL_VALUE,
 )
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
@@ -107,7 +107,7 @@ async def test_options(
     assert options["type"] is FlowResultType.CREATE_ENTRY
     assert options["data"]["prompt"] == "Speak like a pirate"
     assert options["data"]["temperature"] == 0.3
-    assert options["data"][CONF_CHAT_MODEL] == DEFAULT_CHAT_MODEL
+    assert options["data"][CONF_CHAT_MODEL] == RECOMMENDED_CHAT_MODEL_VALUE
     assert options["data"][CONF_TOP_P] == DEFAULT_TOP_P
     assert options["data"][CONF_TOP_K] == DEFAULT_TOP_K
     assert options["data"][CONF_MAX_TOKENS] == DEFAULT_MAX_TOKENS

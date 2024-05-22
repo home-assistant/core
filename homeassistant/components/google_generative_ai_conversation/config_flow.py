@@ -37,13 +37,14 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
-    DEFAULT_CHAT_MODEL,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
     DOMAIN,
+    RECOMMENDED_CHAT_MODEL_LABEL,
+    RECOMMENDED_CHAT_MODEL_VALUE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -142,8 +143,8 @@ async def google_generative_ai_config_option_schema(
 
     models: list[SelectOptionDict] = [
         SelectOptionDict(
-            label="Gemini 1.5 Flash (recommended)",
-            value="models/gemini-1.5-flash-latest",
+            label=RECOMMENDED_CHAT_MODEL_LABEL,
+            value=RECOMMENDED_CHAT_MODEL_VALUE,
         ),
     ]
     models.extend(
@@ -153,11 +154,7 @@ async def google_generative_ai_config_option_schema(
         )
         for api_model in sorted(api_models, key=lambda x: x.display_name)
         if (
-            api_model.name
-            not in (
-                "models/gemini-1.0-pro",  # duplicate of gemini-pro
-                "models/gemini-1.5-flash-latest",
-            )
+            api_model.name != "models/gemini-1.0-pro"  # duplicate of gemini-pro
             and "vision" not in api_model.name
             and "generateContent" in api_model.supported_generation_methods
         )
@@ -181,7 +178,7 @@ async def google_generative_ai_config_option_schema(
         vol.Optional(
             CONF_CHAT_MODEL,
             description={"suggested_value": options.get(CONF_CHAT_MODEL)},
-            default=DEFAULT_CHAT_MODEL,
+            default=RECOMMENDED_CHAT_MODEL_VALUE,
         ): SelectSelector(
             SelectSelectorConfig(
                 mode=SelectSelectorMode.DROPDOWN,

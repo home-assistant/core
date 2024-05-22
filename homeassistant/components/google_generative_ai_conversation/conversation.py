@@ -27,7 +27,6 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
-    DEFAULT_CHAT_MODEL,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
@@ -35,6 +34,8 @@ from .const import (
     DEFAULT_TOP_P,
     DOMAIN,
     LOGGER,
+    RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_CHAT_MODEL_VALUE,
 )
 
 # Max number of back and forth with the LLM to generate a response
@@ -157,8 +158,14 @@ class GoogleGenerativeAIConversationEntity(
             tools = [_format_tool(tool) for tool in llm_api.async_get_tools()]
 
         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
+        model_name = self.entry.options.get(
+            CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL_VALUE
+        )
+        if model_name == RECOMMENDED_CHAT_MODEL_VALUE:
+            model_name = RECOMMENDED_CHAT_MODEL
+
         model = genai.GenerativeModel(
-            model_name=self.entry.options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL),
+            model_name=model_name,
             generation_config={
                 "temperature": self.entry.options.get(
                     CONF_TEMPERATURE, DEFAULT_TEMPERATURE
