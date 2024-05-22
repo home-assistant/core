@@ -96,6 +96,8 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
             ),
         }
 
+    schema[vol.Optional(CONF_DEVICE_ID)] = selector.DeviceSelector()
+
     return schema
 
 
@@ -104,7 +106,6 @@ def options_schema(domain: str) -> vol.Schema:
     return vol.Schema(
         {
             vol.Required(CONF_STATE): selector.TemplateSelector(),
-            vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
         }
         | generate_schema(domain, "option"),
     )
@@ -116,7 +117,6 @@ def config_schema(domain: str) -> vol.Schema:
         {
             vol.Required(CONF_NAME): selector.TextSelector(),
             vol.Required(CONF_STATE): selector.TemplateSelector(),
-            vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
         }
         | generate_schema(domain, "config"),
     )
