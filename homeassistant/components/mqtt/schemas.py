@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -155,17 +156,6 @@ MQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
 MQTT_AVAILABILITY_SCHEMA = MQTT_AVAILABILITY_SINGLE_SCHEMA.extend(
     MQTT_AVAILABILITY_LIST_SCHEMA.schema
 )
-
-
-def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType:
-    """Validate that a device info entry has at least one identifying value."""
-    if value.get(CONF_IDENTIFIERS) or value.get(CONF_CONNECTIONS):
-        return value
-    raise vol.Invalid(
-        "Device must have at least one identifying value in "
-        "'identifiers' and/or 'connections'"
-    )
-
 
 MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
     cv.deprecated(CONF_DEPRECATED_VIA_HUB, CONF_VIA_DEVICE),

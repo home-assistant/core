@@ -10,6 +10,8 @@ import re
 import time
 from typing import TYPE_CHECKING, Any
 
+import voluptuous as vol
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant, callback
@@ -38,8 +40,8 @@ from .const import (
     DOMAIN,
     SUPPORTED_COMPONENTS,
 )
-from .models import DATA_MQTT, MqttOriginInfo, ReceiveMessage
-from .schemas import MQTT_ORIGIN_INFO_SCHEMA
+from .models import DATA_MQTT, MqttComponentConfig, MqttOriginInfo, ReceiveMessage
+from .schemas import DEVICE_DISCOVERY_SCHEMA, MQTT_ORIGIN_INFO_SCHEMA, SHARED_OPTIONS
 from .util import async_forward_entry_setup_and_setup_discovery
 
 ABBREVIATIONS_SET = set(ABBREVIATIONS)
@@ -178,7 +180,7 @@ def _generate_device_cleanup_config(
     hass: HomeAssistant, object_id: str, node_id: str | None
 ) -> dict[str, Any]:
     """Generate a cleanup message on device cleanup."""
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
     device_discover_id: str = f"{node_id} {object_id}" if node_id else object_id
     config: dict[str, Any] = {CONF_DEVICE: {}, CONF_COMPONENTS: {}}
     comp_config = config[CONF_COMPONENTS]
