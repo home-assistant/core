@@ -305,6 +305,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             minor_version = 2
             hass.config_entries.async_update_entry(config_entry, minor_version=2)
 
-    LOGGER.debug("Migration to version  %s.%s successful", version, minor_version)
+    LOGGER.debug("Migration to version %s.%s successful", version, minor_version)
 
     return True
