@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from functools import lru_cache
 import os
 from pathlib import Path
 import tempfile
@@ -216,6 +217,7 @@ def valid_birth_will(config: ConfigType) -> ConfigType:
     return config
 
 
+@lru_cache(maxsize=1)
 def get_mqtt_data(hass: HomeAssistant) -> MqttData:
     """Return typed MqttData from hass.data[DATA_MQTT]."""
     mqtt_data: MqttData = hass.data[DATA_MQTT]
