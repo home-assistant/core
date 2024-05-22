@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 import dataclasses
 from functools import partial, wraps
-from typing import Any, Concatenate, Literal, ParamSpec, cast
+from typing import Any, Concatenate, Literal, cast
 
 from aiohttp import web, web_exceptions, web_request
 import voluptuous as vol
@@ -75,7 +75,6 @@ from .config_validation import BITMASK_SCHEMA
 from .const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     DATA_CLIENT,
-    DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     USER_AGENT,
 )
@@ -84,8 +83,6 @@ from .helpers import (
     async_get_node_from_device_id,
     get_device_id,
 )
-
-_P = ParamSpec("_P")
 
 DATA_UNSUBSCRIBE = "unsubs"
 
@@ -285,7 +282,7 @@ async def _async_get_entry(
         )
         return None, None, None
 
-    client: Client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+    client: Client = entry.runtime_data[DATA_CLIENT]
 
     if client.driver is None:
         connection.send_error(
@@ -363,7 +360,7 @@ def async_get_node(
     return async_get_node_func
 
 
-def async_handle_failed_command(
+def async_handle_failed_command[**_P](
     orig_func: Callable[
         Concatenate[HomeAssistant, ActiveConnection, dict[str, Any], _P],
         Coroutine[Any, Any, None],
@@ -2210,7 +2207,7 @@ class FirmwareUploadView(HomeAssistantView):
         assert node.client.driver
 
         # Increase max payload
-        request._client_max_size = 1024 * 1024 * 10  # pylint: disable=protected-access
+        request._client_max_size = 1024 * 1024 * 10  # noqa: SLF001
 
         data = await request.post()
 
@@ -2339,7 +2336,7 @@ async def websocket_subscribe_controller_statistics(
     client: Client,
     driver: Driver,
 ) -> None:
-    """Subsribe to the statistics updates for a controller."""
+    """Subscribe to the statistics updates for a controller."""
 
     @callback
     def async_cleanup() -> None:
@@ -2434,7 +2431,7 @@ async def websocket_subscribe_node_statistics(
     msg: dict[str, Any],
     node: Node,
 ) -> None:
-    """Subsribe to the statistics updates for a node."""
+    """Subscribe to the statistics updates for a node."""
 
     @callback
     def async_cleanup() -> None:

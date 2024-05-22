@@ -17,6 +17,7 @@ APPLICATION_CREDENTIALS = [
     "lametric",
     "lyric",
     "microbees",
+    "monzo",
     "myuplink",
     "neato",
     "nest",

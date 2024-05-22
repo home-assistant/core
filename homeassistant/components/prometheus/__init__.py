@@ -6,7 +6,7 @@ from collections.abc import Callable
 from contextlib import suppress
 import logging
 import string
-from typing import Any, TypeVar, cast
+from typing import Any, cast
 
 from aiohttp import web
 import prometheus_client
@@ -49,7 +49,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import Event, HomeAssistant, State
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
 from homeassistant.helpers import entityfilter, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import (
@@ -57,12 +57,10 @@ from homeassistant.helpers.entity_registry import (
     EventEntityRegistryUpdatedData,
 )
 from homeassistant.helpers.entity_values import EntityValues
-from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import as_timestamp
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-_MetricBaseT = TypeVar("_MetricBaseT", bound=MetricWrapperBase)
 _LOGGER = logging.getLogger(__name__)
 
 API_ENDPOINT = "/api/prometheus"
@@ -258,7 +256,7 @@ class PrometheusMetrics:
         self, entity_id: str, friendly_name: str | None = None
     ) -> None:
         """Remove labelsets matching the given entity id from all metrics."""
-        for metric in self._metrics.values():
+        for metric in list(self._metrics.values()):
             for sample in cast(list[prometheus_client.Metric], metric.collect())[
                 0
             ].samples:
@@ -287,7 +285,7 @@ class PrometheusMetrics:
             except (ValueError, TypeError):
                 pass
 
-    def _metric(
+    def _metric[_MetricBaseT: MetricWrapperBase](
         self,
         metric: str,
         factory: type[_MetricBaseT],

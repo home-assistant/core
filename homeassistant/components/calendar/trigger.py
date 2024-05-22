@@ -88,8 +88,8 @@ class Timespan:
         return f"[{self.start}, {self.end})"
 
 
-EventFetcher = Callable[[Timespan], Awaitable[list[CalendarEvent]]]
-QueuedEventFetcher = Callable[[Timespan], Awaitable[list[QueuedCalendarEvent]]]
+type EventFetcher = Callable[[Timespan], Awaitable[list[CalendarEvent]]]
+type QueuedEventFetcher = Callable[[Timespan], Awaitable[list[QueuedCalendarEvent]]]
 
 
 def get_entity(hass: HomeAssistant, entity_id: str) -> CalendarEntity:
@@ -137,7 +137,7 @@ def queued_event_fetcher(
         # time span, but need to be triggered later when the end happens.
         results = []
         for trigger_time, event in zip(
-            map(get_trigger_time, active_events), active_events
+            map(get_trigger_time, active_events), active_events, strict=False
         ):
             if trigger_time not in offset_timespan:
                 continue

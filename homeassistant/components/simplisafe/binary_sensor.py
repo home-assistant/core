@@ -79,8 +79,10 @@ async def async_setup_entry(
             if sensor.type in SUPPORTED_BATTERY_SENSOR_TYPES:
                 sensors.append(BatteryBinarySensor(simplisafe, system, sensor))
 
-        for lock in system.locks.values():
-            sensors.append(BatteryBinarySensor(simplisafe, system, lock))
+        sensors.extend(
+            BatteryBinarySensor(simplisafe, system, lock)
+            for lock in system.locks.values()
+        )
 
     async_add_entities(sensors)
 

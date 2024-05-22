@@ -46,7 +46,7 @@ WS_NO_ADMIN_ENDPOINTS = re.compile(
     r"^(?:"
     r"|/ingress/(session|validate_session)"
     r"|/addons/[^/]+/info"
-    r")$" # noqa: ISC001
+    r")$"
 )
 # fmt: on
 
@@ -112,7 +112,7 @@ async def websocket_supervisor_api(
     if not connection.user.is_admin and not WS_NO_ADMIN_ENDPOINTS.match(
         msg[ATTR_ENDPOINT]
     ):
-        raise Unauthorized()
+        raise Unauthorized
     supervisor: HassIO = hass.data[DOMAIN]
 
     command = msg[ATTR_ENDPOINT]

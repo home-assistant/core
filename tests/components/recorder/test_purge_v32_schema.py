@@ -174,11 +174,14 @@ async def test_purge_old_states_encouters_database_corruption(
     sqlite3_exception = DatabaseError("statement", {}, [])
     sqlite3_exception.__cause__ = sqlite3.DatabaseError()
 
-    with patch(
-        "homeassistant.components.recorder.core.move_away_broken_database"
-    ) as move_away, patch(
-        "homeassistant.components.recorder.purge.purge_old_data",
-        side_effect=sqlite3_exception,
+    with (
+        patch(
+            "homeassistant.components.recorder.core.move_away_broken_database"
+        ) as move_away,
+        patch(
+            "homeassistant.components.recorder.purge.purge_old_data",
+            side_effect=sqlite3_exception,
+        ),
     ):
         await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, {"keep_days": 0})
         await hass.async_block_till_done()
@@ -207,12 +210,14 @@ async def test_purge_old_states_encounters_temporary_mysql_error(
     mysql_exception = OperationalError("statement", {}, [])
     mysql_exception.orig = Exception(1205, "retryable")
 
-    with patch(
-        "homeassistant.components.recorder.util.time.sleep"
-    ) as sleep_mock, patch(
-        "homeassistant.components.recorder.purge._purge_old_recorder_runs",
-        side_effect=[mysql_exception, None],
-    ), patch.object(instance.engine.dialect, "name", "mysql"):
+    with (
+        patch("homeassistant.components.recorder.util.time.sleep") as sleep_mock,
+        patch(
+            "homeassistant.components.recorder.purge._purge_old_recorder_runs",
+            side_effect=[mysql_exception, None],
+        ),
+        patch.object(instance.engine.dialect, "name", "mysql"),
+    ):
         await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, {"keep_days": 0})
         await hass.async_block_till_done()
         await async_wait_recording_done(hass)
@@ -349,7 +354,7 @@ async def test_purge_old_statistics_runs(
         assert statistics_runs.count() == 1
 
 
-@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
+@pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
 async def test_purge_method(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -469,7 +474,7 @@ async def test_purge_method(
     )
 
 
-@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
+@pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
 async def test_purge_edge_case(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
@@ -937,8 +942,9 @@ async def test_purge_many_old_events(
     await async_attach_db_engine(hass)
 
     old_events_count = 5
-    with patch.object(instance, "max_bind_vars", old_events_count), patch.object(
-        instance.database_engine, "max_bind_vars", old_events_count
+    with (
+        patch.object(instance, "max_bind_vars", old_events_count),
+        patch.object(instance.database_engine, "max_bind_vars", old_events_count),
     ):
         await _add_test_events(hass, old_events_count)
 

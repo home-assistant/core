@@ -13,12 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .common import (
-    DirectPanel,
-    ElmaxCoordinator,
-    build_direct_ssl_context,
-    get_direct_api_url,
-)
+from .common import DirectPanel, build_direct_ssl_context, get_direct_api_url
 from .const import (
     CONF_ELMAX_MODE,
     CONF_ELMAX_MODE_CLOUD,
@@ -35,6 +30,7 @@ from .const import (
     ELMAX_PLATFORMS,
     POLLING_SECONDS,
 )
+from .coordinator import ElmaxCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         client, panel = await _load_elmax_panel_client(entry)
     except ElmaxBadLoginError as err:
-        raise ConfigEntryAuthFailed() from err
+        raise ConfigEntryAuthFailed from err
 
     # Create the API client object and attempt a login, so that we immediately know
     # if there is something wrong with user credentials

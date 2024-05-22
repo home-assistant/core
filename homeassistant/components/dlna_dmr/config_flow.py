@@ -40,7 +40,7 @@ from .data import get_domain_data
 
 LOGGER = logging.getLogger(__name__)
 
-FlowInput = Mapping[str, Any] | None
+type FlowInput = Mapping[str, Any] | None
 
 
 class ConnectError(IntegrationError):
@@ -339,11 +339,7 @@ class DlnaDmrFlowHandler(ConfigFlow, domain=DOMAIN):
             entry.unique_id
             for entry in self._async_current_entries(include_ignore=False)
         }
-        discoveries = [
-            disc for disc in discoveries if disc.ssdp_udn not in current_unique_ids
-        ]
-
-        return discoveries
+        return [disc for disc in discoveries if disc.ssdp_udn not in current_unique_ids]
 
 
 class DlnaDmrOptionsFlowHandler(OptionsFlow):

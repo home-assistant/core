@@ -12,7 +12,7 @@ from itertools import islice
 import logging
 import os
 import time
-from typing import TYPE_CHECKING, Any, Concatenate, NoReturn, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, NoReturn
 
 from awesomeversion import (
     AwesomeVersion,
@@ -60,9 +60,6 @@ if TYPE_CHECKING:
     from sqlite3.dbapi2 import Cursor as SQLiteCursor
 
     from . import Recorder
-
-_RecorderT = TypeVar("_RecorderT", bound="Recorder")
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,8 +139,8 @@ def session_scope(
         if session.get_transaction() and not read_only:
             need_rollback = True
             session.commit()
-    except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.exception("Error executing query: %s", err)
+    except Exception as err:
+        _LOGGER.exception("Error executing query")
         if need_rollback:
             session.rollback()
         if not exception_filter or not exception_filter(err):
@@ -160,7 +157,7 @@ def execute(
     This method also retries a few times in the case of stale connections.
     """
     debug = _LOGGER.isEnabledFor(logging.DEBUG)
-    for tryno in range(0, RETRIES):
+    for tryno in range(RETRIES):
         try:
             if debug:
                 timer_start = time.perf_counter()
@@ -192,13 +189,14 @@ def execute(
                         elapsed,
                     )
 
-            return result
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
 
             if tryno == RETRIES - 1:
                 raise
             time.sleep(QUERY_RETRY_WAIT)
+        else:
+            return result
 
     # Unreachable
     raise RuntimeError  # pragma: no cover
@@ -627,25 +625,27 @@ def _is_retryable_error(instance: Recorder, err: OperationalError) -> bool:
     )
 
 
-_FuncType = Callable[Concatenate[_RecorderT, _P], bool]
+type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], _R]
 
 
-def retryable_database_job(
+def retryable_database_job[_RecorderT: Recorder, **_P](
     description: str,
-) -> Callable[[_FuncType[_RecorderT, _P]], _FuncType[_RecorderT, _P]]:
+) -> Callable[[_FuncType[_RecorderT, _P, bool]], _FuncType[_RecorderT, _P, bool]]:
     """Try to execute a database job.
 
     The job should return True if it finished, and False if it needs to be rescheduled.
     """
 
-    def decorator(job: _FuncType[_RecorderT, _P]) -> _FuncType[_RecorderT, _P]:
+    def decorator(
+        job: _FuncType[_RecorderT, _P, bool],
+    ) -> _FuncType[_RecorderT, _P, bool]:
         @functools.wraps(job)
         def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> bool:
             try:
                 return job(instance, *args, **kwargs)
             except OperationalError as err:
                 if _is_retryable_error(instance, err):
-                    assert isinstance(err.orig, BaseException)
+                    assert isinstance(err.orig, BaseException)  # noqa: PT017
                     _LOGGER.info(
                         "%s; %s not completed, retrying", err.orig.args[1], description
                     )
@@ -663,12 +663,9 @@ def retryable_database_job(
     return decorator
 
 
-_WrappedFuncType = Callable[Concatenate[_RecorderT, _P], None]
-
-
-def database_job_retry_wrapper(
+def database_job_retry_wrapper[_RecorderT: Recorder, **_P](
     description: str, attempts: int = 5
-) -> Callable[[_WrappedFuncType[_RecorderT, _P]], _WrappedFuncType[_RecorderT, _P]]:
+) -> Callable[[_FuncType[_RecorderT, _P, None]], _FuncType[_RecorderT, _P, None]]:
     """Try to execute a database job multiple times.
 
     This wrapper handles InnoDB deadlocks and lock timeouts.
@@ -678,25 +675,26 @@ def database_job_retry_wrapper(
     """
 
     def decorator(
-        job: _WrappedFuncType[_RecorderT, _P],
-    ) -> _WrappedFuncType[_RecorderT, _P]:
+        job: _FuncType[_RecorderT, _P, None],
+    ) -> _FuncType[_RecorderT, _P, None]:
         @functools.wraps(job)
         def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> None:
             for attempt in range(attempts):
                 try:
                     job(instance, *args, **kwargs)
-                    return
                 except OperationalError as err:
                     if attempt == attempts - 1 or not _is_retryable_error(
                         instance, err
                     ):
                         raise
-                    assert isinstance(err.orig, BaseException)
+                    assert isinstance(err.orig, BaseException)  # noqa: PT017
                     _LOGGER.info(
                         "%s; %s failed, retrying", err.orig.args[1], description
                     )
                     time.sleep(instance.db_retry_wait)
                     # Failed with retryable error
+                else:
+                    return
 
         return wrapper
 

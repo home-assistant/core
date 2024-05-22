@@ -115,7 +115,7 @@ class ConditionProtocol(Protocol):
         """Evaluate state based on configuration."""
 
 
-ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool | None]
+type ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool | None]
 
 
 def condition_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:
@@ -164,7 +164,7 @@ def trace_condition(variables: TemplateVarsType) -> Generator[TraceElement, None
         yield trace_element
     except Exception as ex:
         trace_element.set_error(ex)
-        raise ex
+        raise
     finally:
         if should_pop:
             trace_stack_pop(trace_stack_cv)
@@ -227,16 +227,25 @@ async def async_from_config(
         factory = platform.async_condition_from_config
 
     # Check if condition is not enabled
-    if not config.get(CONF_ENABLED, True):
+    if CONF_ENABLED in config:
+        enabled = config[CONF_ENABLED]
+        if isinstance(enabled, Template):
+            try:
+                enabled = enabled.async_render(limited=True)
+            except TemplateError as err:
+                raise HomeAssistantError(
+                    f"Error rendering condition enabled template: {err}"
+                ) from err
+        if not enabled:
 
-        @trace_condition_function
-        def disabled_condition(
-            hass: HomeAssistant, variables: TemplateVarsType = None
-        ) -> bool | None:
-            """Condition not enabled, will act as if it didn't exist."""
-            return None
+            @trace_condition_function
+            def disabled_condition(
+                hass: HomeAssistant, variables: TemplateVarsType = None
+            ) -> bool | None:
+                """Condition not enabled, will act as if it didn't exist."""
+                return None
 
-        return disabled_condition
+            return disabled_condition
 
     # Check for partials to properly determine if coroutine function
     check_factory = factory
@@ -362,7 +371,7 @@ def numeric_state(
     ).result()
 
 
-def async_numeric_state(  # noqa: C901
+def async_numeric_state(
     hass: HomeAssistant,
     entity: None | str | State,
     below: float | str | None = None,

@@ -315,9 +315,9 @@ async def test_api_ingress_panels(
 @pytest.mark.parametrize(
     ("api_call", "method", "payload"),
     [
-        ["retrieve_discovery_messages", "GET", None],
-        ["refresh_updates", "POST", None],
-        ["update_diagnostics", "POST", True],
+        ("retrieve_discovery_messages", "GET", None),
+        ("refresh_updates", "POST", None),
+        ("update_diagnostics", "POST", True),
     ],
 )
 async def test_api_headers(

@@ -55,7 +55,6 @@ class LitterRobotHub:
                 load_robots=load_robots,
                 subscribe_for_updates=subscribe_for_updates,
             )
-            return
         except LitterRobotLoginException as ex:
             raise ConfigEntryAuthFailed("Invalid credentials") from ex
         except LitterRobotException as ex:

@@ -1,5 +1,10 @@
 {
   "title": "Notifications",
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::notify::title%]"
+    }
+  },
   "services": {
     "notify": {
       "name": "Send a notification",
@@ -23,6 +28,20 @@
         }
       }
     },
+    "send_message": {
+      "name": "Send a notification message",
+      "description": "Sends a notification message.",
+      "fields": {
+        "message": {
+          "name": "Message",
+          "description": "Your notification message."
+        },
+        "title": {
+          "name": "Title",
+          "description": "Title for your notification message."
+        }
+      }
+    },
     "persistent_notification": {
       "name": "Send a persistent notification",
       "description": "Sends a notification that is visible in the **Notifications** panel.",
@@ -38,6 +57,19 @@
         "data": {
           "name": "Data",
           "description": "Some integrations provide extended functionality. For information on how to use _data_, refer to the integration documentation.."
+        }
+      }
+    }
+  },
+  "issues": {
+    "migrate_notify": {
+      "title": "Migration of {integration_title} notify service",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The {integration_title} `notify` service(s) are migrated. A new `notify` entity is available now to replace each legacy `notify` service.\n\nUpdate any automations to use the new `notify.send_message` service exposed with this new entity. When this is done, fix this issue and restart Home Assistant.",
+            "title": "Migrate legacy {integration_title} notify service for domain `{domain}`"
+          }
         }
       }
     }

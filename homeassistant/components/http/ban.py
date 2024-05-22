@@ -10,7 +10,7 @@ from http import HTTPStatus
 from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 from socket import gethostbyaddr, herror
-from typing import Any, Concatenate, Final, ParamSpec, TypeVar
+from typing import Any, Concatenate, Final
 
 from aiohttp.web import (
     AppKey,
@@ -31,9 +31,6 @@ from homeassistant.util import dt as dt_util, yaml
 
 from .const import KEY_HASS
 from .view import HomeAssistantView
-
-_HassViewT = TypeVar("_HassViewT", bound=HomeAssistantView)
-_P = ParamSpec("_P")
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -82,7 +79,7 @@ async def ban_middleware(
         # Verify if IP is not banned
         ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
         if ip_address_ in ip_bans_lookup:
-            raise HTTPForbidden()
+            raise HTTPForbidden
 
     try:
         return await handler(request)
@@ -91,7 +88,7 @@ async def ban_middleware(
         raise
 
 
-def log_invalid_auth(
+def log_invalid_auth[_HassViewT: HomeAssistantView, **_P](
     func: Callable[Concatenate[_HassViewT, Request, _P], Awaitable[Response]],
 ) -> Callable[Concatenate[_HassViewT, Request, _P], Coroutine[Any, Any, Response]]:
     """Decorate function to handle invalid auth or failed login attempts."""
@@ -116,7 +113,8 @@ async def process_wrong_login(request: Request) -> None:
     """
     hass = request.app[KEY_HASS]
 
-    remote_addr = ip_address(request.remote)  # type: ignore[arg-type]
+    assert request.remote
+    remote_addr = ip_address(request.remote)
     remote_host = request.remote
     with suppress(herror):
         remote_host, _, _ = await hass.async_add_executor_job(

@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.area_registry import AreaEntry, async_get
+from homeassistant.helpers.area_registry import async_get
 
 
 @callback
@@ -32,7 +32,7 @@ def websocket_list_areas(
     registry = async_get(hass)
     connection.send_result(
         msg["id"],
-        [_entry_dict(entry) for entry in registry.async_list_areas()],
+        [entry.json_fragment for entry in registry.async_list_areas()],
     )
 
 
@@ -40,7 +40,9 @@ def websocket_list_areas(
     {
         vol.Required("type"): "config/area_registry/create",
         vol.Optional("aliases"): list,
+        vol.Optional("floor_id"): str,
         vol.Optional("icon"): str,
+        vol.Optional("labels"): [str],
         vol.Required("name"): str,
         vol.Optional("picture"): vol.Any(str, None),
     }
@@ -63,12 +65,16 @@ def websocket_create_area(
         # Convert aliases to a set
         data["aliases"] = set(data["aliases"])
 
+    if "labels" in data:
+        # Convert labels to a set
+        data["labels"] = set(data["labels"])
+
     try:
         entry = registry.async_create(**data)
     except ValueError as err:
         connection.send_error(msg["id"], "invalid_info", str(err))
     else:
-        connection.send_result(msg["id"], _entry_dict(entry))
+        connection.send_result(msg["id"], entry.json_fragment)
 
 
 @websocket_api.websocket_command(
@@ -100,7 +106,9 @@ def websocket_delete_area(
         vol.Required("type"): "config/area_registry/update",
         vol.Optional("aliases"): list,
         vol.Required("area_id"): str,
+        vol.Optional("floor_id"): vol.Any(str, None),
         vol.Optional("icon"): vol.Any(str, None),
+        vol.Optional("labels"): [str],
         vol.Optional("name"): str,
         vol.Optional("picture"): vol.Any(str, None),
     }
@@ -123,21 +131,13 @@ def websocket_update_area(
         # Convert aliases to a set
         data["aliases"] = set(data["aliases"])
 
+    if "labels" in data:
+        # Convert labels to a set
+        data["labels"] = set(data["labels"])
+
     try:
         entry = registry.async_update(**data)
     except ValueError as err:
         connection.send_error(msg["id"], "invalid_info", str(err))
     else:
-        connection.send_result(msg["id"], _entry_dict(entry))
-
-
-@callback
-def _entry_dict(entry: AreaEntry) -> dict[str, Any]:
-    """Convert entry to API format."""
-    return {
-        "aliases": list(entry.aliases),
-        "area_id": entry.id,
-        "icon": entry.icon,
-        "name": entry.name,
-        "picture": entry.picture,
-    }
+        connection.send_result(msg["id"], entry.json_fragment)

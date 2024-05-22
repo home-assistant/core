@@ -69,6 +69,8 @@ from .discovery import (
 )
 from .models import ELKM1Data
 
+type ElkM1ConfigEntry = ConfigEntry[ELKM1Data]
+
 SYNC_TIMEOUT = 120
 
 _LOGGER = logging.getLogger(__name__)
@@ -181,7 +183,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Elk M1 platform."""
-    hass.data.setdefault(DOMAIN, {})
     _create_elk_services(hass)
 
     async def _async_discovery(*_: Any) -> None:
@@ -235,7 +236,7 @@ def _async_find_matching_config_entry(
     return None
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bool:
     """Set up Elk-M1 Control from a config entry."""
     conf: MappingProxyType[str, Any] = entry.data
 
@@ -308,7 +309,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config["temperature_unit"] = temperature_unit
     prefix: str = conf[CONF_PREFIX]
     auto_configure: bool = conf[CONF_AUTO_CONFIGURE]
-    hass.data[DOMAIN][entry.entry_id] = ELKM1Data(
+    entry.runtime_data = ELKM1Data(
         elk=elk,
         prefix=prefix,
         mac=entry.unique_id,
@@ -331,24 +332,20 @@ def _included(ranges: list[tuple[int, int]], set_to: bool, values: list[bool]) -
 
 def _find_elk_by_prefix(hass: HomeAssistant, prefix: str) -> Elk | None:
     """Search all config entries for a given prefix."""
-    all_elk: dict[str, ELKM1Data] = hass.data[DOMAIN]
-    for elk_data in all_elk.values():
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if not entry.runtime_data:
+            continue
+        elk_data: ELKM1Data = entry.runtime_data
         if elk_data.prefix == prefix:
             return elk_data.elk
     return None
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    all_elk: dict[str, ELKM1Data] = hass.data[DOMAIN]
-
     # disconnect cleanly
-    all_elk[entry.entry_id].elk.disconnect()
-
-    if unload_ok:
-        all_elk.pop(entry.entry_id)
-
+    entry.runtime_data.elk.disconnect()
     return unload_ok
 
 

@@ -220,6 +220,8 @@ DISCOVERY_KEY = "zha_discovery_info"
 
 DOMAIN = "zha"
 
+ENTITY_METADATA = "entity_metadata"
+
 GROUP_ID = "group_id"
 GROUP_IDS = "group_ids"
 GROUP_NAME = "group_name"
@@ -233,8 +235,6 @@ PRESET_SCHEDULE = "Schedule"
 PRESET_COMPLEX = "Complex"
 PRESET_TEMP_MANUAL = "Temporary manual"
 
-QUIRK_METADATA = "quirk_metadata"
-
 ZCL_INIT_ATTRS = "ZCL_INIT_ATTRS"
 
 ZHA_ALARM_OPTIONS = "zha_alarm_options"
@@ -245,7 +245,7 @@ ZHA_CONFIG_SCHEMAS = {
     ZHA_ALARM_OPTIONS: CONF_ZHA_ALARM_SCHEMA,
 }
 
-_ControllerClsType = type[zigpy.application.ControllerApplication]
+type _ControllerClsType = type[zigpy.application.ControllerApplication]
 
 
 class RadioType(enum.Enum):

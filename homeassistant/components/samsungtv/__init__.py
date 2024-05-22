@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 import getmac
 
 from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -53,6 +53,8 @@ from .const import (
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+
+SamsungTVConfigEntry = ConfigEntry[SamsungTVBridge]
 
 
 @callback
@@ -123,10 +125,8 @@ async def _async_update_ssdp_locations(hass: HomeAssistant, entry: ConfigEntry) 
         hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) -> bool:
     """Set up the Samsung TV platform."""
-    hass.data.setdefault(DOMAIN, {})
-
     # Initialize bridge
     if entry.data.get(CONF_METHOD) == METHOD_ENCRYPTED_WEBSOCKET:
         if not entry.data.get(CONF_TOKEN) or not entry.data.get(CONF_SESSION_ID):
@@ -134,6 +134,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "Token and session id are required in encrypted mode"
             )
     bridge = await _async_create_bridge_with_updated_data(hass, entry)
+
+    @callback
+    def _access_denied() -> None:
+        """Access denied callback."""
+        LOGGER.debug("Access denied in getting remote object")
+        hass.create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={
+                    "source": SOURCE_REAUTH,
+                    "entry_id": entry.entry_id,
+                },
+                data=entry.data,
+            )
+        )
+
+    bridge.register_reauth_callback(_access_denied)
 
     # Ensure updates get saved against the config_entry
     @callback
@@ -143,7 +160,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     bridge.register_update_config_entry_callback(_update_config_entry)
 
-    async def stop_bridge(event: Event) -> None:
+    async def stop_bridge(event: Event | None = None) -> None:
         """Stop SamsungTV bridge connection."""
         LOGGER.debug("Stopping SamsungTVBridge %s", bridge.host)
         await bridge.async_close_remote()
@@ -151,6 +168,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
     )
+    entry.async_on_unload(stop_bridge)
 
     await _async_update_ssdp_locations(hass, entry)
 
@@ -161,7 +179,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(debounced_reloader.async_shutdown)
     entry.async_on_unload(entry.add_update_listener(debounced_reloader.async_call))
 
-    hass.data[DOMAIN][entry.entry_id] = bridge
+    entry.runtime_data = bridge
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -250,14 +268,9 @@ async def _async_create_bridge_with_updated_data(
     return bridge
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        bridge: SamsungTVBridge = hass.data[DOMAIN][entry.entry_id]
-        LOGGER.debug("Stopping SamsungTVBridge %s", bridge.host)
-        await bridge.async_close_remote()
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:

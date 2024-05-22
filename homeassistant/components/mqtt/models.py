@@ -7,7 +7,6 @@ import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
-import datetime as dt
 from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict
@@ -45,7 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_THIS = "this"
 
-PublishPayloadType = str | bytes | int | float | None
+type PublishPayloadType = str | bytes | int | float | None
 
 
 @dataclass
@@ -58,7 +57,7 @@ class PublishMessage:
     retain: bool
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class ReceiveMessage:
     """MQTT Message received."""
 
@@ -67,11 +66,11 @@ class ReceiveMessage:
     qos: int
     retain: bool
     subscribed_topic: str
-    timestamp: dt.datetime
+    timestamp: float
 
 
-AsyncMessageCallbackType = Callable[[ReceiveMessage], Coroutine[Any, Any, None]]
-MessageCallbackType = Callable[[ReceiveMessage], None]
+type AsyncMessageCallbackType = Callable[[ReceiveMessage], Coroutine[Any, Any, None]]
+type MessageCallbackType = Callable[[ReceiveMessage], None]
 
 
 class SubscriptionDebugInfo(TypedDict):
@@ -115,6 +114,8 @@ class MqttOriginInfo(TypedDict, total=False):
 
 class MqttCommandTemplateException(ServiceValidationError):
     """Handle MqttCommandTemplate exceptions."""
+
+    _message: str
 
     def __init__(
         self,
@@ -226,6 +227,8 @@ class MqttCommandTemplate:
 
 class MqttValueTemplateException(TemplateError):
     """Handle MqttValueTemplate exceptions."""
+
+    _message: str
 
     def __init__(
         self,
@@ -372,7 +375,7 @@ class EntityTopicState:
             _, entity = self.subscribe_calls.popitem()
             try:
                 entity.async_write_ha_state()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception(
                     "Exception raised when updating state of %s, topic: "
                     "'%s' with payload: %s",

@@ -57,4 +57,6 @@ class WebminUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.unique_id = self.config_entry.entry_id
 
     async def _async_update_data(self) -> dict[str, Any]:
-        return await self.instance.update()
+        data = await self.instance.update()
+        data["disk_fs"] = {item["dir"]: item for item in data["disk_fs"]}
+        return data

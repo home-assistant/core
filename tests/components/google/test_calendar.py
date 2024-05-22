@@ -79,7 +79,9 @@ class Client:
         self.client = client
         self.id = 0
 
-    async def cmd(self, cmd: str, payload: dict[str, Any] = None) -> dict[str, Any]:
+    async def cmd(
+        self, cmd: str, payload: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Send a command and receive the json result."""
         self.id += 1
         await self.client.send_json(
@@ -93,7 +95,7 @@ class Client:
         assert resp.get("id") == self.id
         return resp
 
-    async def cmd_result(self, cmd: str, payload: dict[str, Any] = None) -> Any:
+    async def cmd_result(self, cmd: str, payload: dict[str, Any] | None = None) -> Any:
         """Send a command and parse the result."""
         resp = await self.cmd(cmd, payload)
         assert resp.get("success")
@@ -101,7 +103,7 @@ class Client:
         return resp.get("result")
 
 
-ClientFixture = Callable[[], Awaitable[Client]]
+type ClientFixture = Callable[[], Awaitable[Client]]
 
 
 @pytest.fixture
@@ -472,7 +474,7 @@ async def test_http_api_event(
     component_setup,
 ) -> None:
     """Test querying the API and fetching events from the server."""
-    hass.config.set_time_zone("Asia/Baghdad")
+    await hass.config.async_set_time_zone("Asia/Baghdad")
     event = {
         **TEST_EVENT,
         **upcoming(),
@@ -786,7 +788,7 @@ async def test_all_day_iter_order(
     event_order,
 ) -> None:
     """Test the sort order of an all day events depending on the time zone."""
-    hass.config.set_time_zone(time_zone)
+    await hass.config.async_set_time_zone(time_zone)
     mock_events_list_items(
         [
             {

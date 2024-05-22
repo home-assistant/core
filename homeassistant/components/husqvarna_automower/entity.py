@@ -3,7 +3,6 @@
 import logging
 
 from aioautomower.model import MowerAttributes
-from aioautomower.utils import structure_token
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -12,8 +11,6 @@ from . import AutomowerDataUpdateCoordinator
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-HUSQVARNA_URL = "https://developer.husqvarnagroup.cloud"
 
 
 class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
@@ -29,10 +26,7 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
         """Initialize AutomowerEntity."""
         super().__init__(coordinator)
         self.mower_id = mower_id
-        entry = coordinator.config_entry
-        structured_token = structure_token(entry.data["token"]["access_token"])
         self._attr_device_info = DeviceInfo(
-            configuration_url=f"{HUSQVARNA_URL}/applications/{structured_token.client_id}",
             identifiers={(DOMAIN, mower_id)},
             manufacturer="Husqvarna",
             model=self.mower_attributes.system.model,

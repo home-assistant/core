@@ -52,12 +52,15 @@ async def test_binary_sensor(
     mock_config_entry = request.getfixturevalue(mock_config_entry)
     mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        f"homeassistant.components.minecraft_server.api.{server.__name__}.{lookup_function_name}",
-        return_value=server(host=TEST_HOST, port=TEST_PORT),
-    ), patch(
-        f"homeassistant.components.minecraft_server.api.{server.__name__}.async_status",
-        return_value=status_response,
+    with (
+        patch(
+            f"homeassistant.components.minecraft_server.api.{server.__name__}.{lookup_function_name}",
+            return_value=server(host=TEST_HOST, port=TEST_PORT),
+        ),
+        patch(
+            f"homeassistant.components.minecraft_server.api.{server.__name__}.async_status",
+            return_value=status_response,
+        ),
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -95,12 +98,15 @@ async def test_binary_sensor_update(
     mock_config_entry = request.getfixturevalue(mock_config_entry)
     mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        f"homeassistant.components.minecraft_server.api.{server.__name__}.{lookup_function_name}",
-        return_value=server(host=TEST_HOST, port=TEST_PORT),
-    ), patch(
-        f"homeassistant.components.minecraft_server.api.{server.__name__}.async_status",
-        return_value=status_response,
+    with (
+        patch(
+            f"homeassistant.components.minecraft_server.api.{server.__name__}.{lookup_function_name}",
+            return_value=server(host=TEST_HOST, port=TEST_PORT),
+        ),
+        patch(
+            f"homeassistant.components.minecraft_server.api.{server.__name__}.async_status",
+            return_value=status_response,
+        ),
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -140,12 +146,15 @@ async def test_binary_sensor_update_failure(
     mock_config_entry = request.getfixturevalue(mock_config_entry)
     mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        f"homeassistant.components.minecraft_server.api.{server.__name__}.{lookup_function_name}",
-        return_value=server(host=TEST_HOST, port=TEST_PORT),
-    ), patch(
-        f"homeassistant.components.minecraft_server.api.{server.__name__}.async_status",
-        return_value=status_response,
+    with (
+        patch(
+            f"homeassistant.components.minecraft_server.api.{server.__name__}.{lookup_function_name}",
+            return_value=server(host=TEST_HOST, port=TEST_PORT),
+        ),
+        patch(
+            f"homeassistant.components.minecraft_server.api.{server.__name__}.async_status",
+            return_value=status_response,
+        ),
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

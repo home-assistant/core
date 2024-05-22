@@ -206,7 +206,7 @@ class WasherDryerClass(SensorEntity):
         self._wd.register_attr_callback(self.async_write_ha_state)
 
     async def async_will_remove_from_hass(self) -> None:
-        """Close Whrilpool Appliance sockets before removing."""
+        """Close Whirlpool Appliance sockets before removing."""
         self._wd.unregister_attr_callback(self.async_write_ha_state)
 
     @property

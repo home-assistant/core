@@ -8,14 +8,10 @@ from enum import Enum
 import functools
 import inspect
 import logging
-from typing import Any, NamedTuple, ParamSpec, TypeVar
-
-_ObjectT = TypeVar("_ObjectT", bound=object)
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
+from typing import Any, NamedTuple
 
 
-def deprecated_substitute(
+def deprecated_substitute[_ObjectT: object](
     substitute_name: str,
 ) -> Callable[[Callable[[_ObjectT], Any]], Callable[[_ObjectT], Any]]:
     """Help migrate properties to new names.
@@ -92,7 +88,7 @@ def get_deprecated(
     return config.get(new_name, default)
 
 
-def deprecated_class(
+def deprecated_class[**_P, _R](
     replacement: str, *, breaks_in_ha_version: str | None = None
 ) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
     """Mark class as deprecated and provide a replacement class to be used instead.
@@ -117,7 +113,7 @@ def deprecated_class(
     return deprecated_decorator
 
 
-def deprecated_function(
+def deprecated_function[**_P, _R](
     replacement: str, *, breaks_in_ha_version: str | None = None
 ) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
     """Mark function as deprecated and provide a replacement to be used instead.
@@ -243,6 +239,14 @@ class DeprecatedConstantEnum(NamedTuple):
     breaks_in_ha_version: str | None
 
 
+class DeprecatedAlias(NamedTuple):
+    """Deprecated alias."""
+
+    value: Any
+    replacement: str
+    breaks_in_ha_version: str | None
+
+
 _PREFIX_DEPRECATED = "_DEPRECATED_"
 
 
@@ -254,6 +258,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
     """
     module_name = module_globals.get("__name__")
     value = replacement = None
+    description = "constant"
     if (deprecated_const := module_globals.get(_PREFIX_DEPRECATED + name)) is None:
         raise AttributeError(f"Module {module_name!r} has no attribute {name!r}")
     if isinstance(deprecated_const, DeprecatedConstant):
@@ -265,6 +270,11 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
         replacement = (
             f"{deprecated_const.enum.__class__.__name__}.{deprecated_const.enum.name}"
         )
+        breaks_in_ha_version = deprecated_const.breaks_in_ha_version
+    elif isinstance(deprecated_const, DeprecatedAlias):
+        description = "alias"
+        value = deprecated_const.value
+        replacement = deprecated_const.replacement
         breaks_in_ha_version = deprecated_const.breaks_in_ha_version
 
     if value is None or replacement is None:
@@ -278,13 +288,13 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
         # specifies that __getattr__ should raise AttributeError if the attribute is not
         # found.
         # https://peps.python.org/pep-0562/#specification
-        raise AttributeError(msg)  # noqa: TRY004
+        raise AttributeError(msg)
 
     _print_deprecation_warning_internal(
         name,
         module_name or __name__,
         replacement,
-        "constant",
+        description,
         "used",
         breaks_in_ha_version,
         log_when_no_integration_is_found=False,

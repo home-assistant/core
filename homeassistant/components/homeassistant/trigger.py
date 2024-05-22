@@ -1,9 +1,10 @@
 """Home Assistant trigger dispatcher."""
 
-import importlib
+from typing import cast
 
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.trigger import (
     TriggerActionType,
     TriggerInfo,
@@ -11,26 +12,15 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-DATA_TRIGGER_PLATFORMS = "homeassistant_trigger_platforms"
-
-
-def _get_trigger_platform(platform_name: str) -> TriggerProtocol:
-    """Get trigger platform."""
-    return importlib.import_module(f"..triggers.{platform_name}", __name__)
-
 
 async def _async_get_trigger_platform(
     hass: HomeAssistant, platform_name: str
 ) -> TriggerProtocol:
     """Get trigger platform from cache or import it."""
-    cache: dict[str, TriggerProtocol] = hass.data.setdefault(DATA_TRIGGER_PLATFORMS, {})
-    if platform := cache.get(platform_name):
-        return platform
-    platform = await hass.async_add_import_executor_job(
-        _get_trigger_platform, platform_name
+    platform = await async_import_module(
+        hass, f"homeassistant.components.homeassistant.triggers.{platform_name}"
     )
-    cache[platform_name] = platform
-    return platform
+    return cast(TriggerProtocol, platform)
 
 
 async def async_validate_trigger_config(

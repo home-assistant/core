@@ -36,7 +36,7 @@ async def get_error_log(hass_ws_client):
 def _generate_and_log_exception(exception, log):
     try:
         raise Exception(exception)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception(log)
 
 
@@ -376,11 +376,14 @@ async def async_log_error_from_test_path(hass, path, watcher):
     call_path_frame = get_frame(call_path, path_frame)
     logger_frame = get_frame("venv_path/logging/log.py", call_path_frame)
 
-    with patch.object(
-        _LOGGER, "findCaller", MagicMock(return_value=(call_path, 0, None, None))
-    ), patch(
-        "homeassistant.components.system_log.sys._getframe",
-        return_value=logger_frame,
+    with (
+        patch.object(
+            _LOGGER, "findCaller", MagicMock(return_value=(call_path, 0, None, None))
+        ),
+        patch(
+            "homeassistant.components.system_log.sys._getframe",
+            return_value=logger_frame,
+        ),
     ):
         wait_empty = watcher.add_watcher("error message")
         _LOGGER.error("error message")
@@ -468,10 +471,35 @@ async def test__figure_out_source(hass: HomeAssistant) -> None:
     file, line_no = system_log._figure_out_source(
         mock_record,
         paths_re,
-        traceback.extract_tb(exc_info[2]),
+        list(traceback.walk_tb(exc_info[2])),
     )
     assert file == __file__
     assert line_no != 5
 
     entry = system_log.LogEntry(mock_record, paths_re, figure_out_source=False)
     assert entry.source == ("figure_out_source is False", 5)
+
+
+async def test_formatting_exception(hass: HomeAssistant) -> None:
+    """Test that exceptions are formatted correctly."""
+    try:
+        raise ValueError("test")
+    except ValueError as ex:
+        exc_info = (type(ex), ex, ex.__traceback__)
+    mock_record = MagicMock(
+        pathname="figure_out_source is False",
+        lineno=5,
+        exc_info=exc_info,
+        exc_text=None,
+    )
+    regex_str = f"({__file__})"
+    paths_re = re.compile(regex_str)
+
+    mock_formatter = MagicMock(
+        formatException=MagicMock(return_value="formatted exception")
+    )
+    entry = system_log.LogEntry(
+        mock_record, paths_re, formatter=mock_formatter, figure_out_source=False
+    )
+    assert entry.exception == "formatted exception"
+    assert mock_record.exc_text == "formatted exception"

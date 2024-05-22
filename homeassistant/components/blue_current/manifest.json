@@ -5,5 +5,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/blue_current",
   "iot_class": "cloud_push",
-  "requirements": ["bluecurrent-api==1.0.6"]
+  "loggers": ["bluecurrent_api"],
+  "requirements": ["bluecurrent-api==1.2.3"]
 }
