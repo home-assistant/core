@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Mapping
 from enum import StrEnum
 from functools import cached_property, lru_cache, partial
@@ -513,19 +514,25 @@ class ActiveDeviceRegistryItems(DeviceRegistryItems[DeviceEntry]):
         - label -> dict[key, True]
         """
         super().__init__()
-        self._area_id_index: dict[str, dict[str, Literal[True]]] = {}
-        self._config_entry_id_index: dict[str, dict[str, Literal[True]]] = {}
-        self._labels_index: dict[str, dict[str, Literal[True]]] = {}
+        self._area_id_index: defaultdict[str, dict[str, Literal[True]]] = defaultdict(
+            dict
+        )
+        self._config_entry_id_index: defaultdict[str, dict[str, Literal[True]]] = (
+            defaultdict(dict)
+        )
+        self._labels_index: defaultdict[str, dict[str, Literal[True]]] = defaultdict(
+            dict
+        )
 
     def _index_entry(self, key: str, entry: DeviceEntry) -> None:
         """Index an entry."""
         super()._index_entry(key, entry)
         if (area_id := entry.area_id) is not None:
-            self._area_id_index.setdefault(area_id, {})[key] = True
+            self._area_id_index[area_id][key] = True
         for label in entry.labels:
-            self._labels_index.setdefault(label, {})[key] = True
+            self._labels_index[label][key] = True
         for config_entry_id in entry.config_entries:
-            self._config_entry_id_index.setdefault(config_entry_id, {})[key] = True
+            self._config_entry_id_index[config_entry_id][key] = True
 
     def _unindex_entry(
         self, key: str, replacement_entry: DeviceEntry | None = None
