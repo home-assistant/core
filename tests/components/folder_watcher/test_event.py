@@ -24,6 +24,8 @@ async def test_event_entity(
 
     file = tmp_path.joinpath("hello.txt")
     file.write_text("Hello, world!")
+    new_file = tmp_path.joinpath("hello2.txt")
+    file.rename(new_file)
 
     await hass.async_add_executor_job(sleep, 0.1)
 
@@ -31,7 +33,14 @@ async def test_event_entity(
     assert entity_entries
 
     def limit_attrs(prop, path):
-        exclude_attrs = {"entity_id", "friendly_name", "folder", "path"}
+        exclude_attrs = {
+            "entity_id",
+            "friendly_name",
+            "folder",
+            "path",
+            "dest_folder",
+            "dest_path",
+        }
         return prop in exclude_attrs
 
     for entity_entry in entity_entries:

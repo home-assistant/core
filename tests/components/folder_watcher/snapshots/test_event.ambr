@@ -281,7 +281,8 @@
 # name: test_event_entity[1-moved-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
+      'dest_file': 'hello2.txt',
+      'event_type': 'moved',
       'event_types': list([
         'closed',
         'created',
@@ -289,11 +290,12 @@
         'modified',
         'moved',
       ]),
+      'file': 'hello.txt',
     }),
     'context': <ANY>,
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2022-04-19T10:31:02.000+00:00',
   })
 # ---
