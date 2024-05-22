@@ -72,14 +72,15 @@ async def test_switch_commands(
 ) -> None:
     """Test switch commands."""
     await setup_integration(hass, mock_config_entry)
+    mocked_method = AsyncMock()
+    setattr(mock_automower_client.commands, aioautomower_command, mocked_method)
     await hass.services.async_call(
         domain="switch",
         service=service,
         service_data={"entity_id": "switch.test_mower_1_enable_schedule"},
         blocking=True,
     )
-    mocked_method = getattr(mock_automower_client.commands, aioautomower_command)
-    assert len(mocked_method.mock_calls) == 1
+    mocked_method.assert_called_once_with(TEST_MOWER_ID)
 
     mocked_method.side_effect = ApiException("Test error")
     with pytest.raises(
