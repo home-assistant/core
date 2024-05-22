@@ -150,12 +150,13 @@ class EmonCmsSensor(SensorEntity):
             id_for_name = "" if str(sensorid) == "1" else sensorid
             # Use the feed name assigned in EmonCMS or fall back to the feed ID
             feed_name = elem.get("name") or f"Feed {elem['id']}"
-            self._name = f"EmonCMS{id_for_name} {feed_name}"
+            self._attr_name = f"EmonCMS{id_for_name} {feed_name}"
         else:
-            self._name = name
-        self._identifier = get_id(
+            self._attr_name = name
+        self._attr_unique_id = get_id(
             sensorid, elem["tag"], elem["name"], elem["id"], elem["userid"]
         )
+        self._attr_native_unit_of_measurement = unit_of_measurement
         self._hass = hass
         self._data = data
         self._value_template = value_template
@@ -198,11 +199,6 @@ class EmonCmsSensor(SensorEntity):
             self._state = None
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
@@ -243,7 +239,7 @@ class EmonCmsSensor(SensorEntity):
                     elem["id"],
                     elem["userid"],
                 )
-                == self._identifier
+                == self._attr_unique_id
             ),
             None,
         )
