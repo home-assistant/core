@@ -24,7 +24,13 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     "agent_id", [None, "conversation.google_generative_ai_conversation"]
 )
-@pytest.mark.parametrize("allow_hass_access", [False, True])
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [
+        {},
+        {CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
+    ],
+)
 async def test_default_prompt(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -33,7 +39,7 @@ async def test_default_prompt(
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
     agent_id: str | None,
-    allow_hass_access: bool,
+    config_entry_options: {},
 ) -> None:
     """Test that the default prompt works."""
     entry = MockConfigEntry(title=None)
@@ -44,14 +50,10 @@ async def test_default_prompt(
     if agent_id is None:
         agent_id = mock_config_entry.entry_id
 
-    if allow_hass_access:
-        hass.config_entries.async_update_entry(
-            mock_config_entry,
-            options={
-                **mock_config_entry.options,
-                CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            },
-        )
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={**mock_config_entry.options, **config_entry_options},
+    )
 
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -145,7 +147,7 @@ async def test_default_prompt(
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.as_dict()["speech"]["plain"]["speech"] == "Hi there!"
     assert [tuple(mock_call) for mock_call in mock_model.mock_calls] == snapshot
-    assert mock_get_tools.called == allow_hass_access
+    assert mock_get_tools.called == (CONF_LLM_HASS_API in config_entry_options)
 
 
 @patch(
@@ -196,6 +198,7 @@ async def test_function_call(
             None,
             context,
             agent_id=agent_id,
+            device_id="test_device",
         )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -226,6 +229,7 @@ async def test_function_call(
             user_prompt="Please call the test function",
             language="en",
             assistant="conversation",
+            device_id="test_device",
         ),
     )
 
@@ -278,6 +282,7 @@ async def test_function_exception(
             None,
             context,
             agent_id=agent_id,
+            device_id="test_device",
         )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -308,6 +313,7 @@ async def test_function_exception(
             user_prompt="Please call the test function",
             language="en",
             assistant="conversation",
+            device_id="test_device",
         ),
     )
 
