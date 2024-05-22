@@ -20,7 +20,7 @@ from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryItems,
     normalize_name,
 )
-from .registry import BaseRegistry
+from .registry import BaseRegistry, RegistryIndexType
 from .singleton import singleton
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
@@ -136,12 +136,8 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
     def __init__(self) -> None:
         """Initialize the area registry items."""
         super().__init__()
-        self._labels_index: defaultdict[str, dict[str, Literal[True]]] = defaultdict(
-            dict
-        )
-        self._floors_index: defaultdict[str, dict[str, Literal[True]]] = defaultdict(
-            dict
-        )
+        self._labels_index: RegistryIndexType = defaultdict(dict)
+        self._floors_index: RegistryIndexType = defaultdict(dict)
 
     def _index_entry(self, key: str, entry: AreaEntry) -> None:
         """Index an entry."""

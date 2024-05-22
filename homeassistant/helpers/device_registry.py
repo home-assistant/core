@@ -38,7 +38,7 @@ from .deprecation import (
 )
 from .frame import report
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
-from .registry import BaseRegistry, BaseRegistryItems
+from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
 from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
@@ -514,15 +514,9 @@ class ActiveDeviceRegistryItems(DeviceRegistryItems[DeviceEntry]):
         - label -> dict[key, True]
         """
         super().__init__()
-        self._area_id_index: defaultdict[str, dict[str, Literal[True]]] = defaultdict(
-            dict
-        )
-        self._config_entry_id_index: defaultdict[str, dict[str, Literal[True]]] = (
-            defaultdict(dict)
-        )
-        self._labels_index: defaultdict[str, dict[str, Literal[True]]] = defaultdict(
-            dict
-        )
+        self._area_id_index: RegistryIndexType = defaultdict(dict)
+        self._config_entry_id_index: RegistryIndexType = defaultdict(dict)
+        self._labels_index: RegistryIndexType = defaultdict(dict)
 
     def _index_entry(self, key: str, entry: DeviceEntry) -> None:
         """Index an entry."""

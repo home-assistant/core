@@ -59,7 +59,7 @@ from .device_registry import (
     EventDeviceRegistryUpdatedData,
 )
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
-from .registry import BaseRegistry, BaseRegistryItems
+from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
 from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
@@ -534,18 +534,10 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         super().__init__()
         self._entry_ids: dict[str, RegistryEntry] = {}
         self._index: dict[tuple[str, str, str], str] = {}
-        self._config_entry_id_index: defaultdict[str, dict[str, Literal[True]]] = (
-            defaultdict(dict)
-        )
-        self._device_id_index: defaultdict[str, dict[str, Literal[True]]] = defaultdict(
-            dict
-        )
-        self._area_id_index: defaultdict[str, dict[str, Literal[True]]] = defaultdict(
-            dict
-        )
-        self._labels_index: defaultdict[str, dict[str, Literal[True]]] = defaultdict(
-            dict
-        )
+        self._config_entry_id_index: RegistryIndexType = defaultdict(dict)
+        self._device_id_index: RegistryIndexType = defaultdict(dict)
+        self._area_id_index: RegistryIndexType = defaultdict(dict)
+        self._labels_index: RegistryIndexType = defaultdict(dict)
 
     def _index_entry(self, key: str, entry: RegistryEntry) -> None:
         """Index an entry."""
