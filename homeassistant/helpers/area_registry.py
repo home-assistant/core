@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Iterable
 import dataclasses
+from functools import cached_property
 from typing import Any, Literal, TypedDict
 
 from homeassistant.core import HomeAssistant, callback
@@ -12,12 +14,13 @@ from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 
 from . import device_registry as dr, entity_registry as er
+from .json import json_bytes, json_fragment
 from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryEntry,
     NormalizedNameBaseRegistryItems,
     normalize_name,
 )
-from .registry import BaseRegistry
+from .registry import BaseRegistry, RegistryIndexType
 from .singleton import singleton
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
@@ -56,7 +59,7 @@ class EventAreaRegistryUpdatedData(TypedDict):
     area_id: str
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True, slots=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class AreaEntry(NormalizedNameBaseRegistryEntry):
     """Area Registry Entry."""
 
@@ -66,6 +69,23 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
     id: str
     labels: set[str] = dataclasses.field(default_factory=set)
     picture: str | None
+
+    @cached_property
+    def json_fragment(self) -> json_fragment:
+        """Return a JSON representation of this AreaEntry."""
+        return json_fragment(
+            json_bytes(
+                {
+                    "aliases": list(self.aliases),
+                    "area_id": self.id,
+                    "floor_id": self.floor_id,
+                    "icon": self.icon,
+                    "labels": list(self.labels),
+                    "name": self.name,
+                    "picture": self.picture,
+                }
+            )
+        )
 
 
 class AreaRegistryStore(Store[AreasRegistryStoreData]):
@@ -116,15 +136,15 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
     def __init__(self) -> None:
         """Initialize the area registry items."""
         super().__init__()
-        self._labels_index: dict[str, dict[str, Literal[True]]] = {}
-        self._floors_index: dict[str, dict[str, Literal[True]]] = {}
+        self._labels_index: RegistryIndexType = defaultdict(dict)
+        self._floors_index: RegistryIndexType = defaultdict(dict)
 
     def _index_entry(self, key: str, entry: AreaEntry) -> None:
         """Index an entry."""
         if entry.floor_id is not None:
-            self._floors_index.setdefault(entry.floor_id, {})[key] = True
+            self._floors_index[entry.floor_id][key] = True
         for label in entry.labels:
-            self._labels_index.setdefault(label, {})[key] = True
+            self._labels_index[label][key] = True
         super()._index_entry(key, entry)
 
     def _unindex_entry(

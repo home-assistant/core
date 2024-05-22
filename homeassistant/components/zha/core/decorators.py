@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, TypeVar
-
-_TypeT = TypeVar("_TypeT", bound=type[Any])
+from typing import Any
 
 
-class DictRegistry(dict[int | str, _TypeT]):
+class DictRegistry[_TypeT: type[Any]](dict[int | str, _TypeT]):
     """Dict Registry of items."""
 
     def register(self, name: int | str) -> Callable[[_TypeT], _TypeT]:
@@ -22,7 +20,9 @@ class DictRegistry(dict[int | str, _TypeT]):
         return decorator
 
 
-class NestedDictRegistry(dict[int | str, dict[int | str | None, _TypeT]]):
+class NestedDictRegistry[_TypeT: type[Any]](
+    dict[int | str, dict[int | str | None, _TypeT]]
+):
     """Dict Registry of multiple items per key."""
 
     def register(
@@ -43,7 +43,9 @@ class NestedDictRegistry(dict[int | str, dict[int | str | None, _TypeT]]):
 class SetRegistry(set[int | str]):
     """Set Registry of items."""
 
-    def register(self, name: int | str) -> Callable[[_TypeT], _TypeT]:
+    def register[_TypeT: type[Any]](
+        self, name: int | str
+    ) -> Callable[[_TypeT], _TypeT]:
         """Return decorator to register item with a specific name."""
 
         def decorator(cluster_handler: _TypeT) -> _TypeT:

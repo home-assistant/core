@@ -61,15 +61,15 @@ repos:
         name: mypy
         entry: script/run-in-env.sh mypy
         language: script
-        types: [python]
+        types_or: [python, pyi]
         require_serial: true
         files: ^(homeassistant|pylint)/.+\.(py|pyi)$
       - id: pylint
         name: pylint
         entry: script/run-in-env.sh pylint -j 0 --ignore-missing-annotations=y
         language: script
-        types: [python]
-        files: ^homeassistant/.+\.py$
+        types_or: [python, pyi]
+        files: ^homeassistant/.+\.(py|pyi)$
       - id: gen_requirements_all
         name: gen_requirements_all
         entry: script/run-in-env.sh python3 -m script.gen_requirements_all
