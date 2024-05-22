@@ -123,7 +123,7 @@ async def test_sensor_unique_id(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    plug = _mocked_device(alias="my_plug", modules=[Module.Led])
+    plug = _mocked_device(alias="my_plug")
     plug.has_emeter = True
     plug.emeter_realtime = Mock(
         power=100,

@@ -1,7 +1,7 @@
 """Tests for the TP-Link component."""
 
 from collections import namedtuple
-from typing import Any, TypedDict
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from kasa import (
@@ -15,7 +15,7 @@ from kasa import (
     KasaException,
     Module,
 )
-from kasa.interfaces import Led, Light, LightEffect
+from kasa.interfaces import Light, LightEffect
 from kasa.protocol import BaseProtocol
 
 from homeassistant.components.tplink import (
@@ -191,13 +191,6 @@ def _mocked_light_effect_module() -> LightEffect:
     return effect
 
 
-def _mocked_led_module() -> Led:
-    led_module = MagicMock(auto_spec=Led, name="Mocked led")
-    led_module.led = True
-    led_module.set_led = AsyncMock()
-    return led_module
-
-
 def _mocked_strip_children(features=None) -> list[Device]:
     plug0 = _mocked_device(
         alias="Plug0",
@@ -221,7 +214,6 @@ def _mocked_strip_children(features=None) -> list[Device]:
 MODULE_TO_MOCK_GEN = {
     Module.Light: _mocked_light_module,
     Module.LightEffect: _mocked_light_effect_module,
-    Module.Led: _mocked_led_module,
 }
 
 FEATURE_TO_MOCK_GEN = {
