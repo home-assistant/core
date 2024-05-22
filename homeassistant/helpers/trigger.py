@@ -240,6 +240,10 @@ async def async_validate_trigger_config(
     """Validate triggers."""
     config = []
     for conf in trigger_config:
+        if CONF_ENABLED in conf and not conf[CONF_ENABLED]:
+            # skip validation of disabled triggers
+            config.append(conf)
+            continue
         platform = await _async_get_trigger_platform(hass, conf)
         if hasattr(platform, "async_validate_trigger_config"):
             conf = await platform.async_validate_trigger_config(hass, conf)

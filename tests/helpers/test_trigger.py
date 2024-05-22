@@ -31,6 +31,13 @@ async def test_bad_trigger_platform(hass: HomeAssistant) -> None:
     assert "Invalid platform 'not_a_platform' specified" in str(ex)
 
 
+async def test_bad_trigger_platform_disabled(hass: HomeAssistant) -> None:
+    """Test bad trigger platform disabled."""
+    assert await async_validate_trigger_config(
+        hass, [{"platform": "not_a_platform", "enabled": False}]
+    )
+
+
 async def test_trigger_subtype(hass: HomeAssistant) -> None:
     """Test trigger subtypes."""
     with patch(
