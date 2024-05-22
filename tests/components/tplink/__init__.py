@@ -1,20 +1,21 @@
 """Tests for the TP-Link component."""
 
+from collections import namedtuple
+from typing import Any, TypedDict
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from kasa import (
     ConnectionType,
+    Device,
     DeviceConfig,
     DeviceFamilyType,
+    DeviceType,
     EncryptType,
-    SmartBulb,
-    SmartDevice,
-    SmartDimmer,
-    SmartLightStrip,
-    SmartPlug,
-    SmartStrip,
+    Feature,
+    KasaException,
+    Module,
 )
-from kasa.exceptions import SmartDeviceException
+from kasa.interfaces import Led, Light, LightEffect
 from kasa.protocol import BaseProtocol
 
 from homeassistant.components.tplink import (
@@ -28,6 +29,8 @@ from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+ColorTempRange = namedtuple("ColorTempRange", ["min", "max"])
 
 MODULE = "homeassistant.components.tplink"
 MODULE_CONFIG_FLOW = "homeassistant.components.tplink.config_flow"
@@ -96,184 +99,146 @@ def _mock_protocol() -> BaseProtocol:
     return protocol
 
 
-def _mocked_bulb(
+def _mocked_device(
     device_config=DEVICE_CONFIG_LEGACY,
     credentials_hash=CREDENTIALS_HASH_LEGACY,
     mac=MAC_ADDRESS,
+    device_id=MAC_ADDRESS,
     alias=ALIAS,
-) -> SmartBulb:
-    bulb = MagicMock(auto_spec=SmartBulb, name="Mocked bulb")
-    bulb.update = AsyncMock()
-    bulb.mac = mac
-    bulb.alias = alias
-    bulb.model = MODEL
-    bulb.host = IP_ADDRESS
-    bulb.brightness = 50
-    bulb.color_temp = 4000
-    bulb.is_color = True
-    bulb.is_strip = False
-    bulb.is_plug = False
-    bulb.is_dimmer = False
-    bulb.is_light_strip = False
-    bulb.has_effects = False
-    bulb.effect = None
-    bulb.effect_list = None
-    bulb.hsv = (10, 30, 5)
-    bulb.device_id = mac
-    bulb.valid_temperature_range.min = 4000
-    bulb.valid_temperature_range.max = 9000
-    bulb.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
-    bulb.turn_off = AsyncMock()
-    bulb.turn_on = AsyncMock()
-    bulb.set_brightness = AsyncMock()
-    bulb.set_hsv = AsyncMock()
-    bulb.set_color_temp = AsyncMock()
-    bulb.protocol = _mock_protocol()
-    bulb.config = device_config
-    bulb.credentials_hash = credentials_hash
-    return bulb
+    modules: list[str] | None = None,
+    children: list[Device] | None = None,
+    features: list[str] | None = None,
+    device_type=DeviceType.Unknown,
+) -> Device:
+    device = MagicMock(auto_spec=Device, name="Mocked device")
+    device.update = AsyncMock()
+    device.mac = mac
+    device.alias = alias
+    device.model = MODEL
+    device.host = IP_ADDRESS
+    device.device_id = device_id
+    device.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
+    device.turn_off = AsyncMock()
+    device.turn_on = AsyncMock()
+
+    device.modules = (
+        {module_name: MODULE_TO_MOCK_GEN[module_name]() for module_name in modules}
+        if modules
+        else {}
+    )
+
+    device.features = (
+        {feature_id: FEATURE_TO_MOCK_GEN[feature_id]() for feature_id in features}
+        if features
+        else {}
+    )
+
+    device.children = children if children else []
+    device.device_type = device_type
+    if device.children and all(
+        child.device_type == DeviceType.StripSocket for child in device.children
+    ):
+        device.device_type = DeviceType.Strip
+
+    device.protocol = _mock_protocol()
+    device.config = device_config
+    device.credentials_hash = credentials_hash
+    return device
 
 
-class MockedSmartLightStrip(SmartLightStrip):
-    """Mock a SmartLightStrip."""
-
-    def __new__(cls, *args, **kwargs):
-        """Mock a SmartLightStrip that will pass an isinstance check."""
-        return MagicMock(spec=cls)
-
-
-def _mocked_smart_light_strip() -> SmartLightStrip:
-    strip = MockedSmartLightStrip()
-    strip.update = AsyncMock()
-    strip.mac = MAC_ADDRESS
-    strip.alias = ALIAS
-    strip.model = MODEL
-    strip.host = IP_ADDRESS
-    strip.brightness = 50
-    strip.color_temp = 4000
-    strip.is_color = True
-    strip.is_strip = False
-    strip.is_plug = False
-    strip.is_dimmer = False
-    strip.is_light_strip = True
-    strip.has_effects = True
-    strip.effect = {"name": "Effect1", "enable": 1}
-    strip.effect_list = ["Effect1", "Effect2"]
-    strip.hsv = (10, 30, 5)
-    strip.device_id = MAC_ADDRESS
-    strip.valid_temperature_range.min = 4000
-    strip.valid_temperature_range.max = 9000
-    strip.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
-    strip.turn_off = AsyncMock()
-    strip.turn_on = AsyncMock()
-    strip.set_brightness = AsyncMock()
-    strip.set_hsv = AsyncMock()
-    strip.set_color_temp = AsyncMock()
-    strip.set_effect = AsyncMock()
-    strip.set_custom_effect = AsyncMock()
-    strip.protocol = _mock_protocol()
-    strip.config = DEVICE_CONFIG_LEGACY
-    strip.credentials_hash = CREDENTIALS_HASH_LEGACY
-    return strip
+def _mocked_feature(
+    value: Any, id: str, type_=Feature.Type.Sensor, category=Feature.Category.Debug
+) -> Feature:
+    feature = MagicMock(auto_spec=Feature, name="Mocked feature")
+    feature.id = id
+    feature.name = id
+    feature.value = value
+    feature.type = type_
+    feature.category = category
+    feature.set_value = AsyncMock()
+    return feature
 
 
-def _mocked_dimmer() -> SmartDimmer:
-    dimmer = MagicMock(auto_spec=SmartDimmer, name="Mocked dimmer")
-    dimmer.update = AsyncMock()
-    dimmer.mac = MAC_ADDRESS
-    dimmer.alias = "My Dimmer"
-    dimmer.model = MODEL
-    dimmer.host = IP_ADDRESS
-    dimmer.brightness = 50
-    dimmer.color_temp = 4000
-    dimmer.is_color = True
-    dimmer.is_strip = False
-    dimmer.is_plug = False
-    dimmer.is_dimmer = True
-    dimmer.is_light_strip = False
-    dimmer.effect = None
-    dimmer.effect_list = None
-    dimmer.hsv = (10, 30, 5)
-    dimmer.device_id = MAC_ADDRESS
-    dimmer.valid_temperature_range.min = 4000
-    dimmer.valid_temperature_range.max = 9000
-    dimmer.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
-    dimmer.turn_off = AsyncMock()
-    dimmer.turn_on = AsyncMock()
-    dimmer.set_brightness = AsyncMock()
-    dimmer.set_hsv = AsyncMock()
-    dimmer.set_color_temp = AsyncMock()
-    dimmer.set_led = AsyncMock()
-    dimmer.protocol = _mock_protocol()
-    dimmer.config = DEVICE_CONFIG_LEGACY
-    dimmer.credentials_hash = CREDENTIALS_HASH_LEGACY
-    return dimmer
+def _mocked_light_module() -> Light:
+    light = MagicMock(auto_spec=Light, name="Mocked light module")
+    light.update = AsyncMock()
+    light.brightness = 50
+    light.color_temp = 4000
+    light.is_color = True
+    light.is_variable_color_temp = True
+    light.is_dimmable = True
+    light.is_brightness = True
+    light.has_effects = False
+    light.hsv = (10, 30, 5)
+    light.valid_temperature_range = ColorTempRange(min=4000, max=9000)
+    light.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
+    light.set_state = AsyncMock()
+    light.set_brightness = AsyncMock()
+    light.set_hsv = AsyncMock()
+    light.set_color_temp = AsyncMock()
+    light.protocol = _mock_protocol()
+    return light
 
 
-def _mocked_plug() -> SmartPlug:
-    plug = MagicMock(auto_spec=SmartPlug, name="Mocked plug")
-    plug.update = AsyncMock()
-    plug.mac = MAC_ADDRESS
-    plug.alias = "My Plug"
-    plug.model = MODEL
-    plug.host = IP_ADDRESS
-    plug.is_light_strip = False
-    plug.is_bulb = False
-    plug.is_dimmer = False
-    plug.is_strip = False
-    plug.is_plug = True
-    plug.device_id = MAC_ADDRESS
-    plug.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
-    plug.turn_off = AsyncMock()
-    plug.turn_on = AsyncMock()
-    plug.set_led = AsyncMock()
-    plug.protocol = _mock_protocol()
-    plug.config = DEVICE_CONFIG_LEGACY
-    plug.credentials_hash = CREDENTIALS_HASH_LEGACY
-    return plug
+def _mocked_light_effect_module() -> LightEffect:
+    effect = MagicMock(auto_spec=LightEffect, name="Mocked light effect")
+    effect.has_effects = True
+    effect.has_custom_effects = True
+    effect.effect = "Effect1"
+    effect.effect_list = ["Off", "Effect1", "Effect2"]
+    effect.set_effect = AsyncMock()
+    effect.set_custom_effect = AsyncMock()
+    return effect
 
 
-def _mocked_strip() -> SmartStrip:
-    strip = MagicMock(auto_spec=SmartStrip, name="Mocked strip")
-    strip.update = AsyncMock()
-    strip.mac = MAC_ADDRESS
-    strip.alias = "My Strip"
-    strip.model = MODEL
-    strip.host = IP_ADDRESS
-    strip.is_light_strip = False
-    strip.is_bulb = False
-    strip.is_dimmer = False
-    strip.is_strip = True
-    strip.is_plug = True
-    strip.device_id = MAC_ADDRESS
-    strip.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
-    strip.turn_off = AsyncMock()
-    strip.turn_on = AsyncMock()
-    strip.set_led = AsyncMock()
-    strip.protocol = _mock_protocol()
-    strip.config = DEVICE_CONFIG_LEGACY
-    strip.credentials_hash = CREDENTIALS_HASH_LEGACY
-    plug0 = _mocked_plug()
-    plug0.alias = "Plug0"
-    plug0.device_id = "bb:bb:cc:dd:ee:ff_PLUG0DEVICEID"
-    plug0.mac = "bb:bb:cc:dd:ee:ff"
+def _mocked_led_module() -> Led:
+    led_module = MagicMock(auto_spec=Led, name="Mocked led")
+    led_module.led = True
+    led_module.set_led = AsyncMock()
+    return led_module
+
+
+def _mocked_strip_children(features=None) -> list[Device]:
+    plug0 = _mocked_device(
+        alias="Plug0",
+        device_id="bb:bb:cc:dd:ee:ff_PLUG0DEVICEID",
+        mac="bb:bb:cc:dd:ee:ff",
+        device_type=DeviceType.StripSocket,
+        features=features,
+    )
+    plug1 = _mocked_device(
+        alias="Plug1",
+        device_id="cc:bb:cc:dd:ee:ff_PLUG1DEVICEID",
+        mac="cc:bb:cc:dd:ee:ff",
+        device_type=DeviceType.StripSocket,
+        features=features,
+    )
     plug0.is_on = True
-    plug0.protocol = _mock_protocol()
-    plug1 = _mocked_plug()
-    plug1.device_id = "cc:bb:cc:dd:ee:ff_PLUG1DEVICEID"
-    plug1.mac = "cc:bb:cc:dd:ee:ff"
-    plug1.alias = "Plug1"
-    plug1.protocol = _mock_protocol()
     plug1.is_on = False
-    strip.children = [plug0, plug1]
-    return strip
+    return [plug0, plug1]
+
+
+MODULE_TO_MOCK_GEN = {
+    Module.Light: _mocked_light_module,
+    Module.LightEffect: _mocked_light_effect_module,
+    Module.Led: _mocked_led_module,
+}
+
+FEATURE_TO_MOCK_GEN = {
+    "state": lambda: _mocked_feature(
+        True, "state", Feature.Type.Switch, Feature.Category.Primary
+    ),
+    "led": lambda: _mocked_feature(
+        True, "led", Feature.Type.Switch, Feature.Category.Config
+    ),
+}
 
 
 def _patch_discovery(device=None, no_device=False):
     async def _discovery(*args, **kwargs):
         if no_device:
             return {}
-        return {IP_ADDRESS: _mocked_bulb()}
+        return {IP_ADDRESS: _mocked_device()}
 
     return patch("homeassistant.components.tplink.Discover.discover", new=_discovery)
 
@@ -281,8 +246,8 @@ def _patch_discovery(device=None, no_device=False):
 def _patch_single_discovery(device=None, no_device=False):
     async def _discover_single(*args, **kwargs):
         if no_device:
-            raise SmartDeviceException
-        return device if device else _mocked_bulb()
+            raise KasaException
+        return device if device else _mocked_device()
 
     return patch(
         "homeassistant.components.tplink.Discover.discover_single", new=_discover_single
@@ -292,14 +257,14 @@ def _patch_single_discovery(device=None, no_device=False):
 def _patch_connect(device=None, no_device=False):
     async def _connect(*args, **kwargs):
         if no_device:
-            raise SmartDeviceException
-        return device if device else _mocked_bulb()
+            raise KasaException
+        return device if device else _mocked_device()
 
-    return patch("homeassistant.components.tplink.SmartDevice.connect", new=_connect)
+    return patch("homeassistant.components.tplink.Device.connect", new=_connect)
 
 
 async def initialize_config_entry_for_device(
-    hass: HomeAssistant, dev: SmartDevice
+    hass: HomeAssistant, dev: Device
 ) -> MockConfigEntry:
     """Create a mocked configuration entry for the given device.
 

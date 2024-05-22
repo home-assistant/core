@@ -9,7 +9,7 @@ from typing import Any
 
 from aiohttp import ClientSession
 from kasa import (
-    AuthenticationException,
+    AuthenticationError,
     Credentials,
     Device,
     DeviceConfig,
@@ -152,7 +152,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config.credentials = credentials
     try:
         device: Device = await Device.connect(config=config)
-    except AuthenticationException as ex:
+    except AuthenticationError as ex:
         raise ConfigEntryAuthFailed from ex
     except KasaException as ex:
         raise ConfigEntryNotReady from ex

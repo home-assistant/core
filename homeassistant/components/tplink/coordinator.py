@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from kasa import AuthenticationException, Device, KasaException
+from kasa import AuthenticationError, Device, KasaException
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
@@ -47,7 +47,7 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Fetch all device and sensor data from api."""
         try:
             await self.device.update(update_children=False)
-        except AuthenticationException as ex:
+        except AuthenticationError as ex:
             raise ConfigEntryAuthFailed from ex
         except KasaException as ex:
             raise UpdateFailed(ex) from ex

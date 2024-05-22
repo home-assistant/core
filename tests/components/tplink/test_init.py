@@ -7,7 +7,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from kasa.exceptions import AuthenticationException
+from kasa import AuthenticationError, Module
 import pytest
 
 from homeassistant import setup
@@ -32,8 +32,7 @@ from . import (
     DEVICE_CONFIG_AUTH,
     IP_ADDRESS,
     MAC_ADDRESS,
-    _mocked_dimmer,
-    _mocked_plug,
+    _mocked_device,
     _patch_connect,
     _patch_discovery,
     _patch_single_discovery,
@@ -105,7 +104,7 @@ async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
     """Test no migration happens if the original entity id still exists."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=MAC_ADDRESS)
     config_entry.add_to_hass(hass)
-    dimmer = _mocked_dimmer()
+    dimmer = _mocked_device(alias="My dimmer", modules=[Module.Light])
     rollout_unique_id = MAC_ADDRESS.replace(":", "").upper()
     original_unique_id = tplink.legacy_device_id(dimmer)
     original_dimmer_entity_reg = entity_reg.async_get_or_create(
@@ -129,7 +128,7 @@ async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
         _patch_connect(device=dimmer),
     ):
         await setup.async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     migrated_dimmer_entity_reg = entity_reg.async_get_or_create(
         config_entry=config_entry,
@@ -238,8 +237,8 @@ async def test_config_entry_device_config_invalid(
 @pytest.mark.parametrize(
     ("error_type", "entry_state", "reauth_flows"),
     [
-        (tplink.AuthenticationException, ConfigEntryState.SETUP_ERROR, True),
-        (tplink.SmartDeviceException, ConfigEntryState.SETUP_RETRY, False),
+        (tplink.AuthenticationError, ConfigEntryState.SETUP_ERROR, True),
+        (tplink.KasaException, ConfigEntryState.SETUP_RETRY, False),
     ],
     ids=["invalid-auth", "unknown-error"],
 )
@@ -275,15 +274,15 @@ async def test_plug_auth_fails(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     config_entry.add_to_hass(hass)
-    plug = _mocked_plug()
-    with _patch_discovery(device=plug), _patch_connect(device=plug):
+    device = _mocked_device(alias="my_plug", features=["state"])
+    with _patch_discovery(device=device), _patch_connect(device=device):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
     entity_id = "switch.my_plug"
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
-    plug.update = AsyncMock(side_effect=AuthenticationException)
+    device.update = AsyncMock(side_effect=AuthenticationError)
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()

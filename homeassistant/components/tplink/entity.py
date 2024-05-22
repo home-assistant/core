@@ -8,12 +8,12 @@ import logging
 from typing import Any, Concatenate
 
 from kasa import (
-    AuthenticationException,
+    AuthenticationError,
     Device,
     DeviceType,
     Feature,
     KasaException,
-    TimeoutException,
+    TimeoutError,
 )
 
 from homeassistant.const import EntityCategory
@@ -38,7 +38,7 @@ def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
     async def _async_wrap(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         try:
             await func(self, *args, **kwargs)
-        except AuthenticationException as ex:
+        except AuthenticationError as ex:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -48,7 +48,7 @@ def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
                     "exc": str(ex),
                 },
             ) from ex
-        except TimeoutException as ex:
+        except TimeoutError as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_timeout",
@@ -107,32 +107,30 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         # The rest of the initialization takes care of setting a proper unique_id
         # This is transitional and will become cleaner as future platforms get converted.
 
-        # If the unique id is already set, we don't need to do anything.
-        if self._attr_unique_id is not None:
-            # TODO: sensor and light are doing their own tricks on unique_ids.
-            #  We should get rid of any special handling inside the platforms.
-            return
+        # TODO: sensor and light are doing their own tricks on unique_ids.
+        #  We should get rid of any special handling inside the platforms.
 
         # If the entity is based on a feature, we use its ID as part of the unique id
-        if feature is not None:
+        if self._attr_unique_id is None and feature is not None:
             self._attr_entity_category = self._category_for_feature(feature)
 
             # Special handling for legacy switch primary controls.
             if feature.id == "state":
                 self._attr_unique_id = legacy_device_id(device)
-                return
+            else:
+                self._attr_unique_id = f"{legacy_device_id(device)}_{feature.id}"
+                _LOGGER.debug(
+                    "Initializing feature-based %s with category %s",
+                    self._attr_unique_id,
+                    self._attr_entity_category,
+                )
 
-            self._attr_unique_id = f"{legacy_device_id(device)}_{feature.id}"
-            _LOGGER.debug(
-                "Initializing feature-based %s with category %s",
-                self._attr_unique_id,
-                self._attr_entity_category,
-            )
-
-        else:
+        elif self._attr_unique_id is None:
             raise HomeAssistantError(
                 "Entity not feature-based nor does define unique_id"
             )
+        self._async_update_attrs()
+        self._attr_available = True
 
     def _category_for_feature(self, feature: Feature) -> EntityCategory | None:
         """Return entity category for a feature."""
