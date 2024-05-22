@@ -122,6 +122,7 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
         return False
 
 
+@lru_cache
 def valid_topic(topic: Any) -> str:
     """Validate that this is a valid topic name/filter."""
     validated_topic = cv.string(topic)
@@ -149,6 +150,7 @@ def valid_topic(topic: Any) -> str:
     return validated_topic
 
 
+@lru_cache
 def valid_subscribe_topic(topic: Any) -> str:
     """Validate that we can subscribe using this MQTT topic."""
     validated_topic = valid_topic(topic)
