@@ -52,10 +52,6 @@ async def async_set_work_area_cutting_height(
     await coordinator.api.commands.set_cutting_height_workarea(
         mower_id, int(cheight), work_area_id
     )
-    # As there are no updates from the websocket regarding work area changes,
-    # we need to wait 5s and then poll the API.
-    await asyncio.sleep(5)
-    await coordinator.async_request_refresh()
 
 
 async def async_set_cutting_height(
@@ -189,6 +185,7 @@ class AutomowerWorkAreaNumberEntity(AutomowerControlEntity, NumberEntity):
     ) -> None:
         """Set up AutomowerNumberEntity."""
         super().__init__(mower_id, coordinator)
+        self.coordinator = coordinator
         self.entity_description = description
         self.work_area_id = work_area_id
         self._attr_unique_id = f"{mower_id}_{work_area_id}_{description.key}"
@@ -221,6 +218,11 @@ class AutomowerWorkAreaNumberEntity(AutomowerControlEntity, NumberEntity):
             raise HomeAssistantError(
                 f"Command couldn't be sent to the command queue: {exception}"
             ) from exception
+        else:
+            # As there are no updates from the websocket regarding work area changes,
+            # we need to wait 5s and then poll the API.
+            await asyncio.sleep(5)
+            await self.coordinator.async_request_refresh()
 
 
 @callback
