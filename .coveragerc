@@ -1065,6 +1065,7 @@ omit =
     homeassistant/components/pushover/notify.py
     homeassistant/components/pushsafer/notify.py
     homeassistant/components/pyload/__init__.py
+    homeassistant/components/pyload/button.py
     homeassistant/components/pyload/coordinator.py
     homeassistant/components/pyload/sensor.py
     homeassistant/components/qbittorrent/__init__.py
