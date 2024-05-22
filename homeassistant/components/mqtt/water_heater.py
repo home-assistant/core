@@ -65,12 +65,9 @@ from .const import (
     DEFAULT_OPTIMISTIC,
 )
 from .debug_info import log_messages
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    async_setup_entity_entry_helper,
-    write_state_on_attr_change,
-)
+from .mixins import async_setup_entity_entry_helper, write_state_on_attr_change
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
