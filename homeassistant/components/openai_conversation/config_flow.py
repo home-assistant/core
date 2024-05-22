@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import types
 from types import MappingProxyType
 from typing import Any
 
@@ -16,11 +15,15 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
     TemplateSelector,
 )
 
@@ -43,16 +46,6 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
-    }
-)
-
-DEFAULT_OPTIONS = types.MappingProxyType(
-    {
-        CONF_PROMPT: DEFAULT_PROMPT,
-        CONF_CHAT_MODEL: DEFAULT_CHAT_MODEL,
-        CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
-        CONF_TOP_P: DEFAULT_TOP_P,
-        CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
     }
 )
 
@@ -92,7 +85,11 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(title="OpenAI Conversation", data=user_input)
+            return self.async_create_entry(
+                title="OpenAI Conversation",
+                data=user_input,
+                options={CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
+            )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -118,45 +115,67 @@ class OpenAIOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(title="OpenAI Conversation", data=user_input)
-        schema = openai_config_option_schema(self.config_entry.options)
+            if user_input[CONF_LLM_HASS_API] == "none":
+                user_input.pop(CONF_LLM_HASS_API)
+            return self.async_create_entry(title="", data=user_input)
+        schema = openai_config_option_schema(self.hass, self.config_entry.options)
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(schema),
         )
 
 
-def openai_config_option_schema(options: MappingProxyType[str, Any]) -> dict:
+def openai_config_option_schema(
+    hass: HomeAssistant,
+    options: MappingProxyType[str, Any],
+) -> dict:
     """Return a schema for OpenAI completion options."""
-    if not options:
-        options = DEFAULT_OPTIONS
+    apis: list[SelectOptionDict] = [
+        SelectOptionDict(
+            label="No control",
+            value="none",
+        )
+    ]
+    apis.extend(
+        SelectOptionDict(
+            label=api.name,
+            value=api.id,
+        )
+        for api in llm.async_get_apis(hass)
+    )
+
     return {
-        vol.Optional(
-            CONF_PROMPT,
-            description={"suggested_value": options[CONF_PROMPT]},
-            default=DEFAULT_PROMPT,
-        ): TemplateSelector(),
         vol.Optional(
             CONF_CHAT_MODEL,
             description={
                 # New key in HA 2023.4
-                "suggested_value": options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL)
+                "suggested_value": options.get(CONF_CHAT_MODEL)
             },
             default=DEFAULT_CHAT_MODEL,
         ): str,
         vol.Optional(
+            CONF_LLM_HASS_API,
+            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+            default="none",
+        ): SelectSelector(SelectSelectorConfig(options=apis)),
+        vol.Optional(
+            CONF_PROMPT,
+            description={"suggested_value": options.get(CONF_PROMPT)},
+            default=DEFAULT_PROMPT,
+        ): TemplateSelector(),
+        vol.Optional(
             CONF_MAX_TOKENS,
-            description={"suggested_value": options[CONF_MAX_TOKENS]},
+            description={"suggested_value": options.get(CONF_MAX_TOKENS)},
             default=DEFAULT_MAX_TOKENS,
         ): int,
         vol.Optional(
             CONF_TOP_P,
-            description={"suggested_value": options[CONF_TOP_P]},
+            description={"suggested_value": options.get(CONF_TOP_P)},
             default=DEFAULT_TOP_P,
         ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
         vol.Optional(
             CONF_TEMPERATURE,
-            description={"suggested_value": options[CONF_TEMPERATURE]},
+            description={"suggested_value": options.get(CONF_TEMPERATURE)},
             default=DEFAULT_TEMPERATURE,
         ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
     }

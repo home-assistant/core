@@ -8,5 +8,5 @@
   "documentation": "https://www.home-assistant.io/integrations/google_generative_ai_conversation",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": ["google-generativeai==0.5.4", "voluptuous-openapi==0.0.3"]
+  "requirements": ["google-generativeai==0.5.4", "voluptuous-openapi==0.0.4"]
 }

@@ -16,9 +16,7 @@
         - Test Device 4
         - 1 (3)
         
-        Answer the user's questions about the world truthfully.
-        
-        If the user wants to control a device, reject the request and suggest using the Home Assistant app.
+        If the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
       ''',
       'role': 'system',
     }),
@@ -26,10 +24,119 @@
       'content': 'hello',
       'role': 'user',
     }),
+    ChatCompletionMessage(content='Hello, how can I help you?', role='assistant', function_call=None, tool_calls=None),
+  ])
+# ---
+# name: test_default_prompt[config_entry_options0-None]
+  list([
     dict({
-      'content': 'Hello, how can I help you?',
-      'role': 'assistant',
+      'content': '''
+        This smart home is controlled by Home Assistant.
+        
+        An overview of the areas and the devices in this smart home:
+        
+        Test Area:
+        - Test Device (Test Model)
+        
+        Test Area 2:
+        - Test Device 2
+        - Test Device 3 (Test Model 3A)
+        - Test Device 4
+        - 1 (3)
+        
+        Call the intent tools to control the system. Just pass the name to the intent.
+      ''',
+      'role': 'system',
     }),
+    dict({
+      'content': 'hello',
+      'role': 'user',
+    }),
+    ChatCompletionMessage(content='Hello, how can I help you?', role='assistant', function_call=None, tool_calls=None),
+  ])
+# ---
+# name: test_default_prompt[config_entry_options0-conversation.openai]
+  list([
+    dict({
+      'content': '''
+        This smart home is controlled by Home Assistant.
+        
+        An overview of the areas and the devices in this smart home:
+        
+        Test Area:
+        - Test Device (Test Model)
+        
+        Test Area 2:
+        - Test Device 2
+        - Test Device 3 (Test Model 3A)
+        - Test Device 4
+        - 1 (3)
+        
+        Call the intent tools to control the system. Just pass the name to the intent.
+      ''',
+      'role': 'system',
+    }),
+    dict({
+      'content': 'hello',
+      'role': 'user',
+    }),
+    ChatCompletionMessage(content='Hello, how can I help you?', role='assistant', function_call=None, tool_calls=None),
+  ])
+# ---
+# name: test_default_prompt[config_entry_options1-None]
+  list([
+    dict({
+      'content': '''
+        This smart home is controlled by Home Assistant.
+        
+        An overview of the areas and the devices in this smart home:
+        
+        Test Area:
+        - Test Device (Test Model)
+        
+        Test Area 2:
+        - Test Device 2
+        - Test Device 3 (Test Model 3A)
+        - Test Device 4
+        - 1 (3)
+        
+        Call the intent tools to control the system. Just pass the name to the intent.
+      ''',
+      'role': 'system',
+    }),
+    dict({
+      'content': 'hello',
+      'role': 'user',
+    }),
+    ChatCompletionMessage(content='Hello, how can I help you?', role='assistant', function_call=None, tool_calls=None),
+  ])
+# ---
+# name: test_default_prompt[config_entry_options1-conversation.openai]
+  list([
+    dict({
+      'content': '''
+        This smart home is controlled by Home Assistant.
+        
+        An overview of the areas and the devices in this smart home:
+        
+        Test Area:
+        - Test Device (Test Model)
+        
+        Test Area 2:
+        - Test Device 2
+        - Test Device 3 (Test Model 3A)
+        - Test Device 4
+        - 1 (3)
+        
+        Call the intent tools to control the system. Just pass the name to the intent.
+      ''',
+      'role': 'system',
+    }),
+    dict({
+      'content': 'hello',
+      'role': 'user',
+    }),
+    ChatCompletionMessage(content='Hello, how can I help you?', role='assistant', function_call=None, tool_calls=None),
   ])
 # ---
 # name: test_default_prompt[conversation.openai]
@@ -49,9 +156,7 @@
         - Test Device 4
         - 1 (3)
         
-        Answer the user's questions about the world truthfully.
-        
-        If the user wants to control a device, reject the request and suggest using the Home Assistant app.
+        If the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
       ''',
       'role': 'system',
     }),
@@ -59,9 +164,39 @@
       'content': 'hello',
       'role': 'user',
     }),
-    dict({
-      'content': 'Hello, how can I help you?',
-      'role': 'assistant',
-    }),
+    ChatCompletionMessage(content='Hello, how can I help you?', role='assistant', function_call=None, tool_calls=None),
   ])
+# ---
+# name: test_unknown_hass_api
+  dict({
+    'conversation_id': None,
+    'response': IntentResponse(
+      card=dict({
+      }),
+      error_code=<IntentResponseErrorCode.UNKNOWN: 'unknown'>,
+      failed_results=list([
+      ]),
+      intent=None,
+      intent_targets=list([
+      ]),
+      language='en',
+      matched_states=list([
+      ]),
+      reprompt=dict({
+      }),
+      response_type=<IntentResponseType.ERROR: 'error'>,
+      speech=dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Error preparing LLM API: API non-existing not found',
+        }),
+      }),
+      speech_slots=dict({
+      }),
+      success_results=list([
+      ]),
+      unmatched_states=list([
+      ]),
+    ),
+  })
 # ---
