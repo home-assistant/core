@@ -70,7 +70,6 @@ async def test_lawn_mower_commands(
 ) -> None:
     """Test lawn_mower commands."""
     await setup_integration(hass, mock_config_entry)
-
     getattr(
         mock_automower_client.commands, aioautomower_command
     ).side_effect = ApiException("Test error")
