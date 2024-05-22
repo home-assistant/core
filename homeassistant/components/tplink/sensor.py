@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import cast
 
-from kasa import SmartDevice
+from kasa import Device, DeviceType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -92,7 +92,7 @@ ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
 
 
 def async_emeter_from_device(
-    device: SmartDevice, description: TPLinkSensorEntityDescription
+    device: Device, description: TPLinkSensorEntityDescription
 ) -> float | None:
     """Map a sensor key to the device attribute."""
     if attr := description.emeter_attr:
@@ -105,11 +105,11 @@ def async_emeter_from_device(
         return round(cast(float, emeter_today), description.precision)
     # today's consumption not available, when device was off all the day
     # bulb's do not report this information, so filter it out
-    return None if device.is_bulb else 0.0
+    return None if device.device_type == DeviceType.Bulb else 0.0
 
 
 def _async_sensors_for_device(
-    device: SmartDevice,
+    device: Device,
     coordinator: TPLinkDataUpdateCoordinator,
     has_parent: bool = False,
 ) -> list[SmartPlugSensor]:
@@ -135,7 +135,7 @@ async def async_setup_entry(
     if not parent.has_emeter:
         return
 
-    if parent.is_strip:
+    if parent.children:
         # Historically we only add the children if the device is a strip
         for idx, child in enumerate(parent.children):
             entities.extend(
@@ -154,7 +154,7 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
 
     def __init__(
         self,
-        device: SmartDevice,
+        device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
         description: TPLinkSensorEntityDescription,
         has_parent: bool = False,

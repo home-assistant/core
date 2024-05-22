@@ -5,12 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Coroutine
 from typing import Any, Concatenate
 
-from kasa import (
-    AuthenticationException,
-    SmartDevice,
-    SmartDeviceException,
-    TimeoutException,
-)
+from kasa import AuthenticationError, Device, KasaException, TimeoutError
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -29,7 +24,7 @@ def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
     async def _async_wrap(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         try:
             await func(self, *args, **kwargs)
-        except AuthenticationException as ex:
+        except AuthenticationError as ex:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -39,7 +34,7 @@ def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
                     "exc": str(ex),
                 },
             ) from ex
-        except TimeoutException as ex:
+        except TimeoutError as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_timeout",
@@ -48,7 +43,7 @@ def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
                     "exc": str(ex),
                 },
             ) from ex
-        except SmartDeviceException as ex:
+        except KasaException as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_error",
@@ -68,11 +63,11 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator]):
     _attr_has_entity_name = True
 
     def __init__(
-        self, device: SmartDevice, coordinator: TPLinkDataUpdateCoordinator
+        self, device: Device, coordinator: TPLinkDataUpdateCoordinator
     ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator)
-        self.device: SmartDevice = device
+        self.device: Device = device
         self._attr_unique_id = device.device_id
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
