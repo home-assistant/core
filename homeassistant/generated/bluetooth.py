@@ -5,7 +5,9 @@ To update, run python3 -m script.hassfest
 
 from __future__ import annotations
 
-BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
+from typing import Final
+
+BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "domain": "airthings_ble",
         "manufacturer_id": 820,
