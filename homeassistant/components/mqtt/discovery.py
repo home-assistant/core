@@ -243,7 +243,7 @@ def _valid_origin_info(discovery_payload: MQTTDiscoveryPayload) -> bool:
         MQTT_ORIGIN_INFO_SCHEMA(discovery_payload[CONF_ORIGIN])
     except Exception as exc:  # noqa:BLE001
         _LOGGER.warning(
-            "Unable to parse origin information " "from discovery message: %s, got %s",
+            "Unable to parse origin information from discovery message: %s, got %s",
             exc,
             discovery_payload[CONF_ORIGIN],
         )
