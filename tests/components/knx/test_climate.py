@@ -56,7 +56,7 @@ async def test_climate_basic_temperature_set(
 
 @pytest.mark.parametrize("heat_cool_ga", [None, "4/4/4"])
 async def test_climate_on_off(
-    hass: HomeAssistant, knx: KNXTestKit, heat_cool_ga: bool
+    hass: HomeAssistant, knx: KNXTestKit, heat_cool_ga: str | None
 ) -> None:
     """Test KNX climate on/off."""
     on_off_ga = "3/3/3"
