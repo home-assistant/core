@@ -214,5 +214,6 @@ def async_remove_entities(
             (split := entity_entry.unique_id.split("_"))[0] == mower_id
             and split[-1] == "zones"
             and entity_entry.unique_id not in active_zones
+            and entity_entry.domain == "switch"
         ):
             entity_reg.async_remove(entity_entry.entity_id)

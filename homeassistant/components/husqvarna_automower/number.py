@@ -238,10 +238,13 @@ def async_remove_entities(
         for work_area_id in _work_areas:
             uid = f"{mower_id}_{work_area_id}_cutting_height_work_area"
             active_work_areas.add(uid)
-        for entity_entry in er.async_entries_for_config_entry(
-            entity_reg, config_entry.entry_id
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_reg, config_entry.entry_id
+    ):
+        if (
+            (split := entity_entry.unique_id.split("_"))[0] == mower_id
+            and split[-1] == "area"
+            and entity_entry.unique_id not in active_work_areas
+            and entity_entry.domain == "number"
         ):
-            if entity_entry.unique_id.split("_")[0] == mower_id:
-                if entity_entry.unique_id.endswith("cutting_height_work_area"):
-                    if entity_entry.unique_id not in active_work_areas:
-                        entity_reg.async_remove(entity_entry.entity_id)
+            entity_reg.async_remove(entity_entry.entity_id)
