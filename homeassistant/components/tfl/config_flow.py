@@ -14,15 +14,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
 
 from .config_helper import config_from_entry
-from .const import (
-    CONF_API_APP_KEY,
-    CONF_STOP_POINT,
-    CONF_STOP_POINT_ADD_ANOTHER,
-    CONF_STOP_POINTS,
-    DOMAIN,
-)
+from .const import CONF_API_APP_KEY, CONF_STOP_POINTS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,10 +27,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 STEP_STOP_POINT_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_STOP_POINT): cv.string,
-        vol.Optional(CONF_STOP_POINT_ADD_ANOTHER): cv.boolean,
-    }
+    {vol.Required(CONF_STOP_POINTS): TextSelector(TextSelectorConfig(multiple=True))}
 )
 
 
@@ -89,6 +81,35 @@ async def validate_stop_point(
         raise CannotConnect from exception
 
 
+async def validate_stop_points(hass: HomeAssistant, app_key: str, stop_points):
+    """Validate the stop points."""
+    errors: dict[str, str] = {}
+    description_placeholders: dict[str, str] = {}
+    for stop_point in stop_points:
+        try:
+            await validate_stop_point(
+                hass,
+                app_key,
+                stop_point,
+            )
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+            break
+        except InvalidAuth:
+            errors["base"] = "invalid_auth"
+            break
+        except ValueError:
+            errors["base"] = "invalid_stop_point"
+            description_placeholders["stop_point"] = stop_point
+            break
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+            break
+
+    return errors, description_placeholders
+
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Transport for London."""
 
@@ -125,32 +146,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the stop point step."""
         errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
         if user_input is not None:
-            try:
-                app_key = self.data[CONF_API_APP_KEY]
-                await validate_stop_point(
-                    self.hass,
-                    app_key,
-                    user_input[CONF_STOP_POINT],
-                )
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except ValueError:
-                errors["base"] = "invalid_stop_point"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                # User input is valid, save the stop point
-                self.data[CONF_STOP_POINTS].append(user_input[CONF_STOP_POINT])
-                # If user ticked the box show this form again so they can add an
-                # additional stop point.
-                if user_input.get(CONF_STOP_POINT_ADD_ANOTHER, False):
-                    return await self.async_step_stop_point()
+            app_key = self.data[CONF_API_APP_KEY]
+            errors, description_placeholders = await validate_stop_points(
+                self.hass, app_key, user_input[CONF_STOP_POINTS]
+            )
 
-                # return await self.async_step_stop_points()
+            if not errors:
+                # User input is valid, save the stop point
+                self.data[CONF_STOP_POINTS].extend(user_input[CONF_STOP_POINTS])
+
                 return self.async_create_entry(
                     title="Transport for London", data=self.data
                 )
@@ -159,6 +165,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="stop_point",
             data_schema=STEP_STOP_POINT_DATA_SCHEMA,
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     @staticmethod
@@ -182,26 +189,37 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage the options for the TfL component."""
         errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
 
         if user_input is not None:
-            updated_stops = user_input[CONF_STOP_POINTS]
-            if (
-                CONF_STOP_POINT in user_input
-                and user_input[CONF_STOP_POINT] is not None
-            ):
-                updated_stops.append(user_input[CONF_STOP_POINT])
-
-            data: dict[str, Any] = {}
-            data[CONF_API_APP_KEY] = user_input[CONF_API_APP_KEY]
-            data[CONF_STOP_POINTS] = updated_stops
-
-            if not errors:
-                # Value of data will be set on the options property of our config_entry
-                # instance.
-                return self.async_create_entry(
-                    title="Transport for London",
-                    data=data,
+            # Validate the app key
+            try:
+                await validate_app_key(self.hass, user_input[CONF_API_APP_KEY])
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                # Validate the stop points
+                errors, description_placeholders = await validate_stop_points(
+                    self.hass,
+                    user_input[CONF_API_APP_KEY],
+                    user_input[CONF_STOP_POINTS],
                 )
+                if not errors:
+                    data: dict[str, Any] = {}
+                    data[CONF_API_APP_KEY] = user_input[CONF_API_APP_KEY]
+                    data[CONF_STOP_POINTS] = user_input[CONF_STOP_POINTS]
+
+                    # Value of data will be set on the options property of our config_entry
+                    # instance.
+                    return self.async_create_entry(
+                        title="Transport for London",
+                        data=data,
+                    )
 
         config = config_from_entry(self.config_entry)
         api_key = deepcopy(config[CONF_API_APP_KEY])
@@ -210,15 +228,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         options_schema = vol.Schema(
             {
                 vol.Optional(CONF_API_APP_KEY, default=api_key): cv.string,
-                vol.Optional(
-                    CONF_STOP_POINTS, default=list(all_stops)
-                ): cv.multi_select(all_stops),
-                vol.Optional(CONF_STOP_POINT): cv.string,
-                # vol.Optional(CONF_NAME): cv.string,
+                vol.Required(CONF_STOP_POINTS, default=all_stops): TextSelector(
+                    TextSelectorConfig(multiple=True)
+                ),
             }
         )
         return self.async_show_form(
-            step_id="init", data_schema=options_schema, errors=errors
+            step_id="init",
+            data_schema=options_schema,
+            errors=errors,
+            description_placeholders=description_placeholders,
         )
 
 

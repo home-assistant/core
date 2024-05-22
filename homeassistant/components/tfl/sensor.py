@@ -41,31 +41,46 @@ async def async_setup_entry(
 
     stop_point_ids: list[str] = conf[CONF_STOP_POINTS]
 
-    stop_point_infos = await hass.async_add_executor_job(
-        stop_point_api.getByIDs, stop_point_ids, False
-    )
-    devices = []
-    if isinstance(stop_point_infos, list):
-        for idx, stop_point_id in enumerate(stop_point_ids):
+    try:
+        stop_point_infos = await hass.async_add_executor_job(
+            stop_point_api.getByIDs, stop_point_ids, False
+        )
+        devices = []
+        if isinstance(stop_point_infos, list):
+            for idx, stop_point_id in enumerate(stop_point_ids):
+                devices.append(
+                    StopPointSensor(
+                        stop_point_api,
+                        stop_point_infos[idx]["commonName"],
+                        stop_point_id,
+                        entry.entry_id,
+                    )
+                )
+        else:
             devices.append(
                 StopPointSensor(
                     stop_point_api,
-                    stop_point_infos[idx]["commonName"],
-                    stop_point_id,
+                    stop_point_infos["commonName"],
+                    stop_point_ids[0],
                     entry.entry_id,
                 )
             )
-    else:
-        devices.append(
-            StopPointSensor(
-                stop_point_api,
-                stop_point_infos["commonName"],
-                stop_point_ids[0],
-                entry.entry_id,
-            )
-        )
 
-    async_add_entities(devices, True)
+        async_add_entities(devices, True)
+
+    except HTTPError as exception:
+        error_code = exception.code
+        _LOGGER.exception(
+            "Error retrieving stop point data from TfL for stop_points=%s with HTTP error_code=%s, entities will not be created",
+            stop_point_ids,
+            error_code,
+        )
+    except URLError as exception:
+        _LOGGER.exception(
+            "Error retrieving stop point data from TfL for stop_points=%s with URLError reason=%s, entities will not be created",
+            stop_point_ids,
+            exception.reason,
+        )
 
 
 class StopPointSensor(SensorEntity):
@@ -94,6 +109,7 @@ class StopPointSensor(SensorEntity):
     async def async_update(self) -> None:
         """Update Stop Point state."""
         try:
+            attributes = {}
 
             def raw_arrival_to_arrival_mapper(raw_arrival):
                 return {
@@ -106,22 +122,23 @@ class StopPointSensor(SensorEntity):
                 self._stop_point_api.getStationArrivals, self._stop_point_id
             )
 
-            raw_arrivals_sorted = sorted(
-                raw_arrivals, key=itemgetter(RAW_ARRIVAL_TIME_TO_STATION)
-            )
+            if raw_arrivals:
+                raw_arrivals_sorted = sorted(
+                    raw_arrivals, key=itemgetter(RAW_ARRIVAL_TIME_TO_STATION)
+                )
 
-            arrivals = list(map(raw_arrival_to_arrival_mapper, raw_arrivals_sorted))
-            _LOGGER.debug("Got arrivals=%s", arrivals)
+                arrivals = list(map(raw_arrival_to_arrival_mapper, raw_arrivals_sorted))
+                _LOGGER.debug("Got arrivals=%s", arrivals)
 
-            arrival_next = arrivals[0]
-            arrivals_next_3 = arrivals[:3]
+                arrival_next = arrivals[0]
+                arrivals_next_3 = arrivals[:3]
 
-            # Due to 255 character limit, the value of the sensor is the next arrival and
-            # the next 3 and full list are provided as attributes
-            self._attr_native_value = arrival_next
-            attributes = {}
-            attributes[ATTR_NEXT_THREE_ARRIVALS] = arrivals_next_3
-            attributes[ATTR_NEXT_ARRIVALS] = arrivals
+                # Due to 255 character limit, the value of the sensor is the next arrival and
+                # the next 3 and full list are provided as attributes
+                self._attr_native_value = arrival_next
+                attributes[ATTR_NEXT_THREE_ARRIVALS] = arrivals_next_3
+                attributes[ATTR_NEXT_ARRIVALS] = arrivals
+
             self._attr_extra_state_attributes = attributes
             self._attr_available = True
 
