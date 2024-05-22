@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from functools import partial
 from typing import Any
 
 from watchdog.events import (
@@ -97,5 +96,6 @@ class FolderWatcherEventEntity(EventEntity):
         """Register callbacks."""
         await super().async_added_to_hass()
         signal = f"folder_watcher-{self._entry.entry_id}-{self.entity_description.key}"
-        _handle = partial(self._async_handle_event, self.entity_description.key)
-        self.async_on_remove(async_dispatcher_connect(self.hass, signal, _handle))
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, signal, self._async_handle_event)
+        )

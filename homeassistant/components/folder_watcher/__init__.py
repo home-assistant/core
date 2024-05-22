@@ -152,7 +152,7 @@ class EventHandler(PatternMatchingEventHandler):
                 fireable,
             )
             signal = f"folder_watcher-{self.entry_id}-{event.event_type}"
-            dispatcher_send(self.hass, signal, _extra)
+            dispatcher_send(self.hass, signal, event.event_type, fireable)
 
     def on_modified(self, event: FileModifiedEvent) -> None:
         """File modified."""

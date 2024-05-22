@@ -31,7 +31,7 @@ async def test_event_entity(
     assert entity_entries
 
     def limit_attrs(prop, path):
-        exclude_attrs = {"entity_id", "friendly_name"}
+        exclude_attrs = {"entity_id", "friendly_name", "folder", "path"}
         return prop in exclude_attrs
 
     for entity_entry in entity_entries:
