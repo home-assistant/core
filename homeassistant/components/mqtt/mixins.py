@@ -1333,6 +1333,53 @@ class MqttEntity(
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
+    @callback
+    def callback_message_received(
+        self, msg_callback: MessageCallbackType, attributes: set[str]
+    ) -> MessageCallbackType:
+        """Run when new MQTT message has been received."""
+        mqtt_data = self.hass.data[DATA_MQTT]
+
+        def _attrs_have_changed(tracked_attrs: dict[str, Any]) -> bool:
+            """Return True if attributes on entity changed or if update is forced."""
+            if not (write_state := (getattr(self, "_attr_force_update", False))):
+                for attribute, last_value in tracked_attrs.items():
+                    if getattr(self, attribute, UNDEFINED) != last_value:
+                        write_state = True
+                        break
+
+            return write_state
+
+        debug_info_entities = self.hass.data[DATA_MQTT].debug_info_entities
+
+        def _log_message(msg: ReceiveMessage) -> None:
+            """Log message."""
+            messages = debug_info_entities[self.entity_id]["subscriptions"][
+                msg.subscribed_topic
+            ]["messages"]
+            if msg not in messages:
+                messages.append(msg)
+
+        def _message_callback(msg: ReceiveMessage) -> None:
+            """Process the message callback."""
+            tracked_attrs: dict[str, Any] = {
+                attribute: getattr(self, attribute, UNDEFINED)
+                for attribute in attributes
+            }
+            try:
+                _log_message(msg)
+                msg_callback(msg)
+            except MqttValueTemplateException as exc:
+                _LOGGER.warning(exc)
+                return
+            if not _attrs_have_changed(tracked_attrs):
+                return
+
+            mqtt_data.state_write_requests.write_state_request(self)
+
+        setattr(_message_callback, "__entity_id", self.entity_id)
+        return _message_callback
+
 
 def update_device(
     hass: HomeAssistant,

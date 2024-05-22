@@ -80,7 +80,7 @@ class EntitySubscription:
 def async_prepare_subscribe_topics(
     hass: HomeAssistant,
     new_state: dict[str, EntitySubscription] | None,
-    topics: dict[str, Any],
+    topics: dict[str, dict[str, Any]],
 ) -> dict[str, EntitySubscription]:
     """Prepare (re)subscribe to a set of MQTT topics.
 
