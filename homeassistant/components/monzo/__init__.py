@@ -10,6 +10,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from .api import AuthenticatedMonzoAPI
 from .const import DOMAIN
@@ -34,8 +35,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    await register_services(hass)
-
     return True
 
 
@@ -45,3 +44,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Monzo integration."""
+    await register_services(hass)
+    return True
