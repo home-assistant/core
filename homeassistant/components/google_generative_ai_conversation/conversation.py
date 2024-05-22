@@ -162,20 +162,15 @@ class GoogleGenerativeAIConversationEntity(
             raw_prompt = DEFAULT_PROMPT
             if user_prompt := self.entry.options.get(CONF_EXTRA_PROMPT):
                 raw_prompt += "\n" + user_prompt
-            model_name = RECOMMENDED_CHAT_MODEL
-            temperature = RECOMMENDED_TEMPERATURE
-            top_p = RECOMMENDED_TOP_P
-            top_k = RECOMMENDED_TOP_K
-            max_tokens = RECOMMENDED_MAX_TOKENS
+
         else:
             raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
-            model_name = self.entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
-            temperature = self.entry.options.get(
-                CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
-            )
-            top_p = self.entry.options.get(CONF_TOP_P, RECOMMENDED_TOP_P)
-            top_k = self.entry.options.get(CONF_TOP_K, RECOMMENDED_TOP_K)
-            max_tokens = self.entry.options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS)
+
+        model_name = self.entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        temperature = self.entry.options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE)
+        top_p = self.entry.options.get(CONF_TOP_P, RECOMMENDED_TOP_P)
+        top_k = self.entry.options.get(CONF_TOP_K, RECOMMENDED_TOP_K)
+        max_tokens = self.entry.options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS)
 
         model = genai.GenerativeModel(
             model_name=model_name,

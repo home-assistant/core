@@ -56,6 +56,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+RECOMMENDED_OPTIONS = {
+    CONF_RECOMMENDED: True,
+    CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+    CONF_EXTRA_PROMPT: "",
+}
+
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect.
@@ -96,11 +102,7 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title="Google Generative AI",
                 data=user_input,
-                options={
-                    CONF_RECOMMENDED: True,
-                    CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-                    CONF_EXTRA_PROMPT: "",
-                },
+                options=RECOMMENDED_OPTIONS,
             )
 
         return self.async_show_form(
@@ -129,6 +131,8 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
+        options: dict[str, Any] | MappingProxyType[str, Any] = self.config_entry.options
+
         if user_input is not None:
             if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
                 if user_input[CONF_LLM_HASS_API] == "none":
@@ -139,14 +143,17 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
             self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
 
             # If we switch to not recommended, generate used prompt.
-            if not user_input[CONF_RECOMMENDED]:
-                user_input[CONF_PROMPT] = (
-                    DEFAULT_PROMPT + "\n" + user_input.get(CONF_EXTRA_PROMPT, "")
-                )
+            if user_input[CONF_RECOMMENDED]:
+                options = RECOMMENDED_OPTIONS
+            else:
+                options = {
+                    CONF_RECOMMENDED: False,
+                    CONF_PROMPT: DEFAULT_PROMPT
+                    + "\n"
+                    + user_input.get(CONF_EXTRA_PROMPT, ""),
+                }
 
-        schema = await google_generative_ai_config_option_schema(
-            self.hass, user_input or self.config_entry.options
-        )
+        schema = await google_generative_ai_config_option_schema(self.hass, options)
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(schema),
