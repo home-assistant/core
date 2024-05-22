@@ -246,14 +246,14 @@ class MatchTargetsConstraints:
     @property
     def has_constraints(self) -> bool:
         """Returns True if at least one constraint is set (ignores assistant)."""
-        return (
-            bool(self.name)
-            or bool(self.area_name)
-            or bool(self.floor_name)
-            or bool(self.domains)
-            or bool(self.device_classes)
-            or bool(self.features)
-            or bool(self.states)
+        return bool(
+            self.name
+            or self.area_name
+            or self.floor_name
+            or self.domains
+            or self.device_classes
+            or self.features
+            or self.states
         )
 
 
