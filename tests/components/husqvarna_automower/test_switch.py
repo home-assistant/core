@@ -128,8 +128,7 @@ async def test_stay_out_zone_switch_commands(
         service_data={"entity_id": entity_id},
         blocking=True,
     )
-    assert len(mocked_method.mock_calls) == 1
-    mocked_method.assert_called_with(TEST_MOWER_ID, TEST_ZONE_ID, boolean)
+    mocked_method.assert_called_once_with(TEST_MOWER_ID, TEST_ZONE_ID, boolean)
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == excepted_state
