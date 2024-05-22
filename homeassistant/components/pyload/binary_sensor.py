@@ -9,12 +9,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import PyLoadConfigEntry
 from .const import DOMAIN, MANUFACTURER, NAME
 from .coordinator import PyLoadCoordinator
 from .util import api_url
@@ -37,10 +37,12 @@ SENSOR_DESCRIPTIONS: dict[str, BinarySensorEntityDescription] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: PyLoadConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors from a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -60,7 +62,7 @@ class PyLoadBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self,
         coordinator: PyLoadCoordinator,
         entity_description: BinarySensorEntityDescription,
-        entry: ConfigEntry,
+        entry: PyLoadConfigEntry,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
