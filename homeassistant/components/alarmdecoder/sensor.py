@@ -17,8 +17,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up for AlarmDecoder sensor."""
 
-    client = entry.runtime_data.client
-    entity = AlarmDecoderSensor(client=client)
+    entity = AlarmDecoderSensor(client=entry.runtime_data.client)
     async_add_entities([entity])
 
 

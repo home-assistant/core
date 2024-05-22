@@ -41,7 +41,7 @@ PLATFORMS = [
     Platform.SENSOR,
 ]
 
-type AlarmDecoderConfigEntry = ConfigEntry["AlarmDecoderData"]
+type AlarmDecoderConfigEntry = ConfigEntry[AlarmDecoderData]
 
 
 @dataclass

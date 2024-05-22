@@ -48,10 +48,9 @@ async def async_setup_entry(
     """Set up for AlarmDecoder alarm panels."""
     options = entry.options
     arm_options = options.get(OPTIONS_ARM, DEFAULT_ARM_OPTIONS)
-    client = entry.runtime_data.client
 
     entity = AlarmDecoderAlarmPanel(
-        client=client,
+        client=entry.runtime_data.client,
         auto_bypass=arm_options[CONF_AUTO_BYPASS],
         code_arm_required=arm_options[CONF_CODE_ARM_REQUIRED],
         alt_night_mode=arm_options[CONF_ALT_NIGHT_MODE],
