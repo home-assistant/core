@@ -185,6 +185,8 @@ RELOADABLE_PLATFORMS = [
     Platform.WATER_HEATER,
 ]
 
+TEMPLATE_ERRORS = (jinja2.TemplateError, TemplateError, TypeError, ValueError)
+
 SUPPORTED_COMPONENTS = {
     "alarm_control_panel",
     "binary_sensor",
@@ -215,5 +217,3 @@ SUPPORTED_COMPONENTS = {
     "valve",
     "water_heater",
 }
-
-TEMPLATE_ERRORS = (jinja2.TemplateError, TemplateError, TypeError, ValueError)
