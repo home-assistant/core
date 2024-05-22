@@ -276,8 +276,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) -
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     version = config_entry.version
+    minor_version = config_entry.minor_version
 
-    LOGGER.debug("Migrating from version %s", version)
+    LOGGER.error("Migrating from version %s.%s", version, minor_version)
 
     # 1 -> 2: Unique ID format changed, so delete and re-import:
     if version == 1:
@@ -290,6 +291,20 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         version = 2
         hass.config_entries.async_update_entry(config_entry, version=2)
 
-    LOGGER.debug("Migration to version %s successful", version)
+    elif version == 2 and minor_version < 2:
+        # Cleanup invalid MAC addresses - see #103512
+        dev_reg = dr.async_get(hass)
+        for device in dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id):
+            for connection in device.connections:
+                if (
+                    connection[0] == dr.CONNECTION_NETWORK_MAC
+                    and connection[1] == "none"
+                ):
+                    dev_reg.async_remove_device(device.id)
+
+        minor_version = 2
+        hass.config_entries.async_update_entry(config_entry, version=2, minor_version=2)
+
+    LOGGER.error("Migration to version  %s.%s successful", version, minor_version)
 
     return True
