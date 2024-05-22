@@ -296,10 +296,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         dev_reg = dr.async_get(hass)
         for device in dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id):
             for connection in device.connections:
-                if (
-                    connection[0] == dr.CONNECTION_NETWORK_MAC
-                    and connection[1] == "none"
-                ):
+                if connection == (dr.CONNECTION_NETWORK_MAC, "none"):
                     dev_reg.async_remove_device(device.id)
 
         minor_version = 2
