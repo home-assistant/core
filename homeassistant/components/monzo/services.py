@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 
-from monzopy import InvalidMonzoAPIResponseError
+from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -54,7 +54,7 @@ async def register_services(hass: HomeAssistant) -> None:
         try:
             account_id = await _get_account_id(call, api, device_registry)
             pot_ids = await _get_pot_ids(call, device_registry)
-        except InvalidMonzoAPIResponseError as err:
+        except (InvalidMonzoAPIResponseError, AuthorisationExpiredError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="external_transfer_failure"
             ) from err

@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from unittest.mock import AsyncMock
 
+from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
 import pytest
 
 from homeassistant.components.monzo.const import DOMAIN
@@ -176,6 +177,28 @@ async def test_transfer_raises_validation_error_if_no_valid_pots(
     """Test pot_transfer raises ServiceValidationError if no valid pots selected."""
     with pytest.raises(ServiceValidationError):
         await _make_transfer(test_data.hass, test_data.account_device_id, [""])
+
+
+@pytest.mark.parametrize(
+    "api_error", [InvalidMonzoAPIResponseError, AuthorisationExpiredError]
+)
+async def test_external_failure_to_get_current_account_id(
+    api_error: Exception,
+    test_data: ServicesTestData,
+    monzo: AsyncMock,
+) -> None:
+    """Test pot_transfer raises HomeAssistantError if transfer fails externally."""
+    monzo.user_account.accounts.side_effect = api_error
+    service_data = {
+        TRANSFER_POTS: [test_data.pot_device_id],
+        TRANSFER_TYPE: TRANSFER_TYPE_DEPOSIT,
+        ATTR_AMOUNT: 1.0,
+    }
+
+    with pytest.raises(HomeAssistantError):
+        await test_data.hass.services.async_call(
+            DOMAIN, SERVICE_POT_TRANSFER, service_data, blocking=True
+        )
 
 
 async def test_external_transfer_failure(
