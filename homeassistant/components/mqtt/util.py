@@ -123,7 +123,13 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
 
 
 def valid_topic(topic: Any) -> str:
-    """Validate that this is a valid topic name/filter."""
+    """Validate that this is a valid topic name/filter.
+
+    This function is not cached and is not expected to be called
+    directly. If it gets used outside of valid_subscribe_topic and
+    valid_publish_topic, it may need an lru_cache decorator or
+    an lru_cache decorator on the function where its used.
+    """
     validated_topic = cv.string(topic)
     try:
         raw_validated_topic = validated_topic.encode("utf-8")
