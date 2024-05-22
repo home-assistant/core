@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_MODEL,
     CONF_NAME,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -79,3 +80,19 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
         # If the ip address changed since we last saw the device
         # broadcast a packet as well
         send_magic_packet(self._mac)
+
+    async def _async_turn_off(self) -> None:
+        """Turn the device off."""
+        await self._bridge.async_power_off()
+        await self.coordinator.async_refresh()
+
+    async def _async_turn_on(self) -> None:
+        """Turn the remote on."""
+        if self._turn_on_action:
+            await self._turn_on_action.async_run(self.hass, self._context)
+        elif self._mac:
+            await self.hass.async_add_executor_job(self._wake_on_lan)
+        else:
+            raise HomeAssistantError(
+                f"Entity {self.entity_id} does not support this service."
+            )

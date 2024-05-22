@@ -299,8 +299,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
 
     async def async_turn_off(self) -> None:
         """Turn off media player."""
-        await self._bridge.async_power_off()
-        await self.coordinator.async_refresh()
+        await super()._async_turn_off()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level on the media player."""
@@ -374,10 +373,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
-        if self._turn_on_action:
-            await self._turn_on_action.async_run(self.hass, self._context)
-        elif self._mac:
-            await self.hass.async_add_executor_job(self._wake_on_lan)
+        await super()._async_turn_on()
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""

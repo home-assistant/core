@@ -38,8 +38,8 @@ class SamsungTVRemote(SamsungTVEntity, RemoteEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self._bridge.async_power_off()
-        await self.coordinator.async_refresh()
+        await super()._async_turn_off()
+
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to a device.
@@ -59,11 +59,4 @@ class SamsungTVRemote(SamsungTVEntity, RemoteEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the remote on."""
-        if self._turn_on_action:
-            await self._turn_on_action.async_run(self.hass, self._context)
-        elif self._mac:
-            await self.hass.async_add_executor_job(self._wake_on_lan)
-        else:
-            raise HomeAssistantError(
-                f"Entity {self.entity_id} does not support this service."
-            )
+        await super()._async_turn_on()
