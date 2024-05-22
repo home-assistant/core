@@ -1,22 +1,23 @@
 """Support for AlarmDecoder sensors (Shows Panel Display)."""
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_AD, DOMAIN, SIGNAL_PANEL_MESSAGE
+from . import AlarmDecoderConfigEntry
+from .const import SIGNAL_PANEL_MESSAGE
 from .entity import AlarmDecoderEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AlarmDecoderConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up for AlarmDecoder sensor."""
 
-    client = hass.data[DOMAIN][entry.entry_id][DATA_AD]
-    entity = AlarmDecoderSensor(client=client)
+    entity = AlarmDecoderSensor(client=entry.runtime_data.client)
     async_add_entities([entity])
 
 
