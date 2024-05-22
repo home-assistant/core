@@ -10,7 +10,7 @@ from hass_nabucasa.voice import MAP_VOICE
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
-from homeassistant.components import http, webhook
+from homeassistant.components import webhook
 from homeassistant.components.google_assistant.http import (
     async_get_users as async_get_google_assistant_users,
 )
@@ -44,7 +44,6 @@ from .const import (
     PREF_INSTANCE_ID,
     PREF_REMOTE_ALLOW_REMOTE_ENABLE,
     PREF_REMOTE_DOMAIN,
-    PREF_STRICT_CONNECTION,
     PREF_TTS_DEFAULT_VOICE,
     PREF_USERNAME,
 )
@@ -177,7 +176,6 @@ class CloudPreferences:
         google_settings_version: int | UndefinedType = UNDEFINED,
         google_connected: bool | UndefinedType = UNDEFINED,
         remote_allow_remote_enable: bool | UndefinedType = UNDEFINED,
-        strict_connection: http.const.StrictConnectionMode | UndefinedType = UNDEFINED,
     ) -> None:
         """Update user preferences."""
         prefs = {**self._prefs}
@@ -197,7 +195,6 @@ class CloudPreferences:
             (PREF_REMOTE_DOMAIN, remote_domain),
             (PREF_GOOGLE_CONNECTED, google_connected),
             (PREF_REMOTE_ALLOW_REMOTE_ENABLE, remote_allow_remote_enable),
-            (PREF_STRICT_CONNECTION, strict_connection),
         ):
             if value is not UNDEFINED:
                 prefs[key] = value
@@ -245,7 +242,6 @@ class CloudPreferences:
             PREF_GOOGLE_SECURE_DEVICES_PIN: self.google_secure_devices_pin,
             PREF_REMOTE_ALLOW_REMOTE_ENABLE: self.remote_allow_remote_enable,
             PREF_TTS_DEFAULT_VOICE: self.tts_default_voice,
-            PREF_STRICT_CONNECTION: self.strict_connection,
         }
 
     @property
@@ -362,20 +358,6 @@ class CloudPreferences:
         """
         return self._prefs.get(PREF_TTS_DEFAULT_VOICE, DEFAULT_TTS_DEFAULT_VOICE)  # type: ignore[no-any-return]
 
-    @property
-    def strict_connection(self) -> http.const.StrictConnectionMode:
-        """Return the strict connection mode."""
-        mode = self._prefs.get(PREF_STRICT_CONNECTION)
-
-        if mode is None:
-            # Set to default value
-            # We store None in the store as the default value to detect if the user has changed the
-            # value or not.
-            mode = http.const.StrictConnectionMode.DISABLED
-        elif not isinstance(mode, http.const.StrictConnectionMode):
-            mode = http.const.StrictConnectionMode(mode)
-        return mode
-
     async def get_cloud_user(self) -> str:
         """Return ID of Home Assistant Cloud system user."""
         user = await self._load_cloud_user()
@@ -433,5 +415,4 @@ class CloudPreferences:
             PREF_REMOTE_DOMAIN: None,
             PREF_REMOTE_ALLOW_REMOTE_ENABLE: True,
             PREF_USERNAME: username,
-            PREF_STRICT_CONNECTION: None,
         }
