@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from typing import Any
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -29,7 +29,12 @@ class SamsungTVRemote(SamsungTVEntity, RemoteEntity):
     """Device that sends commands to a SamsungTV."""
 
     _attr_name = None
-    _attr_should_poll = False
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle data update."""
+        self._attr_is_on = self.coordinator.is_on
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
