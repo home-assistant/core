@@ -104,9 +104,7 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
 def options_schema(domain: str) -> vol.Schema:
     """Generate options schema."""
     return vol.Schema(
-        {
-            vol.Required(CONF_STATE): selector.TemplateSelector(),
-        }
+        {vol.Required(CONF_STATE): selector.TemplateSelector()}
         | generate_schema(domain, "option"),
     )
 
