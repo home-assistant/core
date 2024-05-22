@@ -135,16 +135,16 @@ def valid_topic(topic: Any) -> str:
         raise vol.Invalid(
             "MQTT topic name/filter must not be longer than 65535 encoded bytes."
         )
-    if "\0" in validated_topic:
-        raise vol.Invalid("MQTT topic name/filter must not contain null character.")
-    if any(char <= "\u001f" for char in validated_topic):
-        raise vol.Invalid("MQTT topic name/filter must not contain control characters.")
-    if any("\u007f" <= char <= "\u009f" for char in validated_topic):
-        raise vol.Invalid("MQTT topic name/filter must not contain control characters.")
-    if any("\ufdd0" <= char <= "\ufdef" for char in validated_topic):
-        raise vol.Invalid("MQTT topic name/filter must not contain non-characters.")
-    if any((ord(char) & 0xFFFF) in (0xFFFE, 0xFFFF) for char in validated_topic):
-        raise vol.Invalid("MQTT topic name/filter must not contain noncharacters.")
+
+    for char in validated_topic:
+        if char == "\0":
+            raise vol.Invalid("MQTT topic name/filter must not contain null character.")
+        if char <= "\u001f" or "\u007f" <= char <= "\u009f":
+            raise vol.Invalid(
+                "MQTT topic name/filter must not contain control characters."
+            )
+        if "\ufdd0" <= char <= "\ufdef" or (ord(char) & 0xFFFF) in (0xFFFE, 0xFFFF):
+            raise vol.Invalid("MQTT topic name/filter must not contain non-characters.")
 
     return validated_topic
 
@@ -152,13 +152,14 @@ def valid_topic(topic: Any) -> str:
 def valid_subscribe_topic(topic: Any) -> str:
     """Validate that we can subscribe using this MQTT topic."""
     validated_topic = valid_topic(topic)
-    for i in (i for i, c in enumerate(validated_topic) if c == "+"):
-        if (i > 0 and validated_topic[i - 1] != "/") or (
-            i < len(validated_topic) - 1 and validated_topic[i + 1] != "/"
-        ):
-            raise vol.Invalid(
-                "Single-level wildcard must occupy an entire level of the filter"
-            )
+    if "+" in validated_topic:
+        for i in (i for i, c in enumerate(validated_topic) if c == "+"):
+            if (i > 0 and validated_topic[i - 1] != "/") or (
+                i < len(validated_topic) - 1 and validated_topic[i + 1] != "/"
+            ):
+                raise vol.Invalid(
+                    "Single-level wildcard must occupy an entire level of the filter"
+                )
 
     index = validated_topic.find("#")
     if index != -1:
