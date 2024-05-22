@@ -38,13 +38,13 @@ from .mixins import (
     async_setup_entity_entry_helper,
 )
 from .models import (
+    DATA_MQTT,
     MqttValueTemplate,
     MqttValueTemplateException,
     PayloadSentinel,
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -194,7 +194,7 @@ class MqttEvent(MqttEntity, EventEntity):
                     payload,
                 )
                 return
-            mqtt_data = get_mqtt_data(self.hass)
+            mqtt_data = self.hass.data[DATA_MQTT]
             mqtt_data.state_write_requests.write_state_request(self)
 
         topics["state_topic"] = {
