@@ -5,7 +5,9 @@ To update, run python3 -m script.amazon_polly
 
 from __future__ import annotations
 
-SUPPORTED_REGIONS: list[str] = [
+from typing import Final
+
+SUPPORTED_REGIONS: Final[set[str]] = {
     "af-south-1",
     "ap-east-1",
     "ap-northeast-1",
@@ -26,9 +28,9 @@ SUPPORTED_REGIONS: list[str] = [
     "us-east-2",
     "us-west-1",
     "us-west-2",
-]
+}
 
-SUPPORTED_VOICES: list[str] = [
+SUPPORTED_VOICES: Final[set[str]] = {
     "Aditi",
     "Adriano",
     "Amy",
@@ -125,4 +127,4 @@ SUPPORTED_VOICES: list[str] = [
     "Zayd",
     "Zeina",
     "Zhiyu",
-]
+}
