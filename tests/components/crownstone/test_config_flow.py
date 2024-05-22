@@ -30,7 +30,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-MockFixture = Generator[MagicMock | AsyncMock, None, None]
+type MockFixture = Generator[MagicMock | AsyncMock, None, None]
 
 
 @pytest.fixture(name="crownstone_setup")

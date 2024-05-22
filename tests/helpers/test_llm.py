@@ -10,11 +10,34 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent, llm
 
 
+async def test_get_api_no_existing(hass: HomeAssistant) -> None:
+    """Test getting an llm api where no config exists."""
+    with pytest.raises(HomeAssistantError):
+        llm.async_get_api(hass, "non-existing")
+
+
+async def test_register_api(hass: HomeAssistant) -> None:
+    """Test registering an llm api."""
+
+    class MyAPI(llm.API):
+        def async_get_tools(self) -> list[llm.Tool]:
+            """Return a list of tools."""
+            return []
+
+    api = MyAPI(hass=hass, id="test", name="Test", prompt_template="")
+    llm.async_register_api(hass, api)
+
+    assert llm.async_get_api(hass, "test") is api
+    assert api in llm.async_get_apis(hass)
+
+    with pytest.raises(HomeAssistantError):
+        llm.async_register_api(hass, api)
+
+
 async def test_call_tool_no_existing(hass: HomeAssistant) -> None:
     """Test calling an llm tool where no config exists."""
     with pytest.raises(HomeAssistantError):
-        await llm.async_call_tool(
-            hass,
+        await llm.async_get_api(hass, "intent").async_call_tool(
             llm.ToolInput(
                 "test_tool",
                 {},
@@ -23,12 +46,13 @@ async def test_call_tool_no_existing(hass: HomeAssistant) -> None:
                 None,
                 None,
                 None,
+                None,
             ),
         )
 
 
-async def test_intent_tool(hass: HomeAssistant) -> None:
-    """Test IntentTool class."""
+async def test_assist_api(hass: HomeAssistant) -> None:
+    """Test Assist API."""
     schema = {
         vol.Optional("area"): cv.string,
         vol.Optional("floor"): cv.string,
@@ -42,8 +66,11 @@ async def test_intent_tool(hass: HomeAssistant) -> None:
 
     intent.async_register(hass, intent_handler)
 
-    assert len(list(llm.async_get_tools(hass))) == 1
-    tool = list(llm.async_get_tools(hass))[0]
+    assert len(llm.async_get_apis(hass)) == 1
+    api = llm.async_get_api(hass, "assist")
+    tools = api.async_get_tools()
+    assert len(tools) == 1
+    tool = tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
     assert tool.parameters == vol.Schema(intent_handler.slot_schema)
@@ -61,12 +88,13 @@ async def test_intent_tool(hass: HomeAssistant) -> None:
         user_prompt="test_text",
         language="*",
         assistant="test_assistant",
+        device_id="test_device",
     )
 
     with patch(
         "homeassistant.helpers.intent.async_handle", return_value=intent_response
     ) as mock_intent_handle:
-        response = await llm.async_call_tool(hass, tool_input)
+        response = await api.async_call_tool(tool_input)
 
     mock_intent_handle.assert_awaited_once_with(
         hass,
@@ -80,6 +108,7 @@ async def test_intent_tool(hass: HomeAssistant) -> None:
         test_context,
         "*",
         "test_assistant",
+        "test_device",
     )
     assert response == {
         "card": {},
@@ -92,3 +121,21 @@ async def test_intent_tool(hass: HomeAssistant) -> None:
         "response_type": "action_done",
         "speech": {},
     }
+
+
+async def test_assist_api_description(hass: HomeAssistant) -> None:
+    """Test intent description with Assist API."""
+
+    class MyIntentHandler(intent.IntentHandler):
+        intent_type = "test_intent"
+        description = "my intent handler"
+
+    intent.async_register(hass, MyIntentHandler())
+
+    assert len(llm.async_get_apis(hass)) == 1
+    api = llm.async_get_api(hass, "assist")
+    tools = api.async_get_tools()
+    assert len(tools) == 1
+    tool = tools[0]
+    assert tool.name == "test_intent"
+    assert tool.description == "my intent handler"

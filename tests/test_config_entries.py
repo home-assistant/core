@@ -90,6 +90,89 @@ async def manager(hass: HomeAssistant) -> config_entries.ConfigEntries:
     return manager
 
 
+async def test_setup_race_only_setup_once(hass: HomeAssistant) -> None:
+    """Test ensure that config entries are only setup once."""
+    attempts = 0
+    slow_config_entry_setup_future = hass.loop.create_future()
+    fast_config_entry_setup_future = hass.loop.create_future()
+    slow_setup_future = hass.loop.create_future()
+
+    async def async_setup(hass, config):
+        """Mock setup."""
+        await slow_setup_future
+        return True
+
+    async def async_setup_entry(hass, entry):
+        """Mock setup entry."""
+        slow = entry.data["slow"]
+        if slow:
+            await slow_config_entry_setup_future
+            return True
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise ConfigEntryNotReady
+        await fast_config_entry_setup_future
+        return True
+
+    async def async_unload_entry(hass, entry):
+        """Mock unload entry."""
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=async_setup,
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=async_unload_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    entry = MockConfigEntry(domain="comp", data={"slow": False})
+    entry.add_to_hass(hass)
+
+    entry2 = MockConfigEntry(domain="comp", data={"slow": True})
+    entry2.add_to_hass(hass)
+    await entry2.setup_lock.acquire()
+
+    async def _async_reload_entry(entry: MockConfigEntry):
+        async with entry.setup_lock:
+            await entry.async_unload(hass)
+            await entry.async_setup(hass)
+
+    hass.async_create_task(_async_reload_entry(entry2))
+
+    setup_task = hass.async_create_task(async_setup_component(hass, "comp", {}))
+    entry2.setup_lock.release()
+
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert entry2.state is config_entries.ConfigEntryState.NOT_LOADED
+
+    assert "comp" not in hass.config.components
+    slow_setup_future.set_result(None)
+    await asyncio.sleep(0)
+    assert "comp" in hass.config.components
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+    assert entry2.state is config_entries.ConfigEntryState.SETUP_IN_PROGRESS
+
+    fast_config_entry_setup_future.set_result(None)
+    # Make sure setup retry is started
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+    slow_config_entry_setup_future.set_result(None)
+    await hass.async_block_till_done()
+
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+    await hass.async_block_till_done()
+
+    assert attempts == 2
+    await hass.async_block_till_done()
+    assert setup_task.done()
+    assert entry2.state is config_entries.ConfigEntryState.LOADED
+
+
 async def test_call_setup_entry(hass: HomeAssistant) -> None:
     """Test we call <component>.setup_entry."""
     entry = MockConfigEntry(domain="comp")
@@ -5315,3 +5398,76 @@ async def test_reload_during_setup(hass: HomeAssistant) -> None:
     await setup_task
     await reload_task
     assert setup_calls == 2
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [
+        ConfigEntryError,
+        ConfigEntryAuthFailed,
+        ConfigEntryNotReady,
+    ],
+)
+async def test_raise_wrong_exception_in_forwarded_platform(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    exc: Exception,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that we can remove an entry."""
+
+    async def mock_setup_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock setting up entry."""
+        await hass.config_entries.async_forward_entry_setups(entry, ["light"])
+        return True
+
+    async def mock_unload_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock unloading an entry."""
+        result = await hass.config_entries.async_unload_platforms(entry, ["light"])
+        assert result
+        return result
+
+    mock_remove_entry = AsyncMock(return_value=None)
+
+    async def mock_setup_entry_platform(
+        hass: HomeAssistant,
+        entry: config_entries.ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Mock setting up platform."""
+        raise exc
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=mock_unload_entry,
+            async_remove_entry=mock_remove_entry,
+        ),
+    )
+    mock_platform(
+        hass, "test.light", MockPlatform(async_setup_entry=mock_setup_entry_platform)
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    entry = MockConfigEntry(domain="test", entry_id="test2")
+    entry.add_to_manager(manager)
+
+    # Setup entry
+    await manager.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    exc_type_name = type(exc()).__name__
+    assert (
+        f"test raises exception {exc_type_name} in forwarded platform light;"
+        in caplog.text
+    )
+    assert (
+        f"Instead raise {exc_type_name} before calling async_forward_entry_setups"
+        in caplog.text
+    )

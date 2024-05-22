@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Self, TypeVar
+from typing import Any, Self
 
 import voluptuous as vol
 
@@ -29,7 +29,6 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
-_T = TypeVar("_T")
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "timer"
@@ -82,7 +81,7 @@ def _format_timedelta(delta: timedelta) -> str:
     return f"{int(hours)}:{int(minutes):02}:{int(seconds):02}"
 
 
-def _none_to_empty_dict(value: _T | None) -> _T | dict[Any, Any]:
+def _none_to_empty_dict[_T](value: _T | None) -> _T | dict[Any, Any]:
     if value is None:
         return {}
     return value

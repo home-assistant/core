@@ -268,7 +268,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
                 "bug (https://github.com/home-assistant/core/pull/"
                 "11631#issuecomment-357507744)"
             )
-            return
+            return None
 
         if NO_MOTION in data:
             self._no_motion_since = data[NO_MOTION]
