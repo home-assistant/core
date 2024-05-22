@@ -1067,6 +1067,7 @@ omit =
     homeassistant/components/pyload/__init__.py
     homeassistant/components/pyload/coordinator.py
     homeassistant/components/pyload/sensor.py
+    homeassistant/components/pyload/switch.py
     homeassistant/components/qbittorrent/__init__.py
     homeassistant/components/qbittorrent/coordinator.py
     homeassistant/components/qbittorrent/sensor.py
