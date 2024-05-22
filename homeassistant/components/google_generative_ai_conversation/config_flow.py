@@ -200,6 +200,11 @@ async def google_generative_ai_config_option_schema(
             value="BLOCK_LOW_AND_ABOVE",
         ),
     ]
+    harm_block_thresholds_selector = SelectSelector(
+        SelectSelectorConfig(
+            mode=SelectSelectorMode.DROPDOWN, options=harm_block_thresholds
+        )
+    )
 
     return {
         vol.Optional(
@@ -248,22 +253,22 @@ async def google_generative_ai_config_option_schema(
                 "suggested_value": options.get(CONF_HARASSMENT_BLOCK_THRESHOLD)
             },
             default=DEFAULT_HARM_BLOCK_THRESHOLD,
-        ): SelectSelector(SelectSelectorConfig(options=harm_block_thresholds)),
+        ): harm_block_thresholds_selector,
         vol.Optional(
             CONF_HATE_BLOCK_THRESHOLD,
             description={"suggested_value": options.get(CONF_HATE_BLOCK_THRESHOLD)},
             default=DEFAULT_HARM_BLOCK_THRESHOLD,
-        ): SelectSelector(SelectSelectorConfig(options=harm_block_thresholds)),
+        ): harm_block_thresholds_selector,
         vol.Optional(
             CONF_SEXUAL_BLOCK_THRESHOLD,
             description={"suggested_value": options.get(CONF_SEXUAL_BLOCK_THRESHOLD)},
             default=DEFAULT_HARM_BLOCK_THRESHOLD,
-        ): SelectSelector(SelectSelectorConfig(options=harm_block_thresholds)),
+        ): harm_block_thresholds_selector,
         vol.Optional(
             CONF_DANGEROUS_BLOCK_THRESHOLD,
             description={
                 "suggested_value": options.get(CONF_DANGEROUS_BLOCK_THRESHOLD)
             },
             default=DEFAULT_HARM_BLOCK_THRESHOLD,
-        ): SelectSelector(SelectSelectorConfig(options=harm_block_thresholds)),
+        ): harm_block_thresholds_selector,
     }
