@@ -250,7 +250,7 @@
         "name": "Enable schedule"
       },
       "stay_out_zones": {
-        "name": "Enable {stay_out_zone}"
+        "name": "Avoid {stay_out_zone}"
       }
     }
   }
