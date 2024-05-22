@@ -121,7 +121,7 @@ TIME_SENSORS = (
     ),
     SensorEntityDescription(
         key="three_stars",
-        name="T'set Hakochavim - 3 stars",
+        name="T'set Hakochavim, 3 stars",
         icon="mdi:weather-night",
     ),
     SensorEntityDescription(
