@@ -1,0 +1,11 @@
+{
+  "domain": "llm_tools",
+  "name": "LLM Tools HTTP API",
+  "codeowners": ["@home-assistant/core", "@Shulyaka"],
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/api",
+  "integration_type": "system",
+  "iot_class": "local_push",
+  "quality_scale": "internal",
+  "requirements": ["voluptuous-openapi==0.0.4"]
+}

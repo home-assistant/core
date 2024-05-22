@@ -2826,6 +2826,7 @@ voip-utils==0.1.0
 volkszaehler==0.4.0
 
 # homeassistant.components.google_generative_ai_conversation
+# homeassistant.components.llm_tools
 # homeassistant.components.openai_conversation
 voluptuous-openapi==0.0.4
 
