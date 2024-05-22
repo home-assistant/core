@@ -122,7 +122,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
         self._attr_entity_category = self._category_for_feature(feature)
 
-        # Special handling for entity classes that define unique_id on their own.
+        # Special handling for primary state attribute (backwards compat for the main switch).
         if feature.id == PRIMARY_STATE_ID:
             self._attr_unique_id = legacy_device_id(device)
         else:

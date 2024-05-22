@@ -42,7 +42,7 @@ async def async_setup_entry(
         coordinator=parent_coordinator,
     )
 
-    async_add_entities(entities)
+    async_add_entities(entities, update_before_add=True)
 
 
 class Switch(CoordinatedTPLinkEntity, SwitchEntity):
