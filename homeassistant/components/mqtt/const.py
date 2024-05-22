@@ -24,6 +24,7 @@ CONF_PAYLOAD_AVAILABLE = "payload_available"
 CONF_PAYLOAD_NOT_AVAILABLE = "payload_not_available"
 
 CONF_AVAILABILITY = "availability"
+
 CONF_AVAILABILITY_MODE = "availability_mode"
 CONF_AVAILABILITY_TEMPLATE = "availability_template"
 CONF_AVAILABILITY_TOPIC = "availability_topic"
@@ -216,34 +217,3 @@ SUPPORTED_COMPONENTS = {
 }
 
 TEMPLATE_ERRORS = (jinja2.TemplateError, TemplateError, TypeError, ValueError)
-
-SUPPORTED_COMPONENTS = {
-    "alarm_control_panel",
-    "binary_sensor",
-    "button",
-    "camera",
-    "climate",
-    "cover",
-    "device_automation",
-    "device_tracker",
-    "event",
-    "fan",
-    "humidifier",
-    "image",
-    "lawn_mower",
-    "light",
-    "lock",
-    "notify",
-    "number",
-    "scene",
-    "siren",
-    "select",
-    "sensor",
-    "switch",
-    "tag",
-    "text",
-    "update",
-    "vacuum",
-    "valve",
-    "water_heater",
-}
