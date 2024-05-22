@@ -18,7 +18,9 @@
     "step": {
       "init": {
         "data": {
+          "recommended": "Recommended settings",
           "prompt": "Prompt Template",
+          "extra_prompt": "Extra prompt template",
           "chat_model": "[%key:common::generic::model%]",
           "temperature": "Temperature",
           "top_p": "Top P",
