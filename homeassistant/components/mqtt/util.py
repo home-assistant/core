@@ -26,14 +26,12 @@ from .const import (
     CONF_CERTIFICATE,
     CONF_CLIENT_CERT,
     CONF_CLIENT_KEY,
-    DATA_MQTT,
-    DATA_MQTT_AVAILABLE,
     DEFAULT_ENCODING,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
 )
-from .models import MqttData
+from .models import DATA_MQTT, DATA_MQTT_AVAILABLE
 
 AVAILABILITY_TIMEOUT = 30.0
 
@@ -51,7 +49,7 @@ async def async_forward_entry_setup_and_setup_discovery(
     hass: HomeAssistant, config_entry: ConfigEntry, platforms: set[Platform | str]
 ) -> None:
     """Forward the config entry setup to the platforms and set up discovery."""
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
     platforms_loaded = mqtt_data.platforms_loaded
     new_platforms: set[Platform | str] = platforms - platforms_loaded
     tasks: list[asyncio.Task] = []
@@ -85,7 +83,9 @@ async def async_forward_entry_setup_and_setup_discovery(
 
 def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
     """Return true when the MQTT config entry is enabled."""
-    return hass.config_entries.async_has_entries(
+    return (
+        DATA_MQTT in hass.data and hass.data[DATA_MQTT].client.connected
+    ) or hass.config_entries.async_has_entries(
         DOMAIN, include_disabled=False, include_ignore=False
     )
 
@@ -227,13 +227,6 @@ def valid_birth_will(config: ConfigType) -> ConfigType:
     if config:
         config = _MQTT_WILL_BIRTH_SCHEMA(config)
     return config
-
-
-@lru_cache(maxsize=1)
-def get_mqtt_data(hass: HomeAssistant) -> MqttData:
-    """Return typed MqttData from hass.data[DATA_MQTT]."""
-    mqtt_data: MqttData = hass.data[DATA_MQTT]
-    return mqtt_data
 
 
 async def async_create_certificate_temp_files(
