@@ -86,9 +86,6 @@ CONF_CONFIGURATION_URL = "configuration_url"
 CONF_OBJECT_ID = "object_id"
 CONF_SUPPORT_URL = "support_url"
 
-DATA_MQTT = "mqtt"
-DATA_MQTT_AVAILABLE = "mqtt_client_available"
-
 DEFAULT_PREFIX = "homeassistant"
 DEFAULT_BIRTH_WILL_TOPIC = DEFAULT_PREFIX + "/status"
 DEFAULT_DISCOVERY = True

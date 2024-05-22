@@ -66,6 +66,7 @@ from .const import (
     TRANSPORT_WEBSOCKETS,
 )
 from .models import (
+    DATA_MQTT,
     AsyncMessageCallbackType,
     MessageCallbackType,
     MqttData,
@@ -73,7 +74,7 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
 )
-from .util import get_file_path, get_mqtt_data, mqtt_config_entry_enabled
+from .util import get_file_path, mqtt_config_entry_enabled
 
 if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally
@@ -132,7 +133,7 @@ async def async_publish(
             translation_domain=DOMAIN,
             translation_placeholders={"topic": topic},
         )
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
     outgoing_payload = payload
     if not isinstance(payload, bytes):
         if not encoding:
@@ -186,7 +187,7 @@ async def async_subscribe(
             translation_placeholders={"topic": topic},
         )
     try:
-        mqtt_data = get_mqtt_data(hass)
+        mqtt_data = hass.data[DATA_MQTT]
     except KeyError as exc:
         raise HomeAssistantError(
             f"Cannot subscribe to topic '{topic}', "
