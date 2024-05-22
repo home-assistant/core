@@ -140,7 +140,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
                 HOMEASSISTANT_DOMAIN,
                 f"deprecated_yaml_{DOMAIN}",
                 is_fixable=False,
-                breaks_in_ha_version="2024.11.0",
+                breaks_in_ha_version="2025.01.0",
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_yaml",
                 translation_placeholders={
@@ -157,7 +157,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass,
                 DOMAIN,
                 f"deprecated_yaml_import_issue_{error}",
-                breaks_in_ha_version="2024.12.0",
+                breaks_in_ha_version="2025.01.0",
                 is_fixable=False,
                 issue_domain=DOMAIN,
                 severity=IssueSeverity.WARNING,
