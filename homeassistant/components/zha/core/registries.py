@@ -6,7 +6,7 @@ import collections
 from collections.abc import Callable
 import dataclasses
 from operator import attrgetter
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING
 
 import attr
 from zigpy import zcl
@@ -22,9 +22,6 @@ if TYPE_CHECKING:
     from ..entity import ZhaEntity, ZhaGroupEntity
     from .cluster_handlers import ClientClusterHandler, ClusterHandler
 
-
-_ZhaEntityT = TypeVar("_ZhaEntityT", bound=type["ZhaEntity"])
-_ZhaGroupEntityT = TypeVar("_ZhaGroupEntityT", bound=type["ZhaGroupEntity"])
 
 GROUP_ENTITY_DOMAINS = [Platform.LIGHT, Platform.SWITCH, Platform.FAN]
 
@@ -387,7 +384,7 @@ class ZHAEntityRegistry:
         """Match a ZHA group to a ZHA Entity class."""
         return self._group_registry.get(component)
 
-    def strict_match(
+    def strict_match[_ZhaEntityT: type[ZhaEntity]](
         self,
         component: Platform,
         cluster_handler_names: set[str] | str | None = None,
@@ -418,7 +415,7 @@ class ZHAEntityRegistry:
 
         return decorator
 
-    def multipass_match(
+    def multipass_match[_ZhaEntityT: type[ZhaEntity]](
         self,
         component: Platform,
         cluster_handler_names: set[str] | str | None = None,
@@ -453,7 +450,7 @@ class ZHAEntityRegistry:
 
         return decorator
 
-    def config_diagnostic_match(
+    def config_diagnostic_match[_ZhaEntityT: type[ZhaEntity]](
         self,
         component: Platform,
         cluster_handler_names: set[str] | str | None = None,
@@ -488,7 +485,7 @@ class ZHAEntityRegistry:
 
         return decorator
 
-    def group_match(
+    def group_match[_ZhaGroupEntityT: type[ZhaGroupEntity]](
         self, component: Platform
     ) -> Callable[[_ZhaGroupEntityT], _ZhaGroupEntityT]:
         """Decorate a group match rule."""

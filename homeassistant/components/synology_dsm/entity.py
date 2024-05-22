@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, TypeVar
+from typing import Any
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -16,8 +16,6 @@ from .coordinator import (
     SynologyDSMUpdateCoordinator,
 )
 
-_CoordinatorT = TypeVar("_CoordinatorT", bound=SynologyDSMUpdateCoordinator[Any])
-
 
 @dataclass(frozen=True, kw_only=True)
 class SynologyDSMEntityDescription(EntityDescription):
@@ -26,7 +24,9 @@ class SynologyDSMEntityDescription(EntityDescription):
     api_key: str
 
 
-class SynologyDSMBaseEntity(CoordinatorEntity[_CoordinatorT]):
+class SynologyDSMBaseEntity[_CoordinatorT: SynologyDSMUpdateCoordinator[Any]](
+    CoordinatorEntity[_CoordinatorT]
+):
     """Representation of a Synology NAS entry."""
 
     entity_description: SynologyDSMEntityDescription
