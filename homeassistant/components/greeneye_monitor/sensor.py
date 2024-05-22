@@ -115,7 +115,7 @@ async def async_setup_platform(
         on_new_monitor(monitor)
 
 
-UnderlyingSensorType = (
+type UnderlyingSensorType = (
     greeneye.monitor.Channel
     | greeneye.monitor.PulseCounter
     | greeneye.monitor.TemperatureSensor

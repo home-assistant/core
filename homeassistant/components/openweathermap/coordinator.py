@@ -61,7 +61,7 @@ _LOGGER = logging.getLogger(__name__)
 WEATHER_UPDATE_INTERVAL = timedelta(minutes=10)
 
 
-class WeatherUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
+class WeatherUpdateCoordinator(DataUpdateCoordinator):
     """Weather data update coordinator."""
 
     def __init__(self, owm, latitude, longitude, forecast_mode, hass):

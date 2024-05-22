@@ -566,7 +566,7 @@ class UtilityMeterSensor(RestoreSensor):
     async def _program_reset(self):
         """Program the reset of the utility meter."""
         if self._cron_pattern is not None:
-            tz = dt_util.get_time_zone(self.hass.config.time_zone)
+            tz = dt_util.get_default_time_zone()
             self._next_reset = croniter(self._cron_pattern, dt_util.now(tz)).get_next(
                 datetime
             )  # we need timezone for DST purposes (see issue #102984)

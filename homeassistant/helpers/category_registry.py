@@ -47,7 +47,7 @@ class EventCategoryRegistryUpdatedData(TypedDict):
     category_id: str
 
 
-EventCategoryRegistryUpdated = Event[EventCategoryRegistryUpdatedData]
+type EventCategoryRegistryUpdated = Event[EventCategoryRegistryUpdatedData]
 
 
 @dataclass(slots=True, kw_only=True, frozen=True)

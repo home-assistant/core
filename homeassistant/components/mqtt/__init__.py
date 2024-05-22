@@ -241,6 +241,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             websocket_api.async_register_command(hass, websocket_subscribe)
             websocket_api.async_register_command(hass, websocket_mqtt_info)
             hass.data[DATA_MQTT] = mqtt_data = MqttData(config=mqtt_yaml, client=client)
+            get_mqtt_data.cache_clear()
         client.start(mqtt_data)
 
         # Restore saved subscriptions
@@ -467,7 +468,7 @@ async def websocket_subscribe(
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
-ConnectionStatusCallback = Callable[[bool], None]
+type ConnectionStatusCallback = Callable[[bool], None]
 
 
 @callback
