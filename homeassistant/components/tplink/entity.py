@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable, Coroutine
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, TypedDict, Unpack
 
 from kasa import (
     AuthenticationError,
@@ -24,8 +24,15 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import legacy_device_id
-from .const import DOMAIN
+from .const import DOMAIN, PRIMARY_STATE_ID
 from .coordinator import TPLinkDataUpdateCoordinator
+
+
+class EntityDescriptionExtras(TypedDict, total=False):
+    """Extra kwargs that can be provided to entity descriptions."""
+
+    entity_registry_enabled_default: bool
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,10 +95,6 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         self.device: Device = device
         self._feature = feature
         self._attr_device_info = DeviceInfo(
-            # TODO: find out if connections have any use and/or if it should
-            #  still be set for the main device.
-            #  if set for child devices, all
-            #  devices will be presented by a single device
             # connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
             identifiers={(DOMAIN, str(device.device_id))},
             manufacturer="TP-Link",
@@ -107,30 +110,28 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         # The rest of the initialization takes care of setting a proper unique_id
         # This is transitional and will become cleaner as future platforms get converted.
 
-        # TODO: sensor and light are doing their own tricks on unique_ids.
-        #  We should get rid of any special handling inside the platforms.
+        # If the unique id is already defined, we don't need to do anything.
+        if self._attr_unique_id is not None:
+            return
 
-        # If the entity is based on a feature, we use its ID as part of the unique id
-        if self._attr_unique_id is None and feature is not None:
-            self._attr_entity_category = self._category_for_feature(feature)
-
-            # Special handling for legacy switch primary controls.
-            if feature.id == "state":
-                self._attr_unique_id = legacy_device_id(device)
-            else:
-                self._attr_unique_id = f"{legacy_device_id(device)}_{feature.id}"
-                _LOGGER.debug(
-                    "Initializing feature-based %s with category %s",
-                    self._attr_unique_id,
-                    self._attr_entity_category,
-                )
-
-        elif self._attr_unique_id is None:
+        # If no unique id is defined and we have no feature, it's a bug.
+        if feature is None:
             raise HomeAssistantError(
-                "Entity not feature-based nor does define unique_id"
+                "Entity is not feature-based nor does define unique_id"
             )
-        self._async_update_attrs()
-        self._attr_available = True
+
+        self._attr_entity_category = self._category_for_feature(feature)
+
+        # Special handling for entity classes that define unique_id on their own.
+        if feature.id == PRIMARY_STATE_ID:
+            self._attr_unique_id = legacy_device_id(device)
+        else:
+            self._attr_unique_id = f"{legacy_device_id(device)}_{feature.id}"
+            _LOGGER.debug(
+                "Initializing feature-based %s with category %s",
+                self._attr_unique_id,
+                self._attr_entity_category,
+            )
 
     def _category_for_feature(self, feature: Feature) -> EntityCategory | None:
         """Return entity category for a feature."""
@@ -193,8 +194,7 @@ def _entities_for_device[_E: CoordinatedTPLinkEntity](
         if feat.type != feature_type:
             return False
 
-        # We skip primary features for device types that have specialized platforms,
-        #  like light for lights.
+        # We skip primary features for device types that have specialized platforms.
         ignore_primary_controls_devicetypes = [
             DeviceType.Bulb,
             DeviceType.LightStrip,
@@ -253,9 +253,8 @@ def _entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
     return entities
 
 
-# TODO: use typing.Unpack or find a better way to pass platform-specific kwargs
 def _description_for_feature[_D: EntityDescription](
-    desc_cls: type[_D], feature: Feature, **kwargs: Any
+    desc_cls: type[_D], feature: Feature, **kwargs: Unpack[EntityDescriptionExtras]
 ) -> _D:
     """Return description object for the given feature.
 
@@ -273,7 +272,7 @@ def _description_for_feature[_D: EntityDescription](
         key=feature.id,
         translation_key=feature.id,
         name=feature.name,
-        # TODO: Setting an icon overrides the icon set by translations
+        # Setting an icon overrides the translation, so we doing it here.
         # icon=feature.icon,
         **kwargs,
     )

@@ -11,6 +11,9 @@ DOMAIN = "tplink"
 DISCOVERY_TIMEOUT = 5  # Home Assistant will complain if startup takes > 10s
 CONNECT_TIMEOUT = 5
 
+# Identifier used for primary control state.
+PRIMARY_STATE_ID = "state"
+
 ATTR_CURRENT_A: Final = "current_a"
 ATTR_CURRENT_POWER_W: Final = "current_power_w"
 ATTR_TODAY_ENERGY_KWH: Final = "today_energy_kwh"
