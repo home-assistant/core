@@ -63,6 +63,7 @@ from .components import (
 )
 from .components.sensor import recorder as sensor_recorder  # noqa: F401
 from .const import (
+    BASE_PLATFORMS,
     FORMAT_DATETIME,
     KEY_DATA_LOGGING as DATA_LOGGING,
     REQUIRED_NEXT_PYTHON_HA_RELEASE,
@@ -90,7 +91,6 @@ from .helpers.storage import get_internal_store_manager
 from .helpers.system_info import async_get_system_info
 from .helpers.typing import ConfigType
 from .setup import (
-    BASE_PLATFORMS,
     # _setup_started is marked as protected to make it clear
     # that it is not part of the public API and should not be used
     # by integrations. It is only used for internal tracking of

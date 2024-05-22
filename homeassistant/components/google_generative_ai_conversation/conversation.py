@@ -240,6 +240,7 @@ class GoogleGenerativeAIConversationEntity(
                 user_prompt=user_input.text,
                 language=user_input.language,
                 assistant=conversation.DOMAIN,
+                device_id=user_input.device_id,
             )
             LOGGER.debug(
                 "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
