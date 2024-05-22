@@ -80,7 +80,6 @@ def mock_router(mock_device_registry_devices):
         instance.system.get_config = AsyncMock(return_value=DATA_SYSTEM_GET_CONFIG)
 
         # device_tracker
-        # instance.lan.get_hosts_list = AsyncMock(return_value=DATA_LAN_GET_HOSTS_LIST)
         def get_hosts_list(interface):
             if interface == "pub":
                 return DATA_LAN_GET_HOSTS_LIST
