@@ -312,8 +312,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         await self._bridge.async_power_off()
-        self.coordinator.is_on = False
-        self.coordinator.async_update_listeners()
+        await self.coordinator.async_refresh()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level on the media player."""
