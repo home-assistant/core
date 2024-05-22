@@ -20,7 +20,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, EXECUTION_TIME
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerControlEntity
 
@@ -40,7 +40,6 @@ ERROR_STATES = [
     MowerStates.STOPPED,
     MowerStates.OFF,
 ]
-EXECUTION_TIME = 5
 
 
 async def async_setup_entry(
