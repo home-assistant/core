@@ -30,6 +30,7 @@ from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
+    SupportsResponse,
     callback,
 )
 from homeassistant.exceptions import (
@@ -457,3 +458,10 @@ def _setup_services(hass: HomeAssistant, prefs: CloudPreferences) -> None:
             "url": f"https://login.home-assistant.io?u={quote_plus(url)}",
             "direct_url": url,
         }
+
+    hass.services.async_register(
+        DOMAIN,
+        "create_temporary_strict_connection_url",
+        create_temporary_strict_connection_url,
+        supports_response=SupportsResponse.ONLY,
+    )

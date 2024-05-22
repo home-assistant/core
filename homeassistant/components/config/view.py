@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 from http import HTTPStatus
 import os
-from typing import Any, Generic, TypeVar, cast
+from typing import Any, cast
 
 from aiohttp import web
 import voluptuous as vol
@@ -21,10 +21,10 @@ from homeassistant.util.yaml.loader import JSON_TYPE
 
 from .const import ACTION_CREATE_UPDATE, ACTION_DELETE
 
-_DataT = TypeVar("_DataT", dict[str, dict[str, Any]], list[dict[str, Any]])
 
-
-class BaseEditConfigView(HomeAssistantView, Generic[_DataT]):
+class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]])](
+    HomeAssistantView
+):
     """Configure a Group endpoint."""
 
     def __init__(

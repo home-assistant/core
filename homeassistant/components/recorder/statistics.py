@@ -485,6 +485,12 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
 
     The actual calculation is delegated to the platforms.
     """
+    # Define modified_statistic_ids outside of the "with" statement as
+    # _compile_statistics may raise and be trapped by
+    # filter_unique_constraint_integrity_error which would make
+    # modified_statistic_ids unbound.
+    modified_statistic_ids: set[str] | None = None
+
     # Return if we already have 5-minute statistics for the requested period
     with session_scope(
         session=instance.get_session(),
@@ -946,7 +952,7 @@ def reduce_day_ts_factory() -> (
 
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
-        datetime.fromtimestamp, tz=dt_util.DEFAULT_TIME_ZONE
+        datetime.fromtimestamp, tz=dt_util.get_default_time_zone()
     )
 
     def _same_day_ts(time1: float, time2: float) -> bool:
@@ -994,7 +1000,7 @@ def reduce_week_ts_factory() -> (
 
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
-        datetime.fromtimestamp, tz=dt_util.DEFAULT_TIME_ZONE
+        datetime.fromtimestamp, tz=dt_util.get_default_time_zone()
     )
 
     def _same_week_ts(time1: float, time2: float) -> bool:
@@ -1052,7 +1058,7 @@ def reduce_month_ts_factory() -> (
 
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
-        datetime.fromtimestamp, tz=dt_util.DEFAULT_TIME_ZONE
+        datetime.fromtimestamp, tz=dt_util.get_default_time_zone()
     )
 
     def _same_month_ts(time1: float, time2: float) -> bool:
@@ -2038,7 +2044,7 @@ def _fast_build_sum_list(
     ]
 
 
-def _sorted_statistics_to_dict(
+def _sorted_statistics_to_dict(  # noqa: C901
     hass: HomeAssistant,
     session: Session,
     stats: Sequence[Row[Any]],
@@ -2192,9 +2198,14 @@ def _async_import_statistics(
     for statistic in statistics:
         start = statistic["start"]
         if start.tzinfo is None or start.tzinfo.utcoffset(start) is None:
-            raise HomeAssistantError("Naive timestamp")
+            raise HomeAssistantError(
+                "Naive timestamp: no or invalid timezone info provided"
+            )
         if start.minute != 0 or start.second != 0 or start.microsecond != 0:
-            raise HomeAssistantError("Invalid timestamp")
+            raise HomeAssistantError(
+                "Invalid timestamp: timestamps must be from the top of the hour (minutes and seconds = 0)"
+            )
+
         statistic["start"] = dt_util.as_utc(start)
 
         if "last_reset" in statistic and statistic["last_reset"] is not None:

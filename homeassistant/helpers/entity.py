@@ -16,16 +16,7 @@ from operator import attrgetter
 import sys
 import time
 from types import FunctionType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Final,
-    Literal,
-    NotRequired,
-    TypedDict,
-    TypeVar,
-    final,
-)
+from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypedDict, final
 
 import voluptuous as vol
 
@@ -78,8 +69,6 @@ timer = time.time
 
 if TYPE_CHECKING:
     from .entity_platform import EntityPlatform
-
-_T = TypeVar("_T")
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -533,7 +522,7 @@ class Entity(
     _attr_assumed_state: bool = False
     _attr_attribution: str | None = None
     _attr_available: bool = True
-    _attr_capability_attributes: Mapping[str, Any] | None = None
+    _attr_capability_attributes: dict[str, Any] | None = None
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
     _attr_entity_category: EntityCategory | None
@@ -744,7 +733,7 @@ class Entity(
         return self._attr_state
 
     @cached_property
-    def capability_attributes(self) -> Mapping[str, Any] | None:
+    def capability_attributes(self) -> dict[str, Any] | None:
         """Return the capability attributes.
 
         Attributes that explain the capabilities of an entity.
@@ -950,7 +939,7 @@ class Entity(
         if force_refresh:
             try:
                 await self.async_device_update()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
         elif not self._async_update_ha_state_reported:
@@ -1065,7 +1054,7 @@ class Entity(
         entry = self.registry_entry
 
         capability_attr = self.capability_attributes
-        attr = dict(capability_attr) if capability_attr else {}
+        attr = capability_attr.copy() if capability_attr else {}
         shadowed_attr = {}
 
         available = self.available  # only call self.available once per update cycle
@@ -1603,7 +1592,7 @@ class Entity(
             return f"<entity unknown.unknown={STATE_UNKNOWN}>"
         return f"<entity {self.entity_id}={self._stringify_state(self.available)}>"
 
-    async def async_request_call(self, coro: Coroutine[Any, Any, _T]) -> _T:
+    async def async_request_call[_T](self, coro: Coroutine[Any, Any, _T]) -> _T:
         """Process request batched."""
         if self.parallel_updates:
             await self.parallel_updates.acquire()

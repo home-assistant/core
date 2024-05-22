@@ -10,7 +10,7 @@ import os
 import socket
 import ssl
 from tempfile import NamedTemporaryFile
-from typing import Any, Final, TypedDict, cast
+from typing import Any, Final, Required, TypedDict, cast
 from urllib.parse import quote_plus, urljoin
 
 from aiohttp import web
@@ -21,7 +21,6 @@ from aiohttp.typedefs import JSONDecoder, StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
 from aiohttp.web_protocol import RequestHandler
 from aiohttp_fast_url_dispatcher import FastUrlDispatcher, attach_fast_url_dispatcher
-from aiohttp_isal import enable_isal
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -36,6 +35,7 @@ from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
+    SupportsResponse,
     callback,
 )
 from homeassistant.exceptions import (
@@ -53,6 +53,7 @@ from homeassistant.helpers.http import (
     HomeAssistantView,
     current_request,
 )
+from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -145,6 +146,9 @@ HTTP_SCHEMA: Final = vol.All(
                 [SSL_INTERMEDIATE, SSL_MODERN]
             ),
             vol.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
+            vol.Optional(
+                CONF_STRICT_CONNECTION, default=StrictConnectionMode.DISABLED
+            ): vol.Coerce(StrictConnectionMode),
         }
     ),
 )
@@ -168,6 +172,7 @@ class ConfData(TypedDict, total=False):
     login_attempts_threshold: int
     ip_ban_enabled: bool
     ssl_profile: str
+    strict_connection: Required[StrictConnectionMode]
 
 
 @bind_hass
@@ -196,7 +201,9 @@ class ApiConfig:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HTTP API and debug interface."""
-    enable_isal()
+    # Late import to ensure isal is updated before
+    # we import aiohttp_fast_zlib
+    (await async_import_module(hass, "aiohttp_fast_zlib")).enable()
 
     conf: ConfData | None = config.get(DOMAIN)
 
@@ -234,7 +241,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled,
         use_x_frame_options=use_x_frame_options,
-        strict_connection_non_cloud=StrictConnectionMode.DISABLED,
+        strict_connection_non_cloud=conf[CONF_STRICT_CONNECTION],
     )
 
     async def stop_server(event: Event) -> None:
@@ -550,8 +557,7 @@ class HomeAssistantHTTP:
         # However in Home Assistant components can be discovered after boot.
         # This will now raise a RunTimeError.
         # To work around this we now prevent the router from getting frozen
-        # pylint: disable-next=protected-access
-        self.app._router.freeze = lambda: None  # type: ignore[method-assign]
+        self.app._router.freeze = lambda: None  # type: ignore[method-assign]  # noqa: SLF001
 
         self.runner = web.AppRunner(
             self.app, handler_cancellation=True, shutdown_timeout=10
@@ -615,7 +621,7 @@ def _setup_services(hass: HomeAssistant, conf: ConfData) -> None:
             if not user.is_admin:
                 raise Unauthorized(context=call.context)
 
-        if StrictConnectionMode.DISABLED is StrictConnectionMode.DISABLED:
+        if conf[CONF_STRICT_CONNECTION] is StrictConnectionMode.DISABLED:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="strict_connection_not_enabled_non_cloud",
@@ -647,3 +653,10 @@ def _setup_services(hass: HomeAssistant, conf: ConfData) -> None:
             "url": f"https://login.home-assistant.io?u={quote_plus(url)}",
             "direct_url": url,
         }
+
+    hass.services.async_register(
+        DOMAIN,
+        "create_temporary_strict_connection_url",
+        create_temporary_strict_connection_url,
+        supports_response=SupportsResponse.ONLY,
+    )

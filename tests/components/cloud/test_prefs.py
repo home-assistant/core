@@ -181,7 +181,6 @@ async def test_tts_default_voice_legacy_gender(
     assert cloud.client.prefs.tts_default_voice == (expected_language, voice)
 
 
-@pytest.mark.skip(reason="Remove strict connection config option")
 @pytest.mark.parametrize("mode", list(StrictConnectionMode))
 async def test_strict_connection_convertion(
     hass: HomeAssistant,

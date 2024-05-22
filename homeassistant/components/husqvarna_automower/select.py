@@ -59,12 +59,14 @@ class AutomowerSelectEntity(AutomowerControlEntity, SelectEntity):
     @property
     def current_option(self) -> str:
         """Return the current option for the entity."""
-        return cast(HeadlightModes, self.mower_attributes.headlight.mode).lower()
+        return cast(
+            HeadlightModes, self.mower_attributes.settings.headlight.mode
+        ).lower()
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         try:
-            await self.coordinator.api.set_headlight_mode(
+            await self.coordinator.api.commands.set_headlight_mode(
                 self.mower_id, cast(HeadlightModes, option.upper())
             )
         except ApiException as exception:

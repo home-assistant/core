@@ -71,8 +71,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         return False
 
     if config_entry.version == 1:
-        new = {**config_entry.data}
         if config_entry.minor_version < 2:
+            new = {**config_entry.data}
             fyta = FytaConnector(
                 config_entry.data[CONF_USERNAME], config_entry.data[CONF_PASSWORD]
             )
@@ -82,9 +82,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             new[CONF_ACCESS_TOKEN] = credentials[CONF_ACCESS_TOKEN]
             new[CONF_EXPIRATION] = credentials[CONF_EXPIRATION].isoformat()
 
-        hass.config_entries.async_update_entry(
-            config_entry, data=new, minor_version=2, version=1
-        )
+            hass.config_entries.async_update_entry(
+                config_entry, data=new, minor_version=2, version=1
+            )
 
     _LOGGER.debug(
         "Migration to version %s.%s successful",

@@ -95,7 +95,10 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             _LOGGER.error(err)
             raise AbortFlow(
                 "addon_set_config_failed",
-                description_placeholders=self._get_translation_placeholders(),
+                description_placeholders={
+                    **self._get_translation_placeholders(),
+                    "addon_name": addon_manager.addon_name,
+                },
             ) from err
 
     async def _async_get_addon_info(self, addon_manager: AddonManager) -> AddonInfo:
@@ -596,6 +599,21 @@ class HomeAssistantSkyConnectMultiPanOptionsFlowHandler(
     def _hardware_name(self) -> str:
         """Return the name of the hardware."""
         return self._hw_variant.full_name
+
+    async def async_step_flashing_complete(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Finish flashing and update the config entry."""
+        self.hass.config_entries.async_update_entry(
+            entry=self.config_entry,
+            data={
+                **self.config_entry.data,
+                "firmware": ApplicationType.EZSP.value,
+            },
+            options=self.config_entry.options,
+        )
+
+        return await super().async_step_flashing_complete(user_input)
 
 
 class HomeAssistantSkyConnectOptionsFlowHandler(

@@ -7,7 +7,8 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, OpenGarageDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import OpenGarageDataUpdateCoordinator
 
 
 class OpenGarageEntity(CoordinatorEntity[OpenGarageDataUpdateCoordinator]):

@@ -151,9 +151,8 @@ class ExposedEntities:
         """
         entity_registry = er.async_get(self._hass)
         if not (registry_entry := entity_registry.async_get(entity_id)):
-            return self._async_set_legacy_assistant_option(
-                assistant, entity_id, key, value
-            )
+            self._async_set_legacy_assistant_option(assistant, entity_id, key, value)
+            return
 
         assistant_options: ReadOnlyDict[str, Any] | dict[str, Any]
         if (
@@ -259,7 +258,7 @@ class ExposedEntities:
         if assistant in registry_entry.options:
             if "should_expose" in registry_entry.options[assistant]:
                 should_expose = registry_entry.options[assistant]["should_expose"]
-                return should_expose  # noqa: RET504
+                return should_expose
 
         if self.async_get_expose_new_entities(assistant):
             should_expose = self._is_default_exposed(entity_id, registry_entry)
@@ -286,7 +285,7 @@ class ExposedEntities:
         ) and assistant in exposed_entity.assistants:
             if "should_expose" in exposed_entity.assistants[assistant]:
                 should_expose = exposed_entity.assistants[assistant]["should_expose"]
-                return should_expose  # noqa: RET504
+                return should_expose
 
         if self.async_get_expose_new_entities(assistant):
             should_expose = self._is_default_exposed(entity_id, None)
