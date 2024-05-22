@@ -249,7 +249,7 @@ def async_dispatcher_send_internal[*_Ts](
         if job.job_type is HassJobType.Callback:
             try:
                 job.target(*args)
-            except Exception as ex:  # noqa: BLE001
-                log_exception(_format_err(signal, target, *args), ex)  # type: ignore[arg-type]
+            except Exception:  # noqa: BLE001
+                log_exception(partial(_format_err, signal, target), *args)  # type: ignore[arg-type]
         else:
             hass.async_run_hass_job(job, *args)
