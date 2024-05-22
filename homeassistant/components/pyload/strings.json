@@ -62,9 +62,6 @@
     "binary_sensor": {
       "captcha": {
         "name": "Captcha"
-      },
-      "download": {
-        "name": "Running"
       }
     }
   },

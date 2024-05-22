@@ -1,9 +1,6 @@
 {
   "entity": {
     "binary_sensor": {
-      "download": {
-        "default": "mdi:play"
-      },
       "captcha": {
         "default": "mdi:barcode-scan"
       }
