@@ -771,3 +771,45 @@ async def test_service_intent_handler_required_domains(hass: HomeAssistant) -> N
             "TestType",
             slots={"name": {"value": "bedroom"}, "domain": {"value": "switch"}},
         )
+
+
+async def test_service_handler_empty_strings(hass: HomeAssistant) -> None:
+    """Test that passing empty strings for filters fails in ServiceIntentHandler."""
+    handler = intent.ServiceIntentHandler(
+        "TestType", "light", "turn_on", "Turned {} on"
+    )
+    intent.async_register(hass, handler)
+
+    for slot_name in ("name", "area", "floor"):
+        # Empty string
+        with pytest.raises(intent.InvalidSlotInfo):
+            await intent.async_handle(
+                hass,
+                "test",
+                "TestType",
+                slots={slot_name: {"value": ""}},
+            )
+
+        # Whitespace
+        with pytest.raises(intent.InvalidSlotInfo):
+            await intent.async_handle(
+                hass,
+                "test",
+                "TestType",
+                slots={slot_name: {"value": "  "}},
+            )
+
+
+async def test_service_handler_no_filter(hass: HomeAssistant) -> None:
+    """Test that targeting all devices in the house fails."""
+    handler = intent.ServiceIntentHandler(
+        "TestType", "light", "turn_on", "Turned {} on"
+    )
+    intent.async_register(hass, handler)
+
+    with pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass,
+            "test",
+            "TestType",
+        )
