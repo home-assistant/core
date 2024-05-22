@@ -172,14 +172,14 @@ async def test_zones_deleted(
     ) == (current_entries - 1)
 
 
-async def test_switch(
+async def test_switch_snapshots(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test states of the switch."""
+    """Snapshot tests of the switches."""
     with patch(
         "homeassistant.components.husqvarna_automower.PLATFORMS",
         [Platform.SWITCH],

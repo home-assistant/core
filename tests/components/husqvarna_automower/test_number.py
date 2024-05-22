@@ -124,14 +124,14 @@ async def test_workarea_deleted(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_snapshot_number(
+async def test_number_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test states of the number entity."""
+    """Snapshot tests of the number entities."""
     with patch(
         "homeassistant.components.husqvarna_automower.PLATFORMS",
         [Platform.NUMBER],
