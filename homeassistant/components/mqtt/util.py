@@ -83,6 +83,8 @@ async def async_forward_entry_setup_and_setup_discovery(
 
 def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
     """Return true when the MQTT config entry is enabled."""
+    # If the mqtt client is connected, skip the expensive config
+    # entry check as its roughly two orders of magnitude faster.
     return (
         DATA_MQTT in hass.data and hass.data[DATA_MQTT].client.connected
     ) or hass.config_entries.async_has_entries(
