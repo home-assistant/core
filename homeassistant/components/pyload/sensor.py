@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -17,6 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import PyLoadConfigEntry
 from .const import DOMAIN, MANUFACTURER, NAME
 from .coordinator import PyLoadCoordinator
 from .util import api_url
@@ -69,10 +70,12 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: PyLoadConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors from a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -92,7 +95,7 @@ class PyLoadSensor(CoordinatorEntity, SensorEntity):
         self,
         coordinator: PyLoadCoordinator,
         entity_description: SensorEntityDescription,
-        entry: ConfigEntry,
+        entry: PyLoadConfigEntry,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
