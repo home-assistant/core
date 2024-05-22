@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
@@ -170,15 +171,18 @@ class TimerManager:
         self.timers: dict[str, TimerInfo] = {}
         self.timer_tasks: dict[str, asyncio.Task] = {}
 
-        self.handlers: list[TimerHandler] = []
+        # device_id -> [handler]
+        self.handlers: dict[str | None, list[TimerHandler]] = defaultdict(list)
 
-    def register_handler(self, handler: TimerHandler) -> Callable[[], None]:
+    def register_handler(
+        self, handler: TimerHandler, device_id: str | None
+    ) -> Callable[[], None]:
         """Register a timer handler.
 
         Returns a callable to unregister.
         """
-        self.handlers.append(handler)
-        return lambda: self.handlers.remove(handler)
+        self.handlers[device_id].append(handler)
+        return lambda: self.handlers[device_id].remove(handler)
 
     def start_timer(
         self,
@@ -232,7 +236,7 @@ class TimerManager:
             name=f"Timer {timer_id}",
         )
 
-        for handler in self.handlers:
+        for handler in self.handlers[timer.device_id]:
             handler(TimerEventType.STARTED, timer)
 
         _LOGGER.debug(
@@ -272,7 +276,7 @@ class TimerManager:
 
         timer.cancel()
 
-        for handler in self.handlers:
+        for handler in self.handlers[timer.device_id]:
             handler(TimerEventType.CANCELLED, timer)
 
         _LOGGER.debug(
@@ -302,7 +306,7 @@ class TimerManager:
                 name=f"Timer {timer_id}",
             )
 
-        for handler in self.handlers:
+        for handler in self.handlers[timer.device_id]:
             handler(TimerEventType.UPDATED, timer)
 
         if seconds > 0:
@@ -340,7 +344,7 @@ class TimerManager:
         task = self.timer_tasks.pop(timer_id)
         task.cancel()
 
-        for handler in self.handlers:
+        for handler in self.handlers[timer.device_id]:
             handler(TimerEventType.UPDATED, timer)
 
         _LOGGER.debug(
@@ -367,7 +371,7 @@ class TimerManager:
             name=f"Timer {timer.id}",
         )
 
-        for handler in self.handlers:
+        for handler in self.handlers[timer.device_id]:
             handler(TimerEventType.UPDATED, timer)
 
         _LOGGER.debug(
@@ -383,7 +387,7 @@ class TimerManager:
         timer = self.timers.pop(timer_id)
 
         timer.finish()
-        for handler in self.handlers:
+        for handler in self.handlers[timer.device_id]:
             handler(TimerEventType.FINISHED, timer)
 
         _LOGGER.debug(
@@ -396,14 +400,14 @@ class TimerManager:
 
 @callback
 def async_register_timer_handler(
-    hass: HomeAssistant, handler: TimerHandler
+    hass: HomeAssistant, handler: TimerHandler, device_id: str
 ) -> Callable[[], None]:
     """Register a handler for timer events.
 
     Returns a callable to unregister.
     """
     timer_manager: TimerManager = hass.data[TIMER_DATA]
-    return timer_manager.register_handler(handler)
+    return timer_manager.register_handler(handler, device_id)
 
 
 # -----------------------------------------------------------------------------

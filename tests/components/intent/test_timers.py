@@ -59,7 +59,7 @@ async def test_start_finish_timer(hass: HomeAssistant, init_components) -> None:
             assert timer.id == timer_id
             finished_event.set()
 
-    async_register_timer_handler(hass, handle_timer)
+    async_register_timer_handler(hass, handle_timer, device_id)
 
     result = await intent.async_handle(
         hass,
@@ -112,7 +112,7 @@ async def test_cancel_timer(hass: HomeAssistant, init_components) -> None:
             assert timer.seconds_left == 0
             cancelled_event.set()
 
-    async_register_timer_handler(hass, handle_timer)
+    async_register_timer_handler(hass, handle_timer, device_id)
 
     # Cancel by starting time
     result = await intent.async_handle(
@@ -220,7 +220,7 @@ async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
             assert timer.id == timer_id
             cancelled_event.set()
 
-    async_register_timer_handler(hass, handle_timer)
+    async_register_timer_handler(hass, handle_timer, device_id)
 
     result = await intent.async_handle(
         hass,
@@ -335,7 +335,7 @@ async def test_decrease_timer(hass: HomeAssistant, init_components) -> None:
             assert timer.id == timer_id
             cancelled_event.set()
 
-    async_register_timer_handler(hass, handle_timer)
+    async_register_timer_handler(hass, handle_timer, device_id)
 
     result = await intent.async_handle(
         hass,
@@ -394,13 +394,14 @@ async def test_decrease_timer_below_zero(hass: HomeAssistant, init_components) -
     updated_event = asyncio.Event()
     finished_event = asyncio.Event()
 
+    device_id = "test_device"
     timer_id: str | None = None
     original_total_seconds = 0
 
     def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         nonlocal timer_id, original_total_seconds
 
-        assert timer.device_id is None
+        assert timer.device_id == device_id
         assert timer.name is None
         assert timer.start_hours == 1
         assert timer.start_minutes == 2
@@ -425,7 +426,7 @@ async def test_decrease_timer_below_zero(hass: HomeAssistant, init_components) -
             assert timer.id == timer_id
             finished_event.set()
 
-    async_register_timer_handler(hass, handle_timer)
+    async_register_timer_handler(hass, handle_timer, device_id)
 
     result = await intent.async_handle(
         hass,
@@ -436,6 +437,7 @@ async def test_decrease_timer_below_zero(hass: HomeAssistant, init_components) -
             "minutes": {"value": 2},
             "seconds": {"value": 3},
         },
+        device_id=device_id,
     )
 
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
@@ -454,6 +456,7 @@ async def test_decrease_timer_below_zero(hass: HomeAssistant, init_components) -
             "start_seconds": {"value": 3},
             "seconds": {"value": original_total_seconds + 1},
         },
+        device_id=device_id,
     )
 
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
@@ -602,7 +605,8 @@ async def test_disambiguation(
             timer_info = timer
             cancelled_event.set()
 
-    async_register_timer_handler(hass, handle_timer)
+    async_register_timer_handler(hass, handle_timer, device_alice_study.id)
+    async_register_timer_handler(hass, handle_timer, device_bob_kitchen_1.id)
 
     # Alice: cancel my timer
     result = await intent.async_handle(
@@ -650,6 +654,9 @@ async def test_disambiguation(
     device_registry.async_update_device(
         device_bob_living_room.id, area_id=area_living_room.id
     )
+
+    async_register_timer_handler(hass, handle_timer, device_alice_bedroom.id)
+    async_register_timer_handler(hass, handle_timer, device_bob_living_room.id)
 
     # Alice: set a 3 minute timer (study)
     result = await intent.async_handle(
@@ -755,6 +762,8 @@ async def test_disambiguation(
         device_bob_kitchen_2.id, area_id=area_kitchen.id
     )
 
+    async_register_timer_handler(hass, handle_timer, device_bob_kitchen_2.id)
+
     # Bob cancels the kitchen timer from a different device
     cancelled_event.clear()
     timer_info = None
@@ -788,6 +797,8 @@ async def test_disambiguation(
 
 async def test_pause_unpause_timer(hass: HomeAssistant, init_components) -> None:
     """Test pausing and unpausing a running timer."""
+    device_id = "test_device"
+
     started_event = asyncio.Event()
     updated_event = asyncio.Event()
 
@@ -800,10 +811,14 @@ async def test_pause_unpause_timer(hass: HomeAssistant, init_components) -> None
             assert timer.is_active == expected_active
             updated_event.set()
 
-    async_register_timer_handler(hass, handle_timer)
+    async_register_timer_handler(hass, handle_timer, device_id)
 
     result = await intent.async_handle(
-        hass, "test", intent.INTENT_START_TIMER, {"minutes": {"value": 5}}
+        hass,
+        "test",
+        intent.INTENT_START_TIMER,
+        {"minutes": {"value": 5}},
+        device_id=device_id,
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -812,7 +827,9 @@ async def test_pause_unpause_timer(hass: HomeAssistant, init_components) -> None
 
     # Pause the timer
     expected_active = False
-    result = await intent.async_handle(hass, "test", intent.INTENT_PAUSE_TIMER, {})
+    result = await intent.async_handle(
+        hass, "test", intent.INTENT_PAUSE_TIMER, {}, device_id=device_id
+    )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
     async with asyncio.timeout(1):
@@ -820,14 +837,18 @@ async def test_pause_unpause_timer(hass: HomeAssistant, init_components) -> None
 
     # Pausing again will not fire the event
     updated_event.clear()
-    result = await intent.async_handle(hass, "test", intent.INTENT_PAUSE_TIMER, {})
+    result = await intent.async_handle(
+        hass, "test", intent.INTENT_PAUSE_TIMER, {}, device_id=device_id
+    )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
     assert not updated_event.is_set()
 
     # Unpause the timer
     updated_event.clear()
     expected_active = True
-    result = await intent.async_handle(hass, "test", intent.INTENT_UNPAUSE_TIMER, {})
+    result = await intent.async_handle(
+        hass, "test", intent.INTENT_UNPAUSE_TIMER, {}, device_id=device_id
+    )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
     async with asyncio.timeout(1):
@@ -835,7 +856,9 @@ async def test_pause_unpause_timer(hass: HomeAssistant, init_components) -> None
 
     # Unpausing again will not fire the event
     updated_event.clear()
-    result = await intent.async_handle(hass, "test", intent.INTENT_UNPAUSE_TIMER, {})
+    result = await intent.async_handle(
+        hass, "test", intent.INTENT_UNPAUSE_TIMER, {}, device_id=device_id
+    )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
     assert not updated_event.is_set()
 
@@ -862,6 +885,8 @@ async def test_timer_not_found(hass: HomeAssistant) -> None:
 
 async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> None:
     """Test getting the status of named timers."""
+    device_id = "test_device"
+
     started_event = asyncio.Event()
     num_started = 0
 
@@ -873,7 +898,7 @@ async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> 
             if num_started == 4:
                 started_event.set()
 
-    async_register_timer_handler(hass, handle_timer)
+    async_register_timer_handler(hass, handle_timer, device_id)
 
     # Start timers with names
     result = await intent.async_handle(
@@ -881,6 +906,7 @@ async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> 
         "test",
         intent.INTENT_START_TIMER,
         {"name": {"value": "pizza"}, "minutes": {"value": 10}},
+        device_id=device_id,
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -889,6 +915,7 @@ async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> 
         "test",
         intent.INTENT_START_TIMER,
         {"name": {"value": "pizza"}, "minutes": {"value": 15}},
+        device_id=device_id,
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -897,6 +924,7 @@ async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> 
         "test",
         intent.INTENT_START_TIMER,
         {"name": {"value": "cookies"}, "minutes": {"value": 20}},
+        device_id=device_id,
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -905,6 +933,7 @@ async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> 
         "test",
         intent.INTENT_START_TIMER,
         {"name": {"value": "chicken"}, "hours": {"value": 2}, "seconds": {"value": 30}},
+        device_id=device_id,
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -925,6 +954,7 @@ async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> 
         "test",
         intent.INTENT_TIMER_STATUS,
         {"name": {"value": "cookies"}},
+        device_id=device_id,
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
     timers = result.speech_slots.get("timers", [])
@@ -938,6 +968,7 @@ async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> 
         "test",
         intent.INTENT_TIMER_STATUS,
         {"name": {"value": "pizza"}},
+        device_id=device_id,
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
     timers = result.speech_slots.get("timers", [])
@@ -952,6 +983,7 @@ async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> 
         "test",
         intent.INTENT_TIMER_STATUS,
         {"name": {"value": "pizza"}, "start_minutes": {"value": 10}},
+        device_id=device_id,
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
     timers = result.speech_slots.get("timers", [])
@@ -969,6 +1001,7 @@ async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> 
             "start_hours": {"value": 2},
             "start_seconds": {"value": 30},
         },
+        device_id=device_id,
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
     timers = result.speech_slots.get("timers", [])
@@ -996,6 +1029,7 @@ async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> 
             "start_minutes": {"value": 100},
             "start_seconds": {"value": 100},
         },
+        device_id=device_id,
     )
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
     timers = result.speech_slots.get("timers", [])
@@ -1042,7 +1076,8 @@ async def test_area_filter(
             if num_started == num_timers:
                 started_event.set()
 
-    async_register_timer_handler(hass, handle_timer)
+    async_register_timer_handler(hass, handle_timer, device_kitchen.id)
+    async_register_timer_handler(hass, handle_timer, device_living_room.id)
 
     # Start timers in different areas
     result = await intent.async_handle(
