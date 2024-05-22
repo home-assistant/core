@@ -46,6 +46,7 @@ async def test_call_tool_no_existing(hass: HomeAssistant) -> None:
                 None,
                 None,
                 None,
+                None,
             ),
         )
 
@@ -87,6 +88,7 @@ async def test_assist_api(hass: HomeAssistant) -> None:
         user_prompt="test_text",
         language="*",
         assistant="test_assistant",
+        device_id="test_device",
     )
 
     with patch(
@@ -106,6 +108,7 @@ async def test_assist_api(hass: HomeAssistant) -> None:
         test_context,
         "*",
         "test_assistant",
+        "test_device",
     )
     assert response == {
         "card": {},
