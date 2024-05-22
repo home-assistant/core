@@ -333,6 +333,7 @@ async def test_function_call(
             user_prompt="Please call the test function",
             language="en",
             assistant="conversation",
+            device_id=None,
         ),
     )
 
@@ -449,6 +450,7 @@ async def test_function_exception(
             user_prompt="Please call the test function",
             language="en",
             assistant="conversation",
+            device_id=None,
         ),
     )
 
