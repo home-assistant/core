@@ -40,7 +40,6 @@ class SamsungTVRemote(SamsungTVEntity, RemoteEntity):
         """Turn the device off."""
         await super()._async_turn_off()
 
-
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to a device.
 
