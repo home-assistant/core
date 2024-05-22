@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Final
 
+from kasa import Module
+
 from homeassistant.const import Platform
 
 DOMAIN = "tplink"
@@ -19,3 +21,6 @@ ATTR_TOTAL_ENERGY_KWH: Final = "total_energy_kwh"
 CONF_DEVICE_CONFIG: Final = "device_config"
 
 PLATFORMS: Final = [Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
+
+# List of modules that should be excluded from SWITCH platform creation.
+NO_SWITCH_DEVICE_MODULES = [Module.Light]

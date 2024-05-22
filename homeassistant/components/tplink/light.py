@@ -266,7 +266,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             return
         await self._light_module.set_state(
             # transition currently incorrectly typed in library
-            LightState(light_on=True, transition=transition)  # type: ignore[arg-type]
+            LightState(light_on=True, transition=transition)
         )
 
     @async_refresh_after
