@@ -127,6 +127,8 @@ build.json @home-assistant/supervisor
 /tests/components/aprilaire/ @chamberlain2007
 /homeassistant/components/aprs/ @PhilRW
 /tests/components/aprs/ @PhilRW
+/homeassistant/components/apsystems/ @mawoka-myblock @SonnenladenGmbH
+/tests/components/apsystems/ @mawoka-myblock @SonnenladenGmbH
 /homeassistant/components/aranet/ @aschmitz @thecode @anrijs
 /tests/components/aranet/ @aschmitz @thecode @anrijs
 /homeassistant/components/arcam_fmj/ @elupus
@@ -1481,8 +1483,8 @@ build.json @home-assistant/supervisor
 /tests/components/unifi/ @Kane610
 /homeassistant/components/unifi_direct/ @tofuSCHNITZEL
 /homeassistant/components/unifiled/ @florisvdk
-/homeassistant/components/unifiprotect/ @AngellusMortis @bdraco
-/tests/components/unifiprotect/ @AngellusMortis @bdraco
+/homeassistant/components/unifiprotect/ @bdraco
+/tests/components/unifiprotect/ @bdraco
 /homeassistant/components/upb/ @gwww
 /tests/components/upb/ @gwww
 /homeassistant/components/upc_connect/ @pvizeli @fabaff
@@ -1521,8 +1523,6 @@ build.json @home-assistant/supervisor
 /tests/components/version/ @ludeeus
 /homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja
 /tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja
-/homeassistant/components/viam/ @hipsterbrown
-/tests/components/viam/ @hipsterbrown
 /homeassistant/components/vicare/ @CFenner
 /tests/components/vicare/ @CFenner
 /homeassistant/components/vilfo/ @ManneW

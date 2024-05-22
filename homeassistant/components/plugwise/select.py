@@ -89,12 +89,16 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
         super().__init__(coordinator, device_id)
         self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
-        self._attr_options = self.device[entity_description.options_key]
 
     @property
     def current_option(self) -> str:
         """Return the selected entity option to represent the entity state."""
         return self.device[self.entity_description.key]
+
+    @property
+    def options(self) -> list[str]:
+        """Return the available select-options."""
+        return self.device[self.entity_description.options_key]
 
     async def async_select_option(self, option: str) -> None:
         """Change to the selected entity option."""

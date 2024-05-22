@@ -781,7 +781,7 @@ async def test_history_during_period_significant_domain(
     time_zone,
 ) -> None:
     """Test history_during_period with climate domain."""
-    hass.config.set_time_zone(time_zone)
+    await hass.config.async_set_time_zone(time_zone)
     now = dt_util.utcnow()
 
     await async_setup_component(hass, "history", {})

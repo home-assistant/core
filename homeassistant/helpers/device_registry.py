@@ -7,7 +7,7 @@ from enum import StrEnum
 from functools import cached_property, lru_cache, partial
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
 import attr
 from yarl import URL
@@ -160,7 +160,7 @@ class _EventDeviceRegistryUpdatedData_Update(TypedDict):
     changes: dict[str, Any]
 
 
-EventDeviceRegistryUpdatedData = (
+type EventDeviceRegistryUpdatedData = (
     _EventDeviceRegistryUpdatedData_CreateRemove
     | _EventDeviceRegistryUpdatedData_Update
 )
@@ -449,10 +449,9 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
         return old_data
 
 
-_EntryTypeT = TypeVar("_EntryTypeT", DeviceEntry, DeletedDeviceEntry)
-
-
-class DeviceRegistryItems(BaseRegistryItems[_EntryTypeT]):
+class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
+    BaseRegistryItems[_EntryTypeT]
+):
     """Container for device registry items, maps device id -> entry.
 
     Maintains two additional indexes:

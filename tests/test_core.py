@@ -9,6 +9,7 @@ import functools
 import gc
 import logging
 import os
+import re
 from tempfile import TemporaryDirectory
 import threading
 import time
@@ -3486,3 +3487,31 @@ async def test_async_create_task_thread_safety(hass: HomeAssistant) -> None:
         match="Detected code that calls hass.async_create_task from a thread.",
     ):
         await hass.async_add_executor_job(hass.async_create_task, _any_coro)
+
+
+async def test_thread_safety_message(hass: HomeAssistant) -> None:
+    """Test the thread safety message."""
+    with pytest.raises(
+        RuntimeError,
+        match=re.escape(
+            "Detected code that calls test from a thread other than the event loop, "
+            "which may cause Home Assistant to crash or data to corrupt. For more "
+            "information, see "
+            "https://developers.home-assistant.io/docs/asyncio_thread_safety/#test"
+            ". Please report this issue.",
+        ),
+    ):
+        await hass.async_add_executor_job(hass.verify_event_loop_thread, "test")
+
+
+async def test_set_time_zone_deprecated(hass: HomeAssistant) -> None:
+    """Test set_time_zone is deprecated."""
+    with pytest.raises(
+        RuntimeError,
+        match=re.escape(
+            "Detected code that set the time zone using set_time_zone instead of "
+            "async_set_time_zone which will stop working in Home Assistant 2025.6. "
+            "Please report this issue.",
+        ),
+    ):
+        await hass.config.set_time_zone("America/New_York")
