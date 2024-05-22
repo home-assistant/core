@@ -81,7 +81,7 @@ async def test_raise_config_entry_not_ready_when_offline(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
-    assert hass.config_entries.flow.async_progress() == []
+    assert len(hass.config_entries.flow.async_progress()) == 0
 
 
 async def test_migrate_config_entry(
