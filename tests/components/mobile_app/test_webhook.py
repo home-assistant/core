@@ -39,7 +39,6 @@ def encrypt_payload(secret_key, payload, encode_json=True):
         from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
-        return
 
     import json
 
@@ -61,7 +60,6 @@ def encrypt_payload_legacy(secret_key, payload, encode_json=True):
         from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
-        return
 
     import json
 
@@ -86,7 +84,6 @@ def decrypt_payload(secret_key, encrypted_data):
         from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
-        return
 
     import json
 
@@ -107,7 +104,6 @@ def decrypt_payload_legacy(secret_key, encrypted_data):
         from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
-        return
 
     import json
 
