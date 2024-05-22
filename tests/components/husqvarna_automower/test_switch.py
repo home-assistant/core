@@ -82,17 +82,16 @@ async def test_switch_commands(
     assert len(mocked_method.mock_calls) == 1
 
     mocked_method.side_effect = ApiException("Test error")
-    with pytest.raises(HomeAssistantError) as exc_info:
+    with pytest.raises(
+        HomeAssistantError,
+        match="Command couldn't be sent to the command queue: Test error",
+    ):
         await hass.services.async_call(
             domain="switch",
             service=service,
             service_data={"entity_id": "switch.test_mower_1_enable_schedule"},
             blocking=True,
         )
-    assert (
-        str(exc_info.value)
-        == "Command couldn't be sent to the command queue: Test error"
-    )
     assert len(mocked_method.mock_calls) == 2
 
 

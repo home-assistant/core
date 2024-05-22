@@ -39,7 +39,10 @@ async def test_number_commands(
     assert len(mocked_method.mock_calls) == 1
 
     mocked_method.side_effect = ApiException("Test error")
-    with pytest.raises(HomeAssistantError) as exc_info:
+    with pytest.raises(
+        HomeAssistantError,
+        match="Command couldn't be sent to the command queue: Test error",
+    ):
         await hass.services.async_call(
             domain="number",
             service="set_value",
@@ -47,10 +50,6 @@ async def test_number_commands(
             service_data={"value": "3"},
             blocking=True,
         )
-    assert (
-        str(exc_info.value)
-        == "Command couldn't be sent to the command queue: Test error"
-    )
     assert len(mocked_method.mock_calls) == 2
 
 
@@ -84,7 +83,10 @@ async def test_number_workarea_commands(
     assert state.state == "75"
 
     mocked_method.side_effect = ApiException("Test error")
-    with pytest.raises(HomeAssistantError) as exc_info:
+    with pytest.raises(
+        HomeAssistantError,
+        match="Command couldn't be sent to the command queue: Test error",
+    ):
         await hass.services.async_call(
             domain="number",
             service="set_value",
@@ -92,10 +94,6 @@ async def test_number_workarea_commands(
             service_data={"value": "75"},
             blocking=True,
         )
-    assert (
-        str(exc_info.value)
-        == "Command couldn't be sent to the command queue: Test error"
-    )
     assert len(mocked_method.mock_calls) == 2
 
 
