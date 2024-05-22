@@ -362,16 +362,15 @@ async def async_start(  # noqa: C901
                 hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None
             )
 
-    discovery_topics = [
-        f"{discovery_topic}/+/+/config",
-        f"{discovery_topic}/+/+/+/config",
-    ]
-    mqtt_data.discovery_unsubscribe = await asyncio.gather(
-        *(
-            mqtt.async_subscribe(hass, topic, async_discovery_message_received, 0)
-            for topic in discovery_topics
+    # async_subscribe will never suspend so there is no need to create a task
+    # here and its faster to await them in sequence
+    mqtt_data.discovery_unsubscribe = [
+        await mqtt.async_subscribe(hass, topic, async_discovery_message_received, 0)
+        for topic in (
+            f"{discovery_topic}/+/+/config",
+            f"{discovery_topic}/+/+/+/config",
         )
-    )
+    ]
 
     mqtt_data.last_discovery = time.monotonic()
     mqtt_integrations = await async_get_mqtt(hass)

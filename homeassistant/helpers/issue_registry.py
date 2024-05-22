@@ -144,7 +144,7 @@ class IssueRegistry(BaseRegistry):
         translation_placeholders: dict[str, str] | None = None,
     ) -> IssueEntry:
         """Get issue. Create if it doesn't exist."""
-        self.hass.verify_event_loop_thread("async_get_or_create")
+        self.hass.verify_event_loop_thread("issue_registry.async_get_or_create")
         if (issue := self.async_get_issue(domain, issue_id)) is None:
             issue = IssueEntry(
                 active=True,
@@ -204,7 +204,7 @@ class IssueRegistry(BaseRegistry):
     @callback
     def async_delete(self, domain: str, issue_id: str) -> None:
         """Delete issue."""
-        self.hass.verify_event_loop_thread("async_delete")
+        self.hass.verify_event_loop_thread("issue_registry.async_delete")
         if self.issues.pop((domain, issue_id), None) is None:
             return
 
@@ -221,7 +221,7 @@ class IssueRegistry(BaseRegistry):
     @callback
     def async_ignore(self, domain: str, issue_id: str, ignore: bool) -> IssueEntry:
         """Ignore issue."""
-        self.hass.verify_event_loop_thread("async_ignore")
+        self.hass.verify_event_loop_thread("issue_registry.async_ignore")
         old = self.issues[(domain, issue_id)]
         dismissed_version = ha_version if ignore else None
         if old.dismissed_version == dismissed_version:

@@ -88,6 +88,11 @@ class TeslemetryEntity(
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
 
+    def raise_for_scope(self):
+        """Raise an error if a scope is not available."""
+        if not self.scoped:
+            raise ServiceValidationError("Missing required scope")
+
 
 class TeslemetryVehicleEntity(TeslemetryEntity):
     """Parent class for Teslemetry Vehicle entities."""
@@ -152,11 +157,6 @@ class TeslemetryVehicleEntity(TeslemetryEntity):
             raise HomeAssistantError("Command failed with no reason")
         # Response with result of true
         return result
-
-    def raise_for_scope(self):
-        """Raise an error if a scope is not available."""
-        if not self.scoped:
-            raise ServiceValidationError("Missing required scope")
 
 
 class TeslemetryEnergyLiveEntity(TeslemetryEntity):

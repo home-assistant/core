@@ -22,17 +22,7 @@ import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
 from types import CodeType, TracebackType
-from typing import (
-    Any,
-    Concatenate,
-    Literal,
-    NoReturn,
-    ParamSpec,
-    Self,
-    TypeVar,
-    cast,
-    overload,
-)
+from typing import Any, Concatenate, Literal, NoReturn, Self, cast, overload
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -133,10 +123,6 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
     "object_id",
     "name",
 }
-
-_T = TypeVar("_T")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
 
 ALL_STATES_RATE_LIMIT = 60  # seconds
 DOMAIN_STATES_RATE_LIMIT = 1  # seconds
@@ -702,9 +688,18 @@ class Template:
         if self.hass and self.hass.config.debug:
             self.hass.verify_event_loop_thread("async_render_to_info")
         self._renders += 1
-        assert self.hass and _render_info.get() is None
 
         render_info = RenderInfo(self)
+
+        if not self.hass:
+            raise RuntimeError(f"hass not set while rendering {self}")
+
+        if _render_info.get() is not None:
+            raise RuntimeError(
+                f"RenderInfo already set while rendering {self}, "
+                "this usually indicates the template is being rendered "
+                "in the wrong thread"
+            )
 
         if self.is_static:
             render_info._result = self.template.strip()  # noqa: SLF001
@@ -1217,10 +1212,10 @@ def forgiving_boolean(value: Any) -> bool | object: ...
 
 
 @overload
-def forgiving_boolean(value: Any, default: _T) -> bool | _T: ...
+def forgiving_boolean[_T](value: Any, default: _T) -> bool | _T: ...
 
 
-def forgiving_boolean(
+def forgiving_boolean[_T](
     value: Any, default: _T | object = _SENTINEL
 ) -> bool | _T | object:
     """Try to convert value to a boolean."""
@@ -2840,7 +2835,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         # evaluated fresh with every execution, rather than executed
         # at compile time and the value stored. The context itself
         # can be discarded, we only need to get at the hass object.
-        def hassfunction(
+        def hassfunction[**_P, _R](
             func: Callable[Concatenate[HomeAssistant, _P], _R],
             jinja_context: Callable[
                 [Callable[Concatenate[Any, _P], _R]],

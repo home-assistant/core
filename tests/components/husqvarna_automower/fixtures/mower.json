@@ -157,9 +157,11 @@
             }
           ]
         },
-        "cuttingHeight": 4,
-        "headlight": {
-          "mode": "EVENING_ONLY"
+        "settings": {
+          "cuttingHeight": 4,
+          "headlight": {
+            "mode": "EVENING_ONLY"
+          }
         }
       }
     }
