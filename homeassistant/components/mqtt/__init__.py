@@ -491,7 +491,6 @@ def async_subscribe_connection_status(
         "disconnect": async_dispatcher_connect(hass, MQTT_DISCONNECTED, disconnected),
     }
 
-    @callback
     def unsubscribe() -> None:
         subscriptions["connect"]()
         subscriptions["disconnect"]()
