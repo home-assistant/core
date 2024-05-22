@@ -204,12 +204,12 @@ def async_remove_entities(
         for zones_uid in _zones.zones:
             uid = f"{mower_id}_{zones_uid}_stay_out_zones"
             active_zones.add(uid)
-        for entity_entry in er.async_entries_for_config_entry(
-            entity_reg, config_entry.entry_id
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_reg, config_entry.entry_id
+    ):
+        if (
+            entity_entry.unique_id.split("_")[0] == mower_id
+            and entity_entry.unique_id.split("_")[-1] == "zones"
+            and entity_entry.unique_id not in active_zones
         ):
-            if (
-                entity_entry.unique_id.split("_")[0] == mower_id
-                and entity_entry.unique_id.split("_")[-1] == "zones"
-                and entity_entry.unique_id not in active_zones
-            ):
-                entity_reg.async_remove(entity_entry.entity_id)
+            entity_reg.async_remove(entity_entry.entity_id)
