@@ -4589,6 +4589,40 @@ async def test_async_track_point_in_time_cancel(hass: HomeAssistant) -> None:
     assert "US/Hawaii" in str(times[0].tzinfo)
 
 
+async def test_async_track_point_in_time_cancel_in_job(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test cancel of async track point in time during job execution."""
+
+    now = dt_util.utcnow()
+    times = []
+
+    time_that_will_not_match_right_away = datetime(
+        now.year + 1, 5, 24, 11, 59, 55, tzinfo=dt_util.UTC
+    )
+    freezer.move_to(time_that_will_not_match_right_away)
+
+    @callback
+    def action(x: datetime):
+        nonlocal times
+        times.append(x)
+        unsub()
+
+    unsub = async_track_utc_time_change(hass, action, minute=0, second="*")
+
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 12, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
+    await hass.async_block_till_done()
+    assert len(times) == 1
+
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 13, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
+    await hass.async_block_till_done()
+    assert len(times) == 1
+
+
 async def test_async_track_entity_registry_updated_event(hass: HomeAssistant) -> None:
     """Test tracking entity registry updates for an entity_id."""
 
