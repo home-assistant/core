@@ -89,6 +89,11 @@ class Tool:
         """Call the tool."""
         raise NotImplementedError
 
+    @callback
+    def async_is_applicable(self, hass: HomeAssistant, tool_input: ToolInput) -> bool:
+        """Check the tool applicability."""
+        return True
+
     def __repr__(self) -> str:
         """Represent a string of a Tool."""
         return f"<{self.__class__.__name__} - {self.name}>"
@@ -105,13 +110,13 @@ class API(ABC):
 
     @abstractmethod
     @callback
-    def async_get_tools(self) -> list[Tool]:
+    def async_get_tools(self, tool_input: ToolInput | None = None) -> list[Tool]:
         """Return a list of tools."""
         raise NotImplementedError
 
     async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
         """Call a LLM tool, validate args and return the response."""
-        for tool in self.async_get_tools():
+        for tool in self.async_get_tools(tool_input):
             if tool.name == tool_input.tool_name:
                 break
         else:
@@ -133,11 +138,14 @@ class API(ABC):
 class IntentTool(Tool):
     """LLM Tool representing an Intent."""
 
+    intent_handler: intent.IntentHandler
+
     def __init__(
         self,
         intent_handler: intent.IntentHandler,
     ) -> None:
         """Init the class."""
+        self.intent_handler = intent_handler
         self.name = intent_handler.intent_type
         self.description = (
             intent_handler.description or f"Execute Home Assistant {self.name} intent"
@@ -163,6 +171,22 @@ class IntentTool(Tool):
         )
         return intent_response.as_dict()
 
+    @callback
+    def async_is_applicable(self, hass: HomeAssistant, tool_input: ToolInput) -> bool:
+        """Check the intent applicability."""
+        slots = {key: {"value": val} for key, val in tool_input.tool_args.items()}
+        intent_obj = intent.Intent(
+            hass,
+            platform=tool_input.platform,
+            intent_type=self.name,
+            slots=slots,
+            text_input=tool_input.user_prompt,
+            context=tool_input.context or Context(),
+            language=tool_input.language or "*",
+            assistant=tool_input.assistant,
+        )
+        return self.intent_handler.async_can_handle(intent_obj)
+
 
 class AssistAPI(API):
     """API exposing Assist API to LLMs."""
@@ -184,10 +208,15 @@ class AssistAPI(API):
         )
 
     @callback
-    def async_get_tools(self) -> list[Tool]:
+    def async_get_tools(self, tool_input: ToolInput | None = None) -> list[Tool]:
         """Return a list of LLM tools."""
-        return [
+        tools: list[Tool] = [
             IntentTool(intent_handler)
             for intent_handler in intent.async_get(self.hass)
             if intent_handler.intent_type not in self.IGNORE_INTENTS
+        ]
+        if tool_input is None:
+            return tools
+        return [
+            tool for tool in tools if tool.async_is_applicable(self.hass, tool_input)
         ]
