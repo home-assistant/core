@@ -36,13 +36,9 @@ from .const import (
     DOMAIN,
 )
 from .discovery import MQTTDiscoveryPayload, clear_discovery_hash
-from .mixins import (
-    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-    MqttDiscoveryDeviceUpdate,
-    send_discovery_done,
-    update_device,
-)
+from .mixins import MqttDiscoveryDeviceUpdate, send_discovery_done, update_device
 from .models import DATA_MQTT
+from .schemas import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 

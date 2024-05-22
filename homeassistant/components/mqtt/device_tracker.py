@@ -34,12 +34,12 @@ from .const import CONF_PAYLOAD_RESET, CONF_QOS, CONF_STATE_TOPIC
 from .debug_info import log_messages
 from .mixins import (
     CONF_JSON_ATTRS_TOPIC,
-    MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entity_entry_helper,
     write_state_on_attr_change,
 )
 from .models import MqttValueTemplate, ReceiveMessage, ReceivePayloadType
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_subscribe_topic
 
 CONF_PAYLOAD_HOME = "payload_home"

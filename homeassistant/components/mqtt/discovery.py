@@ -10,10 +10,8 @@ import re
 import time
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE, CONF_NAME, CONF_PLATFORM
+from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
@@ -35,12 +33,12 @@ from .const import (
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
     CONF_ORIGIN,
-    CONF_SUPPORT_URL,
-    CONF_SW_VERSION,
     CONF_TOPIC,
     DOMAIN,
+    SUPPORTED_COMPONENTS,
 )
 from .models import DATA_MQTT, MqttOriginInfo, ReceiveMessage
+from .schemas import MQTT_ORIGIN_INFO_SCHEMA
 from .util import async_forward_entry_setup_and_setup_discovery
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,37 +47,6 @@ TOPIC_MATCHER = re.compile(
     r"(?P<component>\w+)/(?:(?P<node_id>[a-zA-Z0-9_-]+)/)"
     r"?(?P<object_id>[a-zA-Z0-9_-]+)/config"
 )
-
-SUPPORTED_COMPONENTS = {
-    "alarm_control_panel",
-    "binary_sensor",
-    "button",
-    "camera",
-    "climate",
-    "cover",
-    "device_automation",
-    "device_tracker",
-    "event",
-    "fan",
-    "humidifier",
-    "image",
-    "lawn_mower",
-    "light",
-    "lock",
-    "notify",
-    "number",
-    "scene",
-    "siren",
-    "select",
-    "sensor",
-    "switch",
-    "tag",
-    "text",
-    "update",
-    "vacuum",
-    "valve",
-    "water_heater",
-}
 
 MQTT_DISCOVERY_UPDATED: SignalTypeFormat[MQTTDiscoveryPayload] = SignalTypeFormat(
     "mqtt_discovery_updated_{}_{}"
@@ -93,16 +60,6 @@ MQTT_DISCOVERY_DONE: SignalTypeFormat[Any] = SignalTypeFormat(
 )
 
 TOPIC_BASE = "~"
-
-MQTT_ORIGIN_INFO_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(CONF_NAME): cv.string,
-            vol.Optional(CONF_SW_VERSION): cv.string,
-            vol.Optional(CONF_SUPPORT_URL): cv.configuration_url,
-        }
-    ),
-)
 
 
 class MQTTDiscoveryPayload(dict[str, Any]):

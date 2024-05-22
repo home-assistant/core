@@ -21,12 +21,9 @@ from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import CONF_QOS, CONF_TOPIC
 from .debug_info import log_messages
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entity_entry_helper,
-)
+from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import ReceiveMessage
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
