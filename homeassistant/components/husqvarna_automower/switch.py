@@ -167,6 +167,7 @@ class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
             )
             # As there are no updates from the websocket regarding stay out zone changes,
             # we need to wait until the command is executed and then poll the API.
+            await asyncio.sleep(EXECUTION_TIME)
             await self.coordinator.async_request_refresh()
         except ApiException as exception:
             raise HomeAssistantError(
