@@ -126,7 +126,10 @@ def valid_topic(topic: Any) -> str:
     """Validate that this is a valid topic name/filter.
 
     This function is not cached and is not expected to be called
-    directly. If it gets used outside of valid_subscribe_topic and
+    directly outside of this module. It is not marked as protected
+    only because its tested directly in test_util.py.
+
+    If it gets used outside of valid_subscribe_topic and
     valid_publish_topic, it may need an lru_cache decorator or
     an lru_cache decorator on the function where its used.
     """
