@@ -105,7 +105,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
             when = datetime.combine(
                 departure_day,
                 self._time,
-                dt_util.get_time_zone(self.hass.config.time_zone),
+                dt_util.get_default_time_zone(),
             )
         try:
             if self._time:

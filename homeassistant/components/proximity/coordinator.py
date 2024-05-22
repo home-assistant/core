@@ -45,7 +45,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ProximityConfigEntry = ConfigEntry["ProximityDataUpdateCoordinator"]
+type ProximityConfigEntry = ConfigEntry[ProximityDataUpdateCoordinator]
 
 
 @dataclass
