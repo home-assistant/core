@@ -12,7 +12,7 @@ import queue
 import sqlite3
 import threading
 import time
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import psutil_home_assistant as ha_psutil
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select, update
@@ -137,8 +137,6 @@ from .util import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-T = TypeVar("T")
 
 DEFAULT_URL = "sqlite:///{hass_config_path}"
 
@@ -366,9 +364,9 @@ class Recorder(threading.Thread):
             self.queue_task(COMMIT_TASK)
 
     @callback
-    def async_add_executor_job(
-        self, target: Callable[..., T], *args: Any
-    ) -> asyncio.Future[T]:
+    def async_add_executor_job[_T](
+        self, target: Callable[..., _T], *args: Any
+    ) -> asyncio.Future[_T]:
         """Add an executor job from within the event loop."""
         return self.hass.loop.run_in_executor(self._db_executor, target, *args)
 
@@ -924,13 +922,15 @@ class Recorder(threading.Thread):
                 assert isinstance(task, RecorderTask)
             if task.commit_before:
                 self._commit_event_session_or_retry()
-            return task.run(self)
+            task.run(self)
         except exc.DatabaseError as err:
             if self._handle_database_error(err):
                 return
             _LOGGER.exception("Unhandled database error while processing task %s", task)
         except SQLAlchemyError:
             _LOGGER.exception("SQLAlchemyError error processing task %s", task)
+        else:
+            return
 
         # Reset the session if an SQLAlchemyError (including DatabaseError)
         # happens to rollback and recover

@@ -19,7 +19,7 @@ import pathlib
 import sys
 import time
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Literal, Protocol, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, Protocol, TypedDict, cast
 
 from awesomeversion import (
     AwesomeVersion,
@@ -48,8 +48,6 @@ if TYPE_CHECKING:
     from .config_entries import ConfigEntry
     from .helpers import device_registry as dr
     from .helpers.typing import ConfigType
-
-_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,6 +94,11 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
     # https://community.home-assistant.io/t/psa-2024-5-upgrade-failure-and-dreame-vacuum-custom-integration/724612
     "dreame_vacuum": BlockedIntegration(
         AwesomeVersion("1.0.4"), "crashes Home Assistant"
+    ),
+    # Added in 2024.5.5 because of
+    # https://github.com/sh00t2kill/dolphin-robot/issues/185
+    "mydolphin_plus": BlockedIntegration(
+        AwesomeVersion("1.0.13"), "crashes Home Assistant"
     ),
 }
 
@@ -1574,7 +1577,7 @@ class Helpers:
         return wrapped
 
 
-def bind_hass(func: _CallableT) -> _CallableT:
+def bind_hass[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     """Decorate function to indicate that first argument is hass.
 
     The use of this decorator is discouraged, and it should not be used

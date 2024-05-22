@@ -99,7 +99,7 @@ UNSUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
 RECONNECT_INTERVAL_SECONDS = 10
 
-type SocketType = socket.socket | ssl.SSLSocket | Any
+type SocketType = socket.socket | ssl.SSLSocket | mqtt.WebsocketWrapper | Any
 
 type SubscribePayloadType = str | bytes  # Only bytes if encoding is None
 
@@ -328,6 +328,7 @@ class EnsureJobAfterCooldown:
         self._callback = callback_job
         self._task: asyncio.Task | None = None
         self._timer: asyncio.TimerHandle | None = None
+        self._next_execute_time = 0.0
 
     def set_timeout(self, timeout: float) -> None:
         """Set a new timeout period."""
@@ -371,8 +372,28 @@ class EnsureJobAfterCooldown:
         """Ensure we execute after a cooldown period."""
         # We want to reschedule the timer in the future
         # every time this is called.
-        self._async_cancel_timer()
-        self._timer = self._loop.call_later(self._timeout, self.async_execute)
+        next_when = self._loop.time() + self._timeout
+        if not self._timer:
+            self._timer = self._loop.call_at(next_when, self._async_timer_reached)
+            return
+
+        if self._timer.when() < next_when:
+            # Timer already running, set the next execute time
+            # if it fires too early, it will get rescheduled
+            self._next_execute_time = next_when
+
+    @callback
+    def _async_timer_reached(self) -> None:
+        """Handle timer fire."""
+        self._timer = None
+        if self._loop.time() >= self._next_execute_time:
+            self.async_execute()
+            return
+        # Timer fired too early because there were multiple
+        # calls async_schedule. Reschedule the timer.
+        self._timer = self._loop.call_at(
+            self._next_execute_time, self._async_timer_reached
+        )
 
     async def async_cleanup(self) -> None:
         """Cleanup any pending task."""
@@ -540,6 +561,14 @@ class MQTT:
 
     def _increase_socket_buffer_size(self, sock: SocketType) -> None:
         """Increase the socket buffer size."""
+        if not hasattr(sock, "setsockopt") and hasattr(sock, "_socket"):
+            # The WebsocketWrapper does not wrap setsockopt
+            # so we need to get the underlying socket
+            # Remove this once
+            # https://github.com/eclipse/paho.mqtt.python/pull/843
+            # is available.
+            sock = sock._socket  # noqa: SLF001
+
         new_buffer_size = PREFERRED_BUFFER_SIZE
         while True:
             try:

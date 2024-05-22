@@ -10,11 +10,11 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_samsungtv_entry
 from .const import (
+    MOCK_ENTRY_WS_WITH_MAC,
     MOCK_ENTRYDATA_ENCRYPTED_WS,
     SAMPLE_DEVICE_INFO_UE48JU6400,
     SAMPLE_DEVICE_INFO_WIFI,
 )
-from .test_media_player import MOCK_ENTRY_WS_WITH_MAC
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator

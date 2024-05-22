@@ -17,14 +17,16 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
+    SelectSelectorMode,
     TemplateSelector,
 )
 
@@ -95,7 +97,9 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(
-                title="Google Generative AI Conversation", data=user_input
+                title="Google Generative AI",
+                data=user_input,
+                options={CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
             )
 
         return self.async_show_form(
@@ -122,20 +126,62 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(
-                title="Google Generative AI Conversation", data=user_input
-            )
-        schema = google_generative_ai_config_option_schema(self.config_entry.options)
+            if user_input[CONF_LLM_HASS_API] == "none":
+                user_input.pop(CONF_LLM_HASS_API)
+            return self.async_create_entry(title="", data=user_input)
+        schema = await google_generative_ai_config_option_schema(
+            self.hass, self.config_entry.options
+        )
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(schema),
         )
 
 
-def google_generative_ai_config_option_schema(
+async def google_generative_ai_config_option_schema(
+    hass: HomeAssistant,
     options: MappingProxyType[str, Any],
 ) -> dict:
     """Return a schema for Google Generative AI completion options."""
+    api_models = await hass.async_add_executor_job(partial(genai.list_models))
+
+    models: list[SelectOptionDict] = [
+        SelectOptionDict(
+            label="Gemini 1.5 Flash (recommended)",
+            value="models/gemini-1.5-flash-latest",
+        ),
+    ]
+    models.extend(
+        SelectOptionDict(
+            label=api_model.display_name,
+            value=api_model.name,
+        )
+        for api_model in sorted(api_models, key=lambda x: x.display_name)
+        if (
+            api_model.name
+            not in (
+                "models/gemini-1.0-pro",  # duplicate of gemini-pro
+                "models/gemini-1.5-flash-latest",
+            )
+            and "vision" not in api_model.name
+            and "generateContent" in api_model.supported_generation_methods
+        )
+    )
+
+    apis: list[SelectOptionDict] = [
+        SelectOptionDict(
+            label="No control",
+            value="none",
+        )
+    ]
+    apis.extend(
+        SelectOptionDict(
+            label=api.name,
+            value=api.id,
+        )
+        for api in llm.async_get_apis(hass)
+    )
+
     harm_block_thresholds: list[SelectOptionDict] = [
         SelectOptionDict(
             label="Block none",
@@ -154,19 +200,28 @@ def google_generative_ai_config_option_schema(
             value="BLOCK_LOW_AND_ABOVE",
         ),
     ]
+
     return {
+        vol.Optional(
+            CONF_CHAT_MODEL,
+            description={"suggested_value": options.get(CONF_CHAT_MODEL)},
+            default=DEFAULT_CHAT_MODEL,
+        ): SelectSelector(
+            SelectSelectorConfig(
+                mode=SelectSelectorMode.DROPDOWN,
+                options=models,
+            )
+        ),
+        vol.Optional(
+            CONF_LLM_HASS_API,
+            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+            default="none",
+        ): SelectSelector(SelectSelectorConfig(options=apis)),
         vol.Optional(
             CONF_PROMPT,
             description={"suggested_value": options.get(CONF_PROMPT)},
             default=DEFAULT_PROMPT,
         ): TemplateSelector(),
-        vol.Optional(
-            CONF_CHAT_MODEL,
-            description={
-                "suggested_value": options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL)
-            },
-            default=DEFAULT_CHAT_MODEL,
-        ): str,
         vol.Optional(
             CONF_TEMPERATURE,
             description={"suggested_value": options.get(CONF_TEMPERATURE)},

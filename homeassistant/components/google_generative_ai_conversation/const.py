@@ -21,11 +21,8 @@ An overview of the areas and the devices in this smart home:
     {%- endif %}
   {%- endfor %}
 {%- endfor %}
-
-Answer the user's questions about the world truthfully.
-
-If the user wants to control a device, reject the request and suggest using the Home Assistant app.
 """
+
 CONF_CHAT_MODEL = "chat_model"
 DEFAULT_CHAT_MODEL = "models/gemini-pro"
 CONF_TEMPERATURE = "temperature"
@@ -36,6 +33,7 @@ CONF_TOP_K = "top_k"
 DEFAULT_TOP_K = 1
 CONF_MAX_TOKENS = "max_tokens"
 DEFAULT_MAX_TOKENS = 150
+DEFAULT_ALLOW_HASS_ACCESS = False
 CONF_HARASSMENT_BLOCK_THRESHOLD = "harassment_block_threshold"
 CONF_HATE_BLOCK_THRESHOLD = "hate_block_threshold"
 CONF_SEXUAL_BLOCK_THRESHOLD = "secual_block_threshold"
