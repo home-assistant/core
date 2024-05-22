@@ -151,9 +151,8 @@ class ExposedEntities:
         """
         entity_registry = er.async_get(self._hass)
         if not (registry_entry := entity_registry.async_get(entity_id)):
-            return self._async_set_legacy_assistant_option(
-                assistant, entity_id, key, value
-            )
+            self._async_set_legacy_assistant_option(assistant, entity_id, key, value)
+            return
 
         assistant_options: ReadOnlyDict[str, Any] | dict[str, Any]
         if (

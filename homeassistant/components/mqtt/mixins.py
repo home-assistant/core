@@ -106,6 +106,7 @@ from .discovery import (
     set_discovery_hash,
 )
 from .models import (
+    DATA_MQTT,
     MessageCallbackType,
     MqttValueTemplate,
     MqttValueTemplateException,
@@ -118,7 +119,7 @@ from .subscription import (
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
-from .util import get_mqtt_data, mqtt_config_entry_enabled, valid_subscribe_topic
+from .util import mqtt_config_entry_enabled, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -329,7 +330,7 @@ async def async_setup_non_entity_entry_helper(
     discovery_schema: vol.Schema,
 ) -> None:
     """Set up automation or tag creation dynamically through MQTT discovery."""
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
 
     async def async_setup_from_discovery(
         discovery_payload: MQTTDiscoveryPayload,
@@ -360,7 +361,7 @@ async def async_setup_entity_entry_helper(
     schema_class_mapping: dict[str, type[MqttEntity]] | None = None,
 ) -> None:
     """Set up entity creation dynamically through MQTT discovery."""
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
 
     @callback
     def async_setup_from_discovery(
@@ -391,7 +392,7 @@ async def async_setup_entity_entry_helper(
     def _async_setup_entities() -> None:
         """Set up MQTT items from configuration.yaml."""
         nonlocal entity_class
-        mqtt_data = get_mqtt_data(hass)
+        mqtt_data = hass.data[DATA_MQTT]
         if not (config_yaml := mqtt_data.config):
             return
         yaml_configs: list[ConfigType] = [
@@ -496,7 +497,7 @@ def write_state_on_attr_change(
             if not _attrs_have_changed(tracked_attrs):
                 return
 
-            mqtt_data = get_mqtt_data(entity.hass)
+            mqtt_data = entity.hass.data[DATA_MQTT]
             mqtt_data.state_write_requests.write_state_request(entity)
 
         return wrapper
@@ -695,7 +696,7 @@ class MqttAvailability(Entity):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        mqtt_data = get_mqtt_data(self.hass)
+        mqtt_data = self.hass.data[DATA_MQTT]
         client = mqtt_data.client
         if not client.connected and not self.hass.is_stopping:
             return False
@@ -936,7 +937,7 @@ class MqttDiscoveryUpdate(Entity):
         self._removed_from_hass = False
         if discovery_data is None:
             return
-        mqtt_data = get_mqtt_data(hass)
+        mqtt_data = hass.data[DATA_MQTT]
         self._registry_hooks = mqtt_data.discovery_registry_hooks
         discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
         if discovery_hash in self._registry_hooks:
