@@ -113,7 +113,7 @@ async def test_stay_out_zone_switch_commands(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test switch commands."""
-    entity_id = "switch.test_mower_1_enable_danger_zone"
+    entity_id = "switch.test_mower_1_avoid_danger_zone"
     await setup_integration(hass, mock_config_entry)
     values = mower_list_to_dictionary_dataclass(
         load_json_value_fixture("mower.json", DOMAIN)

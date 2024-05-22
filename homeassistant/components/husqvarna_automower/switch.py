@@ -209,7 +209,7 @@ def async_remove_entities(
         ):
             if (
                 entity_entry.unique_id.split("_")[0] == mower_id
-                and entity_entry.unique_id.split("_")[2] == "stay_out_zones"
+                and entity_entry.unique_id.split("_")[-1] == "zones"
                 and entity_entry.unique_id not in active_zones
             ):
                 entity_reg.async_remove(entity_entry.entity_id)
