@@ -73,6 +73,7 @@ class ToolInput(ABC):
     user_prompt: str | None
     language: str | None
     assistant: str | None
+    device_id: str | None
 
 
 class Tool:
@@ -130,6 +131,7 @@ class API(ABC):
             user_prompt=tool_input.user_prompt,
             language=tool_input.language,
             assistant=tool_input.assistant,
+            device_id=tool_input.device_id,
         )
 
         return await tool.async_call(self.hass, _tool_input)
@@ -168,6 +170,7 @@ class IntentTool(Tool):
             tool_input.context,
             tool_input.language,
             tool_input.assistant,
+            tool_input.device_id,
         )
         return intent_response.as_dict()
 
@@ -184,6 +187,7 @@ class IntentTool(Tool):
             context=tool_input.context or Context(),
             language=tool_input.language or "*",
             assistant=tool_input.assistant,
+            device_id=tool_input.device_id,
         )
         return self.intent_handler.async_can_handle(intent_obj)
 

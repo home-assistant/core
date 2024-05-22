@@ -33,12 +33,13 @@ from .mixins import (
     async_setup_entity_entry_helper,
 )
 from .models import (
+    DATA_MQTT,
     MessageCallbackType,
     MqttValueTemplate,
     MqttValueTemplateException,
     ReceiveMessage,
 )
-from .util import get_mqtt_data, valid_subscribe_topic
+from .util import valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -186,7 +187,7 @@ class MqttImage(MqttEntity, ImageEntity):
                 )
                 self._last_image = None
             self._attr_image_last_updated = dt_util.utcnow()
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+            self.hass.data[DATA_MQTT].state_write_requests.write_state_request(self)
 
         add_subscribe_topic(CONF_IMAGE_TOPIC, image_data_received)
 
@@ -208,7 +209,7 @@ class MqttImage(MqttEntity, ImageEntity):
                 )
             self._attr_image_last_updated = dt_util.utcnow()
             self._cached_image = None
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+            self.hass.data[DATA_MQTT].state_write_requests.write_state_request(self)
 
         add_subscribe_topic(CONF_URL_TOPIC, image_from_url_request_received)
 
