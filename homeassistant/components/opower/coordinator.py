@@ -221,7 +221,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                         break
             cost_reads += finer_cost_reads
 
-        tz = dt_util.get_time_zone(time_zone_str)
+        tz = await dt_util.async_get_time_zone(time_zone_str)
         if start_time is None:
             start = None
         else:
