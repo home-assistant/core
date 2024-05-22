@@ -5814,6 +5814,12 @@
       "iot_class": "calculated",
       "single_config_entry": true
     },
+    "sunsynkweb": {
+      "name": "Sunsynk Inverter Web",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "sunweg": {
       "name": "Sun WEG",
       "integration_type": "hub",
