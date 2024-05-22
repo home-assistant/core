@@ -131,7 +131,10 @@ async def test_login_error(
     ],
 )
 async def test_connection_error(
-    hass: HomeAssistant, client: MagicMock, config_entry: MagicMock, the_error: Exception
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MagicMock,
+    the_error: Exception,
 ) -> None:
     """Test Connection errors from API."""
     client.login.side_effect = the_error
