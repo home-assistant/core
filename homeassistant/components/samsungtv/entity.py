@@ -51,6 +51,18 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
             }
         self._turn_on_action = PluggableAction(self.async_write_ha_state)
 
+    @property
+    def available(self) -> bool:
+        """Return the availability of the device."""
+        if self._bridge.auth_failed:
+            return False
+        return (
+            self.coordinator.is_on
+            or bool(self._turn_on_action)
+            or self._mac is not None
+            or self._bridge.power_off_in_progress
+        )
+
     async def async_added_to_hass(self) -> None:
         """Connect and subscribe to dispatcher signals and state updates."""
         await super().async_added_to_hass()
