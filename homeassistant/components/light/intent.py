@@ -32,5 +32,6 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
                     vol.Coerce(int), vol.Range(0, 100)
                 ),
             },
+            description="Sets the brightness or color of a light",
         ),
     )

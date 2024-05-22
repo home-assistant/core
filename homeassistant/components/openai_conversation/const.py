@@ -21,10 +21,6 @@ An overview of the areas and the devices in this smart home:
     {%- endif %}
   {%- endfor %}
 {%- endfor %}
-
-Answer the user's questions about the world truthfully.
-
-If the user wants to control a device, reject the request and suggest using the Home Assistant app.
 """
 CONF_CHAT_MODEL = "chat_model"
 DEFAULT_CHAT_MODEL = "gpt-3.5-turbo"
