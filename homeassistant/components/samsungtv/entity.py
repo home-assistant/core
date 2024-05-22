@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from wakeonlan import send_magic_packet
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONNECTIONS,
     ATTR_IDENTIFIERS,
@@ -17,20 +16,23 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.trigger import PluggableAction
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .bridge import SamsungTVBridge
 from .const import CONF_MANUFACTURER, DOMAIN
+from .coordinator import SamsungTVDataUpdateCoordinator
 from .triggers.turn_on import async_get_turn_on_trigger
 
 
-class SamsungTVEntity(Entity):
+class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity):
     """Defines a base SamsungTV entity."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, *, bridge: SamsungTVBridge, config_entry: ConfigEntry) -> None:
+    def __init__(self, *, coordinator: SamsungTVDataUpdateCoordinator) -> None:
         """Initialize the SamsungTV entity."""
-        self._bridge = bridge
+        super().__init__(coordinator)
+        self._bridge = coordinator.bridge
+        config_entry = coordinator.config_entry
         self._mac: str | None = config_entry.data.get(CONF_MAC)
         self._host: str | None = config_entry.data.get(CONF_HOST)
         # Fallback for legacy models that doesn't have a API to retrieve MAC or SerialNumber
