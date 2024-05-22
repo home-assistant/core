@@ -40,8 +40,8 @@ from .const import (
     CONF_TOPIC,
     DOMAIN,
 )
-from .models import MqttOriginInfo, ReceiveMessage
-from .util import async_forward_entry_setup_and_setup_discovery, get_mqtt_data
+from .models import DATA_MQTT, MqttOriginInfo, ReceiveMessage
+from .util import async_forward_entry_setup_and_setup_discovery
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,12 +113,12 @@ class MQTTDiscoveryPayload(dict[str, Any]):
 
 def clear_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> None:
     """Clear entry from already discovered list."""
-    get_mqtt_data(hass).discovery_already_discovered.remove(discovery_hash)
+    hass.data[DATA_MQTT].discovery_already_discovered.remove(discovery_hash)
 
 
 def set_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> None:
     """Add entry to already discovered list."""
-    get_mqtt_data(hass).discovery_already_discovered.add(discovery_hash)
+    hass.data[DATA_MQTT].discovery_already_discovered.add(discovery_hash)
 
 
 @callback
@@ -150,7 +150,7 @@ async def async_start(  # noqa: C901
     hass: HomeAssistant, discovery_topic: str, config_entry: ConfigEntry
 ) -> None:
     """Start MQTT Discovery."""
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
     platform_setup_lock: dict[str, asyncio.Lock] = {}
 
     async def _async_component_setup(discovery_payload: MQTTDiscoveryPayload) -> None:
@@ -362,16 +362,15 @@ async def async_start(  # noqa: C901
                 hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None
             )
 
-    discovery_topics = [
-        f"{discovery_topic}/+/+/config",
-        f"{discovery_topic}/+/+/+/config",
-    ]
-    mqtt_data.discovery_unsubscribe = await asyncio.gather(
-        *(
-            mqtt.async_subscribe(hass, topic, async_discovery_message_received, 0)
-            for topic in discovery_topics
+    # async_subscribe will never suspend so there is no need to create a task
+    # here and its faster to await them in sequence
+    mqtt_data.discovery_unsubscribe = [
+        await mqtt.async_subscribe(hass, topic, async_discovery_message_received, 0)
+        for topic in (
+            f"{discovery_topic}/+/+/config",
+            f"{discovery_topic}/+/+/+/config",
         )
-    )
+    ]
 
     mqtt_data.last_discovery = time.monotonic()
     mqtt_integrations = await async_get_mqtt(hass)
@@ -427,7 +426,7 @@ async def async_start(  # noqa: C901
 
 async def async_stop(hass: HomeAssistant) -> None:
     """Stop MQTT Discovery."""
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
     for unsub in mqtt_data.discovery_unsubscribe:
         unsub()
     mqtt_data.discovery_unsubscribe = []

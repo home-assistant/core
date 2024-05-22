@@ -122,7 +122,7 @@ async def validate_input(
         options,
     )
     await block_device.initialize()
-    block_device.shutdown()
+    await block_device.shutdown()
     return {
         "title": block_device.name,
         CONF_SLEEP_PERIOD: get_block_device_sleep_period(block_device.settings),

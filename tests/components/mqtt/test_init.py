@@ -1839,6 +1839,7 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     record_calls: MessageCallbackType,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test active subscriptions are restored correctly on reconnect."""
     mqtt_mock = await mqtt_mock_entry()
@@ -1849,7 +1850,8 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     await mqtt.async_subscribe(hass, "test/state", record_calls, qos=1)
     await mqtt.async_subscribe(hass, "test/state", record_calls, qos=0)
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
+    freezer.tick(3)
+    async_fire_time_changed(hass)  # cooldown
     await hass.async_block_till_done()
 
     # the subscribtion with the highest QoS should survive
@@ -1865,15 +1867,18 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     mqtt_client_mock.on_disconnect(None, None, 0)
     await hass.async_block_till_done()
     mqtt_client_mock.on_connect(None, None, None, 0)
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
+    freezer.tick(3)
+    async_fire_time_changed(hass)  # cooldown
     await hass.async_block_till_done()
 
     expected.append(call([("test/state", 1)]))
     assert mqtt_client_mock.subscribe.mock_calls == expected
 
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
+    freezer.tick(3)
+    async_fire_time_changed(hass)  # cooldown
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
+    freezer.tick(3)
+    async_fire_time_changed(hass)  # cooldown
     await hass.async_block_till_done()
 
 
@@ -1889,6 +1894,7 @@ async def test_subscribed_at_highest_qos(
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     record_calls: MessageCallbackType,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the highest qos as assigned when subscribing to the same topic."""
     mqtt_mock = await mqtt_mock_entry()
@@ -1897,18 +1903,21 @@ async def test_subscribed_at_highest_qos(
 
     await mqtt.async_subscribe(hass, "test/state", record_calls, qos=0)
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))  # cooldown
+    freezer.tick(5)
+    async_fire_time_changed(hass)  # cooldown
     await hass.async_block_till_done()
     assert ("test/state", 0) in help_all_subscribe_calls(mqtt_client_mock)
     mqtt_client_mock.reset_mock()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))  # cooldown
+    freezer.tick(5)
+    async_fire_time_changed(hass)  # cooldown
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     await mqtt.async_subscribe(hass, "test/state", record_calls, qos=1)
     await mqtt.async_subscribe(hass, "test/state", record_calls, qos=2)
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))  # cooldown
+    freezer.tick(5)
+    async_fire_time_changed(hass)  # cooldown
     await hass.async_block_till_done()
     # the subscribtion with the highest QoS should survive
     assert help_all_subscribe_calls(mqtt_client_mock) == [("test/state", 2)]
@@ -4430,6 +4439,43 @@ async def test_server_sock_buffer_size(
     with patch.object(client, "setsockopt", side_effect=OSError("foo")):
         mqtt_client_mock.on_socket_open(mqtt_client_mock, None, client)
         mqtt_client_mock.on_socket_register_write(mqtt_client_mock, None, client)
+        await hass.async_block_till_done()
+    assert "Unable to increase the socket buffer size" in caplog.text
+
+
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+async def test_server_sock_buffer_size_with_websocket(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test handling the socket buffer size fails."""
+    mqtt_mock = await mqtt_mock_entry()
+    await hass.async_block_till_done()
+    assert mqtt_mock.connected is True
+
+    mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_SUCCESS
+
+    client, server = socket.socketpair(
+        family=socket.AF_UNIX, type=socket.SOCK_STREAM, proto=0
+    )
+    client.setblocking(False)
+    server.setblocking(False)
+
+    class FakeWebsocket(paho_mqtt.WebsocketWrapper):
+        def _do_handshake(self, *args, **kwargs):
+            pass
+
+    wrapped_socket = FakeWebsocket(client, "127.0.01", 1, False, "/", None)
+
+    with patch.object(client, "setsockopt", side_effect=OSError("foo")):
+        mqtt_client_mock.on_socket_open(mqtt_client_mock, None, wrapped_socket)
+        mqtt_client_mock.on_socket_register_write(
+            mqtt_client_mock, None, wrapped_socket
+        )
         await hass.async_block_till_done()
     assert "Unable to increase the socket buffer size" in caplog.text
 

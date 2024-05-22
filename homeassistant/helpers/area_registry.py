@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 import dataclasses
+from functools import cached_property
 from typing import Any, Literal, TypedDict
 
 from homeassistant.core import HomeAssistant, callback
@@ -12,6 +13,7 @@ from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 
 from . import device_registry as dr, entity_registry as er
+from .json import json_bytes, json_fragment
 from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryEntry,
     NormalizedNameBaseRegistryItems,
@@ -56,7 +58,7 @@ class EventAreaRegistryUpdatedData(TypedDict):
     area_id: str
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True, slots=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class AreaEntry(NormalizedNameBaseRegistryEntry):
     """Area Registry Entry."""
 
@@ -66,6 +68,23 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
     id: str
     labels: set[str] = dataclasses.field(default_factory=set)
     picture: str | None
+
+    @cached_property
+    def json_fragment(self) -> json_fragment:
+        """Return a JSON representation of this AreaEntry."""
+        return json_fragment(
+            json_bytes(
+                {
+                    "aliases": list(self.aliases),
+                    "area_id": self.id,
+                    "floor_id": self.floor_id,
+                    "icon": self.icon,
+                    "labels": list(self.labels),
+                    "name": self.name,
+                    "picture": self.picture,
+                }
+            )
+        )
 
 
 class AreaRegistryStore(Store[AreasRegistryStoreData]):

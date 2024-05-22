@@ -125,7 +125,6 @@ SAVE_DELAY = 1
 DISCOVERY_COOLDOWN = 1
 
 _DataT = TypeVar("_DataT", default=Any)
-_R = TypeVar("_R")
 
 
 class ConfigEntryState(Enum):
@@ -238,7 +237,9 @@ class OperationNotAllowed(ConfigError):
     """Raised when a config entry operation is not allowed."""
 
 
-UpdateListenerType = Callable[[HomeAssistant, "ConfigEntry"], Coroutine[Any, Any, None]]
+type UpdateListenerType = Callable[
+    [HomeAssistant, ConfigEntry], Coroutine[Any, Any, None]
+]
 
 FROZEN_CONFIG_ENTRY_ATTRS = {
     "entry_id",
@@ -727,6 +728,17 @@ class ConfigEntry(Generic[_DataT]):
     ) -> None:
         """Set up while holding the setup lock."""
         async with self.setup_lock:
+            if self.state is ConfigEntryState.LOADED:
+                # If something loaded the config entry while
+                # we were waiting for the lock, we should not
+                # set it up again.
+                _LOGGER.debug(
+                    "Not setting up %s (%s %s) again, already loaded",
+                    self.title,
+                    self.domain,
+                    self.entry_id,
+                )
+                return
             await self.async_setup(hass, integration=integration)
 
     @callback
@@ -1106,7 +1118,7 @@ class ConfigEntry(Generic[_DataT]):
         )
 
     @callback
-    def async_create_task(
+    def async_create_task[_R](
         self,
         hass: HomeAssistant,
         target: Coroutine[Any, Any, _R],
@@ -1130,7 +1142,7 @@ class ConfigEntry(Generic[_DataT]):
         return task
 
     @callback
-    def async_create_background_task(
+    def async_create_background_task[_R](
         self,
         hass: HomeAssistant,
         target: Coroutine[Any, Any, _R],

@@ -20,8 +20,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Samsung TV from a config entry."""
-    bridge = entry.runtime_data
-    async_add_entities([SamsungTVRemote(bridge=bridge, config_entry=entry)])
+    coordinator = entry.runtime_data
+    async_add_entities([SamsungTVRemote(coordinator=coordinator)])
 
 
 class SamsungTVRemote(SamsungTVEntity, RemoteEntity):
@@ -32,7 +32,7 @@ class SamsungTVRemote(SamsungTVEntity, RemoteEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self._bridge.async_power_off()
+        await super()._async_turn_off()
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to a device.
@@ -49,3 +49,7 @@ class SamsungTVRemote(SamsungTVEntity, RemoteEntity):
 
         for _ in range(num_repeats):
             await self._bridge.async_send_keys(command_list)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the remote on."""
+        await super()._async_turn_on()

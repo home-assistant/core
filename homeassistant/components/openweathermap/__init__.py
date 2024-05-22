@@ -26,11 +26,11 @@ from .const import (
     FORECAST_MODE_ONECALL_DAILY,
     PLATFORMS,
 )
-from .weather_update_coordinator import WeatherUpdateCoordinator
+from .coordinator import WeatherUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-OpenweathermapConfigEntry = ConfigEntry["OpenweathermapData"]
+type OpenweathermapConfigEntry = ConfigEntry[OpenweathermapData]
 
 
 @dataclass
