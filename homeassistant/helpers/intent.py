@@ -243,6 +243,19 @@ class MatchTargetsConstraints:
     allow_duplicate_names: bool = False
     """True if entities with duplicate names are allowed in result."""
 
+    @property
+    def has_constraints(self) -> bool:
+        """Returns True if at least one constraint is set (ignores assistant)."""
+        return bool(
+            self.name
+            or self.area_name
+            or self.floor_name
+            or self.domains
+            or self.device_classes
+            or self.features
+            or self.states
+        )
+
 
 @dataclass
 class MatchTargetsPreferences:
@@ -766,6 +779,15 @@ class IntentHandler:
         return f"<{self.__class__.__name__} - {self.intent_type}>"
 
 
+def non_empty_string(value: Any) -> str:
+    """Coerce value to string and fail if string is empty or whitespace."""
+    value_str = cv.string(value)
+    if not value_str.strip():
+        raise vol.Invalid("string value is empty")
+
+    return value_str
+
+
 class DynamicServiceIntentHandler(IntentHandler):
     """Service Intent handler registration (dynamic).
 
@@ -817,7 +839,7 @@ class DynamicServiceIntentHandler(IntentHandler):
     def slot_schema(self) -> dict:
         """Return a slot schema."""
         slot_schema = {
-            vol.Any("name", "area", "floor"): cv.string,
+            vol.Any("name", "area", "floor"): non_empty_string,
             vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional("preferred_area_id"): cv.string,
@@ -892,6 +914,10 @@ class DynamicServiceIntentHandler(IntentHandler):
             features=self.required_features,
             states=self.required_states,
         )
+        if not match_constraints.has_constraints:
+            # Fail if attempting to target all devices in the house
+            raise IntentHandleError("Service handler cannot target all devices")
+
         match_preferences = MatchTargetsPreferences(
             area_id=slots.get("preferred_area_id", {}).get("value"),
             floor_id=slots.get("preferred_floor_id", {}).get("value"),
