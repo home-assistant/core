@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 from smhi.smhi_lib import APIURL_TEMPLATE, SmhiForecast, SmhiForecastException
 from syrupy.assertion import SnapshotAssertion
@@ -10,6 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.smhi.const import ATTR_SMHI_THUNDER_PROBABILITY
 from homeassistant.components.smhi.weather import CONDITION_CLASSES, RETRY_TIMEOUT
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_FORECAST_CONDITION,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
@@ -29,7 +31,7 @@ from homeassistant.components.weather.const import (
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN, UnitOfSpeed
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.dt import utcnow
+from homeassistant.util import dt as dt_util
 
 from . import ENTITY_ID, TEST_CONFIG
 
@@ -64,6 +66,44 @@ async def test_setup_hass(
     assert state
     assert state.state == "fog"
     assert state.attributes == snapshot
+
+
+@freeze_time(datetime(2023, 8, 7, 1, tzinfo=dt_util.UTC))
+async def test_clear_night(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    api_response_night: str,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test for successfully setting up the smhi integration."""
+    hass.config.latitude = "59.32624"
+    hass.config.longitude = "17.84197"
+    uri = APIURL_TEMPLATE.format(
+        TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
+    )
+    aioclient_mock.get(uri, text=api_response_night)
+
+    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert aioclient_mock.call_count == 2
+
+    state = hass.states.get(ENTITY_ID)
+
+    assert state
+    assert state.state == ATTR_CONDITION_CLEAR_NIGHT
+    assert state.attributes == snapshot(name="clear_night")
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {"entity_id": ENTITY_ID, "type": "hourly"},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot(name="clear-night_forecast")
 
 
 async def test_properties_no_data(hass: HomeAssistant) -> None:
@@ -197,7 +237,7 @@ async def test_refresh_weather_forecast_retry(
     """Test the refresh weather forecast function."""
     entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
     entry.add_to_hass(hass)
-    now = utcnow()
+    now = dt_util.utcnow()
 
     with patch(
         "homeassistant.components.smhi.weather.Smhi.async_get_forecast",
