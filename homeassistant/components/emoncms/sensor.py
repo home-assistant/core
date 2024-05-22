@@ -72,7 +72,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_id(sensorid, feeduserid, feedid):
+def get_id(sensorid: str, feeduserid: str, feedid: str) -> str:
     """Return unique identifier for feed / sensor."""
     return f"emoncms{sensorid}_{feeduserid}_{feedid}"
 
