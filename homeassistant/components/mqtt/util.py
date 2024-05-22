@@ -158,7 +158,7 @@ def valid_topic(topic: Any) -> str:
     return validated_topic
 
 
-@lru_cache(maxsize=512)
+@lru_cache
 def valid_subscribe_topic(topic: Any) -> str:
     """Validate that we can subscribe using this MQTT topic."""
     validated_topic = valid_topic(topic)
@@ -196,7 +196,7 @@ def valid_subscribe_topic_template(value: Any) -> template.Template:
     return tpl
 
 
-@lru_cache(maxsize=512)
+@lru_cache
 def valid_publish_topic(topic: Any) -> str:
     """Validate that we can publish using this MQTT topic."""
     validated_topic = valid_topic(topic)
