@@ -724,7 +724,7 @@ class IntentHandler:
     """Intent handler registration."""
 
     intent_type: str
-    platforms: Iterable[str] | None = []
+    platforms: Iterable[str] | None = None
     description: str | None = None
 
     @property
