@@ -201,7 +201,7 @@ aioaseko==0.1.1
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.5.0
+aioautomower==2024.5.1
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.0.0
@@ -949,7 +949,7 @@ gios==4.0.0
 gitterpy==0.1.7
 
 # homeassistant.components.glances
-glances-api==0.6.0
+glances-api==0.7.0
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -1032,7 +1032,7 @@ ha-ffmpeg==3.2.0
 ha-iotawattpy==0.1.2
 
 # homeassistant.components.philips_js
-ha-philipsjs==3.1.1
+ha-philipsjs==3.2.1
 
 # homeassistant.components.habitica
 habitipy==0.3.1
