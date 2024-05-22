@@ -9,13 +9,14 @@ from typing import Any, overload
 
 from homeassistant.core import (
     HassJob,
+    HassJobType,
     HomeAssistant,
     callback,
     get_hassjob_callable_job_type,
 )
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
-from homeassistant.util.logging import catch_log_exception
+from homeassistant.util.logging import catch_log_exception, log_exception
 
 # Explicit reexport of 'SignalType' for backwards compatibility
 from homeassistant.util.signal_type import SignalType as SignalType  # noqa: PLC0414
@@ -167,11 +168,17 @@ def _generate_job[*_Ts](
 ) -> HassJob[..., None | Coroutine[Any, Any, None]]:
     """Generate a HassJob for a signal and target."""
     job_type = get_hassjob_callable_job_type(target)
+    name = f"dispatcher {signal}"
+    if job_type is HassJobType.Callback:
+        # We will catch exceptions in the callback to avoid
+        # wrapping the callback since calling wraps() is more
+        # expensive than the whole dispatcher_send process
+        return HassJob(target, name, job_type=job_type)
     return HassJob(
         catch_log_exception(
             target, partial(_format_err, signal, target), job_type=job_type
         ),
-        f"dispatcher {signal}",
+        name,
         job_type=job_type,
     )
 
@@ -236,4 +243,13 @@ def async_dispatcher_send_internal[*_Ts](
         if job is None:
             job = _generate_job(signal, target)
             target_list[target] = job
-        hass.async_run_hass_job(job, *args)
+        # We do not wrap Callback jobs in catch_log_exception since
+        # single use dispatchers spend more time wrapping the callback
+        # than the actual callback takes to run in many cases.
+        if job.job_type is HassJobType.Callback:
+            try:
+                job.target(*args)
+            except Exception as ex:  # noqa: BLE001
+                log_exception(_format_err(signal, target, *args), ex)  # type: ignore[arg-type]
+        else:
+            hass.async_run_hass_job(job, *args)
