@@ -35,7 +35,7 @@ async def test_aemet_weather(
 ) -> None:
     """Test states of the weather."""
 
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
     await async_init_integration(hass)
 
@@ -69,7 +69,7 @@ async def test_forecast_service(
 ) -> None:
     """Test multiple forecast."""
 
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
     await async_init_integration(hass)
 
@@ -109,7 +109,7 @@ async def test_forecast_subscription(
     """Test multiple forecast."""
     client = await hass_ws_client(hass)
 
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
     await async_init_integration(hass)
 
