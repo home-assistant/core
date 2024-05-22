@@ -26,15 +26,18 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, LOGGER
 
 DEFAULT_NAME = "MPD"
 DEFAULT_PORT = 6600
@@ -74,13 +77,63 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the MPD platform."""
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    name = config.get(CONF_NAME)
-    password = config.get(CONF_PASSWORD)
 
-    entity = MpdDevice(host, port, password, name)
-    async_add_entities([entity], True)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
+    )
+    if (
+        result["type"] is FlowResultType.CREATE_ENTRY
+        or result["reason"] == "single_instance_allowed"
+    ):
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.12.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Music Player Daemon",
+            },
+        )
+        return
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_yaml_import_issue_{result['reason']}",
+        breaks_in_ha_version="2024.12.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Music Player Daemon",
+        },
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up media player from config_entry."""
+
+    async_add_entities(
+        [
+            MpdDevice(
+                entry.data[CONF_HOST],
+                entry.data[CONF_PORT],
+                entry.data.get(CONF_PASSWORD),
+                entry.title,
+            )
+        ],
+        True,
+    )
 
 
 class MpdDevice(MediaPlayerEntity):
@@ -148,7 +201,7 @@ class MpdDevice(MediaPlayerEntity):
                 log_level = logging.DEBUG
                 if self._is_available is not False:
                     log_level = logging.WARNING
-                _LOGGER.log(
+                LOGGER.log(
                     log_level, "Error connecting to '%s': %s", self.server, error
                 )
                 self._is_available = False
@@ -181,7 +234,7 @@ class MpdDevice(MediaPlayerEntity):
 
                 await self._update_playlists()
             except (mpd.ConnectionError, ValueError) as error:
-                _LOGGER.debug("Error updating status: %s", error)
+                LOGGER.debug("Error updating status: %s", error)
 
     @property
     def available(self) -> bool:
@@ -340,7 +393,7 @@ class MpdDevice(MediaPlayerEntity):
                     response = await self._client.readpicture(file)
             except mpd.CommandError as error:
                 if error.errno is not mpd.FailureResponseCode.NO_EXIST:
-                    _LOGGER.warning(
+                    LOGGER.warning(
                         "Retrieving artwork through `readpicture` command failed: %s",
                         error,
                     )
@@ -352,7 +405,7 @@ class MpdDevice(MediaPlayerEntity):
                     response = await self._client.albumart(file)
             except mpd.CommandError as error:
                 if error.errno is not mpd.FailureResponseCode.NO_EXIST:
-                    _LOGGER.warning(
+                    LOGGER.warning(
                         "Retrieving artwork through `albumart` command failed: %s",
                         error,
                     )
@@ -412,7 +465,7 @@ class MpdDevice(MediaPlayerEntity):
                     self._playlists.append(playlist_data["playlist"])
         except mpd.CommandError as error:
             self._playlists = None
-            _LOGGER.warning("Playlists could not be updated: %s:", error)
+            LOGGER.warning("Playlists could not be updated: %s:", error)
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume of media player."""
@@ -489,12 +542,12 @@ class MpdDevice(MediaPlayerEntity):
                 media_id = async_process_play_media_url(self.hass, play_item.url)
 
             if media_type == MediaType.PLAYLIST:
-                _LOGGER.debug("Playing playlist: %s", media_id)
+                LOGGER.debug("Playing playlist: %s", media_id)
                 if media_id in self._playlists:
                     self._currentplaylist = media_id
                 else:
                     self._currentplaylist = None
-                    _LOGGER.warning("Unknown playlist name %s", media_id)
+                    LOGGER.warning("Unknown playlist name %s", media_id)
                 await self._client.clear()
                 await self._client.load(media_id)
                 await self._client.play()
