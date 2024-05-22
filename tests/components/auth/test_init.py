@@ -686,3 +686,32 @@ async def test_ws_sign_path(
     hass, path, expires = mock_sign.mock_calls[0][1]
     assert path == "/api/hello"
     assert expires.total_seconds() == 20
+
+
+async def test_ws_remove_expiry_date_refresh_token(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    hass_admin_credential: Credentials,
+    hass_ws_client: WebSocketGenerator,
+    hass_access_token: str,
+) -> None:
+    """Test removing expiry date from a refresh token."""
+    assert await async_setup_component(hass, "auth", {"http": {}})
+
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID, credential=hass_admin_credential
+    )
+    assert refresh_token.expire_at is not None
+    ws_client = await hass_ws_client(hass, hass_access_token)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "auth/remove_expiry_date_refresh_token",
+            "refresh_token_id": refresh_token.id,
+        }
+    )
+
+    result = await ws_client.receive_json()
+    assert result["success"], result
+    refresh_token = hass.auth.async_get_refresh_token(refresh_token.id)
+    assert refresh_token.expire_at is None

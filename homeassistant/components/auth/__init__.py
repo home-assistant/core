@@ -196,6 +196,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_delete_refresh_token)
     websocket_api.async_register_command(hass, websocket_delete_all_refresh_tokens)
     websocket_api.async_register_command(hass, websocket_sign_path)
+    websocket_api.async_register_command(
+        hass, websocket_remove_expiry_date_refresh_token
+    )
 
     login_flow.async_setup(hass, store_result)
     mfa_setup_flow.async_setup(hass)
