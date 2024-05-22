@@ -134,17 +134,16 @@ async def test_stay_out_zone_switch_commands(
     assert state.state == excepted_state
 
     mocked_method.side_effect = ApiException("Test error")
-    with pytest.raises(HomeAssistantError) as exc_info:
+    with pytest.raises(
+        HomeAssistantError,
+        match="Command couldn't be sent to the command queue: Test error",
+    ):
         await hass.services.async_call(
             domain="switch",
             service=service,
             service_data={"entity_id": entity_id},
             blocking=True,
         )
-    assert (
-        str(exc_info.value)
-        == "Command couldn't be sent to the command queue: Test error"
-    )
     assert len(mocked_method.mock_calls) == 2
 
 
