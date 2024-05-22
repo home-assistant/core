@@ -2192,7 +2192,7 @@ voip-utils==0.1.0
 
 # homeassistant.components.google_generative_ai_conversation
 # homeassistant.components.openai_conversation
-voluptuous-openapi==0.0.3
+voluptuous-openapi==0.0.4
 
 # homeassistant.components.volvooncall
 volvooncall==0.10.3
