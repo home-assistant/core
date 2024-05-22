@@ -38,7 +38,6 @@ SENSOR_CONFIG = {
     ]
 }
 
-
 @pytest.fixture(name="mockIammeter_3080")
 def mock_3080_controller() -> Generator[Mock]:
     """Mock a successful IamMeter API."""
@@ -50,7 +49,6 @@ def mock_3080_controller() -> Generator[Mock]:
     }
     with patch("iammeter.client.Client", return_value=api):
         yield api
-
 
 @pytest.fixture(name="mockIammeter_3080T")
 def mock_3080T_controller() -> Generator[Mock]:
