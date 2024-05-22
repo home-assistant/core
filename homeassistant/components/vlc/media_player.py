@@ -18,7 +18,7 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -34,6 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_ARGUMENTS, default=""): cv.string,
         vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -46,7 +47,13 @@ def setup_platform(
 ) -> None:
     """Set up the vlc platform."""
     add_entities(
-        [VlcDevice(config.get(CONF_NAME, DEFAULT_NAME), config.get(CONF_ARGUMENTS))]
+        [
+            VlcDevice(
+                config.get(CONF_NAME, DEFAULT_NAME),
+                config.get(CONF_ARGUMENTS),
+                config.get(CONF_UNIQUE_ID),
+            )
+        ]
     )
 
 
@@ -64,11 +71,12 @@ class VlcDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
 
-    def __init__(self, name, arguments):
+    def __init__(self, name, arguments, unique_id: str | None = None) -> None:
         """Initialize the vlc device."""
         self._instance = vlc.Instance(arguments)
         self._vlc = self._instance.media_player_new()
         self._attr_name = name
+        self._attr_unique_id = unique_id
 
     def update(self):
         """Get the latest details from the device."""
