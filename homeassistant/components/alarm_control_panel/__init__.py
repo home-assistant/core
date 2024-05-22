@@ -162,13 +162,13 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     def code_or_default_code(self, code: str | None) -> str | None:
         """Return code to use for a service call.
 
-        If the passed in code is not None, it will be return. Otherwise return the
-        default code if set, or None if not set.
+        If the passed in code is not None, it will be returned. Otherwise return the
+        default code, if set, or None if not set, is returned.
         """
         if code:
             # Return code provided by user
             return code
-        # Failback to default code or None if not set
+        # Fallback to default code or None if not set
         return self._alarm_control_panel_option_default_code
 
     @cached_property
@@ -329,16 +329,10 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
         alarm control panel is added to the state machine.
         """
         assert self.registry_entry
-        if (
-            alarm_control_panel_options := self.registry_entry.options.get(DOMAIN)
-        ) and (
-            custom_default_alarm_control_panel_code := alarm_control_panel_options.get(
-                CONF_DEFAULT_CODE
-            )
+        if (alarm_options := self.registry_entry.options.get(DOMAIN)) and (
+            default_code := alarm_options.get(CONF_DEFAULT_CODE)
         ):
-            self._alarm_control_panel_option_default_code = (
-                custom_default_alarm_control_panel_code
-            )
+            self._alarm_control_panel_option_default_code = default_code
             return
         self._alarm_control_panel_option_default_code = None
 
