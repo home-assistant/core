@@ -30,7 +30,6 @@ from mozart_api.models import (
     VolumeState,
 )
 from mozart_api.mozart_client import MozartClient, get_highest_resolution_artwork
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -46,13 +45,9 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from . import BangOlufsenData
@@ -86,6 +81,7 @@ BANG_OLUFSEN_FEATURES = (
     | MediaPlayerEntityFeature.PLAY
     | MediaPlayerEntityFeature.BROWSE_MEDIA
     | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
 )
 
 
@@ -99,31 +95,6 @@ async def async_setup_entry(
 
     # Add MediaPlayer entity
     async_add_entities(new_entities=[BangOlufsenMediaPlayer(config_entry, data.client)])
-
-    # Register services.
-    platform = async_get_current_platform()
-
-    platform.async_register_entity_service(
-        name="overlay_audio",
-        schema={
-            vol.Exclusive("tts", "media", ""): cv.string,
-            vol.Optional("tts_language"): cv.string,
-            vol.Exclusive("uri", "media", "Define either uri or tts"): cv.string,
-            vol.Exclusive("absolute_volume", "volume"): vol.All(
-                vol.Coerce(int),
-                vol.Range(min=0, max=100),
-            ),
-            vol.Exclusive(
-                "offset_volume",
-                "volume",
-                "Define either offset_volume or absolute_volume",
-            ): vol.All(
-                vol.Coerce(int),
-                vol.Range(min=0, max=100),
-            ),
-        },
-        func="async_overlay_audio",
-    )
 
 
 class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
@@ -570,9 +541,14 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         self,
         media_type: MediaType | str,
         media_id: str,
+        announce: bool | None = None,
         **kwargs: Any,
     ) -> None:
         """Play from: netradio station id, URI, favourite or Deezer."""
+        _LOGGER.warning(media_type)
+        _LOGGER.warning(media_id)
+        _LOGGER.warning(announce)
+        _LOGGER.warning(kwargs)
 
         # Convert audio/mpeg, audio/aac etc. to MediaType.MUSIC
         if media_type.startswith("audio/"):
@@ -597,7 +573,42 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             if media_id.endswith(".m3u"):
                 media_id = media_id.replace(".m3u", "")
 
-        if media_type in (MediaType.URL, MediaType.MUSIC):
+        if announce:
+            extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
+
+            absolute_volume = extra.get("overlay_absolute_volume", None)
+            offset_volume = extra.get("overlay_offset_volume", None)
+            tts_language = extra.get("overlay_tts_language", "en-us")
+
+            # Construct request
+            overlay_play_request = OverlayPlayRequest()
+
+            # Define volume level
+            if absolute_volume:
+                overlay_play_request.volume_absolute = absolute_volume
+
+            elif offset_volume:
+                # Ensure that the volume is not above 100
+                if not self._volume.level or not self._volume.level.level:
+                    _LOGGER.warning("Error setting volume")
+                else:
+                    overlay_play_request.volume_absolute = min(
+                        self._volume.level.level + offset_volume, 100
+                    )
+
+            if media_type == BangOlufsenMediaType.OVERLAY_TTS:
+                # Bang & Olufsen cloud TTS
+                overlay_play_request.text_to_speech = (
+                    OverlayPlayRequestTextToSpeechTextToSpeech(
+                        lang=tts_language, text=media_id
+                    )
+                )
+            else:
+                overlay_play_request.uri = Uri(location=media_id)
+
+            await self._client.post_overlay_play(overlay_play_request)
+
+        elif media_type in (MediaType.URL, MediaType.MUSIC):
             await self._client.post_uri_source(uri=Uri(location=media_id))
 
         # The "provider" media_type may not be suitable for overlay all the time.
@@ -677,49 +688,3 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             media_content_id,
             content_filter=lambda item: item.media_content_type.startswith("audio/"),
         )
-
-    async def async_overlay_audio(
-        self,
-        absolute_volume: int | None = None,
-        offset_volume: int | None = None,
-        tts_language: str = "en-us",
-        tts: str | None = None,
-        uri: str | None = None,
-    ) -> None:
-        """Overlay audio over any currently playing audio."""
-
-        # Construct request
-        overlay_play_request = OverlayPlayRequest()
-
-        # Define volume level
-        if absolute_volume:
-            overlay_play_request.volume_absolute = absolute_volume
-        elif offset_volume:
-            # Ensure that the volume is not above 100
-            if not self._volume.level or not self._volume.level.level:
-                _LOGGER.warning("Error setting volume")
-            else:
-                overlay_play_request.volume_absolute = min(
-                    self._volume.level.level + offset_volume, 100
-                )
-        # Define media type for overlay
-        if uri:
-            media_id = uri
-
-            # Play local HA file.
-            if media_source.is_media_source_id(media_id):
-                sourced_media = await media_source.async_resolve_media(
-                    self.hass, media_id, self.entity_id
-                )
-
-                media_id = async_process_play_media_url(self.hass, sourced_media.url)
-
-            # URI
-            overlay_play_request.uri = Uri(location=media_id)
-
-        elif tts:
-            # Bang & Olufsen cloud TTS
-            overlay_play_request.text_to_speech = (
-                OverlayPlayRequestTextToSpeechTextToSpeech(lang=tts_language, text=tts)
-            )
-        await self._client.post_overlay_play(overlay_play_request)
