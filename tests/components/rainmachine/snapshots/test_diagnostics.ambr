@@ -37,8 +37,8 @@
           'update': False,
           'updateStatus': 1,
         }),
-        'programs': dict({
-          '1': dict({
+        'programs': list([
+          dict({
             'active': True,
             'coef': 0,
             'cs_on': False,
@@ -179,7 +179,7 @@
             ]),
             'yearlyRecurring': True,
           }),
-          '2': dict({
+          dict({
             'active': False,
             'coef': 0,
             'cs_on': False,
@@ -320,7 +320,7 @@
             ]),
             'yearlyRecurring': True,
           }),
-        }),
+        ]),
         'provision.settings': dict({
           'location': dict({
             'address': 'Default',
@@ -650,8 +650,8 @@
           'update': False,
           'updateStatus': 1,
         }),
-        'programs': dict({
-          '1': dict({
+        'programs': list([
+          dict({
             'active': True,
             'coef': 0,
             'cs_on': False,
@@ -792,7 +792,7 @@
             ]),
             'yearlyRecurring': True,
           }),
-          '2': dict({
+          dict({
             'active': False,
             'coef': 0,
             'cs_on': False,
@@ -933,7 +933,7 @@
             ]),
             'yearlyRecurring': True,
           }),
-        }),
+        ]),
         'provision.settings': dict({
           'location': dict({
             'address': 'Default',
