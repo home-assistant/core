@@ -29,7 +29,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_devices[{('teslemetry', 'LRW3F7EK4KC700000')}]
+# name: test_devices[{('teslemetry', 'VINVINVIN')}]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -43,17 +43,17 @@
     'identifiers': set({
       tuple(
         'teslemetry',
-        'LRW3F7EK4KC700000',
+        'VINVINVIN',
       ),
     }),
     'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tesla',
-    'model': 'Model 3',
+    'model': None,
     'name': 'Test',
     'name_by_user': None,
-    'serial_number': 'LRW3F7EK4KC700000',
+    'serial_number': 'VINVINVIN',
     'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
