@@ -10,6 +10,7 @@ from hdate import HDate
 from hdate.zmanim import Zmanim
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -21,6 +22,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
+from . import async_update_unique_id
 from .const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
@@ -150,15 +152,28 @@ TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Jewish calendar sensors ."""
-    entry = hass.data[DOMAIN][config_entry.entry_id]
-    sensors = [JewishCalendarSensor(entry, description) for description in INFO_SENSORS]
+    entry = hass.data[DOMAIN][config.entry_id]
+    sensors = [
+        JewishCalendarSensor(config.entry_id, entry, description)
+        for description in INFO_SENSORS
+    ]
     sensors.extend(
-        JewishCalendarTimeSensor(entry, description) for description in TIME_SENSORS
+        JewishCalendarTimeSensor(config.entry_id, entry, description)
+        for description in TIME_SENSORS
     )
+
+    for sensor in sensors:
+        async_update_unique_id(
+            hass,
+            config.entry_id,
+            hass.data[DOMAIN]["prefix"],
+            SENSOR_DOMAIN,
+            sensor.entity_description.key,
+        )
 
     async_add_entities(sensors)
 
@@ -168,13 +183,14 @@ class JewishCalendarSensor(SensorEntity):
 
     def __init__(
         self,
+        entry_id: str,
         data: dict[str, Any],
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the Jewish calendar sensor."""
         self.entity_description = description
         self._attr_name = f"{DEFAULT_NAME} {description.name}"
-        self._attr_unique_id = f'{data["prefix"]}_{description.key}'
+        self._attr_unique_id = f"{entry_id}-{description.key}"
         self._location = data[CONF_LOCATION]
         self._hebrew = data[CONF_LANGUAGE] == "hebrew"
         self._candle_lighting_offset = data[CONF_CANDLE_LIGHT_MINUTES]

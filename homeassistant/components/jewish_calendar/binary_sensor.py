@@ -12,6 +12,7 @@ import hdate
 from hdate.zmanim import Zmanim
 
 from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -22,6 +23,7 @@ from homeassistant.helpers import event
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
+from . import async_update_unique_id
 from .const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_HAVDALAH_OFFSET_MINUTES,
@@ -66,13 +68,22 @@ BINARY_SENSORS: tuple[JewishCalendarBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Jewish Calendar binary sensors."""
+    for description in BINARY_SENSORS:
+        async_update_unique_id(
+            hass,
+            config.entry_id,
+            hass.data[DOMAIN]["prefix"],
+            BINARY_SENSOR_DOMAIN,
+            description.key,
+        )
+
     async_add_entities(
         JewishCalendarBinarySensor(
-            hass.data[DOMAIN][config_entry.entry_id], description
+            config.entry_id, hass.data[DOMAIN][config.entry_id], description
         )
         for description in BINARY_SENSORS
     )
@@ -86,13 +97,14 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
 
     def __init__(
         self,
+        entry_id: str,
         data: dict[str, Any],
         description: JewishCalendarBinarySensorEntityDescription,
     ) -> None:
         """Initialize the binary sensor."""
         self.entity_description = description
         self._attr_name = f"{DEFAULT_NAME} {description.name}"
-        self._attr_unique_id = f'{data["prefix"]}_{description.key}'
+        self._attr_unique_id = f"{entry_id}-{description.key}"
         self._location = data[CONF_LOCATION]
         self._hebrew = data[CONF_LANGUAGE] == "hebrew"
         self._candle_lighting_offset = data[CONF_CANDLE_LIGHT_MINUTES]

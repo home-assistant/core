@@ -16,8 +16,9 @@ from homeassistant.const import (
     CONF_TIME_ZONE,
     Platform,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
@@ -157,3 +158,26 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
+
+
+@callback
+def async_update_unique_id(
+    hass: HomeAssistant,
+    new_prefix: str,
+    old_prefix: str,
+    sensor_domain: str,
+    sensor_key: str,
+) -> None:
+    """Update unique ID to be unrelated to user defined options.
+
+    Introduced with release 2024.5
+    """
+    ent_reg = er.async_get(hass)
+
+    new_unique_id = f"{new_prefix}-{sensor_key}"
+    if ent_reg.async_get_entity_id(sensor_domain, DOMAIN, new_unique_id):
+        return
+
+    old_unique_id = f"{old_prefix}_{sensor_key}"
+    if entity_id := ent_reg.async_get_entity_id(sensor_domain, DOMAIN, old_unique_id):
+        ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
