@@ -94,7 +94,7 @@ def mock_automower_client() -> Generator[AsyncMock, None, None]:
 
     mock = AsyncMock(spec=AutomowerSession)
     mock.auth = AsyncMock(side_effect=websocket_connect)
-    mock.commands = AsyncMock(spec=_MowerCommands)
+    mock.commands = AsyncMock(spec_set=_MowerCommands)
     mock.get_status.return_value = mower_dict
 
     with patch(
