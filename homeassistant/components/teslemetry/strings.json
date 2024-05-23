@@ -328,7 +328,7 @@
   },
   "exceptions": {
     "no_cable": {
-      "message": "No charge cable connected"
+      "message": "Unable to lock as no charge cable is connected"
     }
   }
 }

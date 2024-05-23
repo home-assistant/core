@@ -17,7 +17,6 @@ from .entity import TeslemetryVehicleEntity
 from .models import TeslemetryVehicleData
 
 ENGAGED = "Engaged"
-DISENGAGED = "Disengaged"
 
 
 async def async_setup_entry(
