@@ -5,27 +5,18 @@ import logging
 from urllib.error import HTTPError, URLError
 
 from tflwrapper import stopPoint
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ID, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
 
 from .config_helper import config_from_entry
-from .const import CONF_API_APP_KEY, CONF_STOP_POINTS, DOMAIN
+from .const import CONF_API_APP_KEY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-_STOP_POINT_SCHEME = vol.Schema({vol.Required(CONF_ID): cv.string})
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_STOP_POINTS): [_STOP_POINT_SCHEME]}
-)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
