@@ -28,8 +28,6 @@ async def test_number_commands(
     """Test number commands."""
     entity_id = "number.test_mower_1_cutting_height"
     await setup_integration(hass, mock_config_entry)
-    mocked_method = AsyncMock()
-    setattr(mock_automower_client.commands, "set_cutting_height", mocked_method)
     await hass.services.async_call(
         domain="number",
         service="set_value",
@@ -37,6 +35,7 @@ async def test_number_commands(
         service_data={"value": "3"},
         blocking=True,
     )
+    mocked_method = mock_automower_client.commands.set_cutting_height
     mocked_method.assert_called_once_with(TEST_MOWER_ID, 3)
 
     mocked_method.side_effect = ApiException("Test error")
