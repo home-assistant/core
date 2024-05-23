@@ -81,7 +81,6 @@ from .const import (
 )
 from .debug_info import log_messages
 from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entity_entry_helper,
     write_state_on_attr_change,
@@ -93,6 +92,7 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)

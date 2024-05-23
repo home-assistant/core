@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 import getmac
 
 from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -49,12 +49,13 @@ from .const import (
     UPNP_SVC_MAIN_TV_AGENT,
     UPNP_SVC_RENDERING_CONTROL,
 )
+from .coordinator import SamsungTVDataUpdateCoordinator
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-SamsungTVConfigEntry = ConfigEntry[SamsungTVBridge]
+SamsungTVConfigEntry = ConfigEntry[SamsungTVDataUpdateCoordinator]
 
 
 @callback
@@ -135,6 +136,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) ->
             )
     bridge = await _async_create_bridge_with_updated_data(hass, entry)
 
+    @callback
+    def _access_denied() -> None:
+        """Access denied callback."""
+        LOGGER.debug("Access denied in getting remote object")
+        hass.create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={
+                    "source": SOURCE_REAUTH,
+                    "entry_id": entry.entry_id,
+                },
+                data=entry.data,
+            )
+        )
+
+    bridge.register_reauth_callback(_access_denied)
+
     # Ensure updates get saved against the config_entry
     @callback
     def _update_config_entry(updates: Mapping[str, Any]) -> None:
@@ -143,7 +161,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) ->
 
     bridge.register_update_config_entry_callback(_update_config_entry)
 
-    async def stop_bridge(event: Event) -> None:
+    async def stop_bridge(event: Event | None = None) -> None:
         """Stop SamsungTV bridge connection."""
         LOGGER.debug("Stopping SamsungTVBridge %s", bridge.host)
         await bridge.async_close_remote()
@@ -151,6 +169,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) ->
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
     )
+    entry.async_on_unload(stop_bridge)
 
     await _async_update_ssdp_locations(hass, entry)
 
@@ -161,7 +180,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) ->
     entry.async_on_unload(debounced_reloader.async_shutdown)
     entry.async_on_unload(entry.add_update_listener(debounced_reloader.async_call))
 
-    entry.runtime_data = bridge
+    coordinator = SamsungTVDataUpdateCoordinator(hass, bridge)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -252,19 +273,15 @@ async def _async_create_bridge_with_updated_data(
 
 async def async_unload_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        bridge = entry.runtime_data
-        LOGGER.debug("Stopping SamsungTVBridge %s", bridge.host)
-        await bridge.async_close_remote()
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     version = config_entry.version
+    minor_version = config_entry.minor_version
 
-    LOGGER.debug("Migrating from version %s", version)
+    LOGGER.debug("Migrating from version %s.%s", version, minor_version)
 
     # 1 -> 2: Unique ID format changed, so delete and re-import:
     if version == 1:
@@ -277,6 +294,20 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         version = 2
         hass.config_entries.async_update_entry(config_entry, version=2)
 
-    LOGGER.debug("Migration to version %s successful", version)
+    if version == 2:
+        if minor_version < 2:
+            # Cleanup invalid MAC addresses - see #103512
+            dev_reg = dr.async_get(hass)
+            for device in dr.async_entries_for_config_entry(
+                dev_reg, config_entry.entry_id
+            ):
+                for connection in device.connections:
+                    if connection == (dr.CONNECTION_NETWORK_MAC, "none"):
+                        dev_reg.async_remove_device(device.id)
+
+            minor_version = 2
+            hass.config_entries.async_update_entry(config_entry, minor_version=2)
+
+    LOGGER.debug("Migration to version %s.%s successful", version, minor_version)
 
     return True
