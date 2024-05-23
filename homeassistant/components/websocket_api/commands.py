@@ -516,7 +516,7 @@ async def handle_manifest_list(
             raise int_or_exc
         integrations.append(int_or_exc)
     connection.send_result(
-        msg["id"], [integration.manifest for integration in integrations]
+        msg["id"], [integration.manifest_json_fragment for integration in integrations]
     )
 
 
@@ -530,7 +530,7 @@ async def handle_manifest_get(
     """Handle integrations command."""
     try:
         integration = await async_get_integration(hass, msg["integration"])
-        connection.send_result(msg["id"], integration.manifest)
+        connection.send_result(msg["id"], integration.manifest_json_fragment)
     except IntegrationNotFound:
         connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Integration not found")
 
