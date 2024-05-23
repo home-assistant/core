@@ -13,7 +13,7 @@ if [ -s .python-version ]; then
     export PYENV_VERSION
 fi
 
-if [ -n "${VIRTUAL_ENV}" ] && [ -f "${VIRTUAL_ENV}/bin/activate" ]; then
+if [ -n "${VIRTUAL_ENV-}" ] && [ -f "${VIRTUAL_ENV}/bin/activate" ]; then
   . "${VIRTUAL_ENV}/bin/activate"
 else
   # other common virtualenvs
