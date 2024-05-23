@@ -88,9 +88,6 @@ class LLMToolsListView(HomeAssistantView):
 
         tool_name = data["tool_name"]
 
-        if not tool_name:
-            return self.json_message("tool_name not provided", HTTPStatus.BAD_REQUEST)
-
         _LOGGER.info("Tool call: %s(%s)", tool_name, data["tool_args"])
 
         try:
@@ -140,7 +137,7 @@ class LLMToolView(HomeAssistantView):
             return self.json_message("Tool not found", HTTPStatus.NOT_FOUND)
         return self.json(tool)
 
-    @RequestDataValidator(vol.Maybe(vol.Schema({cv.string: object})))
+    @RequestDataValidator(vol.Schema({cv.string: object}), allow_empty=True)
     async def post(
         self,
         request: web.Request,

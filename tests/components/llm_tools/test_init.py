@@ -78,6 +78,9 @@ async def test_http_tool_list(
         }
     ]
 
+    resp = await client.get("/api/llm_tools/non-existent")
+    assert resp.status == 404
+
     resp = await client.post(
         "/api/llm_tools/Assist",
         json={"tool_name": "OrderBeer", "tool_args": {"type": "Belgian"}},
@@ -106,6 +109,20 @@ async def test_http_tool_list(
                 "speech": "I've ordered a Belgian!",
             },
         },
+    }
+
+    resp = await client.post(
+        "/api/llm_tools/non-existent", json={"tool_name": "OrderBeer"}
+    )
+    assert resp.status == 404
+
+    resp = await client.post("/api/llm_tools/Assist", json={"tool_name": "OrderBeer"})
+    assert resp.status == 500
+    data = await resp.json()
+
+    assert data == {
+        "error": "MultipleInvalid",
+        "error_text": "required key not provided @ data['type']",
     }
 
 
@@ -160,6 +177,12 @@ async def test_http_tool(
         },
     }
 
+    resp = await client.get("/api/llm_tools/non-existent/non-existent")
+    assert resp.status == 404
+
+    resp = await client.get("/api/llm_tools/Assist/non-existent")
+    assert resp.status == 404
+
     resp = await client.post("/api/llm_tools/Assist/OrderBeer", json={"type": "Lager"})
 
     assert resp.status == 200
@@ -185,4 +208,20 @@ async def test_http_tool(
                 "speech": "I've ordered a Lager!",
             },
         },
+    }
+
+    resp = await client.post("/api/llm_tools/non-existent/non-existent")
+    assert resp.status == 404
+
+    resp = await client.post("/api/llm_tools/Assist/non-existent")
+    assert resp.status == 404
+
+    resp = await client.post("/api/llm_tools/Assist/OrderBeer")
+
+    assert resp.status == 500
+    data = await resp.json()
+
+    assert data == {
+        "error": "MultipleInvalid",
+        "error_text": "required key not provided @ data['type']",
     }
