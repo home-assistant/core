@@ -39,7 +39,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 EXPIRED_TOKEN_TIMESTAMP = datetime.datetime(2022, 4, 8).timestamp()
 
 # Typing helpers
-HassApi = Callable[[], Awaitable[dict[str, Any]]]
+type HassApi = Callable[[], Awaitable[dict[str, Any]]]
 
 TEST_EVENT_SUMMARY = "Test Summary"
 TEST_EVENT_DESCRIPTION = "Test Description"

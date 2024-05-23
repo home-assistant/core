@@ -17,18 +17,20 @@ from homeassistant.util.json import JsonObjectType
 from . import intent
 from .singleton import singleton
 
+LLM_API_ASSIST = "assist"
+
+PROMPT_NO_API_CONFIGURED = (
+    "Only if the user wants to control a device, tell them to edit the AI configuration "
+    "and allow access to Home Assistant."
+)
+
 
 @singleton("llm")
 @callback
 def _async_get_apis(hass: HomeAssistant) -> dict[str, API]:
     """Get all the LLM APIs."""
     return {
-        "assist": AssistAPI(
-            hass=hass,
-            id="assist",
-            name="Assist",
-            prompt_template="Call the intent tools to control the system. Just pass the name to the intent.",
-        ),
+        LLM_API_ASSIST: AssistAPI(hass=hass),
     }
 
 
@@ -71,6 +73,7 @@ class ToolInput(ABC):
     user_prompt: str | None
     language: str | None
     assistant: str | None
+    device_id: str | None
 
 
 class Tool:
@@ -123,6 +126,7 @@ class API(ABC):
             user_prompt=tool_input.user_prompt,
             language=tool_input.language,
             assistant=tool_input.assistant,
+            device_id=tool_input.device_id,
         )
 
         return await tool.async_call(self.hass, _tool_input)
@@ -137,7 +141,9 @@ class IntentTool(Tool):
     ) -> None:
         """Init the class."""
         self.name = intent_handler.intent_type
-        self.description = f"Execute Home Assistant {self.name} intent"
+        self.description = (
+            intent_handler.description or f"Execute Home Assistant {self.name} intent"
+        )
         if slot_schema := intent_handler.slot_schema:
             self.parameters = vol.Schema(slot_schema)
 
@@ -156,6 +162,7 @@ class IntentTool(Tool):
             tool_input.context,
             tool_input.language,
             tool_input.assistant,
+            tool_input.device_id,
         )
         return intent_response.as_dict()
 
@@ -169,6 +176,15 @@ class AssistAPI(API):
         INTENT_GET_WEATHER,
         INTENT_GET_TEMPERATURE,
     }
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Init the class."""
+        super().__init__(
+            hass=hass,
+            id=LLM_API_ASSIST,
+            name="Assist",
+            prompt_template="Call the intent tools to control the system. Just pass the name to the intent.",
+        )
 
     @callback
     def async_get_tools(self) -> list[Tool]:

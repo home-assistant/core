@@ -131,7 +131,7 @@ class NSDepartureSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         if not self._trips:
-            return
+            return None
 
         if self._trips[0].trip_parts:
             route = [self._trips[0].departure]

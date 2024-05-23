@@ -122,14 +122,15 @@ NO_DIAGNOSTICS = [
     "geonetnz_quakes",
     "google_assistant_sdk",
     "hyperion",
+    # Modbus is excluded because it doesn't have to have a config flow
+    # according to ADR-0010, since it's a protocol integration. This
+    # means that it can't implement diagnostics.
     "modbus",
     "nightscout",
-    "point",
     "pvpc_hourly_pricing",
     "risco",
     "smarttub",
     "songpal",
-    "tellduslive",
     "vizio",
     "yeelight",
 ]
@@ -385,12 +386,19 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
                 f"{quality_scale} integration does not implement diagnostics",
             )
 
-    if domain in NO_DIAGNOSTICS and (integration.path / "diagnostics.py").exists():
-        integration.add_error(
-            "manifest",
-            "Implements diagnostics and can be "
-            "removed from NO_DIAGNOSTICS in script/hassfest/manifest.py",
-        )
+    if domain in NO_DIAGNOSTICS:
+        if quality_scale and QualityScale[quality_scale.upper()] < QualityScale.GOLD:
+            integration.add_error(
+                "manifest",
+                "{quality_scale} integration should be "
+                "removed from NO_DIAGNOSTICS in script/hassfest/manifest.py",
+            )
+        elif (integration.path / "diagnostics.py").exists():
+            integration.add_error(
+                "manifest",
+                "Implements diagnostics and can be "
+                "removed from NO_DIAGNOSTICS in script/hassfest/manifest.py",
+            )
 
     if not integration.core:
         validate_version(integration)
