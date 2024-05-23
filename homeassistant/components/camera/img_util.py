@@ -13,6 +13,7 @@ with suppress(Exception):
     # in the import executor and not in the event loop.
     from turbojpeg import TurboJPEG
 
+
 if TYPE_CHECKING:
     from . import Image
 
