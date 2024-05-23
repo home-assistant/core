@@ -50,6 +50,7 @@ SENSORS_FOR_CHARGERS: tuple[LektricoSensorEntityDescription, ...] = (
     LektricoSensorEntityDescription(
         key="charging_time",
         translation_key="charging_time",
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         value_fn=lambda data: int(data.charging_time),
     ),
