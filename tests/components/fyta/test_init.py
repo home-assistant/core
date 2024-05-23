@@ -26,13 +26,24 @@ from .const import ACCESS_TOKEN, EXPIRATION, EXPIRATION_OLD, PASSWORD, USERNAME
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.parametrize(
+    "expiration",
+    [
+        EXPIRATION,
+        EXPIRATION_OLD,
+    ],
+)
 async def test_load_unload(
     hass: HomeAssistant,
+    expiration: datetime,
     mock_config_entry: MockConfigEntry,
     mock_fyta_connector: AsyncMock,
 ) -> None:
     """Test load and unload."""
 
+    mock_fyta_connector.expiration = datetime.fromisoformat(expiration).replace(
+        tzinfo=UTC
+    )
     await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -75,6 +86,26 @@ async def test_raise_config_entry_not_ready_when_offline(
     """Config entry state is SETUP_RETRY when FYTA is offline."""
 
     mock_fyta_connector.update_all_plants.side_effect = FytaConnectionError
+
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    assert len(hass.config_entries.flow.async_progress()) == 0
+
+
+async def test_raise_config_entry_not_ready_when_offline_and_expired(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fyta_connector: AsyncMock,
+) -> None:
+    """Config entry state is SETUP_RETRY when FYTA is offline and access_token is expired."""
+
+    mock_fyta_connector.login.side_effect = FytaConnectionError
+    mock_fyta_connector.expiration = datetime.fromisoformat(EXPIRATION_OLD).replace(
+        tzinfo=UTC
+    )
 
     await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
     await hass.async_block_till_done()
