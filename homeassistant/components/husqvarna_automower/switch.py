@@ -15,6 +15,7 @@ from aioautomower.model import (
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -210,9 +211,9 @@ def async_remove_entities(
         entity_reg, config_entry.entry_id
     ):
         if (
-            (split := entity_entry.unique_id.split("_"))[0] == mower_id
+            entity_entry.domain == Platform.SWITCH
+            and (split := entity_entry.unique_id.split("_"))[0] == mower_id
             and split[-1] == "zones"
             and entity_entry.unique_id not in active_zones
-            and entity_entry.domain == "switch"
         ):
             entity_reg.async_remove(entity_entry.entity_id)

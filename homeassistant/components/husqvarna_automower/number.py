@@ -12,7 +12,7 @@ from aioautomower.session import AutomowerSession
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -244,9 +244,9 @@ def async_remove_entities(
         entity_reg, config_entry.entry_id
     ):
         if (
-            (split := entity_entry.unique_id.split("_"))[0] == mower_id
+            entity_entry.domain == Platform.NUMBER
+            and (split := entity_entry.unique_id.split("_"))[0] == mower_id
             and split[-1] == "area"
             and entity_entry.unique_id not in active_work_areas
-            and entity_entry.domain == "number"
         ):
             entity_reg.async_remove(entity_entry.entity_id)
