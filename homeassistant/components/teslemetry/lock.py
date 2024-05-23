@@ -22,7 +22,7 @@ ENGAGED = "Engaged"
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the Teslemetry sensor platform from a config entry."""
+    """Set up the Teslemetry lock platform from a config entry."""
 
     async_add_entities(
         klass(vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes)
@@ -38,7 +38,7 @@ class TeslemetryVehicleLockEntity(TeslemetryVehicleEntity, LockEntity):
     """Lock entity for Teslemetry."""
 
     def __init__(self, data: TeslemetryVehicleData, scoped: bool) -> None:
-        """Initialize the sensor."""
+        """Initialize the lock."""
         super().__init__(data, "vehicle_state_locked")
         self.scoped = scoped
 
@@ -71,7 +71,7 @@ class TeslemetryCableLockEntity(TeslemetryVehicleEntity, LockEntity):
         data: TeslemetryVehicleData,
         scoped: bool,
     ) -> None:
-        """Initialize the sensor."""
+        """Initialize the lock."""
         super().__init__(data, "charge_state_charge_port_latch")
         self.scoped = scoped
 
