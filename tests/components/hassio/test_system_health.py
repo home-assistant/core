@@ -72,6 +72,7 @@ async def test_hassio_system_health(
         "docker_version": "19.0.3",
         "healthy": True,
         "host_connectivity": True,
+        "supervisor_connectivity": True,
         "host_os": "Home Assistant OS 5.9",
         "installed_addons": "Awesome Addon (1.0.0)",
         "ntp_synchronized": True,
