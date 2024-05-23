@@ -1601,17 +1601,21 @@ class EventBus:
             self._listeners[EVENT_STATE_REPORTED].append(filterable_job)
             self._listeners[EVENT_STATE_CHANGED].append(filterable_job)
             return functools.partial(
-                self._async_remove_state_reported_listener, filterable_job
+                self._async_remove_multiple_listeners,
+                (EVENT_STATE_REPORTED, EVENT_STATE_CHANGED),
+                filterable_job,
             )
         return self._async_listen_filterable_job(event_type, filterable_job)
 
     @callback
-    def _async_remove_state_reported_listener(
-        self, filterable_job: _FilterableJobType[Any]
+    def _async_remove_multiple_listeners(
+        self,
+        keys: Iterable[EventType[_DataT] | str],
+        filterable_job: _FilterableJobType[Any],
     ) -> None:
         """Remove a listener for a state_reported_event."""
-        self._async_remove_listener(EVENT_STATE_REPORTED, filterable_job)
-        self._async_remove_listener(EVENT_STATE_CHANGED, filterable_job)
+        for key in keys:
+            self._async_remove_listener(key, filterable_job)
 
     @callback
     def _async_listen_filterable_job(
