@@ -134,14 +134,12 @@ def data_zones_fixture():
     """Define zone data."""
     raw_data = json.loads(load_fixture("zones_data.json", "rainmachine"))
     # This replicate the process from `regenmaschine` to convert list to dict
-    zone_details = json.loads(load_fixture("zones_data.json", "rainmachine"))
+    zone_details = json.loads(load_fixture("zones_details.json", "rainmachine"))
 
     zones: dict[int, dict[str, Any]] = {}
     for zone in raw_data:
         [extra] = [z for z in zone_details if z["uid"] == zone["uid"]]
-        zone_data = {**zone, **extra}
-
-        zones[zone_data["uid"]] = zone_data
+        zones[zone["uid"]] = {**zone, **extra}
 
     return zones
 
