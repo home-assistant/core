@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_default_prompt[False-None]
+# name: test_default_prompt[config_entry_options0-None]
   list([
     tuple(
       '',
@@ -37,7 +37,7 @@
               - Test Device 4
               - 1 (3)
               
-              If the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
+              Only if the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
             ''',
             'role': 'user',
           }),
@@ -58,7 +58,7 @@
     ),
   ])
 # ---
-# name: test_default_prompt[False-conversation.google_generative_ai_conversation]
+# name: test_default_prompt[config_entry_options0-conversation.google_generative_ai_conversation]
   list([
     tuple(
       '',
@@ -96,7 +96,7 @@
               - Test Device 4
               - 1 (3)
               
-              If the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
+              Only if the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
             ''',
             'role': 'user',
           }),
@@ -117,7 +117,7 @@
     ),
   ])
 # ---
-# name: test_default_prompt[True-None]
+# name: test_default_prompt[config_entry_options1-None]
   list([
     tuple(
       '',
@@ -176,7 +176,7 @@
     ),
   ])
 # ---
-# name: test_default_prompt[True-conversation.google_generative_ai_conversation]
+# name: test_default_prompt[config_entry_options1-conversation.google_generative_ai_conversation]
   list([
     tuple(
       '',
