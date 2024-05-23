@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
 
+import lektricowifi
 from lektricowifi import Device
 
 from homeassistant.components.sensor import (
@@ -38,7 +38,7 @@ from .entity import LektricoEntity
 class LektricoSensorEntityDescription(SensorEntityDescription):
     """A class that describes the Lektrico sensor entities."""
 
-    value_fn: Callable[[Any], float | str | int]
+    value_fn: Callable[[lektricowifi.Info], float | str | int]
 
 
 SENSORS_FOR_CHARGERS: tuple[LektricoSensorEntityDescription, ...] = (
@@ -57,8 +57,9 @@ SENSORS_FOR_CHARGERS: tuple[LektricoSensorEntityDescription, ...] = (
         key="power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        value_fn=lambda data: float(data.instant_power) / 1000,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        value_fn=lambda data: float(data.instant_power),
     ),
     LektricoSensorEntityDescription(
         key="energy",
@@ -176,8 +177,9 @@ SENSORS_FOR_LB_1_PHASE: tuple[LektricoSensorEntityDescription, ...] = (
         key="power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        value_fn=lambda data: float(data.power_l1) / 1000,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        value_fn=lambda data: float(data.power_l1),
     ),
     LektricoSensorEntityDescription(
         key="pf",
@@ -196,24 +198,27 @@ SENSORS_FOR_LB_3_PHASE: tuple[LektricoSensorEntityDescription, ...] = (
         translation_key="power_l1",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        value_fn=lambda data: float(data.power_l1) / 1000,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        value_fn=lambda data: float(data.power_l1),
     ),
     LektricoSensorEntityDescription(
         key="power_l2",
         translation_key="power_l2",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        value_fn=lambda data: float(data.power_l2) / 1000,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        value_fn=lambda data: float(data.power_l2),
     ),
     LektricoSensorEntityDescription(
         key="power_l3",
         translation_key="power_l3",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        value_fn=lambda data: float(data.power_l3) / 1000,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        value_fn=lambda data: float(data.power_l3),
     ),
     LektricoSensorEntityDescription(
         key="pf_l1",
