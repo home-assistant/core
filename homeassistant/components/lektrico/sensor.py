@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_FRIENDLY_NAME,
+    CONF_NAME,
     PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -270,7 +270,7 @@ async def async_setup_entry(
         LektricoSensor(
             description,
             coordinator,
-            entry.data[CONF_FRIENDLY_NAME],
+            entry.data[CONF_NAME],
         )
         for description in _sensors_to_be_used
     )

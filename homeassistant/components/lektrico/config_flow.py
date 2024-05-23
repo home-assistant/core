@@ -12,8 +12,8 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     ATTR_HW_VERSION,
     ATTR_SERIAL_NUMBER,
-    CONF_FRIENDLY_NAME,
     CONF_HOST,
+    CONF_NAME,
     CONF_TYPE,
 )
 from homeassistant.core import callback
@@ -23,7 +23,6 @@ from .const import DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_FRIENDLY_NAME): str,
         vol.Required(CONF_HOST): str,
     }
 )
@@ -37,7 +36,7 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize flow."""
         self._host: str
-        self._friendly_name: str
+        self._name: str
         self._serial_number: str
         self._board_revision: str
         self._device_type: str
@@ -50,7 +49,6 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._async_show_setup_form()
 
         self._host = user_input[CONF_HOST]
-        self._friendly_name = user_input[CONF_FRIENDLY_NAME]
 
         # obtain serial number
         try:
@@ -81,10 +79,10 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry(self) -> ConfigFlowResult:
         return self.async_create_entry(
-            title=f"{self._friendly_name} ({self._serial_number})",
+            title=self._name,
             data={
                 CONF_HOST: self._host,
-                CONF_FRIENDLY_NAME: self._friendly_name,
+                CONF_NAME: self._name,
                 ATTR_SERIAL_NUMBER: self._serial_number,
                 CONF_TYPE: self._device_type,
                 ATTR_HW_VERSION: self._board_revision,
@@ -96,22 +94,6 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self._host = discovery_info.host  # 192.168.100.11
-        _id = discovery_info.properties.get("id")  # 1p7k_500006
-
-        if _id is None:
-            # properties have no "id"
-            return self.async_abort(reason="missing_id")
-        _index = _id.find("_")
-        if _index == -1:
-            # "id" does not contain "_"
-            return self.async_abort(reason="missing_underline_in_id")
-        self._serial_number = _id[_index + 1 :]
-        if _id.startswith("m2w_81"):
-            self._friendly_name = Device.TYPE_EM
-        elif _id.startswith("m2w_83"):
-            self._friendly_name = Device.TYPE_3EM
-        else:
-            self._friendly_name = _id[:_index]  # it's the type
 
         # read settings from the device
         try:
@@ -121,7 +103,7 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self.context["title_placeholders"] = {
             "serial_number": self._serial_number,
-            "friendly_name": self._friendly_name,
+            "name": self._name,
         }
 
         return await self.async_step_confirm()
@@ -138,6 +120,7 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
         self._serial_number = str(_settings.serial_number)
         self._device_type = _settings.type
         self._board_revision = _settings.board_revision
+        self._name = f"{_settings.type}_{self._serial_number}"
 
         # Check if already configured
         # Set unique id
