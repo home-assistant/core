@@ -7,20 +7,9 @@ from homeassistant.components.moehlenhoff_alpha2.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import MOCK_BASE_HOST, mock_update_data
+
 from tests.common import MockConfigEntry
-
-MOCK_BASE_ID = "fake-base-id"
-MOCK_BASE_NAME = "fake-base-name"
-MOCK_BASE_HOST = "fake-base-host"
-
-
-async def mock_update_data(self):
-    """Mock moehlenhoff_alpha2.Alpha2Base.update_data."""
-    self.static_data = {
-        "Devices": {
-            "Device": {"ID": MOCK_BASE_ID, "NAME": MOCK_BASE_NAME, "HEATAREA": []}
-        }
-    }
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -33,7 +22,10 @@ async def test_form(hass: HomeAssistant) -> None:
     assert not result["errors"]
 
     with (
-        patch("moehlenhoff_alpha2.Alpha2Base.update_data", mock_update_data),
+        patch(
+            "homeassistant.components.moehlenhoff_alpha2.config_flow.Alpha2Base.update_data",
+            mock_update_data,
+        ),
         patch(
             "homeassistant.components.moehlenhoff_alpha2.async_setup_entry",
             return_value=True,
@@ -46,7 +38,7 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == MOCK_BASE_NAME
+    assert result2["title"] == "Alpha2Test"
     assert result2["data"] == {"host": MOCK_BASE_HOST}
     assert len(mock_setup_entry.mock_calls) == 1
 
