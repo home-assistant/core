@@ -803,7 +803,7 @@ google-cloud-pubsub==2.13.11
 google-generativeai==0.5.4
 
 # homeassistant.components.nest
-google-nest-sdm==3.0.4
+google-nest-sdm==4.0.4
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -858,7 +858,7 @@ ha-philipsjs==3.2.1
 habitipy==0.3.1
 
 # homeassistant.components.bluetooth
-habluetooth==3.1.0
+habluetooth==3.1.1
 
 # homeassistant.components.cloud
 hass-nabucasa==0.81.0
