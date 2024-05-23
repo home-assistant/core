@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Iterable, MutableMapping
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime as dt, timedelta
 import logging
@@ -173,7 +173,7 @@ async def ws_get_history_during_period(
 
 
 def _generate_stream_message(
-    states: MutableMapping[str, list[dict[str, Any]]],
+    states: dict[str, list[dict[str, Any]]],
     start_day: dt,
     end_day: dt,
 ) -> dict[str, Any]:
@@ -201,7 +201,7 @@ def _generate_websocket_response(
     msg_id: int,
     start_time: dt,
     end_time: dt,
-    states: MutableMapping[str, list[dict[str, Any]]],
+    states: dict[str, list[dict[str, Any]]],
 ) -> bytes:
     """Generate a websocket response."""
     return json_bytes(
@@ -225,7 +225,7 @@ def _generate_historical_response(
 ) -> tuple[float, dt | None, bytes | None]:
     """Generate a historical response."""
     states = cast(
-        MutableMapping[str, list[dict[str, Any]]],
+        dict[str, list[dict[str, Any]]],
         history.get_significant_states(
             hass,
             start_time,
@@ -311,7 +311,7 @@ def _history_compressed_state(state: State, no_attributes: bool) -> dict[str, An
 
 def _events_to_compressed_states(
     events: Iterable[Event], no_attributes: bool
-) -> MutableMapping[str, list[dict[str, Any]]]:
+) -> dict[str, list[dict[str, Any]]]:
     """Convert events to a compressed states."""
     states_by_entity_ids: dict[str, list[dict[str, Any]]] = {}
     for event in events:

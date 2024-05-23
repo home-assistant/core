@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from functools import lru_cache
 import os
 from pathlib import Path
 import tempfile
@@ -25,14 +26,12 @@ from .const import (
     CONF_CERTIFICATE,
     CONF_CLIENT_CERT,
     CONF_CLIENT_KEY,
-    DATA_MQTT,
-    DATA_MQTT_AVAILABLE,
     DEFAULT_ENCODING,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
 )
-from .models import MqttData
+from .models import DATA_MQTT, DATA_MQTT_AVAILABLE
 
 AVAILABILITY_TIMEOUT = 30.0
 
@@ -50,7 +49,7 @@ async def async_forward_entry_setup_and_setup_discovery(
     hass: HomeAssistant, config_entry: ConfigEntry, platforms: set[Platform | str]
 ) -> None:
     """Forward the config entry setup to the platforms and set up discovery."""
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
     platforms_loaded = mqtt_data.platforms_loaded
     new_platforms: set[Platform | str] = platforms - platforms_loaded
     tasks: list[asyncio.Task] = []
@@ -84,9 +83,13 @@ async def async_forward_entry_setup_and_setup_discovery(
 
 def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
     """Return true when the MQTT config entry is enabled."""
-    if not bool(hass.config_entries.async_entries(DOMAIN)):
-        return None
-    return not bool(hass.config_entries.async_entries(DOMAIN)[0].disabled_by)
+    # If the mqtt client is connected, skip the expensive config
+    # entry check as its roughly two orders of magnitude faster.
+    return (
+        DATA_MQTT in hass.data and hass.data[DATA_MQTT].client.connected
+    ) or hass.config_entries.async_has_entries(
+        DOMAIN, include_disabled=False, include_ignore=False
+    )
 
 
 async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
@@ -122,7 +125,16 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
 
 
 def valid_topic(topic: Any) -> str:
-    """Validate that this is a valid topic name/filter."""
+    """Validate that this is a valid topic name/filter.
+
+    This function is not cached and is not expected to be called
+    directly outside of this module. It is not marked as protected
+    only because its tested directly in test_util.py.
+
+    If it gets used outside of valid_subscribe_topic and
+    valid_publish_topic, it may need an lru_cache decorator or
+    an lru_cache decorator on the function where its used.
+    """
     validated_topic = cv.string(topic)
     try:
         raw_validated_topic = validated_topic.encode("utf-8")
@@ -134,30 +146,32 @@ def valid_topic(topic: Any) -> str:
         raise vol.Invalid(
             "MQTT topic name/filter must not be longer than 65535 encoded bytes."
         )
-    if "\0" in validated_topic:
-        raise vol.Invalid("MQTT topic name/filter must not contain null character.")
-    if any(char <= "\u001f" for char in validated_topic):
-        raise vol.Invalid("MQTT topic name/filter must not contain control characters.")
-    if any("\u007f" <= char <= "\u009f" for char in validated_topic):
-        raise vol.Invalid("MQTT topic name/filter must not contain control characters.")
-    if any("\ufdd0" <= char <= "\ufdef" for char in validated_topic):
-        raise vol.Invalid("MQTT topic name/filter must not contain non-characters.")
-    if any((ord(char) & 0xFFFF) in (0xFFFE, 0xFFFF) for char in validated_topic):
-        raise vol.Invalid("MQTT topic name/filter must not contain noncharacters.")
+
+    for char in validated_topic:
+        if char == "\0":
+            raise vol.Invalid("MQTT topic name/filter must not contain null character.")
+        if char <= "\u001f" or "\u007f" <= char <= "\u009f":
+            raise vol.Invalid(
+                "MQTT topic name/filter must not contain control characters."
+            )
+        if "\ufdd0" <= char <= "\ufdef" or (ord(char) & 0xFFFF) in (0xFFFE, 0xFFFF):
+            raise vol.Invalid("MQTT topic name/filter must not contain non-characters.")
 
     return validated_topic
 
 
+@lru_cache
 def valid_subscribe_topic(topic: Any) -> str:
     """Validate that we can subscribe using this MQTT topic."""
     validated_topic = valid_topic(topic)
-    for i in (i for i, c in enumerate(validated_topic) if c == "+"):
-        if (i > 0 and validated_topic[i - 1] != "/") or (
-            i < len(validated_topic) - 1 and validated_topic[i + 1] != "/"
-        ):
-            raise vol.Invalid(
-                "Single-level wildcard must occupy an entire level of the filter"
-            )
+    if "+" in validated_topic:
+        for i in (i for i, c in enumerate(validated_topic) if c == "+"):
+            if (i > 0 and validated_topic[i - 1] != "/") or (
+                i < len(validated_topic) - 1 and validated_topic[i + 1] != "/"
+            ):
+                raise vol.Invalid(
+                    "Single-level wildcard must occupy an entire level of the filter"
+                )
 
     index = validated_topic.find("#")
     if index != -1:
@@ -184,6 +198,7 @@ def valid_subscribe_topic_template(value: Any) -> template.Template:
     return tpl
 
 
+@lru_cache
 def valid_publish_topic(topic: Any) -> str:
     """Validate that we can publish using this MQTT topic."""
     validated_topic = valid_topic(topic)
@@ -214,12 +229,6 @@ def valid_birth_will(config: ConfigType) -> ConfigType:
     if config:
         config = _MQTT_WILL_BIRTH_SCHEMA(config)
     return config
-
-
-def get_mqtt_data(hass: HomeAssistant) -> MqttData:
-    """Return typed MqttData from hass.data[DATA_MQTT]."""
-    mqtt_data: MqttData = hass.data[DATA_MQTT]
-    return mqtt_data
 
 
 async def async_create_certificate_temp_files(

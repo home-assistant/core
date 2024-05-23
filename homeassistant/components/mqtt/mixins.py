@@ -31,11 +31,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
     DeviceInfo,
@@ -45,11 +41,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import (
-    ENTITY_CATEGORIES_SCHEMA,
-    Entity,
-    async_generate_entity_id,
-)
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_device_registry_updated_event,
@@ -71,16 +63,24 @@ from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
     ATTR_DISCOVERY_TOPIC,
+    AVAILABILITY_ALL,
+    AVAILABILITY_ANY,
     CONF_AVAILABILITY,
+    CONF_AVAILABILITY_MODE,
+    CONF_AVAILABILITY_TEMPLATE,
+    CONF_AVAILABILITY_TOPIC,
     CONF_CONFIGURATION_URL,
     CONF_CONNECTIONS,
-    CONF_DEPRECATED_VIA_HUB,
+    CONF_ENABLED_BY_DEFAULT,
     CONF_ENCODING,
     CONF_HW_VERSION,
     CONF_IDENTIFIERS,
+    CONF_JSON_ATTRS_TEMPLATE,
+    CONF_JSON_ATTRS_TOPIC,
     CONF_MANUFACTURER,
     CONF_OBJECT_ID,
-    CONF_ORIGIN,
+    CONF_PAYLOAD_AVAILABLE,
+    CONF_PAYLOAD_NOT_AVAILABLE,
     CONF_QOS,
     CONF_SCHEMA,
     CONF_SERIAL_NUMBER,
@@ -89,8 +89,6 @@ from .const import (
     CONF_TOPIC,
     CONF_VIA_DEVICE,
     DEFAULT_ENCODING,
-    DEFAULT_PAYLOAD_AVAILABLE,
-    DEFAULT_PAYLOAD_NOT_AVAILABLE,
     DOMAIN,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
@@ -100,12 +98,12 @@ from .discovery import (
     MQTT_DISCOVERY_DONE,
     MQTT_DISCOVERY_NEW,
     MQTT_DISCOVERY_UPDATED,
-    MQTT_ORIGIN_INFO_SCHEMA,
     MQTTDiscoveryPayload,
     clear_discovery_hash,
     set_discovery_hash,
 )
 from .models import (
+    DATA_MQTT,
     MessageCallbackType,
     MqttValueTemplate,
     MqttValueTemplateException,
@@ -118,24 +116,9 @@ from .subscription import (
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
-from .util import get_mqtt_data, mqtt_config_entry_enabled, valid_subscribe_topic
+from .util import mqtt_config_entry_enabled
 
 _LOGGER = logging.getLogger(__name__)
-
-AVAILABILITY_ALL = "all"
-AVAILABILITY_ANY = "any"
-AVAILABILITY_LATEST = "latest"
-
-AVAILABILITY_MODES = [AVAILABILITY_ALL, AVAILABILITY_ANY, AVAILABILITY_LATEST]
-
-CONF_AVAILABILITY_MODE = "availability_mode"
-CONF_AVAILABILITY_TEMPLATE = "availability_template"
-CONF_AVAILABILITY_TOPIC = "availability_topic"
-CONF_ENABLED_BY_DEFAULT = "enabled_by_default"
-CONF_PAYLOAD_AVAILABLE = "payload_available"
-CONF_PAYLOAD_NOT_AVAILABLE = "payload_not_available"
-CONF_JSON_ATTRS_TOPIC = "json_attributes_topic"
-CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
 
 MQTT_ATTRIBUTES_BLOCKED = {
     "assumed_state",
@@ -155,96 +138,6 @@ MQTT_ATTRIBUTES_BLOCKED = {
     "unique_id",
     "unit_of_measurement",
 }
-
-MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
-    {
-        vol.Exclusive(CONF_AVAILABILITY_TOPIC, "availability"): valid_subscribe_topic,
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-        vol.Optional(
-            CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
-        ): cv.string,
-        vol.Optional(
-            CONF_PAYLOAD_NOT_AVAILABLE, default=DEFAULT_PAYLOAD_NOT_AVAILABLE
-        ): cv.string,
-    }
-)
-
-MQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_AVAILABILITY_MODE, default=AVAILABILITY_LATEST): vol.All(
-            cv.string, vol.In(AVAILABILITY_MODES)
-        ),
-        vol.Exclusive(CONF_AVAILABILITY, "availability"): vol.All(
-            cv.ensure_list,
-            [
-                {
-                    vol.Required(CONF_TOPIC): valid_subscribe_topic,
-                    vol.Optional(
-                        CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
-                    ): cv.string,
-                    vol.Optional(
-                        CONF_PAYLOAD_NOT_AVAILABLE,
-                        default=DEFAULT_PAYLOAD_NOT_AVAILABLE,
-                    ): cv.string,
-                    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-                }
-            ],
-        ),
-    }
-)
-
-MQTT_AVAILABILITY_SCHEMA = MQTT_AVAILABILITY_SINGLE_SCHEMA.extend(
-    MQTT_AVAILABILITY_LIST_SCHEMA.schema
-)
-
-
-def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType:
-    """Validate that a device info entry has at least one identifying value."""
-    if value.get(CONF_IDENTIFIERS) or value.get(CONF_CONNECTIONS):
-        return value
-    raise vol.Invalid(
-        "Device must have at least one identifying value in "
-        "'identifiers' and/or 'connections'"
-    )
-
-
-MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
-    cv.deprecated(CONF_DEPRECATED_VIA_HUB, CONF_VIA_DEVICE),
-    vol.Schema(
-        {
-            vol.Optional(CONF_IDENTIFIERS, default=list): vol.All(
-                cv.ensure_list, [cv.string]
-            ),
-            vol.Optional(CONF_CONNECTIONS, default=list): vol.All(
-                cv.ensure_list, [vol.All(vol.Length(2), [cv.string])]
-            ),
-            vol.Optional(CONF_MANUFACTURER): cv.string,
-            vol.Optional(CONF_MODEL): cv.string,
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_HW_VERSION): cv.string,
-            vol.Optional(CONF_SERIAL_NUMBER): cv.string,
-            vol.Optional(CONF_SW_VERSION): cv.string,
-            vol.Optional(CONF_VIA_DEVICE): cv.string,
-            vol.Optional(CONF_SUGGESTED_AREA): cv.string,
-            vol.Optional(CONF_CONFIGURATION_URL): cv.configuration_url,
-        }
-    ),
-    validate_device_has_at_least_one_identifier,
-)
-
-MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
-    {
-        vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-        vol.Optional(CONF_ORIGIN): MQTT_ORIGIN_INFO_SCHEMA,
-        vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
-        vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
-        vol.Optional(CONF_ICON): cv.icon,
-        vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
-        vol.Optional(CONF_OBJECT_ID): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-    }
-)
 
 
 class SetupEntity(Protocol):
@@ -305,12 +198,12 @@ async def _async_discover(
     except vol.Invalid as err:
         discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
         clear_discovery_hash(hass, discovery_hash)
-        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
+        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None)
         async_handle_schema_error(discovery_payload, err)
     except Exception:
         discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
         clear_discovery_hash(hass, discovery_hash)
-        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
+        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None)
         raise
 
 
@@ -329,7 +222,7 @@ async def async_setup_non_entity_entry_helper(
     discovery_schema: vol.Schema,
 ) -> None:
     """Set up automation or tag creation dynamically through MQTT discovery."""
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
 
     async def async_setup_from_discovery(
         discovery_payload: MQTTDiscoveryPayload,
@@ -360,7 +253,7 @@ async def async_setup_entity_entry_helper(
     schema_class_mapping: dict[str, type[MqttEntity]] | None = None,
 ) -> None:
     """Set up entity creation dynamically through MQTT discovery."""
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
 
     @callback
     def async_setup_from_discovery(
@@ -391,7 +284,7 @@ async def async_setup_entity_entry_helper(
     def _async_setup_entities() -> None:
         """Set up MQTT items from configuration.yaml."""
         nonlocal entity_class
-        mqtt_data = get_mqtt_data(hass)
+        mqtt_data = hass.data[DATA_MQTT]
         if not (config_yaml := mqtt_data.config):
             return
         yaml_configs: list[ConfigType] = [
@@ -496,7 +389,7 @@ def write_state_on_attr_change(
             if not _attrs_have_changed(tracked_attrs):
                 return
 
-            mqtt_data = get_mqtt_data(entity.hass)
+            mqtt_data = entity.hass.data[DATA_MQTT]
             mqtt_data.state_write_requests.write_state_request(entity)
 
         return wrapper
@@ -695,7 +588,7 @@ class MqttAvailability(Entity):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        mqtt_data = get_mqtt_data(self.hass)
+        mqtt_data = self.hass.data[DATA_MQTT]
         client = mqtt_data.client
         if not client.connected and not self.hass.is_stopping:
             return False
@@ -745,7 +638,7 @@ def get_discovery_hash(discovery_data: DiscoveryInfoType) -> tuple[str, str]:
 def send_discovery_done(hass: HomeAssistant, discovery_data: DiscoveryInfoType) -> None:
     """Acknowledge a discovery message has been handled."""
     discovery_hash = get_discovery_hash(discovery_data)
-    async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
+    async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None)
 
 
 def stop_discovery_updates(
@@ -809,7 +702,7 @@ class MqttDiscoveryDeviceUpdate(ABC):
         discovery_hash = get_discovery_hash(discovery_data)
         self._remove_discovery_updated = async_dispatcher_connect(
             hass,
-            MQTT_DISCOVERY_UPDATED.format(discovery_hash),
+            MQTT_DISCOVERY_UPDATED.format(*discovery_hash),
             self.async_discovery_update,
         )
         config_entry.async_on_unload(self._entry_unload)
@@ -817,7 +710,7 @@ class MqttDiscoveryDeviceUpdate(ABC):
             self._remove_device_updated = async_track_device_registry_updated_event(
                 hass, device_id, self._async_device_removed
             )
-        _LOGGER.info(
+        _LOGGER.debug(
             "%s %s has been initialized",
             self.log_name,
             discovery_hash,
@@ -837,7 +730,7 @@ class MqttDiscoveryDeviceUpdate(ABC):
     ) -> None:
         """Handle discovery update."""
         discovery_hash = get_discovery_hash(self._discovery_data)
-        _LOGGER.info(
+        _LOGGER.debug(
             "Got update for %s with hash: %s '%s'",
             self.log_name,
             discovery_hash,
@@ -847,8 +740,8 @@ class MqttDiscoveryDeviceUpdate(ABC):
             discovery_payload
             and discovery_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
         ):
-            _LOGGER.info(
-                "%s %s updating",
+            _LOGGER.debug(
+                "Updating %s with hash %s",
                 self.log_name,
                 discovery_hash,
             )
@@ -864,7 +757,7 @@ class MqttDiscoveryDeviceUpdate(ABC):
             )
             await self._async_tear_down()
             send_discovery_done(self.hass, self._discovery_data)
-            _LOGGER.info(
+            _LOGGER.debug(
                 "%s %s has been removed",
                 self.log_name,
                 discovery_hash,
@@ -872,7 +765,7 @@ class MqttDiscoveryDeviceUpdate(ABC):
         else:
             # Normal update without change
             send_discovery_done(self.hass, self._discovery_data)
-            _LOGGER.info(
+            _LOGGER.debug(
                 "%s %s no changes",
                 self.log_name,
                 discovery_hash,
@@ -936,7 +829,7 @@ class MqttDiscoveryUpdate(Entity):
         self._removed_from_hass = False
         if discovery_data is None:
             return
-        mqtt_data = get_mqtt_data(hass)
+        mqtt_data = hass.data[DATA_MQTT]
         self._registry_hooks = mqtt_data.discovery_registry_hooks
         discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
         if discovery_hash in self._registry_hooks:
@@ -1042,7 +935,7 @@ class MqttDiscoveryUpdate(Entity):
             set_discovery_hash(self.hass, discovery_hash)
             self._remove_discovery_updated = async_dispatcher_connect(
                 self.hass,
-                MQTT_DISCOVERY_UPDATED.format(discovery_hash),
+                MQTT_DISCOVERY_UPDATED.format(*discovery_hash),
                 discovery_callback,
             )
 
@@ -1056,6 +949,15 @@ class MqttDiscoveryUpdate(Entity):
             # Clear the discovery topic so the entity is not
             # rediscovered after a restart
             await async_remove_discovery_payload(self.hass, self._discovery_data)
+
+    @final
+    async def add_to_platform_finish(self) -> None:
+        """Finish adding entity to platform."""
+        await super().add_to_platform_finish()
+        # Only send the discovery done after the entity is fully added
+        # and the state is written to the state machine.
+        if self._discovery_data is not None:
+            send_discovery_done(self.hass, self._discovery_data)
 
     @callback
     def add_to_platform_abort(self) -> None:
@@ -1216,8 +1118,6 @@ class MqttEntity(
         self._prepare_subscribe_topics()
         await self._subscribe_topics()
         await self.mqtt_async_added_to_hass()
-        if self._discovery_data is not None:
-            send_discovery_done(self.hass, self._discovery_data)
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Call before the discovery message is acknowledged.

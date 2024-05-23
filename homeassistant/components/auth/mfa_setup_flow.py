@@ -62,7 +62,8 @@ class MfaFlowManager(data_entry_flow.FlowManager):
         return result
 
 
-async def async_setup(hass: HomeAssistant) -> None:
+@callback
+def async_setup(hass: HomeAssistant) -> None:
     """Init mfa setup flow manager."""
     hass.data[DATA_SETUP_FLOW_MGR] = MfaFlowManager(hass)
 

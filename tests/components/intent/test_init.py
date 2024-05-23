@@ -236,7 +236,12 @@ async def test_turn_on_all(hass: HomeAssistant) -> None:
     hass.states.async_set("light.test_light_2", "off")
     calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
 
-    await intent.async_handle(hass, "test", "HassTurnOn", {"name": {"value": "all"}})
+    await intent.async_handle(
+        hass,
+        "test",
+        "HassTurnOn",
+        {"name": {"value": "all"}, "domain": {"value": "light"}},
+    )
     await hass.async_block_till_done()
 
     # All lights should be on now
@@ -422,7 +427,7 @@ async def test_get_state_intent(
     assert not result.matched_states and not result.unmatched_states
 
     # Test unknown area failure
-    with pytest.raises(intent.IntentHandleError):
+    with pytest.raises(intent.MatchFailedError):
         await intent.async_handle(
             hass,
             "test",

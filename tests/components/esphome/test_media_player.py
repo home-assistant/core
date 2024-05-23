@@ -1,6 +1,6 @@
 """Test ESPHome media_players."""
 
-from unittest.mock import AsyncMock, Mock, call
+from unittest.mock import AsyncMock, Mock, call, patch
 
 from aioesphomeapi import (
     APIClient,
@@ -13,6 +13,7 @@ import pytest
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -152,6 +153,8 @@ async def test_media_player_entity_with_source(
     mock_generic_device_entry,
 ) -> None:
     """Test a generic media_player entity media source."""
+    await async_setup_component(hass, "media_source", {"media_source": {}})
+    await hass.async_block_till_done()
     esphome_platform_mock = Mock(
         async_get_media_browser_root_object=AsyncMock(
             return_value=[
@@ -221,6 +224,33 @@ async def test_media_player_entity_with_source(
         )
 
     mock_client.media_player_command.reset_mock()
+
+    play_media = media_source.PlayMedia(
+        url="http://www.example.com/xy.mp3",
+        mime_type="audio/mp3",
+    )
+
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.media_source.async_resolve_media",
+        return_value=play_media,
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+                ATTR_MEDIA_CONTENT_TYPE: "audio/mp3",
+                ATTR_MEDIA_CONTENT_ID: "media-source://local/xy",
+            },
+            blocking=True,
+        )
+
+    mock_client.media_player_command.assert_has_calls(
+        [call(1, media_url="http://www.example.com/xy.mp3", announcement=None)]
+    )
+
     client = await hass_ws_client()
     await client.send_json(
         {
@@ -239,10 +269,11 @@ async def test_media_player_entity_with_source(
             ATTR_ENTITY_ID: "media_player.test_mymedia_player",
             ATTR_MEDIA_CONTENT_TYPE: MediaType.URL,
             ATTR_MEDIA_CONTENT_ID: "media-source://tts?message=hello",
+            ATTR_MEDIA_ANNOUNCE: True,
         },
         blocking=True,
     )
 
     mock_client.media_player_command.assert_has_calls(
-        [call(1, media_url="media-source://tts?message=hello")]
+        [call(1, media_url="media-source://tts?message=hello", announcement=True)]
     )

@@ -482,14 +482,6 @@ def get_http_port(data: MappingProxyType[str, Any]) -> int:
     return cast(int, data.get(CONF_PORT, DEFAULT_HTTP_PORT))
 
 
-async def async_shutdown_device(device: BlockDevice | RpcDevice) -> None:
-    """Shutdown a Shelly device."""
-    if isinstance(device, RpcDevice):
-        await device.shutdown()
-    if isinstance(device, BlockDevice):
-        device.shutdown()
-
-
 @callback
 def async_remove_shelly_rpc_entities(
     hass: HomeAssistant, domain: str, mac: str, keys: list[str]
@@ -500,3 +492,8 @@ def async_remove_shelly_rpc_entities(
         if entity_id := entity_reg.async_get_entity_id(domain, DOMAIN, f"{mac}-{key}"):
             LOGGER.debug("Removing entity: %s", entity_id)
             entity_reg.async_remove(entity_id)
+
+
+def is_rpc_thermostat_mode(ident: int, status: dict[str, Any]) -> bool:
+    """Return True if 'thermostat:<IDent>' is present in the status."""
+    return f"thermostat:{ident}" in status

@@ -31,7 +31,6 @@ DOMAIN: Final = "shelly"
 
 LOGGER: Logger = getLogger(__package__)
 
-DATA_CONFIG_ENTRY: Final = "config_entry"
 CONF_COAP_PORT: Final = "coap_port"
 FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
 
@@ -44,6 +43,11 @@ RPC_MIN_TRANSITION_TIME_SEC = 0.5
 RGBW_MODELS: Final = (
     MODEL_BULB,
     MODEL_RGBW2,
+)
+
+MOTION_MODELS: Final = (
+    MODEL_MOTION,
+    MODEL_MOTION_2,
 )
 
 MODELS_SUPPORTING_LIGHT_TRANSITION: Final = (

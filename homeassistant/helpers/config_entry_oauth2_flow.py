@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from abc import ABC, ABCMeta, abstractmethod
 import asyncio
+from asyncio import Lock
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from json import JSONDecodeError
@@ -27,6 +28,7 @@ from homeassistant import config_entries
 from homeassistant.components import http
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import async_get_application_credentials
+from homeassistant.util.hass_dict import HassKey
 
 from .aiohttp_client import async_get_clientsession
 from .network import NoURLAvailableError
@@ -34,8 +36,15 @@ from .network import NoURLAvailableError
 _LOGGER = logging.getLogger(__name__)
 
 DATA_JWT_SECRET = "oauth2_jwt_secret"
-DATA_IMPLEMENTATIONS = "oauth2_impl"
-DATA_PROVIDERS = "oauth2_providers"
+DATA_IMPLEMENTATIONS: HassKey[dict[str, dict[str, AbstractOAuth2Implementation]]] = (
+    HassKey("oauth2_impl")
+)
+DATA_PROVIDERS: HassKey[
+    dict[
+        str,
+        Callable[[HomeAssistant, str], Awaitable[list[AbstractOAuth2Implementation]]],
+    ]
+] = HassKey("oauth2_providers")
 AUTH_CALLBACK_PATH = "/auth/external/callback"
 HEADER_FRONTEND_BASE = "HA-Frontend-Base"
 MY_AUTH_CALLBACK_PATH = "https://my.home-assistant.io/redirect/oauth"
@@ -398,10 +407,7 @@ async def async_get_implementations(
     hass: HomeAssistant, domain: str
 ) -> dict[str, AbstractOAuth2Implementation]:
     """Return OAuth2 implementations for specified domain."""
-    registered = cast(
-        dict[str, AbstractOAuth2Implementation],
-        hass.data.setdefault(DATA_IMPLEMENTATIONS, {}).get(domain, {}),
-    )
+    registered = hass.data.setdefault(DATA_IMPLEMENTATIONS, {}).get(domain, {})
 
     if DATA_PROVIDERS not in hass.data:
         return registered
@@ -501,6 +507,7 @@ class OAuth2Session:
         self.hass = hass
         self.config_entry = config_entry
         self.implementation = implementation
+        self._token_lock = Lock()
 
     @property
     def token(self) -> dict:
@@ -517,14 +524,15 @@ class OAuth2Session:
 
     async def async_ensure_token_valid(self) -> None:
         """Ensure that the current token is valid."""
-        if self.valid_token:
-            return
+        async with self._token_lock:
+            if self.valid_token:
+                return
 
-        new_token = await self.implementation.async_refresh_token(self.token)
+            new_token = await self.implementation.async_refresh_token(self.token)
 
-        self.hass.config_entries.async_update_entry(
-            self.config_entry, data={**self.config_entry.data, "token": new_token}
-        )
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, data={**self.config_entry.data, "token": new_token}
+            )
 
     async def async_request(
         self, method: str, url: str, **kwargs: Any

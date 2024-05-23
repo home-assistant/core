@@ -8,6 +8,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_SSL,
     CONF_USERNAME,
 )
 
@@ -22,10 +23,12 @@ MOCK_CONFIG = {
                 CONF_PORT: "1234",
                 CONF_PASSWORD: "fake_pass",
                 CONF_USERNAME: "fake_user",
+                CONF_SSL: False,
             }
         ]
     }
 }
+
 MOCK_HOST = "fake_host"
 MOCK_IPS = {
     "fritz.box": "192.168.178.1",
@@ -902,6 +905,14 @@ MOCK_HOST_ATTRIBUTES_DATA = [
 ]
 
 MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
+MOCK_USER_INPUT_ADVANCED = MOCK_USER_DATA
+MOCK_USER_INPUT_SIMPLE = {
+    CONF_HOST: "fake_host",
+    CONF_PASSWORD: "fake_pass",
+    CONF_USERNAME: "fake_user",
+    CONF_SSL: False,
+}
+
 MOCK_DEVICE_INFO = {
     ATTR_HOST: MOCK_HOST,
     ATTR_NEW_SERIAL_NUMBER: MOCK_SERIAL_NUMBER,

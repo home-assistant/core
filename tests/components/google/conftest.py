@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
 import datetime
 import http
 import time
-from typing import Any, TypeVar
+from typing import Any
 from unittest.mock import Mock, mock_open, patch
 
 from aiohttp.client_exceptions import ClientError
@@ -27,10 +27,9 @@ from homeassistant.util import dt as dt_util
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-ApiResult = Callable[[dict[str, Any]], None]
-ComponentSetup = Callable[[], Awaitable[bool]]
-_T = TypeVar("_T")
-YieldFixture = Generator[_T, None, None]
+type ApiResult = Callable[[dict[str, Any]], None]
+type ComponentSetup = Callable[[], Awaitable[bool]]
+type AsyncYieldFixture[_T] = AsyncGenerator[_T, None]
 
 
 CALENDAR_ID = "qwertyuiopasdfghjklzxcvbnm@import.calendar.google.com"
@@ -241,7 +240,7 @@ def mock_events_list(
 
     def _put_result(
         response: dict[str, Any],
-        calendar_id: str = None,
+        calendar_id: str | None = None,
         exc: ClientError | None = None,
     ) -> None:
         if calendar_id is None:
@@ -331,11 +330,11 @@ def mock_insert_event(
 
 
 @pytest.fixture(autouse=True)
-def set_time_zone(hass):
+async def set_time_zone(hass):
     """Set the time zone for the tests."""
     # Set our timezone to CST/Regina so we can check calculations
     # This keeps UTC-6 all year round
-    hass.config.set_time_zone("America/Regina")
+    await hass.config.async_set_time_zone("America/Regina")
 
 
 @pytest.fixture
