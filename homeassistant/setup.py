@@ -16,10 +16,10 @@ from typing import Any, Final, TypedDict
 
 from . import config as conf_util, core, loader, requirements
 from .const import (
+    BASE_PLATFORMS,  # noqa: F401
     EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_START,
     PLATFORM_FORMAT,
-    Platform,
 )
 from .core import (
     CALLBACK_TYPE,
@@ -44,7 +44,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_COMPONENT: Final = "component"
 
-BASE_PLATFORMS = {platform.value for platform in Platform}
 
 # DATA_SETUP is a dict, indicating domains which are currently
 # being setup or which failed to setup:
@@ -202,6 +201,7 @@ async def _async_process_dependencies(
         or create_eager_task(
             async_setup_component(hass, dep, config),
             name=f"setup {dep} as dependency of {integration.domain}",
+            loop=hass.loop,
         )
         for dep in integration.dependencies
         if dep not in hass.config.components
@@ -636,15 +636,7 @@ def _async_when_setup(
 @core.callback
 def async_get_loaded_integrations(hass: core.HomeAssistant) -> set[str]:
     """Return the complete list of loaded integrations."""
-    integrations = set()
-    for component in hass.config.components:
-        if "." not in component:
-            integrations.add(component)
-            continue
-        platform, _, domain = component.partition(".")
-        if domain in BASE_PLATFORMS:
-            integrations.add(platform)
-    return integrations
+    return hass.config.all_components
 
 
 class SetupPhases(StrEnum):
@@ -810,3 +802,11 @@ def async_get_setup_timings(hass: core.HomeAssistant) -> dict[str, float]:
         domain_timings[domain] = total_top_level + group_max
 
     return domain_timings
+
+
+@callback
+def async_get_domain_setup_times(
+    hass: core.HomeAssistant, domain: str
+) -> Mapping[str | None, dict[SetupPhases, float]]:
+    """Return timing data for each integration."""
+    return _setup_times(hass).get(domain, {})

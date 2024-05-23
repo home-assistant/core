@@ -49,7 +49,7 @@ from .coordinator import (
     NextDnsUpdateCoordinator,
 )
 
-NextDnsConfigEntry = ConfigEntry["NextDnsData"]
+type NextDnsConfigEntry = ConfigEntry[NextDnsData]
 
 
 @dataclass

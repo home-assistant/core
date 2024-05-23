@@ -12,8 +12,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import IAlarmDataUpdateCoordinator
 from .const import DATA_COORDINATOR, DOMAIN
+from .coordinator import IAlarmDataUpdateCoordinator
 
 
 async def async_setup_entry(

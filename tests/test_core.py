@@ -9,6 +9,7 @@ import functools
 import gc
 import logging
 import os
+import re
 from tempfile import TemporaryDirectory
 import threading
 import time
@@ -3345,7 +3346,9 @@ async def test_statemachine_report_state(hass: HomeAssistant) -> None:
     hass.states.async_set("light.bowl", "on", {})
     state_changed_events = async_capture_events(hass, EVENT_STATE_CHANGED)
     state_reported_events = []
-    hass.bus.async_listen(EVENT_STATE_REPORTED, listener, event_filter=mock_filter)
+    unsub = hass.bus.async_listen(
+        EVENT_STATE_REPORTED, listener, event_filter=mock_filter
+    )
 
     hass.states.async_set("light.bowl", "on")
     await hass.async_block_till_done()
@@ -3365,6 +3368,13 @@ async def test_statemachine_report_state(hass: HomeAssistant) -> None:
     hass.states.async_remove("light.bowl")
     await hass.async_block_till_done()
     assert len(state_changed_events) == 3
+    assert len(state_reported_events) == 4
+
+    unsub()
+
+    hass.states.async_set("light.bowl", "on")
+    await hass.async_block_till_done()
+    assert len(state_changed_events) == 4
     assert len(state_reported_events) == 4
 
 
@@ -3442,7 +3452,8 @@ async def test_async_fire_thread_safety(hass: HomeAssistant) -> None:
     events = async_capture_events(hass, "test_event")
     hass.bus.async_fire("test_event")
     with pytest.raises(
-        RuntimeError, match="Detected code that calls async_fire from a thread."
+        RuntimeError,
+        match="Detected code that calls hass.bus.async_fire from a thread.",
     ):
         await hass.async_add_executor_job(hass.bus.async_fire, "test_event")
 
@@ -3452,7 +3463,8 @@ async def test_async_fire_thread_safety(hass: HomeAssistant) -> None:
 async def test_async_register_thread_safety(hass: HomeAssistant) -> None:
     """Test async_register thread safety."""
     with pytest.raises(
-        RuntimeError, match="Detected code that calls async_register from a thread."
+        RuntimeError,
+        match="Detected code that calls hass.services.async_register from a thread.",
     ):
         await hass.async_add_executor_job(
             hass.services.async_register,
@@ -3465,7 +3477,8 @@ async def test_async_register_thread_safety(hass: HomeAssistant) -> None:
 async def test_async_remove_thread_safety(hass: HomeAssistant) -> None:
     """Test async_remove thread safety."""
     with pytest.raises(
-        RuntimeError, match="Detected code that calls async_remove from a thread."
+        RuntimeError,
+        match="Detected code that calls hass.services.async_remove from a thread.",
     ):
         await hass.async_add_executor_job(
             hass.services.async_remove, "test_domain", "test_service"
@@ -3479,6 +3492,35 @@ async def test_async_create_task_thread_safety(hass: HomeAssistant) -> None:
         pass
 
     with pytest.raises(
-        RuntimeError, match="Detected code that calls async_create_task from a thread."
+        RuntimeError,
+        match="Detected code that calls hass.async_create_task from a thread.",
     ):
         await hass.async_add_executor_job(hass.async_create_task, _any_coro)
+
+
+async def test_thread_safety_message(hass: HomeAssistant) -> None:
+    """Test the thread safety message."""
+    with pytest.raises(
+        RuntimeError,
+        match=re.escape(
+            "Detected code that calls test from a thread other than the event loop, "
+            "which may cause Home Assistant to crash or data to corrupt. For more "
+            "information, see "
+            "https://developers.home-assistant.io/docs/asyncio_thread_safety/#test"
+            ". Please report this issue.",
+        ),
+    ):
+        await hass.async_add_executor_job(hass.verify_event_loop_thread, "test")
+
+
+async def test_set_time_zone_deprecated(hass: HomeAssistant) -> None:
+    """Test set_time_zone is deprecated."""
+    with pytest.raises(
+        RuntimeError,
+        match=re.escape(
+            "Detected code that set the time zone using set_time_zone instead of "
+            "async_set_time_zone which will stop working in Home Assistant 2025.6. "
+            "Please report this issue.",
+        ),
+    ):
+        await hass.config.set_time_zone("America/New_York")

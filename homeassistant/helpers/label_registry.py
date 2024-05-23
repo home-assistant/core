@@ -53,7 +53,7 @@ class EventLabelRegistryUpdatedData(TypedDict):
     label_id: str
 
 
-EventLabelRegistryUpdated = Event[EventLabelRegistryUpdatedData]
+type EventLabelRegistryUpdated = Event[EventLabelRegistryUpdatedData]
 
 
 @dataclass(slots=True, frozen=True, kw_only=True)
@@ -121,7 +121,7 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
         description: str | None = None,
     ) -> LabelEntry:
         """Create a new label."""
-        self.hass.verify_event_loop_thread("async_create")
+        self.hass.verify_event_loop_thread("label_registry.async_create")
         if label := self.async_get_label_by_name(name):
             raise ValueError(
                 f"The name {name} ({label.normalized_name}) is already in use"
@@ -152,7 +152,7 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
     @callback
     def async_delete(self, label_id: str) -> None:
         """Delete label."""
-        self.hass.verify_event_loop_thread("async_delete")
+        self.hass.verify_event_loop_thread("label_registry.async_delete")
         del self.labels[label_id]
         self.hass.bus.async_fire_internal(
             EVENT_LABEL_REGISTRY_UPDATED,
@@ -192,7 +192,7 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
         if not changes:
             return old
 
-        self.hass.verify_event_loop_thread("async_update")
+        self.hass.verify_event_loop_thread("label_registry.async_update")
         new = self.labels[label_id] = dataclasses.replace(old, **changes)  # type: ignore[arg-type]
 
         self.async_schedule_save()
