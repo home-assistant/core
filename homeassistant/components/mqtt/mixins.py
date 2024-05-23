@@ -110,7 +110,6 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
 )
-from .schemas import MQTT_AVAILABILITY_SCHEMA, MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from .subscription import (
     EntitySubscription,
     async_prepare_subscribe_topics,
