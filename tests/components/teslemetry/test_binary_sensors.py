@@ -10,7 +10,7 @@ from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import assert_entities, setup_platform
+from . import assert_entities, assert_entities_alt, setup_platform
 from .const import VEHICLE_DATA_ALT
 
 from tests.common import async_fire_time_changed
@@ -46,7 +46,7 @@ async def test_binary_sensor_refresh(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert_entities(hass, entry.entry_id, entity_registry, snapshot, False)
+    assert_entities_alt(hass, entry.entry_id, entity_registry, snapshot)
 
 
 async def test_binary_sensor_offline(
