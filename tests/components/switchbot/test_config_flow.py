@@ -561,7 +561,7 @@ async def test_user_setup_wolock_auth_switchbot_api_down(hass: HomeAssistant) ->
 
     with patch(
         "homeassistant.components.switchbot.config_flow.SwitchbotLock.async_retrieve_encryption_key",
-        side_effect=SwitchbotAccountConnectionError,
+        side_effect=SwitchbotAccountConnectionError("Switchbot API down"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -572,7 +572,8 @@ async def test_user_setup_wolock_auth_switchbot_api_down(hass: HomeAssistant) ->
         )
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == "api_error"
+    assert result["description_placeholders"] == {"error_detail": "Switchbot API down"}
 
 
 async def test_user_setup_wolock_or_bot(hass: HomeAssistant) -> None:
