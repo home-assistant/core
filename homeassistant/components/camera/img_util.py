@@ -105,8 +105,7 @@ class TurboJPEGSingleton:
             TurboJPEGSingleton.__instance = False
 
 
-with suppress(Exception):
-    # TurboJPEG loads libraries that do blocking I/O.
-    # Initialize TurboJPEGSingleton in the executor to avoid
-    # blocking the event loop.
-    TurboJPEGSingleton.instance()
+# TurboJPEG loads libraries that do blocking I/O.
+# Initialize TurboJPEGSingleton in the executor to avoid
+# blocking the event loop.
+TurboJPEGSingleton.instance()
