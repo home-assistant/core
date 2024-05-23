@@ -1259,8 +1259,8 @@ class MqttEntity(
         tracked_attrs: tuple[tuple[str, Any | UndefinedType], ...] = tuple(
             (attribute, getattr(self, attribute, UNDEFINED)) for attribute in attributes
         )
+        self._log_message(msg)
         try:
-            self._log_message(msg)
             msg_callback(msg)
         except MqttValueTemplateException as exc:
             _LOGGER.warning(exc)
