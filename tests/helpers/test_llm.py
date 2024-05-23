@@ -51,6 +51,11 @@ async def test_call_tool_no_existing(hass: HomeAssistant) -> None:
         )
 
 
+async def test_tool_default_applicable(hass: HomeAssistant) -> None:
+    """Test that LLM Tool is applicable by default."""
+    assert llm.Tool().async_is_applicable(hass, None)
+
+
 async def test_call_tool_not_applicable(hass: HomeAssistant) -> None:
     """Test Assist API."""
 
