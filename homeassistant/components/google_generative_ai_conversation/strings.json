@@ -18,7 +18,9 @@
     "step": {
       "init": {
         "data": {
-          "prompt": "Prompt Template",
+          "recommended": "Recommended settings",
+          "prompt": "Prompt",
+          "tone_prompt": "Tone",
           "chat_model": "[%key:common::generic::model%]",
           "temperature": "Temperature",
           "top_p": "Top P",
@@ -29,6 +31,10 @@
           "hate_block_threshold": "Content that is rude, disrespectful, or profane",
           "secual_block_threshold": "Contains references to sexual acts or other lewd content",
           "dangerous_block_threshold": "Promotes, facilitates, or encourages harmful acts"
+        },
+        "data_description": {
+          "prompt": "Extra data to provide to the LLM. This can be a template.",
+          "tone_prompt": "Instructions for the LLM on the style of the generated text. This can be a template."
         }
       }
     }

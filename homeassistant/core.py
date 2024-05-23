@@ -1500,7 +1500,6 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-
         if self._debug:
             _LOGGER.debug(
                 "Bus:Handling %s", _event_repr(event_type, origin, event_data)
@@ -1511,17 +1510,9 @@ class EventBus:
             match_all_listeners = self._match_all_listeners
         else:
             match_all_listeners = EMPTY_LIST
-        if event_type == EVENT_STATE_CHANGED:
-            aliased_listeners = self._listeners.get(EVENT_STATE_REPORTED, EMPTY_LIST)
-        else:
-            aliased_listeners = EMPTY_LIST
-        listeners = listeners + match_all_listeners + aliased_listeners
-        if not listeners:
-            return
 
         event: Event[_DataT] | None = None
-
-        for job, event_filter in listeners:
+        for job, event_filter in listeners + match_all_listeners:
             if event_filter is not None:
                 try:
                     if event_data is None or not event_filter(event_data):
@@ -1599,18 +1590,32 @@ class EventBus:
 
         if event_filter is not None and not is_callback_check_partial(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
+        filterable_job = (HassJob(listener, f"listen {event_type}"), event_filter)
         if event_type == EVENT_STATE_REPORTED:
             if not event_filter:
                 raise HomeAssistantError(
                     f"Event filter is required for event {event_type}"
                 )
-        return self._async_listen_filterable_job(
-            event_type,
-            (
-                HassJob(listener, f"listen {event_type}"),
-                event_filter,
-            ),
-        )
+            # Special case for EVENT_STATE_REPORTED, we also want to listen to
+            # EVENT_STATE_CHANGED
+            self._listeners[EVENT_STATE_REPORTED].append(filterable_job)
+            self._listeners[EVENT_STATE_CHANGED].append(filterable_job)
+            return functools.partial(
+                self._async_remove_multiple_listeners,
+                (EVENT_STATE_REPORTED, EVENT_STATE_CHANGED),
+                filterable_job,
+            )
+        return self._async_listen_filterable_job(event_type, filterable_job)
+
+    @callback
+    def _async_remove_multiple_listeners(
+        self,
+        keys: Iterable[EventType[_DataT] | str],
+        filterable_job: _FilterableJobType[Any],
+    ) -> None:
+        """Remove multiple listeners for specific event_types."""
+        for key in keys:
+            self._async_remove_listener(key, filterable_job)
 
     @callback
     def _async_listen_filterable_job(
@@ -1618,6 +1623,7 @@ class EventBus:
         event_type: EventType[_DataT] | str,
         filterable_job: _FilterableJobType[_DataT],
     ) -> CALLBACK_TYPE:
+        """Listen for all events or events of a specific type."""
         self._listeners[event_type].append(filterable_job)
         return functools.partial(
             self._async_remove_listener, event_type, filterable_job
