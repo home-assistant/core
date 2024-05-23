@@ -13,15 +13,6 @@ from .utils import async_discover_devices
 class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle Switcher config flow."""
 
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle a flow initiated by import."""
-        if self._async_current_entries(True):
-            return self.async_abort(reason="single_instance_allowed")
-
-        return self.async_create_entry(title="Switcher", data={})
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
