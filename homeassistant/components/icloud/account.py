@@ -161,6 +161,7 @@ class IcloudAccount:
         """Update iCloud devices."""
         if self.api is None:
             return
+        _LOGGER.debug("Updating devices")
 
         if self.api.requires_2fa:
             self._require_reauth()
@@ -173,11 +174,12 @@ class IcloudAccount:
             _LOGGER.error("Unknown iCloud error: %s", err)
             self._fetch_interval = 2
             dispatcher_send(self.hass, self.signal_device_update)
-            track_point_in_utc_time(
-                self.hass,
-                self.keep_alive,
-                utcnow() + timedelta(minutes=self._fetch_interval),
-            )
+            if not self._config_entry.pref_disable_polling:
+                track_point_in_utc_time(
+                    self.hass,
+                    self.keep_alive,
+                    utcnow() + timedelta(minutes=self._fetch_interval),
+                )
             return
 
         # Gets devices infos
@@ -223,11 +225,12 @@ class IcloudAccount:
         if new_device:
             dispatcher_send(self.hass, self.signal_device_new)
 
-        track_point_in_utc_time(
-            self.hass,
-            self.keep_alive,
-            utcnow() + timedelta(minutes=self._fetch_interval),
-        )
+        if not self._config_entry.pref_disable_polling:
+            track_point_in_utc_time(
+                self.hass,
+                self.keep_alive,
+                utcnow() + timedelta(minutes=self._fetch_interval),
+            )
 
     def _require_reauth(self):
         """Require the user to log in again."""
