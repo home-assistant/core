@@ -159,7 +159,7 @@ async def test_switch_while_mowing(
     async_fire_time_changed(hass)
     state = hass.states.get("switch.test_mower_1_enable_schedule")
     assert state.state == "on"
-    
+
 
 @pytest.mark.parametrize(
     ("service", "boolean", "excepted_state"),
