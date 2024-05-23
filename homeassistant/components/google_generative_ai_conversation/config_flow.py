@@ -32,11 +32,11 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_CHAT_MODEL,
-    CONF_EXTRA_PROMPT,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
+    CONF_TONE_PROMPT,
     CONF_TOP_K,
     CONF_TOP_P,
     DEFAULT_PROMPT,
@@ -59,7 +59,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 RECOMMENDED_OPTIONS = {
     CONF_RECOMMENDED: True,
     CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-    CONF_EXTRA_PROMPT: "",
+    CONF_TONE_PROMPT: "",
 }
 
 
@@ -150,7 +150,7 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
                     CONF_RECOMMENDED: False,
                     CONF_PROMPT: DEFAULT_PROMPT
                     + "\n"
-                    + user_input.get(CONF_EXTRA_PROMPT, ""),
+                    + user_input.get(CONF_TONE_PROMPT, ""),
                 }
 
         schema = await google_generative_ai_config_option_schema(self.hass, options)
@@ -185,8 +185,8 @@ async def google_generative_ai_config_option_schema(
                 CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
             ): bool,
             vol.Optional(
-                CONF_EXTRA_PROMPT,
-                description={"suggested_value": options.get(CONF_EXTRA_PROMPT)},
+                CONF_TONE_PROMPT,
+                description={"suggested_value": options.get(CONF_TONE_PROMPT)},
                 default="",
             ): TemplateSelector(),
             vol.Optional(

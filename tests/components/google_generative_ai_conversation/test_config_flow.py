@@ -9,11 +9,11 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_CHAT_MODEL,
-    CONF_EXTRA_PROMPT,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
+    CONF_TONE_PROMPT,
     CONF_TOP_K,
     CONF_TOP_P,
     DOMAIN,
@@ -90,7 +90,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["options"] == {
         CONF_RECOMMENDED: True,
         CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-        CONF_EXTRA_PROMPT: "",
+        CONF_TONE_PROMPT: "",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -102,7 +102,7 @@ async def test_form(hass: HomeAssistant) -> None:
             {
                 CONF_RECOMMENDED: True,
                 CONF_LLM_HASS_API: "none",
-                CONF_EXTRA_PROMPT: "bla",
+                CONF_TONE_PROMPT: "bla",
             },
             {
                 CONF_RECOMMENDED: False,
@@ -132,12 +132,12 @@ async def test_form(hass: HomeAssistant) -> None:
             {
                 CONF_RECOMMENDED: True,
                 CONF_LLM_HASS_API: "assist",
-                CONF_EXTRA_PROMPT: "",
+                CONF_TONE_PROMPT: "",
             },
             {
                 CONF_RECOMMENDED: True,
                 CONF_LLM_HASS_API: "assist",
-                CONF_EXTRA_PROMPT: "",
+                CONF_TONE_PROMPT: "",
             },
         ),
     ],
