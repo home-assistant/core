@@ -68,7 +68,7 @@ UNITS = (
         unit=UnitOfEnergy.KILO_WATT_HOUR,
         aliases={"kwh"},
         device_classes={SensorDeviceClass.ENERGY},
-        conversion_fn=lambda x: f"{x / 1000:.2f}",
+        conversion_fn=lambda x: f"{abs(x) / 1000:.2f}",
     ),
 )
 
