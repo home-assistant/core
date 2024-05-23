@@ -41,11 +41,11 @@ from .const import (
     CONF_SUPPORTED_FEATURES,
 )
 from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entity_entry_helper,
 )
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
