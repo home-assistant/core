@@ -19,6 +19,7 @@ from kasa import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -95,7 +96,6 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         self.device: Device = device
         self._feature = feature
         self._attr_device_info = DeviceInfo(
-            # connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
             identifiers={(DOMAIN, str(device.device_id))},
             manufacturer="TP-Link",
             model=device.model,
@@ -106,6 +106,10 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
         if parent is not None:
             self._attr_device_info["via_device"] = (DOMAIN, parent.device_id)
+        else:
+            self._attr_device_info["connections"] = {
+                (dr.CONNECTION_NETWORK_MAC, device.mac)
+            }
 
         # The rest of the initialization takes care of setting a proper unique_id
         # This is transitional and will become cleaner as future platforms get converted.
