@@ -1,4 +1,5 @@
 """Component to interface with various media players."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,14 +9,15 @@ from contextlib import suppress
 import datetime as dt
 from enum import StrEnum
 import functools as ft
-from functools import lru_cache
+from functools import cached_property, lru_cache
 import hashlib
 from http import HTTPStatus
 import logging
 import secrets
-from typing import TYPE_CHECKING, Any, Final, Required, TypedDict, final
+from typing import Any, Final, Required, TypedDict, final
 from urllib.parse import quote, urlparse
 
+import aiohttp
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
@@ -62,6 +64,7 @@ from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
+from . import group as group_pre_import  # noqa: F401
 from .browse_media import BrowseMedia, async_process_play_media_url  # noqa: F401
 from .const import (  # noqa: F401
     ATTR_APP_ID,
@@ -131,11 +134,6 @@ from .const import (  # noqa: F401
     RepeatMode,
 )
 from .errors import BrowseError
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -781,7 +779,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def turn_on(self) -> None:
         """Turn the media player on."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
@@ -789,7 +787,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def turn_off(self) -> None:
         """Turn the media player off."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
@@ -797,7 +795,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
@@ -805,7 +803,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
@@ -813,7 +811,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def media_play(self) -> None:
         """Send play command."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_media_play(self) -> None:
         """Send play command."""
@@ -821,7 +819,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def media_pause(self) -> None:
         """Send pause command."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_media_pause(self) -> None:
         """Send pause command."""
@@ -829,7 +827,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def media_stop(self) -> None:
         """Send stop command."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_media_stop(self) -> None:
         """Send stop command."""
@@ -837,7 +835,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def media_previous_track(self) -> None:
         """Send previous track command."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
@@ -845,7 +843,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def media_next_track(self) -> None:
         """Send next track command."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_media_next_track(self) -> None:
         """Send next track command."""
@@ -853,7 +851,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def media_seek(self, position: float) -> None:
         """Send seek command."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
@@ -863,7 +861,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
@@ -875,7 +873,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def select_source(self, source: str) -> None:
         """Select input source."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
@@ -883,7 +881,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
@@ -891,7 +889,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def clear_playlist(self) -> None:
         """Clear players playlist."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
@@ -899,7 +897,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
@@ -907,7 +905,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
@@ -1133,11 +1131,11 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         The BrowseMedia instance will be used by the
         "media_player/browse_media" websocket command.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
@@ -1145,7 +1143,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def unjoin_player(self) -> None:
         """Remove this player from any group."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
@@ -1339,19 +1337,21 @@ async def websocket_browse_media(
     connection.send_result(msg["id"], result)
 
 
+_FETCH_TIMEOUT = aiohttp.ClientTimeout(total=10)
+
+
 async def async_fetch_image(
     logger: logging.Logger, hass: HomeAssistant, url: str
 ) -> tuple[bytes | None, str | None]:
     """Retrieve an image."""
     content, content_type = (None, None)
     websession = async_get_clientsession(hass)
-    with suppress(asyncio.TimeoutError):
-        async with asyncio.timeout(10):
-            response = await websession.get(url)
-            if response.status == HTTPStatus.OK:
-                content = await response.read()
-                if content_type := response.headers.get(CONTENT_TYPE):
-                    content_type = content_type.split(";")[0]
+    with suppress(TimeoutError):
+        response = await websession.get(url, timeout=_FETCH_TIMEOUT)
+        if response.status == HTTPStatus.OK:
+            content = await response.read()
+            if content_type := response.headers.get(CONTENT_TYPE):
+                content_type = content_type.split(";")[0]
 
     if content is None:
         url_parts = URL(url)

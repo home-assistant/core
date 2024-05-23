@@ -1,4 +1,5 @@
 """Shark IQ Integration."""
+
 import asyncio
 from contextlib import suppress
 
@@ -24,7 +25,7 @@ from .const import (
     SHARKIQ_REGION_DEFAULT,
     SHARKIQ_REGION_EUROPE,
 )
-from .update_coordinator import SharkIqUpdateCoordinator
+from .coordinator import SharkIqUpdateCoordinator
 
 
 class CannotConnect(exceptions.HomeAssistantError):
@@ -40,7 +41,7 @@ async def async_connect_or_timeout(ayla_api: AylaApi) -> bool:
     except SharkIqAuthError:
         LOGGER.error("Authentication error connecting to Shark IQ api")
         return False
-    except asyncio.TimeoutError as exc:
+    except TimeoutError as exc:
         LOGGER.error("Timeout expired")
         raise CannotConnect from exc
 

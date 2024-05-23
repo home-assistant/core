@@ -3,6 +3,7 @@
 These tests fake out the subscriber/devicemanager, and are not using a real
 pubsub subscriber.
 """
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -103,7 +104,7 @@ def create_events(events, device_id=DEVICE_ID, timestamp=None):
     """Create an EventMessage for events."""
     if not timestamp:
         timestamp = utcnow()
-    return EventMessage(
+    return EventMessage.create_event(
         {
             "eventId": "some-event-id",
             "timestamp": timestamp.isoformat(timespec="seconds"),
@@ -263,7 +264,7 @@ async def test_event_message_without_device_event(
     events = async_capture_events(hass, NEST_EVENT)
     await setup_platform()
     timestamp = utcnow()
-    event = EventMessage(
+    event = EventMessage.create_event(
         {
             "eventId": "some-event-id",
             "timestamp": timestamp.isoformat(timespec="seconds"),
@@ -320,7 +321,9 @@ async def test_doorbell_event_thread(
             "eventThreadState": "STARTED",
         }
     )
-    await subscriber.async_receive_event(EventMessage(message_data_1, auth=None))
+    await subscriber.async_receive_event(
+        EventMessage.create_event(message_data_1, auth=None)
+    )
 
     # Publish message #2 that sends a no-op update to end the event thread
     timestamp2 = timestamp1 + datetime.timedelta(seconds=1)
@@ -331,7 +334,9 @@ async def test_doorbell_event_thread(
             "eventThreadState": "ENDED",
         }
     )
-    await subscriber.async_receive_event(EventMessage(message_data_2, auth=None))
+    await subscriber.async_receive_event(
+        EventMessage.create_event(message_data_2, auth=None)
+    )
     await hass.async_block_till_done()
 
     # The event is only published once
@@ -448,7 +453,7 @@ async def test_structure_update_event(
     assert not registry.async_get("camera.back")
 
     # Send a message that triggers the device to be loaded
-    message = EventMessage(
+    message = EventMessage.create_event(
         {
             "eventId": "some-event-id",
             "timestamp": utcnow().isoformat(timespec="seconds"),
@@ -460,9 +465,12 @@ async def test_structure_update_event(
         },
         auth=None,
     )
-    with patch("homeassistant.components.nest.PLATFORMS", [PLATFORM]), patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber",
-        return_value=subscriber,
+    with (
+        patch("homeassistant.components.nest.PLATFORMS", [PLATFORM]),
+        patch(
+            "homeassistant.components.nest.api.GoogleNestSubscriber",
+            return_value=subscriber,
+        ),
     ):
         await subscriber.async_receive_event(message)
         await hass.async_block_till_done()

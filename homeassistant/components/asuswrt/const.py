@@ -1,4 +1,5 @@
 """AsusWrt component constants."""
+
 DOMAIN = "asuswrt"
 
 CONF_DNSMASQ = "dnsmasq"
@@ -6,8 +7,6 @@ CONF_INTERFACE = "interface"
 CONF_REQUIRE_IP = "require_ip"
 CONF_SSH_KEY = "ssh_key"
 CONF_TRACK_UNKNOWN = "track_unknown"
-
-DATA_ASUSWRT = DOMAIN
 
 DEFAULT_DNSMASQ = "/var/lib/misc"
 DEFAULT_INTERFACE = "eth0"

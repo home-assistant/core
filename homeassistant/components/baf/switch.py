@@ -1,4 +1,5 @@
 """Support for Big Ass Fans switch."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -7,30 +8,22 @@ from typing import Any, cast
 
 from aiobafi6 import Device
 
-from homeassistant import config_entries
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import BAFConfigEntry
 from .entity import BAFEntity
-from .models import BAFData
 
 
-@dataclass(frozen=True)
-class BAFSwitchDescriptionMixin:
-    """Required values for BAF sensors."""
-
-    value_fn: Callable[[Device], bool | None]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class BAFSwitchDescription(
     SwitchEntityDescription,
-    BAFSwitchDescriptionMixin,
 ):
     """Class describing BAF switch entities."""
+
+    value_fn: Callable[[Device], bool | None]
 
 
 BASE_SWITCHES = [
@@ -109,12 +102,11 @@ LIGHT_SWITCHES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: BAFConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BAF fan switches."""
-    data: BAFData = hass.data[DOMAIN][entry.entry_id]
-    device = data.device
+    device = entry.runtime_data
     descriptions: list[BAFSwitchDescription] = []
     descriptions.extend(BASE_SWITCHES)
     if device.has_fan:

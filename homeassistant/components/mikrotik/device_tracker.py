@@ -1,4 +1,5 @@
 """Support for Mikrotik routers as device tracker."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -16,7 +17,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
-from .hub import Device, MikrotikDataUpdateCoordinator
+from .coordinator import Device, MikrotikDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -34,11 +35,10 @@ async def async_setup_entry(
     registry = er.async_get(hass)
 
     # Restore clients that is not a part of active clients list.
-    for entity in registry.entities.values():
-        if (
-            entity.config_entry_id == config_entry.entry_id
-            and entity.domain == DEVICE_TRACKER
-        ):
+    for entity in registry.entities.get_entries_for_config_entry_id(
+        config_entry.entry_id
+    ):
+        if entity.domain == DEVICE_TRACKER:
             if (
                 entity.unique_id in coordinator.api.devices
                 or entity.unique_id not in coordinator.api.all_devices

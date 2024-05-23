@@ -36,6 +36,15 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "consider_home": "Seconds to consider a device at 'home'"
+        }
+      }
+    }
+  },
   "entity": {
     "button": {
       "dsl_reconnect": { "name": "DSL reconnect" },

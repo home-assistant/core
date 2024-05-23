@@ -1,4 +1,5 @@
 """The tests for the mqtt water heater component."""
+
 import copy
 import json
 from typing import Any
@@ -24,7 +25,7 @@ from homeassistant.components.water_heater import (
     STATE_PERFORMANCE,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, Platform, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_conversion import TemperatureConverter
 
@@ -93,13 +94,6 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def water_heater_platform_only():
-    """Only setup the water heater platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.WATER_HEATER]):
-        yield
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -1261,3 +1255,35 @@ async def test_skipped_async_ha_write_state(
     """Test a write state command is only called when there is change."""
     await mqtt_mock_entry()
     await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            water_heater.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "modes": ["auto"],
+                    "mode_state_topic": "test-topic",
+                    value_template: "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+        for value_template in ["value_template", "mode_state_template"]
+    ],
+    ids=["value_template", "mode_state_template"],
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

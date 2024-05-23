@@ -1,4 +1,5 @@
 """The tests for the Netatmo sensor platform."""
+
 from unittest.mock import AsyncMock
 
 import pytest
@@ -14,6 +15,7 @@ from .common import selected_platforms, snapshot_platform_entities
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entity(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -44,8 +46,8 @@ async def test_indoor_sensor(
 
     assert hass.states.get(f"{prefix}temperature").state == "20.3"
     assert hass.states.get(f"{prefix}humidity").state == "63"
-    assert hass.states.get(f"{prefix}co2").state == "494"
-    assert hass.states.get(f"{prefix}pressure").state == "1014.5"
+    assert hass.states.get(f"{prefix}carbon_dioxide").state == "494"
+    assert hass.states.get(f"{prefix}atmospheric_pressure").state == "1014.5"
 
 
 async def test_weather_sensor(
@@ -77,13 +79,13 @@ async def test_public_weather_sensor(
 
     assert hass.states.get(f"{prefix}temperature").state == "27.4"
     assert hass.states.get(f"{prefix}humidity").state == "76"
-    assert hass.states.get(f"{prefix}pressure").state == "1014.4"
+    assert hass.states.get(f"{prefix}atmospheric_pressure").state == "1014.4"
 
     prefix = "sensor.home_avg_"
 
     assert hass.states.get(f"{prefix}temperature").state == "22.7"
     assert hass.states.get(f"{prefix}humidity").state == "63.2"
-    assert hass.states.get(f"{prefix}pressure").state == "1010.4"
+    assert hass.states.get(f"{prefix}atmospheric_pressure").state == "1010.4"
 
     entities_before_change = len(hass.states.async_all())
 
@@ -134,7 +136,7 @@ async def test_process_rf(strength: int, expected: str) -> None:
 
 @pytest.mark.parametrize(
     ("health", "expected"),
-    [(4, "Unhealthy"), (3, "Poor"), (2, "Fair"), (1, "Fine"), (0, "Healthy")],
+    [(4, "unhealthy"), (3, "poor"), (2, "fair"), (1, "fine"), (0, "healthy")],
 )
 async def test_process_health(health: int, expected: str) -> None:
     """Test health index translation."""
@@ -163,17 +165,17 @@ async def test_process_health(health: int, expected: str) -> None:
         ),
         ("12:34:56:80:c1:ea-sum_rain_1", "villa_rain_rain_last_hour", "0"),
         ("12:34:56:80:c1:ea-sum_rain_24", "villa_rain_rain_today", "6.9"),
-        ("12:34:56:03:1b:e4-windangle", "netatmoindoor_garden_direction", "SW"),
+        ("12:34:56:03:1b:e4-windangle", "netatmoindoor_garden_direction", "sw"),
         (
             "12:34:56:03:1b:e4-windangle_value",
             "netatmoindoor_garden_angle",
             "217",
         ),
-        ("12:34:56:03:1b:e4-gustangle", "mystation_garden_gust_direction", "S"),
+        ("12:34:56:03:1b:e4-gustangle", "mystation_garden_gust_direction", "s"),
         (
             "12:34:56:03:1b:e4-gustangle",
             "netatmoindoor_garden_gust_direction",
-            "S",
+            "s",
         ),
         (
             "12:34:56:03:1b:e4-gustangle_value",
@@ -193,7 +195,7 @@ async def test_process_health(health: int, expected: str) -> None:
         (
             "12:34:56:26:68:92-health_idx",
             "baby_bedroom_health",
-            "Fine",
+            "fine",
         ),
         (
             "12:34:56:26:68:92-wifi_status",
@@ -246,4 +248,4 @@ async def test_climate_battery_sensor(
 
     prefix = "sensor.livingroom_"
 
-    assert hass.states.get(f"{prefix}battery_percent").state == "75"
+    assert hass.states.get(f"{prefix}battery").state == "75"

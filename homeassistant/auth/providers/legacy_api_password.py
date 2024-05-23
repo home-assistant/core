@@ -2,6 +2,7 @@
 
 It will be removed when auth system production ready
 """
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -11,12 +12,11 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.core import async_get_hass, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from ..models import Credentials, UserMeta
+from ..models import AuthFlowResult, Credentials, UserMeta
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 
 AUTH_PROVIDER_TYPE = "legacy_api_password"
@@ -101,7 +101,7 @@ class LegacyLoginFlow(LoginFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> AuthFlowResult:
         """Handle the step of the form."""
         errors = {}
 

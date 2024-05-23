@@ -1,4 +1,5 @@
 """The tests for the Recorder component."""
+
 from datetime import datetime, timedelta
 from unittest.mock import PropertyMock
 
@@ -97,7 +98,7 @@ def test_repr() -> None:
         EVENT_STATE_CHANGED,
         {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},
         context=state.context,
-        time_fired=fixed_time,
+        time_fired_timestamp=fixed_time.timestamp(),
     )
     assert "2016-07-09 11:00:00+00:00" in repr(States.from_event(event))
     assert "2016-07-09 11:00:00+00:00" in repr(Events.from_event(event))
@@ -163,7 +164,7 @@ def test_from_event_to_delete_state() -> None:
     assert db_state.entity_id == "sensor.temperature"
     assert db_state.state == ""
     assert db_state.last_changed_ts is None
-    assert db_state.last_updated_ts == event.time_fired.timestamp()
+    assert db_state.last_updated_ts == pytest.approx(event.time_fired.timestamp())
 
 
 def test_states_from_native_invalid_entity_id() -> None:
@@ -246,7 +247,10 @@ async def test_process_timestamp_to_utc_isoformat() -> None:
 async def test_event_to_db_model() -> None:
     """Test we can round trip Event conversion."""
     event = ha.Event(
-        "state_changed", {"some": "attr"}, ha.EventOrigin.local, dt_util.utcnow()
+        "state_changed",
+        {"some": "attr"},
+        ha.EventOrigin.local,
+        dt_util.utcnow().timestamp(),
     )
     db_event = Events.from_event(event)
     dialect = SupportedDialect.MYSQL
@@ -357,9 +361,9 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(
 @pytest.mark.parametrize(
     "time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii", "UTC"]
 )
-def test_process_datetime_to_timestamp(time_zone, hass: HomeAssistant) -> None:
+async def test_process_datetime_to_timestamp(time_zone, hass: HomeAssistant) -> None:
     """Test we can handle processing database datatimes to timestamps."""
-    hass.config.set_time_zone(time_zone)
+    await hass.config.async_set_time_zone(time_zone)
     utc_now = dt_util.utcnow()
     assert process_datetime_to_timestamp(utc_now) == utc_now.timestamp()
     now = dt_util.now()
@@ -369,14 +373,14 @@ def test_process_datetime_to_timestamp(time_zone, hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     "time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii", "UTC"]
 )
-def test_process_datetime_to_timestamp_freeze_time(
+async def test_process_datetime_to_timestamp_freeze_time(
     time_zone, hass: HomeAssistant
 ) -> None:
     """Test we can handle processing database datatimes to timestamps.
 
     This test freezes time to make sure everything matches.
     """
-    hass.config.set_time_zone(time_zone)
+    await hass.config.async_set_time_zone(time_zone)
     utc_now = dt_util.utcnow()
     with freeze_time(utc_now):
         epoch = utc_now.timestamp()
@@ -392,7 +396,7 @@ async def test_process_datetime_to_timestamp_mirrors_utc_isoformat_behavior(
     time_zone, hass: HomeAssistant
 ) -> None:
     """Test process_datetime_to_timestamp mirrors process_timestamp_to_utc_isoformat."""
-    hass.config.set_time_zone(time_zone)
+    await hass.config.async_set_time_zone(time_zone)
     datetime_with_tzinfo = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt_util.UTC)
     datetime_without_tzinfo = datetime(2016, 7, 9, 11, 0, 0)
     est = dt_util.get_time_zone("US/Eastern")

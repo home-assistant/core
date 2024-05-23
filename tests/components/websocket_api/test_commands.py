@@ -1,14 +1,14 @@
 """Tests for WebSocket API commands."""
+
 import asyncio
 from copy import deepcopy
-import datetime
 import logging
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
 import voluptuous as vol
 
-from homeassistant import config_entries, loader
+from homeassistant import loader
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.components.websocket_api import const
 from homeassistant.components.websocket_api.auth import (
@@ -17,13 +17,14 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.loader import async_get_integration
-from homeassistant.setup import DATA_SETUP_TIME, async_setup_component
+from homeassistant.setup import async_setup_component
 from homeassistant.util.json import json_loads
 
 from tests.common import (
@@ -203,10 +204,10 @@ async def test_return_response_error(hass: HomeAssistant, websocket_client) -> N
     assert msg["id"] == 8
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
-    assert msg["error"]["code"] == "unknown_error"
+    assert msg["error"]["code"] == "service_validation_error"
 
 
-@pytest.mark.parametrize("command", ("call_service", "call_service_action"))
+@pytest.mark.parametrize("command", ["call_service", "call_service_action"])
 async def test_call_service_blocking(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket, command
 ) -> None:
@@ -684,9 +685,7 @@ async def test_get_states(
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
 
-    states = []
-    for state in hass.states.async_all():
-        states.append(state.as_dict())
+    states = [state.as_dict() for state in hass.states.async_all()]
 
     assert msg["result"] == states
 
@@ -702,7 +701,7 @@ async def test_get_services(
         assert msg["id"] == id_
         assert msg["type"] == const.TYPE_RESULT
         assert msg["success"]
-        assert msg["result"] == hass.services.async_services()
+        assert msg["result"].keys() == hass.services.async_services().keys()
 
 
 async def test_get_config(
@@ -2435,7 +2434,7 @@ async def test_execute_script_with_dynamically_validated_action(
     )
 
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -2493,13 +2492,16 @@ async def test_integration_setup_info(
     hass_admin_user: MockUser,
 ) -> None:
     """Test subscribe/unsubscribe bootstrap_integrations."""
-    hass.data[DATA_SETUP_TIME] = {
-        "august": datetime.timedelta(seconds=12.5),
-        "isy994": datetime.timedelta(seconds=12.8),
-    }
-    await websocket_client.send_json({"id": 7, "type": "integration/setup_info"})
+    with patch(
+        "homeassistant.components.websocket_api.commands.async_get_setup_timings",
+        return_value={
+            "august": 12.5,
+            "isy994": 12.8,
+        },
+    ):
+        await websocket_client.send_json({"id": 7, "type": "integration/setup_info"})
+        msg = await websocket_client.receive_json()
 
-    msg = await websocket_client.receive_json()
     assert msg["id"] == 7
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
@@ -2511,7 +2513,7 @@ async def test_integration_setup_info(
 
 @pytest.mark.parametrize(
     ("key", "config"),
-    (
+    [
         ("trigger", {"platform": "event", "event_type": "hello"}),
         ("trigger", [{"platform": "event", "event_type": "hello"}]),
         (
@@ -2524,7 +2526,7 @@ async def test_integration_setup_info(
         ),
         ("action", {"service": "domain_test.test_service"}),
         ("action", [{"service": "domain_test.test_service"}]),
-    ),
+    ],
 )
 async def test_validate_config_works(
     websocket_client: MockHAClientWebSocket, key, config
@@ -2541,7 +2543,7 @@ async def test_validate_config_works(
 
 @pytest.mark.parametrize(
     ("key", "config", "error"),
-    (
+    [
         (
             "trigger",
             {"platform": "non_existing", "event_type": "hello"},
@@ -2565,7 +2567,7 @@ async def test_validate_config_works(
             {"non_existing": "domain_test.test_service"},
             "Unable to determine action @ data[0]",
         ),
-    ),
+    ],
 )
 async def test_validate_config_invalid(
     websocket_client: MockHAClientWebSocket, key, config, error

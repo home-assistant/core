@@ -1,4 +1,5 @@
 """Support for MQTT scenes."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -16,11 +17,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from .config import MQTT_BASE_SCHEMA
 from .const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entity_entry_helper,
-)
+from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic
 
 DEFAULT_NAME = "MQTT Scene"

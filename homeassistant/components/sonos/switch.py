@@ -1,4 +1,5 @@
 """Entity representing a Sonos Alarm."""
+
 from __future__ import annotations
 
 import datetime
@@ -10,7 +11,7 @@ from soco.exceptions import SoCoSlaveException, SoCoUPnPException
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TIME, EntityCategory, Platform
+from homeassistant.const import ATTR_TIME, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -67,18 +68,6 @@ POLL_REQUIRED = (
     ATTR_STATUS_LIGHT,
 )
 
-FEATURE_ICONS = {
-    ATTR_LOUDNESS: "mdi:bullhorn-variant",
-    ATTR_MUSIC_PLAYBACK_FULL_VOLUME: "mdi:music-note-plus",
-    ATTR_NIGHT_SOUND: "mdi:chat-sleep",
-    ATTR_SPEECH_ENHANCEMENT: "mdi:ear-hearing",
-    ATTR_CROSSFADE: "mdi:swap-horizontal",
-    ATTR_STATUS_LIGHT: "mdi:led-on",
-    ATTR_SUB_ENABLED: "mdi:dog",
-    ATTR_SURROUND_ENABLED: "mdi:surround-sound",
-    ATTR_TOUCH_CONTROLS: "mdi:gesture-tap",
-}
-
 WEEKEND_DAYS = (0, 6)
 
 
@@ -90,9 +79,6 @@ async def async_setup_entry(
     """Set up Sonos from a config entry."""
 
     async def _async_create_alarms(speaker: SonosSpeaker, alarm_ids: list[str]) -> None:
-        async_migrate_alarm_unique_ids(
-            hass, config_entry, speaker.household_id, alarm_ids
-        )
         entities = []
         created_alarms = (
             hass.data[DATA_SONOS].alarms[speaker.household_id].created_alarm_ids
@@ -122,10 +108,6 @@ async def async_setup_entry(
             available_soco_attributes, speaker
         )
         for feature_type in available_features:
-            if feature_type == ATTR_SPEECH_ENHANCEMENT:
-                async_migrate_speech_enhancement_entity_unique_id(
-                    hass, config_entry, speaker
-                )
             _LOGGER.debug(
                 "Creating %s switch on %s",
                 feature_type,
@@ -153,7 +135,6 @@ class SonosSwitchEntity(SonosPollingEntity, SwitchEntity):
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_translation_key = feature_type
         self._attr_unique_id = f"{speaker.soco.uid}-{feature_type}"
-        self._attr_icon = FEATURE_ICONS.get(feature_type)
 
         if feature_type in POLL_REQUIRED:
             self._attr_entity_registry_enabled_default = False
@@ -353,88 +334,3 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         """Handle turn on/off of alarm switch."""
         self.alarm.enabled = turn_on
         self.alarm.save()
-
-
-@callback
-def async_migrate_alarm_unique_ids(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    household_id: str,
-    alarm_ids: list[str],
-) -> None:
-    """Migrate alarm switch unique_ids in the entity registry to the new format."""
-    entity_registry = er.async_get(hass)
-    registry_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
-
-    alarm_entries = [
-        (entry.unique_id, entry)
-        for entry in registry_entries
-        if entry.domain == Platform.SWITCH and entry.original_icon == "mdi:alarm"
-    ]
-
-    for old_unique_id, alarm_entry in alarm_entries:
-        if ":" in old_unique_id:
-            continue
-
-        entry_alarm_id = old_unique_id.split("-")[-1]
-        if entry_alarm_id in alarm_ids:
-            new_unique_id = f"alarm-{household_id}:{entry_alarm_id}"
-            _LOGGER.debug(
-                "Migrating unique_id for %s from %s to %s",
-                alarm_entry.entity_id,
-                old_unique_id,
-                new_unique_id,
-            )
-            entity_registry.async_update_entity(
-                alarm_entry.entity_id, new_unique_id=new_unique_id
-            )
-
-
-@callback
-def async_migrate_speech_enhancement_entity_unique_id(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    speaker: SonosSpeaker,
-) -> None:
-    """Migrate Speech Enhancement switch entity unique_id."""
-    entity_registry = er.async_get(hass)
-    registry_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
-
-    speech_enhancement_entries = [
-        entry
-        for entry in registry_entries
-        if entry.domain == Platform.SWITCH
-        and entry.original_icon == FEATURE_ICONS[ATTR_SPEECH_ENHANCEMENT]
-        and entry.unique_id.startswith(speaker.soco.uid)
-    ]
-
-    if len(speech_enhancement_entries) > 1:
-        _LOGGER.warning(
-            (
-                "Migration of Speech Enhancement switches on %s failed,"
-                " manual cleanup required: %s"
-            ),
-            speaker.zone_name,
-            [e.entity_id for e in speech_enhancement_entries],
-        )
-        return
-
-    if len(speech_enhancement_entries) == 1:
-        old_entry = speech_enhancement_entries[0]
-        if old_entry.unique_id.endswith("dialog_level"):
-            return
-
-        new_unique_id = f"{speaker.soco.uid}-{ATTR_SPEECH_ENHANCEMENT}"
-        _LOGGER.debug(
-            "Migrating unique_id for %s from %s to %s",
-            old_entry.entity_id,
-            old_entry.unique_id,
-            new_unique_id,
-        )
-        entity_registry.async_update_entity(
-            old_entry.entity_id, new_unique_id=new_unique_id
-        )

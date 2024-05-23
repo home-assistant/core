@@ -1,4 +1,5 @@
 """The tests for the Template vacuum platform."""
+
 import pytest
 
 from homeassistant import setup

@@ -1,4 +1,5 @@
 """Component to interface with various sensors that can be monitored."""
+
 from __future__ import annotations
 
 import asyncio
@@ -7,16 +8,12 @@ from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
-from functools import partial
+from functools import cached_property, partial
 import logging
 from math import ceil, floor, isfinite, log10
-from typing import TYPE_CHECKING, Any, Final, Self, cast, final
-
-from typing_extensions import override
+from typing import Any, Final, Self, cast, final, override
 
 from homeassistant.config_entries import ConfigEntry
-
-# pylint: disable-next=hass-deprecated-import
 from homeassistant.const import (  # noqa: F401
     _DEPRECATED_DEVICE_CLASS_AQI,
     _DEPRECATED_DEVICE_CLASS_BATTERY,
@@ -71,6 +68,7 @@ from homeassistant.helpers.typing import UNDEFINED, ConfigType, StateType, Undef
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
+from . import group as group_pre_import  # noqa: F401
 from .const import (  # noqa: F401
     _DEPRECATED_STATE_CLASS_MEASUREMENT,
     _DEPRECATED_STATE_CLASS_TOTAL,
@@ -92,11 +90,6 @@ from .const import (  # noqa: F401
     SensorStateClass,
 )
 from .websocket_api import async_setup as async_setup_ws_api
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -219,6 +212,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _last_reset_reported = False
     _sensor_option_display_precision: int | None = None
     _sensor_option_unit_of_measurement: str | None | UndefinedType = UNDEFINED
+    _invalid_suggested_unit_of_measurement_reported = False
 
     @callback
     def add_to_platform_start(
@@ -366,7 +360,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @property
     @override
-    def capability_attributes(self) -> Mapping[str, Any] | None:
+    def capability_attributes(self) -> dict[str, Any] | None:
         """Return the capability attributes."""
         if state_class := self.state_class:
             return {ATTR_STATE_CLASS: state_class}
@@ -375,6 +369,34 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return {ATTR_OPTIONS: options}
 
         return None
+
+    def _is_valid_suggested_unit(self, suggested_unit_of_measurement: str) -> bool:
+        """Validate the suggested unit.
+
+        Validate that a unit converter exists for the sensor's device class and that the
+        unit converter supports both the native and the suggested units of measurement.
+        """
+        # Make sure we can convert the units
+        if (
+            (unit_converter := UNIT_CONVERTERS.get(self.device_class)) is None
+            or self.native_unit_of_measurement not in unit_converter.VALID_UNITS
+            or suggested_unit_of_measurement not in unit_converter.VALID_UNITS
+        ):
+            if not self._invalid_suggested_unit_of_measurement_reported:
+                self._invalid_suggested_unit_of_measurement_reported = True
+                report_issue = self._suggest_report_issue()
+                # This should raise in Home Assistant Core 2024.5
+                _LOGGER.warning(
+                    (
+                        "%s sets an invalid suggested_unit_of_measurement. Please %s. "
+                        "This warning will become an error in Home Assistant Core 2024.5"
+                    ),
+                    type(self),
+                    report_issue,
+                )
+            return False
+
+        return True
 
     def _get_initial_suggested_unit(self) -> str | UndefinedType:
         """Return the initial unit."""
@@ -388,6 +410,10 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             )
 
         if suggested_unit_of_measurement is None:
+            return UNDEFINED
+
+        # Make sure we can convert the units
+        if not self._is_valid_suggested_unit(suggested_unit_of_measurement):
             return UNDEFINED
 
         return suggested_unit_of_measurement
@@ -416,21 +442,12 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return state attributes."""
         if last_reset := self.last_reset:
             state_class = self.state_class
-            if state_class != SensorStateClass.TOTAL and not self._last_reset_reported:
-                self._last_reset_reported = True
-                report_issue = self._suggest_report_issue()
-                # This should raise in Home Assistant Core 2022.5
-                _LOGGER.warning(
-                    (
-                        "Entity %s (%s) with state_class %s has set last_reset. Setting"
-                        " last_reset for entities with state_class other than 'total'"
-                        " is not supported. Please update your configuration if"
-                        " state_class is manually configured, otherwise %s"
-                    ),
-                    self.entity_id,
-                    type(self),
-                    state_class,
-                    report_issue,
+            if state_class != SensorStateClass.TOTAL:
+                raise ValueError(
+                    f"Entity {self.entity_id} ({type(self)}) with state_class {state_class}"
+                    " has set last_reset. Setting last_reset for entities with state_class"
+                    " other than 'total' is not supported. Please update your configuration"
+                    " if state_class is manually configured."
                 )
 
             if state_class == SensorStateClass.TOTAL:
@@ -478,6 +495,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         Note:
             suggested_unit_of_measurement is stored in the entity registry the first
             time the entity is seen, and then never updated.
+
         """
         if hasattr(self, "_attr_suggested_unit_of_measurement"):
             return self._attr_suggested_unit_of_measurement
@@ -495,16 +513,17 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if self._sensor_option_unit_of_measurement is not UNDEFINED:
             return self._sensor_option_unit_of_measurement
 
+        native_unit_of_measurement = self.native_unit_of_measurement
+
         # Second priority, for non registered entities: unit suggested by integration
         if not self.registry_entry and (
             suggested_unit_of_measurement := self.suggested_unit_of_measurement
         ):
-            return suggested_unit_of_measurement
+            if self._is_valid_suggested_unit(suggested_unit_of_measurement):
+                return suggested_unit_of_measurement
 
         # Third priority: Legacy temperature conversion, which applies
         # to both registered and non registered entities
-        native_unit_of_measurement = self.native_unit_of_measurement
-
         if (
             native_unit_of_measurement in TEMPERATURE_UNITS
             and self.device_class is SensorDeviceClass.TEMPERATURE
@@ -728,13 +747,15 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         return value
 
-    def _suggested_precision_or_none(self) -> int | None:
-        """Return suggested display precision, or None if not set."""
+    def _display_precision_or_none(self) -> int | None:
+        """Return display precision, or None if not set."""
         assert self.registry_entry
-        if (sensor_options := self.registry_entry.options.get(DOMAIN)) and (
-            precision := sensor_options.get("suggested_display_precision")
-        ) is not None:
-            return cast(int, precision)
+        if not (sensor_options := self.registry_entry.options.get(DOMAIN)):
+            return None
+
+        for option in ("display_precision", "suggested_display_precision"):
+            if (precision := sensor_options.get(option)) is not None:
+                return cast(int, precision)
         return None
 
     def _update_suggested_precision(self) -> None:
@@ -765,11 +786,6 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ratio_log = floor(ratio_log) if ratio_log > 0 else ceil(ratio_log)
             display_precision = max(0, display_precision + ratio_log)
 
-        if display_precision is None and (
-            DOMAIN not in self.registry_entry.options
-            or "suggested_display_precision" not in self.registry_entry.options
-        ):
-            return
         sensor_options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
         if (
             "suggested_display_precision" in sensor_options
@@ -816,7 +832,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         Called when the entity registry entry has been updated and before the sensor is
         added to the state machine.
         """
-        self._sensor_option_display_precision = self._suggested_precision_or_none()
+        self._sensor_option_display_precision = self._display_precision_or_none()
         assert self.registry_entry
         if (
             sensor_options := self.registry_entry.options.get(f"{DOMAIN}.private")
@@ -846,9 +862,9 @@ class SensorExtraStoredData(ExtraStoredData):
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the sensor data."""
-        native_value: StateType | date | datetime | Decimal | dict[
-            str, str
-        ] = self.native_value
+        native_value: StateType | date | datetime | Decimal | dict[str, str] = (
+            self.native_value
+        )
         if isinstance(native_value, (date, datetime)):
             native_value = {
                 "__type": str(type(native_value)),

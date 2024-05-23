@@ -1,4 +1,5 @@
 """Common libraries for test setup."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -163,7 +164,7 @@ async def create_device(
     device_id: str,
     device_type: str,
     device_traits: dict[str, Any],
-) -> None:
+) -> CreateDevice:
     """Fixture for creating devices."""
     factory = CreateDevice(device_manager, auth)
     factory.data.update(

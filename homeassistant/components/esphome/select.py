@@ -1,4 +1,5 @@
 """Support for esphome selects."""
+
 from __future__ import annotations
 
 from aioesphomeapi import EntityInfo, SelectInfo, SelectState
@@ -17,6 +18,7 @@ from .domain_data import DomainData
 from .entity import (
     EsphomeAssistEntity,
     EsphomeEntity,
+    convert_api_error_ha_error,
     esphome_state_property,
     platform_async_setup_entry,
 )
@@ -40,7 +42,9 @@ async def async_setup_entry(
 
     entry_data = DomainData.get(hass).get_entry_data(entry)
     assert entry_data.device_info is not None
-    if entry_data.device_info.voice_assistant_version:
+    if entry_data.device_info.voice_assistant_feature_flags_compat(
+        entry_data.api_version
+    ):
         async_add_entities(
             [
                 EsphomeAssistPipelineSelect(hass, entry_data),
@@ -65,9 +69,10 @@ class EsphomeSelect(EsphomeEntity[SelectInfo, SelectState], SelectEntity):
         state = self._state
         return None if state.missing_state else state.state
 
+    @convert_api_error_ha_error
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self._client.select_command(self._key, option)
+        self._client.select_command(self._key, option)
 
 
 class EsphomeAssistPipelineSelect(EsphomeAssistEntity, AssistPipelineSelect):

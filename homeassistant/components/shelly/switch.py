@@ -1,11 +1,18 @@
 """Switch for Shelly."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import MODEL_2, MODEL_25, MODEL_GAS, RPC_GENERATIONS
+from aioshelly.const import (
+    MODEL_2,
+    MODEL_25,
+    MODEL_GAS,
+    MODEL_WALL_DISPLAY,
+    RPC_GENERATIONS,
+)
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
@@ -15,19 +22,23 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import STATE_ON, EntityCategory
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DOMAIN, GAS_VALVE_OPEN_STATES, MODEL_WALL_DISPLAY
-from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
+from .const import CONF_SLEEP_PERIOD, DOMAIN, GAS_VALVE_OPEN_STATES, MOTION_MODELS
+from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
     ShellyBlockAttributeEntity,
     ShellyBlockEntity,
     ShellyRpcEntity,
+    ShellySleepingBlockAttributeEntity,
     async_setup_block_attribute_entities,
+    async_setup_entry_attribute_entities,
 )
 from .utils import (
     async_remove_shelly_entity,
@@ -35,10 +46,12 @@ from .utils import (
     get_rpc_key_ids,
     is_block_channel_type_light,
     is_rpc_channel_type_light,
+    is_rpc_thermostat_internal_actuator,
+    is_rpc_thermostat_mode,
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class BlockSwitchDescription(BlockEntityDescription, SwitchEntityDescription):
     """Class to describe a BLOCK switch."""
 
@@ -52,10 +65,16 @@ GAS_VALVE_SWITCH = BlockSwitchDescription(
     entity_registry_enabled_default=False,
 )
 
+MOTION_SWITCH = BlockSwitchDescription(
+    key="sensor|motionActive",
+    name="Motion detection",
+    entity_category=EntityCategory.CONFIG,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches for device."""
@@ -68,11 +87,11 @@ async def async_setup_entry(
 @callback
 def async_setup_block_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entities for block device."""
-    coordinator = get_entry_data(hass)[config_entry.entry_id].block
+    coordinator = config_entry.runtime_data.block
     assert coordinator
 
     # Add Shelly Gas Valve as a switch
@@ -86,6 +105,20 @@ def async_setup_block_entry(
         )
         return
 
+    # Add Shelly Motion as a switch
+    if coordinator.model in MOTION_MODELS:
+        async_setup_entry_attribute_entities(
+            hass,
+            config_entry,
+            async_add_entities,
+            {("sensor", "motionActive"): MOTION_SWITCH},
+            BlockSleepingMotionSwitch,
+        )
+        return
+
+    if config_entry.data[CONF_SLEEP_PERIOD]:
+        return
+
     # In roller mode the relay blocks exist but do not contain required info
     if (
         coordinator.model in [MODEL_2, MODEL_25]
@@ -96,8 +129,12 @@ def async_setup_block_entry(
     relay_blocks = []
     assert coordinator.device.blocks
     for block in coordinator.device.blocks:
-        if block.type != "relay" or is_block_channel_type_light(
-            coordinator.device.settings, int(block.channel)
+        if (
+            block.type != "relay"
+            or block.channel is not None
+            and is_block_channel_type_light(
+                coordinator.device.settings, int(block.channel)
+            )
         ):
             continue
 
@@ -114,11 +151,11 @@ def async_setup_block_entry(
 @callback
 def async_setup_rpc_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entities for RPC device."""
-    coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
+    coordinator = config_entry.runtime_data.rpc
     assert coordinator
     switch_key_ids = get_rpc_key_ids(coordinator.device.status, "switch")
 
@@ -128,12 +165,19 @@ def async_setup_rpc_entry(
             continue
 
         if coordinator.model == MODEL_WALL_DISPLAY:
-            if not coordinator.device.shelly.get("relay_in_thermostat", False):
-                # Wall Display relay is not used as the thermostat actuator,
-                # we need to remove a climate entity
+            # There are three configuration scenarios for WallDisplay:
+            # - relay mode (no thermostat)
+            # - thermostat mode using the internal relay as an actuator
+            # - thermostat mode using an external (from another device) relay as
+            #   an actuator
+            if not is_rpc_thermostat_mode(id_, coordinator.device.status):
+                # The device is not in thermostat mode, we need to remove a climate
+                # entity
                 unique_id = f"{coordinator.mac}-thermostat:{id_}"
                 async_remove_shelly_entity(hass, "climate", unique_id)
-            else:
+            elif is_rpc_thermostat_internal_actuator(coordinator.device.status):
+                # The internal relay is an actuator, skip this ID so as not to create
+                # a switch entity
                 continue
 
         switch_ids.append(id_)
@@ -146,6 +190,54 @@ def async_setup_rpc_entry(
     async_add_entities(RpcRelaySwitch(coordinator, id_) for id_ in switch_ids)
 
 
+class BlockSleepingMotionSwitch(
+    ShellySleepingBlockAttributeEntity, RestoreEntity, SwitchEntity
+):
+    """Entity that controls Motion Sensor on Block based Shelly devices."""
+
+    entity_description: BlockSwitchDescription
+    _attr_translation_key = "motion_switch"
+
+    def __init__(
+        self,
+        coordinator: ShellyBlockCoordinator,
+        block: Block | None,
+        attribute: str,
+        description: BlockSwitchDescription,
+        entry: RegistryEntry | None = None,
+    ) -> None:
+        """Initialize the sleeping sensor."""
+        super().__init__(coordinator, block, attribute, description, entry)
+        self.last_state: State | None = None
+
+    @property
+    def is_on(self) -> bool | None:
+        """If motion is active."""
+        if self.block is not None:
+            return bool(self.block.motionActive)
+
+        if self.last_state is None:
+            return None
+
+        return self.last_state.state == STATE_ON
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Activate switch."""
+        await self.coordinator.device.set_shelly_motion_detection(True)
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Deactivate switch."""
+        await self.coordinator.device.set_shelly_motion_detection(False)
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) is not None:
+            self.last_state = last_state
+
+
 class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
     """Entity that controls a Gas Valve on Block based Shelly devices.
 
@@ -153,6 +245,7 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
     """
 
     entity_description: BlockSwitchDescription
+    _attr_translation_key = "valve_switch"
 
     def __init__(
         self,
@@ -172,11 +265,6 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
             return self.control_result["state"] in GAS_VALVE_OPEN_STATES
 
         return self.attribute_value in GAS_VALVE_OPEN_STATES
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return "mdi:valve-open" if self.is_on else "mdi:valve-closed"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Open valve."""

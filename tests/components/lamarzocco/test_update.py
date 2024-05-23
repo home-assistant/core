@@ -1,6 +1,5 @@
 """Tests for the La Marzocco Update Entities."""
 
-
 from unittest.mock import MagicMock
 
 from lmcloud.const import LaMarzoccoUpdateableComponent

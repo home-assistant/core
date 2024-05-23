@@ -1,4 +1,5 @@
 """Data update coordinator for the Radarr integration."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -45,7 +46,7 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
     """Data update coordinator for the Radarr integration."""
 
     config_entry: ConfigEntry
-    update_interval = timedelta(seconds=30)
+    _update_interval = timedelta(seconds=30)
 
     def __init__(
         self,
@@ -58,7 +59,7 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
             hass=hass,
             logger=LOGGER,
             name=DOMAIN,
-            update_interval=self.update_interval,
+            update_interval=self._update_interval,
         )
         self.api_client = api_client
         self.host_configuration = host_configuration
@@ -96,7 +97,7 @@ class DiskSpaceDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[RootFolder
         """Fetch the data."""
         root_folders = await self.api_client.async_get_root_folders()
         if isinstance(root_folders, RootFolder):
-            root_folders = [root_folders]
+            return [root_folders]
         return root_folders
 
 
@@ -105,7 +106,10 @@ class HealthDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[Health]]):
 
     async def _fetch_data(self) -> list[Health]:
         """Fetch the health data."""
-        return await self.api_client.async_get_failed_health_checks()
+        health = await self.api_client.async_get_failed_health_checks()
+        if isinstance(health, Health):
+            return [health]
+        return health
 
 
 class MoviesDataUpdateCoordinator(RadarrDataUpdateCoordinator[int]):
@@ -129,7 +133,7 @@ class QueueDataUpdateCoordinator(RadarrDataUpdateCoordinator):
 class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
     """Calendar update coordinator."""
 
-    update_interval = timedelta(hours=1)
+    _update_interval = timedelta(hours=1)
 
     def __init__(
         self,

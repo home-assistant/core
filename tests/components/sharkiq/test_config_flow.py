@@ -1,4 +1,5 @@
 """Test the Shark IQ config flow."""
+
 from unittest.mock import patch
 
 import aiohttp
@@ -8,6 +9,7 @@ from sharkiq import AylaApi, SharkIqAuthError, SharkIqError
 from homeassistant import config_entries
 from homeassistant.components.sharkiq.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 from .const import (
@@ -40,19 +42,22 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch("sharkiq.AylaApi.async_sign_in", return_value=True), patch(
-        "homeassistant.components.sharkiq.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("sharkiq.AylaApi.async_sign_in", return_value=True),
+        patch(
+            "homeassistant.components.sharkiq.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG,
         )
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == f"{TEST_USERNAME:s}"
     assert result2["data"] == {
         "username": TEST_USERNAME,
@@ -85,7 +90,7 @@ async def test_form_error(hass: HomeAssistant, exc: Exception, base_error: str) 
             CONFIG,
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"].get("base") == base_error
 
 
@@ -101,7 +106,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
             data=CONFIG,
         )
 
-        assert result["type"] == "abort"
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
 
 

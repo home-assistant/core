@@ -1,8 +1,6 @@
 """Constants for the Switcher integration."""
-DOMAIN = "switcher_kis"
 
-CONF_DEVICE_PASSWORD = "device_password"
-CONF_PHONE_ID = "phone_id"
+DOMAIN = "switcher_kis"
 
 DATA_BRIDGE = "bridge"
 DATA_DEVICE = "device"

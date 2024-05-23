@@ -1,4 +1,5 @@
 """Support for Huawei LTE routers."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -307,7 +308,7 @@ class Router:
             ResponseErrorNotSupportedException,
         ):
             pass  # Ok, normal, nothing to do
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             _LOGGER.warning("Logout error", exc_info=True)
 
     def cleanup(self, *_: Any) -> None:
@@ -405,7 +406,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         wlan_settings = await hass.async_add_executor_job(
             router.client.wlan.multi_basic_settings
         )
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         # Assume not supported, or authentication required but in unauthenticated mode
         wlan_settings = {}
     macs = get_device_macs(router_info or {}, wlan_settings)
@@ -557,14 +558,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         recipient = options.get(CONF_RECIPIENT)
         if isinstance(recipient, str):
             options[CONF_RECIPIENT] = [x.strip() for x in recipient.split(",")]
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, options=options)
+        hass.config_entries.async_update_entry(config_entry, options=options, version=2)
         _LOGGER.info("Migrated config entry to version %d", config_entry.version)
     if config_entry.version == 2:
-        config_entry.version = 3
         data = dict(config_entry.data)
         data[CONF_MAC] = []
-        hass.config_entries.async_update_entry(config_entry, data=data)
+        hass.config_entries.async_update_entry(config_entry, data=data, version=3)
         _LOGGER.info("Migrated config entry to version %d", config_entry.version)
     # There can be no longer needed *_from_yaml data and options things left behind
     # from pre-2022.4ish; they can be removed while at it when/if we eventually bump and

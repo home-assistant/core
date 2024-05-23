@@ -1,4 +1,5 @@
 """Tests for the Modern Forms switch platform."""
+
 from unittest.mock import patch
 
 from aiomodernforms import ModernFormsConnectionError
@@ -7,7 +8,6 @@ import pytest
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_ICON,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -31,7 +31,6 @@ async def test_switch_state(
 
     state = hass.states.get("switch.modernformsfan_away_mode")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:airplane-takeoff"
     assert state.state == STATE_OFF
 
     entry = entity_registry.async_get("switch.modernformsfan_away_mode")
@@ -40,7 +39,6 @@ async def test_switch_state(
 
     state = hass.states.get("switch.modernformsfan_adaptive_learning")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:school-outline"
     assert state.state == STATE_OFF
 
     entry = entity_registry.async_get("switch.modernformsfan_adaptive_learning")
@@ -112,7 +110,9 @@ async def test_switch_error(
     aioclient_mock.clear_requests()
     aioclient_mock.post("http://192.168.1.123:80/mf", text="", status=400)
 
-    with patch("homeassistant.components.modern_forms.ModernFormsDevice.update"):
+    with patch(
+        "homeassistant.components.modern_forms.coordinator.ModernFormsDevice.update"
+    ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -132,9 +132,14 @@ async def test_switch_connection_error(
     """Test error handling of the Modern Forms switches."""
     await init_integration(hass, aioclient_mock)
 
-    with patch("homeassistant.components.modern_forms.ModernFormsDevice.update"), patch(
-        "homeassistant.components.modern_forms.ModernFormsDevice.away",
-        side_effect=ModernFormsConnectionError,
+    with (
+        patch(
+            "homeassistant.components.modern_forms.coordinator.ModernFormsDevice.update"
+        ),
+        patch(
+            "homeassistant.components.modern_forms.coordinator.ModernFormsDevice.away",
+            side_effect=ModernFormsConnectionError,
+        ),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,

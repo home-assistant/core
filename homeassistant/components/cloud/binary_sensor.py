@@ -1,4 +1,5 @@
 """Support for Home Assistant Cloud binary sensors."""
+
 from __future__ import annotations
 
 import asyncio

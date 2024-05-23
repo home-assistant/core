@@ -1,4 +1,5 @@
 """The gateway tests for the august platform."""
+
 from unittest.mock import MagicMock, patch
 
 from yalexs.authenticator_common import AuthenticationState

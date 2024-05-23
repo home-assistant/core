@@ -37,6 +37,11 @@
       "button_4_long_press": "Button_4 (long press)"
     }
   },
+  "exceptions": {
+    "invalid_config_entry": {
+      "message": "Config entry not found or not loaded!"
+    }
+  },
   "entity": {
     "switch": {
       "usb_ports": { "name": "USB ports" },
@@ -68,11 +73,19 @@
           "enabled": "[%key:common::state::enabled%]",
           "disabled": "[%key:common::state::disabled%]"
         }
+      },
+      "water_meter_reading": {
+        "name": "Water meter reading"
       }
     },
     "number": {
       "config_volume": {
         "name": "Volume"
+      }
+    },
+    "valve": {
+      "meter_valve_state": {
+        "name": "Valve state"
       }
     }
   },

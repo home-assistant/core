@@ -1,4 +1,5 @@
 """Support for SleepIQ foundation preset selection."""
+
 from __future__ import annotations
 
 from asyncsleepiq import (
@@ -28,14 +29,14 @@ async def async_setup_entry(
     data: SleepIQData = hass.data[DOMAIN][entry.entry_id]
     entities: list[SleepIQBedEntity] = []
     for bed in data.client.beds.values():
-        for preset in bed.foundation.presets:
-            entities.append(SleepIQSelectEntity(data.data_coordinator, bed, preset))
-        for foot_warmer in bed.foundation.foot_warmers:
-            entities.append(
-                SleepIQFootWarmingTempSelectEntity(
-                    data.data_coordinator, bed, foot_warmer
-                )
-            )
+        entities.extend(
+            SleepIQSelectEntity(data.data_coordinator, bed, preset)
+            for preset in bed.foundation.presets
+        )
+        entities.extend(
+            SleepIQFootWarmingTempSelectEntity(data.data_coordinator, bed, foot_warmer)
+            for foot_warmer in bed.foundation.foot_warmers
+        )
     async_add_entities(entities)
 
 

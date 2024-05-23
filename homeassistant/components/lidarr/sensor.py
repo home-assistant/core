@@ -1,4 +1,5 @@
 """Support for Lidarr."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -62,10 +63,13 @@ class LidarrSensorEntityDescription(
     """Class to describe a Lidarr sensor."""
 
     attributes_fn: Callable[[T], dict[str, str] | None] = lambda _: None
-    description_fn: Callable[
-        [LidarrSensorEntityDescription[T], LidarrRootFolder],
-        tuple[LidarrSensorEntityDescription[T], str] | None,
-    ] | None = None
+    description_fn: (
+        Callable[
+            [LidarrSensorEntityDescription[T], LidarrRootFolder],
+            tuple[LidarrSensorEntityDescription[T], str] | None,
+        ]
+        | None
+    ) = None
 
 
 SENSOR_TYPES: dict[str, LidarrSensorEntityDescription[Any]] = {
@@ -74,7 +78,6 @@ SENSOR_TYPES: dict[str, LidarrSensorEntityDescription[Any]] = {
         translation_key="disk_space",
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:harddisk",
         value_fn=get_space,
         state_class=SensorStateClass.TOTAL,
         description_fn=get_modified_description,
@@ -83,7 +86,6 @@ SENSOR_TYPES: dict[str, LidarrSensorEntityDescription[Any]] = {
         key="queue",
         translation_key="queue",
         native_unit_of_measurement="Albums",
-        icon="mdi:download",
         value_fn=lambda data, _: data.totalRecords,
         state_class=SensorStateClass.TOTAL,
         attributes_fn=lambda data: {i.title: queue_str(i) for i in data.records},
@@ -92,7 +94,6 @@ SENSOR_TYPES: dict[str, LidarrSensorEntityDescription[Any]] = {
         key="wanted",
         translation_key="wanted",
         native_unit_of_measurement="Albums",
-        icon="mdi:music",
         value_fn=lambda data, _: data.totalRecords,
         state_class=SensorStateClass.TOTAL,
         entity_registry_enabled_default=False,

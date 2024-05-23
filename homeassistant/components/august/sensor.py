@@ -1,4 +1,5 @@
 """Support for August sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -18,7 +19,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     PERCENTAGE,
@@ -29,7 +29,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AugustData
+from . import AugustConfigEntry, AugustData
 from .const import (
     ATTR_OPERATION_AUTORELOCK,
     ATTR_OPERATION_KEYPAD,
@@ -94,11 +94,11 @@ SENSOR_TYPE_KEYPAD_BATTERY = AugustSensorEntityDescription[KeypadDetail](
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AugustConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the August sensors."""
-    data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     entities: list[SensorEntity] = []
     migrate_unique_id_devices = []
     operation_sensors = []
@@ -150,8 +150,7 @@ async def async_setup_entry(
         entities.append(keypad_battery_sensor)
         migrate_unique_id_devices.append(keypad_battery_sensor)
 
-    for device in operation_sensors:
-        entities.append(AugustOperatorSensor(data, device))
+    entities.extend(AugustOperatorSensor(data, device) for device in operation_sensors)
 
     await _async_migrate_old_unique_ids(hass, migrate_unique_id_devices)
 

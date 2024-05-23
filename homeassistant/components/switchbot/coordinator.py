@@ -1,4 +1,5 @@
 """Provides the switchbot DataUpdateCoordinator."""
+
 from __future__ import annotations
 
 import asyncio
@@ -115,7 +116,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
 
     async def async_wait_ready(self) -> bool:
         """Wait for the device to be ready."""
-        with contextlib.suppress(asyncio.TimeoutError):
+        with contextlib.suppress(TimeoutError):
             async with asyncio.timeout(DEVICE_STARTUP_TIMEOUT):
                 await self._ready_event.wait()
                 return True

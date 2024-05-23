@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+
 from enum import Enum
 
 import smarttub

@@ -1,4 +1,5 @@
 """Matter entity base class."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -82,6 +83,9 @@ class MatterEntity(Entity):
         self._attr_should_poll = entity_info.should_poll
         self._extra_poll_timer_unsub: CALLBACK_TYPE | None = None
 
+        # make sure to update the attributes once
+        self._update_from_device()
+
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
@@ -103,9 +107,6 @@ class MatterEntity(Entity):
                     attr_path_filter=attr_path,
                 )
             )
-        await self.matter_client.subscribe_attribute(
-            self._endpoint.node.node_id, sub_paths
-        )
         # subscribe to node (availability changes)
         self._unsubscribes.append(
             self.matter_client.subscribe_events(
@@ -114,9 +115,6 @@ class MatterEntity(Entity):
                 node_filter=self._endpoint.node.node_id,
             )
         )
-
-        # make sure to update the attributes once
-        self._update_from_device()
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
@@ -129,6 +127,9 @@ class MatterEntity(Entity):
 
     async def async_update(self) -> None:
         """Call when the entity needs to be updated."""
+        if not self._endpoint.node.available:
+            # skip poll when the node is not (yet) available
+            return
         # manually poll/refresh the primary value
         await self.matter_client.refresh_attribute(
             self._endpoint.node.node_id,

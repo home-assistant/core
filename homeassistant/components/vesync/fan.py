@@ -1,4 +1,5 @@
 """Support for VeSync fans."""
+
 from __future__ import annotations
 
 import logging
@@ -183,6 +184,8 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
             self.smartfan.auto_mode()
         elif preset_mode == FAN_MODE_SLEEP:
             self.smartfan.sleep_mode()
+        elif preset_mode == FAN_MODE_PET:
+            self.smartfan.pet_mode()
 
         self.schedule_update_ha_state()
 

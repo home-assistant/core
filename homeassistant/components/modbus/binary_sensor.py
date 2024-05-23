@@ -1,4 +1,5 @@
 """Support for Modbus Coil and Discrete Input sensors."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -92,10 +93,9 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
             name=name,
         )
 
-        slaves: list[SlaveSensor] = []
-        for idx in range(0, slave_count):
-            slaves.append(SlaveSensor(self._coordinator, idx, entry))
-        return slaves
+        return [
+            SlaveSensor(self._coordinator, idx, entry) for idx in range(slave_count)
+        ]
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

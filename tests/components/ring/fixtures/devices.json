@@ -69,6 +69,7 @@
         "enable_vod": true,
         "live_view_preset_profile": "highest",
         "live_view_presets": ["low", "middle", "high", "highest"],
+        "motion_detection_enabled": true,
         "motion_announcement": false,
         "motion_snooze_preset_profile": "low",
         "motion_snooze_presets": ["null", "low", "medium", "high"]
@@ -133,6 +134,7 @@
         },
         "live_view_preset_profile": "highest",
         "live_view_presets": ["low", "middle", "high", "highest"],
+        "motion_detection_enabled": false,
         "motion_announcement": false,
         "motion_snooze_preset_profile": "low",
         "motion_snooze_presets": ["none", "low", "medium", "high"],
@@ -281,6 +283,7 @@
         },
         "live_view_preset_profile": "highest",
         "live_view_presets": ["low", "middle", "high", "highest"],
+        "motion_detection_enabled": true,
         "motion_announcement": false,
         "motion_snooze_preset_profile": "low",
         "motion_snooze_presets": ["none", "low", "medium", "high"],
@@ -374,6 +377,93 @@
       "subscribed": true,
       "subscribed_motions": true,
       "time_zone": "America/New_York"
+    }
+  ],
+  "other": [
+    {
+      "id": 185036587,
+      "kind": "intercom_handset_audio",
+      "description": "Ingress",
+      "location_id": "mock-location-id",
+      "schema_id": null,
+      "is_sidewalk_gateway": false,
+      "created_at": "2023-12-01T18:05:25Z",
+      "deactivated_at": null,
+      "owner": {
+        "id": 762490876,
+        "first_name": "",
+        "last_name": "",
+        "email": ""
+      },
+      "device_id": "124ba1b3fe1a",
+      "time_zone": "Europe/Rome",
+      "firmware_version": "Up to Date",
+      "owned": true,
+      "ring_net_id": null,
+      "settings": {
+        "features_confirmed": 5,
+        "show_recordings": true,
+        "recording_ttl": 180,
+        "recording_enabled": false,
+        "keep_alive": null,
+        "keep_alive_auto": 45.0,
+        "doorbell_volume": 8,
+        "enable_chime": 1,
+        "theft_alarm_enable": 0,
+        "use_cached_domain": 1,
+        "use_server_ip": 0,
+        "server_domain": "fw.ring.com",
+        "server_ip": null,
+        "enable_log": 1,
+        "forced_keep_alive": null,
+        "mic_volume": 11,
+        "chime_settings": {
+          "enable": true,
+          "type": 2,
+          "duration": 10
+        },
+        "intercom_settings": {
+          "ring_to_open": false,
+          "predecessor": "{\"make\":\"Comelit\",\"model\":\"2738W\",\"wires\":2}",
+          "config": "{\"intercom_type\": 2, \"number_of_wires\": 2, \"autounlock_enabled\": false, \"speaker_gain\": [-49, -35, -25, -21, -16, -9, -6, -3, 0, 3, 6, 9], \"digital\": {\"audio_amp\": 0, \"chg_en\": false, \"fast_chg\": false, \"bypass\": false, \"idle_lvl\": 32, \"ext_audio\": false, \"ext_audio_term\": 0, \"off_hk_tm\": 0, \"unlk_ka\": false, \"unlock\": {\"cap_tm\": 1000, \"rpl_tm\": 1500, \"gain\": 1000, \"cmp_thr\": 4000, \"lvl\": 25000, \"thr\": 30, \"thr2\": 0, \"offln\": false, \"ac\": true, \"bias\": \"h\", \"tx_pin\": \"TXD2\", \"ack\": 0, \"prot\": \"Comelit_SB2\", \"ask\": {\"f\": 25000, \"b\": 333}}, \"ring\": {\"cap_tm\": 40, \"rpl_tm\": 200, \"gain\": 2000, \"cmp_thr\": 4500, \"lvl\": 28000, \"thr\": 30, \"thr2\": 0, \"offln\": false, \"ac\": true, \"bias\": \"m\", \"tx_pin\": \"TXD2\", \"ack\": 0, \"prot\": \"Comelit_SB2\", \"ask\": {\"f\": 25000, \"b\": 333}}, \"hook_off\": {\"cap_tm\": 1000, \"rpl_tm\": 1500, \"gain\": 1000, \"cmp_thr\": 4000, \"lvl\": 25000, \"thr\": 30, \"thr2\": 0, \"offln\": false, \"ac\": true, \"bias\": \"h\", \"tx_pin\": \"TXD2\", \"ack\": 0, \"prot\": \"Comelit_SB2\", \"ask\": {\"f\": 25000, \"b\": 333}}, \"hook_on\": {\"cap_tm\": 1000, \"rpl_tm\": 1500, \"gain\": 1000, \"cmp_thr\": 4000, \"lvl\": 25000, \"thr\": 30, \"thr2\": 0, \"offln\": false, \"ac\": true, \"bias\": \"h\", \"tx_pin\": \"TXD2\", \"ack\": 0, \"prot\": \"Comelit_SB2\", \"ask\": {\"f\": 25000, \"b\": 333}}}}",
+          "intercom_type": "DF",
+          "replication": 1,
+          "unlock_mode": 0
+        },
+        "voice_volume": 11
+      },
+      "alerts": {
+        "connection": "online",
+        "ota_status": "timeout"
+      },
+      "function": {
+        "name": null
+      },
+      "subscribed": false,
+      "battery_life": "52",
+      "features": {
+        "cfes_eligible": false,
+        "motion_zone_recommendation": false,
+        "motions_enabled": true,
+        "show_recordings": true,
+        "show_vod_settings": true,
+        "rich_notifications_eligible": false,
+        "show_offline_motion_events": false,
+        "sheila_camera_eligible": null,
+        "sheila_camera_processing_eligible": null,
+        "dynamic_network_switching_eligible": false,
+        "chime_auto_detect_capable": false,
+        "missing_key_delivery_address": false,
+        "show_24x7_lite": false,
+        "recording_24x7_eligible": null
+      },
+      "metadata": {
+        "ethernet": false,
+        "legacy_fw_migrated": true,
+        "imported_from_amazon": false,
+        "is_sidewalk_gateway": false,
+        "key_access_point_associated": true
+      }
     }
   ]
 }

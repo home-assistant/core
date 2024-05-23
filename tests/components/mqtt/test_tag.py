@@ -1,4 +1,5 @@
 """The tests for MQTT tag scanner."""
+
 from collections.abc import Generator
 import copy
 import json
@@ -8,7 +9,6 @@ import pytest
 
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -44,13 +44,6 @@ DEFAULT_TAG_SCAN = "E9F35959"
 DEFAULT_TAG_SCAN_JSON = (
     '{"Time":"2020-09-28T17:02:10","PN532":{"UID":"E9F35959", "DATA":"ILOVETASMOTA"}}'
 )
-
-
-@pytest.fixture(autouse=True)
-def binary_sensor_only() -> Generator[None, None, None]:
-    """Only setup the binary_sensor platform to speed up test."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR]):
-        yield
 
 
 @pytest.fixture
@@ -426,15 +419,9 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
 
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(MQTT_DOMAIN)[0]
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mqtt_config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
+    response = await ws_client.remove_device(
+        device_entry.id, mqtt_config_entry.entry_id
     )
-    response = await ws_client.receive_json()
     assert response["success"]
     tag_mock.reset_mock()
 
@@ -619,15 +606,9 @@ async def test_cleanup_tag(
 
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(MQTT_DOMAIN)[0]
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mqtt_config_entry.entry_id,
-            "device_id": device_entry1.id,
-        }
+    response = await ws_client.remove_device(
+        device_entry1.id, mqtt_config_entry.entry_id
     )
-    response = await ws_client.receive_json()
     assert response["success"]
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -951,3 +932,25 @@ async def test_unload_entry(
     async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
     tag_mock.assert_not_called()
+
+
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock: MqttMockHAClient,
+    tag_mock: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    config = copy.deepcopy(DEFAULT_CONFIG_DEVICE)
+    config["value_template"] = "{{ value_json.some_var * 1 }}"
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config))
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", '{"some_var": null }')
+    await hass.async_block_till_done()
+
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

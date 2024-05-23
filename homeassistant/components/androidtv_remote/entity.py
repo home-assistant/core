@@ -1,4 +1,5 @@
 """Base entity for Android TV Remote."""
+
 from __future__ import annotations
 
 from androidtvremote2 import AndroidTVRemote, ConnectionClosed

@@ -1,11 +1,12 @@
 """Helpers for LCN component."""
+
 from __future__ import annotations
 
 import asyncio
 from copy import deepcopy
 from itertools import chain
 import re
-from typing import TypeAlias, cast
+from typing import cast
 
 import pypck
 import voluptuous as vol
@@ -59,12 +60,10 @@ from .const import (
 )
 
 # typing
-AddressType = tuple[int, int, bool]
-DeviceConnectionType: TypeAlias = (
-    pypck.module.ModuleConnection | pypck.module.GroupConnection
-)
+type AddressType = tuple[int, int, bool]
+type DeviceConnectionType = pypck.module.ModuleConnection | pypck.module.GroupConnection
 
-InputType = type[pypck.inputs.Input]
+type InputType = type[pypck.inputs.Input]
 
 # Regex for address validation
 PATTERN_ADDRESS = re.compile(
@@ -286,7 +285,8 @@ def purge_device_registry(
 
     # Find all devices that are referenced in the entity registry.
     references_entities = {
-        entry.device_id for entry in entity_registry.entities.values()
+        entry.device_id
+        for entry in entity_registry.entities.get_entries_for_config_entry_id(entry_id)
     }
 
     # Find device that references the host.

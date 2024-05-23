@@ -1,4 +1,5 @@
 """Tessie Data Coordinator."""
+
 from datetime import timedelta
 from http import HTTPStatus
 import logging
@@ -65,7 +66,7 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if e.status == HTTPStatus.UNAUTHORIZED:
                 # Auth Token is no longer valid
                 raise ConfigEntryAuthFailed from e
-            raise e
+            raise
 
         return self._flatten(vehicle)
 

@@ -1,4 +1,5 @@
 """Test the Fully Kiosk Browser binary sensors."""
+
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -78,7 +79,7 @@ async def test_binary_sensors(
     mock_fully_kiosk.getDeviceInfo.return_value = {}
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("binary_sensor.amazon_fire_plugged_in")
     assert state
@@ -88,7 +89,7 @@ async def test_binary_sensors(
     mock_fully_kiosk.getDeviceInfo.side_effect = FullyKioskError("error", "status")
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("binary_sensor.amazon_fire_plugged_in")
     assert state

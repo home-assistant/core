@@ -1,4 +1,5 @@
 """Support for Plaato devices."""
+
 from datetime import timedelta
 import logging
 
@@ -193,7 +194,7 @@ async def handle_webhook(hass, webhook_id, request):
         data = WEBHOOK_SCHEMA(await request.json())
     except vol.MultipleInvalid as error:
         _LOGGER.warning("An error occurred when parsing webhook data <%s>", error)
-        return
+        return None
 
     device_id = _device_id(data)
     sensor_data = PlaatoAirlock.from_web_hook(data)
@@ -208,7 +209,7 @@ def _device_id(data):
     return f"{data.get(ATTR_DEVICE_NAME)}_{data.get(ATTR_DEVICE_ID)}"
 
 
-class PlaatoCoordinator(DataUpdateCoordinator):
+class PlaatoCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching data from the API."""
 
     def __init__(
@@ -233,8 +234,7 @@ class PlaatoCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Update data via library."""
-        data = await self.api.get_data(
+        return await self.api.get_data(
             session=aiohttp_client.async_get_clientsession(self.hass),
             device_type=self.device_type,
         )
-        return data

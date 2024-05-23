@@ -1,4 +1,5 @@
 """Support for Hitachi DHW."""
+
 from __future__ import annotations
 
 from typing import Any

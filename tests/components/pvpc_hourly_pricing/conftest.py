@@ -1,9 +1,10 @@
 """Tests for the pvpc_hourly_pricing integration."""
+
 from http import HTTPStatus
 
 import pytest
 
-from homeassistant.components.pvpc_hourly_pricing import ATTR_TARIFF, DOMAIN
+from homeassistant.components.pvpc_hourly_pricing.const import ATTR_TARIFF, DOMAIN
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, CURRENCY_EURO, UnitOfEnergy
 
 from tests.common import load_fixture

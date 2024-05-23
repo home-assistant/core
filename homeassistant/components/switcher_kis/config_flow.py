@@ -1,28 +1,21 @@
 """Config flow for Switcher integration."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import DATA_DISCOVERY, DOMAIN
 from .utils import async_discover_devices
 
 
-class SwitcherFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle Switcher config flow."""
-
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
-        """Handle a flow initiated by import."""
-        if self._async_current_entries(True):
-            return self.async_abort(reason="single_instance_allowed")
-
-        return self.async_create_entry(title="Switcher", data={})
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         if self._async_current_entries(True):
             return self.async_abort(reason="single_instance_allowed")
@@ -37,7 +30,7 @@ class SwitcherFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user-confirmation of the config flow."""
         discovered_devices = await self.hass.data[DOMAIN][DATA_DISCOVERY]
 

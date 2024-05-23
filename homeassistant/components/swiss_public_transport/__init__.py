@@ -1,4 +1,5 @@
 """The swiss_public_transport component."""
+
 import logging
 
 from opendata_transport import OpendataTransport
@@ -41,13 +42,10 @@ async def async_setup_entry(
             f"Timeout while connecting for entry '{start} {destination}'"
         ) from e
     except OpendataTransportError as e:
-        _LOGGER.error(
-            "Setup failed for entry '%s %s', check at http://transport.opendata.ch/examples/stationboard.html if your station names are valid",
-            start,
-            destination,
-        )
         raise ConfigEntryError(
-            f"Setup failed for entry '{start} {destination}' with invalid data"
+            f"Setup failed for entry '{start} {destination}' with invalid data, check "
+            "at http://transport.opendata.ch/examples/stationboard.html if your "
+            "station names are valid"
         ) from e
 
     coordinator = SwissPublicTransportDataUpdateCoordinator(hass, opendata)
@@ -89,7 +87,9 @@ async def async_migrate_entry(
             device_registry, config_entry_id=config_entry.entry_id
         )
         for dev in device_entries:
-            device_registry.async_remove_device(dev.id)
+            device_registry.async_update_device(
+                dev.id, remove_config_entry_id=config_entry.entry_id
+            )
 
         entity_id = entity_registry.async_get_entity_id(
             Platform.SENSOR, DOMAIN, "None_departure"
@@ -105,12 +105,14 @@ async def async_migrate_entry(
             )
 
         # Set a valid unique id for config entries
-        config_entry.unique_id = new_unique_id
-        config_entry.minor_version = 2
-        hass.config_entries.async_update_entry(config_entry)
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=new_unique_id, minor_version=2
+        )
 
     _LOGGER.debug(
-        "Migration to minor version %s successful", config_entry.minor_version
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
     )
 
     return True

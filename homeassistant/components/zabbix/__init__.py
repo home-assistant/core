@@ -1,4 +1,5 @@
 """Support for Zabbix."""
+
 from contextlib import suppress
 import json
 import logging
@@ -103,11 +104,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Add an event to the outgoing Zabbix list."""
         state = event.data.get("new_state")
         if state is None or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE):
-            return
+            return None
 
         entity_id = state.entity_id
         if not entities_filter(entity_id):
-            return
+            return None
 
         floats = {}
         strings = {}
@@ -139,9 +140,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         float_keys_count = len(float_keys)
         float_keys.update(floats)
         if len(float_keys) != float_keys_count:
-            floats_discovery = []
-            for float_key in float_keys:
-                floats_discovery.append({"{#KEY}": float_key})
+            floats_discovery = [{"{#KEY}": float_key} for float_key in float_keys]
             metric = ZabbixMetric(
                 publish_states_host,
                 "homeassistant.floats_discovery",

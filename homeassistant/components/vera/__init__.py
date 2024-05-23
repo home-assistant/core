@@ -1,11 +1,12 @@
 """Support for Vera devices."""
+
 from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
 from collections.abc import Awaitable
 import logging
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 import pyvera as veraApi
 from requests.exceptions import RequestException
@@ -128,14 +129,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if device_type is not None:
             vera_devices[device_type].append(device)
 
-    vera_scenes = []
-    for scene in all_scenes:
-        vera_scenes.append(scene)
-
     controller_data = ControllerData(
         controller=controller,
         devices=vera_devices,
-        scenes=vera_scenes,
+        scenes=all_scenes,
         config_entry=entry,
     )
 
@@ -210,10 +207,7 @@ def map_vera_device(
     )
 
 
-_DeviceTypeT = TypeVar("_DeviceTypeT", bound=veraApi.VeraDevice)
-
-
-class VeraDevice(Generic[_DeviceTypeT], Entity):
+class VeraDevice[_DeviceTypeT: veraApi.VeraDevice](Entity):
     """Representation of a Vera device entity."""
 
     def __init__(

@@ -1,4 +1,5 @@
 """Philips Hue binary_sensor platform tests for V2 bridge/api."""
+
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_platform

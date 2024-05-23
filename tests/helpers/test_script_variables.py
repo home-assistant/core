@@ -1,4 +1,5 @@
 """Test script variables."""
+
 import pytest
 
 from homeassistant.core import HomeAssistant

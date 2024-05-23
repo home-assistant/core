@@ -1,4 +1,5 @@
 """Tests for the Withings component."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -20,7 +21,7 @@ from . import (
     setup_integration,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.freeze_time("2023-10-21")
@@ -30,25 +31,19 @@ async def test_all_entities(
     snapshot: SnapshotAssertion,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
     with patch("homeassistant.components.withings.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, polling_config_entry)
-        entity_registry = er.async_get(hass)
-        entity_entries = er.async_entries_for_config_entry(
-            entity_registry, polling_config_entry.entry_id
-        )
 
-        assert entity_entries
-        for entity_entry in entity_entries:
-            assert hass.states.get(entity_entry.entity_id) == snapshot(
-                name=entity_entry.entity_id
-            )
+    await snapshot_platform(
+        hass, entity_registry, snapshot, polling_config_entry.entry_id
+    )
 
 
 async def test_update_failed(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
@@ -68,7 +63,6 @@ async def test_update_failed(
 
 async def test_update_updates_incrementally(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
@@ -253,7 +247,6 @@ async def test_sleep_sensors_created_when_existed(
     hass: HomeAssistant,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sleep sensors will be added if they existed before."""
     await setup_integration(hass, polling_config_entry, False)
@@ -301,7 +294,6 @@ async def test_workout_sensors_created_when_existed(
     hass: HomeAssistant,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test workout sensors will be added if they existed before."""
     await setup_integration(hass, polling_config_entry, False)

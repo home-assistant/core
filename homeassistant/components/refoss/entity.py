@@ -1,4 +1,5 @@
 """Entity object for shared properties of Refoss entities."""
+
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 

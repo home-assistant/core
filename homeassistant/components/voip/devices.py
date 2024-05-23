@@ -1,4 +1,5 @@
 """Class to manage devices."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator
@@ -83,7 +84,7 @@ class VoIPDevices:
             )
 
         @callback
-        def async_device_removed(ev: Event) -> None:
+        def async_device_removed(ev: Event[dr.EventDeviceRegistryUpdatedData]) -> None:
             """Handle device removed."""
             removed_id = ev.data["device_id"]
             self.devices = {
@@ -96,7 +97,7 @@ class VoIPDevices:
             self.hass.bus.async_listen(
                 dr.EVENT_DEVICE_REGISTRY_UPDATED,
                 async_device_removed,
-                callback(lambda ev: ev.data.get("action") == "remove"),
+                callback(lambda event_data: event_data["action"] == "remove"),
             )
         )
 

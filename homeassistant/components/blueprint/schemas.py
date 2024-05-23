@@ -1,4 +1,5 @@
 """Schemas for the blueprint integration."""
+
 from typing import Any
 
 import voluptuous as vol

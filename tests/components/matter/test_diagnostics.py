@@ -1,4 +1,5 @@
 """Test the Matter diagnostics platform."""
+
 from __future__ import annotations
 
 import json

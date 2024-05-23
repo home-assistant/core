@@ -1,4 +1,5 @@
 """The tests for the counter component."""
+
 import logging
 
 import pytest

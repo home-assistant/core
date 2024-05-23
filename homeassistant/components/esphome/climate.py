@@ -1,4 +1,5 @@
 """Support for ESPHome climate devices."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -55,7 +56,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    convert_api_error_ha_error,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 from .enum_mapper import EsphomeEnumMapper
 
 FAN_QUIET = "quiet"
@@ -137,6 +143,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "climate"
+    _enable_turn_on_off_backwards_compatibility = False
 
     @callback
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
@@ -179,6 +186,8 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             features |= ClimateEntityFeature.FAN_MODE
         if self.swing_modes:
             features |= ClimateEntityFeature.SWING_MODE
+        if len(self.hvac_modes) > 1 and HVACMode.OFF in self.hvac_modes:
+            features |= ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
         self._attr_supported_features = features
 
     def _get_precision(self) -> float:
@@ -270,6 +279,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         """Return the humidity we try to reach."""
         return round(self._state.target_humidity)
 
+    @convert_api_error_ha_error
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature (and operation mode if set)."""
         data: dict[str, Any] = {"key": self._key}
@@ -283,18 +293,21 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             data["target_temperature_low"] = kwargs[ATTR_TARGET_TEMP_LOW]
         if ATTR_TARGET_TEMP_HIGH in kwargs:
             data["target_temperature_high"] = kwargs[ATTR_TARGET_TEMP_HIGH]
-        await self._client.climate_command(**data)
+        self._client.climate_command(**data)
 
+    @convert_api_error_ha_error
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        await self._client.climate_command(key=self._key, target_humidity=humidity)
+        self._client.climate_command(key=self._key, target_humidity=humidity)
 
+    @convert_api_error_ha_error
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
-        await self._client.climate_command(
+        self._client.climate_command(
             key=self._key, mode=_CLIMATE_MODES.from_hass(hvac_mode)
         )
 
+    @convert_api_error_ha_error
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         kwargs: dict[str, Any] = {"key": self._key}
@@ -302,8 +315,9 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             kwargs["custom_preset"] = preset_mode
         else:
             kwargs["preset"] = _PRESETS.from_hass(preset_mode)
-        await self._client.climate_command(**kwargs)
+        self._client.climate_command(**kwargs)
 
+    @convert_api_error_ha_error
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         kwargs: dict[str, Any] = {"key": self._key}
@@ -311,10 +325,11 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             kwargs["custom_fan_mode"] = fan_mode
         else:
             kwargs["fan_mode"] = _FAN_MODES.from_hass(fan_mode)
-        await self._client.climate_command(**kwargs)
+        self._client.climate_command(**kwargs)
 
+    @convert_api_error_ha_error
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new swing mode."""
-        await self._client.climate_command(
+        self._client.climate_command(
             key=self._key, swing_mode=_SWING_MODES.from_hass(swing_mode)
         )

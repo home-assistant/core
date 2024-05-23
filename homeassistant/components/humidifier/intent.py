@@ -1,4 +1,5 @@
 """Intents for the humidifier integration."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -32,6 +33,7 @@ class HumidityHandler(intent.IntentHandler):
     """Handle set humidity intents."""
 
     intent_type = INTENT_HUMIDITY
+    description = "Set desired humidity level"
     slot_schema = {
         vol.Required("name"): cv.string,
         vol.Required("humidity"): vol.All(vol.Coerce(int), vol.Range(0, 100)),
@@ -84,6 +86,7 @@ class SetModeHandler(intent.IntentHandler):
     """Handle set humidity intents."""
 
     intent_type = INTENT_MODE
+    description = "Set humidifier mode"
     slot_schema = {
         vol.Required("name"): cv.string,
         vol.Required("mode"): cv.string,

@@ -1,4 +1,5 @@
 """Configure tests for the LastFM integration."""
+
 from collections.abc import Awaitable, Callable
 from unittest.mock import patch
 
@@ -19,7 +20,7 @@ from tests.components.lastfm import (
     MockUser,
 )
 
-ComponentSetup = Callable[[MockConfigEntry, MockUser], Awaitable[None]]
+type ComponentSetup = Callable[[MockConfigEntry, MockUser], Awaitable[None]]
 
 
 @pytest.fixture(name="config_entry")

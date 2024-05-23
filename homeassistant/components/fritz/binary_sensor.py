@@ -1,4 +1,5 @@
 """AVM FRITZ!Box connectivity sensor."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -15,18 +16,14 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import (
-    AvmWrapper,
-    ConnectionInfo,
-    FritzBoxBaseCoordinatorEntity,
-    FritzEntityDescription,
-)
 from .const import DOMAIN
+from .coordinator import AvmWrapper, ConnectionInfo
+from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class FritzBinarySensorEntityDescription(
     BinarySensorEntityDescription, FritzEntityDescription
 ):
@@ -68,7 +65,7 @@ async def async_setup_entry(
         if description.is_suitable(connection_info)
     ]
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class FritzBoxBinarySensor(FritzBoxBaseCoordinatorEntity, BinarySensorEntity):

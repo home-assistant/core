@@ -1,4 +1,5 @@
 """Platform for Kostal Plenticore numbers."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -21,26 +22,20 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .helper import PlenticoreDataFormatter, SettingDataUpdateCoordinator
+from .coordinator import SettingDataUpdateCoordinator
+from .helper import PlenticoreDataFormatter
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class PlenticoreNumberEntityDescriptionMixin:
-    """Define an entity description mixin for number entities."""
+@dataclass(frozen=True, kw_only=True)
+class PlenticoreNumberEntityDescription(NumberEntityDescription):
+    """Describes a Plenticore number entity."""
 
     module_id: str
     data_id: str
     fmt_from: str
     fmt_to: str
-
-
-@dataclass(frozen=True)
-class PlenticoreNumberEntityDescription(
-    NumberEntityDescription, PlenticoreNumberEntityDescriptionMixin
-):
-    """Describes a Plenticore number entity."""
 
 
 NUMBER_SETTINGS_DATA = [

@@ -1,4 +1,5 @@
 """Support for MQTT fans."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -50,7 +51,6 @@ from .const import (
 )
 from .debug_info import log_messages
 from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entity_entry_helper,
     write_state_on_attr_change,
@@ -63,6 +63,7 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
 
 CONF_DIRECTION_STATE_TOPIC = "direction_state_topic"
@@ -318,13 +319,11 @@ class MqttFan(MqttEntity, FanEntity):
             ATTR_PRESET_MODE: config.get(CONF_PRESET_MODE_COMMAND_TEMPLATE),
             ATTR_OSCILLATING: config.get(CONF_OSCILLATION_COMMAND_TEMPLATE),
         }
-        self._command_templates = {}
-        for key, tpl in command_templates.items():
-            self._command_templates[key] = MqttCommandTemplate(
-                tpl, entity=self
-            ).async_render
+        self._command_templates = {
+            key: MqttCommandTemplate(tpl, entity=self).async_render
+            for key, tpl in command_templates.items()
+        }
 
-        self._value_templates = {}
         value_templates: dict[str, Template | None] = {
             CONF_STATE: config.get(CONF_STATE_VALUE_TEMPLATE),
             ATTR_DIRECTION: config.get(CONF_DIRECTION_VALUE_TEMPLATE),
@@ -332,11 +331,12 @@ class MqttFan(MqttEntity, FanEntity):
             ATTR_PRESET_MODE: config.get(CONF_PRESET_MODE_VALUE_TEMPLATE),
             ATTR_OSCILLATING: config.get(CONF_OSCILLATION_VALUE_TEMPLATE),
         }
-        for key, tpl in value_templates.items():
-            self._value_templates[key] = MqttValueTemplate(
-                tpl,
-                entity=self,
+        self._value_templates = {
+            key: MqttValueTemplate(
+                tpl, entity=self
             ).async_render_with_possible_json_value
+            for key, tpl in value_templates.items()
+        }
 
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""

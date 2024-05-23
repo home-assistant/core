@@ -1,4 +1,5 @@
 """Support for Ombi."""
+
 import logging
 
 import pyombi

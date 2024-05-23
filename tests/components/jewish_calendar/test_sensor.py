@@ -1,4 +1,5 @@
 """The tests for the Jewish calendar sensors."""
+
 from datetime import datetime as dt, timedelta
 
 import pytest
@@ -166,7 +167,7 @@ async def test_jewish_calendar_sensor(
     time_zone = dt_util.get_time_zone(tzname)
     test_time = now.replace(tzinfo=time_zone)
 
-    hass.config.set_time_zone(tzname)
+    await hass.config.async_set_time_zone(tzname)
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
@@ -511,7 +512,7 @@ async def test_shabbat_times_sensor(
     time_zone = dt_util.get_time_zone(tzname)
     test_time = now.replace(tzinfo=time_zone)
 
-    hass.config.set_time_zone(tzname)
+    await hass.config.async_set_time_zone(tzname)
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 

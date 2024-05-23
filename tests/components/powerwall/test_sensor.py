@@ -1,4 +1,5 @@
 """The sensor tests for the powerwall platform."""
+
 from datetime import timedelta
 from unittest.mock import Mock, patch
 
@@ -33,11 +34,14 @@ async def test_sensors(
 
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -132,6 +136,65 @@ async def test_sensors(
     assert hass.states.get("sensor.mysite_load_frequency").state == STATE_UNKNOWN
     assert hass.states.get("sensor.mysite_backup_reserve").state == STATE_UNKNOWN
 
+    assert (
+        float(hass.states.get("sensor.mysite_tg0123456789ab_battery_capacity").state)
+        == 14.715
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg0123456789ab_battery_voltage").state)
+        == 245.7
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg0123456789ab_frequency").state) == 50.0
+    )
+    assert float(hass.states.get("sensor.mysite_tg0123456789ab_current").state) == 0.3
+    assert int(hass.states.get("sensor.mysite_tg0123456789ab_power").state) == -100
+    assert (
+        float(hass.states.get("sensor.mysite_tg0123456789ab_battery_export").state)
+        == 2358.235
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg0123456789ab_battery_import").state)
+        == 2693.355
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg0123456789ab_battery_remaining").state)
+        == 14.715
+    )
+    assert (
+        str(hass.states.get("sensor.mysite_tg0123456789ab_grid_state").state)
+        == "grid_compliant"
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg9876543210ba_battery_capacity").state)
+        == 15.137
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg9876543210ba_battery_voltage").state)
+        == 245.6
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg9876543210ba_frequency").state) == 50.0
+    )
+    assert float(hass.states.get("sensor.mysite_tg9876543210ba_current").state) == 0.1
+    assert int(hass.states.get("sensor.mysite_tg9876543210ba_power").state) == -100
+    assert (
+        float(hass.states.get("sensor.mysite_tg9876543210ba_battery_export").state)
+        == 509.907
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg9876543210ba_battery_import").state)
+        == 610.483
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg9876543210ba_battery_remaining").state)
+        == 15.137
+    )
+    assert (
+        str(hass.states.get("sensor.mysite_tg9876543210ba_grid_state").state)
+        == "grid_compliant"
+    )
+
 
 async def test_sensor_backup_reserve_unavailable(hass: HomeAssistant) -> None:
     """Confirm that backup reserve sensor is not added if data is unavailable from the device."""
@@ -143,11 +206,14 @@ async def test_sensor_backup_reserve_unavailable(hass: HomeAssistant) -> None:
 
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -163,11 +229,14 @@ async def test_sensors_with_empty_meters(hass: HomeAssistant) -> None:
 
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -201,11 +270,14 @@ async def test_unique_id_migrate(
     )
     assert old_mysite_load_power_entity.entity_id == "sensor.mysite_load_power"
 
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

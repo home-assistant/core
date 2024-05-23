@@ -1,4 +1,5 @@
 """Const file for the MyBMW integration."""
+
 from homeassistant.const import UnitOfLength, UnitOfVolume
 
 DOMAIN = "bmw_connected_drive"
@@ -27,3 +28,10 @@ SCAN_INTERVALS = {
     "north_america": 600,
     "rest_of_world": 300,
 }
+
+CLIMATE_ACTIVITY_STATE: list[str] = [
+    "cooling",
+    "heating",
+    "inactive",
+    "standby",
+]

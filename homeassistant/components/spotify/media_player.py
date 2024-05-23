@@ -1,11 +1,12 @@
 """Support for interacting with Spotify Connect."""
+
 from __future__ import annotations
 
 from asyncio import run_coroutine_threadsafe
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 import requests
 from spotipy import SpotifyException
@@ -33,10 +34,6 @@ from . import HomeAssistantSpotifyData
 from .browse_media import async_browse_media_internal
 from .const import DOMAIN, MEDIA_PLAYER_PREFIX, PLAYABLE_MEDIA_TYPES, SPOTIFY_SCOPES
 from .util import fetch_image_url
-
-_SpotifyMediaPlayerT = TypeVar("_SpotifyMediaPlayerT", bound="SpotifyMediaPlayer")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +82,7 @@ async def async_setup_entry(
     async_add_entities([spotify], True)
 
 
-def spotify_exception_handler(
+def spotify_exception_handler[_SpotifyMediaPlayerT: SpotifyMediaPlayer, **_P, _R](
     func: Callable[Concatenate[_SpotifyMediaPlayerT, _P], _R],
 ) -> Callable[Concatenate[_SpotifyMediaPlayerT, _P], _R | None]:
     """Decorate Spotify calls to handle Spotify exception.
@@ -97,11 +94,8 @@ def spotify_exception_handler(
     def wrapper(
         self: _SpotifyMediaPlayerT, *args: _P.args, **kwargs: _P.kwargs
     ) -> _R | None:
-        # pylint: disable=protected-access
         try:
             result = func(self, *args, **kwargs)
-            self._attr_available = True
-            return result
         except requests.RequestException:
             self._attr_available = False
             return None
@@ -110,6 +104,8 @@ def spotify_exception_handler(
             if exc.reason == "NO_ACTIVE_DEVICE":
                 raise HomeAssistantError("No active playback device found") from None
             raise HomeAssistantError(f"Spotify error: {exc.reason}") from exc
+        self._attr_available = True
+        return result
 
     return wrapper
 
@@ -118,9 +114,9 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     """Representation of a Spotify controller."""
 
     _attr_has_entity_name = True
-    _attr_icon = "mdi:spotify"
     _attr_media_image_remotely_accessible = False
     _attr_name = None
+    _attr_translation_key = "spotify"
 
     def __init__(
         self,
@@ -377,7 +373,8 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
                 raise ValueError(
                     f"Media type {media_type} is not supported when enqueue is ADD"
                 )
-            return self.data.client.add_to_queue(media_id, kwargs.get("device_id"))
+            self.data.client.add_to_queue(media_id, kwargs.get("device_id"))
+            return
 
         self.data.client.start_playback(**kwargs)
 

@@ -1,8 +1,9 @@
 """Test the Home Connect config flow."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, setup
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
@@ -13,6 +14,7 @@ from homeassistant.components.home_connect.const import (
     OAUTH2_TOKEN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -46,7 +48,7 @@ async def test_full_flow(
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"

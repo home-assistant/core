@@ -1,4 +1,5 @@
 """Control which entities are exposed to voice assistants."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -12,7 +13,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
-from homeassistant.core import HomeAssistant, callback, split_entity_id
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import get_device_class
@@ -129,9 +130,16 @@ class ExposedEntities:
     @callback
     def async_listen_entity_updates(
         self, assistant: str, listener: Callable[[], None]
-    ) -> None:
+    ) -> CALLBACK_TYPE:
         """Listen for updates to entity expose settings."""
+
+        def unsubscribe() -> None:
+            """Stop listening to entity updates."""
+            self._listeners[assistant].remove(listener)
+
         self._listeners.setdefault(assistant, []).append(listener)
+
+        return unsubscribe
 
     @callback
     def async_set_assistant_option(
@@ -143,9 +151,8 @@ class ExposedEntities:
         """
         entity_registry = er.async_get(self._hass)
         if not (registry_entry := entity_registry.async_get(entity_id)):
-            return self._async_set_legacy_assistant_option(
-                assistant, entity_id, key, value
-            )
+            self._async_set_legacy_assistant_option(assistant, entity_id, key, value)
+            return
 
         assistant_options: ReadOnlyDict[str, Any] | dict[str, Any]
         if (
@@ -484,10 +491,10 @@ def ws_expose_new_entities_set(
 @callback
 def async_listen_entity_updates(
     hass: HomeAssistant, assistant: str, listener: Callable[[], None]
-) -> None:
+) -> CALLBACK_TYPE:
     """Listen for updates to entity expose settings."""
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
-    exposed_entities.async_listen_entity_updates(assistant, listener)
+    return exposed_entities.async_listen_entity_updates(assistant, listener)
 
 
 @callback

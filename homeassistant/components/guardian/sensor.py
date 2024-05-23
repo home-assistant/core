@@ -1,4 +1,5 @@
 """Sensors for the Elexa Guardian integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -119,7 +120,6 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
     ValveControllerSensorDescription(
         key=SENSOR_KIND_UPTIME,
         translation_key="uptime",
-        icon="mdi:timer",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         api_category=API_SYSTEM_DIAGNOSTICS,
@@ -128,7 +128,6 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
     ValveControllerSensorDescription(
         key=SENSOR_KIND_TRAVEL_COUNT,
         translation_key="travel_count",
-        icon="mdi:counter",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="revolutions",
         api_category=API_VALVE_STATUS,

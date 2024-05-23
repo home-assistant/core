@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "liability_insured": {
+        "default": "mdi:shield-car"
+      }
+    }
+  }
+}

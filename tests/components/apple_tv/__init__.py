@@ -1,4 +1,5 @@
 """Tests for Apple TV."""
+
 import pytest
 
 # Make asserts in the common module display differences

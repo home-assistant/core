@@ -1,4 +1,5 @@
 """Play media via gstreamer."""
+
 from __future__ import annotations
 
 import logging

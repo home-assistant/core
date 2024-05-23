@@ -1,4 +1,5 @@
 """The Netio switch component."""
+
 from __future__ import annotations
 
 from collections import namedtuple
@@ -164,7 +165,7 @@ class NetioSwitch(SwitchEntity):
     def _set(self, value):
         val = list("uuuu")
         val[int(self.outlet) - 1] = "1" if value else "0"
-        self.netio.get("port list %s" % "".join(val))
+        self.netio.get("port list {}".format("".join(val)))
         self.netio.states[int(self.outlet) - 1] = value
         self.schedule_update_ha_state()
 

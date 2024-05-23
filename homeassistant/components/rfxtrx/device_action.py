@@ -1,4 +1,5 @@
 """Provides device automations for RFXCOM RFXtrx."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -50,21 +51,17 @@ async def async_get_actions(
     except ValueError:
         return []
 
-    actions = []
-    for action_type in ACTION_TYPES:
-        if hasattr(device, action_type):
-            data: dict[int, str] = getattr(device, ACTION_SELECTION[action_type], {})
-            for value in data.values():
-                actions.append(
-                    {
-                        CONF_DEVICE_ID: device_id,
-                        CONF_DOMAIN: DOMAIN,
-                        CONF_TYPE: action_type,
-                        CONF_SUBTYPE: value,
-                    }
-                )
-
-    return actions
+    return [
+        {
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: action_type,
+            CONF_SUBTYPE: value,
+        }
+        for action_type in ACTION_TYPES
+        if hasattr(device, action_type)
+        for value in getattr(device, ACTION_SELECTION[action_type], {}).values()
+    ]
 
 
 def _get_commands(

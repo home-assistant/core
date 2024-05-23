@@ -1,4 +1,5 @@
 """Errors for the HomematicIP Cloud component."""
+
 from homeassistant.exceptions import HomeAssistantError
 
 

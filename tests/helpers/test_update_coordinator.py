@@ -1,6 +1,6 @@
 """Tests for the update coordinator."""
-import asyncio
-from datetime import timedelta
+
+from datetime import datetime, timedelta
 import logging
 from unittest.mock import AsyncMock, Mock, patch
 import urllib.error
@@ -12,7 +12,7 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import update_coordinator
 from homeassistant.util.dt import utcnow
@@ -22,7 +22,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 _LOGGER = logging.getLogger(__name__)
 
 KNOWN_ERRORS: list[tuple[Exception, type[Exception], str]] = [
-    (asyncio.TimeoutError(), asyncio.TimeoutError, "Timeout fetching test data"),
+    (TimeoutError(), TimeoutError, "Timeout fetching test data"),
     (
         requests.exceptions.Timeout(),
         requests.exceptions.Timeout,
@@ -63,14 +63,13 @@ def get_crd(
         calls += 1
         return calls
 
-    crd = update_coordinator.DataUpdateCoordinator[int](
+    return update_coordinator.DataUpdateCoordinator[int](
         hass,
         _LOGGER,
         name="test",
         update_method=refresh,
         update_interval=update_interval,
     )
-    return crd
 
 
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=10)
@@ -716,3 +715,35 @@ async def test_always_callback_when_always_update_is_true(
     update_callback.reset_mock()
 
     remove_callbacks()
+
+
+async def test_timestamp_date_update_coordinator(hass: HomeAssistant) -> None:
+    """Test last_update_success_time is set before calling listeners."""
+    last_update_success_times: list[datetime | None] = []
+
+    async def refresh() -> int:
+        return 1
+
+    crd = update_coordinator.TimestampDataUpdateCoordinator[int](
+        hass,
+        _LOGGER,
+        name="test",
+        update_method=refresh,
+        update_interval=timedelta(seconds=10),
+    )
+
+    @callback
+    def listener():
+        last_update_success_times.append(crd.last_update_success_time)
+
+    unsub = crd.async_add_listener(listener)
+
+    await crd.async_refresh()
+
+    assert len(last_update_success_times) == 1
+    # Ensure the time is set before the listener is called
+    assert last_update_success_times != [None]
+
+    unsub()
+    await crd.async_refresh()
+    assert len(last_update_success_times) == 1

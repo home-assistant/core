@@ -1,5 +1,5 @@
 """Tests for the Bond entities."""
-import asyncio
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -85,7 +85,7 @@ async def test_bpup_goes_offline_and_recovers_same_entity(hass: HomeAssistant) -
     assert hass.states.get("fan.name_1").attributes[fan.ATTR_PERCENTAGE] == 33
 
     bpup_subs.last_message_time = -BPUP_ALIVE_TIMEOUT
-    with patch_bond_device_state(side_effect=asyncio.TimeoutError):
+    with patch_bond_device_state(side_effect=TimeoutError):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=230))
         await hass.async_block_till_done()
 
@@ -147,7 +147,7 @@ async def test_bpup_goes_offline_and_recovers_different_entity(
     assert hass.states.get("fan.name_1").attributes[fan.ATTR_PERCENTAGE] == 33
 
     bpup_subs.last_message_time = -BPUP_ALIVE_TIMEOUT
-    with patch_bond_device_state(side_effect=asyncio.TimeoutError):
+    with patch_bond_device_state(side_effect=TimeoutError):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=230))
         await hass.async_block_till_done()
 
@@ -178,7 +178,7 @@ async def test_polling_fails_and_recovers(hass: HomeAssistant) -> None:
         hass, FAN_DOMAIN, ceiling_fan("name-1"), bond_device_id="test-device-id"
     )
 
-    with patch_bond_device_state(side_effect=asyncio.TimeoutError):
+    with patch_bond_device_state(side_effect=TimeoutError):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=230))
         await hass.async_block_till_done()
 
@@ -199,7 +199,7 @@ async def test_polling_stops_at_the_stop_event(hass: HomeAssistant) -> None:
         hass, FAN_DOMAIN, ceiling_fan("name-1"), bond_device_id="test-device-id"
     )
 
-    with patch_bond_device_state(side_effect=asyncio.TimeoutError):
+    with patch_bond_device_state(side_effect=TimeoutError):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=230))
         await hass.async_block_till_done()
 

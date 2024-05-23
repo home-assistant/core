@@ -1,4 +1,5 @@
 """Module that groups code required to handle state restore for component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -68,13 +69,22 @@ async def _async_reproduce_states(
             [ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW],
         )
 
-    if ATTR_PRESET_MODE in state.attributes:
+    if (
+        ATTR_PRESET_MODE in state.attributes
+        and state.attributes[ATTR_PRESET_MODE] is not None
+    ):
         await call_service(SERVICE_SET_PRESET_MODE, [ATTR_PRESET_MODE])
 
-    if ATTR_SWING_MODE in state.attributes:
+    if (
+        ATTR_SWING_MODE in state.attributes
+        and state.attributes[ATTR_SWING_MODE] is not None
+    ):
         await call_service(SERVICE_SET_SWING_MODE, [ATTR_SWING_MODE])
 
-    if ATTR_FAN_MODE in state.attributes:
+    if (
+        ATTR_FAN_MODE in state.attributes
+        and state.attributes[ATTR_FAN_MODE] is not None
+    ):
         await call_service(SERVICE_SET_FAN_MODE, [ATTR_FAN_MODE])
 
     if ATTR_HUMIDITY in state.attributes:

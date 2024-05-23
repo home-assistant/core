@@ -1,4 +1,5 @@
 """Support for Orvibo S20 Wifi Smart Switches."""
+
 from __future__ import annotations
 
 import logging

@@ -1,4 +1,5 @@
 """The tests for Octoptint binary sensor module."""
+
 from datetime import UTC, datetime
 
 from freezegun.api import FrozenDateTimeFactory
@@ -9,7 +10,11 @@ from homeassistant.helpers import entity_registry as er
 from . import init_integration
 
 
-async def test_sensors(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+async def test_sensors(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test the underlying sensors."""
     printer = {
         "state": {
@@ -25,8 +30,6 @@ async def test_sensors(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> N
     }
     freezer.move_to(datetime(2020, 2, 20, 9, 10, 13, 543, tzinfo=UTC))
     await init_integration(hass, "sensor", printer=printer, job=job)
-
-    entity_registry = er.async_get(hass)
 
     state = hass.states.get("sensor.octoprint_job_percentage")
     assert state is not None
@@ -79,7 +82,9 @@ async def test_sensors(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> N
 
 
 async def test_sensors_no_target_temp(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the underlying sensors."""
     printer = {
@@ -91,8 +96,6 @@ async def test_sensors_no_target_temp(
     }
     freezer.move_to(datetime(2020, 2, 20, 9, 10, 0))
     await init_integration(hass, "sensor", printer=printer)
-
-    entity_registry = er.async_get(hass)
 
     state = hass.states.get("sensor.octoprint_actual_tool1_temp")
     assert state is not None
@@ -110,7 +113,9 @@ async def test_sensors_no_target_temp(
 
 
 async def test_sensors_paused(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the underlying sensors."""
     printer = {
@@ -128,8 +133,6 @@ async def test_sensors_paused(
     freezer.move_to(datetime(2020, 2, 20, 9, 10, 0))
     await init_integration(hass, "sensor", printer=printer, job=job)
 
-    entity_registry = er.async_get(hass)
-
     state = hass.states.get("sensor.octoprint_start_time")
     assert state is not None
     assert state.state == "unknown"
@@ -146,7 +149,9 @@ async def test_sensors_paused(
 
 
 async def test_sensors_printer_disconnected(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the underlying sensors."""
     job = {
@@ -156,8 +161,6 @@ async def test_sensors_printer_disconnected(
     }
     freezer.move_to(datetime(2020, 2, 20, 9, 10, 0))
     await init_integration(hass, "sensor", printer=None, job=job)
-
-    entity_registry = er.async_get(hass)
 
     state = hass.states.get("sensor.octoprint_job_percentage")
     assert state is not None

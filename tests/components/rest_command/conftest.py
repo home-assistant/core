@@ -1,4 +1,5 @@
 """Fixtures for the trend component tests."""
+
 from collections.abc import Awaitable, Callable
 from typing import Any
 
@@ -10,7 +11,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
 
-ComponentSetup = Callable[[dict[str, Any] | None], Awaitable[None]]
+type ComponentSetup = Callable[[dict[str, Any] | None], Awaitable[None]]
 
 TEST_URL = "https://example.com/"
 TEST_CONFIG = {

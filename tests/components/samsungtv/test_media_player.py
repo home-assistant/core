@@ -1,4 +1,5 @@
 """Tests for samsungtv component."""
+
 from copy import deepcopy
 from datetime import datetime, timedelta
 import logging
@@ -41,7 +42,6 @@ from homeassistant.components.samsungtv.const import (
     DOMAIN as SAMSUNGTV_DOMAIN,
     ENCRYPTED_WEBSOCKET_PORT,
     METHOD_ENCRYPTED_WEBSOCKET,
-    METHOD_LEGACY,
     METHOD_WEBSOCKET,
     TIMEOUT_WEBSOCKET,
 )
@@ -81,6 +81,8 @@ import homeassistant.util.dt as dt_util
 
 from . import async_wait_config_entry_reload, setup_samsungtv_entry
 from .const import (
+    MOCK_CONFIG,
+    MOCK_ENTRY_WS_WITH_MAC,
     MOCK_ENTRYDATA_ENCRYPTED_WS,
     SAMPLE_DEVICE_INFO_FRAME,
     SAMPLE_DEVICE_INFO_WIFI,
@@ -90,12 +92,6 @@ from .const import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake"
-MOCK_CONFIG = {
-    CONF_HOST: "fake_host",
-    CONF_NAME: "fake",
-    CONF_PORT: 55000,
-    CONF_METHOD: METHOD_LEGACY,
-}
 MOCK_CONFIGWS = {
     CONF_HOST: "fake_host",
     CONF_NAME: "fake",
@@ -119,17 +115,6 @@ MOCK_ENTRY_WS = {
     CONF_PORT: 8001,
     CONF_TOKEN: "123456789",
     CONF_SSDP_RENDERING_CONTROL_LOCATION: "https://any",
-}
-
-
-MOCK_ENTRY_WS_WITH_MAC = {
-    CONF_IP_ADDRESS: "test",
-    CONF_HOST: "fake_host",
-    CONF_METHOD: "websocket",
-    CONF_MAC: "aa:bb:cc:dd:ee:ff",
-    CONF_NAME: "fake",
-    CONF_PORT: 8002,
-    CONF_TOKEN: "123456789",
 }
 
 
@@ -162,7 +147,7 @@ async def test_setup_websocket(hass: HomeAssistant) -> None:
 
         config_entries = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
         assert len(config_entries) == 1
-        assert config_entries[0].data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+        assert config_entries[0].data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
 
 
 @pytest.mark.usefixtures("rest_api")
@@ -194,12 +179,12 @@ async def test_setup_websocket_2(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert config_entries[0].data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+        assert config_entries[0].data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
 
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state
@@ -224,7 +209,7 @@ async def test_setup_encrypted_websocket(
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state
@@ -241,7 +226,7 @@ async def test_update_on(
     next_update = mock_now + timedelta(minutes=5)
     freezer.move_to(next_update)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
@@ -261,7 +246,7 @@ async def test_update_off(
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get(ENTITY_ID)
         assert state.state == STATE_UNAVAILABLE
@@ -289,7 +274,7 @@ async def test_update_off_ws_no_power_state(
     next_update = mock_now + timedelta(minutes=5)
     freezer.move_to(next_update)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
@@ -305,11 +290,14 @@ async def test_update_off_ws_with_power_state(
     mock_now: datetime,
 ) -> None:
     """Testing update tv off."""
-    with patch.object(
-        rest_api, "rest_device_info", side_effect=HttpApiError
-    ) as mock_device_info, patch.object(
-        remotews, "start_listening", side_effect=WebSocketException("Boom")
-    ) as mock_start_listening:
+    with (
+        patch.object(
+            rest_api, "rest_device_info", side_effect=HttpApiError
+        ) as mock_device_info,
+        patch.object(
+            remotews, "start_listening", side_effect=WebSocketException("Boom")
+        ) as mock_start_listening,
+    ):
         await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
 
         mock_device_info.assert_called_once()
@@ -325,7 +313,7 @@ async def test_update_off_ws_with_power_state(
     next_update = mock_now + timedelta(minutes=1)
     freezer.move_to(next_update)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     remotews.start_listening.assert_called_once()
     rest_api.rest_device_info.assert_called_once()
@@ -341,7 +329,7 @@ async def test_update_off_ws_with_power_state(
     next_update = mock_now + timedelta(minutes=2)
     freezer.move_to(next_update)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     rest_api.rest_device_info.assert_called_once()
 
@@ -354,7 +342,7 @@ async def test_update_off_ws_with_power_state(
     next_update = mock_now + timedelta(minutes=3)
     freezer.move_to(next_update)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     rest_api.rest_device_info.assert_called_once()
 
@@ -385,7 +373,7 @@ async def test_update_off_encryptedws(
     next_update = mock_now + timedelta(minutes=5)
     freezer.move_to(next_update)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
@@ -406,12 +394,12 @@ async def test_update_access_denied(
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         next_update = mock_now + timedelta(minutes=10)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert [
         flow
@@ -433,15 +421,18 @@ async def test_update_ws_connection_failure(
     """Testing update tv connection failure exception."""
     await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
 
-    with patch.object(
-        remotews,
-        "start_listening",
-        side_effect=ConnectionFailure('{"event": "ms.voiceApp.hide"}'),
-    ), patch.object(remotews, "is_alive", return_value=False):
+    with (
+        patch.object(
+            remotews,
+            "start_listening",
+            side_effect=ConnectionFailure('{"event": "ms.voiceApp.hide"}'),
+        ),
+        patch.object(remotews, "is_alive", return_value=False),
+    ):
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         "Unexpected ConnectionFailure trying to get remote for fake_host, please "
@@ -463,13 +454,16 @@ async def test_update_ws_connection_closed(
     """Testing update tv connection failure exception."""
     await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
 
-    with patch.object(
-        remotews, "start_listening", side_effect=ConnectionClosedError(None, None)
-    ), patch.object(remotews, "is_alive", return_value=False):
+    with (
+        patch.object(
+            remotews, "start_listening", side_effect=ConnectionClosedError(None, None)
+        ),
+        patch.object(remotews, "is_alive", return_value=False),
+    ):
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
@@ -485,13 +479,14 @@ async def test_update_ws_unauthorized_error(
     """Testing update tv unauthorized failure exception."""
     await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
 
-    with patch.object(
-        remotews, "start_listening", side_effect=UnauthorizedError
-    ), patch.object(remotews, "is_alive", return_value=False):
+    with (
+        patch.object(remotews, "start_listening", side_effect=UnauthorizedError),
+        patch.object(remotews, "is_alive", return_value=False),
+    ):
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert [
         flow
@@ -516,7 +511,7 @@ async def test_update_unhandled_response(
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get(ENTITY_ID)
         assert state.state == STATE_ON
@@ -536,7 +531,7 @@ async def test_connection_closed_during_update_can_recover(
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get(ENTITY_ID)
         assert state.state == STATE_UNAVAILABLE
@@ -544,7 +539,7 @@ async def test_connection_closed_during_update_can_recover(
         next_update = mock_now + timedelta(minutes=10)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get(ENTITY_ID)
         assert state.state == STATE_ON
@@ -557,11 +552,9 @@ async def test_send_key(hass: HomeAssistant, remote: Mock) -> None:
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     state = hass.states.get(ENTITY_ID)
-    # key and update called
+    # key called
     assert remote.control.call_count == 1
     assert remote.control.call_args_list == [call("KEY_VOLUP")]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
     assert state.state == STATE_ON
 
 
@@ -588,14 +581,12 @@ async def test_send_key_connection_closed_retry_succeed(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     state = hass.states.get(ENTITY_ID)
-    # key because of retry two times and update called
+    # key because of retry two times
     assert remote.control.call_count == 2
     assert remote.control.call_args_list == [
         call("KEY_VOLUP"),
         call("KEY_VOLUP"),
     ]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
     assert state.state == STATE_ON
 
 
@@ -704,7 +695,7 @@ async def test_state(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
     ):
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     # Should be STATE_UNAVAILABLE since there is no way to turn it back on
@@ -919,11 +910,9 @@ async def test_volume_up(hass: HomeAssistant, remote: Mock) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    # key and update called
+    # key called
     assert remote.control.call_count == 1
     assert remote.control.call_args_list == [call("KEY_VOLUP")]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
 
 
 async def test_volume_down(hass: HomeAssistant, remote: Mock) -> None:
@@ -932,11 +921,9 @@ async def test_volume_down(hass: HomeAssistant, remote: Mock) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_DOWN, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    # key and update called
+    # key called
     assert remote.control.call_count == 1
     assert remote.control.call_args_list == [call("KEY_VOLDOWN")]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
 
 
 async def test_mute_volume(hass: HomeAssistant, remote: Mock) -> None:
@@ -948,11 +935,9 @@ async def test_mute_volume(hass: HomeAssistant, remote: Mock) -> None:
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: True},
         True,
     )
-    # key and update called
+    # key called
     assert remote.control.call_count == 1
     assert remote.control.call_args_list == [call("KEY_MUTE")]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
 
 
 async def test_media_play(hass: HomeAssistant, remote: Mock) -> None:
@@ -961,20 +946,16 @@ async def test_media_play(hass: HomeAssistant, remote: Mock) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_MEDIA_PLAY, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    # key and update called
+    # key called
     assert remote.control.call_count == 1
     assert remote.control.call_args_list == [call("KEY_PLAY")]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
 
     await hass.services.async_call(
         DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    # key and update called
+    # key called
     assert remote.control.call_count == 2
     assert remote.control.call_args_list == [call("KEY_PLAY"), call("KEY_PAUSE")]
-    assert remote.close.call_count == 2
-    assert remote.close.call_args_list == [call(), call()]
 
 
 async def test_media_pause(hass: HomeAssistant, remote: Mock) -> None:
@@ -983,20 +964,16 @@ async def test_media_pause(hass: HomeAssistant, remote: Mock) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_MEDIA_PAUSE, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    # key and update called
+    # key called
     assert remote.control.call_count == 1
     assert remote.control.call_args_list == [call("KEY_PAUSE")]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
 
     await hass.services.async_call(
         DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    # key and update called
+    # key called
     assert remote.control.call_count == 2
     assert remote.control.call_args_list == [call("KEY_PAUSE"), call("KEY_PLAY")]
-    assert remote.close.call_count == 2
-    assert remote.close.call_args_list == [call(), call()]
 
 
 async def test_media_next_track(hass: HomeAssistant, remote: Mock) -> None:
@@ -1005,11 +982,9 @@ async def test_media_next_track(hass: HomeAssistant, remote: Mock) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_MEDIA_NEXT_TRACK, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    # key and update called
+    # key  called
     assert remote.control.call_count == 1
     assert remote.control.call_args_list == [call("KEY_CHUP")]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
 
 
 async def test_media_previous_track(hass: HomeAssistant, remote: Mock) -> None:
@@ -1018,11 +993,9 @@ async def test_media_previous_track(hass: HomeAssistant, remote: Mock) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    # key and update called
+    # key called
     assert remote.control.call_count == 1
     assert remote.control.call_args_list == [call("KEY_CHDOWN")]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
 
 
 @pytest.mark.usefixtures("remotews", "rest_api")
@@ -1037,7 +1010,7 @@ async def test_turn_on_wol(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     with patch(
-        "homeassistant.components.samsungtv.media_player.send_magic_packet"
+        "homeassistant.components.samsungtv.entity.send_magic_packet"
     ) as mock_send_magic_packet:
         await hass.services.async_call(
             DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
@@ -1049,7 +1022,7 @@ async def test_turn_on_wol(hass: HomeAssistant) -> None:
 async def test_turn_on_without_turnon(hass: HomeAssistant, remote: Mock) -> None:
     """Test turn on."""
     await setup_samsungtv_entry(hass, MOCK_CONFIG)
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="does not support this service"):
         await hass.services.async_call(
             DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
         )
@@ -1079,8 +1052,6 @@ async def test_play_media(hass: HomeAssistant, remote: Mock) -> None:
         call("KEY_6"),
         call("KEY_ENTER"),
     ]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
     assert sleep.call_count == 3
 
 
@@ -1100,10 +1071,8 @@ async def test_play_media_invalid_type(hass: HomeAssistant) -> None:
             },
             True,
         )
-        # only update called
+        # control not called
         assert remote.control.call_count == 0
-        assert remote.close.call_count == 0
-        assert remote.call_count == 1
 
 
 async def test_play_media_channel_as_string(hass: HomeAssistant) -> None:
@@ -1122,10 +1091,8 @@ async def test_play_media_channel_as_string(hass: HomeAssistant) -> None:
             },
             True,
         )
-        # only update called
+        # control not called
         assert remote.control.call_count == 0
-        assert remote.close.call_count == 0
-        assert remote.call_count == 1
 
 
 async def test_play_media_channel_as_non_positive(hass: HomeAssistant) -> None:
@@ -1143,10 +1110,8 @@ async def test_play_media_channel_as_non_positive(hass: HomeAssistant) -> None:
             },
             True,
         )
-        # only update called
+        # control not called
         assert remote.control.call_count == 0
-        assert remote.close.call_count == 0
-        assert remote.call_count == 1
 
 
 async def test_select_source(hass: HomeAssistant, remote: Mock) -> None:
@@ -1158,11 +1123,9 @@ async def test_select_source(hass: HomeAssistant, remote: Mock) -> None:
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "HDMI"},
         True,
     )
-    # key and update called
+    # key called
     assert remote.control.call_count == 1
     assert remote.control.call_args_list == [call("KEY_HDMI")]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
 
 
 async def test_select_source_invalid_source(hass: HomeAssistant) -> None:
@@ -1176,10 +1139,8 @@ async def test_select_source_invalid_source(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "INVALID"},
             True,
         )
-        # only update called
+        # control not called
         assert remote.control.call_count == 0
-        assert remote.close.call_count == 0
-        assert remote.call_count == 1
 
 
 @pytest.mark.usefixtures("rest_api")
@@ -1358,7 +1319,7 @@ async def test_upnp_shutdown(
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
 
-    assert await entry.async_unload(hass)
+    assert await hass.config_entries.async_unload(entry.entry_id)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_UNAVAILABLE
@@ -1437,13 +1398,16 @@ async def test_upnp_re_subscribe_events(
     assert dmr_device.async_subscribe_services.call_count == 1
     assert dmr_device.async_unsubscribe_services.call_count == 0
 
-    with patch.object(
-        remotews, "start_listening", side_effect=WebSocketException("Boom")
-    ), patch.object(remotews, "is_alive", return_value=False):
+    with (
+        patch.object(
+            remotews, "start_listening", side_effect=WebSocketException("Boom")
+        ),
+        patch.object(remotews, "is_alive", return_value=False),
+    ):
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
@@ -1453,7 +1417,7 @@ async def test_upnp_re_subscribe_events(
     next_update = mock_now + timedelta(minutes=10)
     freezer.move_to(next_update)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
@@ -1483,13 +1447,16 @@ async def test_upnp_failed_re_subscribe_events(
     assert dmr_device.async_subscribe_services.call_count == 1
     assert dmr_device.async_unsubscribe_services.call_count == 0
 
-    with patch.object(
-        remotews, "start_listening", side_effect=WebSocketException("Boom")
-    ), patch.object(remotews, "is_alive", return_value=False):
+    with (
+        patch.object(
+            remotews, "start_listening", side_effect=WebSocketException("Boom")
+        ),
+        patch.object(remotews, "is_alive", return_value=False),
+    ):
         next_update = mock_now + timedelta(minutes=5)
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
@@ -1500,7 +1467,7 @@ async def test_upnp_failed_re_subscribe_events(
     with patch.object(dmr_device, "async_subscribe_services", side_effect=error):
         freezer.move_to(next_update)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON

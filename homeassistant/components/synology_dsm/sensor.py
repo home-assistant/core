@@ -1,8 +1,10 @@
 """Support for Synology DSM sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import cast
 
 from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.dsm.information import SynoDSMInformation
@@ -39,7 +41,7 @@ from .entity import (
 from .models import SynologyDSMData
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SynologyDSMSensorEntityDescription(
     SensorEntityDescription, SynologyDSMEntityDescription
 ):
@@ -52,7 +54,6 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         key="cpu_other_load",
         translation_key="cpu_other_load",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:chip",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -61,7 +62,6 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         key="cpu_user_load",
         translation_key="cpu_user_load",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:chip",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
@@ -69,7 +69,6 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         key="cpu_system_load",
         translation_key="cpu_system_load",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:chip",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -78,7 +77,6 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         key="cpu_total_load",
         translation_key="cpu_total_load",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:chip",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
@@ -86,7 +84,6 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         key="cpu_1min_load",
         translation_key="cpu_1min_load",
         native_unit_of_measurement=ENTITY_UNIT_LOAD,
-        icon="mdi:chip",
         entity_registry_enabled_default=False,
     ),
     SynologyDSMSensorEntityDescription(
@@ -94,21 +91,18 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         key="cpu_5min_load",
         translation_key="cpu_5min_load",
         native_unit_of_measurement=ENTITY_UNIT_LOAD,
-        icon="mdi:chip",
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
         key="cpu_15min_load",
         translation_key="cpu_15min_load",
         native_unit_of_measurement=ENTITY_UNIT_LOAD,
-        icon="mdi:chip",
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
         key="memory_real_usage",
         translation_key="memory_real_usage",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
@@ -119,7 +113,6 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:memory",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -131,7 +124,6 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:memory",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -143,7 +135,6 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
@@ -154,7 +145,6 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
@@ -165,7 +155,6 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
@@ -176,7 +165,6 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
@@ -187,7 +175,6 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.DATA_RATE,
-        icon="mdi:upload",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
@@ -198,7 +185,6 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.DATA_RATE,
-        icon="mdi:download",
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
@@ -207,7 +193,6 @@ STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoStorage.API_KEY,
         key="volume_status",
         translation_key="volume_status",
-        icon="mdi:checkbox-marked-circle-outline",
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoStorage.API_KEY,
@@ -217,7 +202,6 @@ STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.TERABYTES,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:chart-pie",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -229,7 +213,6 @@ STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.TERABYTES,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:chart-pie",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
@@ -237,7 +220,6 @@ STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         key="volume_percentage_used",
         translation_key="volume_percentage_used",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:chart-pie",
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoStorage.API_KEY,
@@ -262,7 +244,6 @@ STORAGE_DISK_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoStorage.API_KEY,
         key="disk_smart_status",
         translation_key="disk_smart_status",
-        icon="mdi:checkbox-marked-circle-outline",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -270,7 +251,6 @@ STORAGE_DISK_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoStorage.API_KEY,
         key="disk_status",
         translation_key="disk_status",
-        icon="mdi:checkbox-marked-circle-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SynologyDSMSensorEntityDescription(
@@ -312,6 +292,8 @@ async def async_setup_entry(
     data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
     api = data.api
     coordinator = data.coordinator_central
+    storage = api.storage
+    assert storage is not None
 
     entities: list[SynoDSMUtilSensor | SynoDSMStorageSensor | SynoDSMInfoSensor] = [
         SynoDSMUtilSensor(api, coordinator, description)
@@ -319,21 +301,21 @@ async def async_setup_entry(
     ]
 
     # Handle all volumes
-    if api.storage.volumes_ids:
+    if storage.volumes_ids:
         entities.extend(
             [
                 SynoDSMStorageSensor(api, coordinator, description, volume)
-                for volume in entry.data.get(CONF_VOLUMES, api.storage.volumes_ids)
+                for volume in entry.data.get(CONF_VOLUMES, storage.volumes_ids)
                 for description in STORAGE_VOL_SENSORS
             ]
         )
 
     # Handle all disks
-    if api.storage.disks_ids:
+    if storage.disks_ids:
         entities.extend(
             [
                 SynoDSMStorageSensor(api, coordinator, description, disk)
-                for disk in entry.data.get(CONF_DISKS, api.storage.disks_ids)
+                for disk in entry.data.get(CONF_DISKS, storage.disks_ids)
                 for description in STORAGE_DISK_SENSORS
             ]
         )
@@ -387,7 +369,7 @@ class SynoDSMUtilSensor(SynoDSMSensor):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return bool(self._api.utilisation)
+        return bool(self._api.utilisation) and super().available
 
 
 class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
@@ -408,8 +390,10 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state."""
-        attr = getattr(self._api.storage, self.entity_description.key)(self._device_id)
-        return attr  # type: ignore[no-any-return]
+        return cast(
+            StateType,
+            getattr(self._api.storage, self.entity_description.key)(self._device_id),
+        )
 
 
 class SynoDSMInfoSensor(SynoDSMSensor):

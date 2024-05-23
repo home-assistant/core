@@ -1,7 +1,8 @@
 """Sensor to indicate whether the current day is a workday."""
+
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Final
 
 from holidays import (
@@ -14,13 +15,20 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
-from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    HomeAssistant,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
 )
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import dt as dt_util, slugify
 
@@ -53,7 +61,7 @@ def validate_dates(holiday_list: list[str]) -> list[str]:
                 continue
             _range: timedelta = d2 - d1
             for i in range(_range.days + 1):
-                day = d1 + timedelta(days=i)
+                day: date = d1 + timedelta(days=i)
                 calc_holidays.append(day.strftime("%Y-%m-%d"))
             continue
         calc_holidays.append(add_date)
@@ -123,25 +131,46 @@ async def async_setup_entry(
                     LOGGER.debug("Removed %s by name '%s'", holiday, remove_holiday)
         except KeyError as unmatched:
             LOGGER.warning("No holiday found matching %s", unmatched)
-            async_create_issue(
-                hass,
-                DOMAIN,
-                f"bad_named_holiday-{entry.entry_id}-{slugify(remove_holiday)}",
-                is_fixable=True,
-                is_persistent=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="bad_named_holiday",
-                translation_placeholders={
-                    CONF_COUNTRY: country if country else "-",
-                    "title": entry.title,
-                    CONF_REMOVE_HOLIDAYS: remove_holiday,
-                },
-                data={
-                    "entry_id": entry.entry_id,
-                    "country": country,
-                    "named_holiday": remove_holiday,
-                },
-            )
+            if dt_util.parse_date(remove_holiday):
+                async_create_issue(
+                    hass,
+                    DOMAIN,
+                    f"bad_date_holiday-{entry.entry_id}-{slugify(remove_holiday)}",
+                    is_fixable=True,
+                    is_persistent=False,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="bad_date_holiday",
+                    translation_placeholders={
+                        CONF_COUNTRY: country if country else "-",
+                        "title": entry.title,
+                        CONF_REMOVE_HOLIDAYS: remove_holiday,
+                    },
+                    data={
+                        "entry_id": entry.entry_id,
+                        "country": country,
+                        "named_holiday": remove_holiday,
+                    },
+                )
+            else:
+                async_create_issue(
+                    hass,
+                    DOMAIN,
+                    f"bad_named_holiday-{entry.entry_id}-{slugify(remove_holiday)}",
+                    is_fixable=True,
+                    is_persistent=False,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="bad_named_holiday",
+                    translation_placeholders={
+                        CONF_COUNTRY: country if country else "-",
+                        "title": entry.title,
+                        CONF_REMOVE_HOLIDAYS: remove_holiday,
+                    },
+                    data={
+                        "entry_id": entry.entry_id,
+                        "country": country,
+                        "named_holiday": remove_holiday,
+                    },
+                )
 
     LOGGER.debug("Found the following holidays for your configuration:")
     for holiday_date, name in sorted(obj_holidays.items()):
@@ -179,6 +208,8 @@ class IsWorkdaySensor(BinarySensorEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_translation_key = DOMAIN
+    _attr_should_poll = False
+    unsub: CALLBACK_TYPE | None = None
 
     def __init__(
         self,
@@ -226,11 +257,34 @@ class IsWorkdaySensor(BinarySensorEntity):
 
         return False
 
-    async def async_update(self) -> None:
-        """Get date and look whether it is a holiday."""
-        self._attr_is_on = self.date_is_workday(dt_util.now())
+    def get_next_interval(self, now: datetime) -> datetime:
+        """Compute next time an update should occur."""
+        tomorrow = dt_util.as_local(now) + timedelta(days=1)
+        return dt_util.start_of_local_day(tomorrow)
 
-    async def check_date(self, check_date: date) -> ServiceResponse:
+    def _update_state_and_setup_listener(self) -> None:
+        """Update state and setup listener for next interval."""
+        now = dt_util.utcnow()
+        self.update_data(now)
+        self.unsub = async_track_point_in_utc_time(
+            self.hass, self.point_in_time_listener, self.get_next_interval(now)
+        )
+
+    @callback
+    def point_in_time_listener(self, time_date: datetime) -> None:
+        """Get the latest data and update state."""
+        self._update_state_and_setup_listener()
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Set up first update."""
+        self._update_state_and_setup_listener()
+
+    def update_data(self, now: datetime) -> None:
+        """Get date and look whether it is a holiday."""
+        self._attr_is_on = self.date_is_workday(now)
+
+    def check_date(self, check_date: date) -> ServiceResponse:
         """Service to check if date is workday or not."""
         return {"workday": self.date_is_workday(check_date)}
 

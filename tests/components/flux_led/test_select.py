@@ -1,4 +1,5 @@
 """Tests for select platform."""
+
 from unittest.mock import patch
 
 from flux_led.const import (

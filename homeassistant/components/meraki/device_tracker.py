@@ -1,4 +1,5 @@
 """Support for the Meraki CMX location service."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -12,7 +13,7 @@ from homeassistant.components.device_tracker import (
     AsyncSeeCallback,
     SourceType,
 )
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -85,8 +86,8 @@ class MerakiView(HomeAssistantView):
         _LOGGER.debug("Processing %s", data["type"])
         if not data["data"]["observations"]:
             _LOGGER.debug("No observations found")
-            return
-        self._handle(request.app["hass"], data)
+            return None
+        self._handle(request.app[KEY_HASS], data)
 
     @callback
     def _handle(self, hass, data):

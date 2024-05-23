@@ -1,4 +1,5 @@
 """Test the Whirlpool Sixth Sense climate domain."""
+
 from unittest.mock import MagicMock
 
 from attr import dataclass
@@ -97,6 +98,8 @@ async def test_static_attributes(
             == ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.SWING_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
         assert attributes[ATTR_HVAC_MODES] == [
             HVACMode.COOL,

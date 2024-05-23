@@ -1,4 +1,5 @@
 """Component providing sensors for UniFi Protect."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -617,7 +618,8 @@ async def async_setup_entry(
     """Set up sensors for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         entities = async_all_device_entities(
             data,
             ProtectDeviceSensor,
@@ -752,7 +754,7 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         # do not call ProtectDeviceSensor method since we want event to get value here
-        EventEntityMixin._async_update_device_from_protect(self, device)
+        EventEntityMixin._async_update_device_from_protect(self, device)  # noqa: SLF001
         event = self._event
         entity_description = self.entity_description
         is_on = entity_description.get_is_on(self.device, self._event)

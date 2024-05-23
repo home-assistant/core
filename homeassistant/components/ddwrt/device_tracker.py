@@ -1,4 +1,5 @@
 """Support for DD-WRT routers."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -97,7 +98,7 @@ class DdWrtDeviceScanner(DeviceScanner):
             elements = cleaned_str.split(",")
             num_clients = int(len(elements) / 5)
             self.mac2name = {}
-            for idx in range(0, num_clients):
+            for idx in range(num_clients):
                 # The data is a single array
                 # every 5 elements represents one host, the MAC
                 # is the third element and the name is the first.
@@ -151,7 +152,7 @@ class DdWrtDeviceScanner(DeviceScanner):
             )
         except requests.exceptions.Timeout:
             _LOGGER.exception("Connection to the router timed out")
-            return
+            return None
         if response.status_code == HTTPStatus.OK:
             return _parse_ddwrt_response(response.text)
         if response.status_code == HTTPStatus.UNAUTHORIZED:
@@ -159,7 +160,7 @@ class DdWrtDeviceScanner(DeviceScanner):
             _LOGGER.exception(
                 "Failed to authenticate, check your username and password"
             )
-            return
+            return None
         _LOGGER.error("Invalid response from DD-WRT: %s", response)
 
 

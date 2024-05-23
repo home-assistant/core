@@ -1,4 +1,5 @@
 """Support for Huawei LTE sensors."""
+
 from __future__ import annotations
 
 from bisect import bisect
@@ -53,7 +54,7 @@ def format_default(value: StateType) -> tuple[StateType, str | None]:
     if value is not None:
         # Clean up value and infer unit, e.g. -71dBm, 15 dB
         if match := re.match(
-            r"([>=<]*)(?P<value>.+?)\s*(?P<unit>[a-zA-Z]+)\s*$", str(value)
+            r"((&[gl]t;|[><])=?)?(?P<value>.+?)\s*(?P<unit>[a-zA-Z]+)\s*$", str(value)
         ):
             try:
                 value = float(match.group("value"))
@@ -78,9 +79,9 @@ def format_last_reset_elapsed_seconds(value: str | None) -> datetime | None:
     try:
         last_reset = datetime.now() - timedelta(seconds=int(value))
         last_reset.replace(microsecond=0)
-        return last_reset
     except ValueError:
         return None
+    return last_reset
 
 
 def signal_icon(limits: Sequence[int], value: StateType) -> str:
@@ -673,17 +674,17 @@ async def async_setup_entry(
                 items = filter(key_meta.include.search, items)
             if key_meta.exclude:
                 items = [x for x in items if not key_meta.exclude.search(x)]
-        for item in items:
-            sensors.append(
-                HuaweiLteSensor(
-                    router,
-                    key,
-                    item,
-                    SENSOR_META[key].descriptions.get(
-                        item, HuaweiSensorEntityDescription(key=item)
-                    ),
-                )
+        sensors.extend(
+            HuaweiLteSensor(
+                router,
+                key,
+                item,
+                SENSOR_META[key].descriptions.get(
+                    item, HuaweiSensorEntityDescription(key=item)
+                ),
             )
+            for item in items
+        )
 
     async_add_entities(sensors, True)
 

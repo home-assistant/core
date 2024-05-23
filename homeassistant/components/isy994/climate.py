@@ -1,4 +1,5 @@
 """Support for Insteon Thermostats via ISY Platform."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -63,14 +64,14 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the ISY thermostat platform."""
-    entities = []
 
     isy_data: IsyData = hass.data[DOMAIN][entry.entry_id]
     devices: dict[str, DeviceInfo] = isy_data.devices
-    for node in isy_data.nodes[Platform.CLIMATE]:
-        entities.append(ISYThermostatEntity(node, devices.get(node.primary_node)))
 
-    async_add_entities(entities)
+    async_add_entities(
+        ISYThermostatEntity(node, devices.get(node.primary_node))
+        for node in isy_data.nodes[Platform.CLIMATE]
+    )
 
 
 class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
@@ -82,9 +83,12 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = 1.0
     _attr_fan_modes = [FAN_AUTO, FAN_ON]
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, node: Node, device_info: DeviceInfo | None = None) -> None:
         """Initialize the ISY Thermostat entity."""

@@ -1,4 +1,5 @@
 """Code to handle a Motion Gateway."""
+
 import contextlib
 import logging
 import socket
@@ -50,7 +51,7 @@ class ConnectMotionGateway:
         try:
             # update device info and get the connected sub devices
             await self._hass.async_add_executor_job(self.update_gateway)
-        except socket.timeout:
+        except TimeoutError:
             _LOGGER.error(
                 "Timeout trying to connect to Motion Gateway with host %s", host
             )
@@ -100,7 +101,7 @@ class ConnectMotionGateway:
         interfaces = await self.async_get_interfaces()
         for interface in interfaces:
             _LOGGER.debug(
-                "Checking Motion Blinds interface '%s' with host %s", interface, host
+                "Checking Motionblinds interface '%s' with host %s", interface, host
             )
             # initialize multicast listener
             check_multicast = AsyncMotionMulticast(interface=interface)
@@ -126,7 +127,7 @@ class ConnectMotionGateway:
             if result:
                 # successfully received multicast
                 _LOGGER.debug(
-                    "Success using Motion Blinds interface '%s' with host %s",
+                    "Success using Motionblinds interface '%s' with host %s",
                     interface,
                     host,
                 )
@@ -134,7 +135,7 @@ class ConnectMotionGateway:
 
         _LOGGER.error(
             (
-                "Could not find working interface for Motion Blinds host %s, using"
+                "Could not find working interface for Motionblinds host %s, using"
                 " interface '%s'"
             ),
             host,

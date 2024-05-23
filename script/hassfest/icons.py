@@ -1,4 +1,5 @@
 """Validate integration icon translation files."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -46,7 +47,7 @@ def ensure_not_same_as_default(value: dict) -> dict:
     return value
 
 
-def icon_schema(integration_type: str) -> vol.Schema:
+def icon_schema(integration_type: str, no_entity_platform: bool) -> vol.Schema:
     """Create a icon schema."""
 
     state_validator = cv.schema_with_slug_keys(
@@ -70,16 +71,20 @@ def icon_schema(integration_type: str) -> vol.Schema:
             ),
         }
 
-    base_schema = vol.Schema(
+    schema = vol.Schema(
         {
             vol.Optional("services"): state_validator,
         }
     )
 
-    if integration_type == "entity":
-        return base_schema.extend(
+    if integration_type in ("entity", "helper", "system"):
+        if integration_type != "entity" or no_entity_platform:
+            field = vol.Optional("entity_component")
+        else:
+            field = vol.Required("entity_component")
+        schema = schema.extend(
             {
-                vol.Required("entity_component"): vol.All(
+                field: vol.All(
                     cv.schema_with_slug_keys(
                         icon_schema_slug(vol.Required),
                         slug_validator=vol.Any("_", cv.slug),
@@ -89,23 +94,25 @@ def icon_schema(integration_type: str) -> vol.Schema:
                 )
             }
         )
-    return base_schema.extend(
-        {
-            vol.Optional("entity"): vol.All(
-                cv.schema_with_slug_keys(
+    if integration_type not in ("entity", "system"):
+        schema = schema.extend(
+            {
+                vol.Optional("entity"): vol.All(
                     cv.schema_with_slug_keys(
-                        icon_schema_slug(vol.Optional),
-                        slug_validator=translation_key_validator,
+                        cv.schema_with_slug_keys(
+                            icon_schema_slug(vol.Optional),
+                            slug_validator=translation_key_validator,
+                        ),
+                        slug_validator=cv.slug,
                     ),
-                    slug_validator=cv.slug,
-                ),
-                ensure_not_same_as_default,
-            )
-        }
-    )
+                    ensure_not_same_as_default,
+                )
+            }
+        )
+    return schema
 
 
-def validate_icon_file(config: Config, integration: Integration) -> None:  # noqa: C901
+def validate_icon_file(config: Config, integration: Integration) -> None:
     """Validate icon file for integration."""
     icons_file = integration.path / "icons.json"
     if not icons_file.is_file():
@@ -119,7 +126,9 @@ def validate_icon_file(config: Config, integration: Integration) -> None:  # noq
         integration.add_error("icons", f"Invalid JSON in {name}: {err}")
         return
 
-    schema = icon_schema(integration.integration_type)
+    no_entity_platform = integration.domain in ("notify", "image_processing")
+
+    schema = icon_schema(integration.integration_type, no_entity_platform)
 
     try:
         schema(icons)

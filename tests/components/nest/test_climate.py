@@ -52,7 +52,7 @@ from .conftest import FakeAuth
 
 from tests.components.climate import common
 
-CreateEvent = Callable[[dict[str, Any]], Awaitable[None]]
+type CreateEvent = Callable[[dict[str, Any]], Awaitable[None]]
 
 EVENT_ID = "some-event-id"
 
@@ -79,7 +79,7 @@ async def create_event(
 
     async def create_event(traits: dict[str, Any]) -> None:
         await subscriber.async_receive_event(
-            EventMessage(
+            EventMessage.create_event(
                 {
                     "eventId": EVENT_ID,
                     "timestamp": "2019-01-01T00:00:01Z",
@@ -909,6 +909,8 @@ async def test_thermostat_fan_off(
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
 
@@ -956,6 +958,8 @@ async def test_thermostat_fan_on(
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
 
@@ -999,6 +1003,8 @@ async def test_thermostat_cool_with_fan(
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
 
@@ -1036,6 +1042,8 @@ async def test_thermostat_set_fan(
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
     # Turn off fan mode
@@ -1098,6 +1106,8 @@ async def test_thermostat_set_fan_when_off(
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
     # Fan cannot be turned on when HVAC is off
@@ -1143,6 +1153,8 @@ async def test_thermostat_fan_empty(
     assert thermostat.attributes[ATTR_SUPPORTED_FEATURES] == (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
     # Ignores set_fan_mode since it is lacking SUPPORT_FAN_MODE

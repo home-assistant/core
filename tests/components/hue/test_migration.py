@@ -1,4 +1,5 @@
 """Test Hue migration logic."""
+
 from unittest.mock import patch
 
 from homeassistant.components import hue
@@ -14,6 +15,7 @@ async def test_migrate_api_key(hass: HomeAssistant) -> None:
         domain=hue.DOMAIN,
         data={"host": "0.0.0.0", "api_version": 2, "username": "abcdefgh"},
     )
+    config_entry.add_to_hass(hass)
     await hue.migration.check_migration(hass, config_entry)
     # the username property should have been migrated to api_key
     assert config_entry.data == {
@@ -29,10 +31,12 @@ async def test_auto_switchover(hass: HomeAssistant) -> None:
         domain=hue.DOMAIN,
         data={"host": "0.0.0.0", "api_version": 1, "username": "abcdefgh"},
     )
+    config_entry.add_to_hass(hass)
 
-    with patch.object(hue.migration, "is_v2_bridge", retun_value=True), patch.object(
-        hue.migration, "handle_v2_migration"
-    ) as mock_mig:
+    with (
+        patch.object(hue.migration, "is_v2_bridge", retun_value=True),
+        patch.object(hue.migration, "handle_v2_migration") as mock_mig,
+    ):
         await hue.migration.check_migration(hass, config_entry)
         assert len(mock_mig.mock_calls) == 1
         # the api version should now be version 2

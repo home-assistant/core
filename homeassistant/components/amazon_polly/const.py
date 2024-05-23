@@ -1,4 +1,5 @@
 """Constants for the Amazon Polly text to speech service."""
+
 from __future__ import annotations
 
 from typing import Final

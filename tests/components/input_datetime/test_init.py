@@ -1,4 +1,5 @@
 """Tests for the Input slider component."""
+
 import datetime
 from unittest.mock import patch
 
@@ -687,7 +688,7 @@ async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -
 
 async def test_timestamp(hass: HomeAssistant) -> None:
     """Test timestamp."""
-    hass.config.set_time_zone("America/Los_Angeles")
+    await hass.config.async_set_time_zone("America/Los_Angeles")
 
     assert await async_setup_component(
         hass,

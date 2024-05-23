@@ -1,11 +1,10 @@
 """Consts for Cast integration."""
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
-from pychromecast.controllers.homeassistant import HomeAssistantController
-
-from homeassistant.helpers.dispatcher import SignalType
+from homeassistant.util.signal_type import SignalType
 
 if TYPE_CHECKING:
     from .helpers import ChromecastInfo
@@ -33,8 +32,17 @@ SIGNAL_CAST_REMOVED: SignalType[ChromecastInfo] = SignalType("cast_removed")
 
 # Dispatcher signal fired when a Chromecast should show a Home Assistant Cast view.
 SIGNAL_HASS_CAST_SHOW_VIEW: SignalType[
-    HomeAssistantController, str, str, str | None
+    HomeAssistantControllerData, str, str, str | None
 ] = SignalType("cast_show_view")
 
 CONF_IGNORE_CEC = "ignore_cec"
 CONF_KNOWN_HOSTS = "known_hosts"
+
+
+class HomeAssistantControllerData(TypedDict):
+    """Data for creating a HomeAssistantController."""
+
+    hass_url: str
+    hass_uuid: str
+    client_id: str | None
+    refresh_token: str
