@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 from typing import Any
 
@@ -284,7 +285,8 @@ class MqttSensor(MqttEntity, RestoreSensor):
 
         topics["state_topic"] = {
             "topic": self._config[CONF_STATE_TOPIC],
-            "msg_callback": self._make_callback_message_received(
+            "msg_callback": partial(
+                self._message_callback,
                 self._state_message_received,
                 {"_attr_native_value", "_attr_last_reset", "_expired"},
             ),

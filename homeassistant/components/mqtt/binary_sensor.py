@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 from typing import Any
 
@@ -239,8 +240,10 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             {
                 "state_topic": {
                     "topic": self._config[CONF_STATE_TOPIC],
-                    "msg_callback": self._make_callback_message_received(
-                        self._state_message_received, {"_attr_is_on", "_expired"}
+                    "msg_callback": partial(
+                        self._message_callback,
+                        self._state_message_received,
+                        {"_attr_is_on", "_expired"},
                     ),
                     "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],

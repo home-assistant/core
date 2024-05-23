@@ -403,9 +403,6 @@ class MqttAttributes(Entity):
 
     _attributes_extra_blocked: frozenset[str] = frozenset()
     _attr_tpl: Callable[[ReceivePayloadType], ReceivePayloadType] | None = None
-    _make_callback_message_received: Callable[
-        [MessageCallbackType, set[str]], Callable[[MessageCallbackType], None]
-    ]
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes mixin."""
@@ -438,7 +435,8 @@ class MqttAttributes(Entity):
             {
                 CONF_JSON_ATTRS_TOPIC: {
                     "topic": self._attributes_config.get(CONF_JSON_ATTRS_TOPIC),
-                    "msg_callback": self._make_callback_message_received(
+                    "msg_callback": partial(
+                        self._message_callback,  # type: ignore[attr-defined]
                         self._attributes_message_received,
                         {"_attr_extra_state_attributes"},
                     ),
@@ -484,10 +482,6 @@ class MqttAttributes(Entity):
 
 class MqttAvailability(Entity):
     """Mixin used for platforms that report availability."""
-
-    _make_callback_message_received: Callable[
-        [MessageCallbackType, set[str]], Callable[[MessageCallbackType], None]
-    ]
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the availability mixin."""
@@ -554,8 +548,10 @@ class MqttAvailability(Entity):
         topics: dict[str, dict[str, Any]] = {
             f"availability_{topic}": {
                 "topic": topic,
-                "msg_callback": self._make_callback_message_received(
-                    self._availability_message_received, {"available"}
+                "msg_callback": partial(
+                    self._message_callback,  # type: ignore[attr-defined]
+                    self._availability_message_received,
+                    {"available"},
                 ),
                 "entity_id": self.entity_id,
                 "qos": self._avail_config[CONF_QOS],
@@ -1282,13 +1278,6 @@ class MqttEntity(
             return
 
         self.hass.data[DATA_MQTT].state_write_requests.write_state_request(self)
-
-    @callback
-    def _make_callback_message_received(
-        self, msg_callback: MessageCallbackType, attributes: set[str]
-    ) -> Callable[[MessageCallbackType], None]:
-        """Run when new MQTT message has been received."""
-        return partial(self._message_callback, msg_callback, attributes)
 
 
 def update_device(
