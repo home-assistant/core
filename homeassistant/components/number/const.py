@@ -158,6 +158,15 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
     """
 
+    ENERGY_FORECAST = "energy_forecast"
+    """Forecast energy.
+
+    Use this device class for sensors predicting energy generated, for example the amount
+    of electric energy a solar system may produce in and hour or over a whole day.
+
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    """
+
     ENERGY_STORAGE = "energy_storage"
     """Stored energy.
 
@@ -436,6 +445,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfTime.MILLISECONDS,
     },
     NumberDeviceClass.ENERGY: set(UnitOfEnergy),
+    NumberDeviceClass.ENERGY_FORECAST: set(UnitOfEnergy),
     NumberDeviceClass.ENERGY_STORAGE: set(UnitOfEnergy),
     NumberDeviceClass.FREQUENCY: set(UnitOfFrequency),
     NumberDeviceClass.GAS: {

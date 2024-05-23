@@ -177,6 +177,15 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
     """
 
+    ENERGY_FORECAST = "energy_forecast"
+    """Forecast energy.
+
+    Use this device class for sensors predicting energy generated, for example the amount
+    of electric energy a solar system may produce in and hour or over a whole day.
+
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    """
+
     ENERGY_STORAGE = "energy_storage"
     """Stored energy.
 
@@ -491,6 +500,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.DISTANCE: DistanceConverter,
     SensorDeviceClass.DURATION: DurationConverter,
     SensorDeviceClass.ENERGY: EnergyConverter,
+    SensorDeviceClass.ENERGY_FORECAST: EnergyConverter,
     SensorDeviceClass.ENERGY_STORAGE: EnergyConverter,
     SensorDeviceClass.GAS: VolumeConverter,
     SensorDeviceClass.POWER: PowerConverter,
@@ -529,6 +539,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfTime.MILLISECONDS,
     },
     SensorDeviceClass.ENERGY: set(UnitOfEnergy),
+    SensorDeviceClass.ENERGY_FORECAST: set(UnitOfEnergy),
     SensorDeviceClass.ENERGY_STORAGE: set(UnitOfEnergy),
     SensorDeviceClass.FREQUENCY: set(UnitOfFrequency),
     SensorDeviceClass.GAS: {
@@ -601,6 +612,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
     },
+    SensorDeviceClass.ENERGY_FORECAST: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.ENERGY_STORAGE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.ENUM: set(),
     SensorDeviceClass.FREQUENCY: {SensorStateClass.MEASUREMENT},

@@ -96,6 +96,7 @@
         "distance": "[%key:component::sensor::entity_component::distance::name%]",
         "duration": "[%key:component::sensor::entity_component::duration::name%]",
         "energy": "[%key:component::sensor::entity_component::energy::name%]",
+        "energy_forecast": "[%key:component::sensor::entity_component::energy_forecast::name%]",
         "energy_storage": "[%key:component::sensor::entity_component::energy_storage::name%]",
         "frequency": "[%key:component::sensor::entity_component::frequency::name%]",
         "gas": "[%key:component::sensor::entity_component::gas::name%]",

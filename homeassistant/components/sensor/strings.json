@@ -163,6 +163,9 @@
     "energy": {
       "name": "Energy"
     },
+    "energy_forecast": {
+      "name": "Forecasted energy"
+    },
     "energy_storage": {
       "name": "Stored energy"
     },

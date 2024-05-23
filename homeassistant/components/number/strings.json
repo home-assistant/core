@@ -58,6 +58,9 @@
     "energy": {
       "name": "[%key:component::sensor::entity_component::energy::name%]"
     },
+    "energy_forecast": {
+      "name": "[%key:component::sensor::entity_component::energy_forecast::name%]"
+    },
     "energy_storage": {
       "name": "[%key:component::sensor::entity_component::energy_storage::name%]"
     },

@@ -95,6 +95,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.DISTANCE: [{CONF_TYPE: CONF_DISTANCE}],
     SensorDeviceClass.DURATION: [{CONF_TYPE: CONF_DURATION}],
     SensorDeviceClass.ENERGY: [{CONF_TYPE: CONF_ENERGY}],
+    SensorDeviceClass.ENERGY_FORECAST: [{CONF_TYPE: CONF_ENERGY}],
     SensorDeviceClass.ENERGY_STORAGE: [{CONF_TYPE: CONF_ENERGY}],
     SensorDeviceClass.FREQUENCY: [{CONF_TYPE: CONF_FREQUENCY}],
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_GAS}],

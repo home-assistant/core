@@ -39,6 +39,9 @@
     "energy": {
       "default": "mdi:lightning-bolt"
     },
+    "energy_forecast": {
+      "default": "mdi:solar-power"
+    },
     "energy_storage": {
       "default": "mdi:car-battery"
     },
