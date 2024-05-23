@@ -26,7 +26,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LektricoDeviceDataUpdateCoordinator
@@ -270,7 +270,7 @@ async def async_setup_entry(
             SENSORS_FOR_LB_DEVICES + SENSORS_FOR_3_PHASE + SENSORS_FOR_LB_3_PHASE
         )
     else:
-        raise PlatformNotReady
+        raise IntegrationError
 
     async_add_entities(
         LektricoSensor(
