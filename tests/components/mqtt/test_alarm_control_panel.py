@@ -1374,7 +1374,6 @@ async def test_value_template_fails(
     """Test the rendering of MQTT value template fails."""
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
-    await hass.async_block_till_done()
     assert (
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
         in caplog.text
