@@ -1988,6 +1988,7 @@ pymitv==1.4.3
 # homeassistant.components.mochad
 pymochad==0.2.0
 
+# homeassistant.components.kermi
 # homeassistant.components.modbus
 pymodbus==3.6.8
 

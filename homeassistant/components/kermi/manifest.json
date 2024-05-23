@@ -1,0 +1,13 @@
+{
+  "domain": "kermi",
+  "name": "kermi",
+  "codeowners": ["@jr42"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/kermi",
+  "homekit": {},
+  "iot_class": "local_polling",
+  "requirements": ["pymodbus==3.6.8"],
+  "ssdp": [],
+  "zeroconf": []
+}
