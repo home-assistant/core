@@ -383,6 +383,9 @@ class EntityTopicState:
             state: str = entity.state  # type: ignore[assignment]
             state_length = len(state)
         except (TypeError, ValueError):
+            # When the state is not a string or is invalid, we
+            # ignore this at this point, there errors will be handled
+            # when we will try to write the state.
             return False
         if state_length > MAX_LENGTH_STATE_STATE:
             _LOGGER.error(
