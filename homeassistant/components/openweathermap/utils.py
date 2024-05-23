@@ -8,7 +8,7 @@ async def validate_api_key(api_key, mode):
     api_key_valid = None
     errors, description_placeholders = {}, {}
     try:
-        owm_client = OWMClient(mode, mode)
+        owm_client = OWMClient(api_key, mode)
         api_key_valid = await owm_client.validate_key()
     except RequestError as error:
         errors["base"] = "cannot_connect"
