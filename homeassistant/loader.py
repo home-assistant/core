@@ -39,6 +39,7 @@ from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
+from .helpers.json import json_bytes, json_fragment
 from .util.hass_dict import HassKey
 from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
@@ -761,6 +762,11 @@ class Integration:
         self._missing_platforms_cache = hass.data[DATA_MISSING_PLATFORMS]
         self._top_level_files = top_level_files or set()
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
+
+    @cached_property
+    def manifest_json_fragment(self) -> json_fragment:
+        """Return manifest as a JSON fragment."""
+        return json_fragment(json_bytes(self.manifest))
 
     @cached_property
     def name(self) -> str:

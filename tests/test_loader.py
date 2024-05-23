@@ -15,6 +15,8 @@ from homeassistant.components import http, hue
 from homeassistant.components.hue import light as hue_light
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import frame
+from homeassistant.helpers.json import json_dumps
+from homeassistant.util.json import json_loads
 
 from .common import MockModule, async_get_persistent_notifications, mock_integration
 
@@ -1959,3 +1961,12 @@ async def test_hass_helpers_use_reported(
             "Detected that custom integration 'test_integration_frame' "
             "accesses hass.helpers.aiohttp_client. This is deprecated"
         ) in caplog.text
+
+
+async def test_manifest_json_fragment_round_trip(hass: HomeAssistant) -> None:
+    """Test json_fragment roundtrip."""
+    integration = await loader.async_get_integration(hass, "hue")
+    assert (
+        json_loads(json_dumps(integration.manifest_json_fragment))
+        == integration.manifest
+    )
