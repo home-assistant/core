@@ -16,7 +16,7 @@ from homeassistant.components.intent.timers import (
     async_register_timer_handler,
 )
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -43,6 +43,7 @@ async def test_start_finish_timer(hass: HomeAssistant, init_components) -> None:
 
     timer_id: str | None = None
 
+    @callback
     def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         nonlocal timer_id
 
@@ -88,6 +89,7 @@ async def test_cancel_timer(hass: HomeAssistant, init_components) -> None:
 
     timer_id: str | None = None
 
+    @callback
     def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         nonlocal timer_id
 
@@ -194,6 +196,7 @@ async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
     timer_id: str | None = None
     original_total_seconds = -1
 
+    @callback
     def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         nonlocal timer_id, original_total_seconds
 
@@ -309,6 +312,7 @@ async def test_decrease_timer(hass: HomeAssistant, init_components) -> None:
     timer_id: str | None = None
     original_total_seconds = 0
 
+    @callback
     def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         nonlocal timer_id, original_total_seconds
 
@@ -403,6 +407,7 @@ async def test_decrease_timer_below_zero(hass: HomeAssistant, init_components) -
     timer_id: str | None = None
     original_total_seconds = 0
 
+    @callback
     def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         nonlocal timer_id, original_total_seconds
 
@@ -497,6 +502,7 @@ async def test_find_timer_failed(hass: HomeAssistant, init_components) -> None:
         )
 
     # Must register a handler before we can do anything with timers
+    @callback
     def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         pass
 
@@ -567,6 +573,7 @@ async def test_disambiguation(
     cancelled_event = asyncio.Event()
     timer_info: TimerInfo | None = None
 
+    @callback
     def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         nonlocal timer_info
 
@@ -853,6 +860,7 @@ async def test_pause_unpause_timer(hass: HomeAssistant, init_components) -> None
 
     expected_active = True
 
+    @callback
     def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         if event_type == TimerEventType.STARTED:
             started_event.set()
@@ -946,6 +954,7 @@ async def test_timers_not_supported(hass: HomeAssistant) -> None:
         )
 
     # Start a timer
+    @callback
     def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         pass
 
@@ -1019,6 +1028,7 @@ async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> 
     started_event = asyncio.Event()
     num_started = 0
 
+    @callback
     def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         nonlocal num_started
 
@@ -1203,6 +1213,7 @@ async def test_area_filter(
     num_timers = 3
     num_started = 0
 
+    @callback
     def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
         nonlocal num_started
 
