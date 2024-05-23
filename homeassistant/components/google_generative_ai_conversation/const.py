@@ -5,6 +5,7 @@ import logging
 DOMAIN = "google_generative_ai_conversation"
 LOGGER = logging.getLogger(__package__)
 CONF_PROMPT = "prompt"
+CONF_TONE_PROMPT = "tone_prompt"
 DEFAULT_PROMPT = """This smart home is controlled by Home Assistant.
 
 An overview of the areas and the devices in this smart home:
@@ -23,14 +24,14 @@ An overview of the areas and the devices in this smart home:
 {%- endfor %}
 """
 
+CONF_RECOMMENDED = "recommended"
 CONF_CHAT_MODEL = "chat_model"
-DEFAULT_CHAT_MODEL = "models/gemini-pro"
+RECOMMENDED_CHAT_MODEL = "models/gemini-1.5-flash-latest"
 CONF_TEMPERATURE = "temperature"
-DEFAULT_TEMPERATURE = 0.9
+RECOMMENDED_TEMPERATURE = 1.0
 CONF_TOP_P = "top_p"
-DEFAULT_TOP_P = 1.0
+RECOMMENDED_TOP_P = 0.95
 CONF_TOP_K = "top_k"
-DEFAULT_TOP_K = 1
+RECOMMENDED_TOP_K = 64
 CONF_MAX_TOKENS = "max_tokens"
-DEFAULT_MAX_TOKENS = 150
-DEFAULT_ALLOW_HASS_ACCESS = False
+RECOMMENDED_MAX_TOKENS = 150

@@ -34,16 +34,18 @@ from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
+    CONF_RECOMMENDED,
     CONF_TEMPERATURE,
+    CONF_TONE_PROMPT,
     CONF_TOP_K,
     CONF_TOP_P,
-    DEFAULT_CHAT_MODEL,
-    DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
-    DEFAULT_TEMPERATURE,
-    DEFAULT_TOP_K,
-    DEFAULT_TOP_P,
     DOMAIN,
+    RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_TEMPERATURE,
+    RECOMMENDED_TOP_K,
+    RECOMMENDED_TOP_P,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,6 +55,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_API_KEY): str,
     }
 )
+
+RECOMMENDED_OPTIONS = {
+    CONF_RECOMMENDED: True,
+    CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+    CONF_TONE_PROMPT: "",
+}
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
@@ -94,7 +102,7 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title="Google Generative AI",
                 data=user_input,
-                options={CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
+                options=RECOMMENDED_OPTIONS,
             )
 
         return self.async_show_form(
@@ -115,18 +123,37 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
+        self.last_rendered_recommended = config_entry.options.get(
+            CONF_RECOMMENDED, False
+        )
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
+        options: dict[str, Any] | MappingProxyType[str, Any] = self.config_entry.options
+
         if user_input is not None:
-            if user_input[CONF_LLM_HASS_API] == "none":
-                user_input.pop(CONF_LLM_HASS_API)
-            return self.async_create_entry(title="", data=user_input)
-        schema = await google_generative_ai_config_option_schema(
-            self.hass, self.config_entry.options
-        )
+            if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
+                if user_input[CONF_LLM_HASS_API] == "none":
+                    user_input.pop(CONF_LLM_HASS_API)
+                return self.async_create_entry(title="", data=user_input)
+
+            # Re-render the options again, now with the recommended options shown/hidden
+            self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
+
+            # If we switch to not recommended, generate used prompt.
+            if user_input[CONF_RECOMMENDED]:
+                options = RECOMMENDED_OPTIONS
+            else:
+                options = {
+                    CONF_RECOMMENDED: False,
+                    CONF_PROMPT: DEFAULT_PROMPT
+                    + "\n"
+                    + user_input.get(CONF_TONE_PROMPT, ""),
+                }
+
+        schema = await google_generative_ai_config_option_schema(self.hass, options)
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(schema),
@@ -135,41 +162,16 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
 
 async def google_generative_ai_config_option_schema(
     hass: HomeAssistant,
-    options: MappingProxyType[str, Any],
+    options: dict[str, Any] | MappingProxyType[str, Any],
 ) -> dict:
     """Return a schema for Google Generative AI completion options."""
-    api_models = await hass.async_add_executor_job(partial(genai.list_models))
-
-    models: list[SelectOptionDict] = [
-        SelectOptionDict(
-            label="Gemini 1.5 Flash (recommended)",
-            value="models/gemini-1.5-flash-latest",
-        ),
-    ]
-    models.extend(
-        SelectOptionDict(
-            label=api_model.display_name,
-            value=api_model.name,
-        )
-        for api_model in sorted(api_models, key=lambda x: x.display_name)
-        if (
-            api_model.name
-            not in (
-                "models/gemini-1.0-pro",  # duplicate of gemini-pro
-                "models/gemini-1.5-flash-latest",
-            )
-            and "vision" not in api_model.name
-            and "generateContent" in api_model.supported_generation_methods
-        )
-    )
-
-    apis: list[SelectOptionDict] = [
+    hass_apis: list[SelectOptionDict] = [
         SelectOptionDict(
             label="No control",
             value="none",
         )
     ]
-    apis.extend(
+    hass_apis.extend(
         SelectOptionDict(
             label=api.name,
             value=api.id,
@@ -177,45 +179,77 @@ async def google_generative_ai_config_option_schema(
         for api in llm.async_get_apis(hass)
     )
 
+    if options.get(CONF_RECOMMENDED):
+        return {
+            vol.Required(
+                CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
+            ): bool,
+            vol.Optional(
+                CONF_TONE_PROMPT,
+                description={"suggested_value": options.get(CONF_TONE_PROMPT)},
+                default="",
+            ): TemplateSelector(),
+            vol.Optional(
+                CONF_LLM_HASS_API,
+                description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+                default="none",
+            ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
+        }
+
+    api_models = await hass.async_add_executor_job(partial(genai.list_models))
+
+    models = [
+        SelectOptionDict(
+            label=api_model.display_name,
+            value=api_model.name,
+        )
+        for api_model in sorted(api_models, key=lambda x: x.display_name)
+        if (
+            api_model.name != "models/gemini-1.0-pro"  # duplicate of gemini-pro
+            and "vision" not in api_model.name
+            and "generateContent" in api_model.supported_generation_methods
+        )
+    ]
+
     return {
+        vol.Required(
+            CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
+        ): bool,
         vol.Optional(
             CONF_CHAT_MODEL,
             description={"suggested_value": options.get(CONF_CHAT_MODEL)},
-            default=DEFAULT_CHAT_MODEL,
+            default=RECOMMENDED_CHAT_MODEL,
         ): SelectSelector(
-            SelectSelectorConfig(
-                mode=SelectSelectorMode.DROPDOWN,
-                options=models,
-            )
+            SelectSelectorConfig(mode=SelectSelectorMode.DROPDOWN, options=models)
         ),
-        vol.Optional(
-            CONF_LLM_HASS_API,
-            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
-            default="none",
-        ): SelectSelector(SelectSelectorConfig(options=apis)),
         vol.Optional(
             CONF_PROMPT,
             description={"suggested_value": options.get(CONF_PROMPT)},
             default=DEFAULT_PROMPT,
         ): TemplateSelector(),
         vol.Optional(
+            CONF_LLM_HASS_API,
+            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+            default="none",
+        ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
+        vol.Optional(
             CONF_TEMPERATURE,
             description={"suggested_value": options.get(CONF_TEMPERATURE)},
-            default=DEFAULT_TEMPERATURE,
+            default=RECOMMENDED_TEMPERATURE,
         ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
         vol.Optional(
             CONF_TOP_P,
             description={"suggested_value": options.get(CONF_TOP_P)},
-            default=DEFAULT_TOP_P,
+            default=RECOMMENDED_TOP_P,
         ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
         vol.Optional(
             CONF_TOP_K,
             description={"suggested_value": options.get(CONF_TOP_K)},
-            default=DEFAULT_TOP_K,
+            default=RECOMMENDED_TOP_K,
         ): int,
         vol.Optional(
             CONF_MAX_TOKENS,
             description={"suggested_value": options.get(CONF_MAX_TOKENS)},
-            default=DEFAULT_MAX_TOKENS,
+            default=RECOMMENDED_MAX_TOKENS,
         ): int,
     }
