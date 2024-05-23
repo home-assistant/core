@@ -24,12 +24,12 @@ class LektricoEntity(CoordinatorEntity[LektricoDeviceDataUpdateCoordinator]):
         """Initialize."""
         super().__init__(coordinator)
 
-        _infoForCharger: InfoForCharger = coordinator.data
+        info_for_charger: InfoForCharger = coordinator.data
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.serial_number)},
             model=f"{coordinator.device_type.upper()} {coordinator.serial_number} rev.{coordinator.board_revision}",
             name=friendly_name,
             manufacturer="Lektrico",
-            sw_version=_infoForCharger.fw_version,
+            sw_version=info_for_charger.fw_version,
         )

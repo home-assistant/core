@@ -250,17 +250,17 @@ async def async_setup_entry(
     """Set up Lektrico charger based on a config entry."""
     coordinator: LektricoDeviceDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    _sensors_to_be_used: tuple[LektricoSensorEntityDescription, ...]
+    sensors_to_be_used: tuple[LektricoSensorEntityDescription, ...]
     if coordinator.device_type == Device.TYPE_1P7K:
-        _sensors_to_be_used = SENSORS_FOR_CHARGERS + SENSORS_FOR_1_PHASE
+        sensors_to_be_used = SENSORS_FOR_CHARGERS + SENSORS_FOR_1_PHASE
     elif coordinator.device_type == Device.TYPE_3P22K:
-        _sensors_to_be_used = SENSORS_FOR_CHARGERS + SENSORS_FOR_3_PHASE
+        sensors_to_be_used = SENSORS_FOR_CHARGERS + SENSORS_FOR_3_PHASE
     elif coordinator.device_type == Device.TYPE_EM:
-        _sensors_to_be_used = (
+        sensors_to_be_used = (
             SENSORS_FOR_LB_DEVICES + SENSORS_FOR_1_PHASE + SENSORS_FOR_LB_1_PHASE
         )
     elif coordinator.device_type == Device.TYPE_3EM:
-        _sensors_to_be_used = (
+        sensors_to_be_used = (
             SENSORS_FOR_LB_DEVICES + SENSORS_FOR_3_PHASE + SENSORS_FOR_LB_3_PHASE
         )
     else:
@@ -272,7 +272,7 @@ async def async_setup_entry(
             coordinator,
             entry.data[CONF_NAME],
         )
-        for description in _sensors_to_be_used
+        for description in sensors_to_be_used
     )
 
 
