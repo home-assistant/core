@@ -1,50 +1,63 @@
-"""Test helpers."""
+"""Test helpers for FYTA."""
 
 from collections.abc import Generator
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.fyta.const import CONF_EXPIRATION
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.components.fyta.const import CONF_EXPIRATION, DOMAIN as FYTA_DOMAIN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 
-from .test_config_flow import ACCESS_TOKEN, EXPIRATION
+from .const import ACCESS_TOKEN, EXPIRATION, PASSWORD, USERNAME
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_fyta():
-    """Build a fixture for the Fyta API that connects successfully and returns one device."""
-
-    mock_fyta_api = AsyncMock()
-    with patch(
-        "homeassistant.components.fyta.config_flow.FytaConnector",
-        return_value=mock_fyta_api,
-    ) as mock_fyta_api:
-        mock_fyta_api.return_value.login.return_value = {
+def mock_config_entry() -> MockConfigEntry:
+    """Mock a config entry."""
+    return MockConfigEntry(
+        domain=FYTA_DOMAIN,
+        title="fyta_user",
+        data={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
             CONF_ACCESS_TOKEN: ACCESS_TOKEN,
             CONF_EXPIRATION: EXPIRATION,
-        }
-        yield mock_fyta_api
+        },
+        minor_version=2,
+    )
 
 
 @pytest.fixture
-def mock_fyta_init():
+def mock_fyta_connector():
     """Build a fixture for the Fyta API that connects successfully and returns one device."""
 
-    mock_fyta_api = AsyncMock()
-    mock_fyta_api.expiration = datetime.now(tz=UTC) + timedelta(days=1)
-    mock_fyta_api.login = AsyncMock(
+    mock_fyta_connector = AsyncMock()
+    mock_fyta_connector.expiration = datetime.fromisoformat(EXPIRATION).replace(
+        tzinfo=UTC
+    )
+    mock_fyta_connector.client = AsyncMock(autospec=True)
+    mock_fyta_connector.login = AsyncMock(
         return_value={
             CONF_ACCESS_TOKEN: ACCESS_TOKEN,
-            CONF_EXPIRATION: EXPIRATION,
+            CONF_EXPIRATION: datetime.fromisoformat(EXPIRATION).replace(tzinfo=UTC),
         }
     )
-    with patch(
-        "homeassistant.components.fyta.FytaConnector.__new__",
-        return_value=mock_fyta_api,
+    with (
+        patch(
+            "homeassistant.components.fyta.FytaConnector",
+            autospec=True,
+            return_value=mock_fyta_connector,
+        ),
+        patch(
+            "homeassistant.components.fyta.config_flow.FytaConnector",
+            autospec=True,
+            return_value=mock_fyta_connector,
+        ),
     ):
-        yield mock_fyta_api
+        yield mock_fyta_connector
 
 
 @pytest.fixture
