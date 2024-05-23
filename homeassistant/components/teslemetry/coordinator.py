@@ -48,7 +48,7 @@ def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
 class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Teslemetry API."""
 
-    updated_once: bool = False
+    updated_once: bool
 
     def __init__(
         self, hass: HomeAssistant, api: VehicleSpecific, product: dict
@@ -62,6 +62,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.api = api
         self.data = flatten(product)
+        self.updated_once = False
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Teslemetry API."""
