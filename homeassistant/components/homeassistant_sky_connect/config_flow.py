@@ -121,6 +121,17 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Pick Thread or Zigbee firmware."""
+        return self.async_show_menu(
+            step_id="pick_firmware",
+            menu_options=[
+                STEP_PICK_FIRMWARE_ZIGBEE,
+                STEP_PICK_FIRMWARE_THREAD,
+            ],
+            description_placeholders=self._get_translation_placeholders(),
+        )
+
+    async def _probe_firmware_type(self) -> bool:
+        """Probe the firmware currently on the device."""
         assert self._usb_info is not None
 
         self._probed_firmware_type = await probe_silabs_firmware_type(
@@ -134,29 +145,22 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             ),
         )
 
-        if self._probed_firmware_type not in (
+        return self._probed_firmware_type in (
             ApplicationType.EZSP,
             ApplicationType.SPINEL,
             ApplicationType.CPC,
-        ):
-            return self.async_abort(
-                reason="unsupported_firmware",
-                description_placeholders=self._get_translation_placeholders(),
-            )
-
-        return self.async_show_menu(
-            step_id="pick_firmware",
-            menu_options=[
-                STEP_PICK_FIRMWARE_THREAD,
-                STEP_PICK_FIRMWARE_ZIGBEE,
-            ],
-            description_placeholders=self._get_translation_placeholders(),
         )
 
     async def async_step_pick_firmware_zigbee(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Pick Zigbee firmware."""
+        if not await self._probe_firmware_type():
+            return self.async_abort(
+                reason="unsupported_firmware",
+                description_placeholders=self._get_translation_placeholders(),
+            )
+
         # Allow the stick to be used with ZHA without flashing
         if self._probed_firmware_type == ApplicationType.EZSP:
             return await self.async_step_confirm_zigbee()
@@ -372,6 +376,12 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Pick Thread firmware."""
+        if not await self._probe_firmware_type():
+            return self.async_abort(
+                reason="unsupported_firmware",
+                description_placeholders=self._get_translation_placeholders(),
+            )
+
         # We install the OTBR addon no matter what, since it is required to use Thread
         if not is_hassio(self.hass):
             return self.async_abort(
@@ -528,17 +538,7 @@ class HomeAssistantSkyConnectConfigFlow(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm a discovery."""
-        self._set_confirm_only()
-
-        # Without confirmation, discovery can automatically progress into parts of the
-        # config flow logic that interacts with hardware.
-        if user_input is not None:
-            return await self.async_step_pick_firmware()
-
-        return self.async_show_form(
-            step_id="confirm",
-            description_placeholders=self._get_translation_placeholders(),
-        )
+        return await self.async_step_pick_firmware()
 
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
@@ -641,15 +641,7 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options flow."""
-        # Don't probe the running firmware, we load it from the config entry
-        return self.async_show_menu(
-            step_id="pick_firmware",
-            menu_options=[
-                STEP_PICK_FIRMWARE_THREAD,
-                STEP_PICK_FIRMWARE_ZIGBEE,
-            ],
-            description_placeholders=self._get_translation_placeholders(),
-        )
+        return await self.async_step_pick_firmware()
 
     async def async_step_pick_firmware_zigbee(
         self, user_input: dict[str, Any] | None = None
@@ -678,17 +670,16 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
         """Pick Thread firmware."""
         assert self._usb_info is not None
 
-        zha_entries = self.hass.config_entries.async_entries(
+        for zha_entry in self.hass.config_entries.async_entries(
             ZHA_DOMAIN,
             include_ignore=False,
             include_disabled=True,
-        )
-
-        if zha_entries and get_zha_device_path(zha_entries[0]) == self._usb_info.device:
-            raise AbortFlow(
-                "zha_still_using_stick",
-                description_placeholders=self._get_translation_placeholders(),
-            )
+        ):
+            if get_zha_device_path(zha_entry) == self._usb_info.device:
+                raise AbortFlow(
+                    "zha_still_using_stick",
+                    description_placeholders=self._get_translation_placeholders(),
+                )
 
         return await super().async_step_pick_firmware_thread(user_input)
 

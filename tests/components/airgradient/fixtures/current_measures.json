@@ -7,13 +7,15 @@
   "pm10": 41,
   "pm003Count": 270,
   "tvocIndex": 99,
-  "tvoc_raw": 31792,
+  "tvocRaw": 31792,
   "noxIndex": 1,
-  "nox_raw": 16931,
+  "noxRaw": 16931,
   "atmp": 27.96,
   "rhum": 48,
-  "boot": 28,
+  "atmpCompensated": 22.17,
+  "rhumCompensated": 47,
+  "bootCount": 28,
   "ledMode": "co2",
-  "firmwareVersion": "3.0.8",
-  "fwMode": "I-9PSL"
+  "firmware": "3.1.1",
+  "model": "I-9PSL"
 }
