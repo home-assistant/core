@@ -28,8 +28,9 @@ class LektricoEntity(CoordinatorEntity[LektricoDeviceDataUpdateCoordinator]):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.serial_number)},
-            model=f"{coordinator.device_type.upper()} {coordinator.serial_number} rev.{coordinator.board_revision}",
+            model=f"{coordinator.device_type.upper()} rev.{coordinator.board_revision}",
             name=friendly_name,
             manufacturer="Lektrico",
             sw_version=info_for_charger.fw_version,
+            serial_number=coordinator.serial_number,
         )

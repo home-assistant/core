@@ -15,7 +15,7 @@ from .const import LOGGER
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
-class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator):
+class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator[lektricowifi.Info]):
     """Data update coordinator for Lektrico device."""
 
     def __init__(
