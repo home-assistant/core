@@ -3346,7 +3346,7 @@ async def test_statemachine_report_state(hass: HomeAssistant) -> None:
     hass.states.async_set("light.bowl", "on", {})
     state_changed_events = async_capture_events(hass, EVENT_STATE_CHANGED)
     state_reported_events = []
-    hass.bus.async_listen(EVENT_STATE_REPORTED, listener, event_filter=mock_filter)
+    unsub = hass.bus.async_listen(EVENT_STATE_REPORTED, listener, event_filter=mock_filter)
 
     hass.states.async_set("light.bowl", "on")
     await hass.async_block_till_done()
@@ -3367,6 +3367,8 @@ async def test_statemachine_report_state(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(state_changed_events) == 3
     assert len(state_reported_events) == 4
+
+    unsub()
 
 
 async def test_report_state_listener_restrictions(hass: HomeAssistant) -> None:
