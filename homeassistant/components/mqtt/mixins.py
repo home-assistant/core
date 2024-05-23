@@ -1249,16 +1249,6 @@ class MqttEntity(
         return False
 
     @callback
-    def _log_message(self, msg: ReceiveMessage) -> None:
-        """Log message."""
-        debug_info_entities = self.hass.data[DATA_MQTT].debug_info_entities
-        messages = debug_info_entities[self.entity_id]["subscriptions"][
-            msg.subscribed_topic
-        ]["messages"]
-        if msg not in messages:
-            messages.append(msg)
-
-    @callback
     def _message_callback(
         self,
         msg_callback: MessageCallbackType,
@@ -1269,16 +1259,21 @@ class MqttEntity(
         attrs_snapshot: tuple[tuple[str, Any | UndefinedType], ...] = tuple(
             (attribute, getattr(self, attribute, UNDEFINED)) for attribute in attributes
         )
-        self._log_message(msg)
+        mqtt_data = self.hass.data[DATA_MQTT]
+        messages = mqtt_data.debug_info_entities[self.entity_id]["subscriptions"][
+            msg.subscribed_topic
+        ]["messages"]
+        if msg not in messages:
+            messages.append(msg)
+
         try:
             msg_callback(msg)
         except MqttValueTemplateException as exc:
             _LOGGER.warning(exc)
             return
-        if not self._attrs_have_changed(attrs_snapshot):
-            return
 
-        self.hass.data[DATA_MQTT].state_write_requests.write_state_request(self)
+        if self._attrs_have_changed(attrs_snapshot):
+            mqtt_data.state_write_requests.write_state_request(self)
 
 
 def update_device(
