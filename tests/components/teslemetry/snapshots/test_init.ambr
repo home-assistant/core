@@ -20,7 +20,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tesla',
-    'model': 'Tesla Backup Gateway 2, Powerwall 2',
+    'model': 'Powerwall 2, Tesla Backup Gateway 2',
     'name': 'Energy Site',
     'name_by_user': None,
     'serial_number': None,
