@@ -68,22 +68,15 @@ class RachioCalendarEntity(
         self._attr_name = "Rachio Smart Hose Timer Events"
         self._attr_unique_id = f"{coordinator.base_station[KEY_ID]}-calendar"
         self.location = coordinator.base_station[KEY_ADDRESS][KEY_LOCALITY]
+        self._previous_event: dict[str, Any] | None = None
 
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        schedule = iter(self.coordinator.data)
-        event = next(schedule, None)
-        if not event:  # Schedule is empty
+        event = self._handle_upcoming_event()
+        if not event:
             return None
-        while (
-            not event[KEY_SKIPPABLE] or KEY_SKIP in event[KEY_RUN_SUMMARIES][0]
-        ):  # Not being skippable indicates the event is in the past
-            event = next(schedule, None)
-            if not event:  # Schedule only has past or skipped events
-                return None
-
-        start_time: Any = dt_util.parse_datetime(event[KEY_START_TIME])
+        start_time = dt_util.parse_datetime(event[KEY_START_TIME], raise_on_error=True)
         return CalendarEvent(
             summary=event[KEY_PROGRAM_NAME],
             start=dt_util.as_local(start_time),
@@ -92,6 +85,32 @@ class RachioCalendarEntity(
             description=event[KEY_RUN_SUMMARIES][0][KEY_VALVE_NAME],
             location=self.location,
         )
+
+    def _handle_upcoming_event(self) -> dict[str, Any] | None:
+        """Handle current or next event."""
+        if self._previous_event:
+            start_time = dt_util.parse_datetime(
+                self._previous_event[KEY_START_TIME], raise_on_error=True
+            )
+            end_time = start_time + timedelta(
+                seconds=int(
+                    self._previous_event[KEY_RUN_SUMMARIES][0][KEY_DURATION_SECONDS]
+                )
+            )
+            if start_time < dt_util.now() < end_time:
+                return self._previous_event
+        schedule = iter(self.coordinator.data)
+        event = next(schedule, None)
+        if not event:  # Schedule is empty
+            return None
+        while (
+            not event[KEY_SKIPPABLE] or KEY_SKIP in event[KEY_RUN_SUMMARIES][0]
+        ):  # Not being skippable indicates the event is in the past
+            event = next(schedule, None)
+            self._previous_event = event
+            if not event:  # Schedule only has past or skipped events
+                return None
+        return event
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
@@ -103,24 +122,28 @@ class RachioCalendarEntity(
 
         event_list: list[CalendarEvent] = []
         for run in schedule:
-            start_time = dt_util.parse_datetime(run[KEY_START_TIME])
-            if start_time:
-                if (
-                    start_date <= start_time <= end_date
-                    and KEY_SKIP not in run[KEY_RUN_SUMMARIES][0]
-                ):
-                    event = CalendarEvent(
-                        summary=run[KEY_PROGRAM_NAME],
-                        start=start_time,
-                        end=start_time
-                        + timedelta(
-                            seconds=int(run[KEY_RUN_SUMMARIES][0][KEY_DURATION_SECONDS])
-                        ),
-                        description=run[KEY_RUN_SUMMARIES][0][KEY_VALVE_NAME],
-                        location=self.location,
-                        uid=f"{run[KEY_PROGRAM_ID]}/{run[KEY_START_TIME]}",
-                    )
-                    event_list.append(event)
+            event_start = dt_util.as_local(
+                dt_util.parse_datetime(run[KEY_START_TIME], raise_on_error=True)
+            )
+            if event_start > end_date:
+                break
+            event_end = event_start + timedelta(
+                seconds=int(run[KEY_RUN_SUMMARIES][0][KEY_DURATION_SECONDS])
+            )
+            if (
+                event_end > start_date
+                and event_start < end_date
+                and KEY_SKIP not in run[KEY_RUN_SUMMARIES][0]
+            ):
+                event = CalendarEvent(
+                    summary=run[KEY_PROGRAM_NAME],
+                    start=event_start,
+                    end=event_end,
+                    description=run[KEY_RUN_SUMMARIES][0][KEY_VALVE_NAME],
+                    location=self.location,
+                    uid=f"{run[KEY_PROGRAM_ID]}/{run[KEY_START_TIME]}",
+                )
+                event_list.append(event)
         return event_list
 
     async def async_delete_event(
