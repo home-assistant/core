@@ -181,7 +181,7 @@ class SensorDeviceClass(StrEnum):
     """Forecast energy.
 
     Use this device class for sensors predicting energy generated, for example the amount
-    of electric energy a solar system may produce in and hour or over a whole day.
+    of electric energy a solar system may produce in an hour or over a whole day.
 
     Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
     """
