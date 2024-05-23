@@ -1073,6 +1073,7 @@ class MqttEntity(
 ):
     """Representation of an MQTT entity."""
 
+    _attr_force_update = False
     _attr_has_entity_name = True
     _attr_should_poll = False
     _default_name: str | None
@@ -1226,14 +1227,15 @@ class MqttEntity(
         """(Re)Subscribe to topics."""
 
     @callback
-    def _attrs_have_changed(self, tracked_attrs: dict[str, Any]) -> bool:
+    def _attrs_have_changed(
+        self, tracked_attrs: tuple[tuple[str, Any | UndefinedType], ...]
+    ) -> bool:
         """Return True if attributes on entity changed or if update is forced."""
-        if getattr(self, "_attr_force_update", False):
+        if self._attr_force_update:
             return True
-        for attribute, last_value in tracked_attrs.items():
+        for attribute, last_value in tracked_attrs:
             if getattr(self, attribute, UNDEFINED) != last_value:
                 return True
-
         return False
 
     @callback
@@ -1254,9 +1256,9 @@ class MqttEntity(
         msg: ReceiveMessage,
     ) -> None:
         """Process the message callback."""
-        tracked_attrs: dict[str, Any] = {
-            attribute: getattr(self, attribute, UNDEFINED) for attribute in attributes
-        }
+        tracked_attrs: tuple[tuple[str, Any | UndefinedType], ...] = tuple(
+            (attribute, getattr(self, attribute, UNDEFINED)) for attribute in attributes
+        )
         try:
             self._log_message(msg)
             msg_callback(msg)
