@@ -526,9 +526,10 @@ async def handle_manifest_get(
     """Handle integrations command."""
     try:
         integration = await async_get_integration(hass, msg["integration"])
-        connection.send_result(msg["id"], integration.manifest_json_fragment)
     except IntegrationNotFound:
         connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Integration not found")
+    else:
+        connection.send_result(msg["id"], integration.manifest_json_fragment)
 
 
 @callback
