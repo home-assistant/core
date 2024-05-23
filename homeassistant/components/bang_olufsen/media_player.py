@@ -545,11 +545,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         **kwargs: Any,
     ) -> None:
         """Play from: netradio station id, URI, favourite or Deezer."""
-        _LOGGER.warning(media_type)
-        _LOGGER.warning(media_id)
-        _LOGGER.warning(announce)
-        _LOGGER.warning(kwargs)
-
         # Convert audio/mpeg, audio/aac etc. to MediaType.MUSIC
         if media_type.startswith("audio/"):
             media_type = MediaType.MUSIC
