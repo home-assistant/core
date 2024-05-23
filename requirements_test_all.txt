@@ -380,7 +380,7 @@ aiowithings==2.1.0
 aioymaps==1.2.2
 
 # homeassistant.components.airgradient
-airgradient==0.4.0
+airgradient==0.4.1
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -458,6 +458,12 @@ axis==61
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
+
+# homeassistant.components.azure_data_explorer
+azure-kusto-data[aio]==3.1.0
+
+# homeassistant.components.azure_data_explorer
+azure-kusto-ingest==3.1.0
 
 # homeassistant.components.holiday
 babel==2.13.1
@@ -809,7 +815,7 @@ gotailwind==0.2.3
 govee-ble==0.31.2
 
 # homeassistant.components.govee_light_local
-govee-local-api==1.4.5
+govee-local-api==1.5.0
 
 # homeassistant.components.gpsd
 gps3==0.33.3
@@ -852,7 +858,7 @@ ha-philipsjs==3.2.1
 habitipy==0.3.1
 
 # homeassistant.components.bluetooth
-habluetooth==3.0.1
+habluetooth==3.1.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.81.0
@@ -1656,7 +1662,7 @@ pyrituals==0.0.6
 pyroute2==0.7.5
 
 # homeassistant.components.rympro
-pyrympro==0.0.7
+pyrympro==0.0.8
 
 # homeassistant.components.sabnzbd
 pysabnzbd==1.1.1

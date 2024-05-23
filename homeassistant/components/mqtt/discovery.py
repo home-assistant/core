@@ -10,10 +10,8 @@ import re
 import time
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE, CONF_NAME, CONF_PLATFORM
+from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
@@ -35,13 +33,13 @@ from .const import (
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
     CONF_ORIGIN,
-    CONF_SUPPORT_URL,
-    CONF_SW_VERSION,
     CONF_TOPIC,
     DOMAIN,
+    SUPPORTED_COMPONENTS,
 )
-from .models import MqttOriginInfo, ReceiveMessage
-from .util import async_forward_entry_setup_and_setup_discovery, get_mqtt_data
+from .models import DATA_MQTT, MqttOriginInfo, ReceiveMessage
+from .schemas import MQTT_ORIGIN_INFO_SCHEMA
+from .util import async_forward_entry_setup_and_setup_discovery
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,37 +47,6 @@ TOPIC_MATCHER = re.compile(
     r"(?P<component>\w+)/(?:(?P<node_id>[a-zA-Z0-9_-]+)/)"
     r"?(?P<object_id>[a-zA-Z0-9_-]+)/config"
 )
-
-SUPPORTED_COMPONENTS = {
-    "alarm_control_panel",
-    "binary_sensor",
-    "button",
-    "camera",
-    "climate",
-    "cover",
-    "device_automation",
-    "device_tracker",
-    "event",
-    "fan",
-    "humidifier",
-    "image",
-    "lawn_mower",
-    "light",
-    "lock",
-    "notify",
-    "number",
-    "scene",
-    "siren",
-    "select",
-    "sensor",
-    "switch",
-    "tag",
-    "text",
-    "update",
-    "vacuum",
-    "valve",
-    "water_heater",
-}
 
 MQTT_DISCOVERY_UPDATED: SignalTypeFormat[MQTTDiscoveryPayload] = SignalTypeFormat(
     "mqtt_discovery_updated_{}_{}"
@@ -94,16 +61,6 @@ MQTT_DISCOVERY_DONE: SignalTypeFormat[Any] = SignalTypeFormat(
 
 TOPIC_BASE = "~"
 
-MQTT_ORIGIN_INFO_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(CONF_NAME): cv.string,
-            vol.Optional(CONF_SW_VERSION): cv.string,
-            vol.Optional(CONF_SUPPORT_URL): cv.configuration_url,
-        }
-    ),
-)
-
 
 class MQTTDiscoveryPayload(dict[str, Any]):
     """Class to hold and MQTT discovery payload and discovery data."""
@@ -113,12 +70,12 @@ class MQTTDiscoveryPayload(dict[str, Any]):
 
 def clear_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> None:
     """Clear entry from already discovered list."""
-    get_mqtt_data(hass).discovery_already_discovered.remove(discovery_hash)
+    hass.data[DATA_MQTT].discovery_already_discovered.remove(discovery_hash)
 
 
 def set_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> None:
     """Add entry to already discovered list."""
-    get_mqtt_data(hass).discovery_already_discovered.add(discovery_hash)
+    hass.data[DATA_MQTT].discovery_already_discovered.add(discovery_hash)
 
 
 @callback
@@ -150,7 +107,7 @@ async def async_start(  # noqa: C901
     hass: HomeAssistant, discovery_topic: str, config_entry: ConfigEntry
 ) -> None:
     """Start MQTT Discovery."""
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
     platform_setup_lock: dict[str, asyncio.Lock] = {}
 
     async def _async_component_setup(discovery_payload: MQTTDiscoveryPayload) -> None:
@@ -426,7 +383,7 @@ async def async_start(  # noqa: C901
 
 async def async_stop(hass: HomeAssistant) -> None:
     """Stop MQTT Discovery."""
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
     for unsub in mqtt_data.discovery_unsubscribe:
         unsub()
     mqtt_data.discovery_unsubscribe = []
