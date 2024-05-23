@@ -1613,7 +1613,7 @@ class EventBus:
         keys: Iterable[EventType[_DataT] | str],
         filterable_job: _FilterableJobType[Any],
     ) -> None:
-        """Remove a listener for a state_reported_event."""
+        """Remove multiple listeners for specific event_types."""
         for key in keys:
             self._async_remove_listener(key, filterable_job)
 
