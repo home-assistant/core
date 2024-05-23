@@ -131,17 +131,6 @@
         }
       }
     },
-    "lock": {
-      "charge_state_charge_port_latch": {
-        "name": "Charge cable lock"
-      },
-      "vehicle_state_locked": {
-        "name": "[%key:component::lock::title%]"
-      },
-      "vehicle_state_speed_limit_mode_active": {
-        "name": "Speed limit"
-      }
-    },
     "sensor": {
       "battery_power": {
         "name": "Battery power"
