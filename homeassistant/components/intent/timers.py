@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
@@ -30,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 TIMER_NOT_FOUND_RESPONSE = "timer_not_found"
 MULTIPLE_TIMERS_MATCHED_RESPONSE = "multiple_timers_matched"
-NOT_TIMER_DEVICE_RESPONSE = "not_timer_device"
+NO_TIMER_SUPPORT_RESPONSE = "no_timer_support"
 
 
 @dataclass
@@ -161,14 +160,14 @@ class MultipleTimersMatchedError(intent.IntentHandleError):
         super().__init__("Multiple timers matched", MULTIPLE_TIMERS_MATCHED_RESPONSE)
 
 
-class NotTimerDeviceError(intent.IntentHandleError):
+class TimersNotSupportedError(intent.IntentHandleError):
     """Error when a timer intent is used from a device that isn't registered to handle timer events."""
 
     def __init__(self, device_id: str | None = None) -> None:
         """Initialize error."""
         super().__init__(
-            f"Timer device is required: device_id={device_id}",
-            NOT_TIMER_DEVICE_RESPONSE,
+            f"Device does not support timers: device_id={device_id}",
+            NO_TIMER_SUPPORT_RESPONSE,
         )
 
 
@@ -183,8 +182,8 @@ class TimerManager:
         self.timers: dict[str, TimerInfo] = {}
         self.timer_tasks: dict[str, asyncio.Task] = {}
 
-        # device_id -> [handler]
-        self.handlers: dict[str, list[TimerHandler]] = defaultdict(list)
+        # device_id -> handler
+        self.handlers: dict[str, TimerHandler] = {}
 
     def register_handler(
         self, device_id: str, handler: TimerHandler
@@ -193,8 +192,12 @@ class TimerManager:
 
         Returns a callable to unregister.
         """
-        self.handlers[device_id].append(handler)
-        return lambda: self.handlers[device_id].remove(handler)
+        self.handlers[device_id] = handler
+
+        def unregister() -> None:
+            self.handlers.pop(device_id)
+
+        return unregister
 
     def start_timer(
         self,
@@ -206,6 +209,9 @@ class TimerManager:
         name: str | None = None,
     ) -> str:
         """Start a timer."""
+        if not self.is_timer_device(device_id):
+            raise TimersNotSupportedError(device_id)
+
         total_seconds = 0
         if hours is not None:
             total_seconds += 60 * 60 * hours
@@ -248,9 +254,7 @@ class TimerManager:
             name=f"Timer {timer_id}",
         )
 
-        for handler in self.handlers[timer.device_id]:
-            handler(TimerEventType.STARTED, timer)
-
+        self.handlers[timer.device_id](TimerEventType.STARTED, timer)
         _LOGGER.debug(
             "Timer started: id=%s, name=%s, hours=%s, minutes=%s, seconds=%s, device_id=%s",
             timer_id,
@@ -282,15 +286,16 @@ class TimerManager:
         if timer is None:
             raise TimerNotFoundError
 
+        if not self.is_timer_device(timer.device_id):
+            raise TimersNotSupportedError(timer.device_id)
+
         if timer.is_active:
             task = self.timer_tasks.pop(timer_id)
             task.cancel()
 
         timer.cancel()
 
-        for handler in self.handlers[timer.device_id]:
-            handler(TimerEventType.CANCELLED, timer)
-
+        self.handlers[timer.device_id](TimerEventType.CANCELLED, timer)
         _LOGGER.debug(
             "Timer cancelled: id=%s, name=%s, seconds_left=%s, device_id=%s",
             timer_id,
@@ -305,6 +310,9 @@ class TimerManager:
         if timer is None:
             raise TimerNotFoundError
 
+        if not self.is_timer_device(timer.device_id):
+            raise TimersNotSupportedError(timer.device_id)
+
         if seconds == 0:
             # Don't bother cancelling and recreating the timer task
             return
@@ -318,8 +326,7 @@ class TimerManager:
                 name=f"Timer {timer_id}",
             )
 
-        for handler in self.handlers[timer.device_id]:
-            handler(TimerEventType.UPDATED, timer)
+        self.handlers[timer.device_id](TimerEventType.UPDATED, timer)
 
         if seconds > 0:
             log_verb = "increased"
@@ -348,6 +355,9 @@ class TimerManager:
         if timer is None:
             raise TimerNotFoundError
 
+        if not self.is_timer_device(timer.device_id):
+            raise TimersNotSupportedError(timer.device_id)
+
         if not timer.is_active:
             # Already paused
             return
@@ -356,9 +366,7 @@ class TimerManager:
         task = self.timer_tasks.pop(timer_id)
         task.cancel()
 
-        for handler in self.handlers[timer.device_id]:
-            handler(TimerEventType.UPDATED, timer)
-
+        self.handlers[timer.device_id](TimerEventType.UPDATED, timer)
         _LOGGER.debug(
             "Timer paused: id=%s, name=%s, seconds_left=%s, device_id=%s",
             timer_id,
@@ -373,6 +381,9 @@ class TimerManager:
         if timer is None:
             raise TimerNotFoundError
 
+        if not self.is_timer_device(timer.device_id):
+            raise TimersNotSupportedError(timer.device_id)
+
         if timer.is_active:
             # Already unpaused
             return
@@ -383,9 +394,7 @@ class TimerManager:
             name=f"Timer {timer.id}",
         )
 
-        for handler in self.handlers[timer.device_id]:
-            handler(TimerEventType.UPDATED, timer)
-
+        self.handlers[timer.device_id](TimerEventType.UPDATED, timer)
         _LOGGER.debug(
             "Timer unpaused: id=%s, name=%s, seconds_left=%s, device_id=%s",
             timer_id,
@@ -398,10 +407,12 @@ class TimerManager:
         """Call event handlers when a timer finishes."""
         timer = self.timers.pop(timer_id)
 
-        timer.finish()
-        for handler in self.handlers[timer.device_id]:
-            handler(TimerEventType.FINISHED, timer)
+        if not self.is_timer_device(timer.device_id):
+            raise TimersNotSupportedError(timer.device_id)
 
+        timer.finish()
+
+        self.handlers[timer.device_id](TimerEventType.FINISHED, timer)
         _LOGGER.debug(
             "Timer finished: id=%s, name=%s, device_id=%s",
             timer_id,
@@ -715,7 +726,7 @@ class BaseTimerIntentHandler(intent.IntentHandler):
         slots = self.async_validate_slots(intent_obj.slots)
 
         if not timer_manager.is_timer_device(intent_obj.device_id):
-            raise NotTimerDeviceError(intent_obj.device_id)
+            raise TimersNotSupportedError(intent_obj.device_id)
 
         assert intent_obj.device_id is not None
 

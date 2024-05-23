@@ -7,11 +7,11 @@ import pytest
 
 from homeassistant.components.intent.timers import (
     MultipleTimersMatchedError,
-    NotTimerDeviceError,
     TimerEventType,
     TimerInfo,
     TimerManager,
     TimerNotFoundError,
+    TimersNotSupportedError,
     _round_time,
     async_register_timer_handler,
 )
@@ -477,7 +477,7 @@ async def test_find_timer_failed(hass: HomeAssistant, init_components) -> None:
     device_id = "test_device"
 
     # No device id
-    with pytest.raises(NotTimerDeviceError):
+    with pytest.raises(TimersNotSupportedError):
         await intent.async_handle(
             hass,
             "test",
@@ -487,7 +487,7 @@ async def test_find_timer_failed(hass: HomeAssistant, init_components) -> None:
         )
 
     # Unregistered device
-    with pytest.raises(NotTimerDeviceError):
+    with pytest.raises(TimersNotSupportedError):
         await intent.async_handle(
             hass,
             "test",
@@ -930,6 +930,86 @@ async def test_timer_not_found(hass: HomeAssistant) -> None:
 
     with pytest.raises(TimerNotFoundError):
         timer_manager.unpause_timer("does-not-exist")
+
+
+async def test_timers_not_supported(hass: HomeAssistant) -> None:
+    """Test unregistered device ids raise TimersNotSupportedError."""
+    timer_manager = TimerManager(hass)
+
+    with pytest.raises(TimersNotSupportedError):
+        timer_manager.start_timer(
+            "does-not-exist",
+            hours=None,
+            minutes=5,
+            seconds=None,
+            language=hass.config.language,
+        )
+
+    # Start a timer
+    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+        pass
+
+    device_id = "test_device"
+    unregister = timer_manager.register_handler(device_id, handle_timer)
+
+    timer_id = timer_manager.start_timer(
+        device_id,
+        hours=None,
+        minutes=5,
+        seconds=None,
+        language=hass.config.language,
+    )
+
+    # Unregister handler so device no longer "supports" timers
+    unregister()
+
+    # All operations on the timer should fail now
+    with pytest.raises(TimersNotSupportedError):
+        timer_manager.add_time(timer_id, 1)
+
+    with pytest.raises(TimersNotSupportedError):
+        timer_manager.remove_time(timer_id, 1)
+
+    with pytest.raises(TimersNotSupportedError):
+        timer_manager.pause_timer(timer_id)
+
+    with pytest.raises(TimersNotSupportedError):
+        timer_manager.unpause_timer(timer_id)
+
+    with pytest.raises(TimersNotSupportedError):
+        timer_manager.cancel_timer(timer_id)
+
+    # Register device again
+    timer_manager.register_handler(device_id, handle_timer)
+
+    original_timer_finished = timer_manager._timer_finished
+    timer_finished_event = asyncio.Event()
+
+    def _timer_finished(self, timer_id: str) -> None:
+        with pytest.raises(TimersNotSupportedError):
+            original_timer_finished(timer_id)
+        timer_finished_event.set()
+
+    # Ensure that a timer finishing with a device that has been unregistered will fail
+    with patch(
+        "homeassistant.components.intent.timers.TimerManager._timer_finished",
+        _timer_finished,
+    ):
+        timer_manager.start_timer(
+            device_id,
+            hours=None,
+            minutes=None,
+            seconds=0,
+            language=hass.config.language,
+        )
+
+        # Pretend device was unregistered while timer was running
+        with patch(
+            "homeassistant.components.intent.timers.TimerManager.is_timer_device",
+            return_value=False,
+        ):
+            async with asyncio.timeout(1):
+                await timer_finished_event.wait()
 
 
 async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> None:
