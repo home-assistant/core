@@ -109,7 +109,7 @@ def make_motion_event(
     """Create an EventMessage for a motion event."""
     if not timestamp:
         timestamp = utcnow()
-    return EventMessage(
+    return EventMessage.create_event(
         {
             "eventId": "some-event-id",  # Ignored; we use the resource updated event id below
             "timestamp": timestamp.isoformat(timespec="seconds"),

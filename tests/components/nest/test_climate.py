@@ -79,7 +79,7 @@ async def create_event(
 
     async def create_event(traits: dict[str, Any]) -> None:
         await subscriber.async_receive_event(
-            EventMessage(
+            EventMessage.create_event(
                 {
                     "eventId": EVENT_ID,
                     "timestamp": "2019-01-01T00:00:01Z",

@@ -457,7 +457,7 @@ async def test_subscriber_automation(
     assert await setup_automation(hass, device_entry.id, "camera_motion")
 
     # Simulate a pubsub message received by the subscriber with a motion event
-    event = EventMessage(
+    event = EventMessage.create_event(
         {
             "eventId": "some-event-id",
             "timestamp": "2019-01-01T00:00:01Z",
