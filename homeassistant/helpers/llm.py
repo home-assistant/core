@@ -20,8 +20,8 @@ from .singleton import singleton
 LLM_API_ASSIST = "assist"
 
 PROMPT_NO_API_CONFIGURED = (
-    "If the user wants to control a device, tell them to edit the AI configuration and "
-    "allow access to Home Assistant."
+    "Only if the user wants to control a device, tell them to edit the AI configuration "
+    "and allow access to Home Assistant."
 )
 
 
