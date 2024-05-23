@@ -5028,6 +5028,11 @@ async def test_hashable_non_string_unique_id(
             {"type": data_entry_flow.FlowResultType.FORM, "step_id": "reauth_confirm"},
         ),
         (
+            config_entries.SOURCE_RECONFIGURE,
+            None,
+            {"type": data_entry_flow.FlowResultType.FORM, "step_id": "reauth_confirm"},
+        ),
+        (
             config_entries.SOURCE_UNIGNORE,
             None,
             {"type": data_entry_flow.FlowResultType.ABORT, "reason": "not_implemented"},
@@ -5108,6 +5113,11 @@ async def test_starting_config_flow_on_single_config_entry(
         ),
         (
             config_entries.SOURCE_REAUTH,
+            None,
+            {"type": data_entry_flow.FlowResultType.FORM, "step_id": "reauth_confirm"},
+        ),
+        (
+            config_entries.SOURCE_RECONFIGURE,
             None,
             {"type": data_entry_flow.FlowResultType.FORM, "step_id": "reauth_confirm"},
         ),

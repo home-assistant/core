@@ -67,8 +67,9 @@ from ..const import (
     DOMAIN as MQTT_DOMAIN,
 )
 from ..debug_info import log_messages
-from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, write_state_on_attr_change
+from ..mixins import MqttEntity, write_state_on_attr_change
 from ..models import ReceiveMessage
+from ..schemas import MQTT_ENTITY_COMMON_SCHEMA
 from ..util import valid_subscribe_topic
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import (
