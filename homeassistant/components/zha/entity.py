@@ -39,23 +39,25 @@ class ZHAEntity(LogMixin, entity.Entity):
         self.entity_data: EntityData = entity_data
         self._unsubs: list[Callable[[], None]] = []
 
-        if self.entity_data.entity.icon is not None:
-            self._attr_icon = self.entity_data.entity.icon
+        meta = self.entity_data.entity.info_object
+        self._attr_unique_id = meta.unique_id
 
-        if self.entity_data.entity.translation_key is not None:
-            self._attr_translation_key = self.entity_data.entity.translation_key
-        elif self.entity_data.entity.name is not None:
-            self._attr_name = self.entity_data.entity.name
+        if meta.icon is not None:
+            self._attr_icon = meta.icon
 
-        if self.entity_data.entity.entity_category == ZHAEntityCategory.CONFIG:
+        if meta.translation_key is not None:
+            self._attr_translation_key = meta.translation_key
+        elif meta.fallback_name is not None:
+            # Only custom quirks will create entities with just a fallback name!
+            #
+            # This is to allow local development and to register niche devices, since
+            # their translation_key will probably never be added to `zha/strings.json`.
+            self._attr_name = meta.fallback_name
+
+        if meta.entity_category == ZHAEntityCategory.CONFIG:
             self._attr_entity_category = EntityCategory.CONFIG
-        elif self.entity_data.entity.entity_category == ZHAEntityCategory.DIAGNOSTIC:
+        elif meta.entity_category == ZHAEntityCategory.DIAGNOSTIC:
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self.entity_data.entity.unique_id
 
     @property
     def available(self) -> bool:
