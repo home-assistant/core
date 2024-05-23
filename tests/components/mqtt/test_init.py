@@ -930,8 +930,11 @@ async def test_handle_logging_on_writing_the_entity_state(
         state = hass.states.get("sensor.test_sensor")
         assert state is not None
         assert state.state == "initial_state"
-        assert "Invalid value for sensor" in caplog.text
-        assert "Exception raised when updating state of" in caplog.text
+        assert (
+            "Invalid value for sensor, while updating "
+            "state of sensor.test_sensor, topic: 'test/state' "
+            "with payload: b'payload causing errors'" in caplog.text
+        )
 
 
 async def test_receiving_non_utf8_message_gets_logged(

@@ -13,7 +13,13 @@ from typing import TYPE_CHECKING, Any, TypedDict
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_NAME,
+    MAX_LENGTH_STATE_STATE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
 from homeassistant.helpers import template
@@ -369,17 +375,51 @@ class EntityTopicState:
         """Register topic."""
         self.subscribe_calls: dict[str, Entity] = {}
 
+    def _check_state_too_long(
+        self, entity: Entity, entity_id: str, msg: MQTTMessage
+    ) -> bool:
+        """Check if the processed state is too long."""
+        try:
+            state: str = entity.state  # type: ignore[assignment]
+            state_length = len(state)
+        except (TypeError, ValueError):
+            return False
+        if state_length > MAX_LENGTH_STATE_STATE:
+            _LOGGER.error(
+                "Cannot update state for entity %s after processing "
+                "payload on topic %s. The requested state (%s) exceeds "
+                "the maximum allowed length (%s). Fall back to "
+                "%s, failed state: %s",
+                entity_id,
+                msg.topic,
+                state_length,
+                MAX_LENGTH_STATE_STATE,
+                STATE_UNKNOWN,
+                state[:8192],
+            )
+            entity.hass.states.async_set(
+                entity_id,
+                STATE_UNKNOWN,
+                {},
+                entity.force_update,
+            )
+            return True
+
+        return False
+
     @callback
     def process_write_state_requests(self, msg: MQTTMessage) -> None:
         """Process the write state requests."""
         while self.subscribe_calls:
-            _, entity = self.subscribe_calls.popitem()
+            entity_id, entity = self.subscribe_calls.popitem()
+            if self._check_state_too_long(entity, entity_id, msg):
+                return
             try:
                 entity.async_write_ha_state()
-            except Exception:
-                _LOGGER.exception(
-                    "Exception raised when updating state of %s, topic: "
-                    "'%s' with payload: %s",
+            except Exception as exc:  # noqa: BLE001
+                _LOGGER.error(
+                    "%s, while updating state of %s, topic: " "'%s' with payload: %s",
+                    exc,
                     entity.entity_id,
                     msg.topic,
                     msg.payload,
