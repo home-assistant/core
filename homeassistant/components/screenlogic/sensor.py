@@ -136,11 +136,13 @@ SUPPORTED_INTELLICHEM_SENSORS = [
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
         key=VALUE.CALCIUM_HARDNESS,
+        entity_registry_enabled_default=False,  # Superseded by number entity
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
         key=VALUE.CYA,
+        entity_registry_enabled_default=False,  # Superseded by number entity
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
@@ -156,11 +158,13 @@ SUPPORTED_INTELLICHEM_SENSORS = [
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
         key=VALUE.TOTAL_ALKALINITY,
+        entity_registry_enabled_default=False,  # Superseded by number entity
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
         key=VALUE.SALT_TDS_PPM,
+        entity_registry_enabled_default=False,  # Superseded by number entity
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
