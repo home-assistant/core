@@ -19,7 +19,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import assert_entities, setup_platform
+from . import assert_entities, assert_entities_alt, setup_platform
 from .const import COMMAND_OK, METADATA_NOSCOPE, VEHICLE_DATA_ALT
 
 
@@ -44,7 +44,7 @@ async def test_media_player_alt(
 
     mock_vehicle_data.return_value = VEHICLE_DATA_ALT
     entry = await setup_platform(hass, [Platform.MEDIA_PLAYER])
-    assert_entities(hass, entry.entry_id, entity_registry, snapshot, assert_entry=False)
+    assert_entities_alt(hass, entry.entry_id, entity_registry, snapshot)
 
 
 async def test_media_player_offline(
@@ -69,7 +69,7 @@ async def test_media_player_noscope(
 
     mock_metadata.return_value = METADATA_NOSCOPE
     entry = await setup_platform(hass, [Platform.MEDIA_PLAYER])
-    assert_entities(hass, entry.entry_id, entity_registry, snapshot, assert_state=False)
+    assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
 
 async def test_media_player_services(
