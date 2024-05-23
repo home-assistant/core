@@ -688,14 +688,14 @@ async def test_ws_sign_path(
     assert expires.total_seconds() == 20
 
 
-async def test_ws_remove_expiry_date_refresh_token(
+async def test_ws_edit_expiry_date_refresh_token(
     hass: HomeAssistant,
     hass_admin_user: MockUser,
     hass_admin_credential: Credentials,
     hass_ws_client: WebSocketGenerator,
     hass_access_token: str,
 ) -> None:
-    """Test removing expiry date from a refresh token."""
+    """Test editing expiry date from a refresh token."""
     assert await async_setup_component(hass, "auth", {"http": {}})
 
     refresh_token = await hass.auth.async_create_refresh_token(
@@ -706,8 +706,9 @@ async def test_ws_remove_expiry_date_refresh_token(
 
     await ws_client.send_json_auto_id(
         {
-            "type": "auth/remove_expiry_date_refresh_token",
+            "type": "auth/edit_expiry_date_refresh_token",
             "refresh_token_id": refresh_token.id,
+            "disable_expiry_date": True,
         }
     )
 
@@ -715,6 +716,19 @@ async def test_ws_remove_expiry_date_refresh_token(
     assert result["success"], result
     refresh_token = hass.auth.async_get_refresh_token(refresh_token.id)
     assert refresh_token.expire_at is None
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "auth/edit_expiry_date_refresh_token",
+            "refresh_token_id": refresh_token.id,
+            "disable_expiry_date": False,
+        }
+    )
+
+    result = await ws_client.receive_json()
+    assert result["success"], result
+    refresh_token = hass.auth.async_get_refresh_token(refresh_token.id)
+    assert refresh_token.expire_at is not None
 
 
 async def test_ws_remove_expiry_date_refresh_token_error(
@@ -728,7 +742,11 @@ async def test_ws_remove_expiry_date_refresh_token_error(
     ws_client = await hass_ws_client(hass, hass_access_token)
 
     await ws_client.send_json_auto_id(
-        {"type": "auth/remove_expiry_date_refresh_token", "refresh_token_id": "invalid"}
+        {
+            "type": "auth/edit_expiry_date_refresh_token",
+            "refresh_token_id": "invalid",
+            "disable_expiry_date": False,
+        }
     )
 
     result = await ws_client.receive_json()

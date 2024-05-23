@@ -520,9 +520,13 @@ class AuthManager:
             revoke_callback()
 
     @callback
-    def async_remove_expiry_date(self, refresh_token: models.RefreshToken) -> None:
-        """Remove expiry date from refresh token."""
-        self._store.async_remove_expiry_date(refresh_token)
+    def async_edit_expiry_date(
+        self, refresh_token: models.RefreshToken, *, disable_expiry_date: bool
+    ) -> None:
+        """Edit expiry date from refresh token."""
+        self._store.async_edit_expiry_date(
+            refresh_token, disable_expiry_date=disable_expiry_date
+        )
 
     @callback
     def _async_remove_expired_refresh_tokens(self, _: datetime | None = None) -> None:

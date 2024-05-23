@@ -321,10 +321,10 @@ async def test_add_remove_user_affects_tokens(
     assert user.refresh_tokens == {}
 
 
-async def test_remove_expiry_date(
+async def test_edit_expiry_date(
     hass: HomeAssistant, hass_storage: dict[str, Any], freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test the expiry date can be removed from a refresh token."""
+    """Test editign expiry date of a refresh token."""
     hass_storage[auth_store.STORAGE_KEY] = {
         "version": 1,
         "data": {
@@ -362,7 +362,7 @@ async def test_remove_expiry_date(
     (token,) = users[0].refresh_tokens.values()
     assert token.expire_at == 1724133771.079745
 
-    store.async_remove_expiry_date(token)
+    store.async_edit_expiry_date(token, disable_expiry_date=True)
     assert token.expire_at is None
 
     freezer.tick(auth_store.DEFAULT_SAVE_DELAY * 2)
@@ -376,3 +376,6 @@ async def test_remove_expiry_date(
         hass_storage[auth_store.STORAGE_KEY]["data"]["refresh_tokens"][0]["expire_at"]
         is None
     )
+
+    store.async_edit_expiry_date(token, disable_expiry_date=False)
+    assert token.expire_at is not None

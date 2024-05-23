@@ -196,9 +196,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_delete_refresh_token)
     websocket_api.async_register_command(hass, websocket_delete_all_refresh_tokens)
     websocket_api.async_register_command(hass, websocket_sign_path)
-    websocket_api.async_register_command(
-        hass, websocket_remove_expiry_date_refresh_token
-    )
+    websocket_api.async_register_command(hass, websocket_edit_expiry_date_refresh_token)
 
     login_flow.async_setup(hass, store_result)
     mfa_setup_flow.async_setup(hass)
@@ -707,20 +705,23 @@ def websocket_sign_path(
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "auth/remove_expiry_date_refresh_token",
+        vol.Required("type"): "auth/edit_expiry_date_refresh_token",
         vol.Required("refresh_token_id"): str,
+        vol.Required("disable_expiry_date"): bool,
     }
 )
 @websocket_api.ws_require_user()
-def websocket_remove_expiry_date_refresh_token(
+def websocket_edit_expiry_date_refresh_token(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Handle a remove expiry date from refresh token request."""
+    """Handle a edit expiration date from refresh token request."""
     refresh_token = connection.user.refresh_tokens.get(msg["refresh_token_id"])
 
     if refresh_token is None:
         connection.send_error(msg["id"], "invalid_token_id", "Received invalid token")
         return
 
-    hass.auth.async_remove_expiry_date(refresh_token)
+    hass.auth.async_edit_expiry_date(
+        refresh_token, disable_expiry_date=msg["disable_expiry_date"]
+    )
     connection.send_result(msg["id"], {})
