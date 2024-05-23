@@ -24,7 +24,10 @@ async def mock_update_data(self):
 
 async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Mock integration setup."""
-    with patch("moehlenhoff_alpha2.Alpha2Base.update_data", mock_update_data):
+    with patch(
+        "homeassistant.components.moehlenhoff_alpha2.Alpha2Base.update_data",
+        mock_update_data,
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={

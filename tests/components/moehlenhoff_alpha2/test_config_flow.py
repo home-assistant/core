@@ -22,7 +22,10 @@ async def test_form(hass: HomeAssistant) -> None:
     assert not result["errors"]
 
     with (
-        patch("moehlenhoff_alpha2.Alpha2Base.update_data", mock_update_data),
+        patch(
+            "homeassistant.components.moehlenhoff_alpha2.Alpha2Base.update_data",
+            mock_update_data,
+        ),
         patch(
             "homeassistant.components.moehlenhoff_alpha2.async_setup_entry",
             return_value=True,
