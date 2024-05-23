@@ -4,12 +4,15 @@ import asyncio
 import logging
 
 from duwi_smarthome_sdk.api.discover import DiscoverClient
+from duwi_smarthome_sdk.api.group import GroupClient
 from duwi_smarthome_sdk.api.floor import FloorInfoClient
 from duwi_smarthome_sdk.api.room import RoomInfoClient
 from duwi_smarthome_sdk.api.terminal import TerminalClient
 from duwi_smarthome_sdk.api.ws import DeviceSynchronizationWS
+from duwi_smarthome_sdk.model.resp.device import Device
+from duwi_smarthome_sdk.model.resp.group import Group
 from duwi_smarthome_sdk.const.status import Code
-from duwi_smarthome_sdk.const.type_map import type_map
+from duwi_smarthome_sdk.const.type_map import type_map, group_type_map
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
@@ -96,14 +99,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     entry_data = hass.data[DOMAIN][instance_id]
     entry_data.update(
         {
-            "app_key": config_entry.data.get("app_key"),
-            "app_secret": config_entry.data.get("app_secret"),
-            "access_token": config_entry.data.get("access_token"),
-            "refresh_token": config_entry.data.get("refresh_token"),
-            "house_no": config_entry.data.get("house_no"),
+            "app_key": config_entry.data.get("app_key").strip(),
+            "app_secret": config_entry.data.get("app_secret").strip(),
+            "access_token": config_entry.data.get("access_token").strip(),
+            "refresh_token": config_entry.data.get("refresh_token").strip(),
+            "house_no": config_entry.data.get("house_no").strip(),
         }
     )
-
+    _LOGGER.debug(f"Config entry data: {entry_data}")
     # Initialize the client used for discovering devices with credentials from entry_data.
     discover_client = DiscoverClient(
         app_key=entry_data["app_key"],
@@ -114,9 +117,23 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         client_model=CLIENT_MODEL,
     )
 
-    # Begin the discovery process using the discovery client.
-    status, devices = await discover_client.discover(house_no=entry_data["house_no"])
+    # Initialize the client used for discovering group with credentials from entry_data.
+    group_client = GroupClient(
+        app_key=entry_data["app_key"],
+        app_secret=entry_data["app_secret"],
+        access_token=entry_data["access_token"],
+        app_version=APP_VERSION,
+        client_version=CLIENT_VERSION,
+        client_model=CLIENT_MODEL,
+    )
 
+    # Begin the discovery process using the discovery client.
+    devices_status, devices = await discover_client.discover(
+        house_no=entry_data["house_no"]
+    )
+    groups_status, groups = await group_client.discover_groups(
+        house_no=entry_data["house_no"]
+    )
     # Initialize clients for fetching floor, room, and terminal information.
     floor_info_client = FloorInfoClient(
         app_key=entry_data["app_key"],
@@ -197,10 +214,26 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
         device.room_name = rooms_dict.get(device.room_no, device.room_name)
 
+    for group in groups if groups else []:
+        group.floor_name = floors_dict.get(
+            rooms_floors_dict.get(group.room_no), group.floor_name
+        )
+        group.room_name = rooms_dict.get(group.room_no, group.room_name)
+        if group.floor_name is None:
+            group.floor_name = ""
+        if group.room_name is None:
+            group.room_name = ""
+
     # Register devices within Home Assistant if the discovery was successful.
-    if status == Code.SUCCESS.value:
+    if devices_status == Code.SUCCESS.value:
         device_registry = setup_device_registry(devices)
         hass.data[DOMAIN][instance_id]["devices"] = device_registry
+
+    if groups_status == Code.SUCCESS.value:
+        group_registry = setup_group_registry(
+            groups, hass.data[DOMAIN][instance_id].get("devices")
+        )
+        hass.data[DOMAIN][instance_id]["devices"] = group_registry
 
     # Forward the setup process to supported platforms within this integration.
     await hass.config_entries.async_forward_entry_setups(
@@ -253,9 +286,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-def setup_device_registry(devices):
+def setup_device_registry(devices: Device, device_registry=None):
     """Organize devices into a structured registry."""
-    device_registry = {}
+    if device_registry is None:
+        device_registry = {}
     for device in devices:
         for main_type, type_no_map in type_map.items():
             if (
@@ -267,6 +301,19 @@ def setup_device_registry(devices):
                 ).append(device)
 
     return device_registry
+
+
+def setup_group_registry(groups: Group, group_registry=None):
+    """Organize groups into a structured registry."""
+    if group_registry is None:
+        group_registry = {}
+    for group in groups:
+        for main_type, type_no_map in group_type_map.items():
+            if group.device_group_type in type_no_map:
+                group_registry.setdefault(main_type, {}).setdefault(
+                    type_no_map[group.device_group_type], []
+                ).append(group)
+    return group_registry
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:

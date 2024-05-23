@@ -51,7 +51,11 @@ async def trans_duwi_state_to_ha_state(
     namespace = message_data.get("namespace")
 
     # Proceed only with the expected namespaces.
-    if namespace not in ["Duwi.RPS.DeviceValue", "Duwi.RPS.TerminalOnline"]:
+    if namespace not in [
+        "Duwi.RPS.DeviceValue",
+        "Duwi.RPS.TerminalOnline",
+        "Duwi.RPS.DeviceGroupValue",
+    ]:
         _LOGGER.debug(f"Received message with unexpected namespace: {namespace}")
         return
 
@@ -117,7 +121,7 @@ async def trans_duwi_state_to_ha_state(
         return
 
     # Extract device number and retrieve entity ID from Home Assistant data.
-    device_no = msg.get("deviceNo")
+    device_no = msg.get("deviceNo", msg.get("deviceGroupNo"))
     if not device_no:
         _LOGGER.debug("Received message with no device_no")
         return
