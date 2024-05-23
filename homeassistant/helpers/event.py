@@ -1595,16 +1595,16 @@ class _TrackTimeInterval:
         hass = self.hass
         loop = hass.loop
         self._timer_handle = loop.call_at(
-            loop.time() + self.seconds, _run_async_call_action, hass, self._track_job
+            loop.time() + self.seconds, self._interval_listener, self._track_job
         )
 
     @callback
-    def _interval_listener(self, now: datetime) -> None:
+    def _interval_listener(self, _: Any) -> None:
         """Handle elapsed intervals."""
         if TYPE_CHECKING:
             assert self._run_job is not None
         self._schedule_timer()
-        self.hass.async_run_hass_job(self._run_job, now, background=True)
+        self.hass.async_run_hass_job(self._run_job, dt_util.utcnow(), background=True)
 
     @callback
     def async_cancel(self) -> None:
