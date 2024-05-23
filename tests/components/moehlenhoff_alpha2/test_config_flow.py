@@ -23,7 +23,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.moehlenhoff_alpha2.Alpha2Base.update_data",
+            "homeassistant.components.moehlenhoff_alpha2.config_flow.Alpha2Base.update_data",
             mock_update_data,
         ),
         patch(
