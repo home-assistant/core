@@ -103,7 +103,9 @@ async def test_switch_offline(
         ),
     ],
 )
-async def test_switch_services(hass: HomeAssistant, name: str, on: str, off: str) -> None:
+async def test_switch_services(
+    hass: HomeAssistant, name: str, on: str, off: str
+) -> None:
     """Tests that the switch service calls work."""
 
     await setup_platform(hass, [Platform.SWITCH])
