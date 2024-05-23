@@ -103,9 +103,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.BooleanState.Attributes.StateValue,),
-        device_type=(
-            device_types.WaterLeakDetector,
-        ),
+        device_type=(device_types.WaterLeakDetector,),
     ),
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
