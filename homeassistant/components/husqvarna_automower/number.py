@@ -18,7 +18,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, EXECUTION_TIME
+from .const import DOMAIN, EXECUTION_TIME_DELAY
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerControlEntity
 
@@ -221,7 +221,7 @@ class AutomowerWorkAreaNumberEntity(AutomowerControlEntity, NumberEntity):
         else:
             # As there are no updates from the websocket regarding work area changes,
             # we need to wait 5s and then poll the API.
-            await asyncio.sleep(EXECUTION_TIME)
+            await asyncio.sleep(EXECUTION_TIME_DELAY)
             await self.coordinator.async_request_refresh()
 
 
