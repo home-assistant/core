@@ -24,10 +24,9 @@ from httpx import ConnectError, ConnectTimeout
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_TIMEOUT, SIGNAL_PANEL_UPDATE
+from .const import DEFAULT_TIMEOUT
 
 
 class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
@@ -136,11 +135,6 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
     def _fire_data_update(self, status: PanelStatus):
         # Store a dictionary for fast endpoint state access
         self._state_by_endpoint = {k.endpoint_id: k for k in status.all_endpoints}
-        # Send the event data to every single device
-        for k, ep_status in self._state_by_endpoint.items():
-            event_signal = f"{SIGNAL_PANEL_UPDATE}-{self.panel_entry.hash}-{k}"
-            async_dispatcher_send(self.hass, event_signal, ep_status)
-
         self.async_set_updated_data(status)
 
     def _register_push_notification_handler(self):
