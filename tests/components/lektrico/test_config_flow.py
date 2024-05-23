@@ -5,9 +5,8 @@ from ipaddress import ip_address
 
 from lektricowifi import DeviceConnectionError
 
-from homeassistant import config_entries
 from homeassistant.components.lektrico.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import (
     ATTR_HW_VERSION,
     ATTR_SERIAL_NUMBER,
@@ -39,7 +38,7 @@ async def test_user_setup(
         context={"source": SOURCE_USER},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
     assert "flow_id" in result
 
@@ -51,7 +50,7 @@ async def test_user_setup(
     )
     await hass.async_block_till_done()
 
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == f"{MOCKED_DEVICE_TYPE}_{MOCKED_DEVICE_SERIAL_NUMBER}"
     assert result.get("data") == {
         CONF_HOST: MOCKED_DEVICE_IP_ADDRESS,
@@ -77,9 +76,9 @@ async def test_user_setup_already_exists(
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
@@ -91,7 +90,7 @@ async def test_user_setup_already_exists(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -100,9 +99,9 @@ async def test_user_setup_device_offline(
 ) -> None:
     """Test manually setting up when device is offline."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
@@ -115,7 +114,7 @@ async def test_user_setup_device_offline(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
 
@@ -126,14 +125,14 @@ async def test_discovered_zeroconf(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        context={"source": SOURCE_ZEROCONF},
         data=MOCKED_DEVICE_ZEROCONF_DATA,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         CONF_HOST: MOCKED_DEVICE_IP_ADDRESS,
         CONF_NAME: f"{MOCKED_DEVICE_TYPE}_{MOCKED_DEVICE_SERIAL_NUMBER}",
@@ -149,11 +148,11 @@ async def test_discovered_zeroconf(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        context={"source": SOURCE_ZEROCONF},
         data=zc_data_new_ip,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == MOCKED_DEVICE_IP_ADDRESS
 
@@ -166,8 +165,8 @@ async def test_discovered_zeroconf_device_connection_error(
     mock_device_config.side_effect = DeviceConnectionError
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        context={"source": SOURCE_ZEROCONF},
         data=MOCKED_DEVICE_ZEROCONF_DATA,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
