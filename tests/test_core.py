@@ -3372,6 +3372,11 @@ async def test_statemachine_report_state(hass: HomeAssistant) -> None:
 
     unsub()
 
+    hass.states.async_set("light.bowl", "on")
+    await hass.async_block_till_done()
+    assert len(state_changed_events) == 4
+    assert len(state_reported_events) == 4
+
 
 async def test_report_state_listener_restrictions(hass: HomeAssistant) -> None:
     """Test we enforce requirements for EVENT_STATE_REPORTED listeners."""
