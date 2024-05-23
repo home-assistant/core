@@ -1228,12 +1228,12 @@ class MqttEntity(
 
     @callback
     def _attrs_have_changed(
-        self, tracked_attrs: tuple[tuple[str, Any | UndefinedType], ...]
+        self, attrs_snapshot: tuple[tuple[str, Any | UndefinedType], ...]
     ) -> bool:
         """Return True if attributes on entity changed or if update is forced."""
         if self._attr_force_update:
             return True
-        for attribute, last_value in tracked_attrs:
+        for attribute, last_value in attrs_snapshot:
             if getattr(self, attribute, UNDEFINED) != last_value:
                 return True
         return False
@@ -1256,7 +1256,7 @@ class MqttEntity(
         msg: ReceiveMessage,
     ) -> None:
         """Process the message callback."""
-        tracked_attrs: tuple[tuple[str, Any | UndefinedType], ...] = tuple(
+        attrs_snapshot: tuple[tuple[str, Any | UndefinedType], ...] = tuple(
             (attribute, getattr(self, attribute, UNDEFINED)) for attribute in attributes
         )
         self._log_message(msg)
@@ -1265,7 +1265,7 @@ class MqttEntity(
         except MqttValueTemplateException as exc:
             _LOGGER.warning(exc)
             return
-        if not self._attrs_have_changed(tracked_attrs):
+        if not self._attrs_have_changed(attrs_snapshot):
             return
 
         self.hass.data[DATA_MQTT].state_write_requests.write_state_request(self)
