@@ -38,8 +38,6 @@ def assert_entities(
     entry_id: str,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
-    assert_entry: bool = True,
-    assert_state: bool = True,
 ) -> None:
     """Test that all entities match their snapshot."""
 
@@ -47,11 +45,9 @@ def assert_entities(
 
     assert entity_entries
     for entity_entry in entity_entries:
-        if assert_entry:
-            assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-        if assert_state:
-            assert (state := hass.states.get(entity_entry.entity_id))
-            assert state == snapshot(name=f"{entity_entry.entity_id}-state")
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert (state := hass.states.get(entity_entry.entity_id))
+        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
 def assert_entities_alt(

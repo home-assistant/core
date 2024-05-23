@@ -375,7 +375,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switch_alt[switch.energy_site_allow_charging_from_grid-state]
+# name: test_switch_alt[switch.energy_site_allow_charging_from_grid-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
@@ -389,7 +389,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switch_alt[switch.energy_site_storm_watch-state]
+# name: test_switch_alt[switch.energy_site_storm_watch-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
@@ -403,7 +403,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_alt[switch.test_auto_seat_climate_left-state]
+# name: test_switch_alt[switch.test_auto_seat_climate_left-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
@@ -417,7 +417,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switch_alt[switch.test_auto_seat_climate_right-state]
+# name: test_switch_alt[switch.test_auto_seat_climate_right-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
@@ -431,7 +431,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switch_alt[switch.test_auto_steering_wheel_heater-state]
+# name: test_switch_alt[switch.test_auto_steering_wheel_heater-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
@@ -445,7 +445,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switch_alt[switch.test_charge-state]
+# name: test_switch_alt[switch.test_charge-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
@@ -459,7 +459,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_alt[switch.test_defrost-state]
+# name: test_switch_alt[switch.test_defrost-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
@@ -473,7 +473,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switch_alt[switch.test_sentry_mode-state]
+# name: test_switch_alt[switch.test_sentry_mode-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
