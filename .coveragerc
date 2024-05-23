@@ -805,6 +805,8 @@ omit =
     homeassistant/components/mochad/switch.py
     homeassistant/components/modem_callerid/button.py
     homeassistant/components/modem_callerid/sensor.py
+    homeassistant/components/moehlenhoff_alpha2/__init__.py
+    homeassistant/components/moehlenhoff_alpha2/button.py
     homeassistant/components/moehlenhoff_alpha2/climate.py
     homeassistant/components/monzo/__init__.py
     homeassistant/components/monzo/api.py
