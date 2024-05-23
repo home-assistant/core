@@ -33,6 +33,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_ENCRYPTION_KEY,
@@ -175,8 +176,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders = {}
         if user_input is not None:
             try:
-                key_details = await self.hass.async_add_executor_job(
-                    SwitchbotLock.retrieve_encryption_key,
+                key_details = await SwitchbotLock.async_retrieve_encryption_key(
+                    async_get_clientsession(self.hass),
                     self._discovered_adv.address,
                     user_input[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
