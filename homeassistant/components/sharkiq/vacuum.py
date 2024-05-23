@@ -27,7 +27,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER, SERVICE_CLEAN_ROOM, SHARK
-from .update_coordinator import SharkIqUpdateCoordinator
+from .coordinator import SharkIqUpdateCoordinator
 
 OPERATING_STATE_MAP = {
     OperatingModes.PAUSE: STATE_PAUSED,

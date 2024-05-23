@@ -167,14 +167,14 @@ class SnmpScanner(DeviceScanner):
         async for errindication, errstatus, errindex, res in walker:
             if errindication:
                 _LOGGER.error("SNMPLIB error: %s", errindication)
-                return
+                return None
             if errstatus:
                 _LOGGER.error(
                     "SNMP error: %s at %s",
                     errstatus.prettyPrint(),
                     errindex and res[int(errindex) - 1][0] or "?",
                 )
-                return
+                return None
 
             for _oid, value in res:
                 if not isEndOfMib(res):

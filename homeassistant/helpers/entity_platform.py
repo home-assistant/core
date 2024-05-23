@@ -30,7 +30,13 @@ from homeassistant.core import (
     split_entity_id,
     valid_entity_id,
 )
-from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    PlatformNotReady,
+)
 from homeassistant.generated import languages
 from homeassistant.setup import SetupPhases, async_start_setup
 from homeassistant.util.async_ import create_eager_task
@@ -196,8 +202,8 @@ class EntityPlatform:
           to that number.
 
         The default value for parallel requests is decided based on the first
-        entity that is added to Home Assistant. It's 0 if the entity defines
-        the async_update method, else it's 1.
+        entity of the platform which is added to Home Assistant. It's 1 if the
+        entity implements the update method, else it's 0.
         """
         if self.parallel_updates_created:
             return self.parallel_updates
@@ -354,7 +360,7 @@ class EntityPlatform:
         try:
             awaitable = async_create_setup_awaitable()
             if asyncio.iscoroutine(awaitable):
-                awaitable = create_eager_task(awaitable)
+                awaitable = create_eager_task(awaitable, loop=hass.loop)
 
             async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, self.domain):
                 await asyncio.shield(awaitable)
@@ -408,6 +414,16 @@ class EntityPlatform:
                 ),
                 self.platform_name,
                 SLOW_SETUP_MAX_WAIT,
+            )
+            return False
+        except (ConfigEntryNotReady, ConfigEntryAuthFailed, ConfigEntryError) as exc:
+            _LOGGER.error(
+                "%s raises exception %s in forwarded platform "
+                "%s; Instead raise %s before calling async_forward_entry_setups",
+                self.platform_name,
+                type(exc).__name__,
+                self.domain,
+                type(exc).__name__,
             )
             return False
         except Exception:
@@ -536,7 +552,7 @@ class EntityPlatform:
         event loop and will finish faster if we run them concurrently.
         """
         results: list[BaseException | None] | None = None
-        tasks = [create_eager_task(coro) for coro in coros]
+        tasks = [create_eager_task(coro, loop=self.hass.loop) for coro in coros]
         try:
             async with self.hass.timeout.async_timeout(timeout, self.domain):
                 results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -1035,7 +1051,9 @@ class EntityPlatform:
                 return
 
             if tasks := [
-                create_eager_task(entity.async_update_ha_state(True))
+                create_eager_task(
+                    entity.async_update_ha_state(True), loop=self.hass.loop
+                )
                 for entity in self.entities.values()
                 if entity.should_poll
             ]:

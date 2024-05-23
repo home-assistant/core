@@ -910,7 +910,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
     _raise_issue_if_no_country(hass, hass.config.country)
 
     if CONF_TIME_ZONE in config:
-        hac.set_time_zone(config[CONF_TIME_ZONE])
+        await hac.async_set_time_zone(config[CONF_TIME_ZONE])
 
     if CONF_MEDIA_DIRS not in config:
         if is_docker_env():
@@ -1673,7 +1673,9 @@ async def async_process_component_config(
             validated_config
             for validated_config in await asyncio.gather(
                 *(
-                    create_eager_task(async_load_and_validate(p_integration))
+                    create_eager_task(
+                        async_load_and_validate(p_integration), loop=hass.loop
+                    )
                     for p_integration in platform_integrations_to_load
                 )
             )

@@ -14,7 +14,7 @@ import reprlib
 import sqlite3
 import ssl
 import threading
-from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, cast
+from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp import client
@@ -48,7 +48,7 @@ from homeassistant.components.websocket_api.auth import (
 )
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
-from homeassistant.config_entries import ConfigEntries, ConfigEntry
+from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HassJob, HomeAssistant
 from homeassistant.helpers import (
@@ -204,11 +204,7 @@ class HAFakeDatetime(freezegun.api.FakeDatetime):  # type: ignore[name-defined]
         return ha_datetime_to_fakedatetime(result)
 
 
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-
-
-def check_real(func: Callable[_P, Coroutine[Any, Any, _R]]):
+def check_real[**_P, _R](func: Callable[_P, Coroutine[Any, Any, _R]]):
     """Force a function to require a keyword _test_real to be passed in."""
 
     @functools.wraps(func)
@@ -558,12 +554,21 @@ async def hass(
 
         # Config entries are not normally unloaded on HA shutdown. They are unloaded here
         # to ensure that they could, and to help track lingering tasks and timers.
-        await asyncio.gather(
-            *(
-                create_eager_task(config_entry.async_unload(hass))
-                for config_entry in hass.config_entries.async_entries()
+        loaded_entries = [
+            entry
+            for entry in hass.config_entries.async_entries()
+            if entry.state is ConfigEntryState.LOADED
+        ]
+        if loaded_entries:
+            await asyncio.gather(
+                *(
+                    create_eager_task(
+                        hass.config_entries.async_unload(config_entry.entry_id),
+                        loop=hass.loop,
+                    )
+                    for config_entry in loaded_entries
+                )
             )
-        )
 
         await hass.async_stop(force=True)
 
@@ -1029,7 +1034,7 @@ async def _mqtt_mock_entry(
         nonlocal real_mqtt_instance
         real_mqtt_instance = real_mqtt(*args, **kwargs)
         spec = [*dir(real_mqtt_instance), "_mqttc"]
-        mock_mqtt_instance = MqttMockHAClient(
+        mock_mqtt_instance = MagicMock(
             return_value=real_mqtt_instance,
             spec_set=spec,
             wraps=real_mqtt_instance,
@@ -1157,6 +1162,31 @@ def mock_get_source_ip() -> Generator[patch, None, None]:
         yield patcher
     finally:
         patcher.stop()
+
+
+@pytest.fixture(autouse=True, scope="session")
+def translations_once() -> Generator[patch, None, None]:
+    """Only load translations once per session."""
+    from homeassistant.helpers.translation import _TranslationsCacheData
+
+    cache = _TranslationsCacheData({}, {})
+    patcher = patch(
+        "homeassistant.helpers.translation._TranslationsCacheData",
+        return_value=cache,
+    )
+    patcher.start()
+    try:
+        yield patcher
+    finally:
+        patcher.stop()
+
+
+@pytest.fixture
+def disable_translations_once(translations_once):
+    """Override loading translations once."""
+    translations_once.stop()
+    yield
+    translations_once.start()
 
 
 @pytest.fixture
@@ -1425,7 +1455,9 @@ def hass_recorder(
             ) -> HomeAssistant:
                 """Set up with params."""
                 if timezone is not None:
-                    hass.config.set_time_zone(timezone)
+                    asyncio.run_coroutine_threadsafe(
+                        hass.config.async_set_time_zone(timezone), hass.loop
+                    ).result()
                 init_recorder_component(hass, config, recorder_db_url)
                 hass.start()
                 hass.block_till_done()

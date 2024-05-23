@@ -35,7 +35,7 @@ from . import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-_SlotsType = dict[str, Any]
+type _SlotsType = dict[str, Any]
 
 INTENT_TURN_OFF = "HassTurnOff"
 INTENT_TURN_ON = "HassTurnOn"
@@ -43,6 +43,13 @@ INTENT_TOGGLE = "HassToggle"
 INTENT_GET_STATE = "HassGetState"
 INTENT_NEVERMIND = "HassNevermind"
 INTENT_SET_POSITION = "HassSetPosition"
+INTENT_START_TIMER = "HassStartTimer"
+INTENT_CANCEL_TIMER = "HassCancelTimer"
+INTENT_INCREASE_TIMER = "HassIncreaseTimer"
+INTENT_DECREASE_TIMER = "HassDecreaseTimer"
+INTENT_PAUSE_TIMER = "HassPauseTimer"
+INTENT_UNPAUSE_TIMER = "HassUnpauseTimer"
+INTENT_TIMER_STATUS = "HassTimerStatus"
 
 SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
@@ -57,9 +64,10 @@ SPEECH_TYPE_SSML = "ssml"
 def async_register(hass: HomeAssistant, handler: IntentHandler) -> None:
     """Register an intent with Home Assistant."""
     if (intents := hass.data.get(DATA_KEY)) is None:
-        intents = hass.data[DATA_KEY] = {}
+        intents = {}
+        hass.data[DATA_KEY] = intents
 
-    assert handler.intent_type is not None, "intent_type cannot be None"
+    assert getattr(handler, "intent_type", None), "intent_type should be set"
 
     if handler.intent_type in intents:
         _LOGGER.warning(
@@ -79,6 +87,12 @@ def async_remove(hass: HomeAssistant, intent_type: str) -> None:
     intents.pop(intent_type, None)
 
 
+@callback
+def async_get(hass: HomeAssistant) -> Iterable[IntentHandler]:
+    """Return registered intents."""
+    return hass.data.get(DATA_KEY, {}).values()
+
+
 @bind_hass
 async def async_handle(
     hass: HomeAssistant,
@@ -89,6 +103,7 @@ async def async_handle(
     context: Context | None = None,
     language: str | None = None,
     assistant: str | None = None,
+    device_id: str | None = None,
 ) -> IntentResponse:
     """Handle an intent."""
     handler = hass.data.get(DATA_KEY, {}).get(intent_type)
@@ -111,6 +126,7 @@ async def async_handle(
         context=context,
         language=language,
         assistant=assistant,
+        device_id=device_id,
     )
 
     try:
@@ -140,6 +156,11 @@ class InvalidSlotInfo(IntentError):
 
 class IntentHandleError(IntentError):
     """Error while handling intent."""
+
+    def __init__(self, message: str = "", response_key: str | None = None) -> None:
+        """Initialize error."""
+        super().__init__(message)
+        self.response_key = response_key
 
 
 class IntentUnexpectedError(IntentError):
@@ -221,6 +242,19 @@ class MatchTargetsConstraints:
 
     allow_duplicate_names: bool = False
     """True if entities with duplicate names are allowed in result."""
+
+    @property
+    def has_constraints(self) -> bool:
+        """Returns True if at least one constraint is set (ignores assistant)."""
+        return bool(
+            self.name
+            or self.area_name
+            or self.floor_name
+            or self.domains
+            or self.device_classes
+            or self.features
+            or self.states
+        )
 
 
 @dataclass
@@ -702,9 +736,14 @@ def async_test_feature(state: State, feature: int, feature_name: str) -> None:
 class IntentHandler:
     """Intent handler registration."""
 
-    intent_type: str | None = None
-    slot_schema: vol.Schema | None = None
+    intent_type: str
     platforms: Iterable[str] | None = []
+    description: str | None = None
+
+    @property
+    def slot_schema(self) -> dict | None:
+        """Return a slot schema."""
+        return None
 
     @callback
     def async_can_handle(self, intent_obj: Intent) -> bool:
@@ -740,19 +779,20 @@ class IntentHandler:
         return f"<{self.__class__.__name__} - {self.intent_type}>"
 
 
+def non_empty_string(value: Any) -> str:
+    """Coerce value to string and fail if string is empty or whitespace."""
+    value_str = cv.string(value)
+    if not value_str.strip():
+        raise vol.Invalid("string value is empty")
+
+    return value_str
+
+
 class DynamicServiceIntentHandler(IntentHandler):
     """Service Intent handler registration (dynamic).
 
     Service specific intent handler that calls a service by name/entity_id.
     """
-
-    slot_schema = {
-        vol.Any("name", "area", "floor"): cv.string,
-        vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
-    }
 
     # We use a small timeout in service calls to (hopefully) pass validation
     # checks, but not try to wait for the call to fully complete.
@@ -767,6 +807,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         required_domains: set[str] | None = None,
         required_features: int | None = None,
         required_states: set[str] | None = None,
+        description: str | None = None,
     ) -> None:
         """Create Service Intent Handler."""
         self.intent_type = intent_type
@@ -774,6 +815,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         self.required_domains = required_domains
         self.required_features = required_features
         self.required_states = required_states
+        self.description = description
 
         self.required_slots: dict[tuple[str, str], vol.Schema] = {}
         if required_slots:
@@ -794,33 +836,33 @@ class DynamicServiceIntentHandler(IntentHandler):
                 self.optional_slots[key] = value_schema
 
     @cached_property
-    def _slot_schema(self) -> vol.Schema:
-        """Create validation schema for slots (with extra required slots)."""
-        if self.slot_schema is None:
-            raise ValueError("Slot schema is not defined")
+    def slot_schema(self) -> dict:
+        """Return a slot schema."""
+        slot_schema = {
+            vol.Any("name", "area", "floor"): non_empty_string,
+            vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional("preferred_area_id"): cv.string,
+            vol.Optional("preferred_floor_id"): cv.string,
+        }
 
-        if self.required_slots or self.optional_slots:
-            slot_schema = {
-                **self.slot_schema,
-                **{
-                    vol.Required(key[0]): schema
-                    for key, schema in self.required_slots.items()
-                },
-                **{
-                    vol.Optional(key[0]): schema
-                    for key, schema in self.optional_slots.items()
-                },
-            }
-        else:
-            slot_schema = self.slot_schema
+        if self.required_slots:
+            slot_schema.update(
+                {
+                    vol.Required(key[0]): validator
+                    for key, validator in self.required_slots.items()
+                }
+            )
 
-        return vol.Schema(
-            {
-                key: SLOT_SCHEMA.extend({"value": validator})
-                for key, validator in slot_schema.items()
-            },
-            extra=vol.ALLOW_EXTRA,
-        )
+        if self.optional_slots:
+            slot_schema.update(
+                {
+                    vol.Optional(key[0]): validator
+                    for key, validator in self.optional_slots.items()
+                }
+            )
+
+        return slot_schema
 
     @abstractmethod
     def get_domain_and_service(
@@ -872,6 +914,10 @@ class DynamicServiceIntentHandler(IntentHandler):
             features=self.required_features,
             states=self.required_states,
         )
+        if not match_constraints.has_constraints:
+            # Fail if attempting to target all devices in the house
+            raise IntentHandleError("Service handler cannot target all devices")
+
         match_preferences = MatchTargetsPreferences(
             area_id=slots.get("preferred_area_id", {}).get("value"),
             floor_id=slots.get("preferred_floor_id", {}).get("value"),
@@ -1059,6 +1105,7 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         required_domains: set[str] | None = None,
         required_features: int | None = None,
         required_states: set[str] | None = None,
+        description: str | None = None,
     ) -> None:
         """Create service handler."""
         super().__init__(
@@ -1069,6 +1116,7 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
             required_domains=required_domains,
             required_features=required_features,
             required_states=required_states,
+            description=description,
         )
         self.domain = domain
         self.service = service
@@ -1103,6 +1151,7 @@ class Intent:
         "language",
         "category",
         "assistant",
+        "device_id",
     ]
 
     def __init__(
@@ -1116,6 +1165,7 @@ class Intent:
         language: str,
         category: IntentCategory | None = None,
         assistant: str | None = None,
+        device_id: str | None = None,
     ) -> None:
         """Initialize an intent."""
         self.hass = hass
@@ -1127,6 +1177,7 @@ class Intent:
         self.language = language
         self.category = category
         self.assistant = assistant
+        self.device_id = device_id
 
     @callback
     def create_response(self) -> IntentResponse:
@@ -1207,6 +1258,7 @@ class IntentResponse:
         self.failed_results: list[IntentResponseTarget] = []
         self.matched_states: list[State] = []
         self.unmatched_states: list[State] = []
+        self.speech_slots: dict[str, Any] = {}
 
         if (self.intent is not None) and (self.intent.category == IntentCategory.QUERY):
             # speech will be the answer to the query
@@ -1281,6 +1333,11 @@ class IntentResponse:
         """Set entity states that were matched or not matched during intent handling (query)."""
         self.matched_states = matched_states
         self.unmatched_states = unmatched_states or []
+
+    @callback
+    def async_set_speech_slots(self, speech_slots: dict[str, Any]) -> None:
+        """Set slots that will be used in the response template of the default agent."""
+        self.speech_slots = speech_slots
 
     @callback
     def as_dict(self) -> dict[str, Any]:

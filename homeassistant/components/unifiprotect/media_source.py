@@ -670,7 +670,7 @@ class ProtectMediaSource(MediaSource):
             hour=0,
             minute=0,
             second=0,
-            tzinfo=dt_util.DEFAULT_TIME_ZONE,
+            tzinfo=dt_util.get_default_time_zone(),
         )
         if is_all:
             if start_dt.month < 12:

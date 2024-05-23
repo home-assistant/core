@@ -54,10 +54,6 @@
       'stay_out_zones': True,
       'work_areas': True,
     }),
-    'cutting_height': 4,
-    'headlight': dict({
-      'mode': 'EVENING_ONLY',
-    }),
     'metadata': dict({
       'connected': True,
       'status_dateteime': '2023-10-18T22:58:52.683000+00:00',
@@ -80,6 +76,12 @@
       'restricted_reason': 'WEEK_SCHEDULE',
     }),
     'positions': '**REDACTED**',
+    'settings': dict({
+      'cutting_height': 4,
+      'headlight': dict({
+        'mode': 'EVENING_ONLY',
+      }),
+    }),
     'statistics': dict({
       'cutting_blade_usage_time': 123,
       'number_of_charging_cycles': 1380,
@@ -96,6 +98,10 @@
         '81C6EEA2-D139-4FEA-B134-F22A6B3EA403': dict({
           'enabled': True,
           'name': 'Springflowers',
+        }),
+        'AAAAAAAA-BBBB-CCCC-DDDD-123456789101': dict({
+          'enabled': False,
+          'name': 'Danger Zone',
         }),
       }),
     }),
