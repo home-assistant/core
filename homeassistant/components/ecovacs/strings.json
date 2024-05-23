@@ -123,7 +123,7 @@
         "name": "Unit care lifespan"
       },
       "lifespan_round_mop": {
-        "name": "Round Mop lifespan"
+        "name": "Round mop lifespan"
       },
       "network_ip": {
         "name": "IP address"
