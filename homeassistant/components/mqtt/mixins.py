@@ -570,11 +570,12 @@ class MqttAvailability(Entity):
     def _availability_message_received(self, msg: ReceiveMessage) -> None:
         """Handle a new received MQTT availability message."""
         topic = msg.topic
-        payload = self._avail_topics[topic][CONF_AVAILABILITY_TEMPLATE](msg.payload)
-        if payload == self._avail_topics[topic][CONF_PAYLOAD_AVAILABLE]:
+        avail_topic = self._avail_topics[topic]
+        payload = avail_topic[CONF_AVAILABILITY_TEMPLATE](msg.payload)
+        if payload == avail_topic[CONF_PAYLOAD_AVAILABLE]:
             self._available[topic] = True
             self._available_latest = True
-        elif payload == self._avail_topics[topic][CONF_PAYLOAD_NOT_AVAILABLE]:
+        elif payload == avail_topic[CONF_PAYLOAD_NOT_AVAILABLE]:
             self._available[topic] = False
             self._available_latest = False
 
