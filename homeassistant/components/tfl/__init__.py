@@ -11,7 +11,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .config_helper import config_from_entry
 from .const import CONF_API_APP_KEY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
 
-    conf = config_from_entry(entry)
+    conf = entry.options
 
     stop_point_api = stopPoint(conf[CONF_API_APP_KEY])
     try:

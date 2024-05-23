@@ -16,7 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .config_helper import config_from_entry
 from .const import (
     ATTR_NEXT_ARRIVALS,
     ATTR_NEXT_THREE_ARRIVALS,
@@ -37,7 +36,7 @@ async def async_setup_entry(
     """Set up the TfL sensor."""
     stop_point_api = hass.data[DOMAIN][entry.entry_id]
 
-    conf = config_from_entry(entry)
+    conf = entry.options
 
     stop_point_ids: list[str] = conf[CONF_STOP_POINTS]
 

@@ -253,13 +253,12 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 async def test_options_flow_init(hass: HomeAssistant) -> None:
     """Test that the options flow is successfully initialised."""
 
+    data = {
+        CONF_API_APP_KEY: "appy_appy_app_key",
+        CONF_STOP_POINTS: ["AAAAAAAA1"],
+    }
     config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="unique_id",
-        data={
-            CONF_API_APP_KEY: "appy_appy_app_key",
-            CONF_STOP_POINTS: ["AAAAAAAA1"],
-        },
+        domain=DOMAIN, unique_id="unique_id", data=data, options=data
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -389,13 +388,12 @@ async def test_options_flow_remove_stop(m_stopPoint, hass: HomeAssistant) -> Non
 
 async def setup_options_flow_with_init_result(hass: HomeAssistant):
     """Create the config entry, setup the options flow, and return the init result."""
+    data = {
+        CONF_API_APP_KEY: "appy_appy_app_key",
+        CONF_STOP_POINTS: ["AAAAAAAA1", "BBBBBBBB2"],
+    }
     config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="unique_id",
-        data={
-            CONF_API_APP_KEY: "appy_appy_app_key",
-            CONF_STOP_POINTS: ["AAAAAAAA1", "BBBBBBBB2"],
-        },
+        domain=DOMAIN, unique_id="unique_id", data=data, options=data
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)

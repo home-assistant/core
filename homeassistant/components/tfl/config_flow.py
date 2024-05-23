@@ -16,7 +16,6 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
 
-from .config_helper import config_from_entry
 from .const import CONF_API_APP_KEY, CONF_STOP_POINTS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -157,8 +156,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # User input is valid, save the stop point
                 self.data[CONF_STOP_POINTS].extend(user_input[CONF_STOP_POINTS])
 
+                # Data is required so we pass in both as options and data, but we only read from options
                 return self.async_create_entry(
-                    title="Transport for London", data=self.data
+                    title="Transport for London", data=self.data, options=self.data
                 )
 
         return self.async_show_form(
@@ -221,7 +221,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         data=data,
                     )
 
-        config = config_from_entry(self.config_entry)
+        config = self.config_entry.options
         api_key = deepcopy(config[CONF_API_APP_KEY])
         all_stops = deepcopy(config[CONF_STOP_POINTS])
 
