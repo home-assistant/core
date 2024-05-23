@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 
 import voluptuous as vol
@@ -18,7 +19,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
-from .coordinator import FeedManager, StoredData
+from .coordinator import FeedReaderCoordinator, StoredData
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -48,10 +49,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     storage = StoredData(hass, old_data_file)
     await storage.async_setup()
     feeds = [
-        FeedManager(hass, url, scan_interval, max_entries, storage) for url in urls
+        FeedReaderCoordinator(hass, url, scan_interval, max_entries, storage)
+        for url in urls
     ]
 
-    for feed in feeds:
-        feed.async_setup()
+    await asyncio.gather(*[feed.async_refresh() for feed in feeds])
+
+    # workaround until we have entities to update
+    [feed.async_add_listener(lambda: None) for feed in feeds]
 
     return True

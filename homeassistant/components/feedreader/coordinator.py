@@ -11,10 +11,9 @@ from time import gmtime, struct_time
 
 import feedparser
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import DELAY_SAVE, DOMAIN, EVENT_FEEDREADER, STORAGE_VERSION
@@ -22,7 +21,7 @@ from .const import DELAY_SAVE, DOMAIN, EVENT_FEEDREADER, STORAGE_VERSION
 _LOGGER = getLogger(__name__)
 
 
-class FeedManager:
+class FeedReaderCoordinator(DataUpdateCoordinator):
     """Abstraction over Feedparser module."""
 
     def __init__(
@@ -34,9 +33,13 @@ class FeedManager:
         storage: StoredData,
     ) -> None:
         """Initialize the FeedManager object, poll as per scan interval."""
-        self._hass = hass
+        super().__init__(
+            hass=hass,
+            logger=_LOGGER,
+            name=f"{DOMAIN} {url}",
+            update_interval=scan_interval,
+        )
         self._url = url
-        self._scan_interval = scan_interval
         self._max_entries = max_entries
         self._feed: feedparser.FeedParserDict | None = None
         self._firstrun = True
@@ -46,24 +49,20 @@ class FeedManager:
         self._has_updated_parsed = False
         self._event_type = EVENT_FEEDREADER
         self._feed_id = url
-
-    @callback
-    def async_setup(self) -> None:
-        """Set up the feed manager."""
-        self._hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, self._async_update)
-        async_track_time_interval(
-            self._hass, self._async_update, self._scan_interval, cancel_on_shutdown=True
+        _LOGGER.debug(
+            "coordinator initi with url:%s scan_interval:%s", url, scan_interval
         )
 
     def _log_no_entries(self) -> None:
         """Send no entries log at debug level."""
         _LOGGER.debug("No new entries to be published in feed %s", self._url)
 
-    async def _async_update(self, _: datetime | Event) -> None:
+    async def _async_update_data(self) -> dict:
         """Update the feed and publish new entries to the event bus."""
-        last_entry_timestamp = await self._hass.async_add_executor_job(self._update)
+        last_entry_timestamp = await self.hass.async_add_executor_job(self._update)
         if last_entry_timestamp:
             self._storage.async_put_timestamp(self._feed_id, last_entry_timestamp)
+        return {}
 
     def _update(self) -> struct_time | None:
         """Update the feed and publish new entries to the event bus."""
@@ -148,7 +147,7 @@ class FeedManager:
                 entry,
             )
         entry.update({"feed_url": self._url})
-        self._hass.bus.fire(self._event_type, entry)
+        self.hass.bus.fire(self._event_type, entry)
         _LOGGER.debug("New event fired for entry %s", entry.get("link"))
 
     def _publish_new_entries(self) -> None:
@@ -193,14 +192,14 @@ class StoredData:
         """Initialize data storage."""
         self._legacy_data_file = legacy_data_file
         self._data: dict[str, struct_time] = {}
-        self._hass = hass
+        self.hass = hass
         self._store: Store[dict[str, str]] = Store(hass, STORAGE_VERSION, DOMAIN)
 
     async def async_setup(self) -> None:
         """Set up storage."""
         if not os.path.exists(self._store.path):
             # Remove the legacy store loading after deprecation period.
-            data = await self._hass.async_add_executor_job(self._legacy_fetch_data)
+            data = await self.hass.async_add_executor_job(self._legacy_fetch_data)
         else:
             if (store_data := await self._store.async_load()) is None:
                 return

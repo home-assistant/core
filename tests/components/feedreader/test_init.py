@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 import pickle
 from time import gmtime
 from typing import Any
-from unittest import mock
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
@@ -13,7 +12,6 @@ import pytest
 from homeassistant.components.feedreader.const import (
     CONF_MAX_ENTRIES,
     CONF_URLS,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     EVENT_FEEDREADER,
 )
@@ -139,15 +137,7 @@ async def test_legacy_storage_error(
     legacy_storage_open.side_effect = open_error
     legacy_storage_load.side_effect = load_error
 
-    with patch(
-        "homeassistant.components.feedreader.coordinator.async_track_time_interval"
-    ) as track_method:
-        assert await async_setup_component(hass, DOMAIN, VALID_CONFIG_1)
-        await hass.async_block_till_done()
-
-    track_method.assert_called_once_with(
-        hass, mock.ANY, DEFAULT_SCAN_INTERVAL, cancel_on_shutdown=True
-    )
+    assert await async_setup_component(hass, DOMAIN, VALID_CONFIG_1)
 
 
 @pytest.mark.parametrize("storage", ["legacy_storage", "json_storage"], indirect=True)
@@ -216,28 +206,7 @@ async def test_storage_data_writing(
 @pytest.mark.parametrize("storage", ["legacy_storage", "json_storage"], indirect=True)
 async def test_setup_one_feed(hass: HomeAssistant, storage: None) -> None:
     """Test the general setup of this component."""
-    with patch(
-        "homeassistant.components.feedreader.coordinator.async_track_time_interval"
-    ) as track_method:
-        assert await async_setup_component(hass, DOMAIN, VALID_CONFIG_1)
-        await hass.async_block_till_done()
-
-    track_method.assert_called_once_with(
-        hass, mock.ANY, DEFAULT_SCAN_INTERVAL, cancel_on_shutdown=True
-    )
-
-
-async def test_setup_scan_interval(hass: HomeAssistant) -> None:
-    """Test the setup of this component with scan interval."""
-    with patch(
-        "homeassistant.components.feedreader.coordinator.async_track_time_interval"
-    ) as track_method:
-        assert await async_setup_component(hass, DOMAIN, VALID_CONFIG_2)
-        await hass.async_block_till_done()
-
-    track_method.assert_called_once_with(
-        hass, mock.ANY, timedelta(seconds=60), cancel_on_shutdown=True
-    )
+    assert await async_setup_component(hass, DOMAIN, VALID_CONFIG_1)
 
 
 async def test_setup_max_entries(hass: HomeAssistant) -> None:
@@ -362,10 +331,11 @@ async def test_feed_updates(
         feed_two_event,
     ]
 
-    with patch("feedparser.http.get", side_effect=side_effect):
+    with patch(
+        "homeassistant.components.feedreader.coordinator.feedparser.http.get",
+        side_effect=side_effect,
+    ):
         assert await async_setup_component(hass, DOMAIN, VALID_CONFIG_2)
-
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
         assert len(events) == 1
