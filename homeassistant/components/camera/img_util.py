@@ -13,7 +13,6 @@ with suppress(Exception):
     # in the import executor and not in the event loop.
     from turbojpeg import TurboJPEG
 
-
 if TYPE_CHECKING:
     from . import Image
 
@@ -103,3 +102,9 @@ class TurboJPEGSingleton:
                 "Error loading libturbojpeg; Camera snapshot performance will be sub-optimal"
             )
             TurboJPEGSingleton.__instance = False
+
+
+with suppress(Exception):
+    # TurboJPEG loads libraries that do blocking I/O,
+    # initialize it in the executor to avoid blocking the event loop.
+    TurboJPEGSingleton.instance()
