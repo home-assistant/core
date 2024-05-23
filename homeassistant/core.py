@@ -1605,6 +1605,7 @@ class EventBus:
             )
         return self._async_listen_filterable_job(event_type, filterable_job)
 
+    @callback
     def _async_remove_state_reported_listener(
         self, filterable_job: _FilterableJobType[Any]
     ) -> None:
