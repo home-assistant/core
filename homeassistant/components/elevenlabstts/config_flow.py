@@ -92,5 +92,5 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
             raise ValueError("User info is not set")
         user_input[CONF_API_KEY] = self.user_info.get(CONF_API_KEY)
         return self.async_create_entry(
-            title="ElevenLabs text-to-speech", data=user_input
+            title=f"ElevenLabs {user_input[CONF_VOICE]}", data=user_input
         )
