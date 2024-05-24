@@ -34,6 +34,7 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
+from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.logging import catch_log_exception
 
 from .const import (
@@ -99,6 +100,9 @@ SUBSCRIBE_COOLDOWN = 0.1
 UNSUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
 RECONNECT_INTERVAL_SECONDS = 10
+
+MAX_SUBSCRIBES_PER_CALL = 500
+MAX_UNSUBSCRIBES_PER_CALL = 500
 
 type SocketType = socket.socket | ssl.SSLSocket | mqtt.WebsocketWrapper | Any
 
@@ -905,17 +909,21 @@ class MQTT:
         self._pending_subscriptions = {}
 
         subscription_list = list(subscriptions.items())
-        result, mid = self._mqttc.subscribe(subscription_list)
 
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            for topic, qos in subscriptions.items():
-                _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
-        self._last_subscribe = time.monotonic()
+        for chunk in chunked_or_all(subscription_list, MAX_SUBSCRIBES_PER_CALL):
+            result, mid = self._mqttc.subscribe(chunk)
 
-        if result == 0:
-            await self._async_wait_for_mid(mid)
-        else:
-            _raise_on_error(result)
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                for topic, qos in subscriptions.items():
+                    _LOGGER.debug(
+                        "Subscribing to %s, mid: %s, qos: %s", topic, mid, qos
+                    )
+            self._last_subscribe = time.monotonic()
+
+            if result == 0:
+                await self._async_wait_for_mid(mid)
+            else:
+                _raise_on_error(result)
 
     async def _async_perform_unsubscribes(self) -> None:
         """Perform pending MQTT client unsubscribes."""
@@ -925,13 +933,14 @@ class MQTT:
         topics = list(self._pending_unsubscribes)
         self._pending_unsubscribes = set()
 
-        result, mid = self._mqttc.unsubscribe(topics)
-        _raise_on_error(result)
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            for topic in topics:
-                _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
+        for chunk in chunked_or_all(topics, MAX_UNSUBSCRIBES_PER_CALL):
+            result, mid = self._mqttc.unsubscribe(chunk)
+            _raise_on_error(result)
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                for topic in chunk:
+                    _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
 
-        await self._async_wait_for_mid(mid)
+            await self._async_wait_for_mid(mid)
 
     async def _async_resubscribe_and_publish_birth_message(
         self, birth_message: PublishMessage
