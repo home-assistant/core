@@ -20,19 +20,19 @@ def set_tz(request):
 @pytest.fixture
 async def utc(hass: HomeAssistant) -> None:
     """Set the default TZ to UTC."""
-    hass.config.async_set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
 
 
 @pytest.fixture
 async def helsinki(hass: HomeAssistant) -> None:
     """Set the default TZ to Europe/Helsinki."""
-    hass.config.async_set_time_zone("Europe/Helsinki")
+    await hass.config.async_set_time_zone("Europe/Helsinki")
 
 
 @pytest.fixture
 async def new_york(hass: HomeAssistant) -> None:
     """Set the default TZ to America/New_York."""
-    hass.config.async_set_time_zone("America/New_York")
+    await hass.config.async_set_time_zone("America/New_York")
 
 
 def _sensor_to_datetime(sensor):
