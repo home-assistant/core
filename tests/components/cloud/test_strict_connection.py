@@ -281,8 +281,8 @@ async def test_strict_connection_cloud_external_unauthenticated_requests(
 
 async def _modify_cookie_for_cloud(client: TestClient, token_type: str) -> str:
     """Modify cookie for cloud."""
-    # Cloud cookie has set secure=true and will not set on unsecure connection
-    # As we test with unsecure connection, we need to set it manually
+    # Cloud cookie has set secure=true and will not set on insecure connection
+    # As we test with insecure connection, we need to set it manually
     # We get the session via http and modify the cookie name to the secure one
     session_id = await (await client.get(f"/test/cookie?token={token_type}")).text()
     cookie_jar = client.session.cookie_jar

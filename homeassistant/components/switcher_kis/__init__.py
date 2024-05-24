@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 
-from .const import DATA_DEVICE, DATA_DISCOVERY, DOMAIN
+from .const import DATA_DEVICE, DOMAIN
 from .coordinator import SwitcherDataUpdateCoordinator
 from .utils import async_start_bridge, async_stop_bridge
 
@@ -59,12 +59,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Must be ready before dispatcher is called
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    discovery_task = hass.data[DOMAIN].pop(DATA_DISCOVERY, None)
-    if discovery_task is not None:
-        discovered_devices = await discovery_task
-        for device in discovered_devices.values():
-            on_device_data_callback(device)
 
     await async_start_bridge(hass, on_device_data_callback)
 
