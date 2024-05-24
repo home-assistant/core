@@ -286,9 +286,6 @@ class TimerManager:
         if timer is None:
             raise TimerNotFoundError
 
-        if not self.is_timer_device(timer.device_id):
-            raise TimersNotSupportedError(timer.device_id)
-
         if timer.is_active:
             task = self.timer_tasks.pop(timer_id)
             task.cancel()
@@ -309,9 +306,6 @@ class TimerManager:
         timer = self.timers.get(timer_id)
         if timer is None:
             raise TimerNotFoundError
-
-        if not self.is_timer_device(timer.device_id):
-            raise TimersNotSupportedError(timer.device_id)
 
         if seconds == 0:
             # Don't bother cancelling and recreating the timer task
@@ -355,9 +349,6 @@ class TimerManager:
         if timer is None:
             raise TimerNotFoundError
 
-        if not self.is_timer_device(timer.device_id):
-            raise TimersNotSupportedError(timer.device_id)
-
         if not timer.is_active:
             # Already paused
             return
@@ -380,9 +371,6 @@ class TimerManager:
         timer = self.timers.get(timer_id)
         if timer is None:
             raise TimerNotFoundError
-
-        if not self.is_timer_device(timer.device_id):
-            raise TimersNotSupportedError(timer.device_id)
 
         if timer.is_active:
             # Already unpaused
