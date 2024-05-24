@@ -833,7 +833,7 @@ def async_set_service_schema(
 def _get_permissible_entity_candidates(
     call: ServiceCall,
     entities: dict[str, Entity],
-    entity_perms: None | (Callable[[str, str], bool]),
+    entity_perms: Callable[[str, str], bool] | None,
     target_all_entities: bool,
     all_referenced: set[str] | None,
 ) -> list[Entity]:
@@ -889,7 +889,7 @@ async def entity_service_call(
 
     Calls all platforms simultaneously.
     """
-    entity_perms: None | (Callable[[str, str], bool]) = None
+    entity_perms: Callable[[str, str], bool] | None = None
     return_response = call.return_response
 
     if call.context.user_id:
