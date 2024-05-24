@@ -65,8 +65,6 @@ from .const import (  # noqa: F401
     CONF_WILL_MESSAGE,
     CONF_WS_HEADERS,
     CONF_WS_PATH,
-    DATA_MQTT,
-    DATA_MQTT_AVAILABLE,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
     DEFAULT_PREFIX,
@@ -79,6 +77,8 @@ from .const import (  # noqa: F401
     TEMPLATE_ERRORS,
 )
 from .models import (  # noqa: F401
+    DATA_MQTT,
+    DATA_MQTT_AVAILABLE,
     MqttCommandTemplate,
     MqttData,
     MqttValueTemplate,
@@ -97,7 +97,6 @@ from .util import (  # noqa: F401
     async_create_certificate_temp_files,
     async_forward_entry_setup_and_setup_discovery,
     async_wait_for_mqtt_client,
-    get_mqtt_data,
     mqtt_config_entry_enabled,
     platforms_from_config,
     valid_publish_topic,
@@ -194,7 +193,7 @@ async def async_check_config_schema(
     hass: HomeAssistant, config_yaml: ConfigType
 ) -> None:
     """Validate manually configured MQTT items."""
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
     mqtt_config: list[dict[str, list[ConfigType]]] = config_yaml.get(DOMAIN, {})
     for mqtt_config_item in mqtt_config:
         for domain, config_items in mqtt_config_item.items():
@@ -233,7 +232,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await async_create_certificate_temp_files(hass, conf)
         client = MQTT(hass, entry, conf)
         if DOMAIN in hass.data:
-            mqtt_data = get_mqtt_data(hass)
+            mqtt_data = hass.data[DATA_MQTT]
             mqtt_data.config = mqtt_yaml
             mqtt_data.client = client
         else:
@@ -467,7 +466,7 @@ async def websocket_subscribe(
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
-ConnectionStatusCallback = Callable[[bool], None]
+type ConnectionStatusCallback = Callable[[bool], None]
 
 
 @callback
@@ -502,7 +501,7 @@ def async_subscribe_connection_status(
 
 def is_connected(hass: HomeAssistant) -> bool:
     """Return if MQTT client is connected."""
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
     return mqtt_data.client.connected
 
 
@@ -519,7 +518,7 @@ async def async_remove_config_entry_device(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload MQTT dump and publish service when the config entry is unloaded."""
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
     mqtt_client = mqtt_data.client
 
     # Unload publish and dump services.

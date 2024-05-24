@@ -6,13 +6,23 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import get_master_hub
 from .const import CONF_MASTER_GATEWAY, DOMAIN, PLATFORMS
 from .deconz_event import async_setup_events, async_unload_events
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import DeconzHub, get_deconz_api
-from .services import async_setup_services, async_unload_services
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up services."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -32,9 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryNotReady from err
     except AuthenticationRequired as err:
         raise ConfigEntryAuthFailed from err
-
-    if not hass.data[DOMAIN]:
-        async_setup_services(hass)
 
     hub = hass.data[DOMAIN][config_entry.entry_id] = DeconzHub(hass, config_entry, api)
     await hub.async_update_device_registry()
@@ -58,10 +65,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     hub: DeconzHub = hass.data[DOMAIN].pop(config_entry.entry_id)
     async_unload_events(hub)
 
-    if not hass.data[DOMAIN]:
-        async_unload_services(hass)
-
-    elif hub.master:
+    if hass.data[DOMAIN] and hub.master:
         await async_update_master_hub(hass, config_entry)
         new_master_hub = next(iter(hass.data[DOMAIN].values()))
         await async_update_master_hub(hass, new_master_hub.config_entry)

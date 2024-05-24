@@ -1,4 +1,4 @@
-"""Constants for the Transmission Bittorent Client component."""
+"""Constants for the Transmission Bittorrent Client component."""
 
 from __future__ import annotations
 

@@ -13,7 +13,7 @@ from functools import cached_property, partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import Any, Literal, TypedDict, TypeVar, cast
+from typing import Any, Literal, TypedDict, cast
 
 import async_interrupt
 import voluptuous as vol
@@ -110,8 +110,6 @@ from .trigger import async_initialize_triggers, async_validate_trigger_config
 from .typing import UNDEFINED, ConfigType, UndefinedType
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
-
-_T = TypeVar("_T")
 
 SCRIPT_MODE_PARALLEL = "parallel"
 SCRIPT_MODE_QUEUED = "queued"
@@ -713,7 +711,9 @@ class _ScriptRun:
         else:
             wait_var["remaining"] = None
 
-    async def _async_run_long_action(self, long_task: asyncio.Task[_T]) -> _T | None:
+    async def _async_run_long_action[_T](
+        self, long_task: asyncio.Task[_T]
+    ) -> _T | None:
         """Run a long task while monitoring for stop request."""
         try:
             async with async_interrupt.interrupt(self._stop, ScriptStoppedError, None):
@@ -1311,7 +1311,7 @@ async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> 
         )
 
 
-_VarsType = dict[str, Any] | MappingProxyType
+type _VarsType = dict[str, Any] | MappingProxyType
 
 
 def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:

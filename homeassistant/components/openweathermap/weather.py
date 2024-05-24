@@ -63,7 +63,7 @@ from .const import (
     FORECAST_MODE_ONECALL_DAILY,
     MANUFACTURER,
 )
-from .weather_update_coordinator import WeatherUpdateCoordinator
+from .coordinator import WeatherUpdateCoordinator
 
 FORECAST_MAP = {
     ATTR_API_FORECAST_CONDITION: ATTR_FORECAST_CONDITION,
