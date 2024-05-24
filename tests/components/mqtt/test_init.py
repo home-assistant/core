@@ -24,13 +24,13 @@ from homeassistant.components.mqtt.client import (
     RECONNECT_INTERVAL_SECONDS,
     EnsureJobAfterCooldown,
 )
-from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from homeassistant.components.mqtt.models import (
     MessageCallbackType,
     MqttCommandTemplateException,
     MqttValueTemplateException,
     ReceiveMessage,
 )
+from homeassistant.components.mqtt.schemas import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
