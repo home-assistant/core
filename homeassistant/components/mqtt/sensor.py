@@ -49,6 +49,7 @@ from .models import (
     ReceivePayloadType,
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+from .util import check_state_too_long
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -242,7 +243,10 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 else:
                     self._attr_native_value = new_value
                 return
-            if self.device_class in {None, SensorDeviceClass.ENUM}:
+            if self.device_class in {
+                None,
+                SensorDeviceClass.ENUM,
+            } and not check_state_too_long(_LOGGER, new_value, self.entity_id, msg):
                 self._attr_native_value = new_value
                 return
             try:
