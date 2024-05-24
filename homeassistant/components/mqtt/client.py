@@ -1151,7 +1151,7 @@ class MQTT:
                         partial(self._exception_message, job.target, receive_msg)
                     )
             else:
-                self.hass.async_run_hass_job(subscription.job, receive_msg)
+                self.hass.async_run_hass_job(job, receive_msg)
         self._mqtt_data.state_write_requests.process_write_state_requests(msg)
 
     @callback
