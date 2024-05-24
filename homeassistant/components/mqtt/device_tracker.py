@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import logging
 from typing import TYPE_CHECKING
 
 import voluptuous as vol
@@ -41,6 +42,8 @@ from .mixins import (
 from .models import MqttValueTemplate, ReceiveMessage, ReceivePayloadType
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_subscribe_topic
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_PAYLOAD_HOME = "payload_home"
 CONF_PAYLOAD_NOT_HOME = "payload_not_home"
@@ -125,6 +128,13 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             payload = self._value_template(msg.payload)
+            if not payload.strip():  # No output from template, ignore
+                _LOGGER.debug(
+                    "Ignoring empty payload '%s' after rendering for topic %s",
+                    payload,
+                    msg.topic,
+                )
+                return
             if payload == self._config[CONF_PAYLOAD_HOME]:
                 self._location_name = STATE_HOME
             elif payload == self._config[CONF_PAYLOAD_NOT_HOME]:

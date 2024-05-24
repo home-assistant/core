@@ -709,12 +709,15 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     def _handle_action_received(self, msg: ReceiveMessage) -> None:
         """Handle receiving action via MQTT."""
         payload = self.render_template(msg, CONF_ACTION_TEMPLATE)
-        if not payload or payload == PAYLOAD_NONE:
+        if not payload:
             _LOGGER.debug(
                 "Invalid %s action: %s, ignoring",
                 [e.value for e in HVACAction],
                 payload,
             )
+            return
+        if payload == PAYLOAD_NONE:
+            self._attr_hvac_action = None
             return
         try:
             self._attr_hvac_action = HVACAction(str(payload))
@@ -733,8 +736,10 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         """Handle receiving listed mode via MQTT."""
         payload = self.render_template(msg, template_name)
 
-        if payload not in self._config[mode_list]:
-            _LOGGER.error("Invalid %s mode: %s", mode_list, payload)
+        if payload == PAYLOAD_NONE:
+            setattr(self, attr, None)
+        elif payload not in self._config[mode_list]:
+            _LOGGER.warning("Invalid %s mode: %s", mode_list, payload)
         else:
             setattr(self, attr, payload)
 

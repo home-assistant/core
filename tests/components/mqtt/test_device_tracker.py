@@ -325,6 +325,11 @@ async def test_setting_device_tracker_value_via_mqtt_message(
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_NOT_HOME
 
+    # Test an empty value is ignored and the state is retained
+    async_fire_mqtt_message(hass, "test-topic", "")
+    state = hass.states.get("device_tracker.test")
+    assert state.state == STATE_NOT_HOME
+
 
 async def test_setting_device_tracker_value_via_mqtt_message_and_template(
     hass: HomeAssistant,

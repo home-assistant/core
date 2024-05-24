@@ -40,6 +40,7 @@ from .const import (
     CONF_RETAIN,
     CONF_STATE_TOPIC,
     CONF_SUPPORTED_FEATURES,
+    PAYLOAD_NONE,
 )
 from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
@@ -176,6 +177,16 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     def _state_message_received(self, msg: ReceiveMessage) -> None:
         """Run when new MQTT message has been received."""
         payload = self._value_template(msg.payload)
+        if not payload.strip():  # No output from template, ignore
+            _LOGGER.debug(
+                "Ignoring empty payload '%s' after rendering for topic %s",
+                payload,
+                msg.topic,
+            )
+            return
+        if payload == PAYLOAD_NONE:
+            self._attr_state = None
+            return
         if payload not in (
             STATE_ALARM_DISARMED,
             STATE_ALARM_ARMED_HOME,

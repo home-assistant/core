@@ -25,7 +25,12 @@ from homeassistant.components.water_heater import (
     STATE_PERFORMANCE,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    STATE_OFF,
+    STATE_UNKNOWN,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_conversion import TemperatureConverter
 
@@ -200,7 +205,7 @@ async def test_set_operation_pessimistic(
     await mqtt_mock_entry()
 
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
 
     await common.async_set_operation_mode(hass, "eco", ENTITY_WATER_HEATER)
     state = hass.states.get(ENTITY_WATER_HEATER)
@@ -213,6 +218,16 @@ async def test_set_operation_pessimistic(
     async_fire_mqtt_message(hass, "mode-state", "bogus mode")
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.state == "eco"
+
+    # Empty state ignored
+    async_fire_mqtt_message(hass, "mode-state", "")
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.state == "eco"
+
+    # Test None payload
+    async_fire_mqtt_message(hass, "mode-state", "None")
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(

@@ -62,6 +62,7 @@ from .const import (
     DEFAULT_POSITION_CLOSED,
     DEFAULT_POSITION_OPEN,
     DEFAULT_RETAIN,
+    PAYLOAD_NONE,
 )
 from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
@@ -350,9 +351,13 @@ class MqttCover(MqttEntity, CoverEntity):
         self._attr_supported_features = supported_features
 
     @callback
-    def _update_state(self, state: str) -> None:
+    def _update_state(self, state: str | None) -> None:
         """Update the cover state."""
-        self._attr_is_closed = state == STATE_CLOSED
+        if state is None:
+            # Reset the state to `unknown`
+            self._attr_is_closed = None
+        else:
+            self._attr_is_closed = state == STATE_CLOSED
         self._attr_is_opening = state == STATE_OPENING
         self._attr_is_closing = state == STATE_CLOSING
 
@@ -376,7 +381,7 @@ class MqttCover(MqttEntity, CoverEntity):
             _LOGGER.debug("Ignoring empty state message from '%s'", msg.topic)
             return
 
-        state: str
+        state: str | None
         if payload == self._config[CONF_STATE_STOPPED]:
             if self._config.get(CONF_GET_POSITION_TOPIC) is not None:
                 state = (
@@ -398,6 +403,8 @@ class MqttCover(MqttEntity, CoverEntity):
             state = STATE_OPEN
         elif payload == self._config[CONF_STATE_CLOSED]:
             state = STATE_CLOSED
+        elif payload == PAYLOAD_NONE:
+            state = None
         else:
             _LOGGER.warning(
                 (
