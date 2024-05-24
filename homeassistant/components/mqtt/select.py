@@ -122,6 +122,13 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             payload = str(self._value_template(msg.payload))
+            if not payload.strip():  # No output from template, ignore
+                _LOGGER.debug(
+                    "Ignoring empty payload '%s' after rendering for topic %s",
+                    payload,
+                    msg.topic,
+                )
+                return
             if payload.lower() == "none":
                 self._attr_current_option = None
                 return

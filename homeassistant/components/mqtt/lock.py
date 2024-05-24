@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import logging
 import re
 from typing import Any
 
@@ -49,6 +50,8 @@ from .models import (
     ReceivePayloadType,
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_CODE_FORMAT = "code_format"
 
@@ -205,9 +208,15 @@ class MqttLock(MqttEntity, LockEntity):
         )
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new lock state messages."""
-            if (payload := self._value_template(msg.payload)) == self._config[
-                CONF_PAYLOAD_RESET
-            ]:
+            payload = self._value_template(msg.payload)
+            if not payload.strip():  # No output from template, ignore
+                _LOGGER.debug(
+                    "Ignoring empty payload '%s' after rendering for topic %s",
+                    payload,
+                    msg.topic,
+                )
+                return
+            if payload == self._config[CONF_PAYLOAD_RESET]:
                 # Reset the state to `unknown`
                 self._attr_is_locked = None
             elif payload in self._valid_states:

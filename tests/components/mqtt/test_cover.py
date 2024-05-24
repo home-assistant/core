@@ -123,6 +123,11 @@ async def test_state_via_state_topic(
     state = hass.states.get("cover.test")
     assert state.state == STATE_OPEN
 
+    async_fire_mqtt_message(hass, "state-topic", "None")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_UNKNOWN
+
 
 @pytest.mark.parametrize(
     "hass_config",
