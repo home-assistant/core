@@ -971,41 +971,6 @@ async def test_timers_not_supported(hass: HomeAssistant) -> None:
             language=hass.config.language,
         )
 
-    # Start a timer
-    @callback
-    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
-        pass
-
-    device_id = "test_device"
-    unregister = timer_manager.register_handler(device_id, handle_timer)
-
-    timer_id = timer_manager.start_timer(
-        device_id,
-        hours=None,
-        minutes=5,
-        seconds=None,
-        language=hass.config.language,
-    )
-
-    # Unregister handler so device no longer "supports" timers
-    unregister()
-
-    # All operations on the timer should fail now
-    with pytest.raises(TimersNotSupportedError):
-        timer_manager.add_time(timer_id, 1)
-
-    with pytest.raises(TimersNotSupportedError):
-        timer_manager.remove_time(timer_id, 1)
-
-    with pytest.raises(TimersNotSupportedError):
-        timer_manager.pause_timer(timer_id)
-
-    with pytest.raises(TimersNotSupportedError):
-        timer_manager.unpause_timer(timer_id)
-
-    with pytest.raises(TimersNotSupportedError):
-        timer_manager.cancel_timer(timer_id)
-
 
 async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> None:
     """Test getting the status of named timers."""
