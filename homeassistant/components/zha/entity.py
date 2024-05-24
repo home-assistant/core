@@ -22,9 +22,6 @@ from .helpers import SIGNAL_REMOVE_ENTITIES, EntityData
 
 _LOGGER = logging.getLogger(__name__)
 
-ENTITY_SUFFIX = "entity_suffix"
-DEFAULT_UPDATE_GROUP_FROM_CHILD_DELAY = 0.5
-
 
 class ZHAEntity(LogMixin, entity.Entity):
     """ZHA eitity."""
@@ -40,6 +37,7 @@ class ZHAEntity(LogMixin, entity.Entity):
         self._unsubs: list[Callable[[], None]] = []
 
         if self.entity_data.entity.icon is not None:
+            # Only custom quirks will realistically set an icon
             self._attr_icon = self.entity_data.entity.icon
 
         meta = self.entity_data.entity.info_object
