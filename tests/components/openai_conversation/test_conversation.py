@@ -502,7 +502,9 @@ async def test_assist_api_tools_conversion(
             ),
         ),
     ) as mock_create:
-        await conversation.async_converse(hass, "hello", None, None, agent_id=agent_id)
+        await conversation.async_converse(
+            hass, "hello", None, Context(), agent_id=agent_id
+        )
 
     tools = mock_create.mock_calls[0][2]["tools"]
     assert tools
