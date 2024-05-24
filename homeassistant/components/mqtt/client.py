@@ -27,14 +27,22 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJob,
+    HassJobType,
+    HomeAssistant,
+    callback,
+    get_hassjob_callable_job_type,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
-from homeassistant.util.logging import catch_log_exception
+from homeassistant.util.logging import catch_log_exception, log_exception
 
 from .const import (
     CONF_BIRTH_MESSAGE,
@@ -198,13 +206,7 @@ async def async_subscribe(
         ) from exc
     return await mqtt_data.client.async_subscribe(
         topic,
-        catch_log_exception(
-            msg_callback,
-            lambda msg: (
-                f"Exception in {msg_callback.__name__} when handling msg on "
-                f"'{msg.topic}': '{msg.payload}'"
-            ),
-        ),
+        msg_callback,
         qos,
         encoding,
     )
@@ -828,6 +830,17 @@ class MQTT:
             return
         self._subscribe_debouncer.async_schedule()
 
+    def _exception_message(
+        self,
+        msg_callback: AsyncMessageCallbackType | MessageCallbackType,
+        msg: mqtt.MQTTMessage,
+    ) -> str:
+        """Return a string with the exception message."""
+        return (
+            f"Exception in {msg_callback.__name__} when handling msg on "
+            f"'{msg.topic}': '{msg.payload!r}'"
+        )
+
     async def async_subscribe(
         self,
         topic: str,
@@ -842,8 +855,21 @@ class MQTT:
         if not isinstance(topic, str):
             raise HomeAssistantError("Topic needs to be a string!")
 
+        job_type = get_hassjob_callable_job_type(msg_callback)
+
+        if job_type is not HassJobType.Callback:
+            # Only wrap the callback if it is not a simple callback
+            job = HassJob(
+                catch_log_exception(
+                    msg_callback, partial(self._exception_message, msg_callback)
+                ),
+                job_type=job_type,
+            )
+        else:
+            job = HassJob(msg_callback, job_type=job_type)
+
         subscription = Subscription(
-            topic, _matcher_for_topic(topic), HassJob(msg_callback), qos, encoding
+            topic, _matcher_for_topic(topic), job, qos, encoding
         )
         self._async_track_subscription(subscription)
         self._matching_subscriptions.cache_clear()
@@ -1116,7 +1142,17 @@ class MQTT:
                 msg_cache_by_subscription_topic[subscription_topic] = receive_msg
             else:
                 receive_msg = msg_cache_by_subscription_topic[subscription_topic]
-            self.hass.async_run_hass_job(subscription.job, receive_msg)
+            job = subscription.job
+            if job.job_type is HassJobType.Callback:
+                # We do not wrap Callback jobs in catch_log_exception since
+                # its expensive and we have to do it 2x for every entity
+                target = job.target
+                try:
+                    target(receive_msg)
+                except Exception:  # noqa: BLE001
+                    log_exception(partial(self._exception_message, target, receive_msg))
+            else:
+                self.hass.async_run_hass_job(subscription.job, receive_msg)
         self._mqtt_data.state_write_requests.process_write_state_requests(msg)
 
     @callback
