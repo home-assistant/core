@@ -1006,38 +1006,6 @@ async def test_timers_not_supported(hass: HomeAssistant) -> None:
     with pytest.raises(TimersNotSupportedError):
         timer_manager.cancel_timer(timer_id)
 
-    # Register device again
-    timer_manager.register_handler(device_id, handle_timer)
-
-    original_timer_finished = timer_manager._timer_finished
-    timer_finished_event = asyncio.Event()
-
-    def _timer_finished(self, timer_id: str) -> None:
-        with pytest.raises(TimersNotSupportedError):
-            original_timer_finished(timer_id)
-        timer_finished_event.set()
-
-    # Ensure that a timer finishing with a device that has been unregistered will fail
-    with patch(
-        "homeassistant.components.intent.timers.TimerManager._timer_finished",
-        _timer_finished,
-    ):
-        timer_manager.start_timer(
-            device_id,
-            hours=None,
-            minutes=None,
-            seconds=0,
-            language=hass.config.language,
-        )
-
-        # Pretend device was unregistered while timer was running
-        with patch(
-            "homeassistant.components.intent.timers.TimerManager.is_timer_device",
-            return_value=False,
-        ):
-            async with asyncio.timeout(1):
-                await timer_finished_event.wait()
-
 
 async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> None:
     """Test getting the status of named timers."""

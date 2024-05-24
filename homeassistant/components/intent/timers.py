@@ -407,9 +407,6 @@ class TimerManager:
         """Call event handlers when a timer finishes."""
         timer = self.timers.pop(timer_id)
 
-        if not self.is_timer_device(timer.device_id):
-            raise TimersNotSupportedError(timer.device_id)
-
         timer.finish()
 
         self.handlers[timer.device_id](TimerEventType.FINISHED, timer)
@@ -420,11 +417,8 @@ class TimerManager:
             timer.device_id,
         )
 
-    def is_timer_device(self, device_id: str | None) -> bool:
+    def is_timer_device(self, device_id: str) -> bool:
         """Return True if device has been registered to handle timer events."""
-        if not device_id:
-            return False
-
         return device_id in self.handlers
 
 
@@ -732,11 +726,11 @@ class StartTimerIntentHandler(intent.IntentHandler):
         timer_manager: TimerManager = hass.data[TIMER_DATA]
         slots = self.async_validate_slots(intent_obj.slots)
 
-        if not timer_manager.is_timer_device(intent_obj.device_id):
+        if not (
+            intent_obj.device_id and timer_manager.is_timer_device(intent_obj.device_id)
+        ):
             # Fail early
             raise TimersNotSupportedError(intent_obj.device_id)
-
-        assert intent_obj.device_id is not None
 
         name: str | None = None
         if "name" in slots:
@@ -783,7 +777,9 @@ class CancelTimerIntentHandler(intent.IntentHandler):
         timer_manager: TimerManager = hass.data[TIMER_DATA]
         slots = self.async_validate_slots(intent_obj.slots)
 
-        if not timer_manager.is_timer_device(intent_obj.device_id):
+        if not (
+            intent_obj.device_id and timer_manager.is_timer_device(intent_obj.device_id)
+        ):
             # Fail early
             raise TimersNotSupportedError(intent_obj.device_id)
 
@@ -812,7 +808,9 @@ class IncreaseTimerIntentHandler(intent.IntentHandler):
         timer_manager: TimerManager = hass.data[TIMER_DATA]
         slots = self.async_validate_slots(intent_obj.slots)
 
-        if not timer_manager.is_timer_device(intent_obj.device_id):
+        if not (
+            intent_obj.device_id and timer_manager.is_timer_device(intent_obj.device_id)
+        ):
             # Fail early
             raise TimersNotSupportedError(intent_obj.device_id)
 
@@ -842,7 +840,9 @@ class DecreaseTimerIntentHandler(intent.IntentHandler):
         timer_manager: TimerManager = hass.data[TIMER_DATA]
         slots = self.async_validate_slots(intent_obj.slots)
 
-        if not timer_manager.is_timer_device(intent_obj.device_id):
+        if not (
+            intent_obj.device_id and timer_manager.is_timer_device(intent_obj.device_id)
+        ):
             # Fail early
             raise TimersNotSupportedError(intent_obj.device_id)
 
@@ -871,7 +871,9 @@ class PauseTimerIntentHandler(intent.IntentHandler):
         timer_manager: TimerManager = hass.data[TIMER_DATA]
         slots = self.async_validate_slots(intent_obj.slots)
 
-        if not timer_manager.is_timer_device(intent_obj.device_id):
+        if not (
+            intent_obj.device_id and timer_manager.is_timer_device(intent_obj.device_id)
+        ):
             # Fail early
             raise TimersNotSupportedError(intent_obj.device_id)
 
@@ -899,7 +901,9 @@ class UnpauseTimerIntentHandler(intent.IntentHandler):
         timer_manager: TimerManager = hass.data[TIMER_DATA]
         slots = self.async_validate_slots(intent_obj.slots)
 
-        if not timer_manager.is_timer_device(intent_obj.device_id):
+        if not (
+            intent_obj.device_id and timer_manager.is_timer_device(intent_obj.device_id)
+        ):
             # Fail early
             raise TimersNotSupportedError(intent_obj.device_id)
 
@@ -927,7 +931,9 @@ class TimerStatusIntentHandler(intent.IntentHandler):
         timer_manager: TimerManager = hass.data[TIMER_DATA]
         slots = self.async_validate_slots(intent_obj.slots)
 
-        if not timer_manager.is_timer_device(intent_obj.device_id):
+        if not (
+            intent_obj.device_id and timer_manager.is_timer_device(intent_obj.device_id)
+        ):
             # Fail early
             raise TimersNotSupportedError(intent_obj.device_id)
 
