@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from itertools import chain
+from typing import Any
 
 from tesla_fleet_api.const import Scope
 
@@ -21,7 +22,7 @@ from .models import TeslemetryVehicleData
 class TeslemetryButtonEntityDescription(ButtonEntityDescription):
     """Describes a Teslemetry Button entity."""
 
-    func: Callable | None = None
+    func: Callable[[TeslemetryButtonEntity], Any] | None = None
 
 
 DESCRIPTIONS: tuple[TeslemetryButtonEntityDescription, ...] = (
