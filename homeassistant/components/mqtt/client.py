@@ -1144,11 +1144,12 @@ class MQTT:
             if job.job_type is HassJobType.Callback:
                 # We do not wrap Callback jobs in catch_log_exception since
                 # its expensive and we have to do it 2x for every entity
-                target = job.target
                 try:
-                    target(receive_msg)
+                    job.target(receive_msg)
                 except Exception:  # noqa: BLE001
-                    log_exception(partial(self._exception_message, target, receive_msg))
+                    log_exception(
+                        partial(self._exception_message, job.target, receive_msg)
+                    )
             else:
                 self.hass.async_run_hass_job(subscription.job, receive_msg)
         self._mqtt_data.state_write_requests.process_write_state_requests(msg)
