@@ -1,4 +1,4 @@
-"""Common classes and elements for Omnilogic Integration."""
+"""Coordinator for the Omnilogic Integration."""
 
 from datetime import timedelta
 import logging
