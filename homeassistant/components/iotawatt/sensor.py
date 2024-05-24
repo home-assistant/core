@@ -23,6 +23,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfReactivePower,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -31,7 +32,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, VOLT_AMPERE_REACTIVE, VOLT_AMPERE_REACTIVE_HOURS
+from .const import DOMAIN, VOLT_AMPERE_REACTIVE_HOURS
 from .coordinator import IotawattUpdater
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,7 +90,7 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
     ),
     "VAR": IotaWattSensorEntityDescription(
         key="VAR",
-        native_unit_of_measurement=VOLT_AMPERE_REACTIVE,
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:flash",
         entity_registry_enabled_default=False,
