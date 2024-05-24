@@ -168,6 +168,9 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         if CONF_HVAC_MODE_REGISTER in config:
             mode_config = config[CONF_HVAC_MODE_REGISTER]
             self._hvac_mode_register = mode_config[CONF_ADDRESS]
+            self._hvac_mode_write_register = mode_config[CONF_ADDRESS]
+            if CONF_WRITE_ADDRESS in mode_config:
+                self._hvac_mode_write_register = mode_config[CONF_WRITE_ADDRESS]
             self._attr_hvac_modes = cast(list[HVACMode], [])
             self._attr_hvac_mode = None
             self._hvac_mode_mapping: list[tuple[int, HVACMode]] = []
@@ -193,6 +196,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         else:
             # No HVAC modes defined
             self._hvac_mode_register = None
+            self._hvac_mode_write_register = None
             self._attr_hvac_mode = HVACMode.AUTO
             self._attr_hvac_modes = [HVACMode.AUTO]
 
@@ -301,14 +305,14 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                     if self._hvac_mode_write_registers:
                         await self._hub.async_pb_call(
                             self._slave,
-                            self._hvac_mode_register,
+                            self._hvac_mode_write_register,
                             [value],
                             CALL_TYPE_WRITE_REGISTERS,
                         )
                     else:
                         await self._hub.async_pb_call(
                             self._slave,
-                            self._hvac_mode_register,
+                            self._hvac_mode_write_register,
                             value,
                             CALL_TYPE_WRITE_REGISTER,
                         )
