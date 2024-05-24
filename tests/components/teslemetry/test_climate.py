@@ -155,7 +155,10 @@ async def test_invalid_error(hass: HomeAssistant) -> None:
             blocking=True,
         )
     mock_on.assert_called_once()
-    assert str(error.value) == "Teslemetry command failed"
+    assert (
+        str(error.value)
+        == "Teslemetry command failed, The data request or command is unknown."
+    )
 
 
 @pytest.mark.parametrize("response", COMMAND_ERRORS)
