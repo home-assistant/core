@@ -34,12 +34,12 @@ from .const import CONF_PAYLOAD_RESET, CONF_QOS, CONF_STATE_TOPIC
 from .debug_info import log_messages
 from .mixins import (
     CONF_JSON_ATTRS_TOPIC,
-    MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entity_entry_helper,
     write_state_on_attr_change,
 )
 from .models import MqttValueTemplate, ReceiveMessage, ReceivePayloadType
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_subscribe_topic
 
 CONF_PAYLOAD_HOME = "payload_home"
@@ -103,7 +103,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
     _default_name = None
     _entity_id_format = device_tracker.ENTITY_ID_FORMAT
     _location_name: str | None = None
-    _value_template: Callable[..., ReceivePayloadType]
+    _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -124,7 +124,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
         @write_state_on_attr_change(self, {"_location_name"})
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
-            payload: ReceivePayloadType = self._value_template(msg.payload)
+            payload = self._value_template(msg.payload)
             if payload == self._config[CONF_PAYLOAD_HOME]:
                 self._location_name = STATE_HOME
             elif payload == self._config[CONF_PAYLOAD_NOT_HOME]:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import abc
 import asyncio
+from collections import defaultdict
 from collections.abc import Callable, Container, Iterable, Mapping
 from contextlib import suppress
 import copy
@@ -203,12 +204,12 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
         self.hass = hass
         self._preview: set[_HandlerT] = set()
         self._progress: dict[str, FlowHandler[_FlowResultT, _HandlerT]] = {}
-        self._handler_progress_index: dict[
+        self._handler_progress_index: defaultdict[
             _HandlerT, set[FlowHandler[_FlowResultT, _HandlerT]]
-        ] = {}
-        self._init_data_process_index: dict[
+        ] = defaultdict(set)
+        self._init_data_process_index: defaultdict[
             type, set[FlowHandler[_FlowResultT, _HandlerT]]
-        ] = {}
+        ] = defaultdict(set)
 
     @abc.abstractmethod
     async def async_create_flow(
@@ -295,7 +296,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
         return self._async_flow_handler_to_flow_result(
             (
                 progress
-                for progress in self._init_data_process_index.get(init_data_type, set())
+                for progress in self._init_data_process_index.get(init_data_type, ())
                 if matcher(progress.init_data)
             ),
             include_uninitialized,
@@ -471,10 +472,9 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
     ) -> None:
         """Add a flow to in progress."""
         if flow.init_data is not None:
-            init_data_type = type(flow.init_data)
-            self._init_data_process_index.setdefault(init_data_type, set()).add(flow)
+            self._init_data_process_index[type(flow.init_data)].add(flow)
         self._progress[flow.flow_id] = flow
-        self._handler_progress_index.setdefault(flow.handler, set()).add(flow)
+        self._handler_progress_index[flow.handler].add(flow)
 
     @callback
     def _async_remove_flow_from_index(

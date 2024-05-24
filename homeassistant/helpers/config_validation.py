@@ -1,6 +1,8 @@
 """Helpers for config validation using voluptuous."""
 
-from __future__ import annotations
+# PEP 563 seems to break typing.get_type_hints when used
+# with PEP 695 syntax. Fixed in Python 3.13.
+# from __future__ import annotations
 
 from collections.abc import Callable, Hashable
 import contextlib
@@ -1781,7 +1783,7 @@ _SCRIPT_STOP_SCHEMA = vol.Schema(
     }
 )
 
-_SCRIPT_PARALLEL_SEQUENCE = vol.Schema(
+_SCRIPT_SEQUENCE_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
@@ -1800,7 +1802,7 @@ _SCRIPT_PARALLEL_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_PARALLEL): vol.All(
-            ensure_list, [vol.Any(_SCRIPT_PARALLEL_SEQUENCE, _parallel_sequence_action)]
+            ensure_list, [vol.Any(_SCRIPT_SEQUENCE_SCHEMA, _parallel_sequence_action)]
         ),
     }
 )
@@ -1816,6 +1818,7 @@ SCRIPT_ACTION_FIRE_EVENT = "event"
 SCRIPT_ACTION_IF = "if"
 SCRIPT_ACTION_PARALLEL = "parallel"
 SCRIPT_ACTION_REPEAT = "repeat"
+SCRIPT_ACTION_SEQUENCE = "sequence"
 SCRIPT_ACTION_SET_CONVERSATION_RESPONSE = "set_conversation_response"
 SCRIPT_ACTION_STOP = "stop"
 SCRIPT_ACTION_VARIABLES = "variables"
@@ -1842,6 +1845,7 @@ ACTIONS_MAP = {
     CONF_SERVICE_TEMPLATE: SCRIPT_ACTION_CALL_SERVICE,
     CONF_STOP: SCRIPT_ACTION_STOP,
     CONF_PARALLEL: SCRIPT_ACTION_PARALLEL,
+    CONF_SEQUENCE: SCRIPT_ACTION_SEQUENCE,
     CONF_SET_CONVERSATION_RESPONSE: SCRIPT_ACTION_SET_CONVERSATION_RESPONSE,
 }
 
@@ -1872,6 +1876,7 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_IF: _SCRIPT_IF_SCHEMA,
     SCRIPT_ACTION_PARALLEL: _SCRIPT_PARALLEL_SCHEMA,
     SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,
+    SCRIPT_ACTION_SEQUENCE: _SCRIPT_SEQUENCE_SCHEMA,
     SCRIPT_ACTION_SET_CONVERSATION_RESPONSE: _SCRIPT_SET_CONVERSATION_RESPONSE_SCHEMA,
     SCRIPT_ACTION_STOP: _SCRIPT_STOP_SCHEMA,
     SCRIPT_ACTION_VARIABLES: _SCRIPT_SET_SCHEMA,

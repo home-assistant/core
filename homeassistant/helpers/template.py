@@ -688,9 +688,18 @@ class Template:
         if self.hass and self.hass.config.debug:
             self.hass.verify_event_loop_thread("async_render_to_info")
         self._renders += 1
-        assert self.hass and _render_info.get() is None
 
         render_info = RenderInfo(self)
+
+        if not self.hass:
+            raise RuntimeError(f"hass not set while rendering {self}")
+
+        if _render_info.get() is not None:
+            raise RuntimeError(
+                f"RenderInfo already set while rendering {self}, "
+                "this usually indicates the template is being rendered "
+                "in the wrong thread"
+            )
 
         if self.is_static:
             render_info._result = self.template.strip()  # noqa: SLF001
@@ -2393,8 +2402,9 @@ def base64_decode(value):
 
 def ordinal(value):
     """Perform ordinal conversion."""
+    suffixes = ["th", "st", "nd", "rd"] + ["th"] * 6  # codespell:ignore nd
     return str(value) + (
-        list(["th", "st", "nd", "rd"] + ["th"] * 6)[(int(str(value)[-1])) % 10]
+        suffixes[(int(str(value)[-1])) % 10]
         if int(str(value)[-2:]) % 100 not in range(11, 14)
         else "th"
     )

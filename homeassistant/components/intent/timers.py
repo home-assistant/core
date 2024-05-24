@@ -690,6 +690,7 @@ class StartTimerIntentHandler(intent.IntentHandler):
     """Intent handler for starting a new timer."""
 
     intent_type = intent.INTENT_START_TIMER
+    description = "Starts a new timer"
     slot_schema = {
         vol.Required(vol.Any("hours", "minutes", "seconds")): cv.positive_int,
         vol.Optional("name"): cv.string,
@@ -733,6 +734,7 @@ class CancelTimerIntentHandler(intent.IntentHandler):
     """Intent handler for cancelling a timer."""
 
     intent_type = intent.INTENT_CANCEL_TIMER
+    description = "Cancels a timer"
     slot_schema = {
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
@@ -755,6 +757,7 @@ class IncreaseTimerIntentHandler(intent.IntentHandler):
     """Intent handler for increasing the time of a timer."""
 
     intent_type = intent.INTENT_INCREASE_TIMER
+    description = "Adds more time to a timer"
     slot_schema = {
         vol.Any("hours", "minutes", "seconds"): cv.positive_int,
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
@@ -779,6 +782,7 @@ class DecreaseTimerIntentHandler(intent.IntentHandler):
     """Intent handler for decreasing the time of a timer."""
 
     intent_type = intent.INTENT_DECREASE_TIMER
+    description = "Removes time from a timer"
     slot_schema = {
         vol.Required(vol.Any("hours", "minutes", "seconds")): cv.positive_int,
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
@@ -803,6 +807,7 @@ class PauseTimerIntentHandler(intent.IntentHandler):
     """Intent handler for pausing a running timer."""
 
     intent_type = intent.INTENT_PAUSE_TIMER
+    description = "Pauses a running timer"
     slot_schema = {
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
@@ -825,6 +830,7 @@ class UnpauseTimerIntentHandler(intent.IntentHandler):
     """Intent handler for unpausing a paused timer."""
 
     intent_type = intent.INTENT_UNPAUSE_TIMER
+    description = "Resumes a paused timer"
     slot_schema = {
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
@@ -847,6 +853,7 @@ class TimerStatusIntentHandler(intent.IntentHandler):
     """Intent handler for reporting the status of a timer."""
 
     intent_type = intent.INTENT_TIMER_STATUS
+    description = "Reports the current status of timers"
     slot_schema = {
         vol.Any("start_hours", "start_minutes", "start_seconds"): cv.positive_int,
         vol.Optional("name"): cv.string,
