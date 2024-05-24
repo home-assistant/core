@@ -351,7 +351,7 @@ async def test_state_always_available(
     ],
 )
 async def test_not_unique_tariffs(hass: HomeAssistant, yaml_config) -> None:
-    """Test utility sensor state initializtion."""
+    """Test utility sensor state initialization."""
     assert not await async_setup_component(hass, DOMAIN, yaml_config)
 
 
@@ -385,7 +385,7 @@ async def test_not_unique_tariffs(hass: HomeAssistant, yaml_config) -> None:
     ],
 )
 async def test_init(hass: HomeAssistant, yaml_config, config_entry_config) -> None:
-    """Test utility sensor state initializtion."""
+    """Test utility sensor state initialization."""
     if yaml_config:
         assert await async_setup_component(hass, DOMAIN, yaml_config)
         await hass.async_block_till_done()
@@ -497,7 +497,7 @@ async def test_unique_id(
     ],
 )
 async def test_entity_name(hass: HomeAssistant, yaml_config, entity_id, name) -> None:
-    """Test utility sensor state initializtion."""
+    """Test utility sensor state initialization."""
     assert await async_setup_component(hass, DOMAIN, yaml_config)
     await hass.async_block_till_done()
 

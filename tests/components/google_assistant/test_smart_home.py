@@ -1281,7 +1281,7 @@ async def test_identify(hass: HomeAssistant) -> None:
                     "payload": {
                         "device": {
                             "mdnsScanData": {
-                                "additionals": [
+                                "additionals": [  # codespell:ignore additionals
                                     {
                                         "type": "TXT",
                                         "class": "IN",
