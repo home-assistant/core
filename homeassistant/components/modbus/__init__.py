@@ -23,6 +23,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_WRITE_ADDRESS,
     CONF_BINARY_SENSORS,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
@@ -160,6 +161,7 @@ BASE_COMPONENT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ADDRESS): cv.positive_int,
+        vol.Optional(CONF_WRITE_ADDRESS): cv.positive_int,
         vol.Exclusive(CONF_DEVICE_ADDRESS, "slave_addr"): cv.positive_int,
         vol.Exclusive(CONF_SLAVE, "slave_addr"): cv.positive_int,
         vol.Optional(

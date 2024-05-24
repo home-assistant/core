@@ -4,6 +4,7 @@ from enum import Enum
 
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_WRITE_ADDRESS,
     CONF_BINARY_SENSORS,
     CONF_COVERS,
     CONF_LIGHTS,

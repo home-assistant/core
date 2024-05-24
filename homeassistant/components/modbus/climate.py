@@ -30,6 +30,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_ADDRESS,
+    CONF_WRITE_ADDRESS,
     CONF_NAME,
     CONF_TEMPERATURE_UNIT,
     PRECISION_TENTHS,
