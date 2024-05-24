@@ -23,7 +23,7 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
             return_value={},
         ),
         patch(
-            "homeassistant.components.omnilogic.common.OmniLogicUpdateCoordinator._async_update_data",
+            "homeassistant.components.omnilogic.coordinator.OmniLogicUpdateCoordinator._async_update_data",
             return_value=TELEMETRY,
         ),
     ):
