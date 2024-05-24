@@ -2,6 +2,7 @@
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy import SnapshotAssertion
 from tesla_fleet_api.exceptions import (
     InvalidToken,
     SubscriptionRequired,
@@ -14,6 +15,7 @@ from homeassistant.components.teslemetry.models import TeslemetryData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_platform
 
@@ -47,6 +49,18 @@ async def test_init_error(
     mock_products.side_effect = side_effect
     entry = await setup_platform(hass)
     assert entry.state is state
+
+
+# Test devices
+async def test_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, snapshot: SnapshotAssertion
+) -> None:
+    """Test device registry."""
+    entry = await setup_platform(hass)
+    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+
+    for device in devices:
+        assert device == snapshot(name=f"{device.identifiers}")
 
 
 # Vehicle Coordinator
