@@ -5,7 +5,6 @@ from datetime import timedelta
 from aiounifi.models.message import MessageKey
 from freezegun.api import FrozenDateTimeFactory, freeze_time
 
-from homeassistant import config_entries
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
@@ -26,7 +25,7 @@ import homeassistant.util.dt as dt_util
 
 from .test_hub import ENTRY_CONFIG, setup_unifi_integration
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -959,11 +958,8 @@ async def test_restoring_client(
         "mac": "00:00:00:00:00:03",
     }
 
-    config_entry = config_entries.ConfigEntry(
-        version=1,
-        minor_version=1,
+    config_entry = MockConfigEntry(
         domain=UNIFI_DOMAIN,
-        title="Mock Title",
         data=ENTRY_CONFIG,
         source="test",
         options={},

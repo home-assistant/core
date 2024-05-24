@@ -165,7 +165,7 @@ async def test_block_sleeping_sensor(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "22.1"
 
@@ -207,7 +207,7 @@ async def test_block_restored_sleeping_sensor(
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "22.1"
 
@@ -233,7 +233,7 @@ async def test_block_restored_sleeping_sensor_no_last_state(
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "22.1"
 
@@ -306,7 +306,7 @@ async def test_block_not_matched_restored_sleeping_sensor(
     )
     monkeypatch.setattr(mock_block_device, "initialized", True)
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "20.4"
 
@@ -464,7 +464,7 @@ async def test_rpc_sleeping_sensor(
 
     # Make device online
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "22.9"
 
@@ -503,7 +503,7 @@ async def test_rpc_restored_sleeping_sensor(
     # Make device online
     monkeypatch.setattr(mock_rpc_device, "initialized", True)
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Mock update
     mock_rpc_device.mock_update()
@@ -539,7 +539,7 @@ async def test_rpc_restored_sleeping_sensor_no_last_state(
     # Make device online
     monkeypatch.setattr(mock_rpc_device, "initialized", True)
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Mock update
     mock_rpc_device.mock_update()
@@ -607,7 +607,7 @@ async def test_rpc_sleeping_update_entity_service(
 
     # Make device online
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state.state == "22.9"
@@ -657,7 +657,7 @@ async def test_block_sleeping_update_entity_service(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "22.1"
 

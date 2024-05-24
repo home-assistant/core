@@ -6,7 +6,7 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Awaitable
 import logging
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 import pyvera as veraApi
 from requests.exceptions import RequestException
@@ -207,10 +207,7 @@ def map_vera_device(
     )
 
 
-_DeviceTypeT = TypeVar("_DeviceTypeT", bound=veraApi.VeraDevice)
-
-
-class VeraDevice(Generic[_DeviceTypeT], Entity):
+class VeraDevice[_DeviceTypeT: veraApi.VeraDevice](Entity):
     """Representation of a Vera device entity."""
 
     def __init__(

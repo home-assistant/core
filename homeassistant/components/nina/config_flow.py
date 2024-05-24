@@ -116,7 +116,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except ApiError:
                 errors["base"] = "cannot_connect"
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception as err:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception: %s", err)
                 return self.async_abort(reason="unknown")
 
@@ -195,7 +195,7 @@ class OptionsFlowHandler(OptionsFlow):
                 )
             except ApiError:
                 errors["base"] = "cannot_connect"
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception as err:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception: %s", err)
                 return self.async_abort(reason="unknown")
 

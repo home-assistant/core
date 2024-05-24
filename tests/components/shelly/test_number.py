@@ -44,7 +44,7 @@ async def test_block_number_update(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "50"
 
@@ -99,7 +99,7 @@ async def test_block_restored_number(
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "50"
 
@@ -136,7 +136,7 @@ async def test_block_restored_number_no_last_state(
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "50"
 
@@ -156,7 +156,7 @@ async def test_block_number_set_value(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_block_device.reset_mock()
     await hass.services.async_call(
@@ -217,7 +217,7 @@ async def test_block_set_value_auth_error(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
 

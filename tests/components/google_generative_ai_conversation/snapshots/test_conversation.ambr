@@ -1,0 +1,183 @@
+# serializer version: 1
+# name: test_default_prompt[config_entry_options0-None]
+  list([
+    tuple(
+      '',
+      tuple(
+      ),
+      dict({
+        'generation_config': dict({
+          'max_output_tokens': 150,
+          'temperature': 1.0,
+          'top_k': 64,
+          'top_p': 0.95,
+        }),
+        'model_name': 'models/gemini-1.5-flash-latest',
+        'tools': None,
+      }),
+    ),
+    tuple(
+      '().start_chat',
+      tuple(
+      ),
+      dict({
+        'history': list([
+          dict({
+            'parts': 'Answer in plain text. Keep it simple and to the point.',
+            'role': 'user',
+          }),
+          dict({
+            'parts': 'Ok',
+            'role': 'model',
+          }),
+        ]),
+      }),
+    ),
+    tuple(
+      '().start_chat().send_message_async',
+      tuple(
+        'hello',
+      ),
+      dict({
+      }),
+    ),
+  ])
+# ---
+# name: test_default_prompt[config_entry_options0-conversation.google_generative_ai_conversation]
+  list([
+    tuple(
+      '',
+      tuple(
+      ),
+      dict({
+        'generation_config': dict({
+          'max_output_tokens': 150,
+          'temperature': 1.0,
+          'top_k': 64,
+          'top_p': 0.95,
+        }),
+        'model_name': 'models/gemini-1.5-flash-latest',
+        'tools': None,
+      }),
+    ),
+    tuple(
+      '().start_chat',
+      tuple(
+      ),
+      dict({
+        'history': list([
+          dict({
+            'parts': 'Answer in plain text. Keep it simple and to the point.',
+            'role': 'user',
+          }),
+          dict({
+            'parts': 'Ok',
+            'role': 'model',
+          }),
+        ]),
+      }),
+    ),
+    tuple(
+      '().start_chat().send_message_async',
+      tuple(
+        'hello',
+      ),
+      dict({
+      }),
+    ),
+  ])
+# ---
+# name: test_default_prompt[config_entry_options1-None]
+  list([
+    tuple(
+      '',
+      tuple(
+      ),
+      dict({
+        'generation_config': dict({
+          'max_output_tokens': 150,
+          'temperature': 1.0,
+          'top_k': 64,
+          'top_p': 0.95,
+        }),
+        'model_name': 'models/gemini-1.5-flash-latest',
+        'tools': None,
+      }),
+    ),
+    tuple(
+      '().start_chat',
+      tuple(
+      ),
+      dict({
+        'history': list([
+          dict({
+            'parts': '''
+              Call the intent tools to control Home Assistant. Just pass the name to the intent.
+              Answer in plain text. Keep it simple and to the point.
+            ''',
+            'role': 'user',
+          }),
+          dict({
+            'parts': 'Ok',
+            'role': 'model',
+          }),
+        ]),
+      }),
+    ),
+    tuple(
+      '().start_chat().send_message_async',
+      tuple(
+        'hello',
+      ),
+      dict({
+      }),
+    ),
+  ])
+# ---
+# name: test_default_prompt[config_entry_options1-conversation.google_generative_ai_conversation]
+  list([
+    tuple(
+      '',
+      tuple(
+      ),
+      dict({
+        'generation_config': dict({
+          'max_output_tokens': 150,
+          'temperature': 1.0,
+          'top_k': 64,
+          'top_p': 0.95,
+        }),
+        'model_name': 'models/gemini-1.5-flash-latest',
+        'tools': None,
+      }),
+    ),
+    tuple(
+      '().start_chat',
+      tuple(
+      ),
+      dict({
+        'history': list([
+          dict({
+            'parts': '''
+              Call the intent tools to control Home Assistant. Just pass the name to the intent.
+              Answer in plain text. Keep it simple and to the point.
+            ''',
+            'role': 'user',
+          }),
+          dict({
+            'parts': 'Ok',
+            'role': 'model',
+          }),
+        ]),
+      }),
+    ),
+    tuple(
+      '().start_chat().send_message_async',
+      tuple(
+        'hello',
+      ),
+      dict({
+      }),
+    ),
+  ])
+# ---

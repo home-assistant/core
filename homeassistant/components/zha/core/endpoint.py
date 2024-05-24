@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, Final, TypeVar
+from typing import TYPE_CHECKING, Any, Final
 
 from homeassistant.const import Platform
 from homeassistant.core import callback
@@ -29,7 +29,6 @@ ATTR_IN_CLUSTERS: Final[str] = "input_clusters"
 ATTR_OUT_CLUSTERS: Final[str] = "output_clusters"
 
 _LOGGER = logging.getLogger(__name__)
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
 
 
 class Endpoint:
@@ -44,7 +43,7 @@ class Endpoint:
         self._all_cluster_handlers: dict[str, ClusterHandler] = {}
         self._claimed_cluster_handlers: dict[str, ClusterHandler] = {}
         self._client_cluster_handlers: dict[str, ClientClusterHandler] = {}
-        self._unique_id: str = f"{str(device.ieee)}-{zigpy_endpoint.endpoint_id}"
+        self._unique_id: str = f"{device.ieee!s}-{zigpy_endpoint.endpoint_id}"
 
     @property
     def device(self) -> ZHADevice:
@@ -209,7 +208,7 @@ class Endpoint:
     def async_new_entity(
         self,
         platform: Platform,
-        entity_class: CALLABLE_T,
+        entity_class: type,
         unique_id: str,
         cluster_handlers: list[ClusterHandler],
         **kwargs: Any,

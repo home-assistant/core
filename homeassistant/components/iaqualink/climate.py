@@ -87,7 +87,7 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction:
         """Return the current HVAC action."""
-        state = AqualinkState(self.dev._heater.state)
+        state = AqualinkState(self.dev._heater.state)  # noqa: SLF001
         if state == AqualinkState.ON:
             return HVACAction.HEATING
         if state == AqualinkState.ENABLED:

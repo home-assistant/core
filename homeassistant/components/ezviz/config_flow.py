@@ -189,7 +189,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             except PyEzvizError:
                 errors["base"] = "invalid_auth"
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
@@ -242,7 +242,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             except PyEzvizError:
                 errors["base"] = "invalid_auth"
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
@@ -297,7 +297,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             except (PyEzvizError, AuthTestResultFailed):
                 errors["base"] = "invalid_auth"
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
@@ -358,7 +358,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             except (PyEzvizError, AuthTestResultFailed):
                 errors["base"] = "invalid_auth"
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 

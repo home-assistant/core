@@ -8,6 +8,11 @@
         "default": "mdi:debug-step-into"
       }
     },
+    "number": {
+      "cutting_height": {
+        "default": "mdi:grass"
+      }
+    },
     "select": {
       "headlight_mode": {
         "default": "mdi:car-light-high"

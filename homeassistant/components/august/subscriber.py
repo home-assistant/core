@@ -47,7 +47,9 @@ class AugustSubscriberMixin:
     @callback
     def _async_scheduled_refresh(self, now: datetime) -> None:
         """Call the refresh method."""
-        self._hass.async_create_task(self._async_refresh(now), eager_start=True)
+        self._hass.async_create_background_task(
+            self._async_refresh(now), name=f"{self} schedule refresh", eager_start=True
+        )
 
     @callback
     def _async_cancel_update_interval(self, _: Event | None = None) -> None:

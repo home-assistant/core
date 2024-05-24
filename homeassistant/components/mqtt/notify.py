@@ -21,12 +21,9 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
 )
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entity_entry_helper,
-)
+from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic
 
 DEFAULT_NAME = "MQTT notify"
@@ -83,7 +80,7 @@ class MqttNotify(MqttEntity, NotifyEntity):
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
-    async def async_send_message(self, message: str) -> None:
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
         payload = self._command_template(message)
         await self.async_publish(

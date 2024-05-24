@@ -4,10 +4,13 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
-def mock_get_source_ip():
-    """Override mock of network util's async_get_source_ip."""
+def mock_network():
+    """Override mock of network util's async_get_adapters."""
 
 
 @pytest.fixture(autouse=True)
-def mock_network():
-    """Override mock of network util's async_get_adapters."""
+def override_mock_get_source_ip(mock_get_source_ip):
+    """Override mock of network util's async_get_source_ip."""
+    mock_get_source_ip.stop()
+    yield
+    mock_get_source_ip.start()

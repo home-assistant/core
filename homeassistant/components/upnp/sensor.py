@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EntityCategory,
     UnitOfDataRate,
@@ -21,12 +20,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import UpnpConfigEntry
 from .const import (
     BYTES_RECEIVED,
     BYTES_SENT,
     DATA_PACKETS,
     DATA_RATE_PACKETS_PER_SECOND,
-    DOMAIN,
     KIBIBYTES_PER_SEC_RECEIVED,
     KIBIBYTES_PER_SEC_SENT,
     LOGGER,
@@ -38,7 +37,6 @@ from .const import (
     ROUTER_UPTIME,
     WAN_STATUS,
 )
-from .coordinator import UpnpDataUpdateCoordinator
 from .entity import UpnpEntity, UpnpEntityDescription
 
 
@@ -146,11 +144,11 @@ SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: UpnpConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the UPnP/IGD sensors."""
-    coordinator: UpnpDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     entities: list[UpnpSensor] = [
         UpnpSensor(

@@ -26,7 +26,7 @@ from homeassistant.util.dt import utcnow
 
 from . import init_integration, mock_nextdns
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, snapshot_platform
 
 
 async def test_switch(
@@ -39,13 +39,7 @@ async def test_switch(
     with patch("homeassistant.components.nextdns.PLATFORMS", [Platform.SWITCH]):
         entry = await init_integration(hass)
 
-    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-
-    assert entity_entries
-    for entity_entry in entity_entries:
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-        assert (state := hass.states.get(entity_entry.entity_id))
-        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 async def test_switch_on(hass: HomeAssistant) -> None:

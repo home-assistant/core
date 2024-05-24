@@ -86,7 +86,7 @@ class MerakiView(HomeAssistantView):
         _LOGGER.debug("Processing %s", data["type"])
         if not data["data"]["observations"]:
             _LOGGER.debug("No observations found")
-            return
+            return None
         self._handle(request.app[KEY_HASS], data)
 
     @callback

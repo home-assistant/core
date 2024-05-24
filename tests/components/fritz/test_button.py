@@ -63,7 +63,7 @@ async def test_buttons(
     assert button
     assert button.state == STATE_UNKNOWN
     with patch(
-        f"homeassistant.components.fritz.common.AvmWrapper.{wrapper_method}"
+        f"homeassistant.components.fritz.coordinator.AvmWrapper.{wrapper_method}"
     ) as mock_press_action:
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -97,7 +97,7 @@ async def test_wol_button(
     assert button
     assert button.state == STATE_UNKNOWN
     with patch(
-        "homeassistant.components.fritz.common.AvmWrapper.async_wake_on_lan"
+        "homeassistant.components.fritz.coordinator.AvmWrapper.async_wake_on_lan"
     ) as mock_press_action:
         await hass.services.async_call(
             BUTTON_DOMAIN,

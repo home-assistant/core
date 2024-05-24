@@ -529,7 +529,10 @@ class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.device.reachable or False
+        return (
+            self.device.reachable
+            or getattr(self.device, self.entity_description.netatmo_name) is not None
+        )
 
     @callback
     def async_update_callback(self) -> None:
