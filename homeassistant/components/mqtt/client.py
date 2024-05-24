@@ -309,11 +309,6 @@ class MqttClientSetup:
         return self._client
 
 
-def _is_simple_match(topic: str) -> bool:
-    """Return if a topic is a simple match."""
-    return not ("+" in topic or "#" in topic)
-
-
 class EnsureJobAfterCooldown:
     """Ensure a cool down period before executing a job.
 
