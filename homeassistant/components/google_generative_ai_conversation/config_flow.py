@@ -36,7 +36,6 @@ from .const import (
     CONF_PROMPT,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
-    CONF_TONE_PROMPT,
     CONF_TOP_K,
     CONF_TOP_P,
     DEFAULT_PROMPT,
@@ -59,7 +58,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 RECOMMENDED_OPTIONS = {
     CONF_RECOMMENDED: True,
     CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-    CONF_TONE_PROMPT: "",
+    CONF_PROMPT: "",
 }
 
 
@@ -142,16 +141,11 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
             # Re-render the options again, now with the recommended options shown/hidden
             self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
 
-            # If we switch to not recommended, generate used prompt.
-            if user_input[CONF_RECOMMENDED]:
-                options = RECOMMENDED_OPTIONS
-            else:
-                options = {
-                    CONF_RECOMMENDED: False,
-                    CONF_PROMPT: DEFAULT_PROMPT
-                    + "\n"
-                    + user_input.get(CONF_TONE_PROMPT, ""),
-                }
+            options = {
+                CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
+                CONF_PROMPT: user_input[CONF_PROMPT],
+                CONF_LLM_HASS_API: user_input[CONF_LLM_HASS_API],
+            }
 
         schema = await google_generative_ai_config_option_schema(self.hass, options)
         return self.async_show_form(
@@ -179,22 +173,24 @@ async def google_generative_ai_config_option_schema(
         for api in llm.async_get_apis(hass)
     )
 
+    schema = {
+        vol.Optional(
+            CONF_PROMPT,
+            description={"suggested_value": options.get(CONF_PROMPT)},
+            default=DEFAULT_PROMPT,
+        ): TemplateSelector(),
+        vol.Optional(
+            CONF_LLM_HASS_API,
+            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+            default="none",
+        ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
+        vol.Required(
+            CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
+        ): bool,
+    }
+
     if options.get(CONF_RECOMMENDED):
-        return {
-            vol.Required(
-                CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
-            ): bool,
-            vol.Optional(
-                CONF_TONE_PROMPT,
-                description={"suggested_value": options.get(CONF_TONE_PROMPT)},
-                default="",
-            ): TemplateSelector(),
-            vol.Optional(
-                CONF_LLM_HASS_API,
-                description={"suggested_value": options.get(CONF_LLM_HASS_API)},
-                default="none",
-            ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
-        }
+        return schema
 
     api_models = await hass.async_add_executor_job(partial(genai.list_models))
 
@@ -211,45 +207,35 @@ async def google_generative_ai_config_option_schema(
         )
     ]
 
-    return {
-        vol.Required(
-            CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
-        ): bool,
-        vol.Optional(
-            CONF_CHAT_MODEL,
-            description={"suggested_value": options.get(CONF_CHAT_MODEL)},
-            default=RECOMMENDED_CHAT_MODEL,
-        ): SelectSelector(
-            SelectSelectorConfig(mode=SelectSelectorMode.DROPDOWN, options=models)
-        ),
-        vol.Optional(
-            CONF_PROMPT,
-            description={"suggested_value": options.get(CONF_PROMPT)},
-            default=DEFAULT_PROMPT,
-        ): TemplateSelector(),
-        vol.Optional(
-            CONF_LLM_HASS_API,
-            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
-            default="none",
-        ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
-        vol.Optional(
-            CONF_TEMPERATURE,
-            description={"suggested_value": options.get(CONF_TEMPERATURE)},
-            default=RECOMMENDED_TEMPERATURE,
-        ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-        vol.Optional(
-            CONF_TOP_P,
-            description={"suggested_value": options.get(CONF_TOP_P)},
-            default=RECOMMENDED_TOP_P,
-        ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-        vol.Optional(
-            CONF_TOP_K,
-            description={"suggested_value": options.get(CONF_TOP_K)},
-            default=RECOMMENDED_TOP_K,
-        ): int,
-        vol.Optional(
-            CONF_MAX_TOKENS,
-            description={"suggested_value": options.get(CONF_MAX_TOKENS)},
-            default=RECOMMENDED_MAX_TOKENS,
-        ): int,
-    }
+    schema.update(
+        {
+            vol.Optional(
+                CONF_CHAT_MODEL,
+                description={"suggested_value": options.get(CONF_CHAT_MODEL)},
+                default=RECOMMENDED_CHAT_MODEL,
+            ): SelectSelector(
+                SelectSelectorConfig(mode=SelectSelectorMode.DROPDOWN, options=models)
+            ),
+            vol.Optional(
+                CONF_TEMPERATURE,
+                description={"suggested_value": options.get(CONF_TEMPERATURE)},
+                default=RECOMMENDED_TEMPERATURE,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Optional(
+                CONF_TOP_P,
+                description={"suggested_value": options.get(CONF_TOP_P)},
+                default=RECOMMENDED_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Optional(
+                CONF_TOP_K,
+                description={"suggested_value": options.get(CONF_TOP_K)},
+                default=RECOMMENDED_TOP_K,
+            ): int,
+            vol.Optional(
+                CONF_MAX_TOKENS,
+                description={"suggested_value": options.get(CONF_MAX_TOKENS)},
+                default=RECOMMENDED_MAX_TOKENS,
+            ): int,
+        }
+    )
+    return schema
