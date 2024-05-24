@@ -165,7 +165,7 @@ homeassistant.components.ecowitt.*
 homeassistant.components.efergy.*
 homeassistant.components.electrasmart.*
 homeassistant.components.electric_kiwi.*
-homeassistant.components.elevenlabstts.*
+homeassistant.components.elevenlabs.*
 homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
 homeassistant.components.emulated_hue.*

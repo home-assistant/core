@@ -10,7 +10,7 @@ from elevenlabs.core import ApiError
 import pytest
 
 from homeassistant.components import tts
-from homeassistant.components.elevenlabstts.const import CONF_MODEL, CONF_VOICE, DOMAIN
+from homeassistant.components.elevenlabs.const import CONF_MODEL, CONF_VOICE, DOMAIN
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
@@ -83,7 +83,7 @@ async def mock_config_entry_setup(
     }
     mock_eleven = AsyncMock()
     with patch(
-        "homeassistant.components.elevenlabstts.tts.AsyncElevenLabs",
+        "homeassistant.components.elevenlabs.tts.AsyncElevenLabs",
         return_value=mock_eleven,
     ):
         config_entry = MockConfigEntry(domain=DOMAIN, data=default_config | config)

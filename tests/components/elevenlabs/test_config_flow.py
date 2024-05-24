@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock
 
 from homeassistant import config_entries
-from homeassistant.components.elevenlabstts.const import CONF_MODEL, CONF_VOICE, DOMAIN
+from homeassistant.components.elevenlabs.const import CONF_MODEL, CONF_VOICE, DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType

@@ -648,7 +648,7 @@ easyenergy==2.1.2
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.8.5
 
-# homeassistant.components.elevenlabstts
+# homeassistant.components.elevenlabs
 elevenlabs==1.1.2
 
 # homeassistant.components.elgato

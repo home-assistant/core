@@ -12,7 +12,7 @@ import pytest
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.elevenlabstts.async_setup_entry", return_value=True
+        "homeassistant.components.elevenlabs.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -46,7 +46,7 @@ def mock_async_client() -> Generator[AsyncMock, None, None]:
     ]
 
     with patch(
-        "homeassistant.components.elevenlabstts.config_flow.AsyncElevenLabs",
+        "homeassistant.components.elevenlabs.config_flow.AsyncElevenLabs",
         return_value=client_mock,
     ) as mock_async_client:
         yield mock_async_client
@@ -56,7 +56,7 @@ def mock_async_client() -> Generator[AsyncMock, None, None]:
 def mock_async_client_fail() -> Generator[AsyncMock, None, None]:
     """Override async ElevenLabs client."""
     with patch(
-        "homeassistant.components.elevenlabstts.config_flow.AsyncElevenLabs",
+        "homeassistant.components.elevenlabs.config_flow.AsyncElevenLabs",
         return_value=AsyncMock(),
     ) as mock_async_client:
         mock_async_client.side_effect = ApiError

@@ -1,5 +1,5 @@
 {
-  "domain": "elevenlabstts",
+  "domain": "elevenlabs",
   "name": "ElevenLabs",
   "codeowners": ["@sorgfresser"],
   "config_flow": true,
