@@ -48,24 +48,24 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
         self._event_type = EVENT_FEEDREADER
         self._feed_id = url
 
+    @callback
     def _log_no_entries(self) -> None:
         """Send no entries log at debug level."""
         _LOGGER.debug("No new entries to be published in feed %s", self._url)
 
-    async def _async_update_data(self) -> None:
-        """Update the feed and publish new entries to the event bus."""
-        last_entry_timestamp = await self.hass.async_add_executor_job(self._update)
-        if last_entry_timestamp:
-            self._storage.async_put_timestamp(self._feed_id, last_entry_timestamp)
-
-    def _update(self) -> struct_time | None:
-        """Update the feed and publish new entries to the event bus."""
-        _LOGGER.debug("Fetching new data from feed %s", self._url)
-        self._feed = feedparser.parse(
+    def _fetch_feed(self) -> feedparser.FeedParserDict:
+        """Fetch the feed data."""
+        return feedparser.parse(
             self._url,
             etag=None if not self._feed else self._feed.get("etag"),
             modified=None if not self._feed else self._feed.get("modified"),
         )
+
+    async def _async_update_data(self) -> None:
+        """Update the feed and publish new entries to the event bus."""
+        _LOGGER.debug("Fetching new data from feed %s", self._url)
+        self._feed = await self.hass.async_add_executor_job(self._fetch_feed)
+
         if not self._feed:
             _LOGGER.error("Error fetching feed data from %s", self._url)
             return None
@@ -98,10 +98,9 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
         _LOGGER.debug("Fetch from feed %s completed", self._url)
 
         if self._last_entry_timestamp:
-            return self._last_entry_timestamp
+            self._storage.async_put_timestamp(self._feed_id, self._last_entry_timestamp)
 
-        return None
-
+    @callback
     def _filter_entries(self) -> None:
         """Filter the entries provided and return the ones to keep."""
         assert self._feed is not None
@@ -113,6 +112,7 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
             )
             self._feed.entries = self._feed.entries[0 : self._max_entries]
 
+    @callback
     def _update_and_fire_entry(self, entry: feedparser.FeedParserDict) -> None:
         """Update last_entry_timestamp and fire entry."""
         # Check if the entry has a updated or published date.
@@ -125,9 +125,10 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
                 entry,
             )
         entry["feed_url"] = self._url
-        self.hass.bus.fire(self._event_type, entry)
+        self.hass.bus.async_fire(self._event_type, entry)
         _LOGGER.debug("New event fired for entry %s", entry.get("link"))
 
+    @callback
     def _publish_new_entries(self) -> None:
         """Publish new entries to the event bus."""
         assert self._feed is not None
