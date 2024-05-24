@@ -833,12 +833,12 @@ class MQTT:
     def _exception_message(
         self,
         msg_callback: AsyncMessageCallbackType | MessageCallbackType,
-        msg: mqtt.MQTTMessage,
+        msg: ReceiveMessage,
     ) -> str:
         """Return a string with the exception message."""
         return (
             f"Exception in {msg_callback.__name__} when handling msg on "
-            f"'{msg.topic}': '{msg.payload!r}'"
+            f"'{msg.topic}': '{msg.payload}'"  # type: ignore[str-bytes-safe]
         )
 
     async def async_subscribe(
