@@ -26,6 +26,12 @@
       },
       "reset_lifespan_side_brush": {
         "default": "mdi:broom"
+      },
+      "reset_lifespan_unit_care": {
+        "default": "mdi:robot-vacuum"
+      },
+      "reset_lifespan_round_mop": {
+        "default": "mdi:broom"
       }
     },
     "event": {
@@ -61,6 +67,12 @@
         "default": "mdi:broom"
       },
       "lifespan_side_brush": {
+        "default": "mdi:broom"
+      },
+      "lifespan_unit_care": {
+        "default": "mdi:robot-vacuum"
+      },
+      "lifespan_round_mop": {
         "default": "mdi:broom"
       },
       "network_ip": {

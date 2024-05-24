@@ -58,6 +58,12 @@
       "reset_lifespan_lens_brush": {
         "name": "Reset lens brush lifespan"
       },
+      "reset_lifespan_round_mop": {
+        "name": "Reset round mop lifespan"
+      },
+      "reset_lifespan_unit_care": {
+        "name": "Reset unit care lifespan"
+      },
       "reset_lifespan_side_brush": {
         "name": "Reset side brushes lifespan"
       }
@@ -112,6 +118,12 @@
       },
       "lifespan_side_brush": {
         "name": "Side brushes lifespan"
+      },
+      "lifespan_unit_care": {
+        "name": "Unit care lifespan"
+      },
+      "lifespan_round_mop": {
+        "name": "Round mop lifespan"
       },
       "network_ip": {
         "name": "IP address"
