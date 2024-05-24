@@ -1,11 +1,11 @@
 {
   "domain": "elevenlabstts",
-  "name": "ElevenLabs Text-to-Speech (TTS)",
+  "name": "ElevenLabs",
   "codeowners": ["@sorgfresser"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/elevenlabs",
   "integration_type": "service",
-  "iot_class": "cloud_push",
+  "iot_class": "cloud_poll",
   "loggers": ["elevenlabs"],
   "requirements": ["elevenlabs==1.1.2"]
 }

@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "description": "Provide your ElevenLabs API-Key",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
