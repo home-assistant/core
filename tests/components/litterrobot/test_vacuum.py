@@ -143,6 +143,7 @@ async def test_commands(
     service: str,
     command: str,
     extra: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test sending commands to the vacuum."""
     await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
@@ -163,5 +164,4 @@ async def test_commands(
     )
     getattr(mock_account.robots[0], command).assert_called_once()
 
-    issue_registry = ir.async_get(hass)
     assert set(issue_registry.issues.keys()) == issues

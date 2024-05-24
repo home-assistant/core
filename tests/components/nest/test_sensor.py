@@ -215,7 +215,7 @@ async def test_event_updates_sensor(
     assert temperature.state == "25.1"
 
     # Simulate a pubsub message received by the subscriber with a trait update
-    event = EventMessage(
+    event = EventMessage.create_event(
         {
             "eventId": "some-event-id",
             "timestamp": "2019-01-01T00:00:01Z",

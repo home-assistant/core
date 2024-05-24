@@ -36,6 +36,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
+from . import UnifiConfigEntry
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
@@ -163,9 +164,7 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
                 abort_reason = "reauth_successful"
 
             if config_entry:
-                hub: UnifiHub | None = self.hass.data.get(UNIFI_DOMAIN, {}).get(
-                    config_entry.entry_id
-                )
+                hub = config_entry.runtime_data
 
                 if hub and hub.available:
                     return self.async_abort(reason="already_configured")
@@ -249,7 +248,7 @@ class UnifiOptionsFlowHandler(OptionsFlow):
 
     hub: UnifiHub
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: UnifiConfigEntry) -> None:
         """Initialize UniFi Network options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
@@ -258,9 +257,7 @@ class UnifiOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the UniFi Network options."""
-        if self.config_entry.entry_id not in self.hass.data[UNIFI_DOMAIN]:
-            return self.async_abort(reason="integration_not_setup")
-        self.hub = self.hass.data[UNIFI_DOMAIN][self.config_entry.entry_id]
+        self.hub = self.config_entry.runtime_data
         self.options[CONF_BLOCK_CLIENT] = self.hub.config.option_block_clients
 
         if self.show_advanced_options:

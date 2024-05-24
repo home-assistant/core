@@ -119,6 +119,33 @@ def assert_result_info(
         assert not hasattr(info, "_domains")
 
 
+async def test_template_render_missing_hass(hass: HomeAssistant) -> None:
+    """Test template render when hass is not set."""
+    hass.states.async_set("sensor.test", "23")
+    template_str = "{{ states('sensor.test') }}"
+    template_obj = template.Template(template_str, None)
+    template._render_info.set(template.RenderInfo(template_obj))
+
+    with pytest.raises(RuntimeError, match="hass not set while rendering"):
+        template_obj.async_render_to_info()
+
+
+async def test_template_render_info_collision(hass: HomeAssistant) -> None:
+    """Test template render info collision.
+
+    This usually means the template is being rendered
+    in the wrong thread.
+    """
+    hass.states.async_set("sensor.test", "23")
+    template_str = "{{ states('sensor.test') }}"
+    template_obj = template.Template(template_str, None)
+    template_obj.hass = hass
+    template._render_info.set(template.RenderInfo(template_obj))
+
+    with pytest.raises(RuntimeError, match="RenderInfo already set while rendering"):
+        template_obj.async_render_to_info()
+
+
 def test_template_equality() -> None:
     """Test template comparison and hashing."""
     template_one = template.Template("{{ template_one }}")
@@ -1108,9 +1135,9 @@ def test_strptime(hass: HomeAssistant) -> None:
     assert render(hass, "{{ strptime('invalid', '%Y', default=1) }}") == 1
 
 
-def test_timestamp_custom(hass: HomeAssistant) -> None:
+async def test_timestamp_custom(hass: HomeAssistant) -> None:
     """Test the timestamps to custom filter."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     now = dt_util.utcnow()
     tests = [
         (1469119144, None, True, "2016-07-21 16:39:04"),
@@ -1150,9 +1177,9 @@ def test_timestamp_custom(hass: HomeAssistant) -> None:
     assert render(hass, "{{ None | timestamp_custom(default=1) }}") == 1
 
 
-def test_timestamp_local(hass: HomeAssistant) -> None:
+async def test_timestamp_local(hass: HomeAssistant) -> None:
     """Test the timestamps to local filter."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     tests = [
         (1469119144, "2016-07-21T16:39:04+00:00"),
     ]
@@ -2225,14 +2252,14 @@ def test_utcnow(mock_is_safe, hass: HomeAssistant) -> None:
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
-def test_today_at(
+async def test_today_at(
     mock_is_safe, hass: HomeAssistant, now, expected, expected_midnight, timezone_str
 ) -> None:
     """Test today_at method."""
     freezer = freeze_time(now)
     freezer.start()
 
-    hass.config.set_time_zone(timezone_str)
+    await hass.config.async_set_time_zone(timezone_str)
 
     result = template.Template(
         "{{ today_at('10:00').isoformat() }}",
@@ -2273,9 +2300,9 @@ def test_today_at(
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
-def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
+async def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
     """Test relative_time method."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
     relative_time_template = (
         '{{relative_time(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}'
@@ -2380,9 +2407,9 @@ def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
-def test_time_since(mock_is_safe, hass: HomeAssistant) -> None:
+async def test_time_since(mock_is_safe, hass: HomeAssistant) -> None:
     """Test time_since method."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
     time_since_template = (
         '{{time_since(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}'
@@ -2543,9 +2570,9 @@ def test_time_since(mock_is_safe, hass: HomeAssistant) -> None:
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
-def test_time_until(mock_is_safe, hass: HomeAssistant) -> None:
+async def test_time_until(mock_is_safe, hass: HomeAssistant) -> None:
     """Test time_until method."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
     time_until_template = (
         '{{time_until(strptime("2000-01-01 11:00:00", "%Y-%m-%d %H:%M:%S"))}}'

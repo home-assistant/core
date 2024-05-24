@@ -72,6 +72,8 @@ from .const import (
     CONF_STREAM_COUNT,
     CONF_STREAM_SOURCE,
     CONF_SUPPORT_AUDIO,
+    CONF_THRESHOLD_CO,
+    CONF_THRESHOLD_CO2,
     CONF_VIDEO_CODEC,
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
@@ -223,6 +225,13 @@ SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
     }
 )
 
+SENSOR_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {
+        vol.Optional(CONF_THRESHOLD_CO): vol.Any(None, cv.positive_int),
+        vol.Optional(CONF_THRESHOLD_CO2): vol.Any(None, cv.positive_int),
+    }
+)
+
 
 HOMEKIT_CHAR_TRANSLATIONS = {
     0: " ",  # nul
@@ -296,6 +305,9 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
 
         elif domain == "cover":
             config = COVER_SCHEMA(config)
+
+        elif domain == "sensor":
+            config = SENSOR_SCHEMA(config)
 
         else:
             config = BASIC_INFO_SCHEMA(config)
