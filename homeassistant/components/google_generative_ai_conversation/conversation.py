@@ -200,7 +200,9 @@ class GoogleGenerativeAIConversationEntity(
                     device_id=user_input.device_id,
                 )
 
-                prompt = llm_api.async_get_api_prompt(empty_tool_input) + "\n" + prompt
+                prompt = (
+                    await llm_api.async_get_api_prompt(empty_tool_input) + "\n" + prompt
+                )
 
         except TemplateError as err:
             LOGGER.error("Error rendering prompt: %s", err)

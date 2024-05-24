@@ -143,7 +143,9 @@ class OpenAIConversationEntity(
                     )
 
                     prompt = (
-                        llm_api.async_get_api_prompt(empty_tool_input) + "\n" + prompt
+                        await llm_api.async_get_api_prompt(empty_tool_input)
+                        + "\n"
+                        + prompt
                     )
 
             except TemplateError as err:
