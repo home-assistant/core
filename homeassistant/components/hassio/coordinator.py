@@ -53,7 +53,6 @@ from .const import (
     SupervisorEntityModel,
 )
 from .handler import HassIO, HassioAPIError
-from .issues import SupervisorIssues
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,10 +169,10 @@ def get_core_info(hass: HomeAssistant) -> dict[str, Any] | None:
 
 @callback
 @bind_hass
-def get_issues_info(hass: HomeAssistant) -> SupervisorIssues | None:
+def get_issues_info(hass: HomeAssistant):
     """Return Supervisor issues info.
 
-    Async friendly.
+    Async friendly. Returns an instance of issues.SupervisorIssues or None.
     """
     return hass.data.get(DATA_KEY_SUPERVISOR_ISSUES)
 
