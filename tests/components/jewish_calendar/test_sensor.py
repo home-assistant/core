@@ -85,7 +85,7 @@ TEST_PARAMS = [
         "Rosh Hashana I",
         {
             "device_class": "enum",
-            "friendly_name": "test Holiday",
+            "friendly_name": "Jewish Calendar Holiday",
             "icon": "mdi:calendar-star",
             "id": "rosh_hashana_i",
             "type": "YOM_TOV",
@@ -104,7 +104,7 @@ TEST_PARAMS = [
         "נצבים",
         {
             "device_class": "enum",
-            "friendly_name": "test Parshat Hashavua",
+            "friendly_name": "Jewish Calendar Parshat Hashavua",
             "icon": "mdi:book-open-variant",
             "options": [p.hebrew for p in htables.PARASHAOT],
         },
@@ -167,7 +167,7 @@ TEST_PARAMS = [
             "month_name": "מרחשוון",
             "day": 6,
             "icon": "mdi:star-david",
-            "friendly_name": "test Date",
+            "friendly_name": "Jewish Calendar Date",
         },
     ),
 ]
