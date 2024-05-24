@@ -25,20 +25,19 @@ from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 
 @dataclass(frozen=True, kw_only=True)
-class TeslemetryNumberEntityDescription(NumberEntityDescription):
+class TeslemetryNumberVehicleEntityDescription(NumberEntityDescription):
     """Describes Teslemetry Number entity."""
 
     func: Callable
     native_min_value: float
     native_max_value: float
     min_key: str | None = None
-    max_key: str | None = None
+    max_key: str
     scopes: list[Scope]
-    requires: str | None = None
 
 
-VEHICLE_DESCRIPTIONS: tuple[TeslemetryNumberEntityDescription, ...] = (
-    TeslemetryNumberEntityDescription(
+VEHICLE_DESCRIPTIONS: tuple[TeslemetryNumberVehicleEntityDescription, ...] = (
+    TeslemetryNumberVehicleEntityDescription(
         key="charge_state_charge_current_request",
         native_step=PRECISION_WHOLE,
         native_min_value=0,
@@ -50,7 +49,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryNumberEntityDescription, ...] = (
         func=lambda api, value: api.set_charging_amps(value),
         scopes=[Scope.VEHICLE_CHARGING_CMDS],
     ),
-    TeslemetryNumberEntityDescription(
+    TeslemetryNumberVehicleEntityDescription(
         key="charge_state_charge_limit_soc",
         native_step=PRECISION_WHOLE,
         native_min_value=50,
@@ -65,26 +64,23 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryNumberEntityDescription, ...] = (
     ),
 )
 
-ENERGY_INFO_DESCRIPTIONS: tuple[TeslemetryNumberEntityDescription, ...] = (
-    TeslemetryNumberEntityDescription(
+
+@dataclass(frozen=True, kw_only=True)
+class TeslemetryNumberBatteryEntityDescription(NumberEntityDescription):
+    """Describes Teslemetry Number entity."""
+
+    func: Callable
+    requires: str | None = None
+
+
+ENERGY_INFO_DESCRIPTIONS: tuple[TeslemetryNumberBatteryEntityDescription, ...] = (
+    TeslemetryNumberBatteryEntityDescription(
         key="backup_reserve_percent",
-        native_step=PRECISION_WHOLE,
-        native_min_value=0,
-        native_max_value=100,
-        device_class=NumberDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
-        scopes=[Scope.ENERGY_CMDS],
         func=lambda api, value: api.backup(int(value)),
         requires="components_battery",
     ),
-    TeslemetryNumberEntityDescription(
+    TeslemetryNumberBatteryEntityDescription(
         key="off_grid_vehicle_charging_reserve",
-        native_step=PRECISION_WHOLE,
-        native_min_value=0,
-        native_max_value=100,
-        device_class=NumberDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
-        scopes=[Scope.ENERGY_CMDS],
         func=lambda api, value: api.off_grid_vehicle_charging_reserve(int(value)),
         requires="components_off_grid_vehicle_charging_reserve_supported",
     ),
@@ -125,12 +121,12 @@ async def async_setup_entry(
 class TeslemetryVehicleNumberEntity(TeslemetryVehicleEntity, NumberEntity):
     """Vehicle number entity base class."""
 
-    entity_description: TeslemetryNumberEntityDescription
+    entity_description: TeslemetryNumberVehicleEntityDescription
 
     def __init__(
         self,
         data: TeslemetryVehicleData,
-        description: TeslemetryNumberEntityDescription,
+        description: TeslemetryNumberVehicleEntityDescription,
         scopes: list[Scope],
     ) -> None:
         """Initialize the number entity."""
@@ -153,13 +149,10 @@ class TeslemetryVehicleNumberEntity(TeslemetryVehicleEntity, NumberEntity):
         else:
             self._attr_native_min_value = self.entity_description.native_min_value
 
-        if self.entity_description.max_key is not None:
-            self._attr_native_max_value = self.get_number(
-                self.entity_description.max_key,
-                self.entity_description.native_max_value,
-            )
-        else:
-            self._attr_native_max_value = self.entity_description.native_max_value
+        self._attr_native_max_value = self.get_number(
+            self.entity_description.max_key,
+            self.entity_description.native_max_value,
+        )
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
@@ -174,18 +167,21 @@ class TeslemetryVehicleNumberEntity(TeslemetryVehicleEntity, NumberEntity):
 class TeslemetryEnergyInfoNumberSensorEntity(TeslemetryEnergyInfoEntity, NumberEntity):
     """Energy info number entity base class."""
 
-    entity_description: TeslemetryNumberEntityDescription
+    entity_description: TeslemetryNumberBatteryEntityDescription
+    _attr_native_step = PRECISION_WHOLE
     _attr_native_min_value = 0
     _attr_native_max_value = 100
+    _attr_device_class = NumberDeviceClass.BATTERY
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(
         self,
         data: TeslemetryEnergyData,
-        description: TeslemetryNumberEntityDescription,
+        description: TeslemetryNumberBatteryEntityDescription,
         scopes: list[Scope],
     ) -> None:
         """Initialize the number entity."""
-        self.scoped = any(scope in scopes for scope in description.scopes)
+        self.scoped = Scope.ENERGY_CMDS in scopes
         self.entity_description = description
         super().__init__(data, description.key)
 
