@@ -15,5 +15,6 @@
   ],
   "requirements": [
     "duwi_smarthome_sdk==0.1.9"
-  ]
+  ],
+  "version": "0.1.0"
 }
