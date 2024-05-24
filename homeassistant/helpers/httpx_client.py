@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 import sys
 from typing import Any, Self
 
@@ -105,7 +105,7 @@ def create_async_httpx_client(
 def _async_register_async_client_shutdown(
     hass: HomeAssistant,
     client: httpx.AsyncClient,
-    original_aclose: Callable[..., Any],
+    original_aclose: Callable[[], Coroutine[Any, Any, None]],
 ) -> None:
     """Register httpx AsyncClient aclose on Home Assistant shutdown.
 

@@ -1,4 +1,4 @@
-"""Config flow for Transmission Bittorent Client."""
+"""Config flow for Transmission Bittorrent Client."""
 
 from __future__ import annotations
 

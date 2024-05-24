@@ -8,11 +8,11 @@
       dict({
         'generation_config': dict({
           'max_output_tokens': 150,
-          'temperature': 0.9,
-          'top_k': 1,
-          'top_p': 1.0,
+          'temperature': 1.0,
+          'top_k': 64,
+          'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-pro',
+        'model_name': 'models/gemini-1.5-flash-latest',
         'tools': None,
       }),
     ),
@@ -67,11 +67,11 @@
       dict({
         'generation_config': dict({
           'max_output_tokens': 150,
-          'temperature': 0.9,
-          'top_k': 1,
-          'top_p': 1.0,
+          'temperature': 1.0,
+          'top_k': 64,
+          'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-pro',
+        'model_name': 'models/gemini-1.5-flash-latest',
         'tools': None,
       }),
     ),
@@ -126,11 +126,11 @@
       dict({
         'generation_config': dict({
           'max_output_tokens': 150,
-          'temperature': 0.9,
-          'top_k': 1,
-          'top_p': 1.0,
+          'temperature': 1.0,
+          'top_k': 64,
+          'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-pro',
+        'model_name': 'models/gemini-1.5-flash-latest',
         'tools': None,
       }),
     ),
@@ -185,11 +185,11 @@
       dict({
         'generation_config': dict({
           'max_output_tokens': 150,
-          'temperature': 0.9,
-          'top_k': 1,
-          'top_p': 1.0,
+          'temperature': 1.0,
+          'top_k': 64,
+          'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-pro',
+        'model_name': 'models/gemini-1.5-flash-latest',
         'tools': None,
       }),
     ),
