@@ -783,8 +783,6 @@ class CancelTimerIntentHandler(intent.IntentHandler):
             # Fail early
             raise TimersNotSupportedError(intent_obj.device_id)
 
-        assert intent_obj.device_id is not None
-
         timer = _find_timer(hass, intent_obj.device_id, slots)
         timer_manager.cancel_timer(timer.id)
         return intent_obj.create_response()
@@ -813,8 +811,6 @@ class IncreaseTimerIntentHandler(intent.IntentHandler):
         ):
             # Fail early
             raise TimersNotSupportedError(intent_obj.device_id)
-
-        assert intent_obj.device_id is not None
 
         total_seconds = _get_total_seconds(slots)
         timer = _find_timer(hass, intent_obj.device_id, slots)
@@ -846,8 +842,6 @@ class DecreaseTimerIntentHandler(intent.IntentHandler):
             # Fail early
             raise TimersNotSupportedError(intent_obj.device_id)
 
-        assert intent_obj.device_id is not None
-
         total_seconds = _get_total_seconds(slots)
         timer = _find_timer(hass, intent_obj.device_id, slots)
         timer_manager.remove_time(timer.id, total_seconds)
@@ -877,8 +871,6 @@ class PauseTimerIntentHandler(intent.IntentHandler):
             # Fail early
             raise TimersNotSupportedError(intent_obj.device_id)
 
-        assert intent_obj.device_id is not None
-
         timer = _find_timer(hass, intent_obj.device_id, slots)
         timer_manager.pause_timer(timer.id)
         return intent_obj.create_response()
@@ -907,8 +899,6 @@ class UnpauseTimerIntentHandler(intent.IntentHandler):
             # Fail early
             raise TimersNotSupportedError(intent_obj.device_id)
 
-        assert intent_obj.device_id is not None
-
         timer = _find_timer(hass, intent_obj.device_id, slots)
         timer_manager.unpause_timer(timer.id)
         return intent_obj.create_response()
@@ -936,8 +926,6 @@ class TimerStatusIntentHandler(intent.IntentHandler):
         ):
             # Fail early
             raise TimersNotSupportedError(intent_obj.device_id)
-
-        assert intent_obj.device_id is not None
 
         statuses: list[dict[str, Any]] = []
         for timer in _find_timers(hass, intent_obj.device_id, slots):
