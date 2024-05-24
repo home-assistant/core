@@ -12,14 +12,15 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_MAX_ENTRIES,
-    CONF_URLS,
-    DEFAULT_MAX_ENTRIES,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-)
+from .const import DOMAIN
 from .coordinator import FeedReaderCoordinator, StoredData
+
+CONF_URLS = "urls"
+CONF_MAX_ENTRIES = "max_entries"
+
+DEFAULT_MAX_ENTRIES = 20
+DEFAULT_SCAN_INTERVAL = timedelta(hours=1)
+
 
 CONFIG_SCHEMA = vol.Schema(
     {

@@ -16,7 +16,12 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .const import DELAY_SAVE, DOMAIN, EVENT_FEEDREADER, STORAGE_VERSION
+from .const import DOMAIN
+
+DELAY_SAVE = 30
+EVENT_FEEDREADER = "feedreader"
+STORAGE_VERSION = 1
+
 
 _LOGGER = getLogger(__name__)
 

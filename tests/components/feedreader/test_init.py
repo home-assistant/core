@@ -9,12 +9,9 @@ from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 
-from homeassistant.components.feedreader.const import (
-    CONF_MAX_ENTRIES,
-    CONF_URLS,
-    DOMAIN,
-    EVENT_FEEDREADER,
-)
+from homeassistant.components.feedreader import CONF_MAX_ENTRIES, CONF_URLS
+from homeassistant.components.feedreader.const import DOMAIN
+from homeassistant.components.feedreader.coordinator import EVENT_FEEDREADER
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.setup import async_setup_component
