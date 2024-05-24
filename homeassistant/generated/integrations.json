@@ -410,7 +410,7 @@
     },
     "apsystems": {
       "name": "APsystems",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -593,6 +593,12 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "azure_data_explorer": {
+      "name": "Azure Data Explorer",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "baf": {
       "name": "Big Ass Fans",
@@ -2271,7 +2277,7 @@
           "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling",
-          "name": "Google Generative AI Conversation"
+          "name": "Google Generative AI"
         },
         "google_mail": {
           "integration_type": "service",
@@ -2944,8 +2950,9 @@
     "jewish_calendar": {
       "name": "Jewish Calendar",
       "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "calculated"
+      "config_flow": true,
+      "iot_class": "calculated",
+      "single_config_entry": true
     },
     "joaoapps_join": {
       "name": "Joaoapps Join",
@@ -5888,7 +5895,8 @@
       "name": "Switcher",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "switchmate": {
       "name": "Switchmate SimplySmart Home",

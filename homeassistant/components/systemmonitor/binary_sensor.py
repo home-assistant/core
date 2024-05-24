@@ -93,7 +93,7 @@ async def async_setup_entry(
     entry: SystemMonitorConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up System Montor binary sensors based on a config entry."""
+    """Set up System Monitor binary sensors based on a config entry."""
     coordinator = entry.runtime_data.coordinator
 
     async_add_entities(

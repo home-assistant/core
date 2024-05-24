@@ -48,7 +48,6 @@ from homeassistant.const import (
     __version__ as hass_version,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
 
 from tests.common import async_mock_service
 
@@ -66,9 +65,7 @@ async def test_accessory_cancels_track_state_change_on_stop(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ):
         acc.run()
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS][entity_id]) == 1
     await acc.stop()
-    assert entity_id not in hass.data[TRACK_STATE_CHANGE_CALLBACKS]
 
 
 async def test_home_accessory(hass: HomeAssistant, hk_driver) -> None:

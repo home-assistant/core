@@ -164,7 +164,7 @@ def _format_err[*_Ts](
 
 def _generate_job[*_Ts](
     signal: SignalType[*_Ts] | str, target: Callable[[*_Ts], Any] | Callable[..., Any]
-) -> HassJob[..., None | Coroutine[Any, Any, None]]:
+) -> HassJob[..., Coroutine[Any, Any, None] | None]:
     """Generate a HassJob for a signal and target."""
     job_type = get_hassjob_callable_job_type(target)
     return HassJob(

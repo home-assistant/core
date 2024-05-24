@@ -14,8 +14,7 @@ from homeassistant.components.lock import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from .common import DOMAIN, assert_entities, setup_platform
 
@@ -86,12 +85,11 @@ async def test_locks(
 
 
 async def test_speed_limit_lock(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Tests that the deprecated speed limit lock entity is correct."""
-
-    issue_registry = async_get_issue_registry(hass)
-
     # Create the deprecated speed limit lock entity
     entity = entity_registry.async_get_or_create(
         LOCK_DOMAIN,

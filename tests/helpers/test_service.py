@@ -800,11 +800,10 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
     assert proxy_load_services_files.mock_calls[0][1][1] == unordered(
         [
             await async_get_integration(hass, DOMAIN_GROUP),
-            await async_get_integration(hass, "http"),  # system_health requires http
         ]
     )
 
-    assert len(descriptions) == 2
+    assert len(descriptions) == 1
     assert DOMAIN_GROUP in descriptions
     assert "description" in descriptions[DOMAIN_GROUP]["reload"]
     assert "fields" in descriptions[DOMAIN_GROUP]["reload"]
@@ -838,7 +837,7 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
         await async_setup_component(hass, DOMAIN_LOGGER, logger_config)
         descriptions = await service.async_get_all_descriptions(hass)
 
-    assert len(descriptions) == 3
+    assert len(descriptions) == 2
     assert DOMAIN_LOGGER in descriptions
     assert descriptions[DOMAIN_LOGGER]["set_default_level"]["name"] == "Translated name"
     assert (

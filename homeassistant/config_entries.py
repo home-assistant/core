@@ -728,6 +728,17 @@ class ConfigEntry(Generic[_DataT]):
     ) -> None:
         """Set up while holding the setup lock."""
         async with self.setup_lock:
+            if self.state is ConfigEntryState.LOADED:
+                # If something loaded the config entry while
+                # we were waiting for the lock, we should not
+                # set it up again.
+                _LOGGER.debug(
+                    "Not setting up %s (%s %s) again, already loaded",
+                    self.title,
+                    self.domain,
+                    self.entry_id,
+                )
+                return
             await self.async_setup(hass, integration=integration)
 
     @callback
@@ -1220,7 +1231,8 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         # Avoid starting a config flow on an integration that only supports
         # a single config entry, but which already has an entry
         if (
-            context.get("source") not in {SOURCE_IGNORE, SOURCE_REAUTH, SOURCE_UNIGNORE}
+            context.get("source")
+            not in {SOURCE_IGNORE, SOURCE_REAUTH, SOURCE_UNIGNORE, SOURCE_RECONFIGURE}
             and self.config_entries.async_has_entries(handler, include_ignore=False)
             and await _support_single_config_entry_only(self.hass, handler)
         ):
