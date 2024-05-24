@@ -45,6 +45,8 @@ from .timers import (
     IncreaseTimerIntentHandler,
     PauseTimerIntentHandler,
     StartTimerIntentHandler,
+    TimerEventType,
+    TimerInfo,
     TimerManager,
     TimerStatusIntentHandler,
     UnpauseTimerIntentHandler,
@@ -57,6 +59,8 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 __all__ = [
     "async_register_timer_handler",
+    "TimerInfo",
+    "TimerEventType",
     "DOMAIN",
 ]
 
