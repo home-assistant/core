@@ -61,14 +61,14 @@ async def test_default_prompt(
         },
     )
 
-    device_registry.async_get_or_create(
+    device_id = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={("test", "1234")},
         name="Test Device",
         manufacturer="Test Manufacturer",
         model="Test Model",
         suggested_area="Test Area",
-    )
+    ).id
     for i in range(3):
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
@@ -154,7 +154,7 @@ async def test_default_prompt(
         ),
     ) as mock_create:
         result = await conversation.async_converse(
-            hass, "hello", None, Context(), agent_id=agent_id
+            hass, "hello", None, Context(), agent_id=agent_id, device_id=device_id
         )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
