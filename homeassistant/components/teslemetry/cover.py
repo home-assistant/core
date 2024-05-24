@@ -59,7 +59,9 @@ class TeslemetryWindowEntity(TeslemetryVehicleEntity, CoverEntity):
         """Initialize the sensor."""
         super().__init__(data, "windows")
         self.scoped = Scope.VEHICLE_CMDS in scopes
-        self._attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+        )
         if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
 
@@ -101,7 +103,6 @@ class TeslemetryChargePortEntity(TeslemetryVehicleEntity, CoverEntity):
     """Cover entity for the charge port."""
 
     _attr_device_class = CoverDeviceClass.DOOR
-    _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
     def __init__(self, vehicle: TeslemetryVehicleData, scopes: list[Scope]) -> None:
         """Initialize the sensor."""
@@ -109,6 +110,9 @@ class TeslemetryChargePortEntity(TeslemetryVehicleEntity, CoverEntity):
         self.scoped = any(
             scope in scopes
             for scope in (Scope.VEHICLE_CMDS, Scope.VEHICLE_CHARGING_CMDS)
+        )
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
         )
         if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
@@ -138,13 +142,13 @@ class TeslemetryFrontTrunkEntity(TeslemetryVehicleEntity, CoverEntity):
     """Cover entity for the charge port."""
 
     _attr_device_class = CoverDeviceClass.DOOR
-    _attr_supported_features = CoverEntityFeature.OPEN
 
     def __init__(self, vehicle: TeslemetryVehicleData, scopes: list[Scope]) -> None:
         """Initialize the sensor."""
         super().__init__(vehicle, "vehicle_state_ft")
 
         self.scoped = Scope.VEHICLE_CMDS in scopes
+        self._attr_supported_features = CoverEntityFeature.OPEN
         if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
 
@@ -165,13 +169,15 @@ class TeslemetryRearTrunkEntity(TeslemetryVehicleEntity, CoverEntity):
     """Cover entity for the charge port."""
 
     _attr_device_class = CoverDeviceClass.DOOR
-    _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
     def __init__(self, vehicle: TeslemetryVehicleData, scopes: list[Scope]) -> None:
         """Initialize the sensor."""
         super().__init__(vehicle, "vehicle_state_rt")
 
         self.scoped = Scope.VEHICLE_CMDS in scopes
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+        )
         if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
 
