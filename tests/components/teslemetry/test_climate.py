@@ -178,7 +178,7 @@ async def test_errors(hass: HomeAssistant, response: str) -> None:
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        mock_on.assert_called_once()
+    mock_on.assert_called_once()
 
 
 async def test_ignored_error(
