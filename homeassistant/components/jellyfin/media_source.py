@@ -396,7 +396,7 @@ class JellyfinSource(MediaSource):
                 k.get(ITEM_KEY_NAME),
             ),
         )
-        return [await self._build_series(serie, False) for serie in series]
+        return [await self._build_series(s, False) for s in series]
 
     async def _build_series(
         self, series: dict[str, Any], include_children: bool

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -32,7 +33,7 @@ class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         name: str,
         api_category: str,
         update_interval: timedelta,
-        update_method: Callable[..., Awaitable],
+        update_method: Callable[[], Coroutine[Any, Any, dict]],
     ) -> None:
         """Initialize."""
         super().__init__(
@@ -45,7 +46,7 @@ class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         )
 
         self._rebooting = False
-        self._signal_handler_unsubs: list[Callable[..., None]] = []
+        self._signal_handler_unsubs: list[Callable[[], None]] = []
         self.config_entry = entry
         self.signal_reboot_completed = SIGNAL_REBOOT_COMPLETED.format(
             self.config_entry.entry_id

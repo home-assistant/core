@@ -1858,7 +1858,7 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     async_fire_time_changed(hass)  # cooldown
     await hass.async_block_till_done()
 
-    # the subscribtion with the highest QoS should survive
+    # the subscription with the highest QoS should survive
     expected = [
         call([("test/state", 2)]),
     ]
@@ -1923,7 +1923,7 @@ async def test_subscribed_at_highest_qos(
     freezer.tick(5)
     async_fire_time_changed(hass)  # cooldown
     await hass.async_block_till_done()
-    # the subscribtion with the highest QoS should survive
+    # the subscription with the highest QoS should survive
     assert help_all_subscribe_calls(mqtt_client_mock) == [("test/state", 2)]
 
 
