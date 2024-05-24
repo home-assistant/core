@@ -930,8 +930,9 @@ async def test_handle_logging_on_writing_the_entity_state(
         state = hass.states.get("sensor.test_sensor")
         assert state is not None
         assert state.state == "initial_state"
+        assert "Invalid value for sensor" in caplog.text
         assert (
-            "Invalid value for sensor, while updating "
+            "Exception raised while updating "
             "state of sensor.test_sensor, topic: 'test/state' "
             "with payload: b'payload causing errors'" in caplog.text
         )

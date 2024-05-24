@@ -376,10 +376,10 @@ class EntityTopicState:
             entity_id, entity = self.subscribe_calls.popitem()
             try:
                 entity.async_write_ha_state()
-            except Exception as exc:  # noqa: BLE001
-                _LOGGER.error(
-                    "%s, while updating state of %s, topic: " "'%s' with payload: %s",
-                    exc,
+            except Exception:
+                _LOGGER.exception(
+                    "Exception raised while updating state of %s, topic: "
+                    "'%s' with payload: %s",
                     entity_id,
                     msg.topic,
                     msg.payload,
