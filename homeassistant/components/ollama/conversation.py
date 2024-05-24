@@ -102,7 +102,9 @@ class OllamaConversationEntity(
             # Render prompt and error out early if there's a problem
             raw_prompt = settings.get(CONF_PROMPT, DEFAULT_PROMPT)
             try:
-                prompt = self._generate_prompt(raw_prompt)
+                prompt = self._generate_prompt(
+                    raw_prompt, user_input.device_id, user_input.context.user_id
+                )
                 _LOGGER.debug("Prompt: %s", prompt)
             except TemplateError as err:
                 _LOGGER.error("Error rendering prompt: %s", err)
@@ -197,13 +199,20 @@ class OllamaConversationEntity(
                 message_history.messages[0]
             ] + message_history.messages[drop_index:]
 
-    def _generate_prompt(self, raw_prompt: str) -> str:
+    def _generate_prompt(
+        self,
+        raw_prompt: str,
+        device_id: str | None,
+        user_id: str | None,
+    ) -> str:
         """Generate a prompt for the user."""
         return template.Template(raw_prompt, self.hass).async_render(
             {
                 "ha_name": self.hass.config.location_name,
                 "ha_language": self.hass.config.language,
                 "exposed_entities": self._get_exposed_entities(),
+                "device_id": device_id,
+                "user_id": user_id,
             },
             parse_result=False,
         )
