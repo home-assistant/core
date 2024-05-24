@@ -440,7 +440,7 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
 
     @callback
     def handle_climate_attribute_received(
-        self, msg: ReceiveMessage, template_name: str, attr: str
+        self, template_name: str, attr: str, msg: ReceiveMessage
     ) -> None:
         """Handle climate attributes coming via MQTT."""
         payload = self.render_template(msg, template_name)
@@ -459,36 +459,6 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
             _LOGGER.error("Could not parse %s from %s", template_name, payload)
 
     @callback
-    def _handle_current_temperature_received(self, msg: ReceiveMessage) -> None:
-        """Handle current temperature coming via MQTT."""
-        self.handle_climate_attribute_received(
-            msg, CONF_CURRENT_TEMP_TEMPLATE, "_attr_current_temperature"
-        )
-
-    @callback
-    def _handle_target_temperature_received(self, msg: ReceiveMessage) -> None:
-        """Handle target temperature coming via MQTT."""
-        self.handle_climate_attribute_received(
-            msg,
-            CONF_TEMP_STATE_TEMPLATE,
-            "_attr_target_temperature",
-        )
-
-    @callback
-    def _handle_temperature_low_received(self, msg: ReceiveMessage) -> None:
-        """Handle target temperature low coming via MQTT."""
-        self.handle_climate_attribute_received(
-            msg, CONF_TEMP_LOW_STATE_TEMPLATE, "_attr_target_temperature_low"
-        )
-
-    @callback
-    def _handle_temperature_high_received(self, msg: ReceiveMessage) -> None:
-        """Handle target temperature high coming via MQTT."""
-        self.handle_climate_attribute_received(
-            msg, CONF_TEMP_HIGH_STATE_TEMPLATE, "_attr_target_temperature_high"
-        )
-
-    @callback
     def prepare_subscribe_topics(
         self,
         topics: dict[str, dict[str, Any]],
@@ -497,25 +467,41 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
         self.add_subscription(
             topics,
             CONF_CURRENT_TEMP_TOPIC,
-            self._handle_current_temperature_received,
+            partial(
+                self.handle_climate_attribute_received,
+                CONF_CURRENT_TEMP_TEMPLATE,
+                "_attr_current_temperature",
+            ),
             {"_attr_current_temperature"},
         )
         self.add_subscription(
             topics,
             CONF_TEMP_STATE_TOPIC,
-            self._handle_target_temperature_received,
+            partial(
+                self.handle_climate_attribute_received,
+                CONF_TEMP_STATE_TEMPLATE,
+                "_attr_target_temperature",
+            ),
             {"_attr_target_temperature"},
         )
         self.add_subscription(
             topics,
             CONF_TEMP_LOW_STATE_TOPIC,
-            self._handle_temperature_low_received,
+            partial(
+                self.handle_climate_attribute_received,
+                CONF_TEMP_LOW_STATE_TEMPLATE,
+                "_attr_target_temperature_low",
+            ),
             {"_attr_target_temperature_low"},
         )
         self.add_subscription(
             topics,
             CONF_TEMP_HIGH_STATE_TOPIC,
-            self._handle_temperature_high_received,
+            partial(
+                self.handle_climate_attribute_received,
+                CONF_TEMP_HIGH_STATE_TEMPLATE,
+                "_attr_target_temperature_high",
+            ),
             {"_attr_target_temperature_high"},
         )
 
@@ -741,23 +727,8 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             return
 
     @callback
-    def _handle_current_humidity_received(self, msg: ReceiveMessage) -> None:
-        """Handle current humidity coming via MQTT."""
-        self.handle_climate_attribute_received(
-            msg, CONF_CURRENT_HUMIDITY_TEMPLATE, "_attr_current_humidity"
-        )
-
-    @callback
-    def _handle_target_humidity_received(self, msg: ReceiveMessage) -> None:
-        """Handle target humidity coming via MQTT."""
-
-        self.handle_climate_attribute_received(
-            msg, CONF_HUMIDITY_STATE_TEMPLATE, "_attr_target_humidity"
-        )
-
-    @callback
     def _handle_mode_received(
-        self, msg: ReceiveMessage, template_name: str, attr: str, mode_list: str
+        self, template_name: str, attr: str, mode_list: str, msg: ReceiveMessage
     ) -> None:
         """Handle receiving listed mode via MQTT."""
         payload = self.render_template(msg, template_name)
@@ -766,33 +737,6 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             _LOGGER.error("Invalid %s mode: %s", mode_list, payload)
         else:
             setattr(self, attr, payload)
-
-    @callback
-    def _handle_current_mode_received(self, msg: ReceiveMessage) -> None:
-        """Handle receiving mode via MQTT."""
-        self._handle_mode_received(
-            msg, CONF_MODE_STATE_TEMPLATE, "_attr_hvac_mode", CONF_MODE_LIST
-        )
-
-    @callback
-    def _handle_fan_mode_received(self, msg: ReceiveMessage) -> None:
-        """Handle receiving fan mode via MQTT."""
-        self._handle_mode_received(
-            msg,
-            CONF_FAN_MODE_STATE_TEMPLATE,
-            "_attr_fan_mode",
-            CONF_FAN_MODE_LIST,
-        )
-
-    @callback
-    def _handle_swing_mode_received(self, msg: ReceiveMessage) -> None:
-        """Handle receiving swing mode via MQTT."""
-        self._handle_mode_received(
-            msg,
-            CONF_SWING_MODE_STATE_TEMPLATE,
-            "_attr_swing_mode",
-            CONF_SWING_MODE_LIST,
-        )
 
     @callback
     def _handle_preset_mode_received(self, msg: ReceiveMessage) -> None:
@@ -828,31 +772,54 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         self.add_subscription(
             topics,
             CONF_CURRENT_HUMIDITY_TOPIC,
-            self._handle_current_humidity_received,
+            partial(
+                self.handle_climate_attribute_received,
+                CONF_CURRENT_HUMIDITY_TEMPLATE,
+                "_attr_current_humidity",
+            ),
             {"_attr_current_humidity"},
         )
         self.add_subscription(
             topics,
             CONF_HUMIDITY_STATE_TOPIC,
-            self._handle_target_humidity_received,
+            partial(
+                self.handle_climate_attribute_received,
+                CONF_HUMIDITY_STATE_TEMPLATE,
+                "_attr_target_humidity",
+            ),
             {"_attr_target_humidity"},
         )
         self.add_subscription(
             topics,
             CONF_MODE_STATE_TOPIC,
-            self._handle_current_mode_received,
+            partial(
+                self._handle_mode_received,
+                CONF_MODE_STATE_TEMPLATE,
+                "_attr_hvac_mode",
+                CONF_MODE_LIST,
+            ),
             {"_attr_hvac_mode"},
         )
         self.add_subscription(
             topics,
             CONF_FAN_MODE_STATE_TOPIC,
-            self._handle_fan_mode_received,
+            partial(
+                self._handle_mode_received,
+                CONF_FAN_MODE_STATE_TEMPLATE,
+                "_attr_fan_mode",
+                CONF_FAN_MODE_LIST,
+            ),
             {"_attr_fan_mode"},
         )
         self.add_subscription(
             topics,
             CONF_SWING_MODE_STATE_TOPIC,
-            self._handle_swing_mode_received,
+            partial(
+                self._handle_mode_received,
+                CONF_SWING_MODE_STATE_TEMPLATE,
+                "_attr_swing_mode",
+                CONF_SWING_MODE_LIST,
+            ),
             {"_attr_swing_mode"},
         )
         self.add_subscription(
