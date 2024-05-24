@@ -113,7 +113,7 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
 
         self._coil_current = _get(climate.current)
         self._coil_setpoint_heat = _get(climate.setpoint_heat)
-        self._coil_setpoint_cool: None | Coil
+        self._coil_setpoint_cool: Coil | None
         try:
             self._coil_setpoint_cool = _get(climate.setpoint_cool)
         except CoilNotFoundException:

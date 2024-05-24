@@ -205,7 +205,7 @@ class SubaruSensor(
         self._attr_unique_id = f"{self.vin}_{description.key}"
 
     @property
-    def native_value(self) -> None | int | float:
+    def native_value(self) -> int | float | None:
         """Return the state of the sensor."""
         vehicle_data = self.coordinator.data[self.vin]
         current_value = vehicle_data[VEHICLE_STATUS].get(self.entity_description.key)
