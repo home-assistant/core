@@ -27,6 +27,7 @@ from .coordinator import (
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
 
 PLATFORMS: Final = [
+    Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.LOCK,
     Platform.SELECT,
