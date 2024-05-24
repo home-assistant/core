@@ -71,6 +71,7 @@ from .const import (
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
+    CONF_HVAC_ONOFF_WRITE_REGISTER,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_STEP,
@@ -251,11 +252,16 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
         if CONF_HVAC_ONOFF_REGISTER in config:
             self._hvac_onoff_register = config[CONF_HVAC_ONOFF_REGISTER]
+            self._hvac_onoff_write_register = config[CONF_HVAC_ONOFF_REGISTER]
             self._hvac_onoff_write_registers = config[CONF_WRITE_REGISTERS]
             if HVACMode.OFF not in self._attr_hvac_modes:
                 self._attr_hvac_modes.append(HVACMode.OFF)
+            if CONF_HVAC_ONOFF_WRITE_REGISTER in config:
+                self._hvac_onoff_write_register = config[CONF_HVAC_ONOFF_WRITE_REGISTER]
+
         else:
             self._hvac_onoff_register = None
+            self._hvac_onoff_write_register = config[CONF_HVAC_ONOFF_REGISTER]
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -266,19 +272,19 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if self._hvac_onoff_register is not None:
+        if self._hvac_onoff_write_register is not None:
             # Turn HVAC Off by writing 0 to the On/Off register, or 1 otherwise.
             if self._hvac_onoff_write_registers:
                 await self._hub.async_pb_call(
                     self._slave,
-                    self._hvac_onoff_register,
+                    self._hvac_onoff_write_register,
                     [0 if hvac_mode == HVACMode.OFF else 1],
                     CALL_TYPE_WRITE_REGISTERS,
                 )
             else:
                 await self._hub.async_pb_call(
                     self._slave,
-                    self._hvac_onoff_register,
+                    self._hvac_onoff_write_register,
                     0 if hvac_mode == HVACMode.OFF else 1,
                     CALL_TYPE_WRITE_REGISTER,
                 )
