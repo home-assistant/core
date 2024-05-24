@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Iterable
+from collections.abc import AsyncGenerator, Callable, Coroutine, Iterable
 import contextlib
 from dataclasses import dataclass
 from functools import lru_cache, partial
@@ -34,6 +34,7 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
+from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.logging import catch_log_exception
 
 from .const import (
@@ -909,18 +910,7 @@ class MQTT:
 
         subscription_list = list(subscriptions.items())
 
-        def split_subscribe_chunks(
-            subscription_list: list[tuple[str, int]],
-        ) -> Generator[list[tuple[str, int]], None, None]:
-            """Split the subscription list in chunks to avoid buffer issues."""
-            for chunk_index in range(
-                0, len(subscription_list), MAX_SUBSCRIBES_PER_CALL
-            ):
-                yield subscription_list[
-                    chunk_index : chunk_index + MAX_SUBSCRIBES_PER_CALL
-                ]
-
-        for chunk in split_subscribe_chunks(subscription_list):
+        for chunk in chunked_or_all(subscription_list, MAX_SUBSCRIBES_PER_CALL):
             result, mid = self._mqttc.subscribe(chunk)
 
             if _LOGGER.isEnabledFor(logging.DEBUG):
@@ -943,14 +933,7 @@ class MQTT:
         topics = list(self._pending_unsubscribes)
         self._pending_unsubscribes = set()
 
-        def split_unsubscribe_chunks(
-            topics: list[str],
-        ) -> Generator[list[str], None, None]:
-            """Split the unsubscribe list in chunks to avoid buffer issues."""
-            for chunk_index in range(0, len(topics), MAX_UNSUBSCRIBES_PER_CALL):
-                yield topics[chunk_index : chunk_index + MAX_SUBSCRIBES_PER_CALL]
-
-        for chunk in split_unsubscribe_chunks(topics):
+        for chunk in chunked_or_all(topics, MAX_UNSUBSCRIBES_PER_CALL):
             result, mid = self._mqttc.unsubscribe(chunk)
             _raise_on_error(result)
             if _LOGGER.isEnabledFor(logging.DEBUG):
