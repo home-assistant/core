@@ -21,7 +21,7 @@ from .models import TeslemetryVehicleData
 class TeslemetryButtonEntityDescription(ButtonEntityDescription):
     """Describes a Teslemetry Button entity."""
 
-    func: Callable[[TeslemetryButtonEntity], Any] | None = None
+    func: Callable[[TeslemetryButtonEntity], Awaitable[Any]] | None = None
 
 
 DESCRIPTIONS: tuple[TeslemetryButtonEntityDescription, ...] = (
