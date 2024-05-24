@@ -34,7 +34,7 @@ from homeassistant.components.recorder.util import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from .common import (
@@ -618,7 +618,11 @@ def test_warn_unsupported_dialect(
     ],
 )
 async def test_issue_for_mariadb_with_MDEV_25020(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mysql_version, min_version
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mysql_version,
+    min_version,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we create an issue for MariaDB versions affected.
 
@@ -653,8 +657,7 @@ async def test_issue_for_mariadb_with_MDEV_25020(
     )
     await hass.async_block_till_done()
 
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
+    issue = issue_registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
     assert issue is not None
     assert issue.translation_placeholders == {"min_version": min_version}
 
@@ -673,7 +676,10 @@ async def test_issue_for_mariadb_with_MDEV_25020(
     ],
 )
 async def test_no_issue_for_mariadb_with_MDEV_25020(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mysql_version
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mysql_version,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we do not create an issue for MariaDB versions not affected.
 
@@ -708,8 +714,7 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
     )
     await hass.async_block_till_done()
 
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
+    issue = issue_registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
     assert issue is None
 
     assert database_engine is not None
