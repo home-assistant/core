@@ -2,29 +2,26 @@
 
 from __future__ import annotations
 
-import asyncio
-import contextlib
+from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
 from pyluba.mammotion.devices import MammotionBaseBLEDevice
 
 from homeassistant.components import bluetooth
-from homeassistant.components.bluetooth.active_update_coordinator import (
-    ActiveBluetoothDataUpdateCoordinator,
-)
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
 
-
+MOWER_SCAN_INTERVAL = timedelta(minutes=1)
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_STARTUP_TIMEOUT = 30
 
 
-class MammotionDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
+class MammotionDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching mammotion data."""
 
     def __init__(
@@ -40,81 +37,22 @@ class MammotionDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         super().__init__(
             hass=hass,
             logger=logger,
-            address=ble_device.address,
-            needs_poll_method=self._needs_poll,
-            poll_method=self._async_update,
-            mode=bluetooth.BluetoothScanningMode.ACTIVE,
-            connectable=True,
+            name="Mammotion Lawn Mower data",
+            update_interval=MOWER_SCAN_INTERVAL,
         )
         self.ble_device = ble_device
         self.device = device
         self.device_name = device_name
         self.base_unique_id = base_unique_id
-        self._ready_event = asyncio.Event()
         self._was_unavailable = True
 
-    @callback
-    def _needs_poll(
-        self,
-        service_info: bluetooth.BluetoothServiceInfoBleak,
-        seconds_since_last_poll: float | None,
-    ) -> bool:
-        # Only poll if hass is running, we need to poll,
-        # and we actually have a way to connect to the device
-        return (
-            self.hass.state is CoreState.running
-            and self.device.poll_needed(seconds_since_last_poll)
-            and bool(
-                bluetooth.async_ble_device_from_address(
-                    self.hass, service_info.device.address, connectable=True
-                )
-            )
-        )
-
-    async def _async_update(
-        self, service_info: bluetooth.BluetoothServiceInfoBleak
-    ) -> None:
+    async def _async_update_data(self) -> dict:
         """Poll the device."""
-        await self.device.start_sync()
+        if bool(
+            bluetooth.async_ble_device_from_address(
+                self.hass, self.ble_device.address, connectable=True
+            )
+        ):
+            return await self.device.start_sync("key", 0)
 
-    @callback
-    def _async_handle_unavailable(
-        self, service_info: bluetooth.BluetoothServiceInfoBleak
-    ) -> None:
-        """Handle the device going unavailable."""
-        super()._async_handle_unavailable(service_info)
-        self._was_unavailable = True
-
-    @callback
-    def _async_handle_bluetooth_event(
-        self,
-        service_info: bluetooth.BluetoothServiceInfoBleak,
-        change: bluetooth.BluetoothChange,
-    ) -> None:
-        """Handle a Bluetooth event."""
-        self.ble_device = service_info.device
-        print(service_info)
-        # if not (
-        #     adv := parse_advertisement_data(
-        #         service_info.device, service_info.advertisement, self.model
-        #     )
-        # ):
-        #     return
-        # if "modelName" in adv.data:
-        #     self._ready_event.set()
-        # _LOGGER.debug(
-        #     "%s: mammotion Luba data: %s", self.ble_device.address, self.device.data
-        # )
-        # if not self.device.advertisement_changed(adv) and not self._was_unavailable:
-        #     return
-        # self._was_unavailable = False
-        # self.device.update_from_advertisement(adv)
-        super()._async_handle_bluetooth_event(service_info, change)
-
-    async def async_wait_ready(self) -> bool:
-        """Wait for the device to be ready."""
-        with contextlib.suppress(TimeoutError):
-            async with asyncio.timeout(DEVICE_STARTUP_TIMEOUT):
-                await self._ready_event.wait()
-                return True
-        return False
+        return self.device.raw_data

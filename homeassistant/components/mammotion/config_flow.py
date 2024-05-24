@@ -19,6 +19,11 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+def format_unique_id(address: str) -> str:
+    """Format the unique ID for a mammotion lawnmower."""
+    return address.replace(":", "").lower()
+
+
 class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Mammotion."""
 
@@ -34,14 +39,16 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfo
     ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
-        _LOGGER.debug("Discovered bluetooth device: %s", discovery_info.as_dict())
-        await self.async_set_unique_id(discovery_info.address)
+        _LOGGER.debug("Discovered bluetooth device: %s", discovery_info)
+        await self.async_set_unique_id(format_unique_id(discovery_info.address))
         self._abort_if_unique_id_configured()
 
         device = bluetooth.async_ble_device_from_address(
             self.hass, discovery_info.address
         )
-
+        if device is None:
+            # TODO return an error
+            return
         self._address = device.address
         self._discovered_devices = {device.address: device}
 
@@ -79,16 +86,15 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
 
-            device = self._discovered_devices[address]
-
+            name = self._discovered_devices[address]
             self.context["title_placeholders"] = {
-                "name": device.name,
+                "name": name,
             }
 
             return self.async_create_entry(
-                title=device.name,
+                title=name,
                 data={
-                    CONF_ADDRESS: device.address,
+                    CONF_ADDRESS: address,
                 },
             )
 
@@ -98,9 +104,7 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
             if address in current_addresses or address in self._discovered_devices:
                 continue
 
-            self._discovered_devices[address] = (
-                device.title or device.get_device_name() or discovery_info.name
-            )
+            self._discovered_devices[address] = discovery_info.name
 
         return self.async_show_form(
             step_id="user",
