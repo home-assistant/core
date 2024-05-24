@@ -130,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if battery.get("part_name"):
                 models.add(battery["part_name"])
         if models:
-            energysite.device["model"] = ", ".join(models)
+            energysite.device["model"] = ", ".join(sorted(models))
 
     # Setup Platforms
     entry.runtime_data = TeslemetryData(vehicles, energysites, scopes)
