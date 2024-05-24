@@ -122,6 +122,7 @@ from .const import (
     CONF_SWING_MODE_SWING_VERT,
     CONF_SWING_MODE_VALUES,
     CONF_TARGET_TEMP,
+    CONF_TARGET_TEMP_WRITE,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_VERIFY,
     CONF_VIRTUAL_COUNT,
@@ -249,6 +250,7 @@ CLIMATE_SCHEMA = vol.All(
     BASE_STRUCT_SCHEMA.extend(
         {
             vol.Required(CONF_TARGET_TEMP): hvac_fixedsize_reglist_validator,
+            vol.Optional(CONF_TARGET_TEMP_WRITE): hvac_fixedsize_reglist_validator,
             vol.Optional(CONF_TARGET_TEMP_WRITE_REGISTERS, default=False): cv.boolean,
             vol.Optional(CONF_MAX_TEMP, default=35): vol.Coerce(float),
             vol.Optional(CONF_MIN_TEMP, default=5): vol.Coerce(float),

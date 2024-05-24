@@ -83,6 +83,7 @@ from .const import (
     CONF_SWING_MODE_SWING_VERT,
     CONF_SWING_MODE_VALUES,
     CONF_TARGET_TEMP,
+    CONF_TARGET_TEMP_WRITE,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_WRITE_REGISTERS,
     DataType,
@@ -142,6 +143,9 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         """Initialize the modbus thermostat."""
         super().__init__(hass, hub, config)
         self._target_temperature_register = config[CONF_TARGET_TEMP]
+        self._target_temperature_register_write = config[CONF_TARGET_TEMP]
+        if CONF_TARGET_TEMP_WRITE in config:
+            self._target_temperature_register_write = config[CONF_TARGET_TEMP_WRITE]
         self._target_temperature_write_registers = config[
             CONF_TARGET_TEMP_WRITE_REGISTERS
         ]
@@ -384,7 +388,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             if self._target_temperature_write_registers:
                 result = await self._hub.async_pb_call(
                     self._slave,
-                    self._target_temperature_register[
+                    self._target_temperature_register_write[
                         HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
                     ],
                     [int(float(registers[0]))],
@@ -393,7 +397,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             else:
                 result = await self._hub.async_pb_call(
                     self._slave,
-                    self._target_temperature_register[
+                    self._target_temperature_register_write[
                         HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
                     ],
                     int(float(registers[0])),
@@ -402,7 +406,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         else:
             result = await self._hub.async_pb_call(
                 self._slave,
-                self._target_temperature_register[
+                self._target_temperature_register_write[
                     HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
                 ],
                 [int(float(i)) for i in registers],
