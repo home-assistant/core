@@ -19,7 +19,7 @@ from homeassistant.components.calendar import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.issue_registry import IssueRegistry
+from homeassistant.helpers import issue_registry as ir
 import homeassistant.util.dt as dt_util
 
 from .conftest import TEST_DOMAIN, MockCalendarEntity, MockConfigEntry
@@ -572,7 +572,7 @@ async def test_list_events_missing_fields(hass: HomeAssistant) -> None:
 
 async def test_issue_deprecated_service_calendar_list_events(
     hass: HomeAssistant,
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the issue is raised on deprecated service weather.get_forecast."""
