@@ -96,6 +96,11 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
     "dreame_vacuum": BlockedIntegration(
         AwesomeVersion("1.0.4"), "crashes Home Assistant"
     ),
+    # Added in 2024.5.5 because of
+    # https://github.com/sh00t2kill/dolphin-robot/issues/185
+    "mydolphin_plus": BlockedIntegration(
+        AwesomeVersion("1.0.13"), "crashes Home Assistant"
+    ),
 }
 
 DATA_COMPONENTS = "components"
@@ -1668,6 +1673,14 @@ def async_get_issue_tracker(
     if not integration and not integration_domain and not module:
         # If we know nothing about the entity, suggest opening an issue on HA core
         return issue_tracker
+
+    if (
+        not integration
+        and (hass and integration_domain)
+        and (comps_or_future := hass.data.get(DATA_CUSTOM_COMPONENTS))
+        and not isinstance(comps_or_future, asyncio.Future)
+    ):
+        integration = comps_or_future.get(integration_domain)
 
     if not integration and (hass and integration_domain):
         with suppress(IntegrationNotLoaded):
