@@ -708,6 +708,9 @@ async def test_invalid_area_floor_names(hass: HomeAssistant) -> None:
     )
     intent.async_register(hass, handler)
 
+    # Need a light to avoid domain error
+    hass.states.async_set("light.test", "off")
+
     with pytest.raises(intent.MatchFailedError) as err:
         await intent.async_handle(
             hass,
