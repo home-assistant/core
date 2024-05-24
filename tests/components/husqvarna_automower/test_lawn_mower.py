@@ -9,7 +9,6 @@ import pytest
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
-from homeassistant.components.husqvarna_automower.lawn_mower import EXCEPTION_TEXT
 from homeassistant.components.lawn_mower import LawnMowerActivity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
