@@ -12,13 +12,13 @@ from aioautomower.session import AutomowerSession
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, EXECUTION_TIME_DELAY
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerControlEntity
 
@@ -52,10 +52,6 @@ async def async_set_work_area_cutting_height(
     await coordinator.api.commands.set_cutting_height_workarea(
         mower_id, int(cheight), work_area_id
     )
-    # As there are no updates from the websocket regarding work area changes,
-    # we need to wait 5s and then poll the API.
-    await asyncio.sleep(5)
-    await coordinator.async_request_refresh()
 
 
 async def async_set_cutting_height(
@@ -189,6 +185,7 @@ class AutomowerWorkAreaNumberEntity(AutomowerControlEntity, NumberEntity):
     ) -> None:
         """Set up AutomowerNumberEntity."""
         super().__init__(mower_id, coordinator)
+        self.coordinator = coordinator
         self.entity_description = description
         self.work_area_id = work_area_id
         self._attr_unique_id = f"{mower_id}_{work_area_id}_{description.key}"
@@ -221,6 +218,11 @@ class AutomowerWorkAreaNumberEntity(AutomowerControlEntity, NumberEntity):
             raise HomeAssistantError(
                 f"Command couldn't be sent to the command queue: {exception}"
             ) from exception
+        else:
+            # As there are no updates from the websocket regarding work area changes,
+            # we need to wait 5s and then poll the API.
+            await asyncio.sleep(EXECUTION_TIME_DELAY)
+            await self.coordinator.async_request_refresh()
 
 
 @callback
@@ -238,10 +240,13 @@ def async_remove_entities(
         for work_area_id in _work_areas:
             uid = f"{mower_id}_{work_area_id}_cutting_height_work_area"
             active_work_areas.add(uid)
-        for entity_entry in er.async_entries_for_config_entry(
-            entity_reg, config_entry.entry_id
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_reg, config_entry.entry_id
+    ):
+        if (
+            entity_entry.domain == Platform.NUMBER
+            and (split := entity_entry.unique_id.split("_"))[0] == mower_id
+            and split[-1] == "area"
+            and entity_entry.unique_id not in active_work_areas
         ):
-            if entity_entry.unique_id.split("_")[0] == mower_id:
-                if entity_entry.unique_id.endswith("cutting_height_work_area"):
-                    if entity_entry.unique_id not in active_work_areas:
-                        entity_reg.async_remove(entity_entry.entity_id)
+            entity_reg.async_remove(entity_entry.entity_id)

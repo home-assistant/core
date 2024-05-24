@@ -70,19 +70,16 @@ async def test_lawn_mower_commands(
 ) -> None:
     """Test lawn_mower commands."""
     await setup_integration(hass, mock_config_entry)
-
     getattr(
         mock_automower_client.commands, aioautomower_command
     ).side_effect = ApiException("Test error")
-
-    with pytest.raises(HomeAssistantError) as exc_info:
+    with pytest.raises(
+        HomeAssistantError,
+        match="Command couldn't be sent to the command queue: Test error",
+    ):
         await hass.services.async_call(
             domain="lawn_mower",
             service=service,
             service_data={"entity_id": "lawn_mower.test_mower_1"},
             blocking=True,
         )
-    assert (
-        str(exc_info.value)
-        == "Command couldn't be sent to the command queue: Test error"
-    )

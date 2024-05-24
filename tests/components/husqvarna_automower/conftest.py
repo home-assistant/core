@@ -4,6 +4,7 @@ from collections.abc import Generator
 import time
 from unittest.mock import AsyncMock, patch
 
+from aioautomower.session import AutomowerSession, _MowerCommands
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from aiohttp import ClientWebSocketResponse
 import pytest
@@ -82,20 +83,18 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 @pytest.fixture
 def mock_automower_client() -> Generator[AsyncMock, None, None]:
     """Mock a Husqvarna Automower client."""
+
+    mower_dict = mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower.json", DOMAIN)
+    )
+
+    mock = AsyncMock(spec=AutomowerSession)
+    mock.auth = AsyncMock(side_effect=ClientWebSocketResponse)
+    mock.commands = AsyncMock(spec_set=_MowerCommands)
+    mock.get_status.return_value = mower_dict
+
     with patch(
         "homeassistant.components.husqvarna_automower.AutomowerSession",
-        autospec=True,
-    ) as mock_client:
-        client = mock_client.return_value
-        client.get_status.return_value = mower_list_to_dictionary_dataclass(
-            load_json_value_fixture("mower.json", DOMAIN)
-        )
-
-        async def websocket_connect() -> ClientWebSocketResponse:
-            """Mock listen."""
-            return ClientWebSocketResponse
-
-        client.auth = AsyncMock(side_effect=websocket_connect)
-        client.commands = AsyncMock()
-
-        yield client
+        return_value=mock,
+    ):
+        yield mock

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch[switch.test_mower_1_avoid_danger_zone-entry]
+# name: test_switch_snapshot[switch.test_mower_1_avoid_danger_zone-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -32,7 +32,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[switch.test_mower_1_avoid_danger_zone-state]
+# name: test_switch_snapshot[switch.test_mower_1_avoid_danger_zone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Avoid Danger Zone',
@@ -45,7 +45,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switch[switch.test_mower_1_avoid_springflowers-entry]
+# name: test_switch_snapshot[switch.test_mower_1_avoid_springflowers-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -78,7 +78,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[switch.test_mower_1_avoid_springflowers-state]
+# name: test_switch_snapshot[switch.test_mower_1_avoid_springflowers-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Avoid Springflowers',
@@ -91,7 +91,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch[switch.test_mower_1_enable_schedule-entry]
+# name: test_switch_snapshot[switch.test_mower_1_enable_schedule-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -124,7 +124,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[switch.test_mower_1_enable_schedule-state]
+# name: test_switch_snapshot[switch.test_mower_1_enable_schedule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Enable schedule',
