@@ -5,16 +5,10 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': tuple(
-        100,
-      ),
-      'min': tuple(
-        0,
-      ),
+      'max': 100,
+      'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
-      'step': tuple(
-        1,
-      ),
+      'step': 1,
     }),
     'config_entry_id': <ANY>,
     'device_class': None,
@@ -32,9 +26,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': tuple(
-      <NumberDeviceClass.BATTERY: 'battery'>,
-    ),
+    'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery-alert',
     'original_name': 'Backup reserve',
     'platform': 'teslemetry',
@@ -42,30 +34,20 @@
     'supported_features': 0,
     'translation_key': 'backup_reserve_percent',
     'unique_id': '123456-backup_reserve_percent',
-    'unit_of_measurement': tuple(
-      '%',
-    ),
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_number[number.energy_site_backup_reserve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': "(<NumberDeviceClass.BATTERY: 'battery'>,)",
+      'device_class': 'battery',
       'friendly_name': 'Energy Site Backup reserve',
       'icon': 'mdi:battery-alert',
-      'max': tuple(
-        100,
-      ),
-      'min': tuple(
-        0,
-      ),
+      'max': 100,
+      'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
-      'step': tuple(
-        1,
-      ),
-      'unit_of_measurement': tuple(
-        '%',
-      ),
+      'step': 1,
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.energy_site_backup_reserve',
@@ -197,16 +179,10 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': tuple(
-        100,
-      ),
-      'min': tuple(
-        0,
-      ),
+      'max': 100,
+      'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
-      'step': tuple(
-        1,
-      ),
+      'step': 1,
     }),
     'config_entry_id': <ANY>,
     'device_class': None,
@@ -224,9 +200,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': tuple(
-      <NumberDeviceClass.BATTERY: 'battery'>,
-    ),
+    'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery-unknown',
     'original_name': 'Off grid reserve',
     'platform': 'teslemetry',
@@ -234,30 +208,20 @@
     'supported_features': 0,
     'translation_key': 'off_grid_vehicle_charging_reserve',
     'unique_id': '123456-off_grid_vehicle_charging_reserve',
-    'unit_of_measurement': tuple(
-      '%',
-    ),
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_number[number.energy_site_off_grid_reserve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': "(<NumberDeviceClass.BATTERY: 'battery'>,)",
+      'device_class': 'battery',
       'friendly_name': 'Energy Site Off grid reserve',
       'icon': 'mdi:battery-unknown',
-      'max': tuple(
-        100,
-      ),
-      'min': tuple(
-        0,
-      ),
+      'max': 100,
+      'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
-      'step': tuple(
-        1,
-      ),
-      'unit_of_measurement': tuple(
-        '%',
-      ),
+      'step': 1,
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.energy_site_off_grid_reserve',
