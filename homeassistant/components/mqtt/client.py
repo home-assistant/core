@@ -548,7 +548,7 @@ class MQTT:
             # Remove this once
             # https://github.com/eclipse/paho.mqtt.python/pull/843
             # is available.
-            sock = sock._socket  # noqa: SLF001
+            sock = sock._socket  # pylint: disable=protected-access
 
         new_buffer_size = PREFERRED_BUFFER_SIZE
         while True:
