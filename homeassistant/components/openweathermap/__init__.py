@@ -6,8 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from pyowm import OWM
-from pyowm.utils.config import get_default_config
+from pyopenweathermap import OWMClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -20,13 +19,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import (
-    CONFIG_FLOW_VERSION,
-    FORECAST_MODE_FREE_DAILY,
-    FORECAST_MODE_ONECALL_DAILY,
-    PLATFORMS,
-)
+from .const import CONFIG_FLOW_VERSION, OWM_MODE_V25, PLATFORMS
 from .coordinator import WeatherUpdateCoordinator
+from .repairs import async_create_issue, async_delete_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,14 +44,17 @@ async def async_setup_entry(
     api_key = entry.data[CONF_API_KEY]
     latitude = entry.data.get(CONF_LATITUDE, hass.config.latitude)
     longitude = entry.data.get(CONF_LONGITUDE, hass.config.longitude)
-    forecast_mode = _get_config_value(entry, CONF_MODE)
     language = _get_config_value(entry, CONF_LANGUAGE)
+    mode = _get_config_value(entry, CONF_MODE)
 
-    config_dict = _get_owm_config(language)
+    if mode == OWM_MODE_V25:
+        async_create_issue(hass, entry.entry_id)
+    else:
+        async_delete_issue(hass, entry.entry_id)
 
-    owm = OWM(api_key, config_dict).weather_manager()
+    owm_client = OWMClient(api_key, mode, lang=language)
     weather_coordinator = WeatherUpdateCoordinator(
-        owm, latitude, longitude, forecast_mode, hass
+        owm_client, latitude, longitude, hass
     )
 
     await weather_coordinator.async_config_entry_first_refresh()
@@ -78,11 +76,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("Migrating OpenWeatherMap entry from version %s", version)
 
-    if version == 1:
-        if (mode := data[CONF_MODE]) == FORECAST_MODE_FREE_DAILY:
-            mode = FORECAST_MODE_ONECALL_DAILY
-
-        new_data = {**data, CONF_MODE: mode}
+    if version < 3:
+        new_data = {**data, CONF_MODE: OWM_MODE_V25}
         config_entries.async_update_entry(
             entry, data=new_data, version=CONFIG_FLOW_VERSION
         )
@@ -108,10 +103,3 @@ def _get_config_value(config_entry: ConfigEntry, key: str) -> Any:
     if config_entry.options:
         return config_entry.options[key]
     return config_entry.data[key]
-
-
-def _get_owm_config(language: str) -> dict[str, Any]:
-    """Get OpenWeatherMap configuration and add language to it."""
-    config_dict = get_default_config()
-    config_dict["language"] = language
-    return config_dict

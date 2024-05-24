@@ -370,6 +370,11 @@ async def async_validate_action_config(
                 hass, parallel_conf[CONF_SEQUENCE]
             )
 
+    elif action_type == cv.SCRIPT_ACTION_SEQUENCE:
+        config[CONF_SEQUENCE] = await async_validate_actions_config(
+            hass, config[CONF_SEQUENCE]
+        )
+
     else:
         raise ValueError(f"No validation for {action_type}")
 
@@ -431,9 +436,7 @@ class _ScriptRun:
     def _log(
         self, msg: str, *args: Any, level: int = logging.INFO, **kwargs: Any
     ) -> None:
-        self._script._log(  # noqa: SLF001
-            msg, *args, level=level, **kwargs
-        )
+        self._script._log(msg, *args, level=level, **kwargs)  # noqa: SLF001
 
     def _step_log(self, default_message, timeout=None):
         self._script.last_action = self._action.get(CONF_ALIAS, default_message)
@@ -1206,6 +1209,12 @@ class _ScriptRun:
             response = None
         raise _StopScript(stop, response)
 
+    @async_trace_path("sequence")
+    async def _async_sequence_step(self) -> None:
+        """Run a sequence."""
+        sequence = await self._script._async_get_sequence_script(self._step)  # noqa: SLF001
+        await self._async_run_script(sequence)
+
     @async_trace_path("parallel")
     async def _async_parallel_step(self) -> None:
         """Run a sequence in parallel."""
@@ -1363,7 +1372,7 @@ class Script:
         domain: str,
         *,
         # Used in "Running <running_description>" log message
-        change_listener: Callable[..., Any] | None = None,
+        change_listener: Callable[[], Any] | None = None,
         copy_variables: bool = False,
         log_exceptions: bool = True,
         logger: logging.Logger | None = None,
@@ -1416,6 +1425,7 @@ class Script:
         self._choose_data: dict[int, _ChooseData] = {}
         self._if_data: dict[int, _IfData] = {}
         self._parallel_scripts: dict[int, list[Script]] = {}
+        self._sequence_scripts: dict[int, Script] = {}
         self.variables = variables
         self._variables_dynamic = template.is_complex(variables)
         if self._variables_dynamic:
@@ -1428,7 +1438,7 @@ class Script:
         return self._change_listener
 
     @change_listener.setter
-    def change_listener(self, change_listener: Callable[..., Any]) -> None:
+    def change_listener(self, change_listener: Callable[[], Any]) -> None:
         """Update the change_listener."""
         self._change_listener = change_listener
         if (
@@ -1941,6 +1951,35 @@ class Script:
             parallel_scripts = await self._async_prep_parallel_scripts(step)
             self._parallel_scripts[step] = parallel_scripts
         return parallel_scripts
+
+    async def _async_prep_sequence_script(self, step: int) -> Script:
+        """Prepare a sequence script."""
+        action = self.sequence[step]
+        step_name = action.get(CONF_ALIAS, f"Sequence action at step {step+1}")
+
+        sequence_script = Script(
+            self._hass,
+            action[CONF_SEQUENCE],
+            f"{self.name}: {step_name}",
+            self.domain,
+            running_description=self.running_description,
+            script_mode=SCRIPT_MODE_PARALLEL,
+            max_runs=self.max_runs,
+            logger=self._logger,
+            top_level=False,
+        )
+        sequence_script.change_listener = partial(
+            self._chain_change_listener, sequence_script
+        )
+
+        return sequence_script
+
+    async def _async_get_sequence_script(self, step: int) -> Script:
+        """Get a (cached) sequence script."""
+        if not (sequence_script := self._sequence_scripts.get(step)):
+            sequence_script = await self._async_prep_sequence_script(step)
+            self._sequence_scripts[step] = sequence_script
+        return sequence_script
 
     def _log(
         self, msg: str, *args: Any, level: int = logging.INFO, **kwargs: Any

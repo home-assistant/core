@@ -27,9 +27,12 @@ from .coordinator import (
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
 
 PLATFORMS: Final = [
+    Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.LOCK,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 
@@ -118,6 +121,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             for energysite in energysites
         ),
     )
+
+    # Add energy device models
+    for energysite in energysites:
+        models = set()
+        for gateway in energysite.info_coordinator.data.get("components_gateways", []):
+            if gateway.get("part_name"):
+                models.add(gateway["part_name"])
+        for battery in energysite.info_coordinator.data.get("components_batteries", []):
+            if battery.get("part_name"):
+                models.add(battery["part_name"])
+        if models:
+            energysite.device["model"] = ", ".join(sorted(models))
 
     # Setup Platforms
     entry.runtime_data = TeslemetryData(vehicles, energysites, scopes)

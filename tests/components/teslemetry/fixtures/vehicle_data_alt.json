@@ -19,7 +19,7 @@
     "backseat_token_updated_at": null,
     "ble_autopair_enrolled": false,
     "charge_state": {
-      "battery_heater_on": false,
+      "battery_heater_on": true,
       "battery_level": 77,
       "battery_range": 266.87,
       "charge_amps": 16,
@@ -69,14 +69,14 @@
       "timestamp": null,
       "trip_charging": false,
       "usable_battery_level": 77,
-      "user_charge_enable_request": null
+      "user_charge_enable_request": true
     },
     "climate_state": {
       "allow_cabin_overheat_protection": true,
       "auto_seat_climate_left": false,
       "auto_seat_climate_right": false,
       "auto_steering_wheel_heat": false,
-      "battery_heater": false,
+      "battery_heater": true,
       "battery_heater_no_power": null,
       "cabin_overheat_protection": "Off",
       "cabin_overheat_protection_actively_cooling": false,
