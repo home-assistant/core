@@ -1669,6 +1669,14 @@ def async_get_issue_tracker(
         # If we know nothing about the entity, suggest opening an issue on HA core
         return issue_tracker
 
+    if (
+        not integration
+        and (hass and integration_domain)
+        and (comps_or_future := hass.data.get(DATA_CUSTOM_COMPONENTS))
+        and not isinstance(comps_or_future, asyncio.Future)
+    ):
+        integration = comps_or_future.get(integration_domain)
+
     if not integration and (hass and integration_domain):
         with suppress(IntegrationNotLoaded):
             integration = async_get_loaded_integration(hass, integration_domain)
