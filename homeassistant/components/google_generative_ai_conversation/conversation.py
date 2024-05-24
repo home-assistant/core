@@ -291,7 +291,7 @@ class GoogleGenerativeAIConversationEntity(
         return template.Template(raw_prompt, self.hass).async_render(
             {
                 "ha_name": self.hass.config.location_name,
-                "device_id": device_id,
+                "user_device_id": device_id,
                 "user_id": user_id,
             },
             parse_result=False,

@@ -22,6 +22,10 @@ An overview of the areas and the devices in this smart home:
     {%- endif %}
   {%- endfor %}
 {%- endfor %}
+
+{% if user_device_id and area_name(device_attr(user_device_id, "area_id")) -%}
+You are in {{ area_name(device_attr(user_device_id, "area_id")) }}.
+{%- endif %}
 """
 
 CONF_RECOMMENDED = "recommended"

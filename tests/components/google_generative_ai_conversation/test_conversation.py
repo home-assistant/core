@@ -55,14 +55,14 @@ async def test_default_prompt(
         options={**mock_config_entry.options, **config_entry_options},
     )
 
-    device_registry.async_get_or_create(
+    device_id = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={("test", "1234")},
         name="Test Device",
         manufacturer="Test Manufacturer",
         model="Test Model",
         suggested_area="Test Area",
-    )
+    ).id
     for i in range(3):
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
@@ -142,6 +142,7 @@ async def test_default_prompt(
             None,
             Context(),
             agent_id=agent_id,
+            device_id=device_id,
         )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
