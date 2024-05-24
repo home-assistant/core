@@ -297,18 +297,6 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
             return
         await self._bridge.async_send_keys(keys)
 
-    @property
-    def available(self) -> bool:
-        """Return the availability of the device."""
-        if self._bridge.auth_failed:
-            return False
-        return (
-            self.state == MediaPlayerState.ON
-            or bool(self._turn_on_action)
-            or self._mac is not None
-            or self._bridge.power_off_in_progress
-        )
-
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         await super()._async_turn_off()

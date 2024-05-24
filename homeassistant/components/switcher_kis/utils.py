@@ -36,7 +36,7 @@ async def async_stop_bridge(hass: HomeAssistant) -> None:
         hass.data[DOMAIN].pop(DATA_BRIDGE)
 
 
-async def async_discover_devices() -> dict[str, SwitcherBase]:
+async def async_has_devices(hass: HomeAssistant) -> bool:
     """Discover Switcher devices."""
     _LOGGER.debug("Starting discovery")
     discovered_devices = {}
@@ -55,7 +55,7 @@ async def async_discover_devices() -> dict[str, SwitcherBase]:
     await bridge.stop()
 
     _LOGGER.debug("Finished discovery, discovered devices: %s", len(discovered_devices))
-    return discovered_devices
+    return len(discovered_devices) > 0
 
 
 @singleton.singleton("switcher_breeze_remote_manager")
