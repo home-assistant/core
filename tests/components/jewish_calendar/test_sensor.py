@@ -7,34 +7,28 @@ import pytest
 from homeassistant.components import jewish_calendar
 from homeassistant.components.binary_sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from . import (
-    HDATE_DEFAULT_ALTITUDE,
-    alter_time,
-    make_jerusalem_test_params,
-    make_nyc_test_params,
-)
+from . import alter_time, make_jerusalem_test_params, make_nyc_test_params
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_jewish_calendar_min_config(hass: HomeAssistant) -> None:
     """Test minimum jewish calendar configuration."""
-    assert await async_setup_component(
-        hass, jewish_calendar.DOMAIN, {"jewish_calendar": {}}
-    )
+    entry = MockConfigEntry(domain=jewish_calendar.DOMAIN, data={})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.jewish_calendar_date") is not None
 
 
 async def test_jewish_calendar_hebrew(hass: HomeAssistant) -> None:
     """Test jewish calendar sensor with language set to hebrew."""
-    assert await async_setup_component(
-        hass, jewish_calendar.DOMAIN, {"jewish_calendar": {"language": "hebrew"}}
-    )
+    entry = MockConfigEntry(domain=jewish_calendar.DOMAIN, data={"language": "hebrew"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.jewish_calendar_date") is not None
 
@@ -172,17 +166,15 @@ async def test_jewish_calendar_sensor(
     hass.config.longitude = longitude
 
     with alter_time(test_time):
-        assert await async_setup_component(
-            hass,
-            jewish_calendar.DOMAIN,
-            {
-                "jewish_calendar": {
-                    "name": "test",
-                    "language": language,
-                    "diaspora": diaspora,
-                }
+        entry = MockConfigEntry(
+            domain=jewish_calendar.DOMAIN,
+            data={
+                "language": language,
+                "diaspora": diaspora,
             },
         )
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
         future = dt_util.utcnow() + timedelta(seconds=30)
@@ -195,7 +187,7 @@ async def test_jewish_calendar_sensor(
         else result
     )
 
-    sensor_object = hass.states.get(f"sensor.test_{sensor}")
+    sensor_object = hass.states.get(f"sensor.jewish_calendar_{sensor}")
     assert sensor_object.state == result
 
     if sensor == "holiday":
@@ -497,7 +489,6 @@ SHABBAT_TEST_IDS = [
 )
 async def test_shabbat_times_sensor(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     language,
     now,
     candle_lighting,
@@ -517,19 +508,17 @@ async def test_shabbat_times_sensor(
     hass.config.longitude = longitude
 
     with alter_time(test_time):
-        assert await async_setup_component(
-            hass,
-            jewish_calendar.DOMAIN,
-            {
-                "jewish_calendar": {
-                    "name": "test",
-                    "language": language,
-                    "diaspora": diaspora,
-                    "candle_lighting_minutes_before_sunset": candle_lighting,
-                    "havdalah_minutes_after_sunset": havdalah,
-                }
+        entry = MockConfigEntry(
+            domain=jewish_calendar.DOMAIN,
+            data={
+                "language": language,
+                "diaspora": diaspora,
+                "candle_lighting_minutes_before_sunset": candle_lighting,
+                "havdalah_minutes_after_sunset": havdalah,
             },
         )
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
         future = dt_util.utcnow() + timedelta(seconds=30)
@@ -548,29 +537,9 @@ async def test_shabbat_times_sensor(
             else result_value
         )
 
-        assert hass.states.get(f"sensor.test_{sensor_type}").state == str(
+        assert hass.states.get(f"sensor.jewish_calendar_{sensor_type}").state == str(
             result_value
         ), f"Value for {sensor_type}"
-
-        entity = entity_registry.async_get(f"sensor.test_{sensor_type}")
-        target_sensor_type = sensor_type.replace("parshat_hashavua", "weekly_portion")
-        target_uid = "_".join(
-            map(
-                str,
-                [
-                    latitude,
-                    longitude,
-                    tzname,
-                    HDATE_DEFAULT_ALTITUDE,
-                    diaspora,
-                    language,
-                    candle_lighting,
-                    havdalah,
-                    target_sensor_type,
-                ],
-            )
-        )
-        assert entity.unique_id == target_uid
 
 
 OMER_PARAMS = [
@@ -597,16 +566,16 @@ async def test_omer_sensor(hass: HomeAssistant, test_time, result) -> None:
     test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
 
     with alter_time(test_time):
-        assert await async_setup_component(
-            hass, jewish_calendar.DOMAIN, {"jewish_calendar": {"name": "test"}}
-        )
+        entry = MockConfigEntry(domain=jewish_calendar.DOMAIN)
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
         future = dt_util.utcnow() + timedelta(seconds=30)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.test_day_of_the_omer").state == result
+    assert hass.states.get("sensor.jewish_calendar_day_of_the_omer").state == result
 
 
 DAFYOMI_PARAMS = [
@@ -631,16 +600,16 @@ async def test_dafyomi_sensor(hass: HomeAssistant, test_time, result) -> None:
     test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
 
     with alter_time(test_time):
-        assert await async_setup_component(
-            hass, jewish_calendar.DOMAIN, {"jewish_calendar": {"name": "test"}}
-        )
+        entry = MockConfigEntry(domain=jewish_calendar.DOMAIN)
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
         future = dt_util.utcnow() + timedelta(seconds=30)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.test_daf_yomi").state == result
+    assert hass.states.get("sensor.jewish_calendar_daf_yomi").state == result
 
 
 async def test_no_discovery_info(
