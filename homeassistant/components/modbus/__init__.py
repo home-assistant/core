@@ -229,6 +229,7 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_VERIFY): vol.Maybe(
             {
                 vol.Optional(CONF_ADDRESS): cv.positive_int,
+                vol.Optional(CONF_WRITE_ADDRESS): cv.positive_int,
                 vol.Optional(CONF_INPUT_TYPE): vol.In(
                     [
                         CALL_TYPE_REGISTER_HOLDING,
@@ -264,6 +265,7 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_HVAC_MODE_REGISTER): vol.Maybe(
                 {
                     CONF_ADDRESS: cv.positive_int,
+                    vol.Optional(CONF_WRITE_ADDRESS): cv.positive_int,
                     CONF_HVAC_MODE_VALUES: {
                         vol.Optional(CONF_HVAC_MODE_OFF): vol.Any(
                             cv.positive_int, [cv.positive_int]
@@ -294,6 +296,7 @@ CLIMATE_SCHEMA = vol.All(
                 vol.All(
                     {
                         vol.Required(CONF_ADDRESS): register_int_list_validator,
+                        vol.Optional(CONF_WRITE_ADDRESS): register_int_list_validator,
                         CONF_FAN_MODE_VALUES: {
                             vol.Optional(CONF_FAN_MODE_ON): cv.positive_int,
                             vol.Optional(CONF_FAN_MODE_OFF): cv.positive_int,
@@ -314,6 +317,7 @@ CLIMATE_SCHEMA = vol.All(
                 vol.All(
                     {
                         vol.Required(CONF_ADDRESS): register_int_list_validator,
+                        vol.Optional(CONF_WRITE_ADDRESS): register_int_list_validator,
                         CONF_SWING_MODE_VALUES: {
                             vol.Optional(CONF_SWING_MODE_SWING_ON): cv.positive_int,
                             vol.Optional(CONF_SWING_MODE_SWING_OFF): cv.positive_int,
