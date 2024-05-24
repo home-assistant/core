@@ -2402,10 +2402,15 @@ def base64_decode(value):
 
 def ordinal(value):
     """Perform ordinal conversion."""
-    return str(value) + (
-        list(["th", "st", "nd", "rd"] + ["th"] * 6)[(int(str(value)[-1])) % 10]
-        if int(str(value)[-2:]) % 100 not in range(11, 14)
-        else "th"
+    return (
+        str(value)
+        + (
+            list(["th", "st", "nd", "rd"] + ["th"] * 6)[  # codespell:ignore nd
+                (int(str(value)[-1])) % 10
+            ]
+            if int(str(value)[-2:]) % 100 not in range(11, 14)
+            else "th"
+        )
     )
 
 
