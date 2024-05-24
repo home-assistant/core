@@ -932,7 +932,7 @@ omit =
     homeassistant/components/ohmconnect/sensor.py
     homeassistant/components/ombi/*
     homeassistant/components/omnilogic/__init__.py
-    homeassistant/components/omnilogic/common.py
+    homeassistant/components/omnilogic/coordinator.py
     homeassistant/components/omnilogic/sensor.py
     homeassistant/components/omnilogic/switch.py
     homeassistant/components/ondilo_ico/__init__.py
