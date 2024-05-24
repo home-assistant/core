@@ -4,10 +4,14 @@ import pytest
 
 import homeassistant.components.zeversolar.__init__ as init
 from homeassistant.components.zeversolar.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
+
+MOCK_HOST_ZEVERSOLAR = "zeversolar-fake-host"
+MOCK_PORT_ZEVERSOLAR = 10200
 
 
 async def test_async_setup_entry_fails(hass: HomeAssistant) -> None:
@@ -16,22 +20,11 @@ async def test_async_setup_entry_fails(hass: HomeAssistant) -> None:
 
     config = MockConfigEntry(
         data={
-            "host": "my host",
-            "port": 10200,
-            "data": "test",
+            CONF_HOST: MOCK_HOST_ZEVERSOLAR,
+            CONF_PORT: MOCK_PORT_ZEVERSOLAR,
         },
         domain=DOMAIN,
-        options={},
-        title="My NEW_DOMAIN",
     )
-
-    if hass.data.get(DOMAIN) is None:
-        hass.data.setdefault(
-            DOMAIN,
-            {
-                "data": "test2",
-            },
-        )
 
     config.add_to_hass(hass)
 
