@@ -45,8 +45,6 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
         self._firstrun = True
         self._storage = storage
         self._last_entry_timestamp: struct_time | None = None
-        self._has_published_parsed = False
-        self._has_updated_parsed = False
         self._event_type = EVENT_FEEDREADER
         self._feed_id = url
 
@@ -99,9 +97,7 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
 
         _LOGGER.debug("Fetch from feed %s completed", self._url)
 
-        if (
-            self._has_published_parsed or self._has_updated_parsed
-        ) and self._last_entry_timestamp:
+        if self._last_entry_timestamp:
             return self._last_entry_timestamp
 
         return None
@@ -121,28 +117,14 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
         """Update last_entry_timestamp and fire entry."""
         # Check if the entry has a updated or published date.
         # Start from a updated date because generally `updated` > `published`.
-        if "updated_parsed" in entry and entry.updated_parsed:
-            # We are lucky, `updated_parsed` data available, let's make use of
-            # it to publish only new available entries since the last run
-            self._has_updated_parsed = True
-            self._last_entry_timestamp = max(
-                entry.updated_parsed, self._last_entry_timestamp
-            )
-        elif "published_parsed" in entry and entry.published_parsed:
-            # We are lucky, `published_parsed` data available, let's make use of
-            # it to publish only new available entries since the last run
-            self._has_published_parsed = True
-            self._last_entry_timestamp = max(
-                entry.published_parsed, self._last_entry_timestamp
-            )
+        if time_stamp := entry.get("updated_parsed") or entry.get("published_parsed"):
+            self._last_entry_timestamp = time_stamp
         else:
-            self._has_updated_parsed = False
-            self._has_published_parsed = False
             _LOGGER.debug(
                 "No updated_parsed or published_parsed info available for entry %s",
                 entry,
             )
-        entry.update({"feed_url": self._url})
+        entry["feed_url"] = self._url
         self.hass.bus.fire(self._event_type, entry)
         _LOGGER.debug("New event fired for entry %s", entry.get("link"))
 
