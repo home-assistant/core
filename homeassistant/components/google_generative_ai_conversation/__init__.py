@@ -73,6 +73,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ) as err:
             raise HomeAssistantError(f"Error generating content: {err}") from err
 
+        if not response.parts:
+            raise HomeAssistantError("Error generating content")
+
         return {"text": response.text}
 
     hass.services.async_register(

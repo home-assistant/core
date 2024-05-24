@@ -29,7 +29,7 @@ dbus-fast==2.21.3
 fnv-hash-fast==0.5.0
 ha-av==10.1.1
 ha-ffmpeg==3.2.0
-habluetooth==3.1.0
+habluetooth==3.1.1
 hass-nabucasa==0.81.0
 hassil==1.7.1
 home-assistant-bluetooth==1.12.0
@@ -56,7 +56,7 @@ pyudev==0.24.1
 PyYAML==6.0.1
 requests==2.31.0
 SQLAlchemy==2.0.30
-typing-extensions>=4.11.0,<5.0
+typing-extensions>=4.12.0,<5.0
 ulid-transform==0.9.0
 urllib3>=1.26.5,<2
 voluptuous-serialize==2.6.0

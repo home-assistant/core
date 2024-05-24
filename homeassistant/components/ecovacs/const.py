@@ -17,6 +17,8 @@ SUPPORTED_LIFESPANS = (
     LifeSpan.FILTER,
     LifeSpan.LENS_BRUSH,
     LifeSpan.SIDE_BRUSH,
+    LifeSpan.UNIT_CARE,
+    LifeSpan.ROUND_MOP,
 )
 
 

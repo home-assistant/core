@@ -592,7 +592,10 @@ def _async_domain_added_filter(
     """Filter state changes by entity_id."""
     return event_data["old_state"] is None and (
         MATCH_ALL in callbacks
-        or split_entity_id(event_data["entity_id"])[0] in callbacks
+        or
+        # If old_state is None, new_state must be set but
+        # mypy doesn't know that
+        event_data["new_state"].domain in callbacks  # type: ignore[union-attr]
     )
 
 
@@ -640,7 +643,10 @@ def _async_domain_removed_filter(
     """Filter state changes by entity_id."""
     return event_data["new_state"] is None and (
         MATCH_ALL in callbacks
-        or split_entity_id(event_data["entity_id"])[0] in callbacks
+        or
+        # If new_state is None, old_state must be set but
+        # mypy doesn't know that
+        event_data["old_state"].domain in callbacks  # type: ignore[union-attr]
     )
 
 
@@ -1571,11 +1577,10 @@ class _TrackTimeInterval:
     cancel_on_shutdown: bool | None
     _track_job: HassJob[[datetime], Coroutine[Any, Any, None] | None] | None = None
     _run_job: HassJob[[datetime], Coroutine[Any, Any, None] | None] | None = None
-    _cancel_callback: CALLBACK_TYPE | None = None
+    _timer_handle: asyncio.TimerHandle | None = None
 
     def async_attach(self) -> None:
         """Initialize track job."""
-        hass = self.hass
         self._track_job = HassJob(
             self._interval_listener,
             self.job_name,
@@ -1587,32 +1592,32 @@ class _TrackTimeInterval:
             f"track time interval {self.seconds}",
             cancel_on_shutdown=self.cancel_on_shutdown,
         )
-        self._cancel_callback = async_call_at(
-            hass,
-            self._track_job,
-            hass.loop.time() + self.seconds,
+        self._schedule_timer()
+
+    def _schedule_timer(self) -> None:
+        """Schedule the timer."""
+        if TYPE_CHECKING:
+            assert self._track_job is not None
+        hass = self.hass
+        loop = hass.loop
+        self._timer_handle = loop.call_at(
+            loop.time() + self.seconds, self._interval_listener, self._track_job
         )
 
     @callback
-    def _interval_listener(self, now: datetime) -> None:
+    def _interval_listener(self, _: Any) -> None:
         """Handle elapsed intervals."""
         if TYPE_CHECKING:
             assert self._run_job is not None
-            assert self._track_job is not None
-        hass = self.hass
-        self._cancel_callback = async_call_at(
-            hass,
-            self._track_job,
-            hass.loop.time() + self.seconds,
-        )
-        hass.async_run_hass_job(self._run_job, now, background=True)
+        self._schedule_timer()
+        self.hass.async_run_hass_job(self._run_job, dt_util.utcnow(), background=True)
 
     @callback
     def async_cancel(self) -> None:
         """Cancel the call_at."""
         if TYPE_CHECKING:
-            assert self._cancel_callback is not None
-        self._cancel_callback()
+            assert self._timer_handle is not None
+        self._timer_handle.cancel()
 
 
 @callback
@@ -1776,7 +1781,6 @@ class _TrackUTCTimeChange:
         # time when the timer was scheduled
         utc_now = time_tracker_utcnow()
         localized_now = dt_util.as_local(utc_now) if self.local else utc_now
-        hass.async_run_hass_job(self.job, localized_now, background=True)
         if TYPE_CHECKING:
             assert self._pattern_time_change_listener_job is not None
         self._cancel_callback = async_track_point_in_utc_time(
@@ -1784,6 +1788,7 @@ class _TrackUTCTimeChange:
             self._pattern_time_change_listener_job,
             self._calculate_next(utc_now + timedelta(seconds=1)),
         )
+        hass.async_run_hass_job(self.job, localized_now, background=True)
 
     @callback
     def async_cancel(self) -> None:

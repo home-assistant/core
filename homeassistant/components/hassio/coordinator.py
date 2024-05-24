@@ -275,7 +275,7 @@ def async_remove_addons_from_dev_reg(
             dev_reg.async_remove_device(dev.id)
 
 
-class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
+class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to retrieve Hass.io status."""
 
     def __init__(
