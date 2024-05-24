@@ -36,13 +36,9 @@ from .const import (
     DOMAIN,
 )
 from .discovery import MQTTDiscoveryPayload, clear_discovery_hash
-from .mixins import (
-    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-    MqttDiscoveryDeviceUpdate,
-    send_discovery_done,
-    update_device,
-)
-from .util import get_mqtt_data
+from .mixins import MqttDiscoveryDeviceUpdate, send_discovery_done, update_device
+from .models import DATA_MQTT
+from .schemas import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -206,7 +202,7 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
         self.device_id = device_id
         self.discovery_data = discovery_data
         self.hass = hass
-        self._mqtt_data = get_mqtt_data(hass)
+        self._mqtt_data = hass.data[DATA_MQTT]
         self.trigger_id = f"{device_id}_{config[CONF_TYPE]}_{config[CONF_SUBTYPE]}"
 
         MqttDiscoveryDeviceUpdate.__init__(
@@ -259,7 +255,7 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
         config = TRIGGER_DISCOVERY_SCHEMA(discovery_data)
         new_trigger_id = f"{self.device_id}_{config[CONF_TYPE]}_{config[CONF_SUBTYPE]}"
         if new_trigger_id != self.trigger_id:
-            mqtt_data = get_mqtt_data(self.hass)
+            mqtt_data = self.hass.data[DATA_MQTT]
             if new_trigger_id in mqtt_data.device_triggers:
                 _LOGGER.error(
                     "Cannot update device trigger %s due to an existing duplicate "
@@ -308,7 +304,7 @@ async def async_setup_trigger(
     trigger_type = config[CONF_TYPE]
     trigger_subtype = config[CONF_SUBTYPE]
     trigger_id = f"{device_id}_{trigger_type}_{trigger_subtype}"
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
     if (
         trigger_id in mqtt_data.device_triggers
         and mqtt_data.device_triggers[trigger_id].discovery_data is not None
@@ -334,7 +330,7 @@ async def async_setup_trigger(
 
 async def async_removed_from_device(hass: HomeAssistant, device_id: str) -> None:
     """Handle Mqtt removed from a device."""
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
     triggers = await async_get_triggers(hass, device_id)
     for trig in triggers:
         trigger_id = f"{device_id}_{trig[CONF_TYPE]}_{trig[CONF_SUBTYPE]}"
@@ -352,7 +348,7 @@ async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device triggers for MQTT devices."""
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
 
     if not mqtt_data.device_triggers:
         return []
@@ -377,7 +373,7 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     trigger_id: str | None = None
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
     device_id = config[CONF_DEVICE_ID]
 
     # The use of CONF_DISCOVERY_ID was deprecated in HA Core 2024.2.

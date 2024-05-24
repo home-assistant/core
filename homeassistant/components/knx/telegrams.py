@@ -7,6 +7,7 @@ from collections.abc import Callable
 from typing import Final, TypedDict
 
 from xknx import XKNX
+from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import XKNXException
 from xknx.telegram import Telegram
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
@@ -15,31 +16,40 @@ from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 import homeassistant.util.dt as dt_util
+from homeassistant.util.signal_type import SignalType
 
-from .const import DOMAIN, SIGNAL_KNX_TELEGRAM_DICT
+from .const import DOMAIN
 from .project import KNXProject
 
 STORAGE_VERSION: Final = 1
 STORAGE_KEY: Final = f"{DOMAIN}/telegrams_history.json"
 
+# dispatcher signal for KNX interface device triggers
+SIGNAL_KNX_TELEGRAM: SignalType[Telegram, TelegramDict] = SignalType("knx_telegram")
 
-class TelegramDict(TypedDict):
+
+class DecodedTelegramPayload(TypedDict):
+    """Decoded payload value and metadata."""
+
+    dpt_main: int | None
+    dpt_sub: int | None
+    dpt_name: str | None
+    unit: str | None
+    value: str | int | float | bool | None
+
+
+class TelegramDict(DecodedTelegramPayload):
     """Represent a Telegram as a dict."""
 
     # this has to be in sync with the frontend implementation
     destination: str
     destination_name: str
     direction: str
-    dpt_main: int | None
-    dpt_sub: int | None
-    dpt_name: str | None
     payload: int | tuple[int, ...] | None
     source: str
     source_name: str
     telegramtype: str
     timestamp: str  # ISO format
-    unit: str | None
-    value: str | int | float | bool | None
 
 
 class Telegrams:
@@ -89,7 +99,7 @@ class Telegrams:
         """Handle incoming and outgoing telegrams from xknx."""
         telegram_dict = self.telegram_to_dict(telegram)
         self.recent_telegrams.append(telegram_dict)
-        async_dispatcher_send(self.hass, SIGNAL_KNX_TELEGRAM_DICT, telegram_dict)
+        async_dispatcher_send(self.hass, SIGNAL_KNX_TELEGRAM, telegram, telegram_dict)
         for job in self._jobs:
             self.hass.async_run_hass_job(job, telegram_dict)
 
@@ -112,14 +122,10 @@ class Telegrams:
     def telegram_to_dict(self, telegram: Telegram) -> TelegramDict:
         """Convert a Telegram to a dict."""
         dst_name = ""
-        dpt_main = None
-        dpt_sub = None
-        dpt_name = None
         payload_data: int | tuple[int, ...] | None = None
         src_name = ""
         transcoder = None
-        unit = None
-        value: str | int | float | bool | None = None
+        decoded_payload: DecodedTelegramPayload | None = None
 
         if (
             ga_info := self.project.group_addresses.get(
@@ -137,27 +143,44 @@ class Telegrams:
         if isinstance(telegram.payload, (GroupValueWrite, GroupValueResponse)):
             payload_data = telegram.payload.value.value
             if transcoder is not None:
-                try:
-                    value = transcoder.from_knx(telegram.payload.value)
-                    dpt_main = transcoder.dpt_main_number
-                    dpt_sub = transcoder.dpt_sub_number
-                    dpt_name = transcoder.value_type
-                    unit = transcoder.unit
-                except XKNXException:
-                    value = "Error decoding value"
+                decoded_payload = decode_telegram_payload(
+                    payload=telegram.payload.value, transcoder=transcoder
+                )
 
         return TelegramDict(
             destination=f"{telegram.destination_address}",
             destination_name=dst_name,
             direction=telegram.direction.value,
-            dpt_main=dpt_main,
-            dpt_sub=dpt_sub,
-            dpt_name=dpt_name,
+            dpt_main=decoded_payload["dpt_main"]
+            if decoded_payload is not None
+            else None,
+            dpt_sub=decoded_payload["dpt_sub"] if decoded_payload is not None else None,
+            dpt_name=decoded_payload["dpt_name"]
+            if decoded_payload is not None
+            else None,
             payload=payload_data,
             source=f"{telegram.source_address}",
             source_name=src_name,
             telegramtype=telegram.payload.__class__.__name__,
             timestamp=dt_util.now().isoformat(),
-            unit=unit,
-            value=value,
+            unit=decoded_payload["unit"] if decoded_payload is not None else None,
+            value=decoded_payload["value"] if decoded_payload is not None else None,
         )
+
+
+def decode_telegram_payload(
+    payload: DPTArray | DPTBinary, transcoder: type[DPTBase]
+) -> DecodedTelegramPayload:
+    """Decode the payload of a KNX telegram."""
+    try:
+        value = transcoder.from_knx(payload)
+    except XKNXException:
+        value = "Error decoding value"
+
+    return DecodedTelegramPayload(
+        dpt_main=transcoder.dpt_main_number,
+        dpt_sub=transcoder.dpt_sub_number,
+        dpt_name=transcoder.value_type,
+        unit=transcoder.unit,
+        value=value,
+    )

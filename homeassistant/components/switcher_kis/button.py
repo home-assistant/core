@@ -46,7 +46,7 @@ THERMOSTAT_BUTTONS = [
         press_fn=lambda api, remote: api.control_breeze_device(
             remote, state=DeviceState.ON, update_state=True
         ),
-        supported=lambda remote: bool(remote.on_off_type),
+        supported=lambda _: True,
     ),
     SwitcherThermostatButtonEntityDescription(
         key="assume_off",
@@ -55,7 +55,7 @@ THERMOSTAT_BUTTONS = [
         press_fn=lambda api, remote: api.control_breeze_device(
             remote, state=DeviceState.OFF, update_state=True
         ),
-        supported=lambda remote: bool(remote.on_off_type),
+        supported=lambda _: True,
     ),
     SwitcherThermostatButtonEntityDescription(
         key="vertical_swing_on",

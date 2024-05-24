@@ -28,9 +28,11 @@ from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
 
 PLATFORMS: Final = [
     Platform.CLIMATE,
+    Platform.LOCK,
     Platform.MEDIA_PLAYER,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 
