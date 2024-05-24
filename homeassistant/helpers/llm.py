@@ -102,7 +102,11 @@ class API(ABC):
     hass: HomeAssistant
     id: str
     name: str
-    prompt_template: str
+
+    @abstractmethod
+    async def async_get_api_prompt(self, tool_input: ToolInput) -> str:
+        """Return the prompt for the API."""
+        raise NotImplementedError
 
     @abstractmethod
     @callback
@@ -183,8 +187,11 @@ class AssistAPI(API):
             hass=hass,
             id=LLM_API_ASSIST,
             name="Assist",
-            prompt_template="Call the intent tools to control the system. Just pass the name to the intent.",
         )
+
+    async def async_get_api_prompt(self, tool_input: ToolInput) -> str:
+        """Return the prompt for the API."""
+        return "Call the intent tools to control Home Assistant. Just pass the name to the intent."
 
     @callback
     def async_get_tools(self) -> list[Tool]:
