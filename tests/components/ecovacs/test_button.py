@@ -48,8 +48,21 @@ def platforms() -> Platform | list[Platform]:
                 ),
             ],
         ),
+        (
+            "5xu9h3",
+            [
+                (
+                    "button.goat_g1_reset_blade_lifespan",
+                    ResetLifeSpan(LifeSpan.BLADE),
+                ),
+                (
+                    "button.goat_g1_reset_lens_brush_lifespan",
+                    ResetLifeSpan(LifeSpan.LENS_BRUSH),
+                ),
+            ],
+        ),
     ],
-    ids=["yna5x1"],
+    ids=["yna5x1", "5xu9h3"],
 )
 async def test_buttons(
     hass: HomeAssistant,
@@ -96,6 +109,13 @@ async def test_buttons(
                 "button.ozmo_950_reset_main_brush_lifespan",
                 "button.ozmo_950_reset_filter_lifespan",
                 "button.ozmo_950_reset_side_brushes_lifespan",
+            ],
+        ),
+        (
+            "5xu9h3",
+            [
+                "button.goat_g1_reset_blade_lifespan",
+                "button.goat_g1_reset_lens_brush_lifespan",
             ],
         ),
     ],

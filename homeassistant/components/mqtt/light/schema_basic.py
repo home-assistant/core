@@ -54,7 +54,7 @@ from ..const import (
     PAYLOAD_NONE,
 )
 from ..debug_info import log_messages
-from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, write_state_on_attr_change
+from ..mixins import MqttEntity, write_state_on_attr_change
 from ..models import (
     MessageCallbackType,
     MqttCommandTemplate,
@@ -65,6 +65,7 @@ from ..models import (
     ReceivePayloadType,
     TemplateVarsType,
 )
+from ..schemas import MQTT_ENTITY_COMMON_SCHEMA
 from ..util import valid_publish_topic, valid_subscribe_topic
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 
@@ -712,7 +713,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 keys.append("white")
             elif color_mode == ColorMode.RGBWW:
                 keys.extend(["cold_white", "warm_white"])
-            variables = dict(zip(keys, color))
+            variables = dict(zip(keys, color, strict=False))
             return self._command_templates[template](rgb_color_str, variables)
 
         def set_optimistic(

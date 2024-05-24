@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Iterable
+from collections.abc import Awaitable, Callable, Coroutine, Iterable
 import dataclasses
 from enum import Enum
 from functools import cache, partial
 import logging
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, TypedDict, TypeGuard, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypedDict, TypeGuard, cast
 
 import voluptuous as vol
 
@@ -47,6 +47,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.loader import Integration, async_get_integrations, bind_hass
 from homeassistant.util.async_ import create_eager_task
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
 from homeassistant.util.yaml.loader import JSON_TYPE
 
@@ -67,15 +68,16 @@ from .typing import ConfigType, TemplateVarsType
 if TYPE_CHECKING:
     from .entity import Entity
 
-    _EntityT = TypeVar("_EntityT", bound=Entity)
-
-
 CONF_SERVICE_ENTITY_ID = "entity_id"
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_DESCRIPTION_CACHE = "service_description_cache"
-ALL_SERVICE_DESCRIPTIONS_CACHE = "all_service_descriptions_cache"
+SERVICE_DESCRIPTION_CACHE: HassKey[dict[tuple[str, str], dict[str, Any] | None]] = (
+    HassKey("service_description_cache")
+)
+ALL_SERVICE_DESCRIPTIONS_CACHE: HassKey[
+    tuple[set[tuple[str, str]], dict[str, dict[str, Any]]]
+] = HassKey("all_service_descriptions_cache")
 
 
 @cache
@@ -93,6 +95,7 @@ def _base_components() -> dict[str, ModuleType]:
         light,
         lock,
         media_player,
+        notify,
         remote,
         siren,
         todo,
@@ -112,6 +115,7 @@ def _base_components() -> dict[str, ModuleType]:
         "light": light,
         "lock": lock,
         "media_player": media_player,
+        "notify": notify,
         "remote": remote,
         "siren": siren,
         "todo": todo,
@@ -425,7 +429,7 @@ def extract_entity_ids(
 
 
 @bind_hass
-async def async_extract_entities(
+async def async_extract_entities[_EntityT: Entity](
     hass: HomeAssistant,
     entities: Iterable[_EntityT],
     service_call: ServiceCall,
@@ -656,9 +660,7 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any]]:
     """Return descriptions (i.e. user documentation) for all service calls."""
-    descriptions_cache: dict[tuple[str, str], dict[str, Any] | None] = (
-        hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
-    )
+    descriptions_cache = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
 
     # We don't mutate services here so we avoid calling
     # async_services which makes a copy of every services
@@ -667,22 +669,18 @@ async def async_get_all_descriptions(
 
     # See if there are new services not seen before.
     # Any service that we saw before already has an entry in description_cache.
-    domains_with_missing_services: set[str] = set()
-    all_services: set[tuple[str, str]] = set()
-    for domain, services_by_domain in services.items():
-        for service_name in services_by_domain:
-            cache_key = (domain, service_name)
-            all_services.add(cache_key)
-            if cache_key not in descriptions_cache:
-                domains_with_missing_services.add(domain)
-
+    all_services = {
+        (domain, service_name)
+        for domain, services_by_domain in services.items()
+        for service_name in services_by_domain
+    }
     # If we have a complete cache, check if it is still valid
     all_cache: tuple[set[tuple[str, str]], dict[str, dict[str, Any]]] | None
     if all_cache := hass.data.get(ALL_SERVICE_DESCRIPTIONS_CACHE):
         previous_all_services, previous_descriptions_cache = all_cache
         # If the services are the same, we can return the cache
         if previous_all_services == all_services:
-            return previous_descriptions_cache  # type: ignore[no-any-return]
+            return previous_descriptions_cache
 
     # Files we loaded for missing descriptions
     loaded: dict[str, JSON_TYPE] = {}
@@ -692,7 +690,9 @@ async def async_get_all_descriptions(
     # add the new ones to the cache without their descriptions
     services = {domain: service.copy() for domain, service in services.items()}
 
-    if domains_with_missing_services:
+    if domains_with_missing_services := {
+        domain for domain, _ in all_services.difference(descriptions_cache)
+    }:
         ints_or_excs = await async_get_integrations(hass, domains_with_missing_services)
         integrations: list[Integration] = []
         for domain, int_or_exc in ints_or_excs.items():
@@ -707,7 +707,7 @@ async def async_get_all_descriptions(
             contents = await hass.async_add_executor_job(
                 _load_services_files, hass, integrations
             )
-            loaded = dict(zip(domains_with_missing_services, contents))
+            loaded = dict(zip(domains_with_missing_services, contents, strict=False))
 
     # Load translations for all service domains
     translations = await translation.async_get_translations(
@@ -808,9 +808,7 @@ def async_set_service_schema(
     domain = domain.lower()
     service = service.lower()
 
-    descriptions_cache: dict[tuple[str, str], dict[str, Any] | None] = (
-        hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
-    )
+    descriptions_cache = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
 
     description = {
         "name": schema.get("name", ""),
@@ -991,7 +989,7 @@ async def entity_service_call(
     )
 
     response_data: EntityServiceResponse = {}
-    for entity, result in zip(entities, results):
+    for entity, result in zip(entities, results, strict=False):
         if isinstance(result, BaseException):
             raise result from None
         response_data[entity.entity_id] = result
@@ -1043,7 +1041,7 @@ async def _handle_entity_call(
         result = await task
 
     if asyncio.iscoroutine(result):
-        _LOGGER.error(
+        _LOGGER.error(  # type: ignore[unreachable]
             (
                 "Service %s for %s incorrectly returns a coroutine object. Await result"
                 " instead in service handler. Report bug to integration author"
@@ -1151,41 +1149,68 @@ def verify_domain_control(
     return decorator
 
 
-class ReloadServiceHelper:
-    """Helper for reload services to minimize unnecessary reloads."""
+class ReloadServiceHelper[_T]:
+    """Helper for reload services.
 
-    def __init__(self, service_func: Callable[[ServiceCall], Awaitable]) -> None:
+    The helper has the following purposes:
+    - Make sure reloads do not happen in parallel
+    - Avoid redundant reloads of the same target
+    """
+
+    def __init__(
+        self,
+        service_func: Callable[[ServiceCall], Coroutine[Any, Any, Any]],
+        reload_targets_func: Callable[[ServiceCall], set[_T]],
+    ) -> None:
         """Initialize ReloadServiceHelper."""
         self._service_func = service_func
         self._service_running = False
         self._service_condition = asyncio.Condition()
+        self._pending_reload_targets: set[_T] = set()
+        self._reload_targets_func = reload_targets_func
 
     async def execute_service(self, service_call: ServiceCall) -> None:
         """Execute the service.
 
-        If a previous reload task if currently in progress, wait for it to finish first.
+        If a previous reload task is currently in progress, wait for it to finish first.
         Once the previous reload task has finished, one of the waiting tasks will be
-        assigned to execute the reload, the others will wait for the reload to finish.
+        assigned to execute the reload of the targets it is assigned to reload. The
+        other tasks will wait if they should reload the same target, otherwise they
+        will wait for the next round.
         """
 
         do_reload = False
+        reload_targets = None
         async with self._service_condition:
             if self._service_running:
-                # A previous reload task is already in progress, wait for it to finish
+                # A previous reload task is already in progress, wait for it to finish,
+                # because that task may be reloading a stale version of the resource.
                 await self._service_condition.wait()
 
-        async with self._service_condition:
-            if not self._service_running:
-                # This task will do the reload
-                self._service_running = True
-                do_reload = True
-            else:
-                # Another task will perform the reload, wait for it to finish
+        while True:
+            async with self._service_condition:
+                # Once we've passed this point, we assume the version of the resource is
+                # the one our task was assigned to reload, or a newer one. Regardless of
+                # which, our task is happy as long as the target is reloaded at least
+                # once.
+                if reload_targets is None:
+                    reload_targets = self._reload_targets_func(service_call)
+                    self._pending_reload_targets |= reload_targets
+                if not self._service_running:
+                    # This task will do a reload
+                    self._service_running = True
+                    do_reload = True
+                    break
+                # Another task will perform a reload, wait for it to finish
                 await self._service_condition.wait()
+                # Check if the reload this task is waiting for has been completed
+                if reload_targets.isdisjoint(self._pending_reload_targets):
+                    break
 
         if do_reload:
             # Reload, then notify other tasks
             await self._service_func(service_call)
             async with self._service_condition:
                 self._service_running = False
+                self._pending_reload_targets -= reload_targets
                 self._service_condition.notify_all()

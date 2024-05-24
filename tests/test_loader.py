@@ -2,6 +2,7 @@
 
 import asyncio
 import os
+import pathlib
 import sys
 import threading
 from typing import Any
@@ -15,6 +16,8 @@ from homeassistant.components import http, hue
 from homeassistant.components.hue import light as hue_light
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import frame
+from homeassistant.helpers.json import json_dumps
+from homeassistant.util.json import json_loads
 
 from .common import MockModule, async_get_persistent_notifications, mock_integration
 
@@ -1108,14 +1111,18 @@ CUSTOM_ISSUE_TRACKER = "https://blablabla.com"
         # Integration domain is not currently deduced from module
         (None, "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER),
         ("hue", "homeassistant.components.mqtt.sensor", CORE_ISSUE_TRACKER_HUE),
-        # Custom integration with known issue tracker
+        # Loaded custom integration with known issue tracker
         ("bla_custom", "custom_components.bla_custom.sensor", CUSTOM_ISSUE_TRACKER),
         ("bla_custom", None, CUSTOM_ISSUE_TRACKER),
-        # Custom integration without known issue tracker
+        # Loaded custom integration without known issue tracker
         (None, "custom_components.bla.sensor", None),
         ("bla_custom_no_tracker", "custom_components.bla_custom.sensor", None),
         ("bla_custom_no_tracker", None, None),
         ("hue", "custom_components.bla.sensor", None),
+        # Unloaded custom integration with known issue tracker
+        ("bla_custom_not_loaded", None, CUSTOM_ISSUE_TRACKER),
+        # Unloaded custom integration without known issue tracker
+        ("bla_custom_not_loaded_no_tracker", None, None),
         # Integration domain has priority over module
         ("bla_custom_no_tracker", "homeassistant.components.bla_custom.sensor", None),
     ],
@@ -1133,6 +1140,32 @@ async def test_async_get_issue_tracker(
         built_in=False,
     )
     mock_integration(hass, MockModule("bla_custom_no_tracker"), built_in=False)
+
+    cust_unloaded_module = MockModule(
+        "bla_custom_not_loaded",
+        partial_manifest={"issue_tracker": CUSTOM_ISSUE_TRACKER},
+    )
+    cust_unloaded = loader.Integration(
+        hass,
+        f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{cust_unloaded_module.DOMAIN}",
+        pathlib.Path(""),
+        cust_unloaded_module.mock_manifest(),
+        set(),
+    )
+
+    cust_unloaded_no_tracker_module = MockModule("bla_custom_not_loaded_no_tracker")
+    cust_unloaded_no_tracker = loader.Integration(
+        hass,
+        f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{cust_unloaded_no_tracker_module.DOMAIN}",
+        pathlib.Path(""),
+        cust_unloaded_no_tracker_module.mock_manifest(),
+        set(),
+    )
+    hass.data["custom_components"] = {
+        "bla_custom_not_loaded": cust_unloaded,
+        "bla_custom_not_loaded_no_tracker": cust_unloaded_no_tracker,
+    }
+
     assert (
         loader.async_get_issue_tracker(hass, integration_domain=domain, module=module)
         == issue_tracker
@@ -1471,6 +1504,50 @@ async def test_async_get_component_deadlock_fallback(
     assert module is module_mock
 
 
+async def test_async_get_component_deadlock_fallback_module_not_found(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify async_get_component fallback behavior.
+
+    Ensure that fallback is not triggered on ModuleNotFoundError.
+    """
+    executor_import_integration = _get_test_integration(
+        hass, "executor_import", True, import_executor=True
+    )
+    assert executor_import_integration.import_executor is True
+    module_mock = MagicMock(__file__="__init__.py")
+    import_attempts = 0
+
+    def mock_import(module: str, *args: Any, **kwargs: Any) -> Any:
+        nonlocal import_attempts
+        if module == "homeassistant.components.executor_import":
+            import_attempts += 1
+
+        if import_attempts == 1:
+            raise ModuleNotFoundError(
+                "homeassistant.components.executor_import not found",
+                name="homeassistant.components.executor_import",
+            )
+
+        return module_mock
+
+    assert "homeassistant.components.executor_import" not in sys.modules
+    assert "custom_components.executor_import" not in sys.modules
+    with (
+        patch("homeassistant.loader.importlib.import_module", mock_import),
+        pytest.raises(
+            ModuleNotFoundError, match="homeassistant.components.executor_import"
+        ),
+    ):
+        await executor_import_integration.async_get_component()
+
+    # We should not have tried to fall back to the event loop import
+    assert "loaded_executor=False" not in caplog.text
+    assert "homeassistant.components.executor_import" not in sys.modules
+    assert "custom_components.executor_import" not in sys.modules
+    assert import_attempts == 1
+
+
 async def test_async_get_component_raises_after_import_failure(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1549,6 +1626,52 @@ async def test_async_get_platform_deadlock_fallback(
     assert "executor=['config_flow']" in caplog.text
     assert "loop=['config_flow']" in caplog.text
     assert module is module_mock
+
+
+async def test_async_get_platform_deadlock_fallback_module_not_found(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify async_get_platform fallback behavior.
+
+    Ensure that fallback is not triggered on ModuleNotFoundError.
+    """
+    executor_import_integration = _get_test_integration(
+        hass, "executor_import", True, import_executor=True
+    )
+    assert executor_import_integration.import_executor is True
+    module_mock = MagicMock()
+    import_attempts = 0
+
+    def mock_import(module: str, *args: Any, **kwargs: Any) -> Any:
+        nonlocal import_attempts
+        if module == "homeassistant.components.executor_import.config_flow":
+            import_attempts += 1
+
+        if import_attempts == 1:
+            raise ModuleNotFoundError(
+                "Not found homeassistant.components.executor_import.config_flow",
+                name="homeassistant.components.executor_import.config_flow",
+            )
+
+        return module_mock
+
+    assert "homeassistant.components.executor_import" not in sys.modules
+    assert "custom_components.executor_import" not in sys.modules
+    with (
+        patch("homeassistant.loader.importlib.import_module", mock_import),
+        pytest.raises(
+            ModuleNotFoundError,
+            match="homeassistant.components.executor_import.config_flow",
+        ),
+    ):
+        await executor_import_integration.async_get_platform("config_flow")
+
+    # We should not have tried to fall back to the event loop import
+    assert "executor=['config_flow']" in caplog.text
+    assert "loop=['config_flow']" not in caplog.text
+    assert "homeassistant.components.executor_import" not in sys.modules
+    assert "custom_components.executor_import" not in sys.modules
+    assert import_attempts == 1
 
 
 async def test_async_get_platform_raises_after_import_failure(
@@ -1869,3 +1992,12 @@ async def test_hass_helpers_use_reported(
             "Detected that custom integration 'test_integration_frame' "
             "accesses hass.helpers.aiohttp_client. This is deprecated"
         ) in caplog.text
+
+
+async def test_manifest_json_fragment_round_trip(hass: HomeAssistant) -> None:
+    """Test json_fragment roundtrip."""
+    integration = await loader.async_get_integration(hass, "hue")
+    assert (
+        json_loads(json_dumps(integration.manifest_json_fragment))
+        == integration.manifest
+    )

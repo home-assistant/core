@@ -57,9 +57,9 @@ BLE_AVAILABILITY_CHECK_INTERVAL = 1800  # seconds
 
 _LOGGER = logging.getLogger(__name__)
 
-AddAccessoryCb = Callable[[Accessory], bool]
-AddServiceCb = Callable[[Service], bool]
-AddCharacteristicCb = Callable[[Characteristic], bool]
+type AddAccessoryCb = Callable[[Accessory], bool]
+type AddServiceCb = Callable[[Service], bool]
+type AddCharacteristicCb = Callable[[Characteristic], bool]
 
 
 def valid_serial_number(serial: str) -> bool:
@@ -110,7 +110,7 @@ class HKDevice:
         # A list of callbacks that turn HK characteristics into entities
         self.char_factories: list[AddCharacteristicCb] = []
 
-        # The platorms we have forwarded the config entry so far. If a new
+        # The platforms we have forwarded the config entry so far. If a new
         # accessory is added to a bridge we may have to load additional
         # platforms. We don't want to load all platforms up front if its just
         # a lightbulb. And we don't want to forward a config entry twice
@@ -153,6 +153,7 @@ class HKDevice:
         self._subscriptions: dict[tuple[int, int], set[CALLBACK_TYPE]] = {}
         self._pending_subscribes: set[tuple[int, int]] = set()
         self._subscribe_timer: CALLBACK_TYPE | None = None
+        self._load_platforms_lock = asyncio.Lock()
 
     @property
     def entity_map(self) -> Accessories:
@@ -327,7 +328,8 @@ class HKDevice:
             )
             # BLE devices always get an RSSI sensor as well
             if "sensor" not in self.platforms:
-                await self._async_load_platforms({"sensor"})
+                async with self._load_platforms_lock:
+                    await self._async_load_platforms({"sensor"})
 
     @callback
     def _async_start_polling(self) -> None:
@@ -804,6 +806,7 @@ class HKDevice:
 
     async def _async_load_platforms(self, platforms: set[str]) -> None:
         """Load a group of platforms."""
+        assert self._load_platforms_lock.locked(), "Must be called with lock held"
         if not (to_load := platforms - self.platforms):
             return
         self.platforms.update(to_load)
@@ -813,22 +816,23 @@ class HKDevice:
 
     async def async_load_platforms(self) -> None:
         """Load any platforms needed by this HomeKit device."""
-        to_load: set[str] = set()
-        for accessory in self.entity_map.accessories:
-            for service in accessory.services:
-                if service.type in HOMEKIT_ACCESSORY_DISPATCH:
-                    platform = HOMEKIT_ACCESSORY_DISPATCH[service.type]
-                    if platform not in self.platforms:
-                        to_load.add(platform)
-
-                for char in service.characteristics:
-                    if char.type in CHARACTERISTIC_PLATFORMS:
-                        platform = CHARACTERISTIC_PLATFORMS[char.type]
+        async with self._load_platforms_lock:
+            to_load: set[str] = set()
+            for accessory in self.entity_map.accessories:
+                for service in accessory.services:
+                    if service.type in HOMEKIT_ACCESSORY_DISPATCH:
+                        platform = HOMEKIT_ACCESSORY_DISPATCH[service.type]
                         if platform not in self.platforms:
                             to_load.add(platform)
 
-        if to_load:
-            await self._async_load_platforms(to_load)
+                    for char in service.characteristics:
+                        if char.type in CHARACTERISTIC_PLATFORMS:
+                            platform = CHARACTERISTIC_PLATFORMS[char.type]
+                            if platform not in self.platforms:
+                                to_load.add(platform)
+
+            if to_load:
+                await self._async_load_platforms(to_load)
 
     @callback
     def async_update_available_state(self, *_: Any) -> None:

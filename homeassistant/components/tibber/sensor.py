@@ -53,6 +53,8 @@ from homeassistant.util import Throttle, dt as dt_util
 
 from .const import DOMAIN as TIBBER_DOMAIN, MANUFACTURER
 
+FIVE_YEARS = 5 * 365 * 24
+
 _LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:currency-usd"
@@ -128,7 +130,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         translation_key="accumulated_consumption",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="accumulatedConsumptionLastHour",
@@ -148,7 +150,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         translation_key="accumulated_production",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="accumulatedProductionLastHour",
@@ -724,9 +726,16 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=has
                         None,
                         {"sum"},
                     )
-                    first_stat = stat[statistic_id][0]
-                    _sum = cast(float, first_stat["sum"])
-                    last_stats_time = first_stat["start"]
+                    if statistic_id in stat:
+                        first_stat = stat[statistic_id][0]
+                        _sum = cast(float, first_stat["sum"])
+                        last_stats_time = first_stat["start"]
+                    else:
+                        hourly_data = await home.get_historic_data(
+                            FIVE_YEARS, production=is_production
+                        )
+                        _sum = 0.0
+                        last_stats_time = None
 
                 statistics = []
 

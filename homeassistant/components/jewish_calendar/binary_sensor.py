@@ -27,7 +27,7 @@ from . import DOMAIN
 class JewishCalendarBinarySensorMixIns(BinarySensorEntityDescription):
     """Binary Sensor description mixin class for Jewish Calendar."""
 
-    is_on: Callable[..., bool] = lambda _: False
+    is_on: Callable[[Zmanim], bool] = lambda _: False
 
 
 @dataclass(frozen=True)
@@ -47,12 +47,12 @@ BINARY_SENSORS: tuple[JewishCalendarBinarySensorEntityDescription, ...] = (
     JewishCalendarBinarySensorEntityDescription(
         key="erev_shabbat_hag",
         name="Erev Shabbat/Hag",
-        is_on=lambda state: bool(state.erev_shabbat_hag),
+        is_on=lambda state: bool(state.erev_shabbat_chag),
     ),
     JewishCalendarBinarySensorEntityDescription(
         key="motzei_shabbat_hag",
         name="Motzei Shabbat/Hag",
-        is_on=lambda state: bool(state.motzei_shabbat_hag),
+        is_on=lambda state: bool(state.motzei_shabbat_chag),
     ),
 )
 
