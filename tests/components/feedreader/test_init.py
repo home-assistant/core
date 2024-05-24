@@ -1,11 +1,9 @@
 """The tests for the feedreader component."""
 
-from collections.abc import Generator
 from datetime import datetime, timedelta
-import pickle
 from time import gmtime
 from typing import Any
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -75,39 +73,9 @@ async def fixture_events(hass: HomeAssistant) -> list[Event]:
     return async_capture_events(hass, EVENT_FEEDREADER)
 
 
-@pytest.fixture(name="storage")
-def fixture_storage(request: pytest.FixtureRequest) -> Generator[None, None, None]:
-    """Set up the test storage environment."""
-    if request.param == "legacy_storage":
-        with patch("os.path.exists", return_value=False):
-            yield
-    elif request.param == "json_storage":
-        with patch("os.path.exists", return_value=True):
-            yield
-    else:
-        raise RuntimeError("Invalid storage fixture")
-
-
-@pytest.fixture(name="legacy_storage_open")
-def fixture_legacy_storage_open() -> Generator[MagicMock, None, None]:
-    """Mock builtins.open for feedreader storage."""
-    with patch(
-        "homeassistant.components.feedreader.coordinator.open",
-        mock_open(),
-        create=True,
-    ) as open_mock:
-        yield open_mock
-
-
-@pytest.fixture(name="legacy_storage_load", autouse=True)
-def fixture_legacy_storage_load(
-    legacy_storage_open,
-) -> Generator[MagicMock, None, None]:
-    """Mock builtins.open for feedreader storage."""
-    with patch(
-        "homeassistant.components.feedreader.coordinator.pickle.load", return_value={}
-    ) as pickle_load:
-        yield pickle_load
+async def test_setup_one_feed(hass: HomeAssistant) -> None:
+    """Test the general setup of this component."""
+    assert await async_setup_component(hass, DOMAIN, VALID_CONFIG_1)
 
 
 async def test_setup_no_feeds(hass: HomeAssistant) -> None:
@@ -115,36 +83,11 @@ async def test_setup_no_feeds(hass: HomeAssistant) -> None:
     assert not await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_URLS: []}})
 
 
-@pytest.mark.parametrize(
-    ("open_error", "load_error"),
-    [
-        (FileNotFoundError("No file"), None),
-        (OSError("Boom"), None),
-        (None, pickle.PickleError("Bad data")),
-    ],
-)
-async def test_legacy_storage_error(
-    hass: HomeAssistant,
-    legacy_storage_open: MagicMock,
-    legacy_storage_load: MagicMock,
-    open_error: Exception | None,
-    load_error: Exception | None,
-) -> None:
-    """Test legacy storage error."""
-    legacy_storage_open.side_effect = open_error
-    legacy_storage_load.side_effect = load_error
-
-    assert await async_setup_component(hass, DOMAIN, VALID_CONFIG_1)
-
-
-@pytest.mark.parametrize("storage", ["legacy_storage", "json_storage"], indirect=True)
 async def test_storage_data_loading(
     hass: HomeAssistant,
     events: list[Event],
     feed_one_event: bytes,
-    legacy_storage_load: MagicMock,
     hass_storage: dict[str, Any],
-    storage: None,
 ) -> None:
     """Test loading existing storage data."""
     storage_data: dict[str, str] = {URL: "2018-04-30T05:10:00+00:00"}
@@ -154,10 +97,6 @@ async def test_storage_data_loading(
         "key": DOMAIN,
         "data": storage_data,
     }
-    legacy_storage_data = {
-        URL: gmtime(datetime.fromisoformat(storage_data[URL]).timestamp())
-    }
-    legacy_storage_load.return_value = legacy_storage_data
 
     with patch(
         "feedparser.http.get",
@@ -198,12 +137,6 @@ async def test_storage_data_writing(
 
     # storage data updated
     assert hass_storage[DOMAIN]["data"] == storage_data
-
-
-@pytest.mark.parametrize("storage", ["legacy_storage", "json_storage"], indirect=True)
-async def test_setup_one_feed(hass: HomeAssistant, storage: None) -> None:
-    """Test the general setup of this component."""
-    assert await async_setup_component(hass, DOMAIN, VALID_CONFIG_1)
 
 
 async def test_setup_max_entries(hass: HomeAssistant) -> None:

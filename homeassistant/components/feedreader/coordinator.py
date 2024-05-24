@@ -5,8 +5,6 @@ from __future__ import annotations
 from calendar import timegm
 from datetime import datetime, timedelta
 from logging import getLogger
-import os
-import pickle
 from time import gmtime, struct_time
 
 import feedparser
@@ -171,45 +169,21 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
 class StoredData:
     """Represent a data storage."""
 
-    def __init__(self, hass: HomeAssistant, legacy_data_file: str) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize data storage."""
-        self._legacy_data_file = legacy_data_file
         self._data: dict[str, struct_time] = {}
         self.hass = hass
         self._store: Store[dict[str, str]] = Store(hass, STORAGE_VERSION, DOMAIN)
 
     async def async_setup(self) -> None:
         """Set up storage."""
-        if not os.path.exists(self._store.path):
-            # Remove the legacy store loading after deprecation period.
-            data = await self.hass.async_add_executor_job(self._legacy_fetch_data)
-        else:
-            if (store_data := await self._store.async_load()) is None:
-                return
-            # Make sure that dst is set to 0, by using gmtime() on the timestamp.
-            data = {
-                feed_id: gmtime(datetime.fromisoformat(timestamp_string).timestamp())
-                for feed_id, timestamp_string in store_data.items()
-            }
-
-        self._data = data
-
-    def _legacy_fetch_data(self) -> dict[str, struct_time]:
-        """Fetch data stored in pickle file."""
-        _LOGGER.debug("Fetching data from legacy file %s", self._legacy_data_file)
-        try:
-            with open(self._legacy_data_file, "rb") as myfile:
-                return pickle.load(myfile) or {}
-        except FileNotFoundError:
-            pass
-        except (OSError, pickle.PickleError) as err:
-            _LOGGER.error(
-                "Error loading data from pickled file %s: %s",
-                self._legacy_data_file,
-                err,
-            )
-
-        return {}
+        if (store_data := await self._store.async_load()) is None:
+            return
+        # Make sure that dst is set to 0, by using gmtime() on the timestamp.
+        self._data = {
+            feed_id: gmtime(datetime.fromisoformat(timestamp_string).timestamp())
+            for feed_id, timestamp_string in store_data.items()
+        }
 
     def get_timestamp(self, feed_id: str) -> struct_time | None:
         """Return stored timestamp for given feed id."""

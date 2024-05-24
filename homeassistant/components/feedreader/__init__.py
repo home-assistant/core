@@ -46,8 +46,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     scan_interval: timedelta = config[DOMAIN][CONF_SCAN_INTERVAL]
     max_entries: int = config[DOMAIN][CONF_MAX_ENTRIES]
-    old_data_file = hass.config.path(f"{DOMAIN}.pickle")
-    storage = StoredData(hass, old_data_file)
+    storage = StoredData(hass)
     await storage.async_setup()
     feeds = [
         FeedReaderCoordinator(hass, url, scan_interval, max_entries, storage)
