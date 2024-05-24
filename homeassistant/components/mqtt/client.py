@@ -856,18 +856,16 @@ class MQTT:
             raise HomeAssistantError("Topic needs to be a string!")
 
         job_type = get_hassjob_callable_job_type(msg_callback)
-
         if job_type is not HassJobType.Callback:
-            # Only wrap the callback if it is not a simple callback
-            job = HassJob(
-                catch_log_exception(
-                    msg_callback, partial(self._exception_message, msg_callback)
-                ),
-                job_type=job_type,
+            # Only wrap the callback with catch_log_exception
+            # if it is not a simple callback since we catch
+            # exceptions for simple callbacks inline for
+            # performance reasons.
+            msg_callback = catch_log_exception(
+                msg_callback, partial(self._exception_message, msg_callback)
             )
-        else:
-            job = HassJob(msg_callback, job_type=job_type)
 
+        job = HassJob(msg_callback, job_type=job_type)
         subscription = Subscription(
             topic, _matcher_for_topic(topic), job, qos, encoding
         )
