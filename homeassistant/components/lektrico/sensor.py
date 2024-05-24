@@ -44,6 +44,16 @@ class LektricoSensorEntityDescription(SensorEntityDescription):
 SENSORS_FOR_CHARGERS: tuple[LektricoSensorEntityDescription, ...] = (
     LektricoSensorEntityDescription(
         key="state",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "available",
+            "connected",
+            "need_auth",
+            "paused",
+            "charging",
+            "error",
+            "updating_firmware",
+        ],
         translation_key="state",
         value_fn=lambda data: str(data.charger_state),
     ),
@@ -93,6 +103,17 @@ SENSORS_FOR_CHARGERS: tuple[LektricoSensorEntityDescription, ...] = (
     LektricoSensorEntityDescription(
         key="limit_reason",
         translation_key="limit_reason",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "no_limit",
+            "installation_current",
+            "user_limit",
+            "dynamic_limit",
+            "schedule",
+            "em_offline",
+            "em",
+            "ocpp",
+        ],
         value_fn=lambda data: str(data.current_limit_reason),
     ),
 )

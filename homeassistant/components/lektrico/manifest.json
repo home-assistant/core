@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/lektrico",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "requirements": ["lektricowifi==0.0.25"],
+  "requirements": ["lektricowifi==0.0.28"],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",

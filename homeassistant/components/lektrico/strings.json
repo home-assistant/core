@@ -24,7 +24,16 @@
   "entity": {
     "sensor": {
       "state": {
-        "name": "State"
+        "name": "State",
+        "state": {
+          "available": "Available",
+          "connected": "Connected",
+          "need_auth": "Connected,NeedAuth",
+          "paused": "Paused",
+          "charging": "Charging",
+          "error": "Error",
+          "updating_firmware": "Updating firmware"
+        }
       },
       "charging_time": {
         "name": "Charging time"
@@ -36,7 +45,17 @@
         "name": "Installation current"
       },
       "limit_reason": {
-        "name": "Limit reason"
+        "name": "Limit reason",
+        "state": {
+          "no_limit": "No limit",
+          "installation_current": "Installation current",
+          "user_limit": "User limit",
+          "dynamic_limit": "Dynamic limit",
+          "schedule": "Schedule",
+          "em_offline": "EM offline",
+          "em": "EM",
+          "ocpp": "OCPP"
+        }
       },
       "breaker_current": {
         "name": "Breaker current"
