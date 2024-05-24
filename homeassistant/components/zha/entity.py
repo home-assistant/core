@@ -59,6 +59,10 @@ class ZHAEntity(LogMixin, entity.Entity):
         elif meta.entity_category == ZHAEntityCategory.DIAGNOSTIC:
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
+        self._attr_entity_registry_enabled_default = (
+            meta.entity_registry_enabled_default
+        )
+
     @property
     def available(self) -> bool:
         """Return entity availability."""
