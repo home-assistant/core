@@ -1105,7 +1105,7 @@ async def test_browse_media(
     assert expected_child_audio in response["result"]["children"]
 
     # Device specifies extra parameters in MIME type, uses non-standard "x-"
-    # prefix, and capitilizes things, all of which should be ignored
+    # prefix, and capitalizes things, all of which should be ignored
     dmr_device_mock.sink_protocol_info = [
         "http-get:*:audio/X-MPEG;codecs=mp3:*",
     ]

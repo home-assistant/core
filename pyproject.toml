@@ -62,7 +62,7 @@ dependencies    = [
     "PyYAML==6.0.1",
     "requests==2.31.0",
     "SQLAlchemy==2.0.30",
-    "typing-extensions>=4.11.0,<5.0",
+    "typing-extensions>=4.12.0,<5.0",
     "ulid-transform==0.9.0",
     # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
@@ -564,7 +564,7 @@ filterwarnings = [
     # https://github.com/tomaszsluszniak/sanix_py/blob/v1.0.6/sanix/__init__.py#L42
     "ignore:invalid escape sequence:SyntaxWarning:.*sanix",
     # https://pypi.org/project/sleekxmppfs/ - v1.4.1 - 2022-08-18
-    "ignore:invalid escape sequence:SyntaxWarning:.*sleekxmppfs.thirdparty.mini_dateutil",
+    "ignore:invalid escape sequence:SyntaxWarning:.*sleekxmppfs.thirdparty.mini_dateutil",  # codespell:ignore thirdparty
     # https://pypi.org/project/vobject/ - v0.9.7 - 2024-03-25
     # https://github.com/py-vobject/vobject
     "ignore:invalid escape sequence:SyntaxWarning:.*vobject.base",
