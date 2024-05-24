@@ -27,7 +27,7 @@ from . import DOMAIN
 class JewishCalendarBinarySensorMixIns(BinarySensorEntityDescription):
     """Binary Sensor description mixin class for Jewish Calendar."""
 
-    is_on: Callable[..., bool] = lambda _: False
+    is_on: Callable[[Zmanim], bool] = lambda _: False
 
 
 @dataclass(frozen=True)

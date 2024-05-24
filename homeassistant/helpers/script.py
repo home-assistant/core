@@ -1372,7 +1372,7 @@ class Script:
         domain: str,
         *,
         # Used in "Running <running_description>" log message
-        change_listener: Callable[..., Any] | None = None,
+        change_listener: Callable[[], Any] | None = None,
         copy_variables: bool = False,
         log_exceptions: bool = True,
         logger: logging.Logger | None = None,
@@ -1438,7 +1438,7 @@ class Script:
         return self._change_listener
 
     @change_listener.setter
-    def change_listener(self, change_listener: Callable[..., Any]) -> None:
+    def change_listener(self, change_listener: Callable[[], Any]) -> None:
         """Update the change_listener."""
         self._change_listener = change_listener
         if (
