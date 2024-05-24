@@ -211,7 +211,7 @@ class OllamaConversationEntity(
                 "ha_name": self.hass.config.location_name,
                 "ha_language": self.hass.config.language,
                 "exposed_entities": self._get_exposed_entities(),
-                "device_id": device_id,
+                "user_device_id": device_id,
                 "user_id": user_id,
             },
             parse_result=False,

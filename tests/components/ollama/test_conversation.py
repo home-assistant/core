@@ -87,6 +87,7 @@ async def test_chat(
             None,
             Context(),
             agent_id=agent_id,
+            device_id=kitchen_device.id,
         )
 
         assert mock_chat.call_count == 1
@@ -104,6 +105,7 @@ async def test_chat(
         assert "bedroom light" in prompt
         assert "office light" not in prompt
         assert "office" not in prompt
+        assert "You are in kitchen." in prompt
 
         assert (
             result.response.response_type == intent.IntentResponseType.ACTION_DONE
