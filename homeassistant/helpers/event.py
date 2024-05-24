@@ -592,7 +592,10 @@ def _async_domain_added_filter(
     """Filter state changes by entity_id."""
     return event_data["old_state"] is None and (
         MATCH_ALL in callbacks
-        or split_entity_id(event_data["entity_id"])[0] in callbacks
+        or
+        # If old_state is None, new_state must be set but
+        # mypy doesn't know that
+        event_data["new_state"].domain in callbacks  # type: ignore[union-attr]
     )
 
 
@@ -640,7 +643,10 @@ def _async_domain_removed_filter(
     """Filter state changes by entity_id."""
     return event_data["new_state"] is None and (
         MATCH_ALL in callbacks
-        or split_entity_id(event_data["entity_id"])[0] in callbacks
+        or
+        # If new_State is None, old_state must be set but
+        # mypy doesn't know that
+        event_data["old_state"].domain in callbacks  # type: ignore[union-attr]
     )
 
 
