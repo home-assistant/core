@@ -120,7 +120,7 @@ async def test_setting_sensor_value_via_mqtt_message(
                     "state_topic": "test-topic",
                 }
             }
-        }
+        },
     ],
 )
 async def test_setting_sensor_to_long_state_via_mqtt_message(
