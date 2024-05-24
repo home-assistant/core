@@ -154,12 +154,19 @@
               "id": "81C6EEA2-D139-4FEA-B134-F22A6B3EA403",
               "name": "Springflowers",
               "enabled": true
+            },
+            {
+              "id": "AAAAAAAA-BBBB-CCCC-DDDD-123456789101",
+              "name": "Danger Zone",
+              "enabled": false
             }
           ]
         },
-        "cuttingHeight": 4,
-        "headlight": {
-          "mode": "EVENING_ONLY"
+        "settings": {
+          "cuttingHeight": 4,
+          "headlight": {
+            "mode": "EVENING_ONLY"
+          }
         }
       }
     }

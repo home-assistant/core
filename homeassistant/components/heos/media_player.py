@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 from functools import reduce, wraps
 import logging
 from operator import ior
-from typing import Any, ParamSpec
+from typing import Any
 
 from pyheos import HeosError, const as heos_const
 
@@ -40,8 +40,6 @@ from .const import (
     SIGNAL_HEOS_PLAYER_ADDED,
     SIGNAL_HEOS_UPDATED,
 )
-
-_P = ParamSpec("_P")
 
 BASE_SUPPORTED_FEATURES = (
     MediaPlayerEntityFeature.VOLUME_MUTE
@@ -90,11 +88,13 @@ async def async_setup_entry(
     async_add_entities(devices, True)
 
 
-_FuncType = Callable[_P, Awaitable[Any]]
-_ReturnFuncType = Callable[_P, Coroutine[Any, Any, None]]
+type _FuncType[**_P] = Callable[_P, Awaitable[Any]]
+type _ReturnFuncType[**_P] = Callable[_P, Coroutine[Any, Any, None]]
 
 
-def log_command_error(command: str) -> Callable[[_FuncType[_P]], _ReturnFuncType[_P]]:
+def log_command_error[**_P](
+    command: str,
+) -> Callable[[_FuncType[_P]], _ReturnFuncType[_P]]:
     """Return decorator that logs command failure."""
 
     def decorator(func: _FuncType[_P]) -> _ReturnFuncType[_P]:

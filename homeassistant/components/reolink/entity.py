@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TypeVar
 
 from reolink_aio.api import DUAL_LENS_MODELS, Host
 
@@ -17,8 +16,6 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import ReolinkData
 from .const import DOMAIN
-
-_T = TypeVar("_T")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -37,7 +34,9 @@ class ReolinkHostEntityDescription(EntityDescription):
     supported: Callable[[Host], bool] = lambda api: True
 
 
-class ReolinkBaseCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[_T]]):
+class ReolinkBaseCoordinatorEntity[_DataT](
+    CoordinatorEntity[DataUpdateCoordinator[_DataT]]
+):
     """Parent class for Reolink entities."""
 
     _attr_has_entity_name = True
@@ -45,7 +44,7 @@ class ReolinkBaseCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[_T]])
     def __init__(
         self,
         reolink_data: ReolinkData,
-        coordinator: DataUpdateCoordinator[_T],
+        coordinator: DataUpdateCoordinator[_DataT],
     ) -> None:
         """Initialize ReolinkBaseCoordinatorEntity."""
         super().__init__(coordinator)

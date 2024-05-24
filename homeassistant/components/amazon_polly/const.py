@@ -66,7 +66,7 @@ SUPPORTED_VOICES: Final[list[str]] = [
     "Hans",  # German
     "Hiujin",  # Chinese (Cantonese), Neural
     "Ida",  # Norwegian, Neural
-    "Ines",  # Portuguese, European
+    "Ines",  # Portuguese, European  # codespell:ignore ines
     "Ivy",  # English
     "Jacek",  # Polish
     "Jan",  # Polish

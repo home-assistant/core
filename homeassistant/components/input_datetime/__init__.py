@@ -237,11 +237,11 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         # If the user passed in an initial value with a timezone, convert it to right tz
         if current_datetime.tzinfo is not None:
             self._current_datetime = current_datetime.astimezone(
-                dt_util.DEFAULT_TIME_ZONE
+                dt_util.get_default_time_zone()
             )
         else:
             self._current_datetime = current_datetime.replace(
-                tzinfo=dt_util.DEFAULT_TIME_ZONE
+                tzinfo=dt_util.get_default_time_zone()
             )
 
     @classmethod
@@ -295,7 +295,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
             )
 
         self._current_datetime = current_datetime.replace(
-            tzinfo=dt_util.DEFAULT_TIME_ZONE
+            tzinfo=dt_util.get_default_time_zone()
         )
 
     @property
@@ -409,7 +409,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
             time = self._current_datetime.time()
 
         self._current_datetime = py_datetime.datetime.combine(
-            date, time, dt_util.DEFAULT_TIME_ZONE
+            date, time, dt_util.get_default_time_zone()
         )
         self.async_write_ha_state()
 

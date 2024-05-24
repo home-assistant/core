@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate, ParamSpec, TypeVar, overload
+from typing import Any, Concatenate, overload
 
 from aiohttp.web import Request, Response, StreamResponse
 
@@ -13,16 +13,18 @@ from homeassistant.exceptions import Unauthorized
 
 from .view import HomeAssistantView
 
-_HomeAssistantViewT = TypeVar("_HomeAssistantViewT", bound=HomeAssistantView)
-_ResponseT = TypeVar("_ResponseT", bound=Response | StreamResponse)
-_P = ParamSpec("_P")
-_FuncType = Callable[
-    Concatenate[_HomeAssistantViewT, Request, _P], Coroutine[Any, Any, _ResponseT]
+type _ResponseType = Response | StreamResponse
+type _FuncType[_T, **_P, _R] = Callable[
+    Concatenate[_T, Request, _P], Coroutine[Any, Any, _R]
 ]
 
 
 @overload
-def require_admin(
+def require_admin[
+    _HomeAssistantViewT: HomeAssistantView,
+    **_P,
+    _ResponseT: _ResponseType,
+](
     _func: None = None,
     *,
     error: Unauthorized | None = None,
@@ -33,12 +35,20 @@ def require_admin(
 
 
 @overload
-def require_admin(
+def require_admin[
+    _HomeAssistantViewT: HomeAssistantView,
+    **_P,
+    _ResponseT: _ResponseType,
+](
     _func: _FuncType[_HomeAssistantViewT, _P, _ResponseT],
 ) -> _FuncType[_HomeAssistantViewT, _P, _ResponseT]: ...
 
 
-def require_admin(
+def require_admin[
+    _HomeAssistantViewT: HomeAssistantView,
+    **_P,
+    _ResponseT: _ResponseType,
+](
     _func: _FuncType[_HomeAssistantViewT, _P, _ResponseT] | None = None,
     *,
     error: Unauthorized | None = None,

@@ -46,10 +46,10 @@ from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
     find_paths_unserializable_data,
     json_bytes,
+    json_fragment,
 )
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import (
-    Integration,
     IntegrationNotFound,
     async_get_integration,
     async_get_integration_descriptions,
@@ -103,7 +103,7 @@ def pong_message(iden: int) -> dict[str, Any]:
 
 @callback
 def _forward_events_check_permissions(
-    send_message: Callable[[bytes | str | dict[str, Any] | Callable[[], str]], None],
+    send_message: Callable[[bytes | str | dict[str, Any]], None],
     user: User,
     message_id_as_bytes: bytes,
     event: Event,
@@ -123,7 +123,7 @@ def _forward_events_check_permissions(
 
 @callback
 def _forward_events_unconditional(
-    send_message: Callable[[bytes | str | dict[str, Any] | Callable[[], str]], None],
+    send_message: Callable[[bytes | str | dict[str, Any]], None],
     message_id_as_bytes: bytes,
     event: Event,
 ) -> None:
@@ -365,7 +365,7 @@ def _send_handle_get_states_response(
 
 @callback
 def _forward_entity_changes(
-    send_message: Callable[[str | bytes | dict[str, Any] | Callable[[], str]], None],
+    send_message: Callable[[str | bytes | dict[str, Any]], None],
     entity_ids: set[str],
     user: User,
     message_id_as_bytes: bytes,
@@ -505,19 +505,15 @@ async def handle_manifest_list(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations command."""
-    wanted_integrations = msg.get("integrations")
-    if wanted_integrations is None:
-        wanted_integrations = async_get_loaded_integrations(hass)
-
-    ints_or_excs = await async_get_integrations(hass, wanted_integrations)
-    integrations: list[Integration] = []
+    ints_or_excs = await async_get_integrations(
+        hass, msg.get("integrations") or async_get_loaded_integrations(hass)
+    )
+    manifest_json_fragments: list[json_fragment] = []
     for int_or_exc in ints_or_excs.values():
         if isinstance(int_or_exc, Exception):
             raise int_or_exc
-        integrations.append(int_or_exc)
-    connection.send_result(
-        msg["id"], [integration.manifest for integration in integrations]
-    )
+        manifest_json_fragments.append(int_or_exc.manifest_json_fragment)
+    connection.send_result(msg["id"], manifest_json_fragments)
 
 
 @decorators.websocket_command(
@@ -530,9 +526,10 @@ async def handle_manifest_get(
     """Handle integrations command."""
     try:
         integration = await async_get_integration(hass, msg["integration"])
-        connection.send_result(msg["id"], integration.manifest)
     except IntegrationNotFound:
         connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Integration not found")
+    else:
+        connection.send_result(msg["id"], integration.manifest_json_fragment)
 
 
 @callback
