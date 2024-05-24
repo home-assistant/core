@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 
+from bleak_retry_connector import BleakNotFoundError
 from pyluba.mammotion.devices import MammotionBaseBLEDevice
 
 from homeassistant.components import bluetooth
@@ -63,11 +64,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data.get(CONF_NAME, entry.title),
     )
 
-    entry.async_on_unload(coordinator.async_start())
-    if not await coordinator.async_wait_ready():
-        raise ConfigEntryNotReady(f"{address} is not advertising state")
-
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except BleakNotFoundError as err:
+        raise ConfigEntryNotReady from err
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
