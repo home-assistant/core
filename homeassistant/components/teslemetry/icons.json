@@ -126,11 +126,6 @@
         }
       }
     },
-    "number": {
-      "vehicle_state_speed_limit_mode_current_limit_mph": {
-        "default": "mdi:car-speed-limiter"
-      }
-    },
     "sensor": {
       "battery_power": {
         "default": "mdi:home-battery"
