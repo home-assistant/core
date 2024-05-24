@@ -972,6 +972,7 @@ omit =
     homeassistant/components/openuv/sensor.py
     homeassistant/components/openweathermap/__init__.py
     homeassistant/components/openweathermap/coordinator.py
+    homeassistant/components/openweathermap/repairs.py
     homeassistant/components/openweathermap/sensor.py
     homeassistant/components/openweathermap/weather.py
     homeassistant/components/opnsense/__init__.py
