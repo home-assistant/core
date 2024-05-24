@@ -59,6 +59,7 @@ from .const import (
     DEFAULT_POSITION_CLOSED,
     DEFAULT_POSITION_OPEN,
     DEFAULT_RETAIN,
+    PAYLOAD_NONE,
 )
 from .debug_info import log_messages
 from .mixins import (
@@ -220,13 +221,16 @@ class MqttValve(MqttEntity, ValveEntity):
         self._attr_supported_features = supported_features
 
     @callback
-    def _update_state(self, state: str) -> None:
+    def _update_state(self, state: str | None) -> None:
         """Update the valve state properties."""
         self._attr_is_opening = state == STATE_OPENING
         self._attr_is_closing = state == STATE_CLOSING
         if self.reports_position:
             return
-        self._attr_is_closed = state == STATE_CLOSED
+        if state is None:
+            self._attr_is_closed = None
+        else:
+            self._attr_is_closed = state == STATE_CLOSED
 
     @callback
     def _process_binary_valve_update(
@@ -242,7 +246,9 @@ class MqttValve(MqttEntity, ValveEntity):
             state = STATE_OPEN
         elif state_payload == self._config[CONF_STATE_CLOSED]:
             state = STATE_CLOSED
-        if state is None:
+        elif state_payload == PAYLOAD_NONE:
+            state = None
+        else:
             _LOGGER.warning(
                 "Payload received on topic '%s' is not one of "
                 "[open, closed, opening, closing], got: %s",
@@ -263,6 +269,9 @@ class MqttValve(MqttEntity, ValveEntity):
             state = STATE_OPENING
         elif state_payload == self._config[CONF_STATE_CLOSING]:
             state = STATE_CLOSING
+        elif state_payload == PAYLOAD_NONE:
+            self._attr_current_valve_position = None
+            return
         if state is None or position_payload != state_payload:
             try:
                 percentage_payload = ranged_value_to_percentage(
