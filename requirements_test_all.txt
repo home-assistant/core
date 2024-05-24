@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.45.0
+PySwitchbot==0.46.1
 
 # homeassistant.components.syncthru
 PySyncThru==0.7.10
@@ -422,7 +422,7 @@ apprise==1.7.4
 aprslib==0.7.2
 
 # homeassistant.components.aranet
-aranet4==2.3.3
+aranet4==2.3.4
 
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.4.0
@@ -554,10 +554,10 @@ construct==2.10.68
 croniter==2.0.2
 
 # homeassistant.components.crownstone
-crownstone-cloud==1.4.9
+crownstone-cloud==1.4.11
 
 # homeassistant.components.crownstone
-crownstone-sse==2.0.4
+crownstone-sse==2.0.5
 
 # homeassistant.components.crownstone
 crownstone-uart==2.1.0
@@ -843,7 +843,7 @@ ha-ffmpeg==3.2.0
 ha-iotawattpy==0.1.2
 
 # homeassistant.components.philips_js
-ha-philipsjs==3.1.1
+ha-philipsjs==3.2.1
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -1635,7 +1635,7 @@ pyqwikswitch==0.93
 pyrainbird==4.0.2
 
 # homeassistant.components.risco
-pyrisco==0.6.1
+pyrisco==0.6.2
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
@@ -1644,7 +1644,7 @@ pyrituals==0.0.6
 pyroute2==0.7.5
 
 # homeassistant.components.rympro
-pyrympro==0.0.7
+pyrympro==0.0.8
 
 # homeassistant.components.sabnzbd
 pysabnzbd==1.1.1
@@ -2222,7 +2222,7 @@ whois==0.9.27
 wiffi==1.1.2
 
 # homeassistant.components.wled
-wled==0.17.1
+wled==0.18.0
 
 # homeassistant.components.wolflink
 wolf-comm==0.0.7
