@@ -89,7 +89,7 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
     async def _async_turn_on(self) -> None:
         """Turn the remote on."""
         if self._turn_on_action:
-            LOGGER.info("Attempting to turn on %s via automation", self.entity_id)
+            LOGGER.debug("Attempting to turn on %s via automation", self.entity_id)
             await self._turn_on_action.async_run(self.hass, self._context)
         elif self._mac:
             LOGGER.info(
