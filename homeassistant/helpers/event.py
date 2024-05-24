@@ -644,7 +644,7 @@ def _async_domain_removed_filter(
     return event_data["new_state"] is None and (
         MATCH_ALL in callbacks
         or
-        # If new_State is None, old_state must be set but
+        # If new_state is None, old_state must be set but
         # mypy doesn't know that
         event_data["old_state"].domain in callbacks  # type: ignore[union-attr]
     )
