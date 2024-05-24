@@ -260,22 +260,22 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
     @callback
     def _handle_current_mode_received(self, msg: ReceiveMessage) -> None:
         """Handle receiving operation mode via MQTT."""
+
         payload = self.render_template(msg, CONF_MODE_STATE_TEMPLATE)
 
         if not payload.strip():  # No output from template, ignore
             _LOGGER.debug(
-                "Ignoring empty payload '%s' for attr '%s' "
+                "Ignoring empty payload '%s' for current operation "
                 "after rendering for topic %s",
                 payload,
-                attr,
                 msg.topic,
             )
             return
 
         if payload == PAYLOAD_NONE:
-            setattr(self, attr, None)
-        elif payload not in self._config[mode_list]:
-            _LOGGER.warning("Invalid %s mode: %s", mode_list, payload)
+            self._attr_current_operation = None
+        elif payload not in self._config[CONF_MODE_LIST]:
+            _LOGGER.warning("Invalid %s mode: %s", CONF_MODE_LIST, payload)
         else:
             if TYPE_CHECKING:
                 assert isinstance(payload, str)
