@@ -48,6 +48,7 @@ from homeassistant.helpers.event import (
     async_track_entity_registry_updated_event,
 )
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import (
     UNDEFINED,
     ConfigType,
@@ -93,7 +94,7 @@ from .const import (
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
 )
-from .debug_info import log_message, log_messages
+from .debug_info import log_message
 from .discovery import (
     MQTT_DISCOVERY_DONE,
     MQTT_DISCOVERY_NEW,
@@ -401,6 +402,7 @@ class MqttAttributes(Entity):
     """Mixin used for platforms that support JSON attributes."""
 
     _attributes_extra_blocked: frozenset[str] = frozenset()
+    _attr_tpl: Callable[[ReceivePayloadType], ReceivePayloadType] | None = None
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes mixin."""
@@ -424,38 +426,21 @@ class MqttAttributes(Entity):
 
     def _attributes_prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        attr_tpl = MqttValueTemplate(
+        self._attr_tpl = MqttValueTemplate(
             self._attributes_config.get(CONF_JSON_ATTRS_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_extra_state_attributes"})
-        def attributes_message_received(msg: ReceiveMessage) -> None:
-            """Update extra state attributes."""
-            payload = attr_tpl(msg.payload)
-            try:
-                json_dict = json_loads(payload) if isinstance(payload, str) else None
-                if isinstance(json_dict, dict):
-                    filtered_dict = {
-                        k: v
-                        for k, v in json_dict.items()
-                        if k not in MQTT_ATTRIBUTES_BLOCKED
-                        and k not in self._attributes_extra_blocked
-                    }
-                    self._attr_extra_state_attributes = filtered_dict
-                else:
-                    _LOGGER.warning("JSON result was not a dictionary")
-            except ValueError:
-                _LOGGER.warning("Erroneous JSON: %s", payload)
-
         self._attributes_sub_state = async_prepare_subscribe_topics(
             self.hass,
             self._attributes_sub_state,
             {
                 CONF_JSON_ATTRS_TOPIC: {
                     "topic": self._attributes_config.get(CONF_JSON_ATTRS_TOPIC),
-                    "msg_callback": attributes_message_received,
+                    "msg_callback": partial(
+                        self._message_callback,  # type: ignore[attr-defined]
+                        self._attributes_message_received,
+                        {"_attr_extra_state_attributes"},
+                    ),
+                    "entity_id": self.entity_id,
                     "qos": self._attributes_config.get(CONF_QOS),
                     "encoding": self._attributes_config[CONF_ENCODING] or None,
                 }
@@ -471,6 +456,28 @@ class MqttAttributes(Entity):
         self._attributes_sub_state = async_unsubscribe_topics(
             self.hass, self._attributes_sub_state
         )
+
+    @callback
+    def _attributes_message_received(self, msg: ReceiveMessage) -> None:
+        """Update extra state attributes."""
+        if TYPE_CHECKING:
+            assert self._attr_tpl is not None
+        payload = self._attr_tpl(msg.payload)
+        try:
+            json_dict = json_loads(payload) if isinstance(payload, str) else None
+        except ValueError:
+            _LOGGER.warning("Erroneous JSON: %s", payload)
+        else:
+            if isinstance(json_dict, dict):
+                filtered_dict = {
+                    k: v
+                    for k, v in json_dict.items()
+                    if k not in MQTT_ATTRIBUTES_BLOCKED
+                    and k not in self._attributes_extra_blocked
+                }
+                self._attr_extra_state_attributes = filtered_dict
+            else:
+                _LOGGER.warning("JSON result was not a dictionary")
 
 
 class MqttAvailability(Entity):
@@ -535,28 +542,18 @@ class MqttAvailability(Entity):
 
     def _availability_prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"available"})
-        def availability_message_received(msg: ReceiveMessage) -> None:
-            """Handle a new received MQTT availability message."""
-            topic = msg.topic
-            payload = self._avail_topics[topic][CONF_AVAILABILITY_TEMPLATE](msg.payload)
-            if payload == self._avail_topics[topic][CONF_PAYLOAD_AVAILABLE]:
-                self._available[topic] = True
-                self._available_latest = True
-            elif payload == self._avail_topics[topic][CONF_PAYLOAD_NOT_AVAILABLE]:
-                self._available[topic] = False
-                self._available_latest = False
-
         self._available = {
             topic: (self._available.get(topic, False)) for topic in self._avail_topics
         }
         topics: dict[str, dict[str, Any]] = {
             f"availability_{topic}": {
                 "topic": topic,
-                "msg_callback": availability_message_received,
+                "msg_callback": partial(
+                    self._message_callback,  # type: ignore[attr-defined]
+                    self._availability_message_received,
+                    {"available"},
+                ),
+                "entity_id": self.entity_id,
                 "qos": self._avail_config[CONF_QOS],
                 "encoding": self._avail_config[CONF_ENCODING] or None,
             }
@@ -568,6 +565,19 @@ class MqttAvailability(Entity):
             self._availability_sub_state,
             topics,
         )
+
+    @callback
+    def _availability_message_received(self, msg: ReceiveMessage) -> None:
+        """Handle a new received MQTT availability message."""
+        topic = msg.topic
+        avail_topic = self._avail_topics[topic]
+        payload = avail_topic[CONF_AVAILABILITY_TEMPLATE](msg.payload)
+        if payload == avail_topic[CONF_PAYLOAD_AVAILABLE]:
+            self._available[topic] = True
+            self._available_latest = True
+        elif payload == avail_topic[CONF_PAYLOAD_NOT_AVAILABLE]:
+            self._available[topic] = False
+            self._available_latest = False
 
     async def _availability_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
@@ -1073,6 +1083,7 @@ class MqttEntity(
 ):
     """Representation of an MQTT entity."""
 
+    _attr_force_update = False
     _attr_has_entity_name = True
     _attr_should_poll = False
     _default_name: str | None
@@ -1224,6 +1235,45 @@ class MqttEntity(
     @abstractmethod
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
+
+    @callback
+    def _attrs_have_changed(
+        self, attrs_snapshot: tuple[tuple[str, Any | UndefinedType], ...]
+    ) -> bool:
+        """Return True if attributes on entity changed or if update is forced."""
+        if self._attr_force_update:
+            return True
+        for attribute, last_value in attrs_snapshot:
+            if getattr(self, attribute, UNDEFINED) != last_value:
+                return True
+        return False
+
+    @callback
+    def _message_callback(
+        self,
+        msg_callback: MessageCallbackType,
+        attributes: set[str],
+        msg: ReceiveMessage,
+    ) -> None:
+        """Process the message callback."""
+        attrs_snapshot: tuple[tuple[str, Any | UndefinedType], ...] = tuple(
+            (attribute, getattr(self, attribute, UNDEFINED)) for attribute in attributes
+        )
+        mqtt_data = self.hass.data[DATA_MQTT]
+        messages = mqtt_data.debug_info_entities[self.entity_id]["subscriptions"][
+            msg.subscribed_topic
+        ]["messages"]
+        if msg not in messages:
+            messages.append(msg)
+
+        try:
+            msg_callback(msg)
+        except MqttValueTemplateException as exc:
+            _LOGGER.warning(exc)
+            return
+
+        if self._attrs_have_changed(attrs_snapshot):
+            mqtt_data.state_write_requests.write_state_request(self)
 
 
 def update_device(
