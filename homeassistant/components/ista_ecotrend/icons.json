@@ -1,0 +1,30 @@
+{
+  "entity": {
+    "sensor": {
+      "heating": {
+        "default": "mdi:radiator"
+      },
+      "water": {
+        "default": "mdi:faucet"
+      },
+      "hot_water": {
+        "default": "mdi:faucet"
+      },
+      "heating_energy": {
+        "default": "mdi:lightning-bolt"
+      },
+      "hot_water_energy": {
+        "default": "mdi:lightning-bolt"
+      },
+      "heating_cost": {
+        "default": "mdi:cash"
+      },
+      "hot_water_cost": {
+        "default": "mdi:cash"
+      },
+      "water_cost": {
+        "default": "mdi:cash"
+      }
+    }
+  }
+}

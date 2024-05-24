@@ -2922,6 +2922,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "ista_ecotrend": {
+      "name": "ista Ecotrend",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "isy994": {
       "name": "Universal Devices ISY/IoX",
       "integration_type": "hub",
