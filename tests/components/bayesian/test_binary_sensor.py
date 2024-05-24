@@ -20,9 +20,9 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_registry import async_get as async_get_entities
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.issue_registry import async_get
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
@@ -104,7 +104,9 @@ async def test_unknown_state_does_not_influence_probability(
     assert state.attributes.get("probability") == prior
 
 
-async def test_sensor_numeric_state(hass: HomeAssistant) -> None:
+async def test_sensor_numeric_state(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test sensor on numeric state platform observations."""
     config = {
         "binary_sensor": {
@@ -200,7 +202,7 @@ async def test_sensor_numeric_state(hass: HomeAssistant) -> None:
 
     assert state.state == "off"
 
-    assert len(async_get(hass).issues) == 0
+    assert len(issue_registry.issues) == 0
 
 
 async def test_sensor_state(hass: HomeAssistant) -> None:
@@ -329,7 +331,7 @@ async def test_sensor_value_template(hass: HomeAssistant) -> None:
     assert state.state == "off"
 
 
-async def test_threshold(hass: HomeAssistant) -> None:
+async def test_threshold(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> None:
     """Test sensor on probability threshold limits."""
     config = {
         "binary_sensor": {
@@ -359,7 +361,7 @@ async def test_threshold(hass: HomeAssistant) -> None:
     assert round(abs(1.0 - state.attributes.get("probability")), 7) == 0
 
     assert state.state == "on"
-    assert len(async_get(hass).issues) == 0
+    assert len(issue_registry.issues) == 0
 
 
 async def test_multiple_observations(hass: HomeAssistant) -> None:
@@ -513,7 +515,9 @@ async def test_multiple_numeric_observations(hass: HomeAssistant) -> None:
     assert state.attributes.get("observations")[1]["platform"] == "numeric_state"
 
 
-async def test_mirrored_observations(hass: HomeAssistant) -> None:
+async def test_mirrored_observations(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test whether mirrored entries are detected and appropriate issues are created."""
 
     config = {
@@ -586,22 +590,24 @@ async def test_mirrored_observations(hass: HomeAssistant) -> None:
             "prior": 0.1,
         }
     }
-    assert len(async_get(hass).issues) == 0
+    assert len(issue_registry.issues) == 0
     assert await async_setup_component(hass, "binary_sensor", config)
     await hass.async_block_till_done()
     hass.states.async_set("sensor.test_monitored2", "on")
     await hass.async_block_till_done()
 
-    assert len(async_get(hass).issues) == 3
+    assert len(issue_registry.issues) == 3
     assert (
-        async_get(hass).issues[
+        issue_registry.issues[
             ("bayesian", "mirrored_entry/Test_Binary/sensor.test_monitored1")
         ]
         is not None
     )
 
 
-async def test_missing_prob_given_false(hass: HomeAssistant) -> None:
+async def test_missing_prob_given_false(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test whether missing prob_given_false are detected and appropriate issues are created."""
 
     config = {
@@ -630,15 +636,15 @@ async def test_missing_prob_given_false(hass: HomeAssistant) -> None:
             "prior": 0.1,
         }
     }
-    assert len(async_get(hass).issues) == 0
+    assert len(issue_registry.issues) == 0
     assert await async_setup_component(hass, "binary_sensor", config)
     await hass.async_block_till_done()
     hass.states.async_set("sensor.test_monitored2", "on")
     await hass.async_block_till_done()
 
-    assert len(async_get(hass).issues) == 3
+    assert len(issue_registry.issues) == 3
     assert (
-        async_get(hass).issues[
+        issue_registry.issues[
             ("bayesian", "no_prob_given_false/missingpgf/sensor.test_monitored1")
         ]
         is not None

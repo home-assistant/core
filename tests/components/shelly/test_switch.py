@@ -479,6 +479,7 @@ async def test_create_issue_valve_switch(
     mock_block_device: Mock,
     entity_registry_enabled_by_default: None,
     monkeypatch: pytest.MonkeyPatch,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we create an issue when an automation or script is using a deprecated entity."""
     monkeypatch.setitem(mock_block_device.status, "cloud", {"connected": False})
@@ -521,7 +522,6 @@ async def test_create_issue_valve_switch(
 
     assert automations_with_entity(hass, entity_id)[0] == "automation.test"
     assert scripts_with_entity(hass, entity_id)[0] == "script.test"
-    issue_registry: ir.IssueRegistry = ir.async_get(hass)
 
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_valve_switch")
     assert issue_registry.async_get_issue(

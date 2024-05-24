@@ -98,19 +98,21 @@ async def test_create_dashboards_when_not_onboarded(
     assert hass_storage[DOMAIN]["data"] == {"migrated": True}
 
 
-async def test_create_issue_when_not_manually_configured(hass: HomeAssistant) -> None:
+async def test_create_issue_when_not_manually_configured(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test creating issue registry issues."""
     assert await async_setup_component(hass, DOMAIN, {})
 
-    issue_registry = ir.async_get(hass)
     assert not issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, "deprecated_yaml_map"
     )
 
 
-async def test_create_issue_when_manually_configured(hass: HomeAssistant) -> None:
+async def test_create_issue_when_manually_configured(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test creating issue registry issues."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    issue_registry = ir.async_get(hass)
     assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml_map")

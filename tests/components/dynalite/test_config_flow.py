@@ -10,10 +10,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.issue_registry import (
-    IssueSeverity,
-    async_get as async_get_issue_registry,
-)
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -34,10 +31,10 @@ async def test_flow(
     exp_type,
     exp_result,
     exp_reason,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Run a flow with or without errors and return result."""
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(dynalite.DOMAIN, "deprecated_yaml")
+    issue = issue_registry.async_get_issue(dynalite.DOMAIN, "deprecated_yaml")
     assert issue is None
     host = "1.2.3.4"
     with patch(
@@ -55,12 +52,12 @@ async def test_flow(
         assert result["result"].state == exp_result
     if exp_reason:
         assert result["reason"] == exp_reason
-    issue = registry.async_get_issue(
+    issue = issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{dynalite.DOMAIN}"
     )
     assert issue is not None
     assert issue.issue_domain == dynalite.DOMAIN
-    assert issue.severity == IssueSeverity.WARNING
+    assert issue.severity == ir.IssueSeverity.WARNING
 
 
 async def test_deprecated(
