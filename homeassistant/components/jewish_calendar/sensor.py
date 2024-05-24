@@ -56,7 +56,7 @@ INFO_SENSORS = (
 TIME_SENSORS = (
     SensorEntityDescription(
         key="first_light",
-        name="Alot Hashachar",
+        name="Alot Hashachar",  # codespell:ignore alot
         icon="mdi:weather-sunset-up",
     ),
     SensorEntityDescription(
