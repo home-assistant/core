@@ -177,5 +177,5 @@ def openai_config_option_schema(
             CONF_TEMPERATURE,
             description={"suggested_value": options.get(CONF_TEMPERATURE)},
             default=DEFAULT_TEMPERATURE,
-        ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+        ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
     }
