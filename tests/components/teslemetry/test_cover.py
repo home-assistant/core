@@ -69,7 +69,7 @@ async def test_cover_offline(
 
     mock_vehicle_data.side_effect = VehicleOffline
     await setup_platform(hass, [Platform.COVER])
-    state = hass.states.get("cover.test_vent_windows")
+    state = hass.states.get("cover.test_windows")
     assert state.state == STATE_UNKNOWN
 
 
@@ -81,7 +81,7 @@ async def test_cover_services(
     await setup_platform(hass, [Platform.COVER])
 
     # Vent Windows
-    entity_id = "cover.test_vent_windows"
+    entity_id = "cover.test_windows"
     with patch(
         "homeassistant.components.teslemetry.VehicleSpecific.window_control",
         return_value=COMMAND_OK,
@@ -101,7 +101,7 @@ async def test_cover_services(
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: ["cover.test_vent_windows"]},
+            {ATTR_ENTITY_ID: ["cover.test_windows"]},
             blocking=True,
         )
         call.assert_called_once()
