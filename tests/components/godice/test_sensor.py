@@ -112,11 +112,7 @@ async def test_reloading_on_connection_lost(
         patch(
             "godice.create",
             return_value=fake_dice,
-        ),
-        patch(
-            "bleak.BleakClient",
-            return_value=None,
-        ) as bleak_client,
+        ) as dice_constructor,
         patch(
             "homeassistant.config_entries.ConfigEntries.async_reload",
             return_value=None,
@@ -128,7 +124,7 @@ async def test_reloading_on_connection_lost(
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        disconnect_cb = bleak_client.call_args.kwargs["disconnected_callback"]
+        disconnect_cb = dice_constructor.call_args.kwargs["disconnected_callback"]
 
         # no reloading when disconnected by request
         config_entry.runtime_data.disconnected_by_request_flag = True

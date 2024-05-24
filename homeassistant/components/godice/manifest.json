@@ -11,5 +11,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/godice",
   "iot_class": "local_push",
-  "requirements": ["godice==0.1.0"]
+  "requirements": ["godice==0.1.2"]
 }

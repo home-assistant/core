@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-import bleak
 import godice
 
 from homeassistant.components import bluetooth
@@ -45,10 +44,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: DiceConfigEntry) -> bool
             hass, entry.data[CONF_ADDRESS]
         )
         assert ble_device is not None
-        client = bleak.BleakClient(
-            ble_device, timeout=20, disconnected_callback=on_disconnect_callback
+        dice = godice.create(
+            ble_device,
+            godice.Shell[entry.data[CONF_SHELL]],
+            disconnected_callback=on_disconnect_callback,
+            timeout=20,
         )
-        dice = godice.create(client, godice.Shell[entry.data[CONF_SHELL]])
         await dice.connect()
         await dice.pulse_led(
             pulse_count=2, on_time_ms=50, off_time_ms=20, rgb_tuple=(0, 255, 0)
