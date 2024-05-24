@@ -14,13 +14,28 @@ ATTR_RETAIN = "retain"
 ATTR_SERIAL_NUMBER = "serial_number"
 ATTR_TOPIC = "topic"
 
+AVAILABILITY_ALL = "all"
+AVAILABILITY_ANY = "any"
+AVAILABILITY_LATEST = "latest"
+
+AVAILABILITY_MODES = [AVAILABILITY_ALL, AVAILABILITY_ANY, AVAILABILITY_LATEST]
+
+CONF_PAYLOAD_AVAILABLE = "payload_available"
+CONF_PAYLOAD_NOT_AVAILABLE = "payload_not_available"
+
 CONF_AVAILABILITY = "availability"
+
+CONF_AVAILABILITY_MODE = "availability_mode"
+CONF_AVAILABILITY_TEMPLATE = "availability_template"
+CONF_AVAILABILITY_TOPIC = "availability_topic"
 CONF_BROKER = "broker"
 CONF_BIRTH_MESSAGE = "birth_message"
 CONF_COMMAND_TEMPLATE = "command_template"
 CONF_COMMAND_TOPIC = "command_topic"
 CONF_DISCOVERY_PREFIX = "discovery_prefix"
 CONF_ENCODING = "encoding"
+CONF_JSON_ATTRS_TOPIC = "json_attributes_topic"
+CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
 CONF_KEEPALIVE = "keepalive"
 CONF_ORIGIN = "origin"
 CONF_QOS = ATTR_QOS
@@ -42,6 +57,7 @@ CONF_CURRENT_HUMIDITY_TEMPLATE = "current_humidity_template"
 CONF_CURRENT_HUMIDITY_TOPIC = "current_humidity_topic"
 CONF_CURRENT_TEMP_TEMPLATE = "current_temperature_template"
 CONF_CURRENT_TEMP_TOPIC = "current_temperature_topic"
+CONF_ENABLED_BY_DEFAULT = "enabled_by_default"
 CONF_MODE_COMMAND_TEMPLATE = "mode_command_template"
 CONF_MODE_COMMAND_TOPIC = "mode_command_topic"
 CONF_MODE_LIST = "modes"
@@ -85,9 +101,6 @@ CONF_SUGGESTED_AREA = "suggested_area"
 CONF_CONFIGURATION_URL = "configuration_url"
 CONF_OBJECT_ID = "object_id"
 CONF_SUPPORT_URL = "support_url"
-
-DATA_MQTT = "mqtt"
-DATA_MQTT_AVAILABLE = "mqtt_client_available"
 
 DEFAULT_PREFIX = "homeassistant"
 DEFAULT_BIRTH_WILL_TOPIC = DEFAULT_PREFIX + "/status"
@@ -172,3 +185,34 @@ RELOADABLE_PLATFORMS = [
 ]
 
 TEMPLATE_ERRORS = (jinja2.TemplateError, TemplateError, TypeError, ValueError)
+
+SUPPORTED_COMPONENTS = {
+    "alarm_control_panel",
+    "binary_sensor",
+    "button",
+    "camera",
+    "climate",
+    "cover",
+    "device_automation",
+    "device_tracker",
+    "event",
+    "fan",
+    "humidifier",
+    "image",
+    "lawn_mower",
+    "light",
+    "lock",
+    "notify",
+    "number",
+    "scene",
+    "siren",
+    "select",
+    "sensor",
+    "switch",
+    "tag",
+    "text",
+    "update",
+    "vacuum",
+    "valve",
+    "water_heater",
+}
