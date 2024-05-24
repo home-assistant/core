@@ -11,17 +11,19 @@ from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioChunkConverter, AudioStart, AudioStop
 from wyoming.client import AsyncTcpClient
 from wyoming.error import Error
+from wyoming.event import Event
 from wyoming.info import Describe, Info
 from wyoming.ping import Ping, Pong
 from wyoming.pipeline import PipelineStage, RunPipeline
 from wyoming.satellite import PauseSatellite, RunSatellite
+from wyoming.timer import TimerCancelled, TimerFinished, TimerStarted, TimerUpdated
 from wyoming.tts import Synthesize, SynthesizeVoice
 from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
-from homeassistant.components import assist_pipeline, stt, tts
+from homeassistant.components import assist_pipeline, intent, stt, tts
 from homeassistant.components.assist_pipeline import select as pipeline_select
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context, HomeAssistant, callback
 
 from .const import DOMAIN
 from .data import WyomingService
@@ -73,6 +75,10 @@ class WyomingSatellite:
         """Run and maintain a connection to satellite."""
         _LOGGER.debug("Running satellite task")
 
+        unregister_timer_handler = intent.async_register_timer_handler(
+            self.hass, self.device.device_id, self._handle_timer
+        )
+
         try:
             while self.is_running:
                 try:
@@ -97,6 +103,8 @@ class WyomingSatellite:
                     # Wait to restart
                     await self.on_restart()
         finally:
+            unregister_timer_handler()
+
             # Ensure sensor is off (before stop)
             self.device.set_is_active(False)
 
@@ -544,3 +552,38 @@ class WyomingSatellite:
                 yield chunk
         except asyncio.CancelledError:
             pass  # ignore
+
+    @callback
+    def _handle_timer(
+        self, event_type: intent.TimerEventType, timer: intent.TimerInfo
+    ) -> None:
+        """Forward timer events to satellite."""
+        assert self._client is not None
+
+        _LOGGER.debug("Timer event: type=%s, info=%s", event_type, timer)
+        event: Event | None = None
+        if event_type == intent.TimerEventType.STARTED:
+            event = TimerStarted(
+                id=timer.id,
+                total_seconds=timer.seconds,
+                name=timer.name,
+                start_hours=timer.start_hours,
+                start_minutes=timer.start_minutes,
+                start_seconds=timer.start_seconds,
+            ).event()
+        elif event_type == intent.TimerEventType.UPDATED:
+            event = TimerUpdated(
+                id=timer.id,
+                is_active=timer.is_active,
+                total_seconds=timer.seconds,
+            ).event()
+        elif event_type == intent.TimerEventType.CANCELLED:
+            event = TimerCancelled(id=timer.id).event()
+        elif event_type == intent.TimerEventType.FINISHED:
+            event = TimerFinished(id=timer.id).event()
+
+        if event is not None:
+            # Send timer event to satellite
+            self.hass.async_create_background_task(
+                self._client.write_event(event), "timer event"
+            )
