@@ -917,9 +917,7 @@ omit =
     homeassistant/components/notion/util.py
     homeassistant/components/nsw_fuel_station/sensor.py
     homeassistant/components/nuki/__init__.py
-    homeassistant/components/nuki/binary_sensor.py
     homeassistant/components/nuki/lock.py
-    homeassistant/components/nuki/sensor.py
     homeassistant/components/nx584/alarm_control_panel.py
     homeassistant/components/oasa_telematics/sensor.py
     homeassistant/components/obihai/__init__.py
