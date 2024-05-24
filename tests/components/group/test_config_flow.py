@@ -271,7 +271,11 @@ async def test_options(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"entities": members2, **options_options},
+        user_input={
+            "entities": members2,
+            "device_id": "6d2da3d42009b639c9ec24a880879eb4",
+            **options_options,
+        },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
@@ -279,6 +283,7 @@ async def test_options(
         "group_type": group_type,
         "hide_members": False,
         "name": "Bed Room",
+        "device_id": "6d2da3d42009b639c9ec24a880879eb4",
         **extra_options,
     }
     assert config_entry.data == {}
@@ -287,6 +292,7 @@ async def test_options(
         "group_type": group_type,
         "hide_members": False,
         "name": "Bed Room",
+        "device_id": "6d2da3d42009b639c9ec24a880879eb4",
         **extra_options,
     }
     assert config_entry.title == "Bed Room"

@@ -37,6 +37,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    CONF_DEVICE_ID,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -47,7 +48,12 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -86,6 +92,7 @@ async def async_setup_platform(
     async_add_entities(
         [
             LightGroup(
+                hass,
                 config.get(CONF_UNIQUE_ID),
                 config[CONF_NAME],
                 config[CONF_ENTITIES],
@@ -108,7 +115,16 @@ async def async_setup_entry(
     mode = config_entry.options.get(CONF_ALL, False)
 
     async_add_entities(
-        [LightGroup(config_entry.entry_id, config_entry.title, entities, mode)]
+        [
+            LightGroup(
+                hass,
+                config_entry.entry_id,
+                config_entry.title,
+                entities,
+                mode,
+                config_entry.options.get(CONF_DEVICE_ID, None),
+            )
+        ]
     )
 
 
@@ -118,6 +134,7 @@ def async_create_preview_light(
 ) -> LightGroup:
     """Create a preview sensor."""
     return LightGroup(
+        hass,
         None,
         name,
         validated_config[CONF_ENTITIES],
@@ -152,7 +169,13 @@ class LightGroup(GroupEntity, LightEntity):
     _attr_should_poll = False
 
     def __init__(
-        self, unique_id: str | None, name: str, entity_ids: list[str], mode: bool | None
+        self,
+        hass: HomeAssistant,
+        unique_id: str | None,
+        name: str,
+        entity_ids: list[str],
+        mode: bool | None,
+        device_id: str | None = None,
     ) -> None:
         """Initialize a light group."""
         self._entity_ids = entity_ids
@@ -163,6 +186,16 @@ class LightGroup(GroupEntity, LightEntity):
         self.mode = any
         if mode:
             self.mode = all
+
+        dev_reg = dr.async_get(hass)
+        if (
+            device_id is not None
+            and (device := dev_reg.async_get(device_id)) is not None
+        ):
+            self._attr_device_info = DeviceInfo(
+                connections=device.connections,
+                identifiers=device.identifiers,
+            )
 
         self._attr_color_mode = ColorMode.UNKNOWN
         self._attr_supported_color_modes = {ColorMode.ONOFF}

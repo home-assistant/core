@@ -19,10 +19,10 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import get_fixture_path
+from tests.common import MockConfigEntry, get_fixture_path
 
 
 async def test_default_state(
@@ -457,3 +457,41 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
     assert hass.states.get("switch.some_group").state == STATE_OFF
     assert hass.states.get("switch.nested_group").state == STATE_OFF
+
+
+async def test_device_id(hass: HomeAssistant) -> None:
+    """Test for device for Group - Switch."""
+    group_type = "switch"
+    device_registry = dr.async_get(hass)
+
+    device_config_entry = MockConfigEntry()
+    device_config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=device_config_entry.entry_id,
+        identifiers={("sensor", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    await hass.async_block_till_done()
+    assert device_entry is not None
+    assert device_entry.id is not None
+
+    group_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My group",
+            "entities": [f"{group_type}.one", f"{group_type}.two"],
+            "group_type": group_type,
+            "device_id": device_entry.id,
+        },
+        title="My group",
+    )
+    group_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(group_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    group_entity = entity_registry.async_get(f"{group_type}.my_group")
+    assert group_entity is not None
+    assert group_entity.device_id == device_entry.id

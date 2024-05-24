@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
+    CONF_DEVICE_ID,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -25,7 +26,12 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -57,6 +63,7 @@ async def async_setup_platform(
     async_add_entities(
         [
             BinarySensorGroup(
+                hass,
                 config.get(CONF_UNIQUE_ID),
                 config[CONF_NAME],
                 config.get(CONF_DEVICE_CLASS),
@@ -82,7 +89,13 @@ async def async_setup_entry(
     async_add_entities(
         [
             BinarySensorGroup(
-                config_entry.entry_id, config_entry.title, None, entities, mode
+                hass,
+                config_entry.entry_id,
+                config_entry.title,
+                None,
+                entities,
+                mode,
+                config_entry.options.get(CONF_DEVICE_ID, None),
             )
         ]
     )
@@ -94,6 +107,7 @@ def async_create_preview_binary_sensor(
 ) -> BinarySensorGroup:
     """Create a preview sensor."""
     return BinarySensorGroup(
+        hass,
         None,
         name,
         None,
@@ -109,11 +123,13 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         unique_id: str | None,
         name: str,
         device_class: BinarySensorDeviceClass | None,
         entity_ids: list[str],
         mode: bool | None,
+        device_id: str | None = None,
     ) -> None:
         """Initialize a BinarySensorGroup entity."""
         super().__init__()
@@ -125,6 +141,16 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
         self.mode = any
         if mode:
             self.mode = all
+
+        dev_reg = dr.async_get(hass)
+        if (
+            device_id is not None
+            and (device := dev_reg.async_get(device_id)) is not None
+        ):
+            self._attr_device_info = DeviceInfo(
+                connections=device.connections,
+                identifiers=device.identifiers,
+            )
 
     @callback
     def async_update_group_state(self) -> None:

@@ -9,7 +9,7 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.const import CONF_ENTITIES, CONF_TYPE
+from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
@@ -65,6 +65,7 @@ async def basic_group_options_schema(
         {
             vol.Required(CONF_ENTITIES): entity_selector,
             vol.Required(CONF_HIDE_MEMBERS, default=False): selector.BooleanSelector(),
+            vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
         }
     )
 
@@ -78,6 +79,7 @@ def basic_group_config_schema(domain: str | list[str]) -> vol.Schema:
                 selector.EntitySelectorConfig(domain=domain, multiple=True),
             ),
             vol.Required(CONF_HIDE_MEMBERS, default=False): selector.BooleanSelector(),
+            vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
         }
     )
 

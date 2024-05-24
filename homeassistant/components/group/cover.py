@@ -20,6 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    CONF_DEVICE_ID,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -39,7 +40,12 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -74,7 +80,10 @@ async def async_setup_platform(
     async_add_entities(
         [
             CoverGroup(
-                config.get(CONF_UNIQUE_ID), config[CONF_NAME], config[CONF_ENTITIES]
+                hass,
+                config.get(CONF_UNIQUE_ID),
+                config[CONF_NAME],
+                config[CONF_ENTITIES],
             )
         ]
     )
@@ -92,7 +101,15 @@ async def async_setup_entry(
     )
 
     async_add_entities(
-        [CoverGroup(config_entry.entry_id, config_entry.title, entities)]
+        [
+            CoverGroup(
+                hass,
+                config_entry.entry_id,
+                config_entry.title,
+                entities,
+                config_entry.options.get(CONF_DEVICE_ID, None),
+            )
+        ]
     )
 
 
@@ -102,6 +119,7 @@ def async_create_preview_cover(
 ) -> CoverGroup:
     """Create a preview sensor."""
     return CoverGroup(
+        hass,
         None,
         name,
         validated_config[CONF_ENTITIES],
@@ -117,7 +135,14 @@ class CoverGroup(GroupEntity, CoverEntity):
     _attr_is_closing: bool | None = False
     _attr_current_cover_position: int | None = 100
 
-    def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        unique_id: str | None,
+        name: str,
+        entities: list[str],
+        device_id: str | None = None,
+    ) -> None:
         """Initialize a CoverGroup entity."""
         self._entity_ids = entities
         self._covers: dict[str, set[str]] = {
@@ -134,6 +159,16 @@ class CoverGroup(GroupEntity, CoverEntity):
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entities}
         self._attr_unique_id = unique_id
+
+        dev_reg = dr.async_get(hass)
+        if (
+            device_id is not None
+            and (device := dev_reg.async_get(device_id)) is not None
+        ):
+            self._attr_device_info = DeviceInfo(
+                connections=device.connections,
+                identifiers=device.identifiers,
+            )
 
     @callback
     def async_update_supported_features(

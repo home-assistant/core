@@ -28,6 +28,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
+    CONF_DEVICE_ID,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_TYPE,
@@ -38,7 +39,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import (
     get_capability,
     get_device_class,
@@ -149,6 +155,7 @@ async def async_setup_entry(
                 None,
                 None,
                 None,
+                config_entry.options.get(CONF_DEVICE_ID, None),
             )
         ]
     )
@@ -319,6 +326,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         unit_of_measurement: str | None,
         state_class: SensorStateClass | None,
         device_class: SensorDeviceClass | None,
+        device_id: str | None = None,
     ) -> None:
         """Initialize a sensor group."""
         self.hass = hass
@@ -342,6 +350,16 @@ class SensorGroup(GroupEntity, SensorEntity):
         ] = CALC_TYPES[self._sensor_type]
         self._state_incorrect: set[str] = set()
         self._extra_state_attribute: dict[str, Any] = {}
+
+        dev_reg = dr.async_get(hass)
+        if (
+            device_id is not None
+            and (device := dev_reg.async_get(device_id)) is not None
+        ):
+            self._attr_device_info = DeviceInfo(
+                connections=device.connections,
+                identifiers=device.identifiers,
+            )
 
     async def async_added_to_hass(self) -> None:
         """When added to hass."""

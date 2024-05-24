@@ -16,6 +16,7 @@ from homeassistant.components.lock import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_DEVICE_ID,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -32,7 +33,12 @@ from homeassistant.const import (
     STATE_UNLOCKING,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -64,6 +70,7 @@ async def async_setup_platform(
     async_add_entities(
         [
             LockGroup(
+                hass,
                 config.get(CONF_UNIQUE_ID),
                 config[CONF_NAME],
                 config[CONF_ENTITIES],
@@ -85,9 +92,11 @@ async def async_setup_entry(
     async_add_entities(
         [
             LockGroup(
+                hass,
                 config_entry.entry_id,
                 config_entry.title,
                 entities,
+                config_entry.options.get(CONF_DEVICE_ID, None),
             )
         ]
     )
@@ -99,6 +108,7 @@ def async_create_preview_lock(
 ) -> LockGroup:
     """Create a preview sensor."""
     return LockGroup(
+        hass,
         None,
         name,
         validated_config[CONF_ENTITIES],
@@ -113,9 +123,11 @@ class LockGroup(GroupEntity, LockEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         unique_id: str | None,
         name: str,
         entity_ids: list[str],
+        device_id: str | None = None,
     ) -> None:
         """Initialize a lock group."""
         self._entity_ids = entity_ids
@@ -124,6 +136,16 @@ class LockGroup(GroupEntity, LockEntity):
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
+
+        dev_reg = dr.async_get(hass)
+        if (
+            device_id is not None
+            and (device := dev_reg.async_get(device_id)) is not None
+        ):
+            self._attr_device_info = DeviceInfo(
+                connections=device.connections,
+                identifiers=device.identifiers,
+            )
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Forward the lock command to all locks in the group."""

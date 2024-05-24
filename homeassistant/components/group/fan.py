@@ -28,6 +28,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    CONF_DEVICE_ID,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -36,7 +37,12 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -73,7 +79,14 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Fan Group platform."""
     async_add_entities(
-        [FanGroup(config.get(CONF_UNIQUE_ID), config[CONF_NAME], config[CONF_ENTITIES])]
+        [
+            FanGroup(
+                hass,
+                config.get(CONF_UNIQUE_ID),
+                config[CONF_NAME],
+                config[CONF_ENTITIES],
+            )
+        ]
     )
 
 
@@ -88,7 +101,17 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_ENTITIES]
     )
 
-    async_add_entities([FanGroup(config_entry.entry_id, config_entry.title, entities)])
+    async_add_entities(
+        [
+            FanGroup(
+                hass,
+                config_entry.entry_id,
+                config_entry.title,
+                entities,
+                config_entry.options.get(CONF_DEVICE_ID, None),
+            )
+        ]
+    )
 
 
 @callback
@@ -97,6 +120,7 @@ def async_create_preview_fan(
 ) -> FanGroup:
     """Create a preview sensor."""
     return FanGroup(
+        hass,
         None,
         name,
         validated_config[CONF_ENTITIES],
@@ -108,7 +132,14 @@ class FanGroup(GroupEntity, FanEntity):
 
     _attr_available: bool = False
 
-    def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        unique_id: str | None,
+        name: str,
+        entities: list[str],
+        device_id: str | None = None,
+    ) -> None:
         """Initialize a FanGroup entity."""
         self._entity_ids = entities
         self._fans: dict[int, set[str]] = {flag: set() for flag in SUPPORTED_FLAGS}
@@ -120,6 +151,16 @@ class FanGroup(GroupEntity, FanEntity):
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entities}
         self._attr_unique_id = unique_id
+
+        dev_reg = dr.async_get(hass)
+        if (
+            device_id is not None
+            and (device := dev_reg.async_get(device_id)) is not None
+        ):
+            self._attr_device_info = DeviceInfo(
+                connections=device.connections,
+                identifiers=device.identifiers,
+            )
 
     @property
     def speed_count(self) -> int:
