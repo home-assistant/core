@@ -56,7 +56,7 @@ class TeslemetryWindowEntity(TeslemetryVehicleEntity, CoverEntity):
     _attr_device_class = CoverDeviceClass.WINDOW
 
     def __init__(self, data: TeslemetryVehicleData, scopes: list[Scope]) -> None:
-        """Initialize the sensor."""
+        """Initialize the cover."""
         super().__init__(data, "windows")
         self.scoped = Scope.VEHICLE_CMDS in scopes
         self._attr_supported_features = (
@@ -105,7 +105,7 @@ class TeslemetryChargePortEntity(TeslemetryVehicleEntity, CoverEntity):
     _attr_device_class = CoverDeviceClass.DOOR
 
     def __init__(self, vehicle: TeslemetryVehicleData, scopes: list[Scope]) -> None:
-        """Initialize the sensor."""
+        """Initialize the cover."""
         super().__init__(vehicle, "charge_state_charge_port_door_open")
         self.scoped = any(
             scope in scopes
@@ -122,7 +122,7 @@ class TeslemetryChargePortEntity(TeslemetryVehicleEntity, CoverEntity):
         self._attr_is_closed = not self._value
 
     async def async_open_cover(self, **kwargs: Any) -> None:
-        """Open windows."""
+        """Open charge port."""
         self.raise_for_scope()
         await self.wake_up_if_asleep()
         await self.handle_command(self.api.charge_port_door_open())
@@ -130,7 +130,7 @@ class TeslemetryChargePortEntity(TeslemetryVehicleEntity, CoverEntity):
         self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
-        """Close windows."""
+        """Close charge port."""
         self.raise_for_scope()
         await self.wake_up_if_asleep()
         await self.handle_command(self.api.charge_port_door_close())
@@ -144,7 +144,7 @@ class TeslemetryFrontTrunkEntity(TeslemetryVehicleEntity, CoverEntity):
     _attr_device_class = CoverDeviceClass.DOOR
 
     def __init__(self, vehicle: TeslemetryVehicleData, scopes: list[Scope]) -> None:
-        """Initialize the sensor."""
+        """Initialize the cover."""
         super().__init__(vehicle, "vehicle_state_ft")
 
         self.scoped = Scope.VEHICLE_CMDS in scopes
@@ -171,7 +171,7 @@ class TeslemetryRearTrunkEntity(TeslemetryVehicleEntity, CoverEntity):
     _attr_device_class = CoverDeviceClass.DOOR
 
     def __init__(self, vehicle: TeslemetryVehicleData, scopes: list[Scope]) -> None:
-        """Initialize the sensor."""
+        """Initialize the cover."""
         super().__init__(vehicle, "vehicle_state_rt")
 
         self.scoped = Scope.VEHICLE_CMDS in scopes
