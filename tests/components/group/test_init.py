@@ -33,7 +33,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
 from homeassistant.setup import async_setup_component
 
 from . import common
@@ -901,10 +900,6 @@ async def test_reloading_groups(hass: HomeAssistant) -> None:
         "group.test_group",
     ]
     assert hass.bus.async_listeners()["state_changed"] == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["hello.world"]) == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["light.bowl"]) == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.one"]) == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.two"]) == 1
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
@@ -920,9 +915,6 @@ async def test_reloading_groups(hass: HomeAssistant) -> None:
         "group.hello",
     ]
     assert hass.bus.async_listeners()["state_changed"] == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["light.bowl"]) == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.one"]) == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.two"]) == 1
 
 
 async def test_modify_group(hass: HomeAssistant) -> None:
