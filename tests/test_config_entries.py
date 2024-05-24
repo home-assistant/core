@@ -504,7 +504,9 @@ async def test_remove_entry(
 
 
 async def test_remove_entry_cancels_reauth(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Tests that removing a config entry, also aborts existing reauth flows."""
     entry = MockConfigEntry(title="test_title", domain="test")
@@ -523,7 +525,6 @@ async def test_remove_entry_cancels_reauth(
     assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
     assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
 
-    issue_registry = ir.async_get(hass)
     issue_id = f"config_entry_reauth_test_{entry.entry_id}"
     assert issue_registry.async_get_issue(HA_DOMAIN, issue_id)
 
@@ -1120,10 +1121,11 @@ async def test_reauth_notification(hass: HomeAssistant) -> None:
 
 
 async def test_reauth_issue(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test that we create/delete an issue when source is reauth."""
-    issue_registry = ir.async_get(hass)
     assert len(issue_registry.issues) == 0
 
     entry = MockConfigEntry(title="test_title", domain="test")
