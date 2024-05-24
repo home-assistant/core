@@ -21,7 +21,7 @@ from .const import DELAY_SAVE, DOMAIN, EVENT_FEEDREADER, STORAGE_VERSION
 _LOGGER = getLogger(__name__)
 
 
-class FeedReaderCoordinator(DataUpdateCoordinator):
+class FeedReaderCoordinator(DataUpdateCoordinator[None]):
     """Abstraction over Feedparser module."""
 
     def __init__(
@@ -57,12 +57,11 @@ class FeedReaderCoordinator(DataUpdateCoordinator):
         """Send no entries log at debug level."""
         _LOGGER.debug("No new entries to be published in feed %s", self._url)
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> None:
         """Update the feed and publish new entries to the event bus."""
         last_entry_timestamp = await self.hass.async_add_executor_job(self._update)
         if last_entry_timestamp:
             self._storage.async_put_timestamp(self._feed_id, last_entry_timestamp)
-        return {}
 
     def _update(self) -> struct_time | None:
         """Update the feed and publish new entries to the event bus."""
