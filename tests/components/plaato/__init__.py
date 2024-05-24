@@ -17,6 +17,8 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
+# Note: It would be good to replace this test data
+# with actual data from the API
 AIRLOCK_DATA = {}
 KEG_DATA = {}
 
