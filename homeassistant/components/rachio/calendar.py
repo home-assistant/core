@@ -28,6 +28,7 @@ from .const import (
     KEY_SKIP,
     KEY_SKIPPABLE,
     KEY_START_TIME,
+    KEY_TOTAL_RUN_DURATION,
     KEY_VALVE_NAME,
 )
 from .coordinator import RachioScheduleUpdateCoordinator
@@ -77,27 +78,31 @@ class RachioCalendarEntity(
         if not event:
             return None
         start_time = dt_util.parse_datetime(event[KEY_START_TIME], raise_on_error=True)
+        valves = ", ".join(
+            [event[KEY_VALVE_NAME] for event in event[KEY_RUN_SUMMARIES]]
+        )
         return CalendarEvent(
             summary=event[KEY_PROGRAM_NAME],
             start=dt_util.as_local(start_time),
             end=dt_util.as_local(start_time)
-            + timedelta(seconds=int(event[KEY_RUN_SUMMARIES][0][KEY_DURATION_SECONDS])),
-            description=event[KEY_RUN_SUMMARIES][0][KEY_VALVE_NAME],
+            + timedelta(seconds=int(event[KEY_TOTAL_RUN_DURATION])),
+            description=valves,
             location=self.location,
         )
 
     def _handle_upcoming_event(self) -> dict[str, Any] | None:
         """Handle current or next event."""
+        # Currently when an event starts, the event disappears from the
+        # API until the event ends. So we store it and use it
+        # if it's within the time window.
         if self._previous_event:
             start_time = dt_util.parse_datetime(
                 self._previous_event[KEY_START_TIME], raise_on_error=True
             )
             end_time = start_time + timedelta(
-                seconds=int(
-                    self._previous_event[KEY_RUN_SUMMARIES][0][KEY_DURATION_SECONDS]
-                )
+                seconds=int(self._previous_event[KEY_TOTAL_RUN_DURATION])
             )
-            if start_time < dt_util.now() < end_time:
+            if start_time <= dt_util.now() <= end_time:
                 return self._previous_event
         schedule = iter(self.coordinator.data)
         event = next(schedule, None)
@@ -119,27 +124,36 @@ class RachioCalendarEntity(
         if not self.coordinator.data:
             raise HomeAssistantError("No events scheduled")
         schedule = self.coordinator.data
-
         event_list: list[CalendarEvent] = []
+
         for run in schedule:
             event_start = dt_util.as_local(
                 dt_util.parse_datetime(run[KEY_START_TIME], raise_on_error=True)
             )
             if event_start > end_date:
                 break
-            event_end = event_start + timedelta(
-                seconds=int(run[KEY_RUN_SUMMARIES][0][KEY_DURATION_SECONDS])
-            )
+            if run[KEY_SKIPPABLE]:
+                event_end = event_start + timedelta(
+                    seconds=int(run[KEY_TOTAL_RUN_DURATION])
+                )
+            else:
+                event_end = event_start + timedelta(
+                    seconds=int(run[KEY_RUN_SUMMARIES][0][KEY_DURATION_SECONDS])
+                )
+
             if (
                 event_end > start_date
                 and event_start < end_date
                 and KEY_SKIP not in run[KEY_RUN_SUMMARIES][0]
             ):
+                valves = ", ".join(
+                    [event[KEY_VALVE_NAME] for event in run[KEY_RUN_SUMMARIES]]
+                )
                 event = CalendarEvent(
                     summary=run[KEY_PROGRAM_NAME],
                     start=event_start,
                     end=event_end,
-                    description=run[KEY_RUN_SUMMARIES][0][KEY_VALVE_NAME],
+                    description=valves,
                     location=self.location,
                     uid=f"{run[KEY_PROGRAM_ID]}/{run[KEY_START_TIME]}",
                 )
