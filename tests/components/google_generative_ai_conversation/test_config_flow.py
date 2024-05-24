@@ -17,7 +17,6 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_RECOMMENDED,
     CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
-    CONF_TONE_PROMPT,
     CONF_TOP_K,
     CONF_TOP_P,
     DEFAULT_HARM_BLOCK_THRESHOLD,
@@ -95,7 +94,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["options"] == {
         CONF_RECOMMENDED: True,
         CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-        CONF_TONE_PROMPT: "",
+        CONF_PROMPT: "",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -107,7 +106,7 @@ async def test_form(hass: HomeAssistant) -> None:
             {
                 CONF_RECOMMENDED: True,
                 CONF_LLM_HASS_API: "none",
-                CONF_TONE_PROMPT: "bla",
+                CONF_PROMPT: "bla",
             },
             {
                 CONF_RECOMMENDED: False,
@@ -141,12 +140,12 @@ async def test_form(hass: HomeAssistant) -> None:
             {
                 CONF_RECOMMENDED: True,
                 CONF_LLM_HASS_API: "assist",
-                CONF_TONE_PROMPT: "",
+                CONF_PROMPT: "",
             },
             {
                 CONF_RECOMMENDED: True,
                 CONF_LLM_HASS_API: "assist",
-                CONF_TONE_PROMPT: "",
+                CONF_PROMPT: "",
             },
         ),
     ],

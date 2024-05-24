@@ -931,7 +931,11 @@ async def test_handle_logging_on_writing_the_entity_state(
         assert state is not None
         assert state.state == "initial_state"
         assert "Invalid value for sensor" in caplog.text
-        assert "Exception raised when updating state of" in caplog.text
+        assert (
+            "Exception raised while updating "
+            "state of sensor.test_sensor, topic: 'test/state' "
+            "with payload: b'payload causing errors'" in caplog.text
+        )
 
 
 async def test_receiving_non_utf8_message_gets_logged(
@@ -1854,7 +1858,7 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     async_fire_time_changed(hass)  # cooldown
     await hass.async_block_till_done()
 
-    # the subscribtion with the highest QoS should survive
+    # the subscription with the highest QoS should survive
     expected = [
         call([("test/state", 2)]),
     ]
@@ -1919,7 +1923,7 @@ async def test_subscribed_at_highest_qos(
     freezer.tick(5)
     async_fire_time_changed(hass)  # cooldown
     await hass.async_block_till_done()
-    # the subscribtion with the highest QoS should survive
+    # the subscription with the highest QoS should survive
     assert help_all_subscribe_calls(mqtt_client_mock) == [("test/state", 2)]
 
 

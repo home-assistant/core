@@ -4,7 +4,6 @@ DOMAIN = "switcher_kis"
 
 DATA_BRIDGE = "bridge"
 DATA_DEVICE = "device"
-DATA_DISCOVERY = "discovery"
 
 DISCOVERY_TIME_SEC = 12
 
