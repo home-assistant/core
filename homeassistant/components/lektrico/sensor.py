@@ -184,7 +184,7 @@ SENSORS_FOR_LB_1_PHASE: tuple[LektricoSensorEntityDescription, ...] = (
     ),
     LektricoSensorEntityDescription(
         key="pf",
-        translation_key="pf",
+        # translation_key="pf",
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,

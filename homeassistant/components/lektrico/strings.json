@@ -59,9 +59,6 @@
       "current_l3": {
         "name": "Current L3"
       },
-      "pf": {
-        "name": "PF"
-      },
       "power_l1": {
         "name": "Power L1"
       },
@@ -72,13 +69,13 @@
         "name": "Power L3"
       },
       "pf_l1": {
-        "name": "PF L1"
+        "name": "Power factor L1"
       },
       "pf_l2": {
-        "name": "PF L2"
+        "name": "Power factor L2"
       },
       "pf_l3": {
-        "name": "PF L3"
+        "name": "Power factor L3"
       }
     }
   }
