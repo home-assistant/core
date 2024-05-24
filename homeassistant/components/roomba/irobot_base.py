@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime
 import logging
+from zoneinfo import ZoneInfo
 
 from homeassistant.components.vacuum import (
     ATTR_STATUS,
@@ -117,6 +119,16 @@ class IRobotEntity(Entity):
     def battery_stats(self):
         """Return the battery stats."""
         return self.vacuum_state.get("bbchg3", {})
+
+    @property
+    def last_mission(self):
+        """Return last mission start time."""
+        if (
+            ts := self.vacuum_state.get("cleanMissionStatus", {}).get("mssnStrtTm")
+        ) is None:
+            return None
+        tz = ZoneInfo(self.vacuum_state.get("timezone", "UTC"))
+        return datetime.fromtimestamp(ts, tz=tz)
 
     @property
     def _robot_state(self):
