@@ -716,37 +716,7 @@ def _round_time(hours: int, minutes: int, seconds: int) -> tuple[int, int, int]:
     return rounded_hours, rounded_minutes, rounded_seconds
 
 
-class BaseTimerIntentHandler(intent.IntentHandler):
-    """Base class for timer intent handlers."""
-
-    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
-        """Handle the intent."""
-        hass = intent_obj.hass
-        timer_manager: TimerManager = hass.data[TIMER_DATA]
-        slots = self.async_validate_slots(intent_obj.slots)
-
-        if not timer_manager.is_timer_device(intent_obj.device_id):
-            raise TimersNotSupportedError(intent_obj.device_id)
-
-        assert intent_obj.device_id is not None
-
-        return await self.async_handle_timer(
-            hass, intent_obj.device_id, slots, timer_manager, intent_obj
-        )
-
-    async def async_handle_timer(
-        self,
-        hass: HomeAssistant,
-        device_id: str,
-        slots: dict,
-        timer_manager: TimerManager,
-        intent_obj: intent.Intent,
-    ) -> intent.IntentResponse:
-        """Handle intent with relevant timer objects available."""
-        raise NotImplementedError
-
-
-class StartTimerIntentHandler(BaseTimerIntentHandler):
+class StartTimerIntentHandler(intent.IntentHandler):
     """Intent handler for starting a new timer."""
 
     intent_type = intent.INTENT_START_TIMER
@@ -756,15 +726,18 @@ class StartTimerIntentHandler(BaseTimerIntentHandler):
         vol.Optional("name"): cv.string,
     }
 
-    async def async_handle_timer(
-        self,
-        hass: HomeAssistant,
-        device_id: str,
-        slots: dict,
-        timer_manager: TimerManager,
-        intent_obj: intent.Intent,
-    ) -> intent.IntentResponse:
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
+        hass = intent_obj.hass
+        timer_manager: TimerManager = hass.data[TIMER_DATA]
+        slots = self.async_validate_slots(intent_obj.slots)
+
+        if not timer_manager.is_timer_device(intent_obj.device_id):
+            # Fail early
+            raise TimersNotSupportedError(intent_obj.device_id)
+
+        assert intent_obj.device_id is not None
+
         name: str | None = None
         if "name" in slots:
             name = slots["name"]["value"]
@@ -782,7 +755,7 @@ class StartTimerIntentHandler(BaseTimerIntentHandler):
             seconds = int(slots["seconds"]["value"])
 
         timer_manager.start_timer(
-            device_id,
+            intent_obj.device_id,
             hours,
             minutes,
             seconds,
@@ -793,7 +766,7 @@ class StartTimerIntentHandler(BaseTimerIntentHandler):
         return intent_obj.create_response()
 
 
-class CancelTimerIntentHandler(BaseTimerIntentHandler):
+class CancelTimerIntentHandler(intent.IntentHandler):
     """Intent handler for cancelling a timer."""
 
     intent_type = intent.INTENT_CANCEL_TIMER
@@ -804,21 +777,24 @@ class CancelTimerIntentHandler(BaseTimerIntentHandler):
         vol.Optional("area"): cv.string,
     }
 
-    async def async_handle_timer(
-        self,
-        hass: HomeAssistant,
-        device_id: str,
-        slots: dict,
-        timer_manager: TimerManager,
-        intent_obj: intent.Intent,
-    ) -> intent.IntentResponse:
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
-        timer = _find_timer(hass, device_id, slots)
+        hass = intent_obj.hass
+        timer_manager: TimerManager = hass.data[TIMER_DATA]
+        slots = self.async_validate_slots(intent_obj.slots)
+
+        if not timer_manager.is_timer_device(intent_obj.device_id):
+            # Fail early
+            raise TimersNotSupportedError(intent_obj.device_id)
+
+        assert intent_obj.device_id is not None
+
+        timer = _find_timer(hass, intent_obj.device_id, slots)
         timer_manager.cancel_timer(timer.id)
         return intent_obj.create_response()
 
 
-class IncreaseTimerIntentHandler(BaseTimerIntentHandler):
+class IncreaseTimerIntentHandler(intent.IntentHandler):
     """Intent handler for increasing the time of a timer."""
 
     intent_type = intent.INTENT_INCREASE_TIMER
@@ -830,22 +806,25 @@ class IncreaseTimerIntentHandler(BaseTimerIntentHandler):
         vol.Optional("area"): cv.string,
     }
 
-    async def async_handle_timer(
-        self,
-        hass: HomeAssistant,
-        device_id: str,
-        slots: dict,
-        timer_manager: TimerManager,
-        intent_obj: intent.Intent,
-    ) -> intent.IntentResponse:
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
+        hass = intent_obj.hass
+        timer_manager: TimerManager = hass.data[TIMER_DATA]
+        slots = self.async_validate_slots(intent_obj.slots)
+
+        if not timer_manager.is_timer_device(intent_obj.device_id):
+            # Fail early
+            raise TimersNotSupportedError(intent_obj.device_id)
+
+        assert intent_obj.device_id is not None
+
         total_seconds = _get_total_seconds(slots)
-        timer = _find_timer(hass, device_id, slots)
+        timer = _find_timer(hass, intent_obj.device_id, slots)
         timer_manager.add_time(timer.id, total_seconds)
         return intent_obj.create_response()
 
 
-class DecreaseTimerIntentHandler(BaseTimerIntentHandler):
+class DecreaseTimerIntentHandler(intent.IntentHandler):
     """Intent handler for decreasing the time of a timer."""
 
     intent_type = intent.INTENT_DECREASE_TIMER
@@ -857,22 +836,25 @@ class DecreaseTimerIntentHandler(BaseTimerIntentHandler):
         vol.Optional("area"): cv.string,
     }
 
-    async def async_handle_timer(
-        self,
-        hass: HomeAssistant,
-        device_id: str,
-        slots: dict,
-        timer_manager: TimerManager,
-        intent_obj: intent.Intent,
-    ) -> intent.IntentResponse:
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
+        hass = intent_obj.hass
+        timer_manager: TimerManager = hass.data[TIMER_DATA]
+        slots = self.async_validate_slots(intent_obj.slots)
+
+        if not timer_manager.is_timer_device(intent_obj.device_id):
+            # Fail early
+            raise TimersNotSupportedError(intent_obj.device_id)
+
+        assert intent_obj.device_id is not None
+
         total_seconds = _get_total_seconds(slots)
-        timer = _find_timer(hass, device_id, slots)
+        timer = _find_timer(hass, intent_obj.device_id, slots)
         timer_manager.remove_time(timer.id, total_seconds)
         return intent_obj.create_response()
 
 
-class PauseTimerIntentHandler(BaseTimerIntentHandler):
+class PauseTimerIntentHandler(intent.IntentHandler):
     """Intent handler for pausing a running timer."""
 
     intent_type = intent.INTENT_PAUSE_TIMER
@@ -883,21 +865,24 @@ class PauseTimerIntentHandler(BaseTimerIntentHandler):
         vol.Optional("area"): cv.string,
     }
 
-    async def async_handle_timer(
-        self,
-        hass: HomeAssistant,
-        device_id: str,
-        slots: dict,
-        timer_manager: TimerManager,
-        intent_obj: intent.Intent,
-    ) -> intent.IntentResponse:
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
-        timer = _find_timer(hass, device_id, slots)
+        hass = intent_obj.hass
+        timer_manager: TimerManager = hass.data[TIMER_DATA]
+        slots = self.async_validate_slots(intent_obj.slots)
+
+        if not timer_manager.is_timer_device(intent_obj.device_id):
+            # Fail early
+            raise TimersNotSupportedError(intent_obj.device_id)
+
+        assert intent_obj.device_id is not None
+
+        timer = _find_timer(hass, intent_obj.device_id, slots)
         timer_manager.pause_timer(timer.id)
         return intent_obj.create_response()
 
 
-class UnpauseTimerIntentHandler(BaseTimerIntentHandler):
+class UnpauseTimerIntentHandler(intent.IntentHandler):
     """Intent handler for unpausing a paused timer."""
 
     intent_type = intent.INTENT_UNPAUSE_TIMER
@@ -908,21 +893,24 @@ class UnpauseTimerIntentHandler(BaseTimerIntentHandler):
         vol.Optional("area"): cv.string,
     }
 
-    async def async_handle_timer(
-        self,
-        hass: HomeAssistant,
-        device_id: str,
-        slots: dict,
-        timer_manager: TimerManager,
-        intent_obj: intent.Intent,
-    ) -> intent.IntentResponse:
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
-        timer = _find_timer(hass, device_id, slots)
+        hass = intent_obj.hass
+        timer_manager: TimerManager = hass.data[TIMER_DATA]
+        slots = self.async_validate_slots(intent_obj.slots)
+
+        if not timer_manager.is_timer_device(intent_obj.device_id):
+            # Fail early
+            raise TimersNotSupportedError(intent_obj.device_id)
+
+        assert intent_obj.device_id is not None
+
+        timer = _find_timer(hass, intent_obj.device_id, slots)
         timer_manager.unpause_timer(timer.id)
         return intent_obj.create_response()
 
 
-class TimerStatusIntentHandler(BaseTimerIntentHandler):
+class TimerStatusIntentHandler(intent.IntentHandler):
     """Intent handler for reporting the status of a timer."""
 
     intent_type = intent.INTENT_TIMER_STATUS
@@ -933,17 +921,20 @@ class TimerStatusIntentHandler(BaseTimerIntentHandler):
         vol.Optional("area"): cv.string,
     }
 
-    async def async_handle_timer(
-        self,
-        hass: HomeAssistant,
-        device_id: str,
-        slots: dict,
-        timer_manager: TimerManager,
-        intent_obj: intent.Intent,
-    ) -> intent.IntentResponse:
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
+        hass = intent_obj.hass
+        timer_manager: TimerManager = hass.data[TIMER_DATA]
+        slots = self.async_validate_slots(intent_obj.slots)
+
+        if not timer_manager.is_timer_device(intent_obj.device_id):
+            # Fail early
+            raise TimersNotSupportedError(intent_obj.device_id)
+
+        assert intent_obj.device_id is not None
+
         statuses: list[dict[str, Any]] = []
-        for timer in _find_timers(hass, device_id, slots):
+        for timer in _find_timers(hass, intent_obj.device_id, slots):
             total_seconds = timer.seconds_left
 
             minutes, seconds = divmod(total_seconds, 60)

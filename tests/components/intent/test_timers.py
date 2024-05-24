@@ -481,25 +481,43 @@ async def test_find_timer_failed(hass: HomeAssistant, init_components) -> None:
     """Test finding a timer with the wrong info."""
     device_id = "test_device"
 
-    # No device id
-    with pytest.raises(TimersNotSupportedError):
-        await intent.async_handle(
-            hass,
-            "test",
-            intent.INTENT_TIMER_STATUS,
-            {},
-            device_id=None,
-        )
+    for intent_name in (
+        intent.INTENT_START_TIMER,
+        intent.INTENT_CANCEL_TIMER,
+        intent.INTENT_PAUSE_TIMER,
+        intent.INTENT_UNPAUSE_TIMER,
+        intent.INTENT_INCREASE_TIMER,
+        intent.INTENT_DECREASE_TIMER,
+        intent.INTENT_TIMER_STATUS,
+    ):
+        if intent_name in (
+            intent.INTENT_START_TIMER,
+            intent.INTENT_INCREASE_TIMER,
+            intent.INTENT_DECREASE_TIMER,
+        ):
+            slots = {"minutes": {"value": 5}}
+        else:
+            slots = {}
 
-    # Unregistered device
-    with pytest.raises(TimersNotSupportedError):
-        await intent.async_handle(
-            hass,
-            "test",
-            intent.INTENT_TIMER_STATUS,
-            {},
-            device_id=device_id,
-        )
+        # No device id
+        with pytest.raises(TimersNotSupportedError):
+            await intent.async_handle(
+                hass,
+                "test",
+                intent_name,
+                slots,
+                device_id=None,
+            )
+
+        # Unregistered device
+        with pytest.raises(TimersNotSupportedError):
+            await intent.async_handle(
+                hass,
+                "test",
+                intent_name,
+                slots,
+                device_id=device_id,
+            )
 
     # Must register a handler before we can do anything with timers
     @callback
