@@ -35,6 +35,7 @@
 # name: test_switches[switch.12345_evening-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'program',
       'friendly_name': '12345 Evening',
       'icon': 'mdi:water',
       'id': 2,
@@ -106,6 +107,7 @@
 # name: test_switches[switch.12345_evening_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'program',
       'friendly_name': '12345 Evening enabled',
       'icon': 'mdi:cog',
     }),
@@ -200,6 +202,7 @@
 # name: test_switches[switch.12345_flower_box-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.17,
@@ -260,6 +263,7 @@
 # name: test_switches[switch.12345_flower_box_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'friendly_name': '12345 Flower box enabled',
       'icon': 'mdi:cog',
     }),
@@ -354,6 +358,7 @@
 # name: test_switches[switch.12345_landscaping-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.17,
@@ -414,6 +419,7 @@
 # name: test_switches[switch.12345_landscaping_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'friendly_name': '12345 Landscaping enabled',
       'icon': 'mdi:cog',
     }),
@@ -461,6 +467,7 @@
 # name: test_switches[switch.12345_morning-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'program',
       'friendly_name': '12345 Morning',
       'icon': 'mdi:water',
       'id': 1,
@@ -532,6 +539,7 @@
 # name: test_switches[switch.12345_morning_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'program',
       'friendly_name': '12345 Morning enabled',
       'icon': 'mdi:cog',
     }),
@@ -579,6 +587,7 @@
 # name: test_switches[switch.12345_test-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.3,
@@ -639,6 +648,7 @@
 # name: test_switches[switch.12345_test_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'friendly_name': '12345 Test enabled',
       'icon': 'mdi:cog',
     }),
@@ -686,6 +696,7 @@
 # name: test_switches[switch.12345_zone_10-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.3,
@@ -746,6 +757,7 @@
 # name: test_switches[switch.12345_zone_10_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'friendly_name': '12345 Zone 10 enabled',
       'icon': 'mdi:cog',
     }),
@@ -793,6 +805,7 @@
 # name: test_switches[switch.12345_zone_11-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.3,
@@ -853,6 +866,7 @@
 # name: test_switches[switch.12345_zone_11_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'friendly_name': '12345 Zone 11 enabled',
       'icon': 'mdi:cog',
     }),
@@ -900,6 +914,7 @@
 # name: test_switches[switch.12345_zone_12-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.3,
@@ -960,6 +975,7 @@
 # name: test_switches[switch.12345_zone_12_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'friendly_name': '12345 Zone 12 enabled',
       'icon': 'mdi:cog',
     }),
@@ -1007,6 +1023,7 @@
 # name: test_switches[switch.12345_zone_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.3,
@@ -1067,6 +1084,7 @@
 # name: test_switches[switch.12345_zone_4_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'friendly_name': '12345 Zone 4 enabled',
       'icon': 'mdi:cog',
     }),
@@ -1114,6 +1132,7 @@
 # name: test_switches[switch.12345_zone_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.3,
@@ -1174,6 +1193,7 @@
 # name: test_switches[switch.12345_zone_5_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'friendly_name': '12345 Zone 5 enabled',
       'icon': 'mdi:cog',
     }),
@@ -1221,6 +1241,7 @@
 # name: test_switches[switch.12345_zone_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.3,
@@ -1281,6 +1302,7 @@
 # name: test_switches[switch.12345_zone_6_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'friendly_name': '12345 Zone 6 enabled',
       'icon': 'mdi:cog',
     }),
@@ -1328,6 +1350,7 @@
 # name: test_switches[switch.12345_zone_7-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.3,
@@ -1388,6 +1411,7 @@
 # name: test_switches[switch.12345_zone_7_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'friendly_name': '12345 Zone 7 enabled',
       'icon': 'mdi:cog',
     }),
@@ -1435,6 +1459,7 @@
 # name: test_switches[switch.12345_zone_8-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.3,
@@ -1495,6 +1520,7 @@
 # name: test_switches[switch.12345_zone_8_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'friendly_name': '12345 Zone 8 enabled',
       'icon': 'mdi:cog',
     }),
@@ -1542,6 +1568,7 @@
 # name: test_switches[switch.12345_zone_9-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'area': 92.9,
       'current_cycle': 0,
       'field_capacity': 0.3,
@@ -1602,6 +1629,7 @@
 # name: test_switches[switch.12345_zone_9_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'activity_type': 'zone',
       'friendly_name': '12345 Zone 9 enabled',
       'icon': 'mdi:cog',
     }),
