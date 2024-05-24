@@ -54,9 +54,6 @@
       "honk": {
         "default": "mdi:bullhorn"
       },
-      "refresh": {
-        "default": "mdi:refresh"
-      },
       "wake": {
         "default": "mdi:sleep-off"
       }
