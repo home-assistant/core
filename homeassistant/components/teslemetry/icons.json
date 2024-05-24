@@ -52,6 +52,20 @@
         }
       }
     },
+    "lock": {
+      "charge_state_charge_port_latch": {
+        "default": "mdi:ev-plug-tesla"
+      },
+      "vehicle_state_locked": {
+        "state": {
+          "locked": "mdi:car-door-lock",
+          "unlocked": "mdi:car-door-lock-open"
+        }
+      },
+      "vehicle_state_speed_limit_mode_active": {
+        "default": "mdi:car-speed-limiter"
+      }
+    },
     "select": {
       "climate_state_seat_heater_left": {
         "default": "mdi:car-seat-heater",

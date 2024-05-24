@@ -564,7 +564,7 @@ filterwarnings = [
     # https://github.com/tomaszsluszniak/sanix_py/blob/v1.0.6/sanix/__init__.py#L42
     "ignore:invalid escape sequence:SyntaxWarning:.*sanix",
     # https://pypi.org/project/sleekxmppfs/ - v1.4.1 - 2022-08-18
-    "ignore:invalid escape sequence:SyntaxWarning:.*sleekxmppfs.thirdparty.mini_dateutil",
+    "ignore:invalid escape sequence:SyntaxWarning:.*sleekxmppfs.thirdparty.mini_dateutil",  # codespell:ignore thirdparty
     # https://pypi.org/project/vobject/ - v0.9.7 - 2024-03-25
     # https://github.com/py-vobject/vobject
     "ignore:invalid escape sequence:SyntaxWarning:.*vobject.base",

@@ -111,6 +111,17 @@
         }
       }
     },
+    "lock": {
+      "charge_state_charge_port_latch": {
+        "name": "Charge cable lock"
+      },
+      "vehicle_state_locked": {
+        "name": "[%key:component::lock::title%]"
+      },
+      "vehicle_state_speed_limit_mode_active": {
+        "name": "Speed limit"
+      }
+    },
     "select": {
       "climate_state_seat_heater_left": {
         "name": "Seat heater front left",
@@ -382,6 +393,11 @@
       "vehicle_state_valet_mode": {
         "name": "Valet mode"
       }
+    }
+  },
+  "exceptions": {
+    "no_cable": {
+      "message": "Charge cable will lock automatically when connected"
     }
   }
 }

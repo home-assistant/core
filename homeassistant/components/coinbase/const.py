@@ -550,7 +550,7 @@ RATES = {
     "TRAC": "TRAC",
     "TRB": "TRB",
     "TRIBE": "TRIBE",
-    "TRU": "TRU",
+    "TRU": "TRU",  # codespell:ignore tru
     "TRY": "TRY",
     "TTD": "TTD",
     "TWD": "TWD",
