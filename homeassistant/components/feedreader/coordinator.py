@@ -49,9 +49,6 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
         self._has_updated_parsed = False
         self._event_type = EVENT_FEEDREADER
         self._feed_id = url
-        _LOGGER.debug(
-            "coordinator initi with url:%s scan_interval:%s", url, scan_interval
-        )
 
     def _log_no_entries(self) -> None:
         """Send no entries log at debug level."""
