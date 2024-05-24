@@ -297,22 +297,9 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
             return
         await self._bridge.async_send_keys(keys)
 
-    @property
-    def available(self) -> bool:
-        """Return the availability of the device."""
-        if self._bridge.auth_failed:
-            return False
-        return (
-            self.state == MediaPlayerState.ON
-            or bool(self._turn_on_action)
-            or self._mac is not None
-            or self._bridge.power_off_in_progress
-        )
-
     async def async_turn_off(self) -> None:
         """Turn off media player."""
-        await self._bridge.async_power_off()
-        await self.coordinator.async_refresh()
+        await super()._async_turn_off()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level on the media player."""
@@ -386,10 +373,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
-        if self._turn_on_action:
-            await self._turn_on_action.async_run(self.hass, self._context)
-        elif self._mac:
-            await self.hass.async_add_executor_job(self._wake_on_lan)
+        await super()._async_turn_on()
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
