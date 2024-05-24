@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from itertools import chain
 from typing import Any
 
 from tesla_fleet_api.const import Scope
@@ -55,18 +54,10 @@ async def async_setup_entry(
     """Set up the Teslemetry Button platform from a config entry."""
 
     async_add_entities(
-        chain(
-            (
-                TeslemetryButtonEntity(vehicle, description)
-                for vehicle in entry.runtime_data.vehicles
-                for description in DESCRIPTIONS
-                if Scope.VEHICLE_CMDS in entry.runtime_data.scopes
-            ),
-            (
-                TeslemetryRefreshButtonEntity(vehicle)
-                for vehicle in entry.runtime_data.vehicles
-            ),
-        )
+        TeslemetryButtonEntity(vehicle, description)
+        for vehicle in entry.runtime_data.vehicles
+        for description in DESCRIPTIONS
+        if Scope.VEHICLE_CMDS in entry.runtime_data.scopes
     )
 
 
@@ -92,24 +83,3 @@ class TeslemetryButtonEntity(TeslemetryVehicleEntity, ButtonEntity):
         await self.wake_up_if_asleep()
         if self.entity_description.func:
             await self.handle_command(self.entity_description.func(self))
-
-
-class TeslemetryRefreshButtonEntity(TeslemetryVehicleEntity, ButtonEntity):
-    """Force Refresh entity for Teslemetry."""
-
-    _attr_entity_registry_enabled_default = False
-
-    def __init__(
-        self,
-        data: TeslemetryVehicleData,
-    ) -> None:
-        """Initialize the button."""
-        super().__init__(data, "refresh")
-
-    def _async_update_attrs(self) -> None:
-        """Update the attributes of the entity."""
-
-    async def async_press(self) -> None:
-        """Press the button."""
-        await self.wake_up_if_asleep()
-        await self.coordinator.async_request_refresh()
