@@ -112,9 +112,6 @@
       "honk": {
         "name": "Honk horn"
       },
-      "refresh": {
-        "name": "Force refresh"
-      },
       "wake": {
         "name": "Wake"
       }
