@@ -102,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         async with timeout(5.0):
-            await hass.async_add_executor_job(partial(genai.list_models))
+            next(await hass.async_add_executor_job(partial(genai.list_models)), None)
     except (ClientError, TimeoutError) as err:
         if isinstance(err, ClientError) and err.reason == "API_KEY_INVALID":
             LOGGER.error("Invalid API key: %s", err)

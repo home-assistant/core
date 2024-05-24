@@ -45,7 +45,7 @@ def mock_models():
     model_10_pro.name = "models/gemini-pro"
     with patch(
         "homeassistant.components.google_generative_ai_conversation.config_flow.genai.list_models",
-        return_value=[model_15_flash, model_10_pro],
+        return_value=iter([model_15_flash, model_10_pro]),
     ):
         yield
 
