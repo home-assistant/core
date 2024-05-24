@@ -201,8 +201,8 @@ def async_track_state_change(
     action: Callable[
         [str, State | None, State | None], Coroutine[Any, Any, None] | None
     ],
-    from_state: None | str | Iterable[str] = None,
-    to_state: None | str | Iterable[str] = None,
+    from_state: str | Iterable[str] | None = None,
+    to_state: str | Iterable[str] | None = None,
 ) -> CALLBACK_TYPE:
     """Track specific state changes.
 
@@ -1866,7 +1866,7 @@ track_time_change = threaded_listener_factory(async_track_time_change)
 
 
 def process_state_match(
-    parameter: None | str | Iterable[str], invert: bool = False
+    parameter: str | Iterable[str] | None, invert: bool = False
 ) -> Callable[[str | None], bool]:
     """Convert parameter to function that matches input against parameter."""
     if parameter is None or parameter == MATCH_ALL:
