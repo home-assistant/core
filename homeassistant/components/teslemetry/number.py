@@ -141,9 +141,9 @@ class TeslemetryVehicleNumberEntity(TeslemetryVehicleEntity, NumberEntity):
         """Update the attributes of the entity."""
         self._attr_native_value = self._value
 
-        if self.entity_description.min_key is not None:
+        if (min_key := self.entity_description.min_key) is not None:
             self._attr_native_min_value = self.get_number(
-                self.entity_description.min_key,
+                min_key,
                 self.entity_description.native_min_value,
             )
         else:
