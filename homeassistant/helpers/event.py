@@ -381,7 +381,7 @@ def _remove_empty_listener() -> None:
 def _remove_listener(
     hass: HomeAssistant,
     tracker: _KeyedEventTracker[_TypedDictT],
-    keys: str | Iterable[str],
+    keys: Iterable[str],
     job: HassJob[[Event[_TypedDictT]], Any],
     callbacks: dict[str, list[HassJob[[Event[_TypedDictT]], Any]]],
 ) -> None:
