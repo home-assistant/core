@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 import logging
 
 import voluptuous as vol
@@ -24,7 +25,7 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -40,12 +41,7 @@ from .const import (
     CONF_STATE_TOPIC,
     CONF_SUPPORTED_FEATURES,
 )
-from .debug_info import log_messages
-from .mixins import (
-    MqttEntity,
-    async_setup_entity_entry_helper,
-    write_state_on_attr_change,
-)
+from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
@@ -177,30 +173,27 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             self._attr_code_format = alarm.CodeFormat.TEXT
         self._attr_code_arm_required = bool(self._config[CONF_CODE_ARM_REQUIRED])
 
+    def _state_message_received(self, msg: ReceiveMessage) -> None:
+        """Run when new MQTT message has been received."""
+        payload = self._value_template(msg.payload)
+        if payload not in (
+            STATE_ALARM_DISARMED,
+            STATE_ALARM_ARMED_HOME,
+            STATE_ALARM_ARMED_AWAY,
+            STATE_ALARM_ARMED_NIGHT,
+            STATE_ALARM_ARMED_VACATION,
+            STATE_ALARM_ARMED_CUSTOM_BYPASS,
+            STATE_ALARM_PENDING,
+            STATE_ALARM_ARMING,
+            STATE_ALARM_DISARMING,
+            STATE_ALARM_TRIGGERED,
+        ):
+            _LOGGER.warning("Received unexpected payload: %s", msg.payload)
+            return
+        self._attr_state = str(payload)
+
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_state"})
-        def message_received(msg: ReceiveMessage) -> None:
-            """Run when new MQTT message has been received."""
-            payload = self._value_template(msg.payload)
-            if payload not in (
-                STATE_ALARM_DISARMED,
-                STATE_ALARM_ARMED_HOME,
-                STATE_ALARM_ARMED_AWAY,
-                STATE_ALARM_ARMED_NIGHT,
-                STATE_ALARM_ARMED_VACATION,
-                STATE_ALARM_ARMED_CUSTOM_BYPASS,
-                STATE_ALARM_PENDING,
-                STATE_ALARM_ARMING,
-                STATE_ALARM_DISARMING,
-                STATE_ALARM_TRIGGERED,
-            ):
-                _LOGGER.warning("Received unexpected payload: %s", msg.payload)
-                return
-            self._attr_state = str(payload)
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
@@ -208,7 +201,12 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             {
                 "state_topic": {
                     "topic": self._config[CONF_STATE_TOPIC],
-                    "msg_callback": message_received,
+                    "msg_callback": partial(
+                        self._message_callback,
+                        self._state_message_received,
+                        {"_attr_state"},
+                    ),
+                    "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
                     "encoding": self._config[CONF_ENCODING] or None,
                 }
