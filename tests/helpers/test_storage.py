@@ -665,9 +665,7 @@ async def test_saving_load_round_trip(tmpdir: py.path.local) -> None:
 
 
 async def test_loading_corrupt_core_file(
-    tmpdir: py.path.local,
-    caplog: pytest.LogCaptureFixture,
-    issue_registry: ir.IssueRegistry,
+    tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we handle unrecoverable corruption in a core file."""
     loop = asyncio.get_running_loop()
@@ -695,6 +693,7 @@ async def test_loading_corrupt_core_file(
         assert data is None
         assert "Unrecoverable error decoding storage" in caplog.text
 
+        issue_registry = ir.async_get(hass)
         found_issue = None
         issue_entry = None
         for (domain, issue), entry in issue_registry.issues.items():
@@ -724,9 +723,7 @@ async def test_loading_corrupt_core_file(
 
 
 async def test_loading_corrupt_file_known_domain(
-    tmpdir: py.path.local,
-    caplog: pytest.LogCaptureFixture,
-    issue_registry: ir.IssueRegistry,
+    tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we handle unrecoverable corruption for a known domain."""
 
@@ -757,6 +754,7 @@ async def test_loading_corrupt_file_known_domain(
         assert data is None
         assert "Unrecoverable error decoding storage" in caplog.text
 
+        issue_registry = ir.async_get(hass)
         found_issue = None
         issue_entry = None
         for (domain, issue), entry in issue_registry.issues.items():
