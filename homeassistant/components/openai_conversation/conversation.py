@@ -110,7 +110,6 @@ class OpenAIConversationEntity(
                 )
             tools = [_format_tool(tool) for tool in llm_api.async_get_tools()]
 
-        raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
         model = self.entry.options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL)
         max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
         top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
@@ -122,10 +121,31 @@ class OpenAIConversationEntity(
         else:
             conversation_id = ulid.ulid_now()
             try:
-                prompt = self._async_generate_prompt(
-                    raw_prompt,
-                    llm_api,
+                prompt = template.Template(
+                    self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT), self.hass
+                ).async_render(
+                    {
+                        "ha_name": self.hass.config.location_name,
+                    },
+                    parse_result=False,
                 )
+
+                if llm_api:
+                    empty_tool_input = llm.ToolInput(
+                        tool_name="",
+                        tool_args={},
+                        platform=DOMAIN,
+                        context=user_input.context,
+                        user_prompt=user_input.text,
+                        language=user_input.language,
+                        assistant=conversation.DOMAIN,
+                        device_id=user_input.device_id,
+                    )
+
+                    prompt = (
+                        llm_api.async_get_api_prompt(empty_tool_input) + "\n" + prompt
+                    )
+
             except TemplateError as err:
                 LOGGER.error("Error rendering prompt: %s", err)
                 intent_response = intent.IntentResponse(language=user_input.language)
@@ -136,6 +156,7 @@ class OpenAIConversationEntity(
                 return conversation.ConversationResult(
                     response=intent_response, conversation_id=conversation_id
                 )
+
             messages = [{"role": "system", "content": prompt}]
 
         messages.append({"role": "user", "content": user_input.text})
@@ -212,23 +233,4 @@ class OpenAIConversationEntity(
         intent_response.async_set_speech(response.content)
         return conversation.ConversationResult(
             response=intent_response, conversation_id=conversation_id
-        )
-
-    def _async_generate_prompt(
-        self,
-        raw_prompt: str,
-        llm_api: llm.API | None,
-    ) -> str:
-        """Generate a prompt for the user."""
-        raw_prompt += "\n"
-        if llm_api:
-            raw_prompt += llm_api.prompt_template
-        else:
-            raw_prompt += llm.PROMPT_NO_API_CONFIGURED
-
-        return template.Template(raw_prompt, self.hass).async_render(
-            {
-                "ha_name": self.hass.config.location_name,
-            },
-            parse_result=False,
         )
