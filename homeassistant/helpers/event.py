@@ -54,19 +54,19 @@ from .sun import get_astral_event_next
 from .template import RenderInfo, Template, result_as_boolean
 from .typing import TemplateVarsType
 
-TRACK_STATE_CHANGE_DATA: HassKey[_KeyedEventData[EventStateChangedData]] = HassKey(
+_TRACK_STATE_CHANGE_DATA: HassKey[_KeyedEventData[EventStateChangedData]] = HassKey(
     "track_state_change_data"
 )
-TRACK_STATE_ADDED_DOMAIN_DATA: HassKey[_KeyedEventData[EventStateChangedData]] = (
+_TRACK_STATE_ADDED_DOMAIN_DATA: HassKey[_KeyedEventData[EventStateChangedData]] = (
     HassKey("track_state_added_domain_data")
 )
-TRACK_STATE_REMOVED_DOMAIN_DATA: HassKey[_KeyedEventData[EventStateChangedData]] = (
+_TRACK_STATE_REMOVED_DOMAIN_DATA: HassKey[_KeyedEventData[EventStateChangedData]] = (
     HassKey("track_state_removed_domain_data")
 )
-TRACK_ENTITY_REGISTRY_UPDATED_DATA: HassKey[
+_TRACK_ENTITY_REGISTRY_UPDATED_DATA: HassKey[
     _KeyedEventData[EventEntityRegistryUpdatedData]
 ] = HassKey("track_entity_registry_updated_data")
-TRACK_DEVICE_REGISTRY_UPDATED_DATA: HassKey[
+_TRACK_DEVICE_REGISTRY_UPDATED_DATA: HassKey[
     _KeyedEventData[EventDeviceRegistryUpdatedData]
 ] = HassKey("track_device_registry_updated_data")
 
@@ -352,7 +352,7 @@ def _async_state_change_filter(
 
 
 _KEYED_TRACK_STATE_CHANGE = _KeyedEventTracker(
-    key=TRACK_STATE_CHANGE_DATA,
+    key=_TRACK_STATE_CHANGE_DATA,
     event_type=EVENT_STATE_CHANGED,
     dispatcher_callable=_async_dispatch_entity_id_event,
     filter_callable=_async_state_change_filter,
@@ -412,10 +412,6 @@ def _async_track_event(
     """Track an event by a specific key.
 
     This function is intended for internal use only.
-
-    The dispatcher_callable, filter_callable, event_type, and run_immediately
-    must always be the same for the listener_key as the first call to this
-    function will set the listener_key in hass.data.
     """
     if not keys:
         return _remove_empty_listener
@@ -486,7 +482,7 @@ def _async_entity_registry_updated_filter(
 
 
 _KEYED_TRACK_ENTITY_REGISTRY_UPDATED = _KeyedEventTracker(
-    key=TRACK_ENTITY_REGISTRY_UPDATED_DATA,
+    key=_TRACK_ENTITY_REGISTRY_UPDATED_DATA,
     event_type=EVENT_ENTITY_REGISTRY_UPDATED,
     dispatcher_callable=_async_dispatch_old_entity_id_or_entity_id_event,
     filter_callable=_async_entity_registry_updated_filter,
@@ -543,7 +539,7 @@ def _async_dispatch_device_id_event(
 
 
 _KEYED_TRACK_DEVICE_REGISTRY_UPDATED = _KeyedEventTracker(
-    key=TRACK_DEVICE_REGISTRY_UPDATED_DATA,
+    key=_TRACK_DEVICE_REGISTRY_UPDATED_DATA,
     event_type=EVENT_DEVICE_REGISTRY_UPDATED,
     dispatcher_callable=_async_dispatch_device_id_event,
     filter_callable=_async_device_registry_updated_filter,
@@ -610,7 +606,7 @@ def async_track_state_added_domain(
 
 
 _KEYED_TRACK_STATE_ADDED_DOMAIN = _KeyedEventTracker(
-    key=TRACK_STATE_ADDED_DOMAIN_DATA,
+    key=_TRACK_STATE_ADDED_DOMAIN_DATA,
     event_type=EVENT_STATE_CHANGED,
     dispatcher_callable=_async_dispatch_domain_event,
     filter_callable=_async_domain_added_filter,
@@ -644,7 +640,7 @@ def _async_domain_removed_filter(
 
 
 _KEYED_TRACK_STATE_REMOVED_DOMAIN = _KeyedEventTracker(
-    key=TRACK_STATE_REMOVED_DOMAIN_DATA,
+    key=_TRACK_STATE_REMOVED_DOMAIN_DATA,
     event_type=EVENT_STATE_CHANGED,
     dispatcher_callable=_async_dispatch_domain_event,
     filter_callable=_async_domain_removed_filter,
