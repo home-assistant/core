@@ -74,8 +74,11 @@ from homeassistant.const import (
     STATE_UNLOCKED,
 )
 from homeassistant.core import Context, CoreState, Event, HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er, recorder as recorder_helper
-from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
+from homeassistant.helpers import (
+    entity_registry as er,
+    issue_registry as ir,
+    recorder as recorder_helper,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads
@@ -1865,6 +1868,7 @@ async def test_database_lock_and_overflow(
     recorder_db_url: str,
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test writing events during lock leading to overflow the queue causes the database to unlock."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
@@ -1915,8 +1919,7 @@ async def test_database_lock_and_overflow(
         assert "Database queue backlog reached more than" in caplog.text
         assert not instance.unlock_database()
 
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "backup_failed_out_of_resources")
+    issue = issue_registry.async_get_issue(DOMAIN, "backup_failed_out_of_resources")
     assert issue is not None
     assert "start_time" in issue.translation_placeholders
     start_time = issue.translation_placeholders["start_time"]
@@ -1931,6 +1934,7 @@ async def test_database_lock_and_overflow_checks_available_memory(
     recorder_db_url: str,
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test writing events during lock leading to overflow the queue causes the database to unlock."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
@@ -2005,8 +2009,7 @@ async def test_database_lock_and_overflow_checks_available_memory(
         db_events = await instance.async_add_executor_job(_get_db_events)
         assert len(db_events) >= 2
 
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "backup_failed_out_of_resources")
+    issue = issue_registry.async_get_issue(DOMAIN, "backup_failed_out_of_resources")
     assert issue is not None
     assert "start_time" in issue.translation_placeholders
     start_time = issue.translation_placeholders["start_time"]
