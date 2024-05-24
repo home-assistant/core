@@ -1,5 +1,7 @@
 """Common fixtures for Anova."""
 
+from __future__ import annotations
+
 import asyncio
 from dataclasses import dataclass
 import json
@@ -40,7 +42,7 @@ class MockedAnovaWebsocketStream:
         """Initialize a Anova Websocket Stream that can be manipulated for tests."""
         self.messages = messages
 
-    def __aiter__(self) -> "MockedAnovaWebsocketStream":
+    def __aiter__(self) -> MockedAnovaWebsocketStream:
         """Handle async iteration."""
         return self
 
