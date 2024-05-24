@@ -19,7 +19,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.trigger import PluggableAction
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_MANUFACTURER, DOMAIN
+from .const import CONF_MANUFACTURER, DOMAIN, LOGGER
 from .coordinator import SamsungTVDataUpdateCoordinator
 from .triggers.turn_on import async_get_turn_on_trigger
 
@@ -89,10 +89,21 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
     async def _async_turn_on(self) -> None:
         """Turn the remote on."""
         if self._turn_on_action:
+            LOGGER.debug("Attempting to turn on %s via automation", self.entity_id)
             await self._turn_on_action.async_run(self.hass, self._context)
         elif self._mac:
+            LOGGER.info(
+                "Attempting to turn on %s via Wake-On-Lan; if this does not work, "
+                "please ensure that Wake-On-Lan is available for your device or use "
+                "a turn_on automation",
+                self.entity_id,
+            )
             await self.hass.async_add_executor_job(self._wake_on_lan)
         else:
+            LOGGER.error(
+                "Unable to turn on %s, as it does not have an automation configured",
+                self.entity_id,
+            )
             raise HomeAssistantError(
                 f"Entity {self.entity_id} does not support this service."
             )
