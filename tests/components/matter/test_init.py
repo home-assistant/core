@@ -414,8 +414,7 @@ async def test_update_addon(
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_issue_registry_invalid_version(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
+    hass: HomeAssistant, matter_client: MagicMock, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test issue registry for invalid version."""
     original_connect_side_effect = matter_client.connect.side_effect
@@ -433,10 +432,9 @@ async def test_issue_registry_invalid_version(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    issue_reg = ir.async_get(hass)
     entry_state = entry.state
     assert entry_state is ConfigEntryState.SETUP_RETRY
-    assert issue_reg.async_get_issue(DOMAIN, "invalid_server_version")
+    assert issue_registry.async_get_issue(DOMAIN, "invalid_server_version")
 
     matter_client.connect.side_effect = original_connect_side_effect
 
@@ -444,7 +442,7 @@ async def test_issue_registry_invalid_version(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert not issue_reg.async_get_issue(DOMAIN, "invalid_server_version")
+    assert not issue_registry.async_get_issue(DOMAIN, "invalid_server_version")
 
 
 @pytest.mark.parametrize(

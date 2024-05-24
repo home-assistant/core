@@ -2683,7 +2683,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_front_passenger_door-statealt]
@@ -2711,7 +2711,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_heat-statealt]
@@ -2928,7 +2928,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_rear_passenger_door-statealt]
@@ -2956,7 +2956,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_running-statealt]

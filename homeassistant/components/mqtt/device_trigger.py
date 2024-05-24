@@ -36,7 +36,7 @@ from .const import (
     DOMAIN,
 )
 from .discovery import MQTTDiscoveryPayload, clear_discovery_hash
-from .mixins import MqttDiscoveryDeviceUpdate, send_discovery_done, update_device
+from .mixins import MqttDiscoveryDeviceUpdateMixin, send_discovery_done, update_device
 from .models import DATA_MQTT
 from .schemas import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 
@@ -185,7 +185,7 @@ class Trigger:
                 trig.remove = None
 
 
-class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
+class MqttDeviceTrigger(MqttDiscoveryDeviceUpdateMixin):
     """Setup a MQTT device trigger with auto discovery."""
 
     def __init__(
@@ -205,7 +205,7 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
         self._mqtt_data = hass.data[DATA_MQTT]
         self.trigger_id = f"{device_id}_{config[CONF_TYPE]}_{config[CONF_SUBTYPE]}"
 
-        MqttDiscoveryDeviceUpdate.__init__(
+        MqttDiscoveryDeviceUpdateMixin.__init__(
             self,
             hass,
             discovery_data,

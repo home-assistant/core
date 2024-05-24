@@ -144,14 +144,14 @@ async def test_error_sensor(
         assert state.state == expected_state
 
 
-async def test_sensor(
+async def test_sensor_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test states of the sensors."""
+    """Snapshot test of the sensors."""
     with patch(
         "homeassistant.components.husqvarna_automower.PLATFORMS",
         [Platform.SENSOR],
