@@ -184,7 +184,9 @@ class GoogleGenerativeAIConversationEntity(
             raw_prompt += "\n" + tone_prompt
 
         try:
-            prompt = self._async_generate_prompt(raw_prompt, llm_api)
+            prompt = self._async_generate_prompt(
+                raw_prompt, llm_api, user_input.device_id, user_input.context.user_id
+            )
         except TemplateError as err:
             LOGGER.error("Error rendering prompt: %s", err)
             intent_response.async_set_error(
@@ -272,7 +274,13 @@ class GoogleGenerativeAIConversationEntity(
             response=intent_response, conversation_id=conversation_id
         )
 
-    def _async_generate_prompt(self, raw_prompt: str, llm_api: llm.API | None) -> str:
+    def _async_generate_prompt(
+        self,
+        raw_prompt: str,
+        llm_api: llm.API | None,
+        device_id: str | None,
+        user_id: str | None,
+    ) -> str:
         """Generate a prompt for the user."""
         raw_prompt += "\n"
         if llm_api:
@@ -283,6 +291,8 @@ class GoogleGenerativeAIConversationEntity(
         return template.Template(raw_prompt, self.hass).async_render(
             {
                 "ha_name": self.hass.config.location_name,
+                "device_id": device_id,
+                "user_id": user_id,
             },
             parse_result=False,
         )
