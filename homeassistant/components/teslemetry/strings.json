@@ -223,12 +223,6 @@
       },
       "off_grid_vehicle_charging_reserve": {
         "name": "Off grid reserve"
-      },
-      "vehicle_state_speed_limit_mode_current_limit_mph": {
-        "name": "Speed limit"
-      },
-      "vehicle_state_speed_limit_mode_current_limit_kph": {
-        "name": "Speed limit"
       }
     },
     "sensor": {
