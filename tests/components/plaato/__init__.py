@@ -29,11 +29,11 @@ async def init_integration(
     """Mock integration setup."""
     with (
         patch(
-            "homeassistant.components.plaato.Plaato.get_airlock_data",
+            "homeassistant.components.plaato.coordinator.Plaato.get_airlock_data",
             return_value=PlaatoAirlock(AIRLOCK_DATA),
         ),
         patch(
-            "homeassistant.components.plaato.Plaato.get_keg_data",
+            "homeassistant.components.plaato.coordinator.Plaato.get_keg_data",
             return_value=PlaatoKeg(KEG_DATA),
         ),
     ):
