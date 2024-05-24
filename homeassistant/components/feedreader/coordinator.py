@@ -42,7 +42,6 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
         self._url = url
         self._max_entries = max_entries
         self._feed: feedparser.FeedParserDict | None = None
-        self._firstrun = True
         self._storage = storage
         self._last_entry_timestamp: struct_time | None = None
         self._event_type = EVENT_FEEDREADER
@@ -133,9 +132,10 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
         """Publish new entries to the event bus."""
         assert self._feed is not None
         new_entry_count = 0
+        firstrun = True
         self._last_entry_timestamp = self._storage.get_timestamp(self._feed_id)
         if self._last_entry_timestamp:
-            self._firstrun = False
+            firstrun = False
         else:
             # Set last entry timestamp as epoch time if not available
             self._last_entry_timestamp = dt_util.utc_from_timestamp(0).timetuple()
@@ -143,7 +143,7 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
         last_entry_timestamp = self._last_entry_timestamp
         for entry in self._feed.entries:
             if (
-                self._firstrun
+                firstrun
                 or (
                     "published_parsed" in entry
                     and entry.published_parsed > last_entry_timestamp
@@ -161,7 +161,6 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
             self._log_no_entries()
         else:
             _LOGGER.debug("%d entries published in feed %s", new_entry_count, self._url)
-        self._firstrun = False
 
 
 class StoredData:
