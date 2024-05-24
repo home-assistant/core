@@ -316,12 +316,35 @@ def sonos_favorites_fixture() -> SearchResult:
 class MockMusicServiceItem:
     """Mocks a Soco MusicServiceItem."""
 
-    def __init__(self, title: str, item_id: str, parent_id: str, item_class: str):
+    def __init__(
+        self,
+        title: str,
+        item_id: str,
+        parent_id: str,
+        item_class: str,
+        album_art_uri: None | str = None,
+    ):
         """Initialize the mock item."""
         self.title = title
         self.item_id = item_id
         self.item_class = item_class
         self.parent_id = parent_id
+        self.album_art_uri: None | str = album_art_uri
+
+
+def list_from_json_fixture(file_name: str) -> list[MockMusicServiceItem]:
+    """Create a list of music service items from a json fixture file."""
+    item_list = load_json_value_fixture(file_name, "sonos")
+    return [
+        MockMusicServiceItem(
+            item.get("title"),
+            item.get("item_id"),
+            item.get("parent_id"),
+            item.get("item_class"),
+            item.get("album_art_uri"),
+        )
+        for item in item_list
+    ]
 
 
 def mock_browse_by_idstring(
@@ -398,6 +421,10 @@ def mock_browse_by_idstring(
                 "object.container.album.musicAlbum",
             ),
         ]
+    if search_type == "tracks":
+        return list_from_json_fixture("music_library_tracks.json")
+    if search_type == "albums" and idstring == "A:ALBUM":
+        return list_from_json_fixture("music_library_albums.json")
     return []
 
 
@@ -416,13 +443,23 @@ def mock_get_music_library_information(
         ]
 
 
+@pytest.fixture(name="music_library_browse_categories")
+def music_library_browse_categories() -> list[MockMusicServiceItem]:
+    """Create fixture for top-level music library categories."""
+    return list_from_json_fixture("music_library_categories.json")
+
+
 @pytest.fixture(name="music_library")
-def music_library_fixture(sonos_favorites: SearchResult) -> Mock:
+def music_library_fixture(
+    sonos_favorites: SearchResult,
+    music_library_browse_categories: list[MockMusicServiceItem],
+) -> Mock:
     """Create music_library fixture."""
     music_library = MagicMock()
     music_library.get_sonos_favorites.return_value = sonos_favorites
-    music_library.browse_by_idstring = mock_browse_by_idstring
+    music_library.browse_by_idstring = Mock(side_effect=mock_browse_by_idstring)
     music_library.get_music_library_information = mock_get_music_library_information
+    music_library.browse = Mock(return_value=music_library_browse_categories)
     return music_library
 
 

@@ -2,6 +2,8 @@
 
 from functools import partial
 
+from syrupy import SnapshotAssertion
+
 from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.components.media_player.const import MediaClass, MediaType
 from homeassistant.components.sonos.media_browser import (
@@ -11,6 +13,8 @@ from homeassistant.components.sonos.media_browser import (
 from homeassistant.core import HomeAssistant
 
 from .conftest import SoCoMockFactory
+
+from tests.typing import WebSocketGenerator
 
 
 class MockMusicServiceItem:
@@ -95,3 +99,81 @@ async def test_build_item_response(
         browse_item.children[1].media_content_id
         == "x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3"
     )
+
+
+async def test_browse_media_root(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    soco,
+    discover,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the async_browse_media method."""
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.zone_a",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["children"] == snapshot
+
+
+async def test_browse_media_library(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    soco,
+    discover,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the async_browse_media method."""
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.zone_a",
+            "media_content_id": "",
+            "media_content_type": "library",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["children"] == snapshot
+
+
+async def test_browse_media_library_albums(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    soco,
+    discover,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the async_browse_media method."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.zone_a",
+            "media_content_id": "A:ALBUM",
+            "media_content_type": "album",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["children"] == snapshot
+    assert soco_mock.music_library.browse_by_idstring.call_count == 1
