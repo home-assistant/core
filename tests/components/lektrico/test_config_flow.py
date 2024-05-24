@@ -62,6 +62,9 @@ async def test_user_setup(
     assert "result" in result
     assert len(mock_setup_entry.mock_calls) == 1
 
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert entries[0].unique_id == MOCKED_DEVICE_SERIAL_NUMBER
+
 
 async def test_user_setup_already_exists(
     hass: HomeAssistant, mock_device_config
