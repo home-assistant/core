@@ -38,7 +38,7 @@ from homeassistant.util import dt as dt_util
 from . import subscription
 from .config import MQTT_RO_SCHEMA
 from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, PAYLOAD_NONE
-from .mixins import MqttAvailability, MqttEntity, async_setup_entity_entry_helper
+from .mixins import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
@@ -268,6 +268,6 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
     def available(self) -> bool:
         """Return true if the device is available and value has not expired."""
         # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
-        return MqttAvailability.available.fget(self) and (  # type: ignore[attr-defined]
+        return MqttAvailabilityMixin.available.fget(self) and (  # type: ignore[attr-defined]
             self._expire_after is None or not self._expired
         )

@@ -398,7 +398,7 @@ def write_state_on_attr_change(
     return _decorator
 
 
-class MqttAttributes(Entity):
+class MqttAttributesMixin(Entity):
     """Mixin used for platforms that support JSON attributes."""
 
     _attributes_extra_blocked: frozenset[str] = frozenset()
@@ -480,7 +480,7 @@ class MqttAttributes(Entity):
                 _LOGGER.warning("JSON result was not a dictionary")
 
 
-class MqttAvailability(Entity):
+class MqttAvailabilityMixin(Entity):
     """Mixin used for platforms that report availability."""
 
     def __init__(self, config: ConfigType) -> None:
@@ -687,7 +687,7 @@ async def async_clear_discovery_topic_if_entity_removed(
         await async_remove_discovery_payload(hass, discovery_data)
 
 
-class MqttDiscoveryDeviceUpdate(ABC):
+class MqttDiscoveryDeviceUpdateMixin(ABC):
     """Add support for auto discovery for platforms without an entity."""
 
     def __init__(
@@ -822,7 +822,7 @@ class MqttDiscoveryDeviceUpdate(ABC):
         """Handle the cleanup of platform specific parts, extend to the platform."""
 
 
-class MqttDiscoveryUpdate(Entity):
+class MqttDiscoveryUpdateMixin(Entity):
     """Mixin used to handle updated discovery message for entity based platforms."""
 
     def __init__(
@@ -854,7 +854,7 @@ class MqttDiscoveryUpdate(Entity):
         )
 
         async def _async_remove_state_and_registry_entry(
-            self: MqttDiscoveryUpdate,
+            self: MqttDiscoveryUpdateMixin,
         ) -> None:
             """Remove entity's state and entity registry entry.
 
@@ -1076,9 +1076,9 @@ class MqttEntityDeviceInfo(Entity):
 
 
 class MqttEntity(
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
+    MqttAttributesMixin,
+    MqttAvailabilityMixin,
+    MqttDiscoveryUpdateMixin,
     MqttEntityDeviceInfo,
 ):
     """Representation of an MQTT entity."""
@@ -1111,9 +1111,11 @@ class MqttEntity(
         self._init_entity_id()
 
         # Initialize mixin classes
-        MqttAttributes.__init__(self, config)
-        MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, hass, discovery_data, self.discovery_update)
+        MqttAttributesMixin.__init__(self, config)
+        MqttAvailabilityMixin.__init__(self, config)
+        MqttDiscoveryUpdateMixin.__init__(
+            self, hass, discovery_data, self.discovery_update
+        )
         MqttEntityDeviceInfo.__init__(self, config.get(CONF_DEVICE), config_entry)
 
     def _init_entity_id(self) -> None:
@@ -1164,9 +1166,9 @@ class MqttEntity(
         self._sub_state = subscription.async_unsubscribe_topics(
             self.hass, self._sub_state
         )
-        await MqttAttributes.async_will_remove_from_hass(self)
-        await MqttAvailability.async_will_remove_from_hass(self)
-        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
+        await MqttAttributesMixin.async_will_remove_from_hass(self)
+        await MqttAvailabilityMixin.async_will_remove_from_hass(self)
+        await MqttDiscoveryUpdateMixin.async_will_remove_from_hass(self)
         debug_info.remove_entity_data(self.hass, self.entity_id)
 
     async def async_publish(
