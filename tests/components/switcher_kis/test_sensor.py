@@ -2,7 +2,6 @@
 
 import pytest
 
-from homeassistant.components.switcher_kis.const import DATA_DEVICE, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
@@ -32,12 +31,11 @@ DEVICE_SENSORS_TUPLE = (
 @pytest.mark.parametrize("mock_bridge", [DUMMY_SWITCHER_DEVICES], indirect=True)
 async def test_sensor_platform(hass: HomeAssistant, mock_bridge) -> None:
     """Test sensor platform."""
-    await init_integration(hass)
+    entry = await init_integration(hass)
     assert mock_bridge
 
     assert mock_bridge.is_running is True
-    assert len(hass.data[DOMAIN]) == 2
-    assert len(hass.data[DOMAIN][DATA_DEVICE]) == 2
+    assert len(entry.runtime_data.coordinators) == 2
 
     for device, sensors in DEVICE_SENSORS_TUPLE:
         for sensor, field in sensors:

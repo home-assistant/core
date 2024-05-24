@@ -2,9 +2,6 @@
 
 DOMAIN = "switcher_kis"
 
-DATA_BRIDGE = "bridge"
-DATA_DEVICE = "device"
-
 DISCOVERY_TIME_SEC = 12
 
 SIGNAL_DEVICE_ADD = "switcher_device_add"

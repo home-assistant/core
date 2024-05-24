@@ -18,9 +18,15 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_bridge(request):
     """Return a mocked SwitcherBridge."""
-    with patch(
-        "homeassistant.components.switcher_kis.utils.SwitcherBridge", autospec=True
-    ) as bridge_mock:
+    with (
+        patch(
+            "homeassistant.components.switcher_kis.SwitcherBridge", autospec=True
+        ) as bridge_mock,
+        patch(
+            "homeassistant.components.switcher_kis.utils.SwitcherBridge",
+            new=bridge_mock,
+        ),
+    ):
         bridge = bridge_mock.return_value
 
         bridge.devices = []
