@@ -6,12 +6,13 @@ from calendar import timegm
 from datetime import datetime, timedelta
 from logging import getLogger
 from time import gmtime, struct_time
+from urllib.error import URLError
 
 import feedparser
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -69,8 +70,8 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
         self._feed = await self.hass.async_add_executor_job(self._fetch_feed)
 
         if not self._feed:
-            _LOGGER.error("Error fetching feed data from %s", self._url)
-            return None
+            raise UpdateFailed(f"Error fetching feed data from {self._url}")
+
         # The 'bozo' flag really only indicates that there was an issue
         # during the initial parsing of the XML, but it doesn't indicate
         # whether this is an unrecoverable error. In this case the
@@ -78,6 +79,12 @@ class FeedReaderCoordinator(DataUpdateCoordinator[None]):
         # If an error is detected here, log warning message but continue
         # processing the feed entries if present.
         if self._feed.bozo != 0:
+            if isinstance(self._feed.bozo_exception, URLError):
+                raise UpdateFailed(
+                    f"Error fetching feed data from {self._url} : {self._feed.bozo_exception}"
+                )
+
+            # no connection issue, but parsing issue
             _LOGGER.warning(
                 "Possible issue parsing feed %s: %s",
                 self._url,
