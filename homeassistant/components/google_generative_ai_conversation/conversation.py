@@ -31,11 +31,11 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
-    DEFAULT_HARM_BLOCK_THRESHOLD,
     DEFAULT_PROMPT,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_HARM_BLOCK_THRESHOLD,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_K,
@@ -175,16 +175,16 @@ class GoogleGenerativeAIConversationEntity(
             },
             safety_settings={
                 "HARASSMENT": self.entry.options.get(
-                    CONF_HARASSMENT_BLOCK_THRESHOLD, DEFAULT_HARM_BLOCK_THRESHOLD
+                    CONF_HARASSMENT_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
                 ),
                 "HATE": self.entry.options.get(
-                    CONF_HATE_BLOCK_THRESHOLD, DEFAULT_HARM_BLOCK_THRESHOLD
+                    CONF_HATE_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
                 ),
                 "SEXUAL": self.entry.options.get(
-                    CONF_SEXUAL_BLOCK_THRESHOLD, DEFAULT_HARM_BLOCK_THRESHOLD
+                    CONF_SEXUAL_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
                 ),
                 "DANGEROUS": self.entry.options.get(
-                    CONF_DANGEROUS_BLOCK_THRESHOLD, DEFAULT_HARM_BLOCK_THRESHOLD
+                    CONF_DANGEROUS_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
                 ),
             },
             tools=tools or None,

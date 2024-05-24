@@ -42,10 +42,10 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
-    DEFAULT_HARM_BLOCK_THRESHOLD,
     DEFAULT_PROMPT,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_HARM_BLOCK_THRESHOLD,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_K,
@@ -270,24 +270,26 @@ async def google_generative_ai_config_option_schema(
                 description={
                     "suggested_value": options.get(CONF_HARASSMENT_BLOCK_THRESHOLD)
                 },
-                default=DEFAULT_HARM_BLOCK_THRESHOLD,
+                default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
             ): harm_block_thresholds_selector,
             vol.Optional(
                 CONF_HATE_BLOCK_THRESHOLD,
                 description={"suggested_value": options.get(CONF_HATE_BLOCK_THRESHOLD)},
-                default=DEFAULT_HARM_BLOCK_THRESHOLD,
+                default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
             ): harm_block_thresholds_selector,
             vol.Optional(
                 CONF_SEXUAL_BLOCK_THRESHOLD,
-                description={"suggested_value": options.get(CONF_SEXUAL_BLOCK_THRESHOLD)},
-                default=DEFAULT_HARM_BLOCK_THRESHOLD,
+                description={
+                    "suggested_value": options.get(CONF_SEXUAL_BLOCK_THRESHOLD)
+                },
+                default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
             ): harm_block_thresholds_selector,
             vol.Optional(
                 CONF_DANGEROUS_BLOCK_THRESHOLD,
                 description={
                     "suggested_value": options.get(CONF_DANGEROUS_BLOCK_THRESHOLD)
                 },
-                default=DEFAULT_HARM_BLOCK_THRESHOLD,
+                default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
             ): harm_block_thresholds_selector,
         }
     )
