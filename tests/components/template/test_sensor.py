@@ -1902,10 +1902,10 @@ async def test_device_id(hass: HomeAssistant) -> None:
     """Test for device for Template."""
     device_registry = dr.async_get(hass)
 
-    source_config_entry = MockConfigEntry()
-    source_config_entry.add_to_hass(hass)
+    device_config_entry = MockConfigEntry()
+    device_config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
-        config_entry_id=source_config_entry.entry_id,
+        config_entry_id=device_config_entry.entry_id,
         identifiers={("sensor", "identifier_test")},
         connections={("mac", "30:31:32:33:34:35")},
     )
