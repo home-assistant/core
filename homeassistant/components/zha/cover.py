@@ -49,25 +49,21 @@ async def async_setup_entry(
 class ZhaCover(ZHAEntity, CoverEntity):
     """Representation of a ZHA cover."""
 
-    _attr_translation_key: str = "cover"
-
     def __init__(self, entity_data) -> None:
         """Initialize the ZHA cover."""
         super().__init__(entity_data)
 
-        if (
-            hasattr(self.entity_data.entity, "_attr_device_class")
-            and self.entity_data.entity._attr_device_class is not None
-        ):
-            self._attr_device_class: CoverDeviceClass | None = CoverDeviceClass(
-                self.entity_data.entity._attr_device_class.value
+        if self.entity_data.entity.info_object.device_class is not None:
+            self._attr_device_class = CoverDeviceClass(
+                self.entity_data.entity.info_object.device_class
             )
+
         if (
             hasattr(self.entity_data.entity, "_attr_supported_features")
-            and self.entity_data.entity._attr_supported_features is not None
+            and self.entity_data.entity._attr_supported_features is not None  # noqa: SLF001
         ):
             self._attr_supported_features: CoverEntityFeature = CoverEntityFeature(
-                self.entity_data.entity._attr_supported_features
+                self.entity_data.entity._attr_supported_features  # noqa: SLF001
             )
 
     @property

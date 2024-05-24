@@ -47,12 +47,9 @@ class ZHAButton(ZHAEntity, ButtonEntity):
     def __init__(self, entity_data) -> None:
         """Initialize the ZHA binary sensor."""
         super().__init__(entity_data)
-        if (
-            hasattr(self.entity_data.entity, "_attr_device_class")
-            and self.entity_data.entity._attr_device_class is not None
-        ):
+        if self.entity_data.entity.info_object.device_class is not None:
             self._attr_device_class = ButtonDeviceClass(
-                self.entity_data.entity._attr_device_class.value
+                self.entity_data.entity.info_object.device_class
             )
 
     async def async_press(self) -> None:
