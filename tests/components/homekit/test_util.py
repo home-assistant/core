@@ -11,6 +11,8 @@ from homeassistant.components.homekit.const import (
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
+    CONF_THRESHOLD_CO,
+    CONF_THRESHOLD_CO2,
     DEFAULT_CONFIG_FLOW_PORT,
     DOMAIN,
     FEATURE_ON_OFF,
@@ -169,6 +171,12 @@ def test_validate_entity_config() -> None:
     }
     assert vec({"switch.demo": {CONF_TYPE: TYPE_VALVE}}) == {
         "switch.demo": {CONF_TYPE: TYPE_VALVE, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
+    assert vec({"sensor.co": {CONF_THRESHOLD_CO: 500}}) == {
+        "sensor.co": {CONF_THRESHOLD_CO: 500, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
+    assert vec({"sensor.co2": {CONF_THRESHOLD_CO2: 500}}) == {
+        "sensor.co2": {CONF_THRESHOLD_CO2: 500, CONF_LOW_BATTERY_THRESHOLD: 20}
     }
 
 
