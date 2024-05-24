@@ -26,6 +26,7 @@ class EntitySubscription:
     unsubscribe_callback: Callable[[], None] | None = attr.ib()
     qos: int = attr.ib(default=0)
     encoding: str = attr.ib(default="utf-8")
+    entity_id: str | None = attr.ib(default=None)
 
     def resubscribe_if_necessary(
         self, hass: HomeAssistant, other: EntitySubscription | None
@@ -41,7 +42,7 @@ class EntitySubscription:
             other.unsubscribe_callback()
             # Clear debug data if it exists
             debug_info.remove_subscription(
-                self.hass, other.message_callback, str(other.topic)
+                self.hass, other.message_callback, str(other.topic), other.entity_id
             )
 
         if self.topic is None:
@@ -49,7 +50,9 @@ class EntitySubscription:
             return
 
         # Prepare debug data
-        debug_info.add_subscription(self.hass, self.message_callback, self.topic)
+        debug_info.add_subscription(
+            self.hass, self.message_callback, self.topic, self.entity_id
+        )
 
         self.subscribe_task = mqtt.async_subscribe(
             hass, self.topic, self.message_callback, self.qos, self.encoding
@@ -80,7 +83,7 @@ class EntitySubscription:
 def async_prepare_subscribe_topics(
     hass: HomeAssistant,
     new_state: dict[str, EntitySubscription] | None,
-    topics: dict[str, Any],
+    topics: dict[str, dict[str, Any]],
 ) -> dict[str, EntitySubscription]:
     """Prepare (re)subscribe to a set of MQTT topics.
 
@@ -106,6 +109,7 @@ def async_prepare_subscribe_topics(
             encoding=value.get("encoding", "utf-8"),
             hass=hass,
             subscribe_task=None,
+            entity_id=value.get("entity_id", None),
         )
         # Get the current subscription state
         current = current_subscriptions.pop(key, None)
@@ -118,7 +122,10 @@ def async_prepare_subscribe_topics(
             remaining.unsubscribe_callback()
             # Clear debug data if it exists
             debug_info.remove_subscription(
-                hass, remaining.message_callback, str(remaining.topic)
+                hass,
+                remaining.message_callback,
+                str(remaining.topic),
+                remaining.entity_id,
             )
 
     return new_state
