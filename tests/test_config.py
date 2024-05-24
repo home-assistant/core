@@ -1983,18 +1983,19 @@ def test_identify_config_schema(domain, schema, expected) -> None:
     )
 
 
-async def test_core_config_schema_historic_currency(hass: HomeAssistant) -> None:
+async def test_core_config_schema_historic_currency(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test core config schema."""
     await config_util.async_process_ha_core_config(hass, {"currency": "LTT"})
 
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue("homeassistant", "historic_currency")
     assert issue
     assert issue.translation_placeholders == {"currency": "LTT"}
 
 
 async def test_core_store_historic_currency(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant, hass_storage: dict[str, Any], issue_registry: ir.IssueRegistry
 ) -> None:
     """Test core config store."""
     core_data = {
@@ -2008,7 +2009,6 @@ async def test_core_store_historic_currency(
     hass_storage["core.config"] = dict(core_data)
     await config_util.async_process_ha_core_config(hass, {})
 
-    issue_registry = ir.async_get(hass)
     issue_id = "historic_currency"
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert issue
@@ -2019,11 +2019,12 @@ async def test_core_store_historic_currency(
     assert not issue
 
 
-async def test_core_config_schema_no_country(hass: HomeAssistant) -> None:
+async def test_core_config_schema_no_country(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test core config schema."""
     await config_util.async_process_ha_core_config(hass, {})
 
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue("homeassistant", "country_not_configured")
     assert issue
 
@@ -2037,12 +2038,14 @@ async def test_core_config_schema_no_country(hass: HomeAssistant) -> None:
     ],
 )
 async def test_core_config_schema_legacy_template(
-    hass: HomeAssistant, config: dict[str, Any], expected_issue: str | None
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    expected_issue: str | None,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test legacy_template core config schema."""
     await config_util.async_process_ha_core_config(hass, config)
 
-    issue_registry = ir.async_get(hass)
     for issue_id in ("legacy_templates_true", "legacy_templates_false"):
         issue = issue_registry.async_get_issue("homeassistant", issue_id)
         assert issue if issue_id == expected_issue else not issue
@@ -2053,7 +2056,7 @@ async def test_core_config_schema_legacy_template(
 
 
 async def test_core_store_no_country(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant, hass_storage: dict[str, Any], issue_registry: ir.IssueRegistry
 ) -> None:
     """Test core config store."""
     core_data = {
@@ -2065,7 +2068,6 @@ async def test_core_store_no_country(
     hass_storage["core.config"] = dict(core_data)
     await config_util.async_process_ha_core_config(hass, {})
 
-    issue_registry = ir.async_get(hass)
     issue_id = "country_not_configured"
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert issue
