@@ -19,7 +19,7 @@ from hass_nabucasa.const import STATE_DISCONNECTED
 from hass_nabucasa.voice import TTS_VOICES
 import voluptuous as vol
 
-from homeassistant.components import http, websocket_api
+from homeassistant.components import websocket_api
 from homeassistant.components.alexa import (
     entities as alexa_entities,
     errors as alexa_errors,
@@ -46,7 +46,6 @@ from .const import (
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_REMOTE_ALLOW_REMOTE_ENABLE,
-    PREF_STRICT_CONNECTION,
     PREF_TTS_DEFAULT_VOICE,
     REQUEST_TIMEOUT,
 )
@@ -449,9 +448,6 @@ def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
             vol.Coerce(tuple), validate_language_voice
         ),
         vol.Optional(PREF_REMOTE_ALLOW_REMOTE_ENABLE): bool,
-        vol.Optional(PREF_STRICT_CONNECTION): vol.Coerce(
-            http.const.StrictConnectionMode
-        ),
     }
 )
 @websocket_api.async_response
