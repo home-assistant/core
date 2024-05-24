@@ -304,6 +304,7 @@ async def test_deprecation_warning(
     display_options: list[str],
     expected_warnings: list[str],
     expected_issues: list[str],
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test deprecation warning for swatch beat."""
     config = {
@@ -321,7 +322,6 @@ async def test_deprecation_warning(
     for expected_warning in expected_warnings:
         assert any(expected_warning in warning.message for warning in warnings)
 
-    issue_registry = ir.async_get(hass)
     assert len(issue_registry.issues) == len(expected_issues)
     for expected_issue in expected_issues:
         assert (DOMAIN, expected_issue) in issue_registry.issues

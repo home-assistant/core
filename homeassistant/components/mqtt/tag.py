@@ -20,7 +20,7 @@ from .config import MQTT_BASE_SCHEMA
 from .const import ATTR_DISCOVERY_HASH, CONF_QOS, CONF_TOPIC
 from .discovery import MQTTDiscoveryPayload
 from .mixins import (
-    MqttDiscoveryDeviceUpdate,
+    MqttDiscoveryDeviceUpdateMixin,
     async_handle_schema_error,
     async_setup_non_entity_entry_helper,
     send_discovery_done,
@@ -97,7 +97,7 @@ def async_has_tags(hass: HomeAssistant, device_id: str) -> bool:
     return tags[device_id] != {}
 
 
-class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
+class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
     """MQTT Tag scanner."""
 
     _value_template: Callable[[ReceivePayloadType, str], ReceivePayloadType]
@@ -122,7 +122,7 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
             hass=self.hass,
         ).async_render_with_possible_json_value
 
-        MqttDiscoveryDeviceUpdate.__init__(
+        MqttDiscoveryDeviceUpdateMixin.__init__(
             self, hass, discovery_data, device_id, config_entry, LOG_NAME
         )
 
