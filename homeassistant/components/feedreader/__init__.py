@@ -55,7 +55,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await asyncio.gather(*[feed.async_refresh() for feed in feeds])
 
-    # workaround until we have entities to update
+    # workaround because coordinators without listeners won't update
+    # can be removed when we have entities to update
     [feed.async_add_listener(lambda: None) for feed in feeds]
 
     return True
