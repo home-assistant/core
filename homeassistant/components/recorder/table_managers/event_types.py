@@ -9,12 +9,13 @@ from lru import LRU
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Event
+from homeassistant.util.collection import chunked
 from homeassistant.util.event_type import EventType
 
 from ..db_schema import EventTypes
 from ..queries import find_event_type_ids
 from ..tasks import RefreshEventTypesTask
-from ..util import chunked, execute_stmt_lambda_element
+from ..util import execute_stmt_lambda_element
 from . import BaseLRUTableManager
 
 if TYPE_CHECKING:
