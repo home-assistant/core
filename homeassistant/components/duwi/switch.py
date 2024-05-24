@@ -53,6 +53,7 @@ async def async_setup_entry(
                         route_num=device.route_num,
                         state=device.value.get("switch", None) == "on",
                         available=device.value.get("online", False),
+                        is_group=bool(getattr(device, "device_group_no", None)),
                     )
                     for device in device_list
                 ]
@@ -84,6 +85,7 @@ class DuwiSwitch(SwitchEntity):
         state: bool,
         available: bool,
         device_name: str,
+        is_group: bool = False,
         assumed: bool = False,
     ) -> None:
         """Initialize the Duwi Switch Entity."""
@@ -98,6 +100,7 @@ class DuwiSwitch(SwitchEntity):
         self._instance_id = instance_id
         self._is_on = state
         self._available = available
+        self._is_group = is_group
         self._assumed = assumed
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
@@ -125,6 +128,7 @@ class DuwiSwitch(SwitchEntity):
             app_version=APP_VERSION,
             client_version=CLIENT_VERSION,
             client_model=CLIENT_MODEL,
+            is_group=is_group,
         )
 
         # Initialize Control Device

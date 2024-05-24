@@ -86,6 +86,7 @@ async def async_setup_entry(
                             "terminal_sequence": device.terminal_sequence,
                             "route_num": device.route_num,
                             "state": device.value.get("switch", "off") == "on",
+                            "is_group": bool(getattr(device, "device_group_no", None)),
                             "available": device.value.get("online"),
                             "position": int(device.value.get("control_percent", 0)),
                             "supported_features": SUPPORTED_COVER_MODES[cover_type],
@@ -124,6 +125,11 @@ class DuwiCover(CoverEntity):
     _attr_name = None
     _attr_should_poll = False
 
+    @property
+    def unique_id(self) -> str:
+        """Return unique ID for cover."""
+        return self._unique_id
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -138,6 +144,7 @@ class DuwiCover(CoverEntity):
         room_name: str,
         state: bool,
         available: bool,
+        is_group: bool = False,
         position: int | None = None,
         tilt_position: int | None = None,
         supported_features: CoverEntityFeature | None = None,
@@ -155,6 +162,7 @@ class DuwiCover(CoverEntity):
         self._room_name = room_name
         self._route_num = route_num
         self._state = state
+        self._is_group = is_group
         self._available = available
         self._position = position
         self._attr_supported_features = supported_features
@@ -190,6 +198,7 @@ class DuwiCover(CoverEntity):
             app_version=APP_VERSION,
             client_version=CLIENT_VERSION,
             client_model=CLIENT_MODEL,
+            is_group=is_group,
         )
 
         self.cd = ControlDevice(device_no=self._device_no, house_no=self._house_no)
@@ -213,11 +222,6 @@ class DuwiCover(CoverEntity):
         self.hass.data[DOMAIN][instance_id].setdefault("slave", {}).setdefault(
             self._terminal_sequence, {}
         )[self._device_no] = self.update_device_state
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID for cover."""
-        return self._unique_id
 
     @property
     def available(self) -> bool:

@@ -85,6 +85,7 @@ async def async_setup_entry(
                             "effect_list": device_effect_list,
                             "effect_map": device.value.get("effectList", None),
                             "state": device.value.get("switch", "off") == "on",
+                            "is_group": bool(getattr(device, "device_group_no", None)),
                             "available": device.value.get("online", False),
                             "supported_color_modes": SUPPORTED_COLOR_MODES[device_type],
                         }
@@ -165,6 +166,7 @@ class DuwiLight(LightEntity):
         route_num: str,
         state: bool,
         is_color_light: bool = False,
+        is_group: bool = False,
         available: bool = False,
         brightness: int | None = None,
         ct: int | None = None,
@@ -190,6 +192,7 @@ class DuwiLight(LightEntity):
         self._room_name = room_name
 
         self._instance_id = instance_id
+        self._is_group = is_group
         self._available = available
         self._brightness = brightness
         self._ct = ct
@@ -242,6 +245,7 @@ class DuwiLight(LightEntity):
             app_version=APP_VERSION,
             client_version=CLIENT_VERSION,
             client_model=CLIENT_MODEL,
+            is_group=is_group,
         )
         self.cd = ControlDevice(
             device_no=self._device_no,
