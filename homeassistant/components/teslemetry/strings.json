@@ -225,6 +225,20 @@
         "name": "Off grid reserve"
       }
     },
+    "cover": {
+      "charge_state_charge_port_door_open": {
+        "name": "Charge port door"
+      },
+      "vehicle_state_ft": {
+        "name": "Frunk"
+      },
+      "vehicle_state_rt": {
+        "name": "Trunk"
+      },
+      "windows": {
+        "name": "Windows"
+      }
+    },
     "sensor": {
       "battery_power": {
         "name": "Battery power"
