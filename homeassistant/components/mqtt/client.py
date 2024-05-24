@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Coroutine, Iterable
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Iterable
 import contextlib
 from dataclasses import dataclass
 from functools import lru_cache, partial
@@ -99,6 +99,9 @@ SUBSCRIBE_COOLDOWN = 0.1
 UNSUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
 RECONNECT_INTERVAL_SECONDS = 10
+
+MAX_SUBSCRIBES_PER_CALL = 100
+MAX_UNSUBSCRIBES_PER_CALL = 100
 
 type SocketType = socket.socket | ssl.SSLSocket | mqtt.WebsocketWrapper | Any
 
@@ -905,17 +908,32 @@ class MQTT:
         self._pending_subscriptions = {}
 
         subscription_list = list(subscriptions.items())
-        result, mid = self._mqttc.subscribe(subscription_list)
 
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            for topic, qos in subscriptions.items():
-                _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
-        self._last_subscribe = time.monotonic()
+        def split_subscribe_chunks(
+            subscription_list: list[tuple[str, int]],
+        ) -> Generator[list[tuple[str, int]], None, None]:
+            """Split the subscription list in chunks to avoid buffer issues."""
+            for chunk_index in range(
+                0, len(subscription_list), MAX_SUBSCRIBES_PER_CALL
+            ):
+                yield subscription_list[
+                    chunk_index : chunk_index + MAX_SUBSCRIBES_PER_CALL
+                ]
 
-        if result == 0:
-            await self._async_wait_for_mid(mid)
-        else:
-            _raise_on_error(result)
+        for chunk in split_subscribe_chunks(subscription_list):
+            result, mid = self._mqttc.subscribe(chunk)
+
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                for topic, qos in subscriptions.items():
+                    _LOGGER.debug(
+                        "Subscribing to %s, mid: %s, qos: %s", topic, mid, qos
+                    )
+            self._last_subscribe = time.monotonic()
+
+            if result == 0:
+                await self._async_wait_for_mid(mid)
+            else:
+                _raise_on_error(result)
 
     async def _async_perform_unsubscribes(self) -> None:
         """Perform pending MQTT client unsubscribes."""
@@ -925,13 +943,21 @@ class MQTT:
         topics = list(self._pending_unsubscribes)
         self._pending_unsubscribes = set()
 
-        result, mid = self._mqttc.unsubscribe(topics)
-        _raise_on_error(result)
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            for topic in topics:
-                _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
+        def split_unsubscribe_chunks(
+            topics: list[str],
+        ) -> Generator[list[str], None, None]:
+            """Split the unsubscribe list in chunks to avoid buffer issues."""
+            for chunk_index in range(0, len(topics), MAX_UNSUBSCRIBES_PER_CALL):
+                yield topics[chunk_index : chunk_index + MAX_SUBSCRIBES_PER_CALL]
 
-        await self._async_wait_for_mid(mid)
+        for chunk in split_unsubscribe_chunks(topics):
+            result, mid = self._mqttc.unsubscribe(chunk)
+            _raise_on_error(result)
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                for topic in chunk:
+                    _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
+
+            await self._async_wait_for_mid(mid)
 
     async def _async_resubscribe_and_publish_birth_message(
         self, birth_message: PublishMessage
