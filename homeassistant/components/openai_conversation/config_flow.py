@@ -146,6 +146,16 @@ def openai_config_option_schema(
 
     return {
         vol.Optional(
+            CONF_PROMPT,
+            description={"suggested_value": options.get(CONF_PROMPT)},
+            default=DEFAULT_PROMPT,
+        ): TemplateSelector(),
+        vol.Optional(
+            CONF_LLM_HASS_API,
+            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+            default="none",
+        ): SelectSelector(SelectSelectorConfig(options=apis)),
+        vol.Optional(
             CONF_CHAT_MODEL,
             description={
                 # New key in HA 2023.4
@@ -153,16 +163,6 @@ def openai_config_option_schema(
             },
             default=DEFAULT_CHAT_MODEL,
         ): str,
-        vol.Optional(
-            CONF_LLM_HASS_API,
-            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
-            default="none",
-        ): SelectSelector(SelectSelectorConfig(options=apis)),
-        vol.Optional(
-            CONF_PROMPT,
-            description={"suggested_value": options.get(CONF_PROMPT)},
-            default=DEFAULT_PROMPT,
-        ): TemplateSelector(),
         vol.Optional(
             CONF_MAX_TOKENS,
             description={"suggested_value": options.get(CONF_MAX_TOKENS)},
