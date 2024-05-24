@@ -31,8 +31,8 @@ class TeslemetryNumberEntityDescription(NumberEntityDescription):
     func: Callable
     native_min_value: float
     native_max_value: float
-    min_key: str = ""
-    max_key: str = ""
+    min_key: str | None = None
+    max_key: str | None = None
     scopes: list[Scope]
     requires: str | None = None
 
@@ -144,14 +144,22 @@ class TeslemetryVehicleNumberEntity(TeslemetryVehicleEntity, NumberEntity):
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         self._attr_native_value = self._value
-        self._attr_native_min_value = self.get_number(
-            self.entity_description.min_key,
-            self.entity_description.native_min_value,
-        )
-        self._attr_native_max_value = self.get_number(
-            self.entity_description.max_key,
-            self.entity_description.native_max_value,
-        )
+
+        if self.entity_description.min_key is not None:
+            self._attr_native_min_value = self.get_number(
+                self.entity_description.min_key,
+                self.entity_description.native_min_value,
+            )
+        else:
+            self._attr_native_min_value = self.entity_description.native_min_value
+
+        if self.entity_description.max_key is not None:
+            self._attr_native_max_value = self.get_number(
+                self.entity_description.max_key,
+                self.entity_description.native_max_value,
+            )
+        else:
+            self._attr_native_max_value = self.entity_description.native_max_value
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
@@ -167,6 +175,8 @@ class TeslemetryEnergyInfoNumberSensorEntity(TeslemetryEnergyInfoEntity, NumberE
     """Energy info number entity base class."""
 
     entity_description: TeslemetryNumberEntityDescription
+    _attr_native_min_value = 0
+    _attr_native_max_value = 100
 
     def __init__(
         self,
@@ -182,14 +192,6 @@ class TeslemetryEnergyInfoNumberSensorEntity(TeslemetryEnergyInfoEntity, NumberE
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         self._attr_native_value = self._value
-        self._attr_native_min_value = self.get_number(
-            self.entity_description.min_key,
-            self.entity_description.native_min_value,
-        )
-        self._attr_native_max_value = self.get_number(
-            self.entity_description.max_key,
-            self.entity_description.native_max_value,
-        )
         self._attr_icon = icon_for_battery_level(self.native_value)
 
     async def async_set_native_value(self, value: float) -> None:
