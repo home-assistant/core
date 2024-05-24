@@ -383,13 +383,18 @@ def _remove_listener(
     tracker: _KeyedEventTracker[_TypedDictT],
     keys: Iterable[str],
     job: HassJob[[Event[_TypedDictT]], Any],
+    callbacks: dict[str, list[HassJob[[Event[_TypedDictT]], Any]]],
 ) -> None:
     """Remove listener."""
-    callbacks = hass.data[tracker.key].callbacks
-    for key in keys:
-        callbacks[key].remove(job)
-        if len(callbacks[key]) == 0:
-            del callbacks[key]
+    if isinstance(keys, str):
+        callbacks[keys].remove(job)
+        if not callbacks[keys]:
+            del callbacks[keys]
+    else:
+        for key in keys:
+            callbacks[key].remove(job)
+            if not callbacks[key]:
+                del callbacks[key]
 
     if not callbacks:
         hass.data.pop(tracker.key).listener()
@@ -439,12 +444,11 @@ def _async_track_event(
         # during startup, and we want to avoid the overhead of
         # creating empty lists and throwing them away.
         callbacks[keys].append(job)
-        keys = [keys]
     else:
         for key in keys:
             callbacks[key].append(job)
 
-    return partial(_remove_listener, hass, tracker, keys, job)
+    return partial(_remove_listener, hass, tracker, keys, job, callbacks)
 
 
 @callback
