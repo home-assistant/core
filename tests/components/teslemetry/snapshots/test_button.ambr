@@ -32,6 +32,19 @@
     'unit_of_measurement': None,
   })
 # ---
+# name: test_button[button.test_flash_lights-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Flash lights',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_flash_lights',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_button[button.test_force_refresh-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -63,6 +76,19 @@
     'translation_key': 'refresh',
     'unique_id': 'VINVINVIN-refresh',
     'unit_of_measurement': None,
+  })
+# ---
+# name: test_button[button.test_force_refresh-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Force refresh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_force_refresh',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_button[button.test_homelink-entry]
@@ -98,6 +124,19 @@
     'unit_of_measurement': None,
   })
 # ---
+# name: test_button[button.test_homelink-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Homelink',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_homelink',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_button[button.test_honk_horn-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -129,6 +168,19 @@
     'translation_key': 'honk',
     'unique_id': 'VINVINVIN-honk',
     'unit_of_measurement': None,
+  })
+# ---
+# name: test_button[button.test_honk_horn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Honk horn',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_honk_horn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_button[button.test_keyless_driving-entry]
@@ -164,6 +216,19 @@
     'unit_of_measurement': None,
   })
 # ---
+# name: test_button[button.test_keyless_driving-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Keyless driving',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_keyless_driving',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_button[button.test_play_fart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -197,6 +262,19 @@
     'unit_of_measurement': None,
   })
 # ---
+# name: test_button[button.test_play_fart-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Play fart',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_play_fart',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_button[button.test_wake-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -228,5 +306,18 @@
     'translation_key': 'wake',
     'unique_id': 'VINVINVIN-wake',
     'unit_of_measurement': None,
+  })
+# ---
+# name: test_button[button.test_wake-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Wake',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_wake',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---

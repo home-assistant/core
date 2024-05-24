@@ -23,7 +23,7 @@ async def test_button(
     """Tests that the button entities are correct."""
 
     entry = await setup_platform(hass, [Platform.BUTTON])
-    assert_entities(hass, entry.entry_id, entity_registry, snapshot, False)
+    assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
 
 @pytest.mark.parametrize(
