@@ -54,7 +54,7 @@
     },
     "switch": {
       "toggle": {
-        "name": "Master Switch"
+        "name": "Power"
       }
     }
   }
