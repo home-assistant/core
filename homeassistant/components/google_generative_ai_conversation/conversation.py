@@ -25,16 +25,17 @@ from .const import (
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_TEMPERATURE,
+    CONF_TONE_PROMPT,
     CONF_TOP_K,
     CONF_TOP_P,
-    DEFAULT_CHAT_MODEL,
-    DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
-    DEFAULT_TEMPERATURE,
-    DEFAULT_TOP_K,
-    DEFAULT_TOP_P,
     DOMAIN,
     LOGGER,
+    RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_TEMPERATURE,
+    RECOMMENDED_TOP_K,
+    RECOMMENDED_TOP_P,
 )
 
 # Max number of back and forth with the LLM to generate a response
@@ -156,17 +157,16 @@ class GoogleGenerativeAIConversationEntity(
                 )
             tools = [_format_tool(tool) for tool in llm_api.async_get_tools()]
 
-        raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
         model = genai.GenerativeModel(
-            model_name=self.entry.options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL),
+            model_name=self.entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
             generation_config={
                 "temperature": self.entry.options.get(
-                    CONF_TEMPERATURE, DEFAULT_TEMPERATURE
+                    CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
                 ),
-                "top_p": self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P),
-                "top_k": self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K),
+                "top_p": self.entry.options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+                "top_k": self.entry.options.get(CONF_TOP_K, RECOMMENDED_TOP_K),
                 "max_output_tokens": self.entry.options.get(
-                    CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS
+                    CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
                 ),
             },
             tools=tools or None,
@@ -178,6 +178,10 @@ class GoogleGenerativeAIConversationEntity(
         else:
             conversation_id = ulid.ulid_now()
             messages = [{}, {}]
+
+        raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
+        if tone_prompt := self.entry.options.get(CONF_TONE_PROMPT):
+            raw_prompt += "\n" + tone_prompt
 
         try:
             prompt = self._async_generate_prompt(raw_prompt, llm_api)
@@ -221,7 +225,7 @@ class GoogleGenerativeAIConversationEntity(
             if not chat_response.parts:
                 intent_response.async_set_error(
                     intent.IntentResponseErrorCode.UNKNOWN,
-                    "Sorry, I had a problem talking to Google Generative AI. Likely blocked",
+                    "Sorry, I had a problem getting a response from Google Generative AI.",
                 )
                 return conversation.ConversationResult(
                     response=intent_response, conversation_id=conversation_id

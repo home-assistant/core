@@ -78,7 +78,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.45.0
+PySwitchbot==0.46.1
 
 # homeassistant.components.syncthru
 PySyncThru==0.7.10
@@ -380,7 +380,7 @@ aiowithings==2.1.0
 aioymaps==1.2.2
 
 # homeassistant.components.airgradient
-airgradient==0.4.0
+airgradient==0.4.1
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -458,6 +458,12 @@ axis==61
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
+
+# homeassistant.components.azure_data_explorer
+azure-kusto-data[aio]==3.1.0
+
+# homeassistant.components.azure_data_explorer
+azure-kusto-ingest==3.1.0
 
 # homeassistant.components.holiday
 babel==2.13.1
@@ -797,7 +803,7 @@ google-cloud-pubsub==2.13.11
 google-generativeai==0.5.4
 
 # homeassistant.components.nest
-google-nest-sdm==3.0.4
+google-nest-sdm==4.0.4
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -809,7 +815,7 @@ gotailwind==0.2.3
 govee-ble==0.31.2
 
 # homeassistant.components.govee_light_local
-govee-local-api==1.4.5
+govee-local-api==1.5.0
 
 # homeassistant.components.gpsd
 gps3==0.33.3
@@ -852,7 +858,7 @@ ha-philipsjs==3.2.1
 habitipy==0.3.1
 
 # homeassistant.components.bluetooth
-habluetooth==3.1.0
+habluetooth==3.1.1
 
 # homeassistant.components.cloud
 hass-nabucasa==0.81.0
@@ -1593,6 +1599,9 @@ pyoctoprintapi==0.1.12
 # homeassistant.components.openuv
 pyopenuv==2023.02.0
 
+# homeassistant.components.openweathermap
+pyopenweathermap==0.0.9
+
 # homeassistant.components.opnsense
 pyopnsense==0.4.0
 
@@ -1609,9 +1618,6 @@ pyotp==2.8.0
 
 # homeassistant.components.overkiz
 pyoverkiz==1.13.10
-
-# homeassistant.components.openweathermap
-pyowm==3.2.0
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
