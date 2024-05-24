@@ -421,6 +421,9 @@ async def async_from_config_dict(
     start = monotonic()
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
+    # Prime custom component cache early so we know if registry entries are tied
+    # to a custom integration
+    await loader.async_get_custom_components(hass)
     await async_load_base_functionality(hass)
 
     # Set up core.

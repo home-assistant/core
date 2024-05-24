@@ -196,7 +196,7 @@ def create_event_message(event_data, timestamp, device_id=None):
     """Create an EventMessage for a single event type."""
     if device_id is None:
         device_id = DEVICE_ID
-    return EventMessage(
+    return EventMessage.create_event(
         {
             "eventId": f"{EVENT_ID}-{timestamp}",
             "timestamp": timestamp.isoformat(timespec="seconds"),

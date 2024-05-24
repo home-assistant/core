@@ -88,7 +88,10 @@ async def test_lawn_mower_commands(
     getattr(
         mock_automower_client.commands, aioautomower_command
     ).side_effect = ApiException("Test error")
-    with pytest.raises(HomeAssistantError) as exc_info:
+    with pytest.raises(
+        HomeAssistantError,
+        match="Command couldn't be sent to the command queue: Test error",
+    ):
         await hass.services.async_call(
             domain=domain,
             service=service,
@@ -96,4 +99,3 @@ async def test_lawn_mower_commands(
             service_data=service_data,
             blocking=True,
         )
-    assert str(exc_info.value) == EXCEPTION_TEXT.format(exception="Test error")

@@ -594,6 +594,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "azure_data_explorer": {
+      "name": "Azure Data Explorer",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "baf": {
       "name": "Big Ass Fans",
       "integration_type": "hub",
@@ -5888,7 +5894,8 @@
       "name": "Switcher",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "switchmate": {
       "name": "Switchmate SimplySmart Home",

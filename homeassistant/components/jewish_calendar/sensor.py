@@ -56,7 +56,7 @@ INFO_SENSORS = (
 TIME_SENSORS = (
     SensorEntityDescription(
         key="first_light",
-        name="Alot Hashachar",
+        name="Alot Hashachar",  # codespell:ignore alot
         icon="mdi:weather-sunset-up",
     ),
     SensorEntityDescription(
@@ -202,8 +202,9 @@ class JewishCalendarSensor(SensorEntity):
         daytime_date = HDate(today, diaspora=self._diaspora, hebrew=self._hebrew)
 
         # The Jewish day starts after darkness (called "tzais") and finishes at
-        # sunset ("shkia"). The time in between is a gray area (aka "Bein
-        # Hashmashot" - literally: "in between the sun and the moon").
+        # sunset ("shkia"). The time in between is a gray area
+        # (aka "Bein Hashmashot"  # codespell:ignore
+        # - literally: "in between the sun and the moon").
 
         # For some sensors, it is more interesting to consider the date to be
         # tomorrow based on sunset ("shkia"), for others based on "tzais".
