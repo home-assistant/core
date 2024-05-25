@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from contextlib import suppress
+from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
@@ -66,8 +67,7 @@ from ..const import (
     CONF_STATE_TOPIC,
     DOMAIN as MQTT_DOMAIN,
 )
-from ..debug_info import log_messages
-from ..mixins import MqttEntity, write_state_on_attr_change
+from ..mixins import MqttEntity
 from ..models import ReceiveMessage
 from ..schemas import MQTT_ENTITY_COMMON_SCHEMA
 from ..util import valid_subscribe_topic
@@ -414,114 +414,117 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                     self.entity_id,
                 )
 
+    @callback
+    def _state_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT messages."""
+        values = json_loads_object(msg.payload)
+
+        if values["state"] == "ON":
+            self._attr_is_on = True
+        elif values["state"] == "OFF":
+            self._attr_is_on = False
+        elif values["state"] is None:
+            self._attr_is_on = None
+
+        if (
+            self._deprecated_color_handling
+            and color_supported(self.supported_color_modes)
+            and "color" in values
+        ):
+            # Deprecated color handling
+            if values["color"] is None:
+                self._attr_hs_color = None
+            else:
+                self._update_color(values)
+
+        if not self._deprecated_color_handling and "color_mode" in values:
+            self._update_color(values)
+
+        if brightness_supported(self.supported_color_modes):
+            try:
+                if brightness := values["brightness"]:
+                    if TYPE_CHECKING:
+                        assert isinstance(brightness, float)
+                    self._attr_brightness = color_util.value_to_brightness(
+                        (1, self._config[CONF_BRIGHTNESS_SCALE]), brightness
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Ignoring zero brightness value for entity %s",
+                        self.entity_id,
+                    )
+
+            except KeyError:
+                pass
+            except (TypeError, ValueError):
+                _LOGGER.warning(
+                    "Invalid brightness value '%s' received for entity %s",
+                    values["brightness"],
+                    self.entity_id,
+                )
+
+        if (
+            self._deprecated_color_handling
+            and self.supported_color_modes
+            and ColorMode.COLOR_TEMP in self.supported_color_modes
+        ):
+            # Deprecated color handling
+            try:
+                if values["color_temp"] is None:
+                    self._attr_color_temp = None
+                else:
+                    self._attr_color_temp = int(values["color_temp"])  # type: ignore[arg-type]
+            except KeyError:
+                pass
+            except ValueError:
+                _LOGGER.warning(
+                    "Invalid color temp value '%s' received for entity %s",
+                    values["color_temp"],
+                    self.entity_id,
+                )
+            # Allow to switch back to color_temp
+            if "color" not in values:
+                self._attr_hs_color = None
+
+        if self.supported_features and LightEntityFeature.EFFECT:
+            with suppress(KeyError):
+                self._attr_effect = cast(str, values["effect"])
+
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(
-            self,
+        #
+        if self._topic[CONF_STATE_TOPIC] is None:
+            return
+
+        self._sub_state = subscription.async_prepare_subscribe_topics(
+            self.hass,
+            self._sub_state,
             {
-                "_attr_brightness",
-                "_attr_color_temp",
-                "_attr_effect",
-                "_attr_hs_color",
-                "_attr_is_on",
-                "_attr_rgb_color",
-                "_attr_rgbw_color",
-                "_attr_rgbww_color",
-                "_attr_xy_color",
-                "color_mode",
+                CONF_STATE_TOPIC: {
+                    "topic": self._topic[CONF_STATE_TOPIC],
+                    "msg_callback": partial(
+                        self._message_callback,
+                        self._state_received,
+                        {
+                            "_attr_brightness",
+                            "_attr_color_temp",
+                            "_attr_effect",
+                            "_attr_hs_color",
+                            "_attr_is_on",
+                            "_attr_rgb_color",
+                            "_attr_rgbw_color",
+                            "_attr_rgbww_color",
+                            "_attr_xy_color",
+                            "color_mode",
+                        },
+                    ),
+                    "entity_id": self.entity_id,
+                    "qos": self._config[CONF_QOS],
+                    "encoding": self._config[CONF_ENCODING] or None,
+                }
             },
         )
-        def state_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages."""
-            values = json_loads_object(msg.payload)
-
-            if values["state"] == "ON":
-                self._attr_is_on = True
-            elif values["state"] == "OFF":
-                self._attr_is_on = False
-            elif values["state"] is None:
-                self._attr_is_on = None
-
-            if (
-                self._deprecated_color_handling
-                and color_supported(self.supported_color_modes)
-                and "color" in values
-            ):
-                # Deprecated color handling
-                if values["color"] is None:
-                    self._attr_hs_color = None
-                else:
-                    self._update_color(values)
-
-            if not self._deprecated_color_handling and "color_mode" in values:
-                self._update_color(values)
-
-            if brightness_supported(self.supported_color_modes):
-                try:
-                    if brightness := values["brightness"]:
-                        if TYPE_CHECKING:
-                            assert isinstance(brightness, float)
-                        self._attr_brightness = color_util.value_to_brightness(
-                            (1, self._config[CONF_BRIGHTNESS_SCALE]), brightness
-                        )
-                    else:
-                        _LOGGER.debug(
-                            "Ignoring zero brightness value for entity %s",
-                            self.entity_id,
-                        )
-
-                except KeyError:
-                    pass
-                except (TypeError, ValueError):
-                    _LOGGER.warning(
-                        "Invalid brightness value '%s' received for entity %s",
-                        values["brightness"],
-                        self.entity_id,
-                    )
-
-            if (
-                self._deprecated_color_handling
-                and self.supported_color_modes
-                and ColorMode.COLOR_TEMP in self.supported_color_modes
-            ):
-                # Deprecated color handling
-                try:
-                    if values["color_temp"] is None:
-                        self._attr_color_temp = None
-                    else:
-                        self._attr_color_temp = int(values["color_temp"])  # type: ignore[arg-type]
-                except KeyError:
-                    pass
-                except ValueError:
-                    _LOGGER.warning(
-                        "Invalid color temp value '%s' received for entity %s",
-                        values["color_temp"],
-                        self.entity_id,
-                    )
-                # Allow to switch back to color_temp
-                if "color" not in values:
-                    self._attr_hs_color = None
-
-            if self.supported_features and LightEntityFeature.EFFECT:
-                with suppress(KeyError):
-                    self._attr_effect = cast(str, values["effect"])
-
-        if self._topic[CONF_STATE_TOPIC] is not None:
-            self._sub_state = subscription.async_prepare_subscribe_topics(
-                self.hass,
-                self._sub_state,
-                {
-                    "state_topic": {
-                        "topic": self._topic[CONF_STATE_TOPIC],
-                        "msg_callback": state_received,
-                        "qos": self._config[CONF_QOS],
-                        "encoding": self._config[CONF_ENCODING] or None,
-                    }
-                },
-            )
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
