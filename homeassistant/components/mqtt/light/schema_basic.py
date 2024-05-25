@@ -642,7 +642,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
         last_state = await self.async_get_last_state()
 
         def restore_state(

@@ -114,7 +114,7 @@ from .models import (
 from .subscription import (
     EntitySubscription,
     async_prepare_subscribe_topics,
-    async_subscribe_topics,
+    async_subscribe_topics_internal,
     async_unsubscribe_topics,
 )
 from .util import mqtt_config_entry_enabled
@@ -450,7 +450,7 @@ class MqttAttributesMixin(Entity):
     @callback
     def _attributes_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        async_subscribe_topics(self.hass, self._attributes_sub_state)
+        async_subscribe_topics_internal(self.hass, self._attributes_sub_state)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe when removed."""
@@ -583,7 +583,7 @@ class MqttAvailabilityMixin(Entity):
     @callback
     def _availability_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        async_subscribe_topics(self.hass, self._availability_sub_state)
+        async_subscribe_topics_internal(self.hass, self._availability_sub_state)
 
     @callback
     def async_mqtt_connect(self) -> None:

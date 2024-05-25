@@ -133,12 +133,24 @@ def async_prepare_subscribe_topics(
     return new_state
 
 
-@callback
-def async_subscribe_topics(
+async def async_subscribe_topics(
     hass: HomeAssistant,
     sub_state: dict[str, EntitySubscription],
 ) -> None:
     """(Re)Subscribe to a set of MQTT topics."""
+    async_subscribe_topics_internal(hass, sub_state)
+
+
+@callback
+def async_subscribe_topics_internal(
+    hass: HomeAssistant,
+    sub_state: dict[str, EntitySubscription],
+) -> None:
+    """(Re)Subscribe to a set of MQTT topics.
+
+    This function is internal to the MQTT integration and should not be called
+    from outside the integration.
+    """
     for sub in sub_state.values():
         sub.subscribe()
 
