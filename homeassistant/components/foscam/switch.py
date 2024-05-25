@@ -1,4 +1,4 @@
-"""Component provides basic support for Foscam IP cameras."""
+"""Component provides support for the Foscam Switch."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ from typing import Any
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FoscamCoordinator
@@ -26,32 +27,33 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
 
     if coordinator.data["is_asleep"]["supported"]:
-        async_add_entities([FoscamAwakeSwitch(coordinator, config_entry)])
+        async_add_entities([FoscamSleepSwitch(coordinator, config_entry)])
 
 
-class FoscamAwakeSwitch(FoscamEntity, SwitchEntity):
-    """An implementation of a Foscam IP camera."""
+class FoscamSleepSwitch(FoscamEntity, SwitchEntity):
+    """An implementation for Sleep Switch."""
 
     def __init__(
         self,
         coordinator: FoscamCoordinator,
         config_entry: ConfigEntry,
     ) -> None:
-        """Initialize a Foscam camera."""
+        """Initialize a Foscam Sleep Switch."""
         super().__init__(coordinator, config_entry.entry_id)
 
-        self._attr_name = config_entry.title + " Awake"
-        self._attr_unique_id = config_entry.entry_id + "_awake_switch"
+        self._attr_unique_id = "sleep_switch"
+        self._attr_translation_key = "sleep_switch"
+        self._attr_has_entity_name = True
 
         self.is_asleep = self.coordinator.data["is_asleep"]["status"]
 
     @property
     def is_on(self):
-        """Return true if switch is on."""
-        return not self.is_asleep
+        """Return true if camera is asleep."""
+        return self.is_asleep
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on the switch."""
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Wake camera."""
         LOGGER.debug("Wake camera")
 
         ret, _ = await self.hass.async_add_executor_job(
@@ -59,20 +61,18 @@ class FoscamAwakeSwitch(FoscamEntity, SwitchEntity):
         )
 
         if ret != 0:
-            LOGGER.error("Error waking up: %s", ret)
-            return
+            raise HomeAssistantError(f"Error waking up: {ret}")
 
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the switch."""
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """But camera is sleep."""
         LOGGER.debug("Sleep camera")
 
         ret, _ = await self.hass.async_add_executor_job(self.coordinator.session.sleep)
 
         if ret != 0:
-            LOGGER.error("Error sleeping: %s", ret)
-            return
+            raise HomeAssistantError(f"Error sleeping: {ret}")
 
         await self.coordinator.async_request_refresh()
 
