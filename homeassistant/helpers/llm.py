@@ -14,7 +14,7 @@ from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.json import JsonObjectType
 
-from . import intent
+from . import area_registry, device_registry, floor_registry, intent
 from .singleton import singleton
 
 LLM_API_ASSIST = "assist"
@@ -191,7 +191,25 @@ class AssistAPI(API):
 
     async def async_get_api_prompt(self, tool_input: ToolInput) -> str:
         """Return the prompt for the API."""
-        return "Call the intent tools to control Home Assistant. Just pass the name to the intent."
+        prompt = "Call the intent tools to control Home Assistant. Just pass the name to the intent."
+        if tool_input.device_id:
+            device_reg = device_registry.async_get(self.hass)
+            device = device_reg.async_get(tool_input.device_id)
+            if device:
+                area_reg = area_registry.async_get(self.hass)
+                if device.area_id and (area := area_reg.async_get_area(device.area_id)):
+                    floor_reg = floor_registry.async_get(self.hass)
+                    if area.floor_id and (
+                        floor := floor_reg.async_get_floor(area.floor_id)
+                    ):
+                        prompt += f" You are in {area.name} ({floor.name})."
+                    else:
+                        prompt += f" You are in {area.name}."
+        if tool_input.context and tool_input.context.user_id:
+            user = await self.hass.auth.async_get_user(tool_input.context.user_id)
+            if user:
+                prompt += f" The user name is {user.name}."
+        return prompt
 
     @callback
     def async_get_tools(self) -> list[Tool]:
