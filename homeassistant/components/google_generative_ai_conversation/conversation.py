@@ -205,15 +205,6 @@ class GoogleGenerativeAIConversationEntity(
             messages = [{}, {}]
 
         try:
-            prompt = template.Template(
-                self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT), self.hass
-            ).async_render(
-                {
-                    "ha_name": self.hass.config.location_name,
-                },
-                parse_result=False,
-            )
-
             if llm_api:
                 empty_tool_input = llm.ToolInput(
                     tool_name="",
@@ -226,9 +217,24 @@ class GoogleGenerativeAIConversationEntity(
                     device_id=user_input.device_id,
                 )
 
-                prompt = (
-                    await llm_api.async_get_api_prompt(empty_tool_input) + "\n" + prompt
+                api_prompt = await llm_api.async_get_api_prompt(empty_tool_input)
+
+            else:
+                api_prompt = llm.PROMPT_NO_API_CONFIGURED
+
+            prompt = "\n".join(
+                (
+                    api_prompt,
+                    template.Template(
+                        self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT), self.hass
+                    ).async_render(
+                        {
+                            "ha_name": self.hass.config.location_name,
+                        },
+                        parse_result=False,
+                    ),
                 )
+            )
 
         except TemplateError as err:
             LOGGER.error("Error rendering prompt: %s", err)

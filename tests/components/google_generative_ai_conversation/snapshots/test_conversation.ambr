@@ -29,7 +29,10 @@
       dict({
         'history': list([
           dict({
-            'parts': 'Answer in plain text. Keep it simple and to the point.',
+            'parts': '''
+              Only if the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
+              Answer in plain text. Keep it simple and to the point.
+            ''',
             'role': 'user',
           }),
           dict({
@@ -79,7 +82,10 @@
       dict({
         'history': list([
           dict({
-            'parts': 'Answer in plain text. Keep it simple and to the point.',
+            'parts': '''
+              Only if the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
+              Answer in plain text. Keep it simple and to the point.
+            ''',
             'role': 'user',
           }),
           dict({
