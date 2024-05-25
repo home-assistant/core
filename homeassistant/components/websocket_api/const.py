@@ -30,6 +30,10 @@ PENDING_MSG_PEAK_TIME: Final = 5
 # limit it to a lower number.
 MAX_PENDING_MSG: Final = 4096
 
+# Maximum number of messages that are pending before we force
+# resolve the ready future.
+PENDING_MSG_MAX_FORCE_READY: Final = 256
+
 ERR_ID_REUSE: Final = "id_reuse"
 ERR_INVALID_FORMAT: Final = "invalid_format"
 ERR_NOT_ALLOWED: Final = "not_allowed"

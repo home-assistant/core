@@ -24,6 +24,7 @@ from .auth import AUTH_REQUIRED_MESSAGE, AuthPhase
 from .const import (
     DATA_CONNECTIONS,
     MAX_PENDING_MSG,
+    PENDING_MSG_MAX_FORCE_READY,
     PENDING_MSG_PEAK,
     PENDING_MSG_PEAK_TIME,
     SIGNAL_WEBSOCKET_CONNECTED,
@@ -247,7 +248,8 @@ class WebSocketHandler:
         We will release the ready future if the queue did not grow since the
         last time we tried to release the ready future.
 
-        If we reach the peak, we will release the ready future immediately.
+        If we reach PENDING_MSG_MAX_FORCE_READY, we will release the ready future
+        immediately so avoid the coalesced messages from growing too large.
         """
         if (
             not (ready_future := self._ready_future)
@@ -256,10 +258,10 @@ class WebSocketHandler:
         ):
             self._release_ready_queue_size = 0
             return
-        # If we are below the peak and there are new messages in the queue
-        # since the last time we tried to release the ready future, we try again
-        # later so we can coalesce more messages.
-        if queue_size > self._release_ready_queue_size < PENDING_MSG_PEAK:
+        # If we are below the max pending to force ready, and there are new messages
+        # in the queue since the last time we tried to release the ready future, we
+        # try again later so we can coalesce more messages.
+        if queue_size > self._release_ready_queue_size < PENDING_MSG_MAX_FORCE_READY:
             self._release_ready_queue_size = queue_size
             self._loop.call_soon(self._release_ready_future_or_reschedule)
             return
