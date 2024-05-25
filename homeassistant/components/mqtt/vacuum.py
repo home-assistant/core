@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import partial
 import logging
 from typing import Any, cast
 
@@ -49,12 +50,7 @@ from .const import (
     CONF_STATE_TOPIC,
     DOMAIN,
 )
-from .debug_info import log_messages
-from .mixins import (
-    MqttEntity,
-    async_setup_entity_entry_helper,
-    write_state_on_attr_change,
-)
+from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic
@@ -322,31 +318,32 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         self._attr_fan_speed = self._state_attrs.get(FAN_SPEED, 0)
         self._attr_battery_level = max(0, min(100, self._state_attrs.get(BATTERY, 0)))
 
+    @callback
+    def _state_message_received(self, msg: ReceiveMessage) -> None:
+        """Handle state MQTT message."""
+        payload = json_loads_object(msg.payload)
+        if STATE in payload and (
+            (state := payload[STATE]) in POSSIBLE_STATES or state is None
+        ):
+            self._attr_state = (
+                POSSIBLE_STATES[cast(str, state)] if payload[STATE] else None
+            )
+            del payload[STATE]
+        self._update_state_attributes(payload)
+
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         topics: dict[str, Any] = {}
 
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(
-            self, {"_attr_battery_level", "_attr_fan_speed", "_attr_state"}
-        )
-        def state_message_received(msg: ReceiveMessage) -> None:
-            """Handle state MQTT message."""
-            payload = json_loads_object(msg.payload)
-            if STATE in payload and (
-                (state := payload[STATE]) in POSSIBLE_STATES or state is None
-            ):
-                self._attr_state = (
-                    POSSIBLE_STATES[cast(str, state)] if payload[STATE] else None
-                )
-                del payload[STATE]
-            self._update_state_attributes(payload)
-
         if state_topic := self._config.get(CONF_STATE_TOPIC):
             topics["state_position_topic"] = {
                 "topic": state_topic,
-                "msg_callback": state_message_received,
+                "msg_callback": partial(
+                    self._message_callback,
+                    self._state_message_received,
+                    {"_attr_battery_level", "_attr_fan_speed", "_attr_state"},
+                ),
+                "entity_id": self.entity_id,
                 "qos": self._config[CONF_QOS],
                 "encoding": self._config[CONF_ENCODING] or None,
             }
