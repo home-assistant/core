@@ -72,15 +72,14 @@ async def test_number_set_value(
             "homeassistant.components.sensibo.util.SensiboClient.async_set_calibration",
             return_value={"status": "failure"},
         ),
+        pytest.raises(HomeAssistantError),
     ):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                NUMBER_DOMAIN,
-                SERVICE_SET_VALUE,
-                {ATTR_ENTITY_ID: state1.entity_id, ATTR_VALUE: "0.2"},
-                blocking=True,
-            )
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: state1.entity_id, ATTR_VALUE: "0.2"},
+            blocking=True,
+        )
 
     state2 = hass.states.get("number.hallway_temperature_calibration")
     assert state2.state == "0.1"
@@ -101,7 +100,6 @@ async def test_number_set_value(
             {ATTR_ENTITY_ID: state1.entity_id, ATTR_VALUE: "0.2"},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     state2 = hass.states.get("number.hallway_temperature_calibration")
     assert state2.state == "0.2"

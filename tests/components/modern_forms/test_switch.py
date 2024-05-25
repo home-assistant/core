@@ -60,7 +60,6 @@ async def test_switch_change_state(
             {ATTR_ENTITY_ID: "switch.modernformsfan_away_mode"},
             blocking=True,
         )
-        await hass.async_block_till_done()
         away_mock.assert_called_once_with(away=True)
 
     with patch("aiomodernforms.ModernFormsDevice.away") as away_mock:
@@ -70,7 +69,6 @@ async def test_switch_change_state(
             {ATTR_ENTITY_ID: "switch.modernformsfan_away_mode"},
             blocking=True,
         )
-        await hass.async_block_till_done()
         away_mock.assert_called_once_with(away=False)
 
     # Adaptive Learning
@@ -83,7 +81,6 @@ async def test_switch_change_state(
             {ATTR_ENTITY_ID: "switch.modernformsfan_adaptive_learning"},
             blocking=True,
         )
-        await hass.async_block_till_done()
         adaptive_learning_mock.assert_called_once_with(adaptive_learning=True)
 
     with patch(
@@ -95,7 +92,6 @@ async def test_switch_change_state(
             {ATTR_ENTITY_ID: "switch.modernformsfan_adaptive_learning"},
             blocking=True,
         )
-        await hass.async_block_till_done()
         adaptive_learning_mock.assert_called_once_with(adaptive_learning=False)
 
 
@@ -119,7 +115,6 @@ async def test_switch_error(
             {ATTR_ENTITY_ID: "switch.modernformsfan_away_mode"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         state = hass.states.get("switch.modernformsfan_away_mode")
         assert state.state == STATE_OFF
@@ -147,7 +142,6 @@ async def test_switch_connection_error(
             {ATTR_ENTITY_ID: "switch.modernformsfan_away_mode"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         state = hass.states.get("switch.modernformsfan_away_mode")
         assert state.state == STATE_UNAVAILABLE

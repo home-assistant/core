@@ -35,7 +35,6 @@ async def test_clear_traffic_statistics(client, hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: f"button.lte_{BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS}"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     client.return_value.monitoring.set_clear_traffic.assert_called_once()
 
     client.return_value.monitoring.set_clear_traffic.reset_mock()
@@ -45,7 +44,6 @@ async def test_clear_traffic_statistics(client, hass: HomeAssistant) -> None:
         {CONF_URL: MOCK_CONF_URL},
         blocking=True,
     )
-    await hass.async_block_till_done()
     client.return_value.monitoring.set_clear_traffic.assert_not_called()
 
 
@@ -63,7 +61,6 @@ async def test_restart(client, hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: f"button.lte_{BUTTON_KEY_RESTART}"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     client.return_value.device.set_control.assert_called_with(ControlModeEnum.REBOOT)
 
     client.return_value.device.set_control.reset_mock()
@@ -73,5 +70,4 @@ async def test_restart(client, hass: HomeAssistant) -> None:
         {CONF_URL: MOCK_CONF_URL},
         blocking=True,
     )
-    await hass.async_block_till_done()
     client.return_value.device.set_control.assert_not_called()

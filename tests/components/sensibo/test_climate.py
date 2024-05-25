@@ -163,7 +163,6 @@ async def test_climate_fan(
             {ATTR_ENTITY_ID: state1.entity_id, ATTR_FAN_MODE: "low"},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
     assert state2.attributes["fan_mode"] == "low"
@@ -203,7 +202,6 @@ async def test_climate_fan(
             {ATTR_ENTITY_ID: state1.entity_id, ATTR_FAN_MODE: "low"},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     state3 = hass.states.get("climate.hallway")
     assert state3.attributes["fan_mode"] == "low"
@@ -272,7 +270,6 @@ async def test_climate_swing(
             {ATTR_ENTITY_ID: state1.entity_id, ATTR_SWING_MODE: "fixedtop"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
     assert state2.attributes["swing_mode"] == "fixedtop"
@@ -311,7 +308,6 @@ async def test_climate_swing(
             {ATTR_ENTITY_ID: state1.entity_id, ATTR_SWING_MODE: "fixedtop"},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     state3 = hass.states.get("climate.hallway")
     assert state3.attributes["swing_mode"] == "fixedtop"
@@ -344,7 +340,6 @@ async def test_climate_temperatures(
             {ATTR_ENTITY_ID: state1.entity_id, ATTR_TEMPERATURE: 20},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
     assert state2.attributes["temperature"] == 20
@@ -365,7 +360,6 @@ async def test_climate_temperatures(
             {ATTR_ENTITY_ID: state1.entity_id, ATTR_TEMPERATURE: 15},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
     assert state2.attributes["temperature"] == 16
@@ -386,7 +380,6 @@ async def test_climate_temperatures(
             {ATTR_ENTITY_ID: state1.entity_id, ATTR_TEMPERATURE: 18.5},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
     assert state2.attributes["temperature"] == 19
@@ -407,7 +400,6 @@ async def test_climate_temperatures(
             {ATTR_ENTITY_ID: state1.entity_id, ATTR_TEMPERATURE: 24},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
     assert state2.attributes["temperature"] == 20
@@ -428,7 +420,6 @@ async def test_climate_temperatures(
             {ATTR_ENTITY_ID: state1.entity_id, ATTR_TEMPERATURE: 20},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
     assert state2.attributes["temperature"] == 20
@@ -446,7 +437,6 @@ async def test_climate_temperatures(
             {ATTR_ENTITY_ID: state1.entity_id},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
     assert state2.attributes["temperature"] == 20
@@ -486,7 +476,6 @@ async def test_climate_temperatures(
             {ATTR_ENTITY_ID: state1.entity_id, ATTR_TEMPERATURE: 20},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
     assert state2.attributes["temperature"] == 20
@@ -548,7 +537,6 @@ async def test_climate_temperature_is_none(
             },
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
     assert state2.attributes["temperature"] == 25
@@ -605,7 +593,6 @@ async def test_climate_hvac_mode(
             {ATTR_ENTITY_ID: state1.entity_id, ATTR_HVAC_MODE: "off"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
     assert state2.state == "off"
@@ -637,7 +624,6 @@ async def test_climate_hvac_mode(
             {ATTR_ENTITY_ID: state1.entity_id, ATTR_HVAC_MODE: "heat"},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
     assert state2.state == "heat"
@@ -682,7 +668,6 @@ async def test_climate_on_off(
             {ATTR_ENTITY_ID: state1.entity_id},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
     assert state2.state == "off"
@@ -703,7 +688,6 @@ async def test_climate_on_off(
             {ATTR_ENTITY_ID: state1.entity_id},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
     assert state2.state == "heat"
@@ -747,7 +731,6 @@ async def test_climate_service_failed(
             {ATTR_ENTITY_ID: state1.entity_id},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
     assert state2.state == "heat"
@@ -792,7 +775,6 @@ async def test_climate_assumed_state(
             {ATTR_ENTITY_ID: state1.entity_id, ATTR_STATE: "off"},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
     assert state2.state == "off"
@@ -875,7 +857,6 @@ async def test_climate_set_timer(
             },
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     with (
         patch(
@@ -899,7 +880,6 @@ async def test_climate_set_timer(
             },
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     with (
         patch(
@@ -920,7 +900,6 @@ async def test_climate_set_timer(
             },
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     monkeypatch.setattr(get_data.parsed["ABC999111"], "timer_on", True)
     monkeypatch.setattr(get_data.parsed["ABC999111"], "timer_id", "SzTGE4oZ4D")
@@ -992,7 +971,6 @@ async def test_climate_pure_boost(
             },
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     with (
         patch(
@@ -1027,7 +1005,6 @@ async def test_climate_pure_boost(
             },
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pure_boost_enabled", True)
     monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pure_sensitivity", "s")
@@ -1101,7 +1078,6 @@ async def test_climate_climate_react(
             },
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     with (
         patch(
@@ -1173,7 +1149,6 @@ async def test_climate_climate_react(
             },
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     monkeypatch.setattr(get_data.parsed["ABC999111"], "smart_on", True)
     monkeypatch.setattr(get_data.parsed["ABC999111"], "smart_type", "temperature")
@@ -1319,7 +1294,6 @@ async def test_climate_climate_react_fahrenheit(
             },
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     monkeypatch.setattr(get_data.parsed["ABC999111"], "smart_on", True)
     monkeypatch.setattr(get_data.parsed["ABC999111"], "smart_type", "temperature")
@@ -1416,7 +1390,6 @@ async def test_climate_full_ac_state(
             },
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     with (
         patch(
@@ -1442,7 +1415,6 @@ async def test_climate_full_ac_state(
             },
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     monkeypatch.setattr(get_data.parsed["ABC999111"], "hvac_mode", "cool")
     monkeypatch.setattr(get_data.parsed["ABC999111"], "device_on", True)

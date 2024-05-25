@@ -56,7 +56,6 @@ async def test_webostv_turn_on_trigger_device_id(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == device.id
     assert calls[0].data["id"] == 0
@@ -73,8 +72,6 @@ async def test_webostv_turn_on_trigger_device_id(
             {"entity_id": ENTITY_ID},
             blocking=True,
         )
-
-    await hass.async_block_till_done()
     assert len(calls) == 0
 
 
@@ -112,8 +109,6 @@ async def test_webostv_turn_on_trigger_entity_id(
         {"entity_id": ENTITY_ID},
         blocking=True,
     )
-
-    await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == ENTITY_ID
     assert calls[0].data["id"] == 0

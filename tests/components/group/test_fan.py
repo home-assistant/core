@@ -414,7 +414,6 @@ async def test_reload(hass: HomeAssistant, setup_comp) -> None:
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert hass.states.get(FAN_GROUP) is None
     assert hass.states.get("fan.upstairs_fans") is not None

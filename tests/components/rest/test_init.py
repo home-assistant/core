@@ -274,7 +274,6 @@ async def test_reload(hass: HomeAssistant) -> None:
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert hass.states.get("sensor.mockreset") is None
     assert hass.states.get("sensor.rollout")
@@ -323,7 +322,6 @@ async def test_reload_and_remove_all(hass: HomeAssistant) -> None:
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert hass.states.get("sensor.mockreset") is None
 
@@ -367,7 +365,6 @@ async def test_reload_fails_to_read_configuration(hass: HomeAssistant) -> None:
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
 

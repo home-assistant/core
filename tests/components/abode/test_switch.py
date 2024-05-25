@@ -54,7 +54,6 @@ async def test_switch_on(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
         )
-        await hass.async_block_till_done()
 
         mock_switch_on.assert_called_once()
 
@@ -67,7 +66,6 @@ async def test_switch_off(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
         )
-        await hass.async_block_till_done()
 
         mock_switch_off.assert_called_once()
 
@@ -92,7 +90,6 @@ async def test_turn_automation_off(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: AUTOMATION_ID},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         mock_trigger.assert_called_once_with(False)
 
@@ -108,7 +105,6 @@ async def test_turn_automation_on(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: AUTOMATION_ID},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         mock_trigger.assert_called_once_with(True)
 
@@ -124,6 +120,5 @@ async def test_trigger_automation(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: AUTOMATION_ID},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         mock.assert_called_once()

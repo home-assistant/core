@@ -165,8 +165,6 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
         blocking=True,
     )
 
-    await hass.async_block_till_done()
-
     now = dt_util.utcnow() + timedelta(seconds=20)
     with freeze_time(now):
         hass.states.async_set(
@@ -198,7 +196,6 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
         {ATTR_ENTITY_ID: "sensor.energy_bill_midpeak", ATTR_VALUE: "100"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("sensor.energy_bill_midpeak")
     assert state is not None
     assert state.state == "100"
@@ -209,7 +206,6 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
         {ATTR_ENTITY_ID: "sensor.energy_bill_midpeak", ATTR_VALUE: "0.123"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("sensor.energy_bill_midpeak")
     assert state is not None
     assert state.state == "0.123"
@@ -974,8 +970,6 @@ async def test_service_reset_no_tariffs(
             blocking=True,
         )
 
-        await hass.async_block_till_done()
-
     state = hass.states.get("sensor.energy_bill")
     assert state
     assert state.state == "0"
@@ -1100,8 +1094,6 @@ async def test_service_reset_no_tariffs_correct_with_multi(
             target={"entity_id": "sensor.energy_bill"},
             blocking=True,
         )
-
-        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_bill")
     assert state
@@ -1619,7 +1611,6 @@ async def test_non_periodically_resetting_meter_with_tariffs(
         {ATTR_ENTITY_ID: "select.energy_bill", "option": "high"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_bill_low")
     assert state.attributes.get("last_valid_state") == "None"

@@ -35,7 +35,6 @@ async def test_lock_services(
         service_data={ATTR_ENTITY_ID: "lock.vault_door"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_lock.lock.assert_called_once_with()
 
     await hass.services.async_call(
@@ -44,7 +43,6 @@ async def test_lock_services(
         service_data={ATTR_ENTITY_ID: "lock.vault_door"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_lock.unlock.assert_called_once_with()
 
     await hass.config_entries.async_unload(mock_added_config_entry.entry_id)

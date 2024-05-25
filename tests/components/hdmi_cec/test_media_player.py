@@ -143,7 +143,6 @@ async def test_service_on(
         {ATTR_ENTITY_ID: "media_player.hdmi_3"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     mock_hdmi_device.turn_on.assert_called_once_with()
 
@@ -300,7 +299,6 @@ async def test_volume_services(
         data,
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert mock_hdmi_device.send_command.call_count == 2
     assert_key_press_release(mock_hdmi_device.send_command, dst=3, key=key)
@@ -327,7 +325,6 @@ async def test_track_change_services(
         {ATTR_ENTITY_ID: "media_player.hdmi_3"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert mock_hdmi_device.send_command.call_count == 2
     assert_key_press_release(mock_hdmi_device.send_command, dst=3, key=key)
@@ -368,7 +365,6 @@ async def test_playback_services(
         {ATTR_ENTITY_ID: "media_player.hdmi_3"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert mock_hdmi_device.send_command.call_count == 2
     assert_key_press_release(mock_hdmi_device.send_command, dst=3, key=key)
@@ -397,7 +393,6 @@ async def test_play_pause_service(
         {ATTR_ENTITY_ID: "media_player.hdmi_3"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert mock_hdmi_device.send_command.call_count == 2
     assert_key_press_release(mock_hdmi_device.send_command, dst=3, key=KEY_PAUSE)
@@ -411,7 +406,6 @@ async def test_play_pause_service(
         {ATTR_ENTITY_ID: "media_player.hdmi_3"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert mock_hdmi_device.send_command.call_count == 4
     assert_key_press_release(mock_hdmi_device.send_command, 1, dst=3, key=KEY_PLAY)

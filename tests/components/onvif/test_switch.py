@@ -46,7 +46,6 @@ async def test_turn_wiper_switch_on(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "switch.testcamera_wiper"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     device.async_run_aux_command.assert_called_once()
     state = hass.states.get("switch.testcamera_wiper")
@@ -64,7 +63,6 @@ async def test_turn_wiper_switch_off(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "switch.testcamera_wiper"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     device.async_run_aux_command.assert_called_once()
     state = hass.states.get("switch.testcamera_wiper")
@@ -107,7 +105,6 @@ async def test_turn_autofocus_switch_on(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "switch.testcamera_autofocus"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     device.async_set_imaging_settings.assert_called_once()
     state = hass.states.get("switch.testcamera_autofocus")
@@ -125,7 +122,6 @@ async def test_turn_autofocus_switch_off(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "switch.testcamera_autofocus"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     device.async_set_imaging_settings.assert_called_once()
     state = hass.states.get("switch.testcamera_autofocus")
@@ -168,7 +164,6 @@ async def test_turn_infrared_switch_on(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "switch.testcamera_ir_lamp"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     device.async_set_imaging_settings.assert_called_once()
     state = hass.states.get("switch.testcamera_ir_lamp")
@@ -186,7 +181,6 @@ async def test_turn_infrared_switch_off(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "switch.testcamera_ir_lamp"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     device.async_set_imaging_settings.assert_called_once()
     state = hass.states.get("switch.testcamera_ir_lamp")

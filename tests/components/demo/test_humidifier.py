@@ -81,7 +81,6 @@ async def test_set_target_humidity_bad_attr(hass: HomeAssistant) -> None:
             {ATTR_HUMIDITY: None, ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.attributes.get(ATTR_HUMIDITY) == 54.2
@@ -98,7 +97,6 @@ async def test_set_target_humidity(hass: HomeAssistant) -> None:
         {ATTR_HUMIDITY: 64, ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.attributes.get(ATTR_HUMIDITY) == 64
@@ -112,7 +110,6 @@ async def test_set_hold_mode_away(hass: HomeAssistant) -> None:
         {ATTR_MODE: MODE_AWAY, ATTR_ENTITY_ID: ENTITY_HYGROSTAT},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_HYGROSTAT)
     assert state.attributes.get(ATTR_MODE) == MODE_AWAY
@@ -126,7 +123,6 @@ async def test_set_hold_mode_eco(hass: HomeAssistant) -> None:
         {ATTR_MODE: "eco", ATTR_ENTITY_ID: ENTITY_HYGROSTAT},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_HYGROSTAT)
     assert state.attributes.get(ATTR_MODE) == "eco"

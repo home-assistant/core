@@ -90,7 +90,6 @@ async def test_camera_light_setup_and_services(
             {ATTR_ENTITY_ID: light_entity},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(
             {"modules": [{"id": "12:34:56:10:b9:0e", "floodlight": "auto"}]}
         )
@@ -103,7 +102,6 @@ async def test_camera_light_setup_and_services(
             {ATTR_ENTITY_ID: light_entity},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(
             {"modules": [{"id": "12:34:56:10:b9:0e", "floodlight": "on"}]}
         )
@@ -177,7 +175,6 @@ async def test_light_setup_and_services(
             {ATTR_ENTITY_ID: light_entity},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(
             {
                 "modules": [
@@ -198,7 +195,6 @@ async def test_light_setup_and_services(
             {ATTR_ENTITY_ID: light_entity},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(
             {
                 "modules": [

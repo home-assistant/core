@@ -41,6 +41,5 @@ async def test_actions(
         {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 25},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert len(mock_melissa.return_value.async_send.mock_calls) == 2

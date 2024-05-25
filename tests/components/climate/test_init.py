@@ -922,7 +922,6 @@ async def test_issue_aux_property_deprecated(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert ("implements the `is_aux_heat` property") not in caplog.text
 

@@ -310,7 +310,6 @@ async def test_setup_get(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "sensor.foo"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("sensor.foo")
     assert state.state == "123"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
@@ -975,7 +974,6 @@ async def test_reload(hass: HomeAssistant) -> None:
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert hass.states.get("sensor.mockreset") is None
     assert hass.states.get("sensor.rollout")

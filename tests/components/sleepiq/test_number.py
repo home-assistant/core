@@ -78,7 +78,6 @@ async def test_firmness(hass: HomeAssistant, mock_asyncsleepiq) -> None:
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     mock_asyncsleepiq.beds[BED_ID].sleepers[0].set_sleepnumber.assert_called_once()
     mock_asyncsleepiq.beds[BED_ID].sleepers[0].set_sleepnumber.assert_called_with(42)
@@ -149,7 +148,6 @@ async def test_actuators(hass: HomeAssistant, mock_asyncsleepiq) -> None:
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     mock_asyncsleepiq.beds[BED_ID].foundation.actuators[
         0
@@ -192,6 +190,5 @@ async def test_foot_warmer_timer(hass: HomeAssistant, mock_asyncsleepiq) -> None
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert mock_asyncsleepiq.beds[BED_ID].foundation.foot_warmers[0].timer == 300

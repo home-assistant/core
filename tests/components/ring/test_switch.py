@@ -73,7 +73,6 @@ async def test_siren_can_be_turned_on(
         "switch", "turn_on", {"entity_id": "switch.front_siren"}, blocking=True
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("switch.front_siren")
     assert state.state == "on"
 
@@ -98,8 +97,6 @@ async def test_updates_work(
         {ATTR_ENTITY_ID: ["switch.front_siren"]},
         blocking=True,
     )
-
-    await hass.async_block_till_done()
 
     state = hass.states.get("switch.front_siren")
     assert state.state == "on"
@@ -134,7 +131,6 @@ async def test_switch_errors_when_turned_on(
             await hass.services.async_call(
                 "switch", "turn_on", {"entity_id": "switch.front_siren"}, blocking=True
             )
-        await hass.async_block_till_done()
     assert mock_switch.call_count == 1
     assert (
         any(

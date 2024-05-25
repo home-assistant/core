@@ -35,7 +35,6 @@ async def test_button(
             {ATTR_ENTITY_ID: BUTTON_ENTITY},
             blocking=True,
         )
-    await hass.async_block_till_done()
     assert mock_account.robots[0].reset_waste_drawer.call_count == 1
     mock_account.robots[0].reset_waste_drawer.assert_called_with()
 

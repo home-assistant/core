@@ -104,7 +104,6 @@ async def test_remote_toggles(
         {ATTR_ENTITY_ID: ENTITY_REMOTE},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_REMOTE)
     assert state.state == STATE_OFF
@@ -117,7 +116,6 @@ async def test_remote_toggles(
         {ATTR_ENTITY_ID: ENTITY_REMOTE},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_REMOTE)
     assert state.state == STATE_ON
@@ -130,7 +128,6 @@ async def test_remote_toggles(
         {ATTR_ENTITY_ID: ENTITY_REMOTE, ATTR_ACTIVITY: "Play Music"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_REMOTE)
     assert state.state == STATE_ON
@@ -143,7 +140,6 @@ async def test_remote_toggles(
         {ATTR_ENTITY_ID: ENTITY_REMOTE, ATTR_ACTIVITY: ACTIVITIES_TO_IDS["Watch TV"]},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_REMOTE)
     assert state.state == STATE_ON
@@ -354,7 +350,6 @@ async def test_change_channel(
         {ATTR_ENTITY_ID: ENTITY_REMOTE, ATTR_CHANNEL: 100},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     change_channel_mock.assert_awaited_once_with(100)
 
@@ -381,7 +376,6 @@ async def test_sync(
         {ATTR_ENTITY_ID: ENTITY_REMOTE},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     sync_mock.assert_awaited_once()
     mock_write_config.assert_called()
@@ -394,4 +388,3 @@ async def _send_commands_and_wait(hass, service_data):
         service_data,
         blocking=True,
     )
-    await hass.async_block_till_done()

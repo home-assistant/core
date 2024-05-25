@@ -63,7 +63,6 @@ async def test_set_value(
         {ATTR_ENTITY_ID: ENTITY_ID, "value": -125},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_myuplink_client.async_set_device_points.assert_called_once()
 
 
@@ -82,7 +81,6 @@ async def test_api_failure(
             {ATTR_ENTITY_ID: ENTITY_ID, "value": -125},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_myuplink_client.async_set_device_points.assert_called_once()
 
 

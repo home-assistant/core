@@ -38,5 +38,4 @@ async def test_button_opens_door(
         "button", "press", {"entity_id": "button.ingress_open_door"}, blocking=True
     )
 
-    await hass.async_block_till_done()
     assert mock.call_count == 1

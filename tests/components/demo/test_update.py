@@ -187,7 +187,6 @@ async def test_update_with_progress_raising(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "update.demo_update_with_progress"},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     assert fake_sleep.call_count == 5
     assert len(events) == 5

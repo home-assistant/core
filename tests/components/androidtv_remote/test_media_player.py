@@ -249,7 +249,6 @@ async def test_media_player_play_media(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # 4 7s should be sent
     # 2 1s should be sent

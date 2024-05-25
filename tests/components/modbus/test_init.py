@@ -1658,7 +1658,6 @@ async def test_stop_restart(
         ATTR_HUB: TEST_MODBUS_NAME,
     }
     await hass.services.async_call(DOMAIN, SERVICE_STOP, data, blocking=True)
-    await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
     assert mock_modbus.close.called
     assert f"modbus {TEST_MODBUS_NAME} communication closed" in caplog.text
@@ -1666,7 +1665,6 @@ async def test_stop_restart(
     mock_modbus.reset_mock()
     caplog.clear()
     await hass.services.async_call(DOMAIN, SERVICE_RESTART, data, blocking=True)
-    await hass.async_block_till_done()
     assert not mock_modbus.close.called
     assert mock_modbus.connect.called
     assert f"modbus {TEST_MODBUS_NAME} communication open" in caplog.text
@@ -1674,7 +1672,6 @@ async def test_stop_restart(
     mock_modbus.reset_mock()
     caplog.clear()
     await hass.services.async_call(DOMAIN, SERVICE_RESTART, data, blocking=True)
-    await hass.async_block_till_done()
     assert mock_modbus.close.called
     assert mock_modbus.connect.called
     assert f"modbus {TEST_MODBUS_NAME} communication closed" in caplog.text
@@ -1690,7 +1687,6 @@ async def test_write_no_client(hass: HomeAssistant, mock_modbus) -> None:
         ATTR_HUB: TEST_MODBUS_NAME,
     }
     await hass.services.async_call(DOMAIN, SERVICE_STOP, data, blocking=True)
-    await hass.async_block_till_done()
     assert mock_modbus.close.called
 
     data = {
@@ -1717,7 +1713,6 @@ async def test_integration_reload(
     yaml_path = get_fixture_path("configuration.yaml", "modbus")
     with mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
-        await hass.async_block_till_done()
         for _ in range(4):
             freezer.tick(timedelta(seconds=1))
             async_fire_time_changed(hass)
@@ -1739,7 +1734,6 @@ async def test_integration_reload_failed(
         mock.patch.object(mock_modbus, "connect", side_effect=ModbusException("error")),
     ):
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
-        await hass.async_block_till_done()
 
     assert "Modbus reloading" in caplog.text
     assert "connect failed, retry in pymodbus" in caplog.text
@@ -1759,7 +1753,6 @@ async def test_integration_setup_failed(
             return_value=False
         )
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
-        await hass.async_block_till_done()
 
 
 async def test_no_entities(hass: HomeAssistant) -> None:

@@ -69,7 +69,6 @@ async def test_set_number_value(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: ["number.genie_perfume_amount"]},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("number.genie_perfume_amount")
     assert state
@@ -100,7 +99,6 @@ async def test_set_number_value_out_of_range(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: ["number.genie_perfume_amount"]},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("number.genie_perfume_amount")
     assert state
@@ -119,7 +117,6 @@ async def test_set_number_value_out_of_range(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: ["number.genie_perfume_amount"]},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("number.genie_perfume_amount")
     assert state
@@ -150,7 +147,6 @@ async def test_set_number_value_to_float(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: ["number.genie_perfume_amount"]},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("number.genie_perfume_amount")
     assert state

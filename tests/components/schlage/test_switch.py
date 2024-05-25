@@ -31,7 +31,6 @@ async def test_beeper_services(
         service_data={ATTR_ENTITY_ID: "switch.vault_door_keypress_beep"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_lock.set_beeper.assert_called_once_with(False)
     mock_lock.set_beeper.reset_mock()
 
@@ -41,7 +40,6 @@ async def test_beeper_services(
         service_data={ATTR_ENTITY_ID: "switch.vault_door_keypress_beep"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_lock.set_beeper.assert_called_once_with(True)
 
     await hass.config_entries.async_unload(mock_added_config_entry.entry_id)
@@ -57,7 +55,6 @@ async def test_lock_and_leave_services(
         service_data={ATTR_ENTITY_ID: "switch.vault_door_1_touch_locking"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_lock.set_lock_and_leave.assert_called_once_with(False)
     mock_lock.set_lock_and_leave.reset_mock()
 
@@ -67,7 +64,6 @@ async def test_lock_and_leave_services(
         service_data={ATTR_ENTITY_ID: "switch.vault_door_1_touch_locking"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_lock.set_lock_and_leave.assert_called_once_with(True)
 
     await hass.config_entries.async_unload(mock_added_config_entry.entry_id)

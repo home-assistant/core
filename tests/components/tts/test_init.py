@@ -1009,7 +1009,6 @@ async def test_service_without_cache(
         service_data,
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert len(calls) == 1
     assert not (
         mock_tts_cache_dir

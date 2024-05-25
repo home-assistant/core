@@ -83,7 +83,6 @@ async def test_duplicated_disconnect_is_no_op(
     await hass.services.async_call(
         "button", "press", {"entity_id": "button.test_disconnect"}, blocking=True
     )
-    await hass.async_block_till_done()
 
     async def mock_disconnect():
         await asyncio.sleep(0)
@@ -116,7 +115,6 @@ async def test_ensure_connection_state(
     await hass.services.async_call(
         "button", "press", {"entity_id": "button.test_disconnect"}, blocking=True
     )
-    await hass.async_block_till_done()
 
     mock_desk_api.disconnect.reset_mock()
     mock_desk_api.is_connected = True

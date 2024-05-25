@@ -91,7 +91,6 @@ async def test_webhook_event_handling_thermostats(
         {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_TEMPERATURE: 21},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Fake webhook thermostat manual set point
     response = {
@@ -134,7 +133,6 @@ async def test_webhook_event_handling_thermostats(
         {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Fake webhook thermostat mode change to "Max"
     response = {
@@ -172,7 +170,6 @@ async def test_webhook_event_handling_thermostats(
         {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_HVAC_MODE: HVACMode.OFF},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Fake webhook turn thermostat off
     response = {
@@ -207,7 +204,6 @@ async def test_webhook_event_handling_thermostats(
         {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_HVAC_MODE: HVACMode.AUTO},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Fake webhook thermostat mode cancel set point
     response = {
@@ -267,7 +263,6 @@ async def test_service_preset_mode_frost_guard_thermostat(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Fake webhook thermostat mode change to "Frost Guard"
     response = {
@@ -295,7 +290,6 @@ async def test_service_preset_mode_frost_guard_thermostat(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Test webhook thermostat mode change to "Schedule"
     response = {
@@ -337,7 +331,6 @@ async def test_service_preset_modes_thermostat(
         {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_PRESET_MODE: PRESET_AWAY},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Fake webhook thermostat mode change to "Away"
     response = {
@@ -361,7 +354,6 @@ async def test_service_preset_modes_thermostat(
         {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_PRESET_MODE: PRESET_BOOST},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Test webhook thermostat mode change to "Max"
     response = {
@@ -418,7 +410,6 @@ async def test_service_set_temperature_with_end_datetime(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Test webhook room mode change to "manual"
     response = {
@@ -476,7 +467,6 @@ async def test_service_set_temperature_with_time_period(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Test webhook room mode change to "manual"
     response = {
@@ -560,7 +550,6 @@ async def test_service_clear_temperature_setting(
         {ATTR_ENTITY_ID: climate_entity_livingroom},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Test webhook room mode change to "home"
     response = {
@@ -661,7 +650,6 @@ async def test_service_schedule_thermostats(
             {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_SCHEDULE_NAME: "Winter"},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_switch_schedule.assert_called_once_with(
             schedule_id="b1b54a2f45795764f59d50d8"
         )
@@ -688,7 +676,6 @@ async def test_service_schedule_thermostats(
             {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_SCHEDULE_NAME: "summer"},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_switch_home_schedule.assert_not_called()
 
     assert "summer is not a valid schedule" in caplog.text
@@ -719,7 +706,6 @@ async def test_service_preset_mode_with_end_time_thermostats(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Fake webhook thermostat mode change to "Away"
     response = {
@@ -750,7 +736,6 @@ async def test_service_preset_mode_with_end_time_thermostats(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     # Test setting a valid preset mode (that allow an end datetime in Netatmo == THERM_MODES) without an end datetime
     with pytest.raises(MultipleInvalid):
@@ -763,7 +748,6 @@ async def test_service_preset_mode_with_end_time_thermostats(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_service_preset_mode_already_boost_valves(
@@ -816,7 +800,6 @@ async def test_service_preset_mode_already_boost_valves(
         {ATTR_ENTITY_ID: climate_entity_entrada, ATTR_PRESET_MODE: PRESET_BOOST},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Test webhook valve mode change to "Max"
     response = {
@@ -868,7 +851,6 @@ async def test_service_preset_mode_boost_valves(
         {ATTR_ENTITY_ID: climate_entity_entrada, ATTR_PRESET_MODE: PRESET_BOOST},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Fake backend response
     response = {
@@ -914,7 +896,6 @@ async def test_service_preset_mode_invalid(
             {ATTR_ENTITY_ID: "climate.cocina", ATTR_PRESET_MODE: "invalid"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_valves_service_turn_off(
@@ -941,7 +922,6 @@ async def test_valves_service_turn_off(
         {ATTR_ENTITY_ID: climate_entity_entrada},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Fake backend response for valve being turned off
     response = {
@@ -988,7 +968,6 @@ async def test_valves_service_turn_on(
         {ATTR_ENTITY_ID: climate_entity_entrada},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Fake backend response for valve being turned on
     response = {

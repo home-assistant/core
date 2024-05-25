@@ -176,7 +176,6 @@ async def test_install(
         {ATTR_ENTITY_ID: "update.device_1"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert aioclient_mock.call_count == 1
     assert aioclient_mock.mock_calls[0] == (

@@ -86,7 +86,6 @@ async def setup_light(hass: HomeAssistant):
         {ATTR_ENTITY_ID: LIGHT_ENTITY},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(LIGHT_ENTITY)
 
@@ -111,7 +110,6 @@ async def test_missing_url_and_path(hass: HomeAssistant, setup_integration) -> N
         await hass.services.async_call(
             DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
         )
-        await hass.async_block_till_done()
 
     # check light is still off, unchanged due to bad parameters on service call
     state = hass.states.get(LIGHT_ENTITY)
@@ -127,8 +125,6 @@ async def _async_execute_service(hass: HomeAssistant, service_data: dict[str, An
 
     # Call the shared service, our above mock should return the base64 decoded fixture 1x1 pixel
     await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, service_data, blocking=True)
-
-    await hass.async_block_till_done()
 
 
 async def test_url_success(

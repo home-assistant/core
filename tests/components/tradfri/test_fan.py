@@ -180,7 +180,6 @@ async def test_services(
         {"entity_id": entity_id, **service_data},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     await command_store.trigger_observe_callback(
         hass,

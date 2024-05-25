@@ -50,7 +50,6 @@ async def test_lock(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             LOCK_DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
         )
-        await hass.async_block_till_done()
         mock_lock.assert_called_once()
 
 
@@ -62,5 +61,4 @@ async def test_unlock(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             LOCK_DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
         )
-        await hass.async_block_till_done()
         mock_unlock.assert_called_once()

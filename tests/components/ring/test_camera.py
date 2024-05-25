@@ -70,8 +70,6 @@ async def test_camera_motion_detection_can_be_turned_on(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
-
     state = hass.states.get("camera.front")
     assert state.attributes.get("motion_detection") is True
 
@@ -90,8 +88,6 @@ async def test_updates_work(
     )
 
     await hass.services.async_call("ring", "update", {}, blocking=True)
-
-    await hass.async_block_till_done()
 
     state = hass.states.get("camera.internal")
     assert state.attributes.get("motion_detection") is not True
@@ -129,7 +125,6 @@ async def test_motion_detection_errors_when_turned_on(
                 {"entity_id": "camera.front"},
                 blocking=True,
             )
-        await hass.async_block_till_done()
     assert mock_motion_detection.call_count == 1
     assert (
         any(

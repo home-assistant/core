@@ -123,7 +123,6 @@ async def test_press_button_with_argument(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "button.name_1_increase_flame"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_action.assert_called_once_with(
         "test-device-id", Action(Action.INCREASE_FLAME, STEP_SIZE)
@@ -136,7 +135,6 @@ async def test_press_button_with_argument(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "button.name_1_decrease_flame"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_action.assert_called_once_with(
         "test-device-id", Action(Action.DECREASE_FLAME, STEP_SIZE)
@@ -162,7 +160,6 @@ async def test_press_button(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "button.name_1_start_increasing_brightness"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_action.assert_called_once_with(
         "test-device-id", Action(Action.START_INCREASING_BRIGHTNESS)
@@ -175,7 +172,6 @@ async def test_press_button(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "button.name_1_start_decreasing_brightness"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_action.assert_called_once_with(
         "test-device-id", Action(Action.START_DECREASING_BRIGHTNESS)

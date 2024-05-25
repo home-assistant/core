@@ -34,7 +34,6 @@ async def test_qnap_buttons(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "button.qsw_m408_4c_restart"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         mock_users_verification.assert_called_once()
         mock_post_system_command.assert_called_once()

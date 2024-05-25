@@ -323,7 +323,6 @@ async def test_reload(hass: HomeAssistant) -> None:
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert hass.states.get("switch.switch_group") is None
     assert hass.states.get("switch.master_switches_g") is not None
@@ -361,7 +360,6 @@ async def test_reload_with_platform_not_setup(hass: HomeAssistant) -> None:
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert hass.states.get("switch.switch_group") is None
     assert hass.states.get("switch.master_switches_g") is not None
@@ -396,7 +394,6 @@ async def test_reload_with_base_integration_platform_not_setup(
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert hass.states.get("switch.switch_group") is None
     assert hass.states.get("switch.master_switches_g") is not None

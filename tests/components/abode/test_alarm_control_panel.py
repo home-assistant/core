@@ -63,7 +63,6 @@ async def test_set_alarm_away(hass: HomeAssistant) -> None:
                 {ATTR_ENTITY_ID: DEVICE_ID},
                 blocking=True,
             )
-            await hass.async_block_till_done()
             mock_set_away.assert_called_once()
 
         with patch(
@@ -94,7 +93,6 @@ async def test_set_alarm_home(hass: HomeAssistant) -> None:
                 {ATTR_ENTITY_ID: DEVICE_ID},
                 blocking=True,
             )
-            await hass.async_block_till_done()
             mock_set_home.assert_called_once()
 
         with patch(
@@ -123,7 +121,6 @@ async def test_set_alarm_standby(hass: HomeAssistant) -> None:
                 {ATTR_ENTITY_ID: DEVICE_ID},
                 blocking=True,
             )
-            await hass.async_block_till_done()
             mock_set_standby.assert_called_once()
 
         with patch(

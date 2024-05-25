@@ -62,7 +62,6 @@ async def test_change_state(
             {ATTR_ENTITY_ID: "light.modernformsfan_light"},
             blocking=True,
         )
-        await hass.async_block_till_done()
         light_mock.assert_called_once_with(
             on=False,
         )
@@ -74,7 +73,6 @@ async def test_change_state(
             {ATTR_ENTITY_ID: "light.modernformsfan_light", ATTR_BRIGHTNESS: 255},
             blocking=True,
         )
-        await hass.async_block_till_done()
         light_mock.assert_called_once_with(on=True, brightness=100)
 
 
@@ -93,7 +91,6 @@ async def test_sleep_timer_services(
             {ATTR_ENTITY_ID: "light.modernformsfan_light", ATTR_SLEEP_TIME: 1},
             blocking=True,
         )
-        await hass.async_block_till_done()
         light_mock.assert_called_once_with(sleep=60)
 
     with patch("aiomodernforms.ModernFormsDevice.light") as light_mock:
@@ -103,7 +100,6 @@ async def test_sleep_timer_services(
             {ATTR_ENTITY_ID: "light.modernformsfan_light"},
             blocking=True,
         )
-        await hass.async_block_till_done()
         light_mock.assert_called_once_with(sleep=0)
 
 
@@ -128,7 +124,6 @@ async def test_light_error(
             {ATTR_ENTITY_ID: "light.modernformsfan_light"},
             blocking=True,
         )
-        await hass.async_block_till_done()
         state = hass.states.get("light.modernformsfan_light")
         assert state.state == STATE_ON
         assert "Invalid response from API" in caplog.text
@@ -155,7 +150,6 @@ async def test_light_connection_error(
             {ATTR_ENTITY_ID: "light.modernformsfan_light"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         state = hass.states.get("light.modernformsfan_light")
         assert state.state == STATE_UNAVAILABLE

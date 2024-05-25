@@ -121,8 +121,6 @@ async def test_setup_legacy_service(hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    await hass.async_block_till_done()
-
     assert len(calls) == 1
 
 
@@ -157,7 +155,5 @@ async def test_setup_service(
         },
         blocking=True,
     )
-
-    await hass.async_block_till_done()
 
     assert len(calls) == 1

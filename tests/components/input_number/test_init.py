@@ -401,7 +401,6 @@ async def test_reload(
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
-        await hass.async_block_till_done()
 
     assert count_start + 2 == len(hass.states.async_entity_ids())
 
@@ -629,6 +628,5 @@ async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
-        await hass.async_block_till_done()
 
     assert count_start == len(hass.states.async_entity_ids())

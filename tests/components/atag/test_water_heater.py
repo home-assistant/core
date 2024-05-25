@@ -44,5 +44,4 @@ async def test_setting_target_temperature(
             {ATTR_ENTITY_ID: WATER_HEATER_ID, ATTR_TEMPERATURE: 50},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_temp.assert_called_once_with(50)

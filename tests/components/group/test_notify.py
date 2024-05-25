@@ -211,7 +211,6 @@ async def test_reload_notify(hass: HomeAssistant, tmp_path: Path) -> None:
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert hass.services.has_service(notify.DOMAIN, "test_service1")
     assert hass.services.has_service(notify.DOMAIN, "test_service2")

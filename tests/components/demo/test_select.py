@@ -60,7 +60,6 @@ async def test_select_option_bad_attr(hass: HomeAssistant) -> None:
             {ATTR_OPTION: "slow_speed", ATTR_ENTITY_ID: ENTITY_SPEED},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_SPEED)
     assert state
@@ -79,7 +78,6 @@ async def test_select_option(hass: HomeAssistant) -> None:
         {ATTR_OPTION: "light_speed", ATTR_ENTITY_ID: ENTITY_SPEED},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_SPEED)
     assert state

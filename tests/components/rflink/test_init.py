@@ -226,7 +226,6 @@ async def test_send_command_event_propagation(hass: HomeAssistant, monkeypatch) 
         {"device_id": "protocol_0_1", "command": "on"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert protocol.send_command_ack.call_args_list[0][0][0] == "protocol_0_1"
     assert protocol.send_command_ack.call_args_list[0][0][1] == "on"
     assert hass.states.get(f"{domain}.test1").state == "on"
@@ -237,7 +236,6 @@ async def test_send_command_event_propagation(hass: HomeAssistant, monkeypatch) 
         {"device_id": "protocol_0_1", "command": "alloff"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert protocol.send_command_ack.call_args_list[1][0][0] == "protocol_0_1"
     assert protocol.send_command_ack.call_args_list[1][0][1] == "alloff"
     assert hass.states.get(f"{domain}.test1").state == "off"

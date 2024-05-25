@@ -60,7 +60,6 @@ async def test_button(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     monkeypatch.setattr(get_data.parsed["ABC999111"], "filter_clean", False)
     monkeypatch.setattr(

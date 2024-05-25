@@ -2246,7 +2246,6 @@ async def test_cast_platform_play_media_local_media(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Assert we added extra play information
     quick_play_mock.assert_called()
@@ -2275,7 +2274,6 @@ async def test_cast_platform_play_media_local_media(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Assert we added extra play information
     quick_play_mock.assert_called()

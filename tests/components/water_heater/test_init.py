@@ -206,7 +206,6 @@ async def test_operation_mode_validation(
     await hass.services.async_call(
         DOMAIN, SERVICE_SET_OPERATION_MODE, data, blocking=True
     )
-    await hass.async_block_till_done()
     water_heater_entity.set_operation_mode.assert_has_calls([mock.call("eco")])
 
 

@@ -61,7 +61,6 @@ async def test_switch_handle_coordinator_update(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: ["switch.genie"]},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("switch.genie")
     assert state

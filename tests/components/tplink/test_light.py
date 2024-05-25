@@ -784,7 +784,6 @@ async def test_light_errors_when_turned_on(
         await hass.services.async_call(
             LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
-    await hass.async_block_till_done()
     assert bulb.turn_on.call_count == 1
     assert (
         any(

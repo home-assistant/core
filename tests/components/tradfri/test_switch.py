@@ -76,7 +76,6 @@ async def test_turn_on_off(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     await command_store.trigger_observe_callback(hass, device)
 

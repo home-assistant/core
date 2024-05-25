@@ -88,7 +88,6 @@ async def test_output_turn_on(dim_output, hass: HomeAssistant, lcn_connection) -
         {ATTR_ENTITY_ID: LIGHT_OUTPUT1},
         blocking=True,
     )
-    await hass.async_block_till_done()
     dim_output.assert_awaited_with(0, 100, 9)
 
     state = hass.states.get(LIGHT_OUTPUT1)
@@ -105,7 +104,6 @@ async def test_output_turn_on(dim_output, hass: HomeAssistant, lcn_connection) -
         {ATTR_ENTITY_ID: LIGHT_OUTPUT1},
         blocking=True,
     )
-    await hass.async_block_till_done()
     dim_output.assert_awaited_with(0, 100, 9)
 
     state = hass.states.get(LIGHT_OUTPUT1)
@@ -130,7 +128,6 @@ async def test_output_turn_on_with_attributes(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     dim_output.assert_awaited_with(0, 19, 6)
 
     state = hass.states.get(LIGHT_OUTPUT1)
@@ -153,7 +150,6 @@ async def test_output_turn_off(dim_output, hass: HomeAssistant, lcn_connection) 
         {ATTR_ENTITY_ID: LIGHT_OUTPUT1},
         blocking=True,
     )
-    await hass.async_block_till_done()
     dim_output.assert_awaited_with(0, 0, 9)
 
     state = hass.states.get(LIGHT_OUTPUT1)
@@ -170,7 +166,6 @@ async def test_output_turn_off(dim_output, hass: HomeAssistant, lcn_connection) 
         {ATTR_ENTITY_ID: LIGHT_OUTPUT1},
         blocking=True,
     )
-    await hass.async_block_till_done()
     dim_output.assert_awaited_with(0, 0, 9)
 
     state = hass.states.get(LIGHT_OUTPUT1)
@@ -197,7 +192,6 @@ async def test_output_turn_off_with_attributes(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     dim_output.assert_awaited_with(0, 0, 6)
 
     state = hass.states.get(LIGHT_OUTPUT1)
@@ -222,7 +216,6 @@ async def test_relay_turn_on(
         {ATTR_ENTITY_ID: LIGHT_RELAY1},
         blocking=True,
     )
-    await hass.async_block_till_done()
     control_relays.assert_awaited_with(states)
 
     state = hass.states.get(LIGHT_RELAY1)
@@ -239,7 +232,6 @@ async def test_relay_turn_on(
         {ATTR_ENTITY_ID: LIGHT_RELAY1},
         blocking=True,
     )
-    await hass.async_block_till_done()
     control_relays.assert_awaited_with(states)
 
     state = hass.states.get(LIGHT_RELAY1)
@@ -267,7 +259,6 @@ async def test_relay_turn_off(
         {ATTR_ENTITY_ID: LIGHT_RELAY1},
         blocking=True,
     )
-    await hass.async_block_till_done()
     control_relays.assert_awaited_with(states)
 
     state = hass.states.get(LIGHT_RELAY1)
@@ -284,7 +275,6 @@ async def test_relay_turn_off(
         {ATTR_ENTITY_ID: LIGHT_RELAY1},
         blocking=True,
     )
-    await hass.async_block_till_done()
     control_relays.assert_awaited_with(states)
 
     state = hass.states.get(LIGHT_RELAY1)

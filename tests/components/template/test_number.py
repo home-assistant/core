@@ -219,7 +219,6 @@ async def test_templates_with_entities(hass: HomeAssistant, calls) -> None:
         {CONF_ENTITY_ID: _VALUE_INPUT_NUMBER, INPUT_NUMBER_ATTR_VALUE: 5},
         blocking=True,
     )
-    await hass.async_block_till_done()
     _verify(hass, 5, 1, 3, 5)
 
     await hass.services.async_call(
@@ -228,7 +227,6 @@ async def test_templates_with_entities(hass: HomeAssistant, calls) -> None:
         {CONF_ENTITY_ID: _STEP_INPUT_NUMBER, INPUT_NUMBER_ATTR_VALUE: 2},
         blocking=True,
     )
-    await hass.async_block_till_done()
     _verify(hass, 5, 2, 3, 5)
 
     await hass.services.async_call(
@@ -237,7 +235,6 @@ async def test_templates_with_entities(hass: HomeAssistant, calls) -> None:
         {CONF_ENTITY_ID: _MINIMUM_INPUT_NUMBER, INPUT_NUMBER_ATTR_VALUE: 2},
         blocking=True,
     )
-    await hass.async_block_till_done()
     _verify(hass, 5, 2, 2, 5)
 
     await hass.services.async_call(
@@ -246,7 +243,6 @@ async def test_templates_with_entities(hass: HomeAssistant, calls) -> None:
         {CONF_ENTITY_ID: _MAXIMUM_INPUT_NUMBER, INPUT_NUMBER_ATTR_VALUE: 6},
         blocking=True,
     )
-    await hass.async_block_till_done()
     _verify(hass, 5, 2, 2, 6)
 
     await hass.services.async_call(
@@ -396,7 +392,6 @@ async def test_icon_template(hass: HomeAssistant) -> None:
         {CONF_ENTITY_ID: _VALUE_INPUT_NUMBER, INPUT_NUMBER_ATTR_VALUE: 51},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(_TEST_NUMBER)
     assert float(state.state) == 51
@@ -454,7 +449,6 @@ async def test_icon_template_with_trigger(hass: HomeAssistant) -> None:
         {CONF_ENTITY_ID: _VALUE_INPUT_NUMBER, INPUT_NUMBER_ATTR_VALUE: 51},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(_TEST_NUMBER)
     assert float(state.state) == 51

@@ -58,7 +58,6 @@ async def test_turn_on_trigger_device_id(
     await hass.services.async_call(
         entity_domain, SERVICE_TURN_ON, {"entity_id": entity_id}, blocking=True
     )
-    await hass.async_block_till_done()
 
     assert len(calls) == 1
     assert calls[0].data["some"] == device.id
@@ -76,7 +75,6 @@ async def test_turn_on_trigger_device_id(
         await hass.services.async_call(
             entity_domain, SERVICE_TURN_ON, {"entity_id": entity_id}, blocking=True
         )
-        await hass.async_block_till_done()
 
     assert len(calls) == 0
     mock_send_magic_packet.assert_called()
@@ -117,7 +115,6 @@ async def test_turn_on_trigger_entity_id(
     await hass.services.async_call(
         entity_domain, SERVICE_TURN_ON, {"entity_id": entity_id}, blocking=True
     )
-    await hass.async_block_till_done()
 
     assert len(calls) == 1
     assert calls[0].data["some"] == entity_id

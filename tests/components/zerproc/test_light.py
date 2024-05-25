@@ -182,7 +182,6 @@ async def test_light_turn_on(hass: HomeAssistant, mock_light) -> None:
             {ATTR_ENTITY_ID: "light.ledblue_ccddeeff"},
             blocking=True,
         )
-        await hass.async_block_till_done()
     mock_turn_on.assert_called()
 
     with patch.object(mock_light, "set_color") as mock_set_color:
@@ -192,7 +191,6 @@ async def test_light_turn_on(hass: HomeAssistant, mock_light) -> None:
             {ATTR_ENTITY_ID: "light.ledblue_ccddeeff", ATTR_BRIGHTNESS: 25},
             blocking=True,
         )
-        await hass.async_block_till_done()
     mock_set_color.assert_called_with(25, 25, 25)
 
     # Make sure no discovery calls are made while we emulate time passing
@@ -213,7 +211,6 @@ async def test_light_turn_on(hass: HomeAssistant, mock_light) -> None:
                 {ATTR_ENTITY_ID: "light.ledblue_ccddeeff", ATTR_BRIGHTNESS: 25},
                 blocking=True,
             )
-            await hass.async_block_till_done()
 
         mock_set_color.assert_called_with(19, 17, 25)
 
@@ -224,7 +221,6 @@ async def test_light_turn_on(hass: HomeAssistant, mock_light) -> None:
                 {ATTR_ENTITY_ID: "light.ledblue_ccddeeff", ATTR_HS_COLOR: (50, 50)},
                 blocking=True,
             )
-            await hass.async_block_till_done()
 
         mock_set_color.assert_called_with(220, 201, 110)
 
@@ -244,7 +240,6 @@ async def test_light_turn_on(hass: HomeAssistant, mock_light) -> None:
                 {ATTR_ENTITY_ID: "light.ledblue_ccddeeff", ATTR_HS_COLOR: (50, 50)},
                 blocking=True,
             )
-            await hass.async_block_till_done()
 
         mock_set_color.assert_called_with(75, 68, 37)
 
@@ -259,7 +254,6 @@ async def test_light_turn_on(hass: HomeAssistant, mock_light) -> None:
                 },
                 blocking=True,
             )
-            await hass.async_block_till_done()
 
         mock_set_color.assert_called_with(162, 200, 50)
 
@@ -273,7 +267,6 @@ async def test_light_turn_off(hass: HomeAssistant, mock_light) -> None:
             {ATTR_ENTITY_ID: "light.ledblue_ccddeeff"},
             blocking=True,
         )
-        await hass.async_block_till_done()
     mock_turn_off.assert_called()
 
 

@@ -107,7 +107,6 @@ async def test_setup_reload_service(hass: HomeAssistant) -> None:
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert len(setup_called) == 2
 
@@ -155,7 +154,6 @@ async def test_setup_reload_service_when_async_process_component_config_fails(
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert len(setup_called) == 1
 
@@ -203,7 +201,6 @@ async def test_setup_reload_service_with_platform_that_provides_async_reset_plat
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert len(setup_called) == 1
     assert len(async_reset_platform_called) == 1

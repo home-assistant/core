@@ -131,7 +131,6 @@ async def test_if_fires_on_state_change(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == f"turn_on - {kodi_media_player} - 0"
 
@@ -142,7 +141,6 @@ async def test_if_fires_on_state_change(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == f"turn_off - {kodi_media_player} - 0"
 
@@ -187,6 +185,5 @@ async def test_if_fires_on_state_change_legacy(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == f"turn_on - {kodi_media_player} - 0"

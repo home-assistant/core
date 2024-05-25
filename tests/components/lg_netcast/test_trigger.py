@@ -54,7 +54,6 @@ async def test_lg_netcast_turn_on_trigger_device_id(
         {"entity_id": ENTITY_ID},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert len(calls) == 1
     assert calls[0].data["some"] == device.id
@@ -73,7 +72,6 @@ async def test_lg_netcast_turn_on_trigger_device_id(
             blocking=True,
         )
 
-    await hass.async_block_till_done()
     assert len(calls) == 0
 
 
@@ -109,7 +107,6 @@ async def test_lg_netcast_turn_on_trigger_entity_id(hass: HomeAssistant, calls):
         {"entity_id": ENTITY_ID},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert len(calls) == 1
     assert calls[0].data["some"] == ENTITY_ID

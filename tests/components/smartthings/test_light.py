@@ -149,7 +149,6 @@ async def test_turn_off(hass: HomeAssistant, light_devices) -> None:
         "light", "turn_off", {"entity_id": "light.color_dimmer_2"}, blocking=True
     )
     # This test schedules and update right after the call
-    await hass.async_block_till_done()
     # Assert
     state = hass.states.get("light.color_dimmer_2")
     assert state is not None
@@ -168,7 +167,6 @@ async def test_turn_off_with_transition(hass: HomeAssistant, light_devices) -> N
         blocking=True,
     )
     # This test schedules and update right after the call
-    await hass.async_block_till_done()
     # Assert
     state = hass.states.get("light.color_dimmer_2")
     assert state is not None
@@ -184,7 +182,6 @@ async def test_turn_on(hass: HomeAssistant, light_devices) -> None:
         "light", "turn_on", {ATTR_ENTITY_ID: "light.color_dimmer_1"}, blocking=True
     )
     # This test schedules and update right after the call
-    await hass.async_block_till_done()
     # Assert
     state = hass.states.get("light.color_dimmer_1")
     assert state is not None
@@ -207,7 +204,6 @@ async def test_turn_on_with_brightness(hass: HomeAssistant, light_devices) -> No
         blocking=True,
     )
     # This test schedules and update right after the call
-    await hass.async_block_till_done()
     # Assert
     state = hass.states.get("light.color_dimmer_1")
     assert state is not None
@@ -235,7 +231,6 @@ async def test_turn_on_with_minimal_brightness(
         blocking=True,
     )
     # This test schedules and update right after the call
-    await hass.async_block_till_done()
     # Assert
     state = hass.states.get("light.color_dimmer_1")
     assert state is not None
@@ -256,7 +251,6 @@ async def test_turn_on_with_color(hass: HomeAssistant, light_devices) -> None:
         blocking=True,
     )
     # This test schedules and update right after the call
-    await hass.async_block_till_done()
     # Assert
     state = hass.states.get("light.color_dimmer_2")
     assert state is not None
@@ -276,7 +270,6 @@ async def test_turn_on_with_color_temp(hass: HomeAssistant, light_devices) -> No
         blocking=True,
     )
     # This test schedules and update right after the call
-    await hass.async_block_till_done()
     # Assert
     state = hass.states.get("light.color_dimmer_2")
     assert state is not None

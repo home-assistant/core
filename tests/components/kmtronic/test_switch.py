@@ -49,7 +49,6 @@ async def test_relay_on_off(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("switch.controller_1_1_1_1_relay_1")
     assert state.state == "on"
 
@@ -66,7 +65,6 @@ async def test_relay_on_off(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("switch.controller_1_1_1_1_relay_1")
     assert state.state == "off"
 
@@ -83,7 +81,6 @@ async def test_relay_on_off(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("switch.controller_1_1_1_1_relay_1")
     assert state.state == "on"
 
@@ -199,7 +196,6 @@ async def test_relay_on_off_reversed(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("switch.controller_1_1_1_1_relay_1")
     assert state.state == "off"
 
@@ -216,6 +212,5 @@ async def test_relay_on_off_reversed(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("switch.controller_1_1_1_1_relay_1")
     assert state.state == "on"

@@ -255,7 +255,6 @@ async def test_turn_on(
         {"entity_id": entity_id, **service_data, **transition},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     await command_store.trigger_observe_callback(
         hass, device, {ATTR_LIGHT_CONTROL: [{ATTR_DEVICE_STATE: 1}]}
@@ -299,7 +298,6 @@ async def test_turn_off(
         {"entity_id": entity_id, **transition},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     await command_store.trigger_observe_callback(
         hass, device, {ATTR_LIGHT_CONTROL: [{ATTR_DEVICE_STATE: 0}]}

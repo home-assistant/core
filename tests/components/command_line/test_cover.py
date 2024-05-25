@@ -337,7 +337,6 @@ async def test_updating_manually(
         {ATTR_ENTITY_ID: ["cover.test"]},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert called
 
 

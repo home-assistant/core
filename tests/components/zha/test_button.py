@@ -164,7 +164,6 @@ async def test_button(hass: HomeAssistant, contact_sensor) -> None:
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        await hass.async_block_till_done()
         assert len(cluster.request.mock_calls) == 1
         assert cluster.request.call_args[0][0] is False
         assert cluster.request.call_args[0][1] == 0
@@ -204,7 +203,6 @@ async def test_frost_unlock(hass: HomeAssistant, tuya_water_valve) -> None:
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        await hass.async_block_till_done()
         assert cluster.write_attributes.mock_calls == [
             call({"frost_lock_reset": 0}, manufacturer=None)
         ]
@@ -322,7 +320,6 @@ async def test_quirks_command_button(hass: HomeAssistant, custom_button_device) 
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        await hass.async_block_till_done()
         assert len(cluster.request.mock_calls) == 1
         assert cluster.request.call_args[0][0] is False
         assert cluster.request.call_args[0][1] == 0
@@ -359,7 +356,6 @@ async def test_quirks_write_attr_button(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        await hass.async_block_till_done()
         assert cluster.write_attributes.mock_calls == [
             call({cluster.AttributeDefs.feed.name: 2}, manufacturer=None)
         ]

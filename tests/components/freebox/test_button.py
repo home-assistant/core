@@ -32,7 +32,6 @@ async def test_reboot(hass: HomeAssistant, router: Mock) -> None:
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_service.assert_called_once()
 
 
@@ -58,5 +57,4 @@ async def test_mark_calls_as_read(hass: HomeAssistant, router: Mock) -> None:
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_service.mark_calls_log_as_read.assert_called_once()

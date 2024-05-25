@@ -59,7 +59,6 @@ async def test_if_fires_on_event(hass: HomeAssistant, calls, setup_comp) -> None
     )
     assert service_response["response"]["speech"]["plain"]["speech"] == "Done"
 
-    await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["data"] == {
         "alias": None,
@@ -176,7 +175,6 @@ async def test_response_same_sentence(hass: HomeAssistant, calls, setup_comp) ->
         blocking=True,
         return_response=True,
     )
-    await hass.async_block_till_done()
 
     # Should only get first response
     assert service_response["response"]["speech"]["plain"]["speech"] == "response 1"
@@ -236,7 +234,6 @@ async def test_response_same_sentence_with_error(
         blocking=True,
         return_response=True,
     )
-    await hass.async_block_till_done()
 
     # Should still get first response
     assert service_response["response"]["speech"]["plain"]["speech"] == "response 1"
@@ -333,7 +330,6 @@ async def test_same_trigger_multiple_sentences(
     )
 
     # Only triggers once
-    await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["data"] == {
         "alias": None,
@@ -395,7 +391,6 @@ async def test_same_sentence_multiple_triggers(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     assert len(calls) == 2
 
     # The calls may come in any order
@@ -497,7 +492,6 @@ async def test_wildcards(hass: HomeAssistant, calls, setup_comp) -> None:
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["data"] == {
         "alias": None,

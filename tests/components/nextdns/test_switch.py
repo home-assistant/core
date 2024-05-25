@@ -59,7 +59,6 @@ async def test_switch_on(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         state = hass.states.get("switch.fake_profile_block_page")
         assert state
@@ -85,7 +84,6 @@ async def test_switch_off(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "switch.fake_profile_web3"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         state = hass.states.get("switch.fake_profile_web3")
         assert state

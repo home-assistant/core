@@ -163,7 +163,6 @@ async def test_set_temperature(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get("climate.l1_100").attributes[ATTR_TEMPERATURE] == 30
 
 
@@ -182,7 +181,6 @@ async def test_set_fan_mode(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get("climate.l1_100").attributes[ATTR_FAN_MODE] == FAN_HIGH
 
 
@@ -201,7 +199,6 @@ async def test_set_swing_mode(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get("climate.l1_101").attributes[ATTR_SWING_MODE] == "vertical"
 
 
@@ -237,7 +234,6 @@ async def test_set_hvac_mode(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get("climate.l1_100").state == HVACMode.HEAT
 
 
@@ -256,7 +252,6 @@ async def test_set_hvac_mode_off(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get("climate.l1_101").state == HVACMode.OFF
 
 
@@ -274,7 +269,6 @@ async def test_turn_on(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get("climate.l1_100").state == HVACMode.COOL
 
 
@@ -292,5 +286,4 @@ async def test_turn_off(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get("climate.l1_101").state == HVACMode.OFF

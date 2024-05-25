@@ -52,7 +52,6 @@ async def run_service_tests(hass, device, platform, services):
         args = cur_item.get(ATTR_ARGS, {})
         service_data = {"entity_id": f"{platform}.name", **args}
         await hass.services.async_call(platform, service, service_data, blocking=True)
-        await hass.async_block_till_done()
         for check_item in services:
             check_method = getattr(device, check_item[ATTR_METHOD])
             if check_item[ATTR_SERVICE] == service:

@@ -72,7 +72,6 @@ async def test_reset_button(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Verify reset was written
     args = mock_connection.write_coil.call_args

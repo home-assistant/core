@@ -29,7 +29,6 @@ async def test_change_settings(hass: HomeAssistant) -> None:
             {"setting": "confirm_snd", "value": "loud"},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_setting.assert_called_once()
 
 

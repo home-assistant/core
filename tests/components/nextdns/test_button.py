@@ -40,7 +40,6 @@ async def test_button_press(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "button.fake_profile_clear_logs"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_clear_logs.assert_called_once()
 

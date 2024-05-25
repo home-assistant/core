@@ -998,7 +998,6 @@ async def test_create_event_service(
         blocking=True,
     )
     # Ensure data is written to disk
-    await hass.async_block_till_done()
 
     events = await get_events("1997-07-14T00:00:00Z", "1997-07-16T00:00:00Z")
     assert list(map(event_fields, events)) == [

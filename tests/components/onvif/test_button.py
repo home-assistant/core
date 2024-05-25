@@ -37,7 +37,6 @@ async def test_reboot_button_press(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "button.testcamera_reboot"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     devicemgmt.SystemReboot.assert_called_once()
 
@@ -67,6 +66,5 @@ async def test_set_dateandtime_button_press(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "button.testcamera_set_system_date_and_time"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     device.async_manually_set_date_and_time.assert_called_once()

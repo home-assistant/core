@@ -43,7 +43,6 @@ async def test_setup(hass: HomeAssistant, router: Mock) -> None:
             SERVICE_REBOOT,
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_service.assert_called_once()
 
 

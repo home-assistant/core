@@ -57,7 +57,6 @@ async def test_switch_setup_and_services(
             {ATTR_ENTITY_ID: fan_entity, ATTR_PRESET_MODE: "fast"},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(
             {
                 "modules": [

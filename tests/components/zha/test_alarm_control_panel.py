@@ -87,7 +87,6 @@ async def test_alarm_control_panel(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
     assert cluster.client_command.call_count == 2
     assert cluster.client_command.await_count == 2
@@ -110,7 +109,6 @@ async def test_alarm_control_panel(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
     cluster.client_command.reset_mock()
     await hass.services.async_call(
@@ -125,7 +123,6 @@ async def test_alarm_control_panel(
         {ATTR_ENTITY_ID: entity_id, "code": "1111"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
     assert cluster.client_command.call_count == 4
     assert cluster.client_command.await_count == 4
@@ -148,7 +145,6 @@ async def test_alarm_control_panel(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_HOME
     assert cluster.client_command.call_count == 2
     assert cluster.client_command.await_count == 2
@@ -168,7 +164,6 @@ async def test_alarm_control_panel(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_NIGHT
     assert cluster.client_command.call_count == 2
     assert cluster.client_command.await_count == 2
@@ -265,7 +260,6 @@ async def reset_alarm_panel(hass, cluster, entity_id):
         {ATTR_ENTITY_ID: entity_id, "code": "4321"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
     assert cluster.client_command.call_count == 2
     assert cluster.client_command.await_count == 2

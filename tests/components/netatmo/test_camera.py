@@ -275,7 +275,6 @@ async def test_service_set_person_away_invalid_person(
             service_data=data,
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     assert excinfo.value.args == ("Person(s) not registered ['Batman']",)
 
@@ -303,7 +302,6 @@ async def test_service_set_persons_home_invalid_person(
             service_data=data,
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     assert excinfo.value.args == ("Person(s) not registered ['Batman']",)
 
@@ -392,7 +390,6 @@ async def test_service_set_camera_light_invalid_type(
             service_data=data,
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     mock_set_state.assert_not_called()
     assert "NACamera <Hall> does not have a floodlight" in excinfo.value.args[0]

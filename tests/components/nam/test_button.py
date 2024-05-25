@@ -42,7 +42,6 @@ async def test_button_press(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "button.nettigo_air_monitor_restart"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_restart.assert_called_once()
 

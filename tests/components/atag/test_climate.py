@@ -59,7 +59,6 @@ async def test_setting_climate(
             {ATTR_ENTITY_ID: CLIMATE_ID, ATTR_TEMPERATURE: 15},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_temp.assert_called_once_with(15)
 
     with patch("pyatag.entities.Climate.set_preset_mode") as mock_set_preset:
@@ -69,7 +68,6 @@ async def test_setting_climate(
             {ATTR_ENTITY_ID: CLIMATE_ID, ATTR_PRESET_MODE: PRESET_AWAY},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_preset.assert_called_once_with(PRESET_MAP[PRESET_AWAY])
 
     with patch("pyatag.entities.Climate.set_hvac_mode") as mock_set_hvac:
@@ -79,7 +77,6 @@ async def test_setting_climate(
             {ATTR_ENTITY_ID: CLIMATE_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_hvac.assert_called_once_with(HVACMode.HEAT)
 
 

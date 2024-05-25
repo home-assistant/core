@@ -3686,7 +3686,6 @@ async def test_publish_json_from_template(
     )
 
     await hass.services.async_call("script", "test_script_payload", blocking=True)
-    await hass.async_block_till_done()
 
     assert mqtt_mock.async_publish.called
     assert mqtt_mock.async_publish.call_args[0][1] == test_str
@@ -3697,7 +3696,6 @@ async def test_publish_json_from_template(
     await hass.services.async_call(
         "script", "test_script_payload_template", blocking=True
     )
-    await hass.async_block_till_done()
 
     assert mqtt_mock.async_publish.called
     assert mqtt_mock.async_publish.call_args[0][1] == test_str
@@ -3942,7 +3940,6 @@ async def test_setup_manual_items_with_unique_ids(
         {},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert hass.states.get("light.test1") is not None
     assert (hass.states.get("light.test2") is not None) == unique
@@ -4027,7 +4024,6 @@ async def test_link_config_entry(
         {},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert _check_entities() == 2
 
 
@@ -4157,7 +4153,6 @@ async def test_reload_config_entry(
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert (state := hass.states.get("sensor.test_manual1")) is not None
     assert state.attributes["friendly_name"] == "test_manual1_updated"
@@ -4208,17 +4203,18 @@ async def test_reload_with_invalid_config(
 
     # Reload with an invalid config and assert again
     invalid_config = {"mqtt": "some_invalid_config"}
-    with patch(
-        "homeassistant.config.load_yaml_config_file", return_value=invalid_config
+    with (
+        patch(
+            "homeassistant.config.load_yaml_config_file", return_value=invalid_config
+        ),
+        pytest.raises(HomeAssistantError),
     ):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                "mqtt",
-                SERVICE_RELOAD,
-                {},
-                blocking=True,
-            )
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            "mqtt",
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
 
     # Test nothing changed as loading the config failed
     assert hass.states.get("sensor.test") is not None
@@ -4255,7 +4251,6 @@ async def test_reload_with_empty_config(
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert hass.states.get("sensor.test") is None
 
@@ -4307,7 +4302,6 @@ async def test_reload_with_new_platform_config(
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert hass.states.get("sensor.test") is not None
     assert hass.states.get("binary_sensor.test") is not None

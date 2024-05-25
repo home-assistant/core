@@ -286,7 +286,6 @@ async def test_entity_refresh(hass: HomeAssistant, mock_simple_nws, no_sensor) -
         {"entity_id": "weather.abc"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert instance.update_observation.call_count == 2
     assert instance.update_forecast.call_count == 2
     assert instance.update_forecast_hourly.call_count == 2

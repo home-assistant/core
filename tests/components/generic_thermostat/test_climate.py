@@ -1426,7 +1426,6 @@ async def test_reload(hass: HomeAssistant) -> None:
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("climate.test") is None

@@ -93,7 +93,6 @@ async def test_if_fires_on_turn_on_request(
     await hass.services.async_call(
         "media_player", "turn_on", {"entity_id": entity_id}, blocking=True
     )
-    await hass.async_block_till_done()
 
     assert len(calls) == 2
     assert calls[0].data["some"] == device.id

@@ -168,7 +168,6 @@ async def test_on_off_light_state(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("light.wl000000000099_1")
     assert state
     assert state.state == STATE_ON
@@ -181,7 +180,6 @@ async def test_on_off_light_state(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("light.wl000000000099_1")
     assert state
     assert state.state == STATE_OFF
@@ -199,7 +197,6 @@ async def test_dimmer_light_state(
         {ATTR_BRIGHTNESS: 42, ATTR_ENTITY_ID: "light.wl000000000099_1"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("light.wl000000000099_1")
     assert state
@@ -212,7 +209,6 @@ async def test_dimmer_light_state(
         {ATTR_BRIGHTNESS: 0, ATTR_ENTITY_ID: "light.wl000000000099_1"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("light.wl000000000099_1")
     assert state
@@ -224,7 +220,6 @@ async def test_dimmer_light_state(
         {ATTR_BRIGHTNESS: 100, ATTR_ENTITY_ID: "light.wl000000000099_1"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("light.wl000000000099_1")
     assert state
@@ -238,7 +233,6 @@ async def test_dimmer_light_state(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("light.wl000000000099_1")
     assert state
     assert state.state == STATE_OFF
@@ -251,7 +245,6 @@ async def test_dimmer_light_state(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("light.wl000000000099_1")
     assert state
     assert state.state == STATE_ON
@@ -273,7 +266,6 @@ async def test_color_light_state(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("light.wl000000000099_1")
     assert state
@@ -291,7 +283,6 @@ async def test_color_light_state(
         {ATTR_BRIGHTNESS: 0, ATTR_ENTITY_ID: "light.wl000000000099_1"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("light.wl000000000099_1")
     assert state
@@ -307,7 +298,6 @@ async def test_color_light_state(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("light.wl000000000099_1")
     assert state
@@ -326,7 +316,6 @@ async def test_color_light_state(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("light.wl000000000099_1")
     assert state
     assert state.state == STATE_OFF
@@ -339,7 +328,6 @@ async def test_color_light_state(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("light.wl000000000099_1")
     assert state
     assert state.state == STATE_ON
@@ -351,7 +339,6 @@ async def test_color_light_state(
         {ATTR_HS_COLOR: [0, 100], ATTR_ENTITY_ID: "light.wl000000000099_1"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("light.wl000000000099_1")
     assert state
@@ -369,7 +356,6 @@ async def test_color_light_state(
         {ATTR_BRIGHTNESS: 60, ATTR_ENTITY_ID: "light.wl000000000099_1"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("light.wl000000000099_1")
     assert state

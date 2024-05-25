@@ -156,7 +156,6 @@ async def test_optimistic_states(hass: HomeAssistant, start_ha) -> None:
         await hass.services.async_call(
             ALARM_DOMAIN, service, {"entity_id": TEMPLATE_NAME}, blocking=True
         )
-        await hass.async_block_till_done()
         assert hass.states.get(TEMPLATE_NAME).state == set_state
 
 
@@ -286,7 +285,6 @@ async def test_actions(hass: HomeAssistant, service, start_ha, service_calls) ->
     await hass.services.async_call(
         ALARM_DOMAIN, service, {"entity_id": TEMPLATE_NAME}, blocking=True
     )
-    await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert service_calls[0].data["service"] == service
     assert service_calls[0].data["service_data"]["code"] == TEMPLATE_NAME

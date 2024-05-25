@@ -55,8 +55,6 @@ async def test_default_ding_chime_can_be_played(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
-
     assert requests_mock.request_history[-1].url.startswith(
         "https://api.ring.com/clients_api/chimes/123456/play_sound?"
     )
@@ -83,8 +81,6 @@ async def test_turn_on_plays_default_chime(
         {"entity_id": "siren.downstairs_siren"},
         blocking=True,
     )
-
-    await hass.async_block_till_done()
 
     assert requests_mock.request_history[-1].url.startswith(
         "https://api.ring.com/clients_api/chimes/123456/play_sound?"
@@ -113,8 +109,6 @@ async def test_explicit_ding_chime_can_be_played(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
-
     assert requests_mock.request_history[-1].url.startswith(
         "https://api.ring.com/clients_api/chimes/123456/play_sound?"
     )
@@ -141,8 +135,6 @@ async def test_motion_chime_can_be_played(
         {"entity_id": "siren.downstairs_siren", "tone": "motion"},
         blocking=True,
     )
-
-    await hass.async_block_till_done()
 
     assert requests_mock.request_history[-1].url.startswith(
         "https://api.ring.com/clients_api/chimes/123456/play_sound?"
@@ -174,17 +166,18 @@ async def test_siren_errors_when_turned_on(
 
     assert not any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
-    with patch.object(
-        ring_doorbell.RingChime, "test_sound", side_effect=exception_type
-    ) as mock_siren:
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                "siren",
-                "turn_on",
-                {"entity_id": "siren.downstairs_siren", "tone": "motion"},
-                blocking=True,
-            )
-        await hass.async_block_till_done()
+    with (
+        patch.object(
+            ring_doorbell.RingChime, "test_sound", side_effect=exception_type
+        ) as mock_siren,
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            "siren",
+            "turn_on",
+            {"entity_id": "siren.downstairs_siren", "tone": "motion"},
+            blocking=True,
+        )
     assert mock_siren.call_count == 1
     assert (
         any(

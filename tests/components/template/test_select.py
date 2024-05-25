@@ -200,7 +200,6 @@ async def test_templates_with_entities(hass: HomeAssistant, calls) -> None:
         {CONF_ENTITY_ID: _OPTION_INPUT_SELECT, INPUT_SELECT_ATTR_OPTION: "b"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     _verify(hass, "b", ["a", "b"])
 
     await hass.services.async_call(
@@ -212,7 +211,6 @@ async def test_templates_with_entities(hass: HomeAssistant, calls) -> None:
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     _verify(hass, "b", ["a", "b", "c"])
 
     await hass.services.async_call(
@@ -351,7 +349,6 @@ async def test_template_icon_with_entities(hass: HomeAssistant) -> None:
         {CONF_ENTITY_ID: _OPTION_INPUT_SELECT, INPUT_SELECT_ATTR_OPTION: "b"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(_TEST_SELECT)
     assert state.state == "b"
@@ -409,7 +406,6 @@ async def test_template_icon_with_trigger(hass: HomeAssistant) -> None:
         {CONF_ENTITY_ID: _OPTION_INPUT_SELECT, INPUT_SELECT_ATTR_OPTION: "b"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(_TEST_SELECT)
     assert state is not None
@@ -422,7 +418,6 @@ async def test_template_icon_with_trigger(hass: HomeAssistant) -> None:
         {CONF_ENTITY_ID: _OPTION_INPUT_SELECT, INPUT_SELECT_ATTR_OPTION: "a"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(_TEST_SELECT)
     assert state.state == "a"

@@ -217,7 +217,6 @@ async def test_service_say_timeout(
         {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert len(calls) == 1
     assert (

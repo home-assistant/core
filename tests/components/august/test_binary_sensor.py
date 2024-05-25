@@ -48,7 +48,6 @@ async def test_doorsense(hass: HomeAssistant) -> None:
 
     data = {ATTR_ENTITY_ID: "lock.online_with_doorsense_name"}
     await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
-    await hass.async_block_till_done()
 
     binary_sensor_online_with_doorsense_name = hass.states.get(
         "binary_sensor.online_with_doorsense_name_door"
@@ -56,7 +55,6 @@ async def test_doorsense(hass: HomeAssistant) -> None:
     assert binary_sensor_online_with_doorsense_name.state == STATE_ON
 
     await hass.services.async_call(LOCK_DOMAIN, SERVICE_LOCK, data, blocking=True)
-    await hass.async_block_till_done()
 
     binary_sensor_online_with_doorsense_name = hass.states.get(
         "binary_sensor.online_with_doorsense_name_door"

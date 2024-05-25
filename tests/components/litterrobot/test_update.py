@@ -78,14 +78,12 @@ async def test_robot_with_update(
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
-    await hass.async_block_till_done()
     assert robot.update_firmware.call_count == 1
 
     robot.update_firmware = AsyncMock(return_value=True)
     await hass.services.async_call(
         PLATFORM_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
-    await hass.async_block_till_done()
     assert robot.update_firmware.call_count == 1
 
 

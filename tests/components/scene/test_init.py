@@ -270,7 +270,6 @@ async def turn_off_lights(hass, entity_ids):
         {"entity_id": entity_ids},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
 
 async def test_invalid_platform(

@@ -173,7 +173,6 @@ async def test_set_temperature_supported_cooling(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert mock_connection.write_coil.mock_calls == [
         call(CoilData(coil_setpoint_heat, 22))
@@ -190,7 +189,6 @@ async def test_set_temperature_supported_cooling(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert mock_connection.write_coil.mock_calls == [
         call(CoilData(coil_setpoint_cool, 22))
@@ -218,7 +216,6 @@ async def test_set_temperature_supported_cooling(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert mock_connection.write_coil.mock_calls == [
         call(CoilData(coil_setpoint_heat, 22)),
@@ -264,7 +261,6 @@ async def test_set_temperature_unsupported_cooling(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert mock_connection.write_coil.mock_calls == [
         call(CoilData(coil_setpoint_heat, 22))
     ]
@@ -333,7 +329,6 @@ async def test_set_hvac_mode(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert mock_connection.write_coil.mock_calls == [
         call(CoilData(coil_cooling_with_room_sensor, cooling_with_room_sensor)),
@@ -373,6 +368,5 @@ async def test_set_invalid_hvac_mode(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert mock_connection.write_coil.mock_calls == []

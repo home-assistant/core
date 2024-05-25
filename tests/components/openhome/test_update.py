@@ -153,7 +153,6 @@ async def test_update_available(hass: HomeAssistant):
         {ATTR_ENTITY_ID: "update.friendly_name"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     update_firmware.assert_called_once()
 

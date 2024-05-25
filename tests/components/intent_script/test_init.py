@@ -196,7 +196,6 @@ async def test_reload(hass: HomeAssistant) -> None:
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert len(intents) == 1
 
@@ -212,7 +211,6 @@ async def test_reload(hass: HomeAssistant) -> None:
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     # absence of intent_script from the configuration.yaml should delete all intents.
     assert len(intents) == 0

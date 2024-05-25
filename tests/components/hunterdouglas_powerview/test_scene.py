@@ -117,6 +117,5 @@ async def test_scenes(
             {"entity_id": f"scene.powerview_generation_{api_version}_open_study"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_activate.assert_called_once()

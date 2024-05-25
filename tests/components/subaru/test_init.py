@@ -120,7 +120,6 @@ async def test_update_skip_unsubscribed(
             blocking=True,
         )
 
-        await hass.async_block_till_done()
         mock_fetch.assert_not_called()
 
 
@@ -141,7 +140,6 @@ async def test_update_disabled(hass: HomeAssistant, ev_entry) -> None:
             {ATTR_ENTITY_ID: TEST_ENTITY_ID},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_update.assert_not_called()
 
 

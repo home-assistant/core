@@ -93,7 +93,6 @@ async def test_turn_on_20min_ventilator(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: VENTILATOR_20MIN_ID},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_20min_ventilator.assert_called_once_with(THERMOSTAT_ID, True)
 
 
@@ -111,5 +110,4 @@ async def test_turn_off_20min_ventilator(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: VENTILATOR_20MIN_ID},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_20min_ventilator.assert_called_once_with(THERMOSTAT_ID, False)

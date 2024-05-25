@@ -40,7 +40,6 @@ async def test_light_set_states(hass: HomeAssistant, mock_asyncsleepiq) -> None:
         {ATTR_ENTITY_ID: f"light.sleepnumber_{BED_NAME_LOWER}_light_1"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_asyncsleepiq.beds[BED_ID].foundation.lights[0].turn_on.assert_called_once()
 
     await hass.services.async_call(
@@ -49,7 +48,6 @@ async def test_light_set_states(hass: HomeAssistant, mock_asyncsleepiq) -> None:
         {ATTR_ENTITY_ID: f"light.sleepnumber_{BED_NAME_LOWER}_light_1"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_asyncsleepiq.beds[BED_ID].foundation.lights[0].turn_off.assert_called_once()
 
 

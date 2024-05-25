@@ -158,7 +158,6 @@ async def test_climate_thermostat_schedule_temporary_hold(hass: HomeAssistant) -
         service_data={ATTR_ENTITY_ID: "climate.temp_bathroom", "temperature": 90},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # opportunistic set
     state = hass.states.get("climate.temp_bathroom")

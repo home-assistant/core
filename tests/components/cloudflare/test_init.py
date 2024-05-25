@@ -112,7 +112,6 @@ async def test_integration_services(hass: HomeAssistant, cfupdate, caplog) -> No
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert len(instance.update_dns_record.mock_calls) == 2
     assert "All target records are up to date" not in caplog.text
@@ -138,7 +137,6 @@ async def test_integration_services_with_issue(hass: HomeAssistant, cfupdate) ->
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     instance.update_dns_record.assert_not_called()
 
@@ -176,7 +174,6 @@ async def test_integration_services_with_nonexisting_record(
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     instance.update_dns_record.assert_not_called()
     assert "All target records are up to date" in caplog.text

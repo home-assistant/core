@@ -74,7 +74,6 @@ async def test_outputs_open(
         {ATTR_ENTITY_ID: COVER_OUTPUTS},
         blocking=True,
     )
-    await hass.async_block_till_done()
     control_motors_outputs.assert_awaited_with(
         MotorStateModifier.UP, MotorReverseTime.RT1200
     )
@@ -93,7 +92,6 @@ async def test_outputs_open(
         {ATTR_ENTITY_ID: COVER_OUTPUTS},
         blocking=True,
     )
-    await hass.async_block_till_done()
     control_motors_outputs.assert_awaited_with(
         MotorStateModifier.UP, MotorReverseTime.RT1200
     )
@@ -120,7 +118,6 @@ async def test_outputs_close(
         {ATTR_ENTITY_ID: COVER_OUTPUTS},
         blocking=True,
     )
-    await hass.async_block_till_done()
     control_motors_outputs.assert_awaited_with(
         MotorStateModifier.DOWN, MotorReverseTime.RT1200
     )
@@ -139,7 +136,6 @@ async def test_outputs_close(
         {ATTR_ENTITY_ID: COVER_OUTPUTS},
         blocking=True,
     )
-    await hass.async_block_till_done()
     control_motors_outputs.assert_awaited_with(
         MotorStateModifier.DOWN, MotorReverseTime.RT1200
     )
@@ -166,7 +162,6 @@ async def test_outputs_stop(
         {ATTR_ENTITY_ID: COVER_OUTPUTS},
         blocking=True,
     )
-    await hass.async_block_till_done()
     control_motors_outputs.assert_awaited_with(MotorStateModifier.STOP)
 
     state = hass.states.get(COVER_OUTPUTS)
@@ -183,7 +178,6 @@ async def test_outputs_stop(
         {ATTR_ENTITY_ID: COVER_OUTPUTS},
         blocking=True,
     )
-    await hass.async_block_till_done()
     control_motors_outputs.assert_awaited_with(MotorStateModifier.STOP)
 
     state = hass.states.get(COVER_OUTPUTS)
@@ -211,7 +205,6 @@ async def test_relays_open(
         {ATTR_ENTITY_ID: COVER_RELAYS},
         blocking=True,
     )
-    await hass.async_block_till_done()
     control_motors_relays.assert_awaited_with(states)
 
     state = hass.states.get(COVER_RELAYS)
@@ -228,7 +221,6 @@ async def test_relays_open(
         {ATTR_ENTITY_ID: COVER_RELAYS},
         blocking=True,
     )
-    await hass.async_block_till_done()
     control_motors_relays.assert_awaited_with(states)
 
     state = hass.states.get(COVER_RELAYS)
@@ -256,7 +248,6 @@ async def test_relays_close(
         {ATTR_ENTITY_ID: COVER_RELAYS},
         blocking=True,
     )
-    await hass.async_block_till_done()
     control_motors_relays.assert_awaited_with(states)
 
     state = hass.states.get(COVER_RELAYS)
@@ -273,7 +264,6 @@ async def test_relays_close(
         {ATTR_ENTITY_ID: COVER_RELAYS},
         blocking=True,
     )
-    await hass.async_block_till_done()
     control_motors_relays.assert_awaited_with(states)
 
     state = hass.states.get(COVER_RELAYS)
@@ -301,7 +291,6 @@ async def test_relays_stop(
         {ATTR_ENTITY_ID: COVER_RELAYS},
         blocking=True,
     )
-    await hass.async_block_till_done()
     control_motors_relays.assert_awaited_with(states)
 
     state = hass.states.get(COVER_RELAYS)
@@ -318,7 +307,6 @@ async def test_relays_stop(
         {ATTR_ENTITY_ID: COVER_RELAYS},
         blocking=True,
     )
-    await hass.async_block_till_done()
     control_motors_relays.assert_awaited_with(states)
 
     state = hass.states.get(COVER_RELAYS)

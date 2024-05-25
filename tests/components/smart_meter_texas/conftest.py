@@ -49,7 +49,6 @@ async def refresh_data(hass, config_entry, aioclient_mock):
         {ATTR_ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
 
 def mock_connection(

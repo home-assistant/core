@@ -58,7 +58,6 @@ async def test_update_failure(
             {ATTR_ENTITY_ID: TEST_ENTITY_ID},
             blocking=True,
         )
-        await hass.async_block_till_done()
         updater.assert_called_once()
 
 

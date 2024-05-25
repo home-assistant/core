@@ -50,7 +50,6 @@ async def test_open(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
         )
-        await hass.async_block_till_done()
         mock_open.assert_called_once()
 
 
@@ -65,5 +64,4 @@ async def test_close(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: DEVICE_ID},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_close.assert_called_once()

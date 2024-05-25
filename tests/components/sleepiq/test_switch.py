@@ -35,7 +35,6 @@ async def test_switch_set_states(hass: HomeAssistant, mock_asyncsleepiq) -> None
         {ATTR_ENTITY_ID: f"switch.sleepnumber_{BED_NAME_LOWER}_pause_mode"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_asyncsleepiq.beds[BED_ID].set_pause_mode.assert_called_with(False)
 
     await hass.services.async_call(
@@ -44,7 +43,6 @@ async def test_switch_set_states(hass: HomeAssistant, mock_asyncsleepiq) -> None
         {ATTR_ENTITY_ID: f"switch.sleepnumber_{BED_NAME_LOWER}_pause_mode"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_asyncsleepiq.beds[BED_ID].set_pause_mode.assert_called_with(True)
 
 

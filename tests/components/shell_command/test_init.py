@@ -43,7 +43,6 @@ async def test_executing_service(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         await hass.services.async_call("shell_command", "test_service", blocking=True)
-        await hass.async_block_till_done()
         assert os.path.isfile(path)
 
 
@@ -78,7 +77,6 @@ async def test_template_render_no_template(mock_call, hass: HomeAssistant) -> No
     await hass.async_block_till_done()
 
     await hass.services.async_call("shell_command", "test_service", blocking=True)
-    await hass.async_block_till_done()
     cmd = mock_call.mock_calls[0][1][0]
 
     assert mock_call.call_count == 1
@@ -104,8 +102,6 @@ async def test_incorrect_template(mock_call, hass: HomeAssistant) -> None:
             "shell_command", "test_service", blocking=True, return_response=True
         )
 
-    await hass.async_block_till_done()
-
 
 @patch("homeassistant.components.shell_command.asyncio.create_subprocess_exec")
 async def test_template_render(mock_call, hass: HomeAssistant) -> None:
@@ -124,7 +120,6 @@ async def test_template_render(mock_call, hass: HomeAssistant) -> None:
 
     await hass.services.async_call("shell_command", "test_service", blocking=True)
 
-    await hass.async_block_till_done()
     cmd = mock_call.mock_calls[0][1]
 
     assert mock_call.call_count == 1
@@ -147,7 +142,6 @@ async def test_subprocess_error(mock_error, mock_call, hass: HomeAssistant) -> N
         response = await hass.services.async_call(
             "shell_command", "test_service", blocking=True, return_response=True
         )
-        await hass.async_block_till_done()
         assert mock_call.call_count == 1
         assert mock_error.call_count == 1
         assert not os.path.isfile(path)
@@ -168,7 +162,6 @@ async def test_stdout_captured(mock_output, hass: HomeAssistant) -> None:
         "shell_command", "test_service", blocking=True, return_response=True
     )
 
-    await hass.async_block_till_done()
     assert mock_output.call_count == 1
     assert test_phrase.encode() + b"\n" == mock_output.call_args_list[0][0][-1]
     assert response["stdout"] == test_phrase
@@ -195,7 +188,6 @@ async def test_non_text_stdout_capture(
         "shell_command", "output_image", blocking=True
     )
 
-    await hass.async_block_till_done()
     assert not response
 
     # Non-text output throws with 'return_response'
@@ -207,7 +199,6 @@ async def test_non_text_stdout_capture(
             "shell_command", "output_image", blocking=True, return_response=True
         )
 
-    await hass.async_block_till_done()
     assert not response
     assert "Unable to handle non-utf8 output of command" in caplog.text
 
@@ -226,7 +217,6 @@ async def test_stderr_captured(mock_output, hass: HomeAssistant) -> None:
         "shell_command", "test_service", blocking=True, return_response=True
     )
 
-    await hass.async_block_till_done()
     assert mock_output.call_count == 1
     assert test_phrase.encode() + b"\n" == mock_output.call_args_list[0][0][-1]
     assert response["stderr"] == test_phrase
@@ -260,18 +250,17 @@ async def test_do_not_run_forever(
             "homeassistant.components.shell_command.asyncio.create_subprocess_shell",
             side_effect=mock_create_subprocess_shell,
         ),
-    ):
-        with pytest.raises(
+        pytest.raises(
             HomeAssistantError,
             match="Timed out running command: `mock_sleep 10000`, after: 0.001 seconds",
-        ):
-            await hass.services.async_call(
-                shell_command.DOMAIN,
-                "test_service",
-                blocking=True,
-                return_response=True,
-            )
-        await hass.async_block_till_done()
+        ),
+    ):
+        await hass.services.async_call(
+            shell_command.DOMAIN,
+            "test_service",
+            blocking=True,
+            return_response=True,
+        )
 
     mock_process.kill.assert_called_once()
     assert "Timed out" in caplog.text

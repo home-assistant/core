@@ -71,7 +71,6 @@ async def test_light_can_be_turned_on(
     await hass.services.async_call(
         "light", "turn_on", {"entity_id": "light.front_light"}, blocking=True
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("light.front_light")
     assert state.state == "on"
@@ -91,8 +90,6 @@ async def test_updates_work(
     )
 
     await hass.services.async_call("ring", "update", {}, blocking=True)
-
-    await hass.async_block_till_done()
 
     state = hass.states.get("light.front_light")
     assert state.state == "on"
@@ -127,7 +124,6 @@ async def test_light_errors_when_turned_on(
             await hass.services.async_call(
                 "light", "turn_on", {"entity_id": "light.front_light"}, blocking=True
             )
-        await hass.async_block_till_done()
     assert mock_lights.call_count == 1
     assert (
         any(

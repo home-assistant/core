@@ -102,7 +102,6 @@ async def test_open_cover(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "cover.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_open.assert_called_once_with("test-device-id", Action.open())
 
@@ -120,7 +119,6 @@ async def test_close_cover(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "cover.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_close.assert_called_once_with("test-device-id", Action.close())
 
@@ -138,7 +136,6 @@ async def test_stop_cover(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "cover.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_hold.assert_called_once_with("test-device-id", Action.hold())
 
@@ -156,7 +153,6 @@ async def test_tilt_open_cover(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "cover.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_open.assert_called_once_with("test-device-id", Action.tilt_open())
     assert hass.states.get("cover.name_1").state == STATE_UNKNOWN
@@ -175,7 +171,6 @@ async def test_tilt_close_cover(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "cover.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_close.assert_called_once_with("test-device-id", Action.tilt_close())
     assert hass.states.get("cover.name_1").state == STATE_UNKNOWN
@@ -198,7 +193,6 @@ async def test_tilt_stop_cover(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "cover.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_hold.assert_called_once_with("test-device-id", Action.hold())
     assert hass.states.get("cover.name_1").state == STATE_UNKNOWN
@@ -221,7 +215,6 @@ async def test_tilt_and_open(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "cover.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_open.assert_called_once_with("test-device-id", Action.tilt_open())
     assert hass.states.get("cover.name_1").state == STATE_CLOSED

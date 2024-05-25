@@ -491,7 +491,6 @@ async def test_execute(
     await hass.services.async_call(
         "light", "turn_off", {"entity_id": "light.ceiling_lights"}, blocking=True
     )
-    await hass.async_block_till_done()
 
     events = async_capture_events(hass, EVENT_COMMAND_RECEIVED)
     service_events = async_capture_events(hass, EVENT_CALL_SERVICE)
@@ -641,7 +640,6 @@ async def test_execute_times_out(
     await hass.services.async_call(
         "light", "turn_off", {"entity_id": "light.ceiling_lights"}, blocking=True
     )
-    await hass.async_block_till_done()
 
     events = async_capture_events(hass, EVENT_COMMAND_RECEIVED)
     service_events = async_capture_events(hass, EVENT_CALL_SERVICE)

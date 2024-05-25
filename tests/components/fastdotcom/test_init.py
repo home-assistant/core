@@ -111,7 +111,6 @@ async def test_service_deprecated(
         {},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     issue = issue_registry.async_get_issue(DOMAIN, "service_deprecation")
     assert issue

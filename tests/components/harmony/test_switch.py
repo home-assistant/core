@@ -139,7 +139,6 @@ async def _toggle_switch_and_wait(hass, service_name, entity):
         {ATTR_ENTITY_ID: entity},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
 
 async def test_create_issue(

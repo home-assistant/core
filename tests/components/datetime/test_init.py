@@ -45,7 +45,6 @@ async def test_datetime(hass: HomeAssistant) -> None:
         {ATTR_DATETIME: datetime(2022, 3, 3, 3, 4, 5), ATTR_ENTITY_ID: "datetime.test"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("datetime.test")
     assert state.state == "2022-03-03T03:04:05+00:00"
@@ -57,7 +56,6 @@ async def test_datetime(hass: HomeAssistant) -> None:
         {ATTR_DATETIME: "2022-03-03T03:04:05+00:00", ATTR_ENTITY_ID: "datetime.test"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("datetime.test")
     assert state.state == "2022-03-03T03:04:05+00:00"
@@ -69,7 +67,6 @@ async def test_datetime(hass: HomeAssistant) -> None:
         {ATTR_DATETIME: "2022-03-03T03:04:05-05:00", ATTR_ENTITY_ID: "datetime.test"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("datetime.test")
     assert state.state == "2022-03-03T08:04:05+00:00"

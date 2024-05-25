@@ -214,14 +214,12 @@ async def test_service_binary_sensor_update(
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
     mock_modbus_ha.read_coils.return_value = ReadResult([0x01])
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 

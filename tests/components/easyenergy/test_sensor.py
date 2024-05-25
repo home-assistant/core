@@ -313,7 +313,6 @@ async def test_no_gas_today(
         {ATTR_ENTITY_ID: "sensor.easyenergy_today_gas_current_hour_price"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.easyenergy_today_gas_current_hour_price")
     assert state

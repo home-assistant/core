@@ -71,7 +71,6 @@ async def test_turn_on_switch_wifi_guest_network(client, hass: HomeAssistant) ->
         {ATTR_ENTITY_ID: SWITCH_WIFI_GUEST_NETWORK},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.is_state(SWITCH_WIFI_GUEST_NETWORK, STATE_ON)
     client.return_value.wlan.wifi_guest_network_switch.assert_called_once_with(True)
 
@@ -93,7 +92,6 @@ async def test_turn_off_switch_wifi_guest_network(client, hass: HomeAssistant) -
         {ATTR_ENTITY_ID: SWITCH_WIFI_GUEST_NETWORK},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.is_state(SWITCH_WIFI_GUEST_NETWORK, STATE_OFF)
     client.return_value.wlan.wifi_guest_network_switch.assert_called_with(False)
 

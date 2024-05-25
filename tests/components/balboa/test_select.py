@@ -99,4 +99,3 @@ async def _select_option_and_wait(hass: HomeAssistant | None, entity, option):
         },
         blocking=True,
     )
-    await hass.async_block_till_done()

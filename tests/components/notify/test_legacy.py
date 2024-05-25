@@ -386,7 +386,6 @@ async def test_setup_platform_and_reload(
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     # Check if the notify services from setup still exist
     assert hass.services.has_service(notify.DOMAIN, "testnotify_a")

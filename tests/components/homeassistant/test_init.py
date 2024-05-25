@@ -580,7 +580,6 @@ async def test_restart_homeassistant(
             blocking=True,
         )
         assert mock_check.called
-        await hass.async_block_till_done()
         assert mock_restart.called
         assert mock_safe_mode.called == safe_mode_enabled
 
@@ -602,7 +601,6 @@ async def test_stop_homeassistant(hass: HomeAssistant) -> None:
             blocking=True,
         )
         assert not mock_check.called
-        await hass.async_block_till_done()
         assert mock_restart.called
 
 

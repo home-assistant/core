@@ -1723,7 +1723,6 @@ async def help_test_publishing_with_custom_encoding(
         service_data["test1"],
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     mqtt_mock.async_publish.assert_any_call("cmd/test1", str(payload), 0, False)
     mqtt_mock.async_publish.reset_mock()
@@ -1799,7 +1798,6 @@ async def help_test_reload_with_config(
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def help_test_reloadable(
@@ -1851,7 +1849,6 @@ async def help_test_reloadable(
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert len(hass.states.async_all(domain)) == 3
 

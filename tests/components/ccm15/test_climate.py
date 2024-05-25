@@ -63,7 +63,6 @@ async def test_climate_state(
             {ATTR_ENTITY_ID: ["climate.midea_0"], ATTR_FAN_MODE: FAN_HIGH},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_state.assert_called_once()
 
     with patch(
@@ -75,7 +74,6 @@ async def test_climate_state(
             {ATTR_ENTITY_ID: ["climate.midea_0"], ATTR_HVAC_MODE: HVACMode.COOL},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_state.assert_called_once()
 
     with patch(
@@ -87,7 +85,6 @@ async def test_climate_state(
             {ATTR_ENTITY_ID: ["climate.midea_0"], ATTR_TEMPERATURE: 25},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_state.assert_called_once()
 
     with patch(
@@ -99,7 +96,6 @@ async def test_climate_state(
             {ATTR_ENTITY_ID: ["climate.midea_0"]},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_state.assert_called_once()
 
     with patch(
@@ -111,7 +107,6 @@ async def test_climate_state(
             {ATTR_ENTITY_ID: ["climate.midea_0"]},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_state.assert_called_once()
 
     # Create an instance of the CCM15DeviceState class

@@ -291,7 +291,6 @@ async def test_reload(hass: HomeAssistant, calls, mock_litejet) -> None:
             "reload",
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     await simulate_press(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
     assert len(calls) == 0

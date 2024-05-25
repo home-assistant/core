@@ -199,8 +199,6 @@ async def test_disable_service_call(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-        await hass.async_block_till_done()
-
         mocked_hole.disable.assert_called_with(1)
 
 

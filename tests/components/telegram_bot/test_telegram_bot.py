@@ -39,7 +39,6 @@ async def test_send_message(hass: HomeAssistant, webhook_platform) -> None:
         blocking=True,
         context=context,
     )
-    await hass.async_block_till_done()
 
     assert len(events) == 1
     assert events[0].context == context

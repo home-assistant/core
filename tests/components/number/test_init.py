@@ -355,7 +355,6 @@ async def test_set_value(
         {ATTR_VALUE: 60.0, ATTR_ENTITY_ID: "number.test"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("number.test")
     assert state.state == "60.0"
@@ -505,8 +504,6 @@ async def test_temperature_conversion(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
-
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(updated_state_value))
     assert entity0._values["native_value"] == updated_native_value
@@ -519,8 +516,6 @@ async def test_temperature_conversion(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
-
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(state_min_value), rel=0.1)
 
@@ -531,8 +526,6 @@ async def test_temperature_conversion(
         {ATTR_VALUE: state_max_value, ATTR_ENTITY_ID: entity0.entity_id},
         blocking=True,
     )
-
-    await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(state_max_value), rel=0.1)

@@ -123,7 +123,6 @@ async def test_custom_integration_and_validation(
             {ATTR_OPTION: "option invalid", ATTR_ENTITY_ID: "select.select_1"},
             blocking=True,
         )
-    await hass.async_block_till_done()
     assert exc.value.translation_domain == DOMAIN
     assert exc.value.translation_key == "not_valid_option"
 
@@ -138,7 +137,6 @@ async def test_custom_integration_and_validation(
             {ATTR_OPTION: "option invalid", ATTR_ENTITY_ID: "select.select_2"},
             blocking=True,
         )
-    await hass.async_block_till_done()
     assert hass.states.get("select.select_2").state == STATE_UNKNOWN
 
     await hass.services.async_call(
@@ -147,7 +145,6 @@ async def test_custom_integration_and_validation(
         {ATTR_OPTION: "option 3", ATTR_ENTITY_ID: "select.select_2"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert hass.states.get("select.select_2").state == "option 3"
 

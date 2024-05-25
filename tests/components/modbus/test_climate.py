@@ -503,7 +503,6 @@ async def test_service_climate_update(
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == result
 
 
@@ -618,7 +617,6 @@ async def test_service_climate_fan_update(
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).attributes[ATTR_FAN_MODE] == result
 
 
@@ -758,7 +756,6 @@ async def test_service_climate_swing_update(
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).attributes[ATTR_SWING_MODE] == result
 
 

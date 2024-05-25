@@ -168,7 +168,6 @@ async def test_select_addressable_strip_config(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: ic_type_entity_id, ATTR_OPTION: "UCS1618"},
             blocking=True,
         )
-        await hass.async_block_till_done()
     bulb.async_set_device_config.assert_called_once_with(ic_type="UCS1618")
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -210,7 +209,6 @@ async def test_select_mutable_0x25_strip_config(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: operating_mode_entity_id, ATTR_OPTION: "CCT"},
             blocking=True,
         )
-        await hass.async_block_till_done()
     bulb.async_set_device_config.assert_called_once_with(operating_mode="CCT")
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -297,7 +295,6 @@ async def test_select_white_channel_type(hass: HomeAssistant) -> None:
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
     assert (
         config_entry.data[CONF_WHITE_CHANNEL_TYPE]
         == WhiteChannelType.NATURAL.name.lower()

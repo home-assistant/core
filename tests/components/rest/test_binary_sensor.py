@@ -398,7 +398,6 @@ async def test_setup_with_exception(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: ["binary_sensor.foo"]},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.foo")
     assert state.state == STATE_UNAVAILABLE
@@ -438,7 +437,6 @@ async def test_reload(hass: HomeAssistant) -> None:
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.mockreset") is None
     assert hass.states.get("binary_sensor.rollout")

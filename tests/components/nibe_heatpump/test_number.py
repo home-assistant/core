@@ -99,8 +99,6 @@ async def test_set_value(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
-
     # Verify written
     args = mock_connection.write_coil.call_args
     assert args

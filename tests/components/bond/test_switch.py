@@ -63,7 +63,6 @@ async def test_turn_on_switch(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "switch.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_turn_on.assert_called_once_with("test-device-id", Action.turn_on())
 
@@ -81,7 +80,6 @@ async def test_turn_off_switch(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "switch.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_turn_off.assert_called_once_with("test-device-id", Action.turn_off())
 
@@ -99,7 +97,6 @@ async def test_switch_set_power_belief(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "switch.name_1", ATTR_POWER_STATE: False},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_bond_action.assert_called_once_with(
         "test-device-id", Action.set_power_state_belief(False)
@@ -123,7 +120,6 @@ async def test_switch_set_power_belief_api_error(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "switch.name_1", ATTR_POWER_STATE: False},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_update_reports_switch_is_on(hass: HomeAssistant) -> None:

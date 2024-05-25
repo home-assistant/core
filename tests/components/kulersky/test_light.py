@@ -127,7 +127,6 @@ async def test_light_turn_on(hass: HomeAssistant, mock_light) -> None:
         {ATTR_ENTITY_ID: "light.bedroom"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_light.set_color.assert_called_with(255, 255, 255, 255)
 
     mock_light.get_color.return_value = (50, 50, 50, 50)
@@ -137,7 +136,6 @@ async def test_light_turn_on(hass: HomeAssistant, mock_light) -> None:
         {ATTR_ENTITY_ID: "light.bedroom", ATTR_BRIGHTNESS: 50},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_light.set_color.assert_called_with(50, 50, 50, 50)
 
     mock_light.get_color.return_value = (50, 25, 13, 6)
@@ -147,7 +145,6 @@ async def test_light_turn_on(hass: HomeAssistant, mock_light) -> None:
         {ATTR_ENTITY_ID: "light.bedroom", ATTR_RGBW_COLOR: (255, 128, 64, 32)},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_light.set_color.assert_called_with(50, 25, 13, 6)
 
     # RGB color is converted to RGBW by assigning the white component to the white
@@ -159,7 +156,6 @@ async def test_light_turn_on(hass: HomeAssistant, mock_light) -> None:
         {ATTR_ENTITY_ID: "light.bedroom", ATTR_RGB_COLOR: (64, 128, 255)},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_light.set_color.assert_called_with(0, 17, 50, 17)
 
     # HS color is converted to RGBW by assigning the white component to the white
@@ -171,7 +167,6 @@ async def test_light_turn_on(hass: HomeAssistant, mock_light) -> None:
         {ATTR_ENTITY_ID: "light.bedroom", ATTR_HS_COLOR: (50, 50)},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_light.set_color.assert_called_with(50, 41, 0, 50)
 
 
@@ -184,7 +179,6 @@ async def test_light_turn_off(hass: HomeAssistant, mock_light) -> None:
         {ATTR_ENTITY_ID: "light.bedroom"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_light.set_color.assert_called_with(0, 0, 0, 0)
 
 

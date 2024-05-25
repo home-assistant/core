@@ -32,7 +32,6 @@ async def test_notify_entity_service(
         service_data={"entity_id": entity_id, "message": "It is too cold!"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_ecobee.send_message.assert_called_with(THERMOSTAT_ID, "It is too cold!")
 
 
@@ -51,7 +50,6 @@ async def test_legacy_notify_service(
         service_data={"message": "It is too cold!", "target": THERMOSTAT_ID},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_ecobee.send_message.assert_called_with(THERMOSTAT_ID, "It is too cold!")
     mock_ecobee.send_message.reset_mock()
     assert len(issue_registry.issues) == 1

@@ -59,7 +59,6 @@ async def test_selects_hub(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> 
         {ATTR_OPTION: "away", ATTR_ENTITY_ID: protect_mode_select_name},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert len(mqtt_mock.async_publish.mock_calls) == 1
 
     # Simulate response of the device

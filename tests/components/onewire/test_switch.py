@@ -89,7 +89,6 @@ async def test_switch_toggle(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # Test TOGGLE service to on
@@ -100,5 +99,4 @@ async def test_switch_toggle(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ON

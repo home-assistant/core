@@ -295,7 +295,6 @@ async def test_media_player_services(
                 service_data=service_data,
                 blocking=True,
             )
-            await hass.async_block_till_done()
 
         for url in urls:
             call_available = False

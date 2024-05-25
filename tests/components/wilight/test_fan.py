@@ -92,7 +92,6 @@ async def test_on_off_fan_state(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("fan.wl000000000099_2")
     assert state
     assert state.state == STATE_ON
@@ -105,7 +104,6 @@ async def test_on_off_fan_state(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("fan.wl000000000099_2")
     assert state
     assert state.state == STATE_ON
@@ -119,7 +117,6 @@ async def test_on_off_fan_state(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("fan.wl000000000099_2")
     assert state
     assert state.state == STATE_OFF
@@ -139,7 +136,6 @@ async def test_speed_fan_state(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("fan.wl000000000099_2")
     assert state
     assert state.attributes.get(ATTR_PERCENTAGE) == 33
@@ -152,7 +148,6 @@ async def test_speed_fan_state(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("fan.wl000000000099_2")
     assert state
     assert state.attributes.get(ATTR_PERCENTAGE) == 66
@@ -165,7 +160,6 @@ async def test_speed_fan_state(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("fan.wl000000000099_2")
     assert state
     assert state.attributes.get(ATTR_PERCENTAGE) == 100
@@ -185,7 +179,6 @@ async def test_direction_fan_state(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("fan.wl000000000099_2")
     assert state
     assert state.state == STATE_ON
@@ -199,7 +192,6 @@ async def test_direction_fan_state(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("fan.wl000000000099_2")
     assert state
     assert state.attributes.get(ATTR_DIRECTION) == DIRECTION_REVERSE

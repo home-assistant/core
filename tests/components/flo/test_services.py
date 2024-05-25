@@ -46,7 +46,6 @@ async def test_services(
         {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert aioclient_mock.call_count == 9
 
     await hass.services.async_call(
@@ -55,7 +54,6 @@ async def test_services(
         {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert aioclient_mock.call_count == 10
 
     await hass.services.async_call(
@@ -64,7 +62,6 @@ async def test_services(
         {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert aioclient_mock.call_count == 11
 
     await hass.services.async_call(
@@ -77,7 +74,6 @@ async def test_services(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert aioclient_mock.call_count == 12
 
     # test calling with a string value to ensure it is converted to int
@@ -91,7 +87,6 @@ async def test_services(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert aioclient_mock.call_count == 13
 
     # test calling with a non string -> int value and ensure exception is thrown
@@ -106,5 +101,4 @@ async def test_services(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
         assert aioclient_mock.call_count == 13

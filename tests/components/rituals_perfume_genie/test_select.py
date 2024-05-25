@@ -66,7 +66,6 @@ async def test_select_option(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: ["select.genie_room_size"]},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("select.genie_room_size")
     assert state
@@ -97,7 +96,6 @@ async def test_select_invalid_option(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: ["select.genie_room_size"]},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("select.genie_room_size")
     assert state

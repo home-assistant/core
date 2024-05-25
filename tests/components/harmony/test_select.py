@@ -101,4 +101,3 @@ async def _select_option_and_wait(hass, entity, option):
         },
         blocking=True,
     )
-    await hass.async_block_till_done()

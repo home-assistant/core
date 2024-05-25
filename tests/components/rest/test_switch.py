@@ -293,7 +293,6 @@ async def test_turn_on_success(
         {ATTR_ENTITY_ID: "switch.foo"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     last_call = route.calls[-1]
     last_request: httpx.Request = last_call.request
@@ -313,7 +312,6 @@ async def test_turn_on_status_not_ok(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "switch.foo"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     last_call = route.calls[-1]
     last_request: httpx.Request = last_call.request
@@ -333,7 +331,6 @@ async def test_turn_on_timeout(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "switch.foo"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert hass.states.get("switch.foo").state == STATE_UNKNOWN
 
@@ -354,7 +351,6 @@ async def test_turn_off_success(
         {ATTR_ENTITY_ID: "switch.foo"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     last_call = route.calls[-1]
     last_request: httpx.Request = last_call.request
@@ -375,7 +371,6 @@ async def test_turn_off_status_not_ok(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "switch.foo"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     last_call = route.calls[-1]
     last_request: httpx.Request = last_call.request
@@ -396,7 +391,6 @@ async def test_turn_off_timeout(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "switch.foo"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert hass.states.get("switch.foo").state == STATE_UNKNOWN
 

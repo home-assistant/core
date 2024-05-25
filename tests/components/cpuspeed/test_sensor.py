@@ -54,7 +54,6 @@ async def test_sensor(
         {ATTR_ENTITY_ID: "sensor.cpu_speed"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.cpu_speed")
     assert state

@@ -264,7 +264,6 @@ async def test_asleep_or_offline(
     await hass.services.async_call(
         CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: [entity_id]}, blocking=True
     )
-    await hass.async_block_till_done()
     mock_wake_up.assert_called_once()
 
 

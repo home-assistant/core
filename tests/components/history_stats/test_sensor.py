@@ -251,7 +251,6 @@ async def test_reload(recorder_mock: Recorder, hass: HomeAssistant) -> None:
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 2
 
@@ -1145,7 +1144,6 @@ async def test_reload_before_start_event(
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 2
 

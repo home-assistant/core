@@ -37,7 +37,6 @@ async def test_set_net_mode(client, hass: HomeAssistant) -> None:
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     client.return_value.net.set_net_mode.assert_called_once()
     client.return_value.net.set_net_mode.assert_called_with(
         LTEBandEnum.ALL, NetworkBandEnum.ALL, NetworkModeEnum.MODE_4G_3G_AUTO.value

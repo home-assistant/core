@@ -1709,7 +1709,6 @@ async def test_server_logging(hass: HomeAssistant, client) -> None:
     await hass.services.async_call(
         LOGGER_DOMAIN, SERVICE_SET_LEVEL, {"zwave_js_server": "debug"}, blocking=True
     )
-    await hass.async_block_till_done()
     assert logging.getLogger("zwave_js_server").getEffectiveLevel() == logging.DEBUG
 
     # Validate that the server logging was enabled

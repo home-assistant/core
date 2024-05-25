@@ -85,7 +85,6 @@ async def test_select_schedule_thermostats(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_switch_home_schedule.assert_called_once_with(
             schedule_id="591b54a2764ff4d50d8b5795"
         )

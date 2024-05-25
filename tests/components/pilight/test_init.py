@@ -114,7 +114,6 @@ async def test_send_code_no_protocol(hass: HomeAssistant) -> None:
                 service_data={"noprotocol": "test", "value": 42},
                 blocking=True,
             )
-            await hass.async_block_till_done()
         assert "required key not provided @ data['protocol']" in str(excinfo.value)
 
 
@@ -134,7 +133,6 @@ async def test_send_code(mock_pilight_error, hass: HomeAssistant) -> None:
             service_data=service_data,
             blocking=True,
         )
-        await hass.async_block_till_done()
         error_log_call = mock_pilight_error.call_args_list[-1]
         service_data["protocol"] = [service_data["protocol"]]
         assert str(service_data) in str(error_log_call)
@@ -158,7 +156,6 @@ async def test_send_code_fail(mock_pilight_error, hass: HomeAssistant) -> None:
             service_data=service_data,
             blocking=True,
         )
-        await hass.async_block_till_done()
         error_log_call = mock_pilight_error.call_args_list[-1]
         assert "Pilight send failed" in str(error_log_call)
 

@@ -1091,7 +1091,6 @@ async def test_debug_logging(
         {"homeassistant.components.bluetooth": "DEBUG"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     address = "44:44:33:11:23:41"
     start_time_monotonic = 50.0

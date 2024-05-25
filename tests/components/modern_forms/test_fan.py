@@ -69,7 +69,6 @@ async def test_change_state(
             {ATTR_ENTITY_ID: "fan.modernformsfan_fan"},
             blocking=True,
         )
-        await hass.async_block_till_done()
         fan_mock.assert_called_once_with(
             on=False,
         )
@@ -84,7 +83,6 @@ async def test_change_state(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
         fan_mock.assert_called_once_with(on=True, speed=6)
 
 
@@ -103,7 +101,6 @@ async def test_sleep_timer_services(
             {ATTR_ENTITY_ID: "fan.modernformsfan_fan", ATTR_SLEEP_TIME: 1},
             blocking=True,
         )
-        await hass.async_block_till_done()
         fan_mock.assert_called_once_with(sleep=60)
 
     with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
@@ -113,7 +110,6 @@ async def test_sleep_timer_services(
             {ATTR_ENTITY_ID: "fan.modernformsfan_fan"},
             blocking=True,
         )
-        await hass.async_block_till_done()
         fan_mock.assert_called_once_with(sleep=0)
 
 
@@ -135,7 +131,6 @@ async def test_change_direction(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
         fan_mock.assert_called_once_with(
             direction=DIRECTION_REVERSE,
         )
@@ -158,7 +153,6 @@ async def test_set_percentage(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
         fan_mock.assert_called_once_with(
             on=True,
             speed=6,
@@ -175,7 +169,6 @@ async def test_set_percentage(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
         fan_mock.assert_called_once_with(on=False)
 
 
@@ -200,7 +193,6 @@ async def test_fan_error(
             {ATTR_ENTITY_ID: "fan.modernformsfan_fan"},
             blocking=True,
         )
-        await hass.async_block_till_done()
         state = hass.states.get("fan.modernformsfan_fan")
         assert state.state == STATE_ON
         assert "Invalid response from API" in caplog.text
@@ -227,7 +219,6 @@ async def test_fan_connection_error(
             {ATTR_ENTITY_ID: "fan.modernformsfan_fan"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         state = hass.states.get("fan.modernformsfan_fan")
         assert state.state == STATE_UNAVAILABLE

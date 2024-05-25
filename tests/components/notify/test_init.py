@@ -105,7 +105,6 @@ async def test_send_message_service(
         copy.deepcopy(TEST_KWARGS) | {"entity_id": "notify.test"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     entity.send_message_mock_calls.assert_called_once()
     entity.send_message_mock_calls.reset_mock()
@@ -178,7 +177,6 @@ async def test_send_message_service_with_title(
         copy.deepcopy(TEST_KWARGS_TITLE) | {"entity_id": "notify.test"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     entity.send_message_mock_calls.assert_called_once_with(
         TEST_KWARGS_TITLE[notify.ATTR_MESSAGE],

@@ -230,7 +230,6 @@ async def test_light_on_off(hass: HomeAssistant, mock_govee_api: MagicMock) -> N
             {"entity_id": light.entity_id},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         light = hass.states.get("light.H615A")
         assert light is not None
@@ -244,7 +243,6 @@ async def test_light_on_off(hass: HomeAssistant, mock_govee_api: MagicMock) -> N
             {"entity_id": light.entity_id},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         light = hass.states.get("light.H615A")
         assert light is not None
@@ -286,7 +284,6 @@ async def test_light_brightness(hass: HomeAssistant, mock_govee_api: MagicMock) 
             {"entity_id": light.entity_id, "brightness_pct": 50},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         light = hass.states.get("light.H615A")
         assert light is not None
@@ -300,7 +297,6 @@ async def test_light_brightness(hass: HomeAssistant, mock_govee_api: MagicMock) 
             {"entity_id": light.entity_id, "brightness": 255},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         light = hass.states.get("light.H615A")
         assert light is not None
@@ -316,7 +312,6 @@ async def test_light_brightness(hass: HomeAssistant, mock_govee_api: MagicMock) 
             {"entity_id": light.entity_id, "brightness": 255},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         light = hass.states.get("light.H615A")
         assert light is not None
@@ -361,7 +356,6 @@ async def test_light_color(hass: HomeAssistant, mock_govee_api: MagicMock) -> No
             {"entity_id": light.entity_id, "rgb_color": [100, 255, 50]},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         light = hass.states.get("light.H615A")
         assert light is not None
@@ -379,7 +373,6 @@ async def test_light_color(hass: HomeAssistant, mock_govee_api: MagicMock) -> No
             {"entity_id": light.entity_id, "kelvin": 4400},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         light = hass.states.get("light.H615A")
         assert light is not None

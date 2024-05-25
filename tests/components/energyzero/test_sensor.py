@@ -91,7 +91,6 @@ async def test_no_gas_today(hass: HomeAssistant, mock_energyzero: MagicMock) -> 
         {ATTR_ENTITY_ID: ["sensor.energyzero_today_gas_current_hour_price"]},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert (state := hass.states.get("sensor.energyzero_today_gas_current_hour_price"))
     assert state.state == STATE_UNKNOWN

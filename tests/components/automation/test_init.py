@@ -598,7 +598,6 @@ async def test_reload_config_service(
             blocking=True,
         )
         # De-flake ?!
-        await hass.async_block_till_done()
 
     assert len(test_reload_event) == 1
 

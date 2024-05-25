@@ -267,4 +267,3 @@ async def async_yaml_patch_helper(hass, filename):
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()

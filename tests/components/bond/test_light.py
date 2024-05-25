@@ -314,7 +314,6 @@ async def test_light_set_brightness_belief_full(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_bond_action.assert_called_once_with(
         "test-device-id", Action.set_brightness_belief(brightness=100)
@@ -341,7 +340,6 @@ async def test_light_set_brightness_belief_api_error(hass: HomeAssistant) -> Non
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_fp_light_set_brightness_belief_full(hass: HomeAssistant) -> None:
@@ -360,7 +358,6 @@ async def test_fp_light_set_brightness_belief_full(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_bond_action.assert_called_once_with(
         "test-device-id", Action.set_brightness_belief(brightness=100)
@@ -387,7 +384,6 @@ async def test_fp_light_set_brightness_belief_api_error(hass: HomeAssistant) -> 
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_light_set_brightness_belief_brightness_not_supported(
@@ -408,7 +404,6 @@ async def test_light_set_brightness_belief_brightness_not_supported(
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_light_set_brightness_belief_zero(hass: HomeAssistant) -> None:
@@ -427,7 +422,6 @@ async def test_light_set_brightness_belief_zero(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 0},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_bond_action.assert_called_once_with(
         "test-device-id", Action.set_light_state_belief(False)
@@ -450,7 +444,6 @@ async def test_fp_light_set_brightness_belief_zero(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 0},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_bond_action.assert_called_once_with(
         "test-device-id", Action.set_power_state_belief(False)
@@ -473,7 +466,6 @@ async def test_light_set_power_belief(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_bond_action.assert_called_once_with(
         "test-device-id", Action.set_light_state_belief(False)
@@ -500,7 +492,6 @@ async def test_light_set_power_belief_api_error(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_fp_light_set_power_belief(hass: HomeAssistant) -> None:
@@ -519,7 +510,6 @@ async def test_fp_light_set_power_belief(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_bond_action.assert_called_once_with(
         "test-device-id", Action.set_power_state_belief(False)
@@ -546,7 +536,6 @@ async def test_fp_light_set_power_belief_api_error(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_fp_light_set_brightness_belief_brightness_not_supported(
@@ -567,7 +556,6 @@ async def test_fp_light_set_brightness_belief_brightness_not_supported(
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_light_start_increasing_brightness(hass: HomeAssistant) -> None:
@@ -586,7 +574,6 @@ async def test_light_start_increasing_brightness(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "light.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_bond_action.assert_called_once_with(
         "test-device-id", Action(Action.START_INCREASING_BRIGHTNESS)
@@ -608,7 +595,6 @@ async def test_light_start_increasing_brightness_missing_service(
             {ATTR_ENTITY_ID: "light.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_light_start_decreasing_brightness(hass: HomeAssistant) -> None:
@@ -627,7 +613,6 @@ async def test_light_start_decreasing_brightness(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "light.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_bond_action.assert_called_once_with(
         "test-device-id", Action(Action.START_DECREASING_BRIGHTNESS)
@@ -652,7 +637,6 @@ async def test_light_start_decreasing_brightness_missing_service(
             {ATTR_ENTITY_ID: "light.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_light_stop(hass: HomeAssistant) -> None:
@@ -671,7 +655,6 @@ async def test_light_stop(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "light.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_bond_action.assert_called_once_with("test-device-id", Action(Action.STOP))
 
@@ -694,7 +677,6 @@ async def test_light_stop_missing_service(
             {ATTR_ENTITY_ID: "light.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_turn_on_light(hass: HomeAssistant) -> None:
@@ -710,7 +692,6 @@ async def test_turn_on_light(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "light.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_turn_light_on.assert_called_once_with("test-device-id", Action.turn_light_on())
 
@@ -728,7 +709,6 @@ async def test_turn_off_light(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "light.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_turn_light_off.assert_called_once_with(
         "test-device-id", Action.turn_light_off()
@@ -803,7 +783,6 @@ async def test_turn_on_light_with_brightness(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 128},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_set_brightness.assert_called_once_with(
         "test-device-id", Action(Action.SET_BRIGHTNESS, 50)
@@ -826,7 +805,6 @@ async def test_turn_on_up_light(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "light.name_1_up_light"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_turn_on.assert_called_once_with(
         "test-device-id", Action(Action.TURN_UP_LIGHT_ON)
@@ -849,7 +827,6 @@ async def test_turn_off_up_light(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "light.name_1_up_light"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_turn_off.assert_called_once_with(
         "test-device-id", Action(Action.TURN_UP_LIGHT_OFF)
@@ -872,7 +849,6 @@ async def test_turn_on_down_light(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "light.name_1_down_light"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_turn_on.assert_called_once_with(
         "test-device-id", Action(Action.TURN_DOWN_LIGHT_ON)
@@ -895,7 +871,6 @@ async def test_turn_off_down_light(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "light.name_1_down_light"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_turn_off.assert_called_once_with(
         "test-device-id", Action(Action.TURN_DOWN_LIGHT_OFF)
@@ -981,7 +956,6 @@ async def test_turn_on_fireplace_with_brightness(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 128},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_set_flame.assert_called_once_with("test-device-id", Action.set_flame(50))
 
@@ -999,7 +973,6 @@ async def test_turn_on_fireplace_without_brightness(hass: HomeAssistant) -> None
             {ATTR_ENTITY_ID: "light.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_turn_on.assert_called_once_with("test-device-id", Action.turn_on())
 
@@ -1017,7 +990,6 @@ async def test_turn_off_fireplace(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "light.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_turn_off.assert_called_once_with("test-device-id", Action.turn_off())
 

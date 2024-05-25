@@ -79,7 +79,6 @@ async def test_split_foundation_preset(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     mock_asyncsleepiq.beds[BED_ID].foundation.presets[0].set_preset.assert_called_once()
     mock_asyncsleepiq.beds[BED_ID].foundation.presets[0].set_preset.assert_called_with(
@@ -117,7 +116,6 @@ async def test_single_foundation_preset(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     mock_asyncsleepiq_single_foundation.beds[BED_ID].foundation.presets[
         0
@@ -157,7 +155,6 @@ async def test_foot_warmer(hass: HomeAssistant, mock_asyncsleepiq: MagicMock) ->
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     mock_asyncsleepiq.beds[BED_ID].foundation.foot_warmers[
         0
@@ -188,7 +185,6 @@ async def test_foot_warmer(hass: HomeAssistant, mock_asyncsleepiq: MagicMock) ->
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     mock_asyncsleepiq.beds[BED_ID].foundation.foot_warmers[
         1

@@ -38,7 +38,6 @@ async def test_date(hass: HomeAssistant) -> None:
         {ATTR_TIME: time(2, 3, 4), ATTR_ENTITY_ID: "time.test"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("time.test")
     assert state.state == "02:03:04"

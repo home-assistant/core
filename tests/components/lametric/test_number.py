@@ -73,7 +73,6 @@ async def test_brightness(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert len(mock_lametric.display.mock_calls) == 1
     mock_lametric.display.assert_called_once_with(brightness=21)
@@ -121,7 +120,6 @@ async def test_volume(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert len(mock_lametric.audio.mock_calls) == 1
     mock_lametric.audio.assert_called_once_with(volume=42)
@@ -150,7 +148,6 @@ async def test_number_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("number.frenck_s_lametric_volume")
     assert state
@@ -180,7 +177,6 @@ async def test_number_connection_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("number.frenck_s_lametric_volume")
     assert state

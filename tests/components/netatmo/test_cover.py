@@ -59,7 +59,6 @@ async def test_cover_setup_and_services(
             {ATTR_ENTITY_ID: switch_entity},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(
             {
                 "modules": [
@@ -80,7 +79,6 @@ async def test_cover_setup_and_services(
             {ATTR_ENTITY_ID: switch_entity},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(
             {
                 "modules": [
@@ -101,7 +99,6 @@ async def test_cover_setup_and_services(
             {ATTR_ENTITY_ID: switch_entity},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(
             {
                 "modules": [
@@ -122,7 +119,6 @@ async def test_cover_setup_and_services(
             {ATTR_ENTITY_ID: switch_entity, ATTR_POSITION: 50},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(
             {
                 "modules": [

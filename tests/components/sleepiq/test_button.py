@@ -28,7 +28,6 @@ async def test_button_calibrate(hass: HomeAssistant, mock_asyncsleepiq) -> None:
         {ATTR_ENTITY_ID: f"button.sleepnumber_{BED_NAME_LOWER}_calibrate"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     mock_asyncsleepiq.beds[BED_ID].calibrate.assert_called_once()
 
@@ -53,6 +52,5 @@ async def test_button_stop_pump(hass: HomeAssistant, mock_asyncsleepiq) -> None:
         {ATTR_ENTITY_ID: f"button.sleepnumber_{BED_NAME_LOWER}_stop_pump"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     mock_asyncsleepiq.beds[BED_ID].stop_pump.assert_called_once()

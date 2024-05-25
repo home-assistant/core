@@ -107,7 +107,6 @@ async def test_on_off_switch_state(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("switch.wl000000000099_1_watering")
     assert state
     assert state.state == STATE_ON
@@ -120,7 +119,6 @@ async def test_on_off_switch_state(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("switch.wl000000000099_1_watering")
     assert state
     assert state.state == STATE_OFF
@@ -133,7 +131,6 @@ async def test_on_off_switch_state(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("switch.wl000000000099_2_pause")
     assert state
     assert state.state == STATE_ON
@@ -146,7 +143,6 @@ async def test_on_off_switch_state(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("switch.wl000000000099_2_pause")
     assert state
     assert state.state == STATE_OFF
@@ -166,7 +162,6 @@ async def test_switch_services(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("switch.wl000000000099_1_watering")
     assert state
     assert state.attributes.get(ATTR_WATERING_TIME) == 30
@@ -179,7 +174,6 @@ async def test_switch_services(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("switch.wl000000000099_2_pause")
     assert state
     assert state.attributes.get(ATTR_PAUSE_TIME) == 18
@@ -196,7 +190,6 @@ async def test_switch_services(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("switch.wl000000000099_1_watering")
     assert state
     assert state.attributes.get(ATTR_TRIGGER_1) == "12715301"
@@ -213,7 +206,6 @@ async def test_switch_services(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("switch.wl000000000099_1_watering")
     assert state
     assert state.attributes.get(ATTR_TRIGGER_2) == "12707301"
@@ -230,7 +222,6 @@ async def test_switch_services(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("switch.wl000000000099_1_watering")
     assert state
     assert state.attributes.get(ATTR_TRIGGER_3) == "00015301"
@@ -247,7 +238,6 @@ async def test_switch_services(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     state = hass.states.get("switch.wl000000000099_1_watering")
     assert state
     assert state.attributes.get(ATTR_TRIGGER_4) == "00008300"
@@ -261,5 +251,4 @@ async def test_switch_services(
             blocking=True,
         )
 
-        await hass.async_block_till_done()
     assert str(exc_info.value) == "Entity is not a WiLight valve switch"

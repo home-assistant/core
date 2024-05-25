@@ -106,7 +106,6 @@ async def test_if_fires_on_turn_on_request(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == player_setup
     assert calls[0].data["id"] == 0
@@ -152,7 +151,6 @@ async def test_if_fires_on_turn_on_request_legacy(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == player_setup
     assert calls[0].data["id"] == 0

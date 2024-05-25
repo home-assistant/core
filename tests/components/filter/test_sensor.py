@@ -204,7 +204,6 @@ async def test_source_state_none(recorder_mock: Recorder, hass: HomeAssistant) -
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     # Template state gets to None
     state = hass.states.get("sensor.template_test")
@@ -529,7 +528,6 @@ async def test_reload(recorder_mock: Recorder, hass: HomeAssistant) -> None:
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 2
 

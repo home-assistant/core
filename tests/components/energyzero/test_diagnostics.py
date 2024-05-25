@@ -48,7 +48,6 @@ async def test_diagnostics_no_gas_today(
         {ATTR_ENTITY_ID: ["sensor.energyzero_today_gas_current_hour_price"]},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, init_integration)

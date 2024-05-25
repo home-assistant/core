@@ -69,5 +69,4 @@ async def test_generic_entity_update_service(
             {ATTR_ENTITY_ID: TEST_ENTITY_ID},
             blocking=True,
         )
-        await hass.async_block_till_done()
         updater.assert_called_once()

@@ -254,7 +254,6 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
                 {CONF_ENTITY_ID: "timer.test1", **step["data"]},
                 blocking=True,
             )
-            await hass.async_block_till_done()
 
         state = hass.states.get("timer.test1")
         assert state
@@ -283,7 +282,6 @@ async def test_start_service(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
     )
-    await hass.async_block_till_done()
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
@@ -293,7 +291,6 @@ async def test_start_service(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_CANCEL, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
     )
-    await hass.async_block_till_done()
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_IDLE
@@ -307,7 +304,6 @@ async def test_start_service(hass: HomeAssistant) -> None:
             {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 10},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     await hass.services.async_call(
         DOMAIN,
@@ -315,7 +311,6 @@ async def test_start_service(hass: HomeAssistant) -> None:
         {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 15},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
@@ -371,7 +366,6 @@ async def test_start_service(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_CANCEL, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
     )
-    await hass.async_block_till_done()
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_IDLE
@@ -422,7 +416,6 @@ async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("timer.test1")
     assert state
@@ -437,7 +430,6 @@ async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
         {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: -5},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("timer.test1")
     assert state
@@ -548,7 +540,6 @@ async def test_config_reload(
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
-        await hass.async_block_till_done()
 
     assert count_start + 2 == len(hass.states.async_entity_ids())
 
@@ -847,7 +838,6 @@ async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
-        await hass.async_block_till_done()
 
     assert count_start == len(hass.states.async_entity_ids())
 

@@ -42,7 +42,6 @@ async def test_ecobee_repair_flow(
         service_data={"message": "It is too cold!", "target": THERMOSTAT_ID},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_ecobee.send_message.assert_called_with(THERMOSTAT_ID, "It is too cold!")
     mock_ecobee.send_message.reset_mock()
 

@@ -453,7 +453,6 @@ async def test_open_action(hass: HomeAssistant, start_ha, calls) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
     )
-    await hass.async_block_till_done()
 
     assert len(calls) == 1
     assert calls[0].data["action"] == "open_cover"
@@ -492,12 +491,10 @@ async def test_close_stop_action(hass: HomeAssistant, start_ha, calls) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
     )
-    await hass.async_block_till_done()
 
     await hass.services.async_call(
         DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
     )
-    await hass.async_block_till_done()
 
     assert len(calls) == 2
     assert calls[0].data["action"] == "close_cover"
@@ -550,7 +547,6 @@ async def test_set_position(hass: HomeAssistant, start_ha, calls) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
     )
-    await hass.async_block_till_done()
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_position") == 100.0
     assert len(calls) == 1
@@ -561,7 +557,6 @@ async def test_set_position(hass: HomeAssistant, start_ha, calls) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
     )
-    await hass.async_block_till_done()
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_position") == 0.0
     assert len(calls) == 2
@@ -572,7 +567,6 @@ async def test_set_position(hass: HomeAssistant, start_ha, calls) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
     )
-    await hass.async_block_till_done()
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_position") == 100.0
     assert len(calls) == 3
@@ -583,7 +577,6 @@ async def test_set_position(hass: HomeAssistant, start_ha, calls) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
     )
-    await hass.async_block_till_done()
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_position") == 0.0
     assert len(calls) == 4
@@ -597,7 +590,6 @@ async def test_set_position(hass: HomeAssistant, start_ha, calls) -> None:
         {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_POSITION: 25},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_position") == 25.0
     assert len(calls) == 5
@@ -652,7 +644,6 @@ async def test_set_tilt_position(
         attr,
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert len(calls) == 1
     assert calls[-1].data["action"] == "set_cover_tilt_position"
@@ -687,7 +678,6 @@ async def test_set_position_optimistic(hass: HomeAssistant, start_ha, calls) -> 
         {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_POSITION: 42},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_position") == 42.0
 
@@ -700,7 +690,6 @@ async def test_set_position_optimistic(hass: HomeAssistant, start_ha, calls) -> 
         await hass.services.async_call(
             DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
         )
-        await hass.async_block_till_done()
         state = hass.states.get("cover.test_template_cover")
         assert state.state == test_state
 
@@ -736,7 +725,6 @@ async def test_set_tilt_position_optimistic(
         {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_TILT_POSITION: 42},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_tilt_position") == 42.0
 
@@ -749,7 +737,6 @@ async def test_set_tilt_position_optimistic(
         await hass.services.async_call(
             DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
         )
-        await hass.async_block_till_done()
         state = hass.states.get("cover.test_template_cover")
         assert state.attributes.get("current_tilt_position") == pos
 

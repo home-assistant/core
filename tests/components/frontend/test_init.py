@@ -628,7 +628,6 @@ async def test_manifest_json(
     await hass.services.async_call(
         DOMAIN, "set_theme", {"name": "happy"}, blocking=True
     )
-    await hass.async_block_till_done()
 
     resp = await mock_http_client.get("/manifest.json")
     assert resp.status == HTTPStatus.OK

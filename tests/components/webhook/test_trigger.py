@@ -326,7 +326,6 @@ async def test_webhook_reload(
             "reload",
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     await client.post("/api/webhook/post_webhook", data={"hello": "world"})
     await hass.async_block_till_done()

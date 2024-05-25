@@ -255,7 +255,6 @@ async def test_plug_errors_when_turned_on(
         await hass.services.async_call(
             SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
-    await hass.async_block_till_done()
     assert plug.turn_on.call_count == 1
     assert (
         any(

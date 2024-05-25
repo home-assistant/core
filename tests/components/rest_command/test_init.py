@@ -226,7 +226,6 @@ async def test_rest_command_headers(
     ]:
         await hass.services.async_call(DOMAIN, test_service, {}, blocking=True)
 
-    await hass.async_block_till_done()
     assert len(aioclient_mock.mock_calls) == 7
 
     # no_headers_test

@@ -90,7 +90,6 @@ async def test_select_bad_attr(hass: HomeAssistant) -> None:
             {ATTR_OPTION: "up", ATTR_ENTITY_ID: entity_id + "_display_orientation"},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id + "_display_orientation")
     assert state
@@ -113,7 +112,6 @@ async def test_select_option(hass: HomeAssistant) -> None:
         {ATTR_OPTION: "left", ATTR_ENTITY_ID: entity_id + "_display_orientation"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id + "_display_orientation")
     assert state

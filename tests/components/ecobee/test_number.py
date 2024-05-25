@@ -53,7 +53,6 @@ async def test_set_min_time_home(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: VENTILATOR_MIN_HOME_ID, ATTR_VALUE: target_value},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_min_home_time.assert_called_once_with(THERMOSTAT_ID, target_value)
 
 
@@ -71,5 +70,4 @@ async def test_set_min_time_away(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: VENTILATOR_MIN_AWAY_ID, ATTR_VALUE: target_value},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_min_away_time.assert_called_once_with(THERMOSTAT_ID, target_value)

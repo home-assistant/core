@@ -855,7 +855,6 @@ async def test_update_request_with_template(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "binary_sensor.test_binary"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get("binary_sensor.test_binary").state == "off"
 
 
@@ -895,7 +894,6 @@ async def test_update_request_without_template(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "binary_sensor.test_binary"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get("binary_sensor.test_binary").state == "off"
 
 
@@ -977,7 +975,6 @@ async def test_reload(hass: HomeAssistant) -> None:
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
 

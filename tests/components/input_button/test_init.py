@@ -237,8 +237,6 @@ async def test_reload_not_changing_state(hass: HomeAssistant, storage_setup) -> 
             blocking=True,
         )
 
-    await hass.async_block_till_done()
-
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state is not None
     assert len(state_changes) == 1

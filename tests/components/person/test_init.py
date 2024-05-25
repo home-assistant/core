@@ -767,7 +767,6 @@ async def test_reload(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
-        await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids()) == 2
 

@@ -1776,7 +1776,6 @@ async def test_serviceregistry_async_return_response(
         blocking=True,
         return_response=True,
     )
-    await hass.async_block_till_done()
     assert result == {"test-reply": "test-value1"}
 
 
@@ -1835,7 +1834,6 @@ async def test_serviceregistry_return_response_invalid(
             blocking=True,
             return_response=True,
         )
-        await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
@@ -1904,7 +1902,6 @@ async def test_serviceregistry_return_response_optional(
         blocking=True,
         return_response=return_response,
     )
-    await hass.async_block_till_done()
     assert response_data == expected_response_data
 
 
@@ -2133,7 +2130,6 @@ async def test_service_call_event_contains_original_data(hass: HomeAssistant) ->
     await hass.services.async_call(
         "test", "service", {"number": "23"}, blocking=True, context=context
     )
-    await hass.async_block_till_done()
     assert len(events) == 1
     assert events[0].data["service_data"]["number"] == "23"
     assert events[0].context is context

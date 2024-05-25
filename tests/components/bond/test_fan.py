@@ -79,7 +79,6 @@ async def turn_fan_on(
         service_data=service_data,
         blocking=True,
     )
-    await hass.async_block_till_done()
 
 
 async def test_entity_registry(
@@ -336,7 +335,6 @@ async def test_set_speed_off(hass: HomeAssistant) -> None:
             service_data={ATTR_ENTITY_ID: "fan.name_1", ATTR_PERCENTAGE: 0},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     mock_turn_off.assert_called_with("test-device-id", Action.turn_off())
 
@@ -354,7 +352,6 @@ async def test_turn_off_fan(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "fan.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_turn_off.assert_called_once_with("test-device-id", Action.turn_off())
 
@@ -372,7 +369,6 @@ async def test_set_speed_belief_speed_zero(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "fan.name_1", "speed": 0},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_action.assert_called_once_with(
         "test-device-id", Action.set_power_state_belief(False)
@@ -396,7 +392,6 @@ async def test_set_speed_belief_speed_api_error(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "fan.name_1", "speed": 100},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_set_speed_belief_speed_100(hass: HomeAssistant) -> None:
@@ -412,7 +407,6 @@ async def test_set_speed_belief_speed_100(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "fan.name_1", "speed": 100},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_action.assert_any_call("test-device-id", Action.set_power_state_belief(True))
     mock_action.assert_called_with("test-device-id", Action.set_speed_belief(3))
@@ -475,7 +469,6 @@ async def test_set_fan_direction(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "fan.name_1", ATTR_DIRECTION: DIRECTION_FORWARD},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_set_direction.assert_called_once_with(
         "test-device-id", Action.set_direction(Direction.FORWARD)

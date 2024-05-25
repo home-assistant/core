@@ -56,7 +56,6 @@ async def test_reload_service(
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert "Loading config" in caplog.text
 
@@ -75,7 +74,6 @@ async def test_reload_service(
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state_binary_sensor = hass.states.get("binary_sensor.test")
     state_sensor = hass.states.get("sensor.test")

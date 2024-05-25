@@ -362,7 +362,6 @@ async def test_switch_command_state_fail(
         {ATTR_ENTITY_ID: "switch.test"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     entity_state = hass.states.get("switch.test")
     assert entity_state
@@ -702,7 +701,6 @@ async def test_updating_manually(
         {ATTR_ENTITY_ID: ["switch.test"]},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert called
 
 

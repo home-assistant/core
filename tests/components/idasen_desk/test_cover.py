@@ -79,7 +79,6 @@ async def test_cover_services(
         {"entity_id": entity_id, **service_data},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state
     assert state.state == expected_state
@@ -114,4 +113,3 @@ async def test_cover_services_exception(
             {"entity_id": entity_id, **service_data},
             blocking=True,
         )
-    await hass.async_block_till_done()

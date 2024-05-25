@@ -56,7 +56,6 @@ async def test_lock_transition_to_unlocked(
     await hass.services.async_call(
         "lock", SERVICE_UNLOCK, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    await hass.async_block_till_done()
     lock.unlock.assert_called()
 
 
@@ -70,7 +69,6 @@ async def test_lock_transition_to_locked(
     await hass.services.async_call(
         "lock", SERVICE_LOCK, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    await hass.async_block_till_done()
     lock.lock.assert_called()
 
 
@@ -84,5 +82,4 @@ async def test_lock_transition_to_open(
     await hass.services.async_call(
         "lock", SERVICE_OPEN, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    await hass.async_block_till_done()
     lock.open.assert_called()

@@ -359,7 +359,6 @@ async def test_reload_service(hass: HomeAssistant, running) -> None:
         return_value={"script": {object_id: {"sequence": [{"delay": {"seconds": 5}}]}}},
     ):
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
-        await hass.async_block_till_done()
 
     if running != "same":
         state = hass.states.get(ENTITY_ID)
@@ -1579,7 +1578,6 @@ async def test_blueprint_automation(hass: HomeAssistant, calls) -> None:
     await hass.services.async_call(
         "script", "test_script", {"var_from_service": "hello"}, blocking=True
     )
-    await hass.async_block_till_done()
     assert len(calls) == 1
     assert script.blueprint_in_script(hass, "script.test_script") == "test_service.yaml"
     assert script.scripts_with_blueprint(hass, "test_service.yaml") == [

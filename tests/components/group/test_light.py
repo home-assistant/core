@@ -313,7 +313,6 @@ async def test_brightness(hass: HomeAssistant) -> None:
         {"entity_id": [entity1.entity_id], ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 177
@@ -327,7 +326,6 @@ async def test_brightness(hass: HomeAssistant) -> None:
         {"entity_id": [entity0.entity_id]},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 100
@@ -385,7 +383,6 @@ async def test_color_hs(hass: HomeAssistant) -> None:
         {"entity_id": [entity1.entity_id], ATTR_HS_COLOR: (0, 50)},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_COLOR_MODE] == "hs"
     assert state.attributes[ATTR_HS_COLOR] == (0, 75)
@@ -398,7 +395,6 @@ async def test_color_hs(hass: HomeAssistant) -> None:
         {"entity_id": [entity0.entity_id]},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_COLOR_MODE] == "hs"
     assert state.attributes[ATTR_HS_COLOR] == (0, 50)
@@ -457,7 +453,6 @@ async def test_color_rgb(hass: HomeAssistant) -> None:
         {"entity_id": [entity1.entity_id]},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_COLOR_MODE] == "rgb"
     assert state.attributes[ATTR_RGB_COLOR] == (127, 96, 96)
@@ -470,7 +465,6 @@ async def test_color_rgb(hass: HomeAssistant) -> None:
         {"entity_id": [entity0.entity_id]},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_COLOR_MODE] == "rgb"
     assert state.attributes[ATTR_RGB_COLOR] == (255, 128, 64)
@@ -529,7 +523,6 @@ async def test_color_rgbw(hass: HomeAssistant) -> None:
         {"entity_id": [entity1.entity_id]},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_COLOR_MODE] == "rgbw"
     assert state.attributes[ATTR_RGBW_COLOR] == (127, 96, 96, 127)
@@ -542,7 +535,6 @@ async def test_color_rgbw(hass: HomeAssistant) -> None:
         {"entity_id": [entity0.entity_id]},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_COLOR_MODE] == "rgbw"
     assert state.attributes[ATTR_RGBW_COLOR] == (255, 128, 64, 0)
@@ -601,7 +593,6 @@ async def test_color_rgbww(hass: HomeAssistant) -> None:
         {"entity_id": [entity1.entity_id]},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_COLOR_MODE] == "rgbww"
     assert state.attributes[ATTR_RGBWW_COLOR] == (127, 80, 64, 80, 127)
@@ -614,7 +605,6 @@ async def test_color_rgbww(hass: HomeAssistant) -> None:
         {"entity_id": [entity0.entity_id]},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_COLOR_MODE] == "rgbww"
     assert state.attributes[ATTR_RGBWW_COLOR] == (255, 128, 64, 32, 0)
@@ -670,7 +660,6 @@ async def test_white(hass: HomeAssistant) -> None:
         {"entity_id": ["light.light_group"], ATTR_WHITE: 128},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_COLOR_MODE] == "white"
@@ -727,7 +716,6 @@ async def test_color_temp(hass: HomeAssistant) -> None:
         {"entity_id": [entity1.entity_id], ATTR_COLOR_TEMP_KELVIN: 1000},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 501
@@ -740,7 +728,6 @@ async def test_color_temp(hass: HomeAssistant) -> None:
         {"entity_id": [entity0.entity_id]},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 1000
@@ -795,7 +782,6 @@ async def test_emulated_color_temp_group(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "light.light_group", ATTR_COLOR_TEMP: 200},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("light.test1")
     assert state.state == STATE_ON
@@ -865,7 +851,6 @@ async def test_min_max_mireds(hass: HomeAssistant) -> None:
         {"entity_id": [entity0.entity_id]},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 1
     assert state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 1234567890
@@ -876,7 +861,6 @@ async def test_min_max_mireds(hass: HomeAssistant) -> None:
         {"entity_id": [entity0.entity_id]},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 1
     assert state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 1234567890
@@ -1087,7 +1071,6 @@ async def test_color_mode(hass: HomeAssistant) -> None:
         {"entity_id": [entity1.entity_id]},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
 
@@ -1097,7 +1080,6 @@ async def test_color_mode(hass: HomeAssistant) -> None:
         {"entity_id": [entity2.entity_id]},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
 
@@ -1107,7 +1089,6 @@ async def test_color_mode(hass: HomeAssistant) -> None:
         {"entity_id": [entity0.entity_id, entity1.entity_id]},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.HS
 
@@ -1183,7 +1164,6 @@ async def test_color_mode2(hass: HomeAssistant) -> None:
         {"entity_id": ["light.test1"]},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
@@ -1515,7 +1495,6 @@ async def test_reload(hass: HomeAssistant) -> None:
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert hass.states.get("light.light_group") is None
     assert hass.states.get("light.master_hall_lights_g") is not None
@@ -1553,7 +1532,6 @@ async def test_reload_with_platform_not_setup(hass: HomeAssistant) -> None:
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert hass.states.get("light.light_group") is None
     assert hass.states.get("light.master_hall_lights_g") is not None
@@ -1588,7 +1566,6 @@ async def test_reload_with_base_integration_platform_not_setup(
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert hass.states.get("light.light_group") is None
     assert hass.states.get("light.master_hall_lights_g") is not None

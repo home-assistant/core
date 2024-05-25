@@ -938,8 +938,6 @@ async def test_homekit_reset_accessories(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
 
         assert mock_run_accessory.called
         homekit.status = STATUS_READY
@@ -1105,7 +1103,6 @@ async def test_homekit_unpair(
             {ATTR_DEVICE_ID: hk_bridge_dev.id},
             blocking=True,
         )
-        await hass.async_block_till_done()
         assert state.paired_clients == {}
         homekit.status = STATUS_STOPPED
 
@@ -1147,7 +1144,6 @@ async def test_homekit_unpair_missing_device_id(
                 {ATTR_DEVICE_ID: "notvalid"},
                 blocking=True,
             )
-        await hass.async_block_till_done()
         state.paired_clients = {client_1.decode("utf-8"): "any"}
         homekit.status = STATUS_STOPPED
 
@@ -1200,7 +1196,6 @@ async def test_homekit_unpair_not_homekit_device(
                 {ATTR_DEVICE_ID: device_entry.id},
                 blocking=True,
             )
-        await hass.async_block_till_done()
         state.paired_clients = {client_1.decode("utf-8"): "any"}
         homekit.status = STATUS_STOPPED
 
@@ -1243,7 +1238,6 @@ async def test_homekit_reset_accessories_not_supported(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         assert hk_driver_async_update_advertisement.call_count == 1
         assert not mock_add_accessory.called
@@ -1288,7 +1282,6 @@ async def test_homekit_reset_accessories_state_missing(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         assert hk_driver_config_changed.call_count == 0
         assert not mock_add_accessory.called
@@ -1335,7 +1328,6 @@ async def test_homekit_reset_accessories_not_bridged(
             {ATTR_ENTITY_ID: "light.not_bridged"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         assert hk_driver_async_update_advertisement.call_count == 0
         assert not mock_add_accessory.called
@@ -1374,7 +1366,6 @@ async def test_homekit_reset_single_accessory(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        await hass.async_block_till_done()
         assert mock_run.called
         assert hk_driver_async_update_advertisement.call_count == 1
         homekit.status = STATUS_READY
@@ -1416,7 +1407,6 @@ async def test_homekit_reset_single_accessory_unsupported(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         assert hk_driver_config_changed.call_count == 0
         homekit.status = STATUS_STOPPED
@@ -1456,7 +1446,6 @@ async def test_homekit_reset_single_accessory_state_missing(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         assert hk_driver_config_changed.call_count == 0
         homekit.status = STATUS_STOPPED
@@ -1496,7 +1485,6 @@ async def test_homekit_reset_single_accessory_no_match(
             {ATTR_ENTITY_ID: "light.no_match"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         assert hk_driver_config_changed.call_count == 0
         homekit.status = STATUS_STOPPED
@@ -2148,7 +2136,6 @@ async def test_reload(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     mock_homekit2.assert_any_call(
         hass,

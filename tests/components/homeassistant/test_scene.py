@@ -28,7 +28,6 @@ async def test_reload_config_service(hass: HomeAssistant) -> None:
         return_value={"scene": {"name": "Hallo", "entities": {"light.kitchen": "on"}}},
     ):
         await hass.services.async_call("scene", "reload", blocking=True)
-        await hass.async_block_till_done()
 
     assert hass.states.get("scene.hallo") is not None
     assert len(test_reloaded_event) == 1
@@ -39,7 +38,6 @@ async def test_reload_config_service(hass: HomeAssistant) -> None:
         return_value={"scene": {"name": "Bye", "entities": {"light.kitchen": "on"}}},
     ):
         await hass.services.async_call("scene", "reload", blocking=True)
-        await hass.async_block_till_done()
 
     assert len(test_reloaded_event) == 2
     assert hass.states.get("scene.hallo") is None
@@ -107,7 +105,6 @@ async def test_create_service(
         {"scene_id": "hallo", "entities": {}, "snapshot_entities": []},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert "Empty scenes are not allowed" in caplog.text
     assert hass.states.get("scene.hallo") is None
 
@@ -120,7 +117,6 @@ async def test_create_service(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     scene = hass.states.get("scene.hallo")
     assert scene is not None
@@ -138,7 +134,6 @@ async def test_create_service(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     scene = hass.states.get("scene.hallo")
     assert scene is not None
@@ -156,7 +151,6 @@ async def test_create_service(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert "The scene scene.hallo_2 already exists" in caplog.text
     scene = hass.states.get("scene.hallo_2")
@@ -187,7 +181,6 @@ async def test_delete_service(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
@@ -198,7 +191,6 @@ async def test_delete_service(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
@@ -209,7 +201,6 @@ async def test_delete_service(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
     assert hass.states.get("scene.hallo_2") is not None
 
     assert hass.states.get("scene.hallo") is not None
@@ -222,7 +213,6 @@ async def test_delete_service(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert hass.states.get("state.hallo") is None
 
@@ -242,7 +232,6 @@ async def test_snapshot_service(
         {"scene_id": "hallo", "snapshot_entities": ["light.my_light"]},
         blocking=True,
     )
-    await hass.async_block_till_done()
     scene = hass.states.get("scene.hallo")
     assert scene is not None
     assert scene.attributes.get("entity_id") == ["light.my_light"]
@@ -252,7 +241,6 @@ async def test_snapshot_service(
     await hass.services.async_call(
         "scene", "turn_on", {"entity_id": "scene.hallo"}, blocking=True
     )
-    await hass.async_block_till_done()
     assert len(turn_on_calls) == 1
     assert turn_on_calls[0].data.get("entity_id") == "light.my_light"
     assert turn_on_calls[0].data.get("hs_color") == (345, 75)
@@ -263,7 +251,6 @@ async def test_snapshot_service(
         {"scene_id": "hallo_2", "snapshot_entities": ["light.not_existent"]},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get("scene.hallo_2") is None
     assert (
         "Entity light.not_existent does not exist and therefore cannot be snapshotted"
@@ -280,7 +267,6 @@ async def test_snapshot_service(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     scene = hass.states.get("scene.hallo_3")
     assert scene is not None
     assert "light.my_light" in scene.attributes.get("entity_id")
@@ -303,7 +289,6 @@ async def test_ensure_no_intersection(hass: HomeAssistant) -> None:
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
     assert "entities and snapshot_entities must not overlap" in str(ex.value)
     assert hass.states.get("scene.hallo") is None
 

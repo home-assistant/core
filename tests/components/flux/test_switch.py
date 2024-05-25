@@ -1046,7 +1046,6 @@ async def test_flux_with_multiple_lights(
     await hass.services.async_call(
         light.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ent3.entity_id}, blocking=True
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(ent1.entity_id)
     assert state.state == STATE_ON

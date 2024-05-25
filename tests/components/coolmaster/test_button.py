@@ -25,6 +25,5 @@ async def test_button(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.l1_101_clean_filter").state == "off"

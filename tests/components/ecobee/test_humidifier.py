@@ -69,7 +69,6 @@ async def test_turn_on(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: DEVICE_ID},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_turn_on.assert_called_once_with(0, "manual")
 
 
@@ -84,7 +83,6 @@ async def test_turn_off(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: DEVICE_ID},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_turn_off.assert_called_once_with(0, STATE_OFF)
 
 
@@ -99,7 +97,6 @@ async def test_set_mode(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: DEVICE_ID, ATTR_MODE: MODE_AUTO},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_mode.assert_called_once_with(0, MODE_AUTO)
 
         await hass.services.async_call(
@@ -108,7 +105,6 @@ async def test_set_mode(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: DEVICE_ID, ATTR_MODE: MODE_MANUAL},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_mode.assert_called_with(0, MODE_MANUAL)
 
         with pytest.raises(ValueError):
@@ -131,5 +127,4 @@ async def test_set_humidity(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: DEVICE_ID, ATTR_HUMIDITY: 60},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_humidity.assert_called_once_with(0, 60)

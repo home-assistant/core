@@ -113,7 +113,6 @@ async def test_arm(
             {ATTR_ENTITY_ID: PROSEGUR_ALARM_ENTITY},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         state = hass.states.get(PROSEGUR_ALARM_ENTITY)
         assert state.state == alarm_state

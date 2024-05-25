@@ -734,7 +734,6 @@ async def test_debug_logging(
         {"homeassistant.components.esphome": "DEBUG"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_client.set_debug.assert_has_calls([call(True)])
 
     mock_client.reset_mock()
@@ -744,7 +743,6 @@ async def test_debug_logging(
         {"homeassistant.components.esphome": "WARNING"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     mock_client.set_debug.assert_has_calls([call(False)])
 
 

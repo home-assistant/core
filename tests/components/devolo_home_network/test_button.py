@@ -89,7 +89,6 @@ async def test_button(
         {ATTR_ENTITY_ID: state_key},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
     assert state.state == "2023-01-13T12:00:00+00:00"
@@ -106,7 +105,6 @@ async def test_button(
             {ATTR_ENTITY_ID: state_key},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     await hass.config_entries.async_unload(entry.entry_id)
 
@@ -130,7 +128,6 @@ async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None
             blocking=True,
         )
 
-    await hass.async_block_till_done()
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
 

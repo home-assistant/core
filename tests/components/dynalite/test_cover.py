@@ -101,7 +101,6 @@ async def test_cover_without_tilt(hass: HomeAssistant, mock_device) -> None:
         await hass.services.async_call(
             "cover", "open_cover_tilt", {"entity_id": "cover.name"}, blocking=True
         )
-    await hass.async_block_till_done()
     mock_device.async_open_cover_tilt.assert_not_called()
 
 

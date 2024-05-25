@@ -285,7 +285,6 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     assert hass.states.get("media_player.bedroom").state == STATE_OFF
     assert hass.states.get("media_player.kitchen").state == STATE_OFF
     assert hass.states.get("media_player.living_room").state == STATE_OFF
@@ -296,7 +295,6 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
         {ATTR_ENTITY_ID: "media_player.media_group"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get("media_player.bedroom").state == STATE_PLAYING
     assert hass.states.get("media_player.kitchen").state == STATE_PLAYING
     assert hass.states.get("media_player.living_room").state == STATE_PLAYING
@@ -307,7 +305,6 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
         {ATTR_ENTITY_ID: "media_player.media_group"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get("media_player.bedroom").state == STATE_PAUSED
     assert hass.states.get("media_player.kitchen").state == STATE_PAUSED
     assert hass.states.get("media_player.living_room").state == STATE_PAUSED
@@ -318,7 +315,6 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
         {ATTR_ENTITY_ID: "media_player.media_group"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get("media_player.bedroom").state == STATE_PLAYING
     assert hass.states.get("media_player.kitchen").state == STATE_PLAYING
     assert hass.states.get("media_player.living_room").state == STATE_PLAYING
@@ -331,7 +327,6 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
         {ATTR_ENTITY_ID: "media_player.media_group"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get("media_player.kitchen").attributes[ATTR_MEDIA_TRACK] == 2
 
     await hass.services.async_call(
@@ -340,7 +335,6 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
         {ATTR_ENTITY_ID: "media_player.media_group"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get("media_player.kitchen").attributes[ATTR_MEDIA_TRACK] == 1
 
     await hass.services.async_call(
@@ -397,7 +391,6 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert (
         hass.states.get("media_player.bedroom").attributes[ATTR_MEDIA_VOLUME_LEVEL]
         == 0.5
@@ -417,7 +410,6 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
         {ATTR_ENTITY_ID: "media_player.media_group"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert (
         hass.states.get("media_player.bedroom").attributes[ATTR_MEDIA_VOLUME_LEVEL]
         == 0.6
@@ -437,7 +429,6 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
         {ATTR_ENTITY_ID: "media_player.media_group"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert (
         hass.states.get("media_player.bedroom").attributes[ATTR_MEDIA_VOLUME_LEVEL]
         == 0.5
@@ -469,7 +460,6 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
         {ATTR_ENTITY_ID: "media_player.media_group", ATTR_MEDIA_VOLUME_MUTED: True},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert (
         hass.states.get("media_player.bedroom").attributes[ATTR_MEDIA_VOLUME_MUTED]
         is True
@@ -499,7 +489,6 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
         {ATTR_ENTITY_ID: "media_player.media_group", ATTR_MEDIA_SHUFFLE: True},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert (
         hass.states.get("media_player.bedroom").attributes[ATTR_MEDIA_SHUFFLE] is True
     )
@@ -520,7 +509,6 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
         {ATTR_ENTITY_ID: "media_player.media_group"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     # SERVICE_CLEAR_PLAYLIST is not supported by bedroom and living_room players
     assert hass.states.get("media_player.kitchen").state == STATE_OFF
 
@@ -530,7 +518,6 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
         {ATTR_ENTITY_ID: "media_player.kitchen"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get("media_player.bedroom").state == STATE_PLAYING
     assert hass.states.get("media_player.kitchen").state == STATE_PLAYING
     assert hass.states.get("media_player.living_room").state == STATE_PLAYING
@@ -540,7 +527,6 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
         {ATTR_ENTITY_ID: "media_player.media_group"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get("media_player.bedroom").state == STATE_OFF
     assert hass.states.get("media_player.kitchen").state == STATE_OFF
     assert hass.states.get("media_player.living_room").state == STATE_OFF
@@ -593,7 +579,6 @@ async def test_nested_group(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    await hass.async_block_till_done()
     assert hass.states.get("media_player.bedroom").state == STATE_OFF
     assert hass.states.get("media_player.kitchen").state == STATE_OFF
     assert hass.states.get("media_player.group_1").state == STATE_OFF

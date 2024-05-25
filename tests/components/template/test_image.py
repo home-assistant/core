@@ -371,7 +371,6 @@ async def test_templates_with_entities(
         {CONF_ENTITY_ID: _URL_INPUT_TEXT, INPUT_TEXT_ATTR_VALUE: "http://example2.com"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     await _assert_state(
         hass,
         hass_client,
