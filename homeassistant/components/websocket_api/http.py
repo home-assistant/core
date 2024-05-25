@@ -24,7 +24,6 @@ from .auth import AUTH_REQUIRED_MESSAGE, AuthPhase
 from .const import (
     DATA_CONNECTIONS,
     MAX_PENDING_MSG,
-    MSG_BACKLOG_SIZE_TO_DELAY,
     PENDING_MSG_PEAK,
     PENDING_MSG_PEAK_TIME,
     SIGNAL_WEBSOCKET_CONNECTED,
@@ -80,7 +79,7 @@ class WebSocketHandler:
         "_connection",
         "_message_queue",
         "_ready_future",
-        "_release_ready_pending",
+        "_release_ready_queue_size",
     )
 
     def __init__(self, hass: HomeAssistant, request: web.Request) -> None:
@@ -103,7 +102,7 @@ class WebSocketHandler:
         # an asyncio.Queue.
         self._message_queue: deque[bytes | None] = deque()
         self._ready_future: asyncio.Future[None] | None = None
-        self._release_ready_pending: bool = False
+        self._release_ready_queue_size: int = 0
 
     def __repr__(self) -> str:
         """Return the representation."""
@@ -224,17 +223,10 @@ class WebSocketHandler:
             return
 
         message_queue.append(message)
-        if not self._release_ready_pending:
+        if self._ready_future and self._release_ready_queue_size == 0:
             # Try to coalesce more messages to reduce the number of writes
-            self._release_ready_pending = True
-            if queue_size_before_add >= MSG_BACKLOG_SIZE_TO_DELAY:
-                # If the queue is getting large, we want to give the event
-                # loop a chance catch up on processing other tasks before
-                # so we don't flood the event loop with writes. We want to
-                # coalesce more messages before releasing the ready future.
-                self._loop.call_later(0.1, self._release_ready_future)
-            else:
-                self._loop.call_soon(self._release_ready_future)
+            self._release_ready_queue_size = queue_size_before_add + 1
+            self._loop.call_soon(self._release_ready_future_or_reschedule)
 
         peak_checker_active = self._peak_checker_unsub is not None
 
@@ -249,19 +241,29 @@ class WebSocketHandler:
             )
 
     @callback
-    def _release_ready_future(self) -> None:
-        """Release the ready future.
+    def _release_ready_future_or_reschedule(self) -> None:
+        """Release the ready future or reschedule.
 
-        We do this from a call_soon to try to coalesce
-        more messages to reduce the number of writes.
+        We will release the ready future if the queue did not grow since the
+        last time we tried to release the ready future.
+
+        If we reach the peak, we will release the ready future immediately.
         """
         if (
-            self._message_queue
-            and (ready_future := self._ready_future)
-            and not ready_future.done()
+            not (ready_future := self._ready_future)
+            or ready_future.done()
+            or not (queue_size := len(self._message_queue))
         ):
-            ready_future.set_result(None)
-        self._release_ready_pending = False
+            return
+        # If we are below the peak and there are new messages in the queue
+        # since the last time we tried to release the ready future, we try again
+        # later so we can coalesce more messages.
+        if PENDING_MSG_PEAK > queue_size > self._release_ready_queue_size:
+            self._release_ready_queue_size = queue_size
+            self._loop.call_soon(self._release_ready_future_or_reschedule)
+            return
+        ready_future.set_result(None)
+        self._release_ready_queue_size = 0
 
     @callback
     def _check_write_peak(self, _utc_time: dt.datetime) -> None:
