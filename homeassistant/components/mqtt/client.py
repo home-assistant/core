@@ -444,10 +444,10 @@ class MQTT:
         self.config_entry = config_entry
         self.conf = conf
 
-        self._simple_subscriptions: defaultdict[str, list[Subscription]] = defaultdict(
-            list
+        self._simple_subscriptions: defaultdict[str, set[Subscription]] = defaultdict(
+            set
         )
-        self._wildcard_subscriptions: list[Subscription] = []
+        self._wildcard_subscriptions: set[Subscription] = set()
         # _retained_topics prevents a Subscription from receiving a
         # retained message more than once per topic. This prevents flooding
         # already active subscribers when new subscribers subscribe to a topic
@@ -467,7 +467,7 @@ class MQTT:
         self._should_reconnect: bool = True
         self._available_future: asyncio.Future[bool] | None = None
 
-        self._max_qos: dict[str, int] = {}  # topic, max qos
+        self._max_qos: defaultdict[str, int] = defaultdict(int)  # topic, max qos
         self._pending_subscriptions: dict[str, int] = {}  # topic, qos
         self._unsubscribe_debouncer = EnsureJobAfterCooldown(
             UNSUBSCRIBE_COOLDOWN, self._async_perform_unsubscribes
@@ -804,9 +804,9 @@ class MQTT:
         The caller is responsible clearing the cache of _matching_subscriptions.
         """
         if subscription.is_simple_match:
-            self._simple_subscriptions[subscription.topic].append(subscription)
+            self._simple_subscriptions[subscription.topic].add(subscription)
         else:
-            self._wildcard_subscriptions.append(subscription)
+            self._wildcard_subscriptions.add(subscription)
 
     @callback
     def _async_untrack_subscription(self, subscription: Subscription) -> None:
@@ -835,8 +835,8 @@ class MQTT:
         """Queue requested subscriptions."""
         for subscription in subscriptions:
             topic, qos = subscription
-            max_qos = max(qos, self._max_qos.setdefault(topic, qos))
-            self._max_qos[topic] = max_qos
+            if (max_qos := self._max_qos[topic]) < qos:
+                self._max_qos[topic] = (max_qos := qos)
             self._pending_subscriptions[topic] = max_qos
             # Cancel any pending unsubscribe since we are subscribing now
             if topic in self._pending_unsubscribes:
@@ -1270,9 +1270,7 @@ class MQTT:
 
         last_discovery = self._mqtt_data.last_discovery
         last_subscribe = now if self._pending_subscriptions else self._last_subscribe
-        wait_until = max(
-            last_discovery + DISCOVERY_COOLDOWN, last_subscribe + DISCOVERY_COOLDOWN
-        )
+        wait_until = max(last_discovery, last_subscribe) + DISCOVERY_COOLDOWN
         while now < wait_until:
             await asyncio.sleep(wait_until - now)
             now = time.monotonic()
@@ -1280,9 +1278,7 @@ class MQTT:
             last_subscribe = (
                 now if self._pending_subscriptions else self._last_subscribe
             )
-            wait_until = max(
-                last_discovery + DISCOVERY_COOLDOWN, last_subscribe + DISCOVERY_COOLDOWN
-            )
+            wait_until = max(last_discovery, last_subscribe) + DISCOVERY_COOLDOWN
 
 
 def _matcher_for_topic(subscription: str) -> Callable[[str], bool]:

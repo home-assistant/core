@@ -63,7 +63,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 RECOMMENDED_OPTIONS = {
     CONF_RECOMMENDED: True,
     CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-    CONF_PROMPT: "",
+    CONF_PROMPT: DEFAULT_PROMPT,
 }
 
 
@@ -181,8 +181,7 @@ async def google_generative_ai_config_option_schema(
     schema = {
         vol.Optional(
             CONF_PROMPT,
-            description={"suggested_value": options.get(CONF_PROMPT)},
-            default=DEFAULT_PROMPT,
+            description={"suggested_value": options.get(CONF_PROMPT, DEFAULT_PROMPT)},
         ): TemplateSelector(),
         vol.Optional(
             CONF_LLM_HASS_API,

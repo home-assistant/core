@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 import logging
-from typing import Any
 
 from aioswitcher.api.remotes import SwitcherBreezeRemoteManager
 from aioswitcher.bridge import SwitcherBase, SwitcherBridge
@@ -13,27 +11,9 @@ from aioswitcher.bridge import SwitcherBase, SwitcherBridge
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import singleton
 
-from .const import DATA_BRIDGE, DISCOVERY_TIME_SEC, DOMAIN
+from .const import DISCOVERY_TIME_SEC
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_start_bridge(
-    hass: HomeAssistant, on_device_callback: Callable[[SwitcherBase], Any]
-) -> None:
-    """Start switcher UDP bridge."""
-    bridge = hass.data[DOMAIN][DATA_BRIDGE] = SwitcherBridge(on_device_callback)
-    _LOGGER.debug("Starting Switcher bridge")
-    await bridge.start()
-
-
-async def async_stop_bridge(hass: HomeAssistant) -> None:
-    """Stop switcher UDP bridge."""
-    bridge: SwitcherBridge = hass.data[DOMAIN].get(DATA_BRIDGE)
-    if bridge is not None:
-        _LOGGER.debug("Stopping Switcher bridge")
-        await bridge.stop()
-        hass.data[DOMAIN].pop(DATA_BRIDGE)
 
 
 async def async_has_devices(hass: HomeAssistant) -> bool:

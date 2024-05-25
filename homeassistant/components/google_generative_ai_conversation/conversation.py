@@ -205,15 +205,6 @@ class GoogleGenerativeAIConversationEntity(
             messages = [{}, {}]
 
         try:
-            prompt = template.Template(
-                self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT), self.hass
-            ).async_render(
-                {
-                    "ha_name": self.hass.config.location_name,
-                },
-                parse_result=False,
-            )
-
             if llm_api:
                 empty_tool_input = llm.ToolInput(
                     tool_name="",
@@ -226,9 +217,24 @@ class GoogleGenerativeAIConversationEntity(
                     device_id=user_input.device_id,
                 )
 
-                prompt = (
-                    await llm_api.async_get_api_prompt(empty_tool_input) + "\n" + prompt
+                api_prompt = await llm_api.async_get_api_prompt(empty_tool_input)
+
+            else:
+                api_prompt = llm.PROMPT_NO_API_CONFIGURED
+
+            prompt = "\n".join(
+                (
+                    template.Template(
+                        self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT), self.hass
+                    ).async_render(
+                        {
+                            "ha_name": self.hass.config.location_name,
+                        },
+                        parse_result=False,
+                    ),
+                    api_prompt,
                 )
+            )
 
         except TemplateError as err:
             LOGGER.error("Error rendering prompt: %s", err)
@@ -257,10 +263,20 @@ class GoogleGenerativeAIConversationEntity(
                 genai_types.BlockedPromptException,
                 genai_types.StopCandidateException,
             ) as err:
-                LOGGER.error("Error sending message: %s", err)
+                LOGGER.error("Error sending message: %s %s", type(err), err)
+
+                if isinstance(
+                    err, genai_types.StopCandidateException
+                ) and "finish_reason: SAFETY\n" in str(err):
+                    error = "The message got blocked by your safety settings"
+                else:
+                    error = (
+                        f"Sorry, I had a problem talking to Google Generative AI: {err}"
+                    )
+
                 intent_response.async_set_error(
                     intent.IntentResponseErrorCode.UNKNOWN,
-                    f"Sorry, I had a problem talking to Google Generative AI: {err}",
+                    error,
                 )
                 return conversation.ConversationResult(
                     response=intent_response, conversation_id=conversation_id
