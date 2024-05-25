@@ -1051,6 +1051,27 @@ async def test_subscribe_topic_not_initialize(
         await mqtt.async_subscribe(hass, "test-topic", record_calls)
 
 
+async def test_subscribe_mqtt_config_entry_disabled(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
+    """Test the subscription of a topic when MQTT config entry is disabled."""
+    mqtt_mock.connected = True
+
+    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    assert mqtt_config_entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
+    assert mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
+
+    await hass.config_entries.async_set_disabled_by(
+        mqtt_config_entry.entry_id, ConfigEntryDisabler.USER
+    )
+    mqtt_mock.connected = False
+
+    with pytest.raises(HomeAssistantError, match=r".*MQTT is not enabled"):
+        await mqtt.async_subscribe(hass, "test-topic", record_calls)
+
+
 @patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
 @patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.2)
 async def test_subscribe_and_resubscribe(
@@ -3824,7 +3845,7 @@ async def test_unload_config_entry(
 async def test_publish_or_subscribe_without_valid_config_entry(
     hass: HomeAssistant, record_calls: MessageCallbackType
 ) -> None:
-    """Test internal publish function with bas use cases."""
+    """Test internal publish function with bad use cases."""
     with pytest.raises(HomeAssistantError):
         await mqtt.async_publish(
             hass, "some-topic", "test-payload", qos=0, retain=False, encoding=None
