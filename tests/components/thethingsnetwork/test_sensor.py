@@ -20,10 +20,11 @@ async def test_sensor(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     mock_ttnclient,
+    mock_config_entry,
 ) -> None:
     """Test a working configurations."""
 
-    await init_integration(hass)
+    await init_integration(hass, mock_config_entry)
 
     # Check devices
     assert (

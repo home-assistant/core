@@ -7,9 +7,17 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_APP_ID, CONF_HOSTNAME, DOMAIN, PLATFORMS, TTN_API_HOSTNAME
+from .const import (
+    CONF_API_KEY,
+    CONF_APP_ID,
+    CONF_HOSTNAME,
+    DOMAIN,
+    PLATFORMS,
+    TTN_API_HOSTNAME,
+)
 from .coordinator import TTNCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,8 +25,10 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
-            {},
-            extra=vol.ALLOW_EXTRA,
+            {
+                vol.Required(CONF_APP_ID): cv.string,
+                vol.Required(CONF_API_KEY): cv.string,
+            }
         )
     },
     extra=vol.ALLOW_EXTRA,

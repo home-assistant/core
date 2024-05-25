@@ -62,22 +62,26 @@ DATA_UPDATE = {
     },
 }
 
-CONFIG_ENTRY = MockConfigEntry(
-    domain=DOMAIN,
-    unique_id=APP_ID,
-    title=APP_ID,
-    data={
-        CONF_APP_ID: APP_ID,
-        CONF_HOSTNAME: TTN_API_HOSTNAME,
-        CONF_API_KEY: API_KEY,
-    },
-)
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Mock a config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=APP_ID,
+        title=APP_ID,
+        data={
+            CONF_APP_ID: APP_ID,
+            CONF_HOSTNAME: TTN_API_HOSTNAME,
+            CONF_API_KEY: API_KEY,
+        },
+    )
 
 
-async def init_integration(hass: HomeAssistant):
+async def init_integration(hass: HomeAssistant, config_entry):
     """Mock TTNClient."""
-    CONFIG_ENTRY.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(CONFIG_ENTRY.entry_id)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
 
