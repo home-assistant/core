@@ -99,7 +99,6 @@ _ENVIRONMENT_STRICT: HassKey[TemplateEnvironment] = HassKey(
 )
 _HASS_LOADER = "template.hass_loader"
 
-_RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
 _IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
 
@@ -261,7 +260,9 @@ def is_complex(value: Any) -> bool:
 
 def is_template_string(maybe_template: str) -> bool:
     """Check if the input is a Jinja2 template."""
-    return _RE_JINJA_DELIMITERS.search(maybe_template) is not None
+    return "{" in maybe_template and (
+        "{%" in maybe_template or "{{" in maybe_template or "{#" in maybe_template
+    )
 
 
 class ResultWrapper:
