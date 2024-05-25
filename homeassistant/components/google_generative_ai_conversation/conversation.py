@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, Literal
 
 import google.ai.generativelanguage as glm
-from google.api_core.exceptions import ClientError
+from google.api_core.exceptions import GoogleAPICallError
 import google.generativeai as genai
 import google.generativeai.types as genai_types
 import voluptuous as vol
@@ -258,7 +258,7 @@ class GoogleGenerativeAIConversationEntity(
             try:
                 chat_response = await chat.send_message_async(chat_request)
             except (
-                ClientError,
+                GoogleAPICallError,
                 ValueError,
                 genai_types.BlockedPromptException,
                 genai_types.StopCandidateException,
