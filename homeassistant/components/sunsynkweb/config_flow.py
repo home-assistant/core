@@ -49,23 +49,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data[CONF_USERNAME], data[CONF_PASSWORD]
-    # )
-
     hub = AuthChecker(hass)
     try:
         if not await hub.authenticate(data[CONF_USERNAME], data[CONF_PASSWORD]):
             raise InvalidAuth
     except aiohttp.ClientConnectionError as err:
         raise CannotConnect from err
-
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
 
     # Return info that you want to store in the config entry.
     return {"title": "Sunsynk Web status"}
