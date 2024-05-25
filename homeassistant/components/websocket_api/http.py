@@ -24,6 +24,7 @@ from .auth import AUTH_REQUIRED_MESSAGE, AuthPhase
 from .const import (
     DATA_CONNECTIONS,
     MAX_PENDING_MSG,
+    MSG_BACKLOG_SIZE_TO_DELAY,
     PENDING_MSG_PEAK,
     PENDING_MSG_PEAK_TIME,
     SIGNAL_WEBSOCKET_CONNECTED,
@@ -67,6 +68,7 @@ class WebSocketHandler:
 
     __slots__ = (
         "_hass",
+        "_loop",
         "_request",
         "_wsock",
         "_handle_task",
@@ -78,12 +80,13 @@ class WebSocketHandler:
         "_connection",
         "_message_queue",
         "_ready_future",
-        "_ready_call_soon_pending",
+        "_release_ready_pending",
     )
 
     def __init__(self, hass: HomeAssistant, request: web.Request) -> None:
         """Initialize an active connection."""
         self._hass = hass
+        self._loop = hass.loop
         self._request: web.Request = request
         self._wsock = web.WebSocketResponse(heartbeat=55)
         self._handle_task: asyncio.Task | None = None
@@ -100,7 +103,7 @@ class WebSocketHandler:
         # an asyncio.Queue.
         self._message_queue: deque[bytes | None] = deque()
         self._ready_future: asyncio.Future[None] | None = None
-        self._ready_call_soon_pending: bool = False
+        self._release_ready_pending: bool = False
 
     def __repr__(self) -> str:
         """Return the representation."""
@@ -128,7 +131,7 @@ class WebSocketHandler:
         message_queue = self._message_queue
         logger = self._logger
         wsock = self._wsock
-        loop = self._hass.loop
+        loop = self._loop
         debug = logger.debug
         is_enabled_for = logger.isEnabledFor
         logging_debug = logging.DEBUG
@@ -221,10 +224,17 @@ class WebSocketHandler:
             return
 
         message_queue.append(message)
-        if not self._ready_call_soon_pending:
+        if not self._release_ready_pending:
             # Try to coalesce more messages to reduce the number of writes
-            self._ready_call_soon_pending = True
-            self._hass.loop.call_soon(self._release_ready_future)
+            self._release_ready_pending = True
+            if queue_size_before_add >= MSG_BACKLOG_SIZE_TO_DELAY:
+                # If the queue is getting large, we want to give the event
+                # loop a chance catch up on processing other tasks before
+                # so we don't flood the event loop with writes. We want to
+                # coalesce more messages before releasing the ready future.
+                self._loop.call_later(0.1, self._release_ready_future)
+            else:
+                self._loop.call_soon(self._release_ready_future)
 
         peak_checker_active = self._peak_checker_unsub is not None
 
@@ -251,7 +261,7 @@ class WebSocketHandler:
             and not ready_future.done()
         ):
             ready_future.set_result(None)
-        self._ready_call_soon_pending = False
+        self._release_ready_pending = False
 
     @callback
     def _check_write_peak(self, _utc_time: dt.datetime) -> None:
