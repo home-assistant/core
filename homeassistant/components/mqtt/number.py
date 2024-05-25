@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import partial
 import logging
 
 import voluptuous as vol
@@ -41,12 +42,7 @@ from .const import (
     CONF_RETAIN,
     CONF_STATE_TOPIC,
 )
-from .debug_info import log_messages
-from .mixins import (
-    MqttEntity,
-    async_setup_entity_entry_helper,
-    write_state_on_attr_change,
-)
+from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -165,60 +161,62 @@ class MqttNumber(MqttEntity, RestoreNumber):
         self._attr_native_step = config[CONF_STEP]
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
 
+    @callback
+    def _message_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT messages."""
+        num_value: int | float | None
+        payload = str(self._value_template(msg.payload))
+        if not payload.strip():
+            _LOGGER.debug("Ignoring empty state update from '%s'", msg.topic)
+            return
+        try:
+            if payload == self._config[CONF_PAYLOAD_RESET]:
+                num_value = None
+            elif payload.isnumeric():
+                num_value = int(payload)
+            else:
+                num_value = float(payload)
+        except ValueError:
+            _LOGGER.warning("Payload '%s' is not a Number", msg.payload)
+            return
+
+        if num_value is not None and (
+            num_value < self.min_value or num_value > self.max_value
+        ):
+            _LOGGER.error(
+                "Invalid value for %s: %s (range %s - %s)",
+                self.entity_id,
+                num_value,
+                self.min_value,
+                self.max_value,
+            )
+            return
+
+        self._attr_native_value = num_value
+
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_native_value"})
-        def message_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages."""
-            num_value: int | float | None
-            payload = str(self._value_template(msg.payload))
-            if not payload.strip():
-                _LOGGER.debug("Ignoring empty state update from '%s'", msg.topic)
-                return
-            try:
-                if payload == self._config[CONF_PAYLOAD_RESET]:
-                    num_value = None
-                elif payload.isnumeric():
-                    num_value = int(payload)
-                else:
-                    num_value = float(payload)
-            except ValueError:
-                _LOGGER.warning("Payload '%s' is not a Number", msg.payload)
-                return
-
-            if num_value is not None and (
-                num_value < self.min_value or num_value > self.max_value
-            ):
-                _LOGGER.error(
-                    "Invalid value for %s: %s (range %s - %s)",
-                    self.entity_id,
-                    num_value,
-                    self.min_value,
-                    self.max_value,
-                )
-                return
-
-            self._attr_native_value = num_value
-
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
             self._attr_assumed_state = True
-        else:
-            self._sub_state = subscription.async_prepare_subscribe_topics(
-                self.hass,
-                self._sub_state,
-                {
-                    "state_topic": {
-                        "topic": self._config.get(CONF_STATE_TOPIC),
-                        "msg_callback": message_received,
-                        "qos": self._config[CONF_QOS],
-                        "encoding": self._config[CONF_ENCODING] or None,
-                    }
-                },
-            )
+            return
+        self._sub_state = subscription.async_prepare_subscribe_topics(
+            self.hass,
+            self._sub_state,
+            {
+                "state_topic": {
+                    "topic": self._config.get(CONF_STATE_TOPIC),
+                    "msg_callback": partial(
+                        self._message_callback,
+                        self._message_received,
+                        {"_attr_native_value"},
+                    ),
+                    "entity_id": self.entity_id,
+                    "qos": self._config[CONF_QOS],
+                    "encoding": self._config[CONF_ENCODING] or None,
+                }
+            },
+        )
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
