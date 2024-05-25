@@ -30,8 +30,6 @@ from .util import (
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
-SpotifyConfigEntry = ConfigEntry["HomeAssistantSpotifyData"]
-
 __all__ = [
     "async_browse_media",
     "DOMAIN",
@@ -49,6 +47,9 @@ class HomeAssistantSpotifyData:
     current_user: dict[str, Any]
     devices: DataUpdateCoordinator[list[dict[str, Any]]]
     session: OAuth2Session
+
+
+type SpotifyConfigEntry = ConfigEntry[HomeAssistantSpotifyData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> bool:
