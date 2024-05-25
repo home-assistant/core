@@ -10,6 +10,7 @@ timer.
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Callable, Container, Hashable, KeysView, Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum
@@ -58,7 +59,7 @@ from .device_registry import (
     EventDeviceRegistryUpdatedData,
 )
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
-from .registry import BaseRegistry, BaseRegistryItems
+from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
 from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
@@ -533,10 +534,10 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         super().__init__()
         self._entry_ids: dict[str, RegistryEntry] = {}
         self._index: dict[tuple[str, str, str], str] = {}
-        self._config_entry_id_index: dict[str, dict[str, Literal[True]]] = {}
-        self._device_id_index: dict[str, dict[str, Literal[True]]] = {}
-        self._area_id_index: dict[str, dict[str, Literal[True]]] = {}
-        self._labels_index: dict[str, dict[str, Literal[True]]] = {}
+        self._config_entry_id_index: RegistryIndexType = defaultdict(dict)
+        self._device_id_index: RegistryIndexType = defaultdict(dict)
+        self._area_id_index: RegistryIndexType = defaultdict(dict)
+        self._labels_index: RegistryIndexType = defaultdict(dict)
 
     def _index_entry(self, key: str, entry: RegistryEntry) -> None:
         """Index an entry."""
@@ -545,13 +546,13 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         # python has no ordered set, so we use a dict with True values
         # https://discuss.python.org/t/add-orderedset-to-stdlib/12730
         if (config_entry_id := entry.config_entry_id) is not None:
-            self._config_entry_id_index.setdefault(config_entry_id, {})[key] = True
+            self._config_entry_id_index[config_entry_id][key] = True
         if (device_id := entry.device_id) is not None:
-            self._device_id_index.setdefault(device_id, {})[key] = True
+            self._device_id_index[device_id][key] = True
         if (area_id := entry.area_id) is not None:
-            self._area_id_index.setdefault(area_id, {})[key] = True
+            self._area_id_index[area_id][key] = True
         for label in entry.labels:
-            self._labels_index.setdefault(label, {})[key] = True
+            self._labels_index[label][key] = True
 
     def _unindex_entry(
         self, key: str, replacement_entry: RegistryEntry | None = None

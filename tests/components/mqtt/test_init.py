@@ -24,13 +24,13 @@ from homeassistant.components.mqtt.client import (
     RECONNECT_INTERVAL_SECONDS,
     EnsureJobAfterCooldown,
 )
-from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from homeassistant.components.mqtt.models import (
     MessageCallbackType,
     MqttCommandTemplateException,
     MqttValueTemplateException,
     ReceiveMessage,
 )
+from homeassistant.components.mqtt.schemas import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
@@ -44,7 +44,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 import homeassistant.core as ha
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er, template
 from homeassistant.helpers.entity import Entity
@@ -214,6 +214,7 @@ async def test_mqtt_await_ack_at_disconnect(
             0,
             False,
         )
+        await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_publish(
@@ -931,7 +932,11 @@ async def test_handle_logging_on_writing_the_entity_state(
         assert state is not None
         assert state.state == "initial_state"
         assert "Invalid value for sensor" in caplog.text
-        assert "Exception raised when updating state of" in caplog.text
+        assert (
+            "Exception raised while updating "
+            "state of sensor.test_sensor, topic: 'test/state' "
+            "with payload: b'payload causing errors'" in caplog.text
+        )
 
 
 async def test_receiving_non_utf8_message_gets_logged(
@@ -1854,7 +1859,7 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     async_fire_time_changed(hass)  # cooldown
     await hass.async_block_till_done()
 
-    # the subscribtion with the highest QoS should survive
+    # the subscription with the highest QoS should survive
     expected = [
         call([("test/state", 2)]),
     ]
@@ -1919,7 +1924,7 @@ async def test_subscribed_at_highest_qos(
     freezer.tick(5)
     async_fire_time_changed(hass)  # cooldown
     await hass.async_block_till_done()
-    # the subscribtion with the highest QoS should survive
+    # the subscription with the highest QoS should survive
     assert help_all_subscribe_calls(mqtt_client_mock) == [("test/state", 2)]
 
 
@@ -2810,6 +2815,59 @@ async def test_mqtt_subscribes_in_single_call(
         [("topic/test", 0), ("home/sensor", 0)],
         [("home/sensor", 0), ("topic/test", 0)],
     ]
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_entry_data",
+    [
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_BIRTH_MESSAGE: {},
+            mqtt.CONF_DISCOVERY: False,
+        }
+    ],
+)
+@patch("homeassistant.components.mqtt.client.MAX_SUBSCRIBES_PER_CALL", 2)
+@patch("homeassistant.components.mqtt.client.MAX_UNSUBSCRIBES_PER_CALL", 2)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+async def test_mqtt_subscribes_and_unsubscribes_in_chunks(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    record_calls: MessageCallbackType,
+) -> None:
+    """Test chunked client subscriptions."""
+    mqtt_mock = await mqtt_mock_entry()
+    # Fake that the client is connected
+    mqtt_mock().connected = True
+
+    mqtt_client_mock.subscribe.reset_mock()
+    unsub_tasks: list[CALLBACK_TYPE] = []
+    unsub_tasks.append(await mqtt.async_subscribe(hass, "topic/test1", record_calls))
+    unsub_tasks.append(await mqtt.async_subscribe(hass, "home/sensor1", record_calls))
+    unsub_tasks.append(await mqtt.async_subscribe(hass, "topic/test2", record_calls))
+    unsub_tasks.append(await mqtt.async_subscribe(hass, "home/sensor2", record_calls))
+    await hass.async_block_till_done()
+    # Make sure the debouncer finishes
+    await asyncio.sleep(0.2)
+
+    assert mqtt_client_mock.subscribe.call_count == 2
+    # Assert we have a 2 subscription calls with both 2 subscriptions
+    assert len(mqtt_client_mock.subscribe.mock_calls[0][1][0]) == 2
+    assert len(mqtt_client_mock.subscribe.mock_calls[1][1][0]) == 2
+
+    # Unsubscribe all topics
+    for task in unsub_tasks:
+        task()
+    await hass.async_block_till_done()
+    # Make sure the debouncer finishes
+    await asyncio.sleep(0.2)
+
+    assert mqtt_client_mock.unsubscribe.call_count == 2
+    # Assert we have a 2 unsubscribe calls with both 2 topic
+    assert len(mqtt_client_mock.unsubscribe.mock_calls[0][1][0]) == 2
+    assert len(mqtt_client_mock.unsubscribe.mock_calls[1][1][0]) == 2
 
 
 async def test_default_entry_setting_are_applied(

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 from typing import Any
 
@@ -40,20 +41,15 @@ from homeassistant.util import dt as dt_util
 from . import subscription
 from .config import MQTT_RO_SCHEMA
 from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, PAYLOAD_NONE
-from .debug_info import log_messages
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttAvailability,
-    MqttEntity,
-    async_setup_entity_entry_helper,
-    write_state_on_attr_change,
-)
+from .mixins import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttValueTemplate,
     PayloadSentinel,
     ReceiveMessage,
     ReceivePayloadType,
 )
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+from .util import check_state_too_long
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -215,9 +211,9 @@ class MqttSensor(MqttEntity, RestoreSensor):
             self._config.get(CONF_LAST_RESET_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
 
-    def _prepare_subscribe_topics(self) -> None:
-        """(Re)Subscribe to topics."""
-        topics: dict[str, dict[str, Any]] = {}
+    @callback
+    def _state_message_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT state messages."""
 
         def _update_state(msg: ReceiveMessage) -> None:
             # auto-expire enabled?
@@ -247,7 +243,10 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 else:
                     self._attr_native_value = new_value
                 return
-            if self.device_class in {None, SensorDeviceClass.ENUM}:
+            if self.device_class in {
+                None,
+                SensorDeviceClass.ENUM,
+            } and not check_state_too_long(_LOGGER, new_value, self.entity_id, msg):
                 self._attr_native_value = new_value
                 return
             try:
@@ -280,20 +279,22 @@ class MqttSensor(MqttEntity, RestoreSensor):
                     "Invalid last_reset message '%s' from '%s'", msg.payload, msg.topic
                 )
 
-        @callback
-        @write_state_on_attr_change(
-            self, {"_attr_native_value", "_attr_last_reset", "_expired"}
-        )
-        @log_messages(self.hass, self.entity_id)
-        def message_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages."""
-            _update_state(msg)
-            if CONF_LAST_RESET_VALUE_TEMPLATE in self._config:
-                _update_last_reset(msg)
+        _update_state(msg)
+        if CONF_LAST_RESET_VALUE_TEMPLATE in self._config:
+            _update_last_reset(msg)
+
+    def _prepare_subscribe_topics(self) -> None:
+        """(Re)Subscribe to topics."""
+        topics: dict[str, dict[str, Any]] = {}
 
         topics["state_topic"] = {
             "topic": self._config[CONF_STATE_TOPIC],
-            "msg_callback": message_received,
+            "msg_callback": partial(
+                self._message_callback,
+                self._state_message_received,
+                {"_attr_native_value", "_attr_last_reset", "_expired"},
+            ),
+            "entity_id": self.entity_id,
             "qos": self._config[CONF_QOS],
             "encoding": self._config[CONF_ENCODING] or None,
         }
@@ -317,6 +318,6 @@ class MqttSensor(MqttEntity, RestoreSensor):
     def available(self) -> bool:
         """Return true if the device is available and value has not expired."""
         # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
-        return MqttAvailability.available.fget(self) and (  # type: ignore[attr-defined]
+        return MqttAvailabilityMixin.available.fget(self) and (  # type: ignore[attr-defined]
             self._expire_after is None or not self._expired
         )

@@ -6,6 +6,7 @@ from google.api_core.exceptions import ClientError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -110,6 +111,30 @@ async def test_generate_content_service_error(
         )
 
 
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_content_response_has_empty_parts(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test generate content service handles response with empty parts."""
+    with (
+        patch("google.generativeai.GenerativeModel") as mock_model,
+        pytest.raises(HomeAssistantError, match="Error generating content"),
+    ):
+        mock_response = MagicMock()
+        mock_response.parts = []
+        mock_model.return_value.generate_content_async = AsyncMock(
+            return_value=mock_response
+        )
+        await hass.services.async_call(
+            "google_generative_ai_conversation",
+            "generate_content",
+            {"prompt": "write a story about an epic fail"},
+            blocking=True,
+            return_response=True,
+        )
+
+
 async def test_generate_content_service_with_image_not_allowed_path(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -193,3 +218,31 @@ async def test_generate_content_service_with_non_image(
             blocking=True,
             return_response=True,
         )
+
+
+async def test_config_entry_not_ready(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test configuration entry not ready."""
+    with patch(
+        "homeassistant.components.google_generative_ai_conversation.genai.list_models",
+        side_effect=ClientError("error"),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_config_entry_setup_error(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test configuration entry setup error."""
+    with patch(
+        "homeassistant.components.google_generative_ai_conversation.genai.list_models",
+        side_effect=ClientError("error", error_info="API_KEY_INVALID"),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR

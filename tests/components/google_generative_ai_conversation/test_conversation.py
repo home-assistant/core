@@ -354,7 +354,7 @@ async def test_blocked_response(
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
-        "Sorry, I had a problem talking to Google Generative AI. Likely blocked"
+        "Sorry, I had a problem getting a response from Google Generative AI."
     )
 
 
