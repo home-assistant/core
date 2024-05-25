@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from tesla_fleet_api.const import Scope
 
@@ -34,8 +34,6 @@ async def async_setup_entry(
 
 class TeslemetryUpdateEntity(TeslemetryVehicleEntity, UpdateEntity):
     """Teslemetry Updates entity."""
-
-    _attr_supported_features = UpdateEntityFeature.PROGRESS
 
     def __init__(
         self,
@@ -89,8 +87,8 @@ class TeslemetryUpdateEntity(TeslemetryVehicleEntity, UpdateEntity):
             SCHEDULED,
             INSTALLING,
         ):
-            self._attr_in_progress = int(
-                self.get_number("vehicle_state_software_update_install_perc", 0)
+            self._attr_in_progress = (
+                cast(int, self.get("vehicle_state_software_update_install_perc")) or 1
             )
         else:
             self._attr_in_progress = False
