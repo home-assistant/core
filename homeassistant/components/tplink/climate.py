@@ -61,7 +61,7 @@ class TPLinkClimate(CoordinatedTPLinkEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    # TODO: this disables the warning for async_turn_{on,off}, which should be fine?
+    # This disables the warning for async_turn_{on,off}.
     _enable_turn_on_off_backwards_compatibility = False
     # TODO: use unit from the device
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -97,7 +97,7 @@ class TPLinkClimate(CoordinatedTPLinkEntity, ClimateEntity):
         elif hvac_mode is HVACMode.OFF:
             await self._state_feature.set_value(False)
         else:
-            _LOGGER.warning("Tried to set unsupported hvacmode %s", hvac_mode)
+            _LOGGER.warning("Tried to set unsupported mode: %s", hvac_mode)
 
     @async_refresh_after
     async def async_turn_on(self) -> None:
@@ -123,19 +123,21 @@ class TPLinkClimate(CoordinatedTPLinkEntity, ClimateEntity):
         self._attr_hvac_mode = (
             HVACMode.HEAT if self._state_feature.value else HVACMode.OFF
         )
-        action: HVACAction
-        match self._mode_feature.value:
-            case ThermostatState.Idle:
-                action = HVACAction.IDLE
-            case ThermostatState.Heating:
-                action = HVACAction.HEATING
-            case ThermostatState.Off:
-                action = HVACAction.OFF
-            case _:
-                _LOGGER.warning(
-                    "Unknown thermostat state %s, defaulting to OFF",
-                    self._state_feature.value,
-                )
-                action = HVACAction.OFF
 
-        self._attr_hvac_action = action
+        STATE_TO_ACTION = {
+            ThermostatState.Idle: HVACAction.IDLE,
+            ThermostatState.Heating: HVACAction.HEATING,
+            ThermostatState.Off: HVACAction.OFF,
+        }
+        if (
+            self._mode_feature.value not in STATE_TO_ACTION
+            and self._attr_hvac_action is not HVACAction.OFF
+        ):
+            _LOGGER.warning(
+                "Unknown thermostat state, defaulting to OFF: %s",
+                self._mode_feature.value,
+            )
+            self._attr_hvac_action = HVACAction.OFF
+            return
+
+        self._attr_hvac_action = STATE_TO_ACTION[self._mode_feature.value]
