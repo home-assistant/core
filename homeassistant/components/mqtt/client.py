@@ -77,7 +77,6 @@ from .const import (
 )
 from .models import (
     DATA_MQTT,
-    AsyncMessageCallbackType,
     MessageCallbackType,
     MqttData,
     PublishMessage,
@@ -184,7 +183,7 @@ async def async_publish(
 async def async_subscribe(
     hass: HomeAssistant,
     topic: str,
-    msg_callback: AsyncMessageCallbackType | MessageCallbackType,
+    msg_callback: Callable[[ReceiveMessage], Coroutine[Any, Any, None] | None],
     qos: int = DEFAULT_QOS,
     encoding: str | None = DEFAULT_ENCODING,
 ) -> CALLBACK_TYPE:
@@ -452,7 +451,7 @@ class MQTT:
         self._should_reconnect: bool = True
         self._available_future: asyncio.Future[bool] | None = None
 
-        self._max_qos: dict[str, int] = {}  # topic, max qos
+        self._max_qos: defaultdict[str, int] = defaultdict(int)  # topic, max qos
         self._pending_subscriptions: dict[str, int] = {}  # topic, qos
         self._unsubscribe_debouncer = EnsureJobAfterCooldown(
             UNSUBSCRIBE_COOLDOWN, self._async_perform_unsubscribes
@@ -820,8 +819,8 @@ class MQTT:
         """Queue requested subscriptions."""
         for subscription in subscriptions:
             topic, qos = subscription
-            max_qos = max(qos, self._max_qos.setdefault(topic, qos))
-            self._max_qos[topic] = max_qos
+            if (max_qos := self._max_qos[topic]) < qos:
+                self._max_qos[topic] = (max_qos := qos)
             self._pending_subscriptions[topic] = max_qos
             # Cancel any pending unsubscribe since we are subscribing now
             if topic in self._pending_unsubscribes:
@@ -832,7 +831,7 @@ class MQTT:
 
     def _exception_message(
         self,
-        msg_callback: AsyncMessageCallbackType | MessageCallbackType,
+        msg_callback: Callable[[ReceiveMessage], Coroutine[Any, Any, None] | None],
         msg: ReceiveMessage,
     ) -> str:
         """Return a string with the exception message."""
@@ -844,7 +843,7 @@ class MQTT:
     async def async_subscribe(
         self,
         topic: str,
-        msg_callback: AsyncMessageCallbackType | MessageCallbackType,
+        msg_callback: Callable[[ReceiveMessage], Coroutine[Any, Any, None] | None],
         qos: int,
         encoding: str | None = None,
     ) -> Callable[[], None]:

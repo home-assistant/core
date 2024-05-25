@@ -5,7 +5,7 @@ from __future__ import annotations
 from ast import literal_eval
 import asyncio
 from collections import deque
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
 import logging
@@ -70,7 +70,6 @@ class ReceiveMessage:
     timestamp: float
 
 
-type AsyncMessageCallbackType = Callable[[ReceiveMessage], Coroutine[Any, Any, None]]
 type MessageCallbackType = Callable[[ReceiveMessage], None]
 
 

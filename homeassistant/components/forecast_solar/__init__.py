@@ -16,7 +16,7 @@ from .coordinator import ForecastSolarDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
-ForecastSolarConfigEntry = ConfigEntry[ForecastSolarDataUpdateCoordinator]
+type ForecastSolarConfigEntry = ConfigEntry[ForecastSolarDataUpdateCoordinator]
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
