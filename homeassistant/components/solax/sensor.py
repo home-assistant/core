@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import cast
 
+from solax.inverter import InverterResponse
 from solax.units import Units
 
 from homeassistant.components.sensor import (
@@ -21,16 +23,15 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from . import SolaxConfigEntry
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import SolaxDataUpdateCoordinator
+from .coordinator import Reset, SolaxDataUpdateCoordinator
 
 DEFAULT_PORT = 80
 
@@ -102,9 +103,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Entry setup."""
-    api = entry.runtime_data.api
     coordinator = entry.runtime_data.coordinator
-    resp = coordinator.data
+    api = coordinator.api
+    resp = cast(InverterResponse, coordinator.data)
     serial = resp.serial_number
     version = resp.version
     entities: list[InverterSensorEntity] = []
@@ -127,25 +128,12 @@ async def async_setup_entry(
             description.device_class,
             last_reset if measurement.resets_daily else None,
         )
-        if measurement.resets_daily:
-            entry.async_on_unload(
-                async_track_time_change(
-                    hass=hass,
-                    action=entity.async_listen_for_midnight,
-                    hour=0,
-                    minute=0,
-                    second=0,
-                )
-            )
         entities.append(entity)
     async_add_entities(entities)
 
 
-class InverterSensorEntity(CoordinatorEntity, SensorEntity):
+class InverterSensorEntity(CoordinatorEntity[SolaxDataUpdateCoordinator], SensorEntity):
     """Class for a sensor."""
-
-    value: Any
-    _attr_should_poll = False
 
     def __init__(
         self,
@@ -158,7 +146,7 @@ class InverterSensorEntity(CoordinatorEntity, SensorEntity):
         unit: str | None,
         state_class: SensorStateClass | str | None,
         device_class: SensorDeviceClass | None,
-        last_reset=None,
+        last_reset: datetime | None,
     ) -> None:
         """Initialize an inverter sensor."""
         super().__init__(coordinator)
@@ -176,14 +164,22 @@ class InverterSensorEntity(CoordinatorEntity, SensorEntity):
         )
         self.key = key
 
-    @callback
-    def async_listen_for_midnight(self, today: datetime) -> None:
+    def _handle_coordinator_update(self) -> None:
         """Reset at midnight."""
-        self._attr_last_reset = dt_util.start_of_local_day(today)
-        self.value = 0
-        self.async_schedule_update_ha_state()
+        match self.coordinator.data:
+            case Reset(start_of_local_day):
+                if self.last_reset is None:
+                    return
+
+                self._attr_last_reset = start_of_local_day
+
+        self.async_write_ha_state()
 
     @property
     def native_value(self):
         """State of this inverter attribute."""
-        return self.coordinator.data.data[self.key]
+        match self.coordinator.data:
+            case Reset(_):
+                return 0
+            case InverterResponse(data):
+                return data[self.key]

@@ -4,14 +4,12 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from solax import InverterResponse, RealTimeAPI, real_time_api
-from solax.inverter import InverterError
+from solax import real_time_api
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .coordinator import SolaxDataUpdateCoordinator
 
@@ -24,7 +22,6 @@ SCAN_INTERVAL = timedelta(seconds=30)
 class SolaxData:
     """Class for storing solax data."""
 
-    api: RealTimeAPI
     coordinator: SolaxDataUpdateCoordinator
 
 
@@ -45,22 +42,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolaxConfigEntry) -> boo
     except Exception as err:
         raise ConfigEntryNotReady from err
 
-    async def _async_update() -> InverterResponse:
-        try:
-            return await api.get_data()
-        except InverterError as err:
-            raise UpdateFailed from err
-
     coordinator = SolaxDataUpdateCoordinator(
+        api,
         hass,
         logger=_LOGGER,
         name=f"solax {entry.title}",
         update_interval=SCAN_INTERVAL,
-        update_method=_async_update,
     )
+    entry.runtime_data = SolaxData(coordinator=coordinator)
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = SolaxData(api=api, coordinator=coordinator)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
