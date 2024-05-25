@@ -39,6 +39,7 @@ from .client import (  # noqa: F401
     MQTT,
     async_publish,
     async_subscribe,
+    async_subscribe_internal,
     publish,
     subscribe,
 )
@@ -65,8 +66,6 @@ from .const import (  # noqa: F401
     CONF_WILL_MESSAGE,
     CONF_WS_HEADERS,
     CONF_WS_PATH,
-    DATA_MQTT,
-    DATA_MQTT_AVAILABLE,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
     DEFAULT_PREFIX,
@@ -79,6 +78,8 @@ from .const import (  # noqa: F401
     TEMPLATE_ERRORS,
 )
 from .models import (  # noqa: F401
+    DATA_MQTT,
+    DATA_MQTT_AVAILABLE,
     MqttCommandTemplate,
     MqttData,
     MqttValueTemplate,
@@ -97,7 +98,6 @@ from .util import (  # noqa: F401
     async_create_certificate_temp_files,
     async_forward_entry_setup_and_setup_discovery,
     async_wait_for_mqtt_client,
-    get_mqtt_data,
     mqtt_config_entry_enabled,
     platforms_from_config,
     valid_publish_topic,
@@ -194,7 +194,7 @@ async def async_check_config_schema(
     hass: HomeAssistant, config_yaml: ConfigType
 ) -> None:
     """Validate manually configured MQTT items."""
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
     mqtt_config: list[dict[str, list[ConfigType]]] = config_yaml.get(DOMAIN, {})
     for mqtt_config_item in mqtt_config:
         for domain, config_items in mqtt_config_item.items():
@@ -233,7 +233,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await async_create_certificate_temp_files(hass, conf)
         client = MQTT(hass, entry, conf)
         if DOMAIN in hass.data:
-            mqtt_data = get_mqtt_data(hass)
+            mqtt_data = hass.data[DATA_MQTT]
             mqtt_data.config = mqtt_yaml
             mqtt_data.client = client
         else:
@@ -312,7 +312,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         def collect_msg(msg: ReceiveMessage) -> None:
             messages.append((msg.topic, str(msg.payload).replace("\n", "")))
 
-        unsub = await async_subscribe(hass, call.data["topic"], collect_msg)
+        unsub = async_subscribe_internal(hass, call.data["topic"], collect_msg)
 
         def write_dump() -> None:
             with open(hass.config.path("mqtt_dump.txt"), "w", encoding="utf8") as fp:
@@ -460,7 +460,7 @@ async def websocket_subscribe(
 
     # Perform UTF-8 decoding directly in callback routine
     qos: int = msg.get("qos", DEFAULT_QOS)
-    connection.subscriptions[msg["id"]] = await async_subscribe(
+    connection.subscriptions[msg["id"]] = async_subscribe_internal(
         hass, msg["topic"], forward_messages, encoding=None, qos=qos
     )
 
@@ -502,7 +502,7 @@ def async_subscribe_connection_status(
 
 def is_connected(hass: HomeAssistant) -> bool:
     """Return if MQTT client is connected."""
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
     return mqtt_data.client.connected
 
 
@@ -519,28 +519,17 @@ async def async_remove_config_entry_device(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload MQTT dump and publish service when the config entry is unloaded."""
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
     mqtt_client = mqtt_data.client
 
     # Unload publish and dump services.
-    hass.services.async_remove(
-        DOMAIN,
-        SERVICE_PUBLISH,
-    )
-    hass.services.async_remove(
-        DOMAIN,
-        SERVICE_DUMP,
-    )
+    hass.services.async_remove(DOMAIN, SERVICE_PUBLISH)
+    hass.services.async_remove(DOMAIN, SERVICE_DUMP)
 
     # Stop the discovery
     await discovery.async_stop(hass)
     # Unload the platforms
-    await asyncio.gather(
-        *(
-            hass.config_entries.async_forward_entry_unload(entry, component)
-            for component in mqtt_data.platforms_loaded
-        )
-    )
+    await hass.config_entries.async_unload_platforms(entry, mqtt_data.platforms_loaded)
     mqtt_data.platforms_loaded = set()
     await asyncio.sleep(0)
     # Unsubscribe reload dispatchers

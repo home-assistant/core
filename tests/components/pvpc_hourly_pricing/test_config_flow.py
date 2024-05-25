@@ -42,7 +42,7 @@ async def test_config_flow(
     - Configure options to introduce API Token, with bad auth and good one
     """
     freezer.move_to(_MOCK_TIME_VALID_RESPONSES)
-    hass.config.set_time_zone("Europe/Madrid")
+    await hass.config.async_set_time_zone("Europe/Madrid")
     tst_config = {
         CONF_NAME: "test",
         ATTR_TARIFF: TARIFFS[1],
@@ -184,7 +184,7 @@ async def test_reauth(
 ) -> None:
     """Test reauth flow for API-token mode."""
     freezer.move_to(_MOCK_TIME_BAD_AUTH_RESPONSES)
-    hass.config.set_time_zone("Europe/Madrid")
+    await hass.config.async_set_time_zone("Europe/Madrid")
     tst_config = {
         CONF_NAME: "test",
         ATTR_TARIFF: TARIFFS[1],

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from asyncio import timeout
 from functools import partial
 import mimetypes
 from pathlib import Path
@@ -23,7 +24,7 @@ from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_CHAT_MODEL, CONF_PROMPT, DEFAULT_CHAT_MODEL, DOMAIN, LOGGER
+from .const import CONF_PROMPT, DOMAIN, LOGGER
 
 SERVICE_GENERATE_CONTENT = "generate_content"
 CONF_IMAGE_FILENAME = "image_filename"
@@ -73,6 +74,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ) as err:
             raise HomeAssistantError(f"Error generating content: {err}") from err
 
+        if not response.parts:
+            raise HomeAssistantError("Error generating content")
+
         return {"text": response.text}
 
     hass.services.async_register(
@@ -97,13 +101,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     genai.configure(api_key=entry.data[CONF_API_KEY])
 
     try:
-        await hass.async_add_executor_job(
-            partial(
-                genai.get_model, entry.options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL)
-            )
-        )
-    except ClientError as err:
-        if err.reason == "API_KEY_INVALID":
+        async with timeout(5.0):
+            next(await hass.async_add_executor_job(partial(genai.list_models)), None)
+    except (ClientError, TimeoutError) as err:
+        if isinstance(err, ClientError) and err.reason == "API_KEY_INVALID":
             LOGGER.error("Invalid API key: %s", err)
             return False
         raise ConfigEntryNotReady(err) from err

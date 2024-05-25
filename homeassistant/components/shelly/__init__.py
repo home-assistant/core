@@ -328,6 +328,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> b
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):
         if shelly_entry_data.block:
-            shelly_entry_data.block.shutdown()
+            await shelly_entry_data.block.shutdown()
 
     return unload_ok

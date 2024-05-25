@@ -1034,7 +1034,7 @@ async def _mqtt_mock_entry(
         nonlocal real_mqtt_instance
         real_mqtt_instance = real_mqtt(*args, **kwargs)
         spec = [*dir(real_mqtt_instance), "_mqttc"]
-        mock_mqtt_instance = MqttMockHAClient(
+        mock_mqtt_instance = MagicMock(
             return_value=real_mqtt_instance,
             spec_set=spec,
             wraps=real_mqtt_instance,
@@ -1455,7 +1455,9 @@ def hass_recorder(
             ) -> HomeAssistant:
                 """Set up with params."""
                 if timezone is not None:
-                    hass.config.set_time_zone(timezone)
+                    asyncio.run_coroutine_threadsafe(
+                        hass.config.async_set_time_zone(timezone), hass.loop
+                    ).result()
                 init_recorder_component(hass, config, recorder_db_url)
                 hass.start()
                 hass.block_till_done()

@@ -62,7 +62,7 @@ async def async_setup_entry(
                 await hass.async_add_executor_job(
                     partial(
                         HomeControl,
-                        gateway_id=gateway_id,
+                        gateway_id=str(gateway_id),
                         mydevolo_instance=mydevolo,
                         zeroconf_instance=zeroconf_instance,
                     )

@@ -207,7 +207,6 @@ async def test_block_update_auth_error(
         {ATTR_ENTITY_ID: "update.test_name_firmware_update"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
 
@@ -669,7 +668,6 @@ async def test_rpc_update_auth_error(
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()

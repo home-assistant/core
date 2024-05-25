@@ -248,6 +248,9 @@
     "switch": {
       "enable_schedule": {
         "name": "Enable schedule"
+      },
+      "stay_out_zones": {
+        "name": "Avoid {stay_out_zone}"
       }
     }
   }
