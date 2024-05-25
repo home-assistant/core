@@ -181,7 +181,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor[binary_sensor.test_cabin_overheat_protection_actively_cooling-entry]
@@ -228,7 +228,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor[binary_sensor.test_charge_cable-entry]
@@ -275,7 +275,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor[binary_sensor.test_charger_has_multiple_phases-entry]
@@ -415,7 +415,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor[binary_sensor.test_front_driver_window-entry]
@@ -462,7 +462,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor[binary_sensor.test_front_passenger_door-entry]
@@ -509,7 +509,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor[binary_sensor.test_front_passenger_window-entry]
@@ -602,7 +602,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor[binary_sensor.test_preconditioning_enabled-entry]
@@ -695,7 +695,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor[binary_sensor.test_rear_driver_window-entry]
@@ -742,7 +742,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor[binary_sensor.test_rear_passenger_door-entry]
@@ -789,7 +789,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor[binary_sensor.test_rear_passenger_window-entry]
@@ -882,7 +882,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor[binary_sensor.test_status-entry]
@@ -929,7 +929,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor[binary_sensor.test_tire_pressure_warning_front_left-entry]
@@ -976,7 +976,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor[binary_sensor.test_tire_pressure_warning_front_right-entry]
@@ -1023,7 +1023,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor[binary_sensor.test_tire_pressure_warning_rear_left-entry]
@@ -1070,7 +1070,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor[binary_sensor.test_tire_pressure_warning_rear_right-entry]
@@ -1117,7 +1117,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor[binary_sensor.test_trip_charging-entry]
@@ -1163,7 +1163,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor[binary_sensor.test_user_present-entry]
@@ -1263,7 +1263,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_cabin_overheat_protection_actively_cooling-statealt]
@@ -1277,7 +1277,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_charge_cable-statealt]
@@ -1291,7 +1291,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_charger_has_multiple_phases-statealt]
@@ -1332,7 +1332,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_front_driver_window-statealt]
@@ -1346,7 +1346,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_front_passenger_door-statealt]
@@ -1360,7 +1360,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_front_passenger_window-statealt]
@@ -1387,7 +1387,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_preconditioning_enabled-statealt]
@@ -1414,7 +1414,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_rear_driver_window-statealt]
@@ -1428,7 +1428,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_rear_passenger_door-statealt]
@@ -1442,7 +1442,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_rear_passenger_window-statealt]
@@ -1469,7 +1469,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_status-statealt]
@@ -1483,7 +1483,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_tire_pressure_warning_front_left-statealt]
@@ -1497,7 +1497,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_tire_pressure_warning_front_right-statealt]
@@ -1511,7 +1511,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_tire_pressure_warning_rear_left-statealt]
@@ -1525,7 +1525,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_tire_pressure_warning_rear_right-statealt]
@@ -1539,7 +1539,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_trip_charging-statealt]
@@ -1552,7 +1552,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_user_present-statealt]
