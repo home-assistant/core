@@ -222,7 +222,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics(self.hass, self._sub_state)
 
         if self._attr_assumed_state and (
             last_number_data := await self.async_get_last_number_data()

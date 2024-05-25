@@ -476,7 +476,7 @@ class MqttFan(MqttEntity, FanEntity):
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def is_on(self) -> bool | None:

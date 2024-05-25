@@ -449,7 +449,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the entity.

@@ -290,7 +290,7 @@ class MqttSiren(MqttEntity, SirenEntity):
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:

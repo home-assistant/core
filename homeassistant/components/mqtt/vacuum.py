@@ -356,7 +356,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     async def _async_publish_command(self, feature: VacuumEntityFeature) -> None:
         """Publish a command."""

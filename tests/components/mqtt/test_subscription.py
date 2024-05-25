@@ -45,7 +45,7 @@ async def test_subscribe_topics(
             "test_topic2": {"topic": "test-topic2", "msg_callback": record_calls2},
         },
     )
-    await async_subscribe_topics(hass, sub_state)
+    async_subscribe_topics(hass, sub_state)
 
     async_fire_mqtt_message(hass, "test-topic1", "test-payload1")
     assert len(calls1) == 1
@@ -98,7 +98,7 @@ async def test_modify_topics(
             "test_topic2": {"topic": "test-topic2", "msg_callback": record_calls2},
         },
     )
-    await async_subscribe_topics(hass, sub_state)
+    async_subscribe_topics(hass, sub_state)
 
     async_fire_mqtt_message(hass, "test-topic1", "test-payload")
     assert len(calls1) == 1
@@ -113,7 +113,7 @@ async def test_modify_topics(
         sub_state,
         {"test_topic1": {"topic": "test-topic1_1", "msg_callback": record_calls1}},
     )
-    await async_subscribe_topics(hass, sub_state)
+    async_subscribe_topics(hass, sub_state)
 
     async_fire_mqtt_message(hass, "test-topic1", "test-payload")
     async_fire_mqtt_message(hass, "test-topic2", "test-payload")
@@ -153,7 +153,7 @@ async def test_qos_encoding_default(
         sub_state,
         {"test_topic1": {"topic": "test-topic1", "msg_callback": msg_callback}},
     )
-    await async_subscribe_topics(hass, sub_state)
+    async_subscribe_topics(hass, sub_state)
     mqtt_mock.async_subscribe.assert_called_with("test-topic1", ANY, 0, "utf-8")
 
 
@@ -182,7 +182,7 @@ async def test_qos_encoding_custom(
             }
         },
     )
-    await async_subscribe_topics(hass, sub_state)
+    async_subscribe_topics(hass, sub_state)
     mqtt_mock.async_subscribe.assert_called_with("test-topic1", ANY, 1, "utf-16")
 
 
@@ -207,7 +207,7 @@ async def test_no_change(
         sub_state,
         {"test_topic1": {"topic": "test-topic1", "msg_callback": record_calls}},
     )
-    await async_subscribe_topics(hass, sub_state)
+    async_subscribe_topics(hass, sub_state)
     subscribe_call_count = mqtt_mock.async_subscribe.call_count
 
     async_fire_mqtt_message(hass, "test-topic1", "test-payload")
@@ -218,7 +218,7 @@ async def test_no_change(
         sub_state,
         {"test_topic1": {"topic": "test-topic1", "msg_callback": record_calls}},
     )
-    await async_subscribe_topics(hass, sub_state)
+    async_subscribe_topics(hass, sub_state)
     assert subscribe_call_count == mqtt_mock.async_subscribe.call_count
 
     async_fire_mqtt_message(hass, "test-topic1", "test-payload")

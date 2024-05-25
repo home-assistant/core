@@ -413,7 +413,7 @@ class MqttAttributesMixin(Entity):
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
         self._attributes_prepare_subscribe_topics()
-        await self._attributes_subscribe_topics()
+        self._attributes_subscribe_topics()
 
     def attributes_prepare_discovery_update(self, config: DiscoveryInfoType) -> None:
         """Handle updated discovery message."""
@@ -422,7 +422,7 @@ class MqttAttributesMixin(Entity):
 
     async def attributes_discovery_update(self, config: DiscoveryInfoType) -> None:
         """Handle updated discovery message."""
-        await self._attributes_subscribe_topics()
+        self._attributes_subscribe_topics()
 
     def _attributes_prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
@@ -447,9 +447,10 @@ class MqttAttributesMixin(Entity):
             },
         )
 
-    async def _attributes_subscribe_topics(self) -> None:
+    @callback
+    def _attributes_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await async_subscribe_topics(self.hass, self._attributes_sub_state)
+        async_subscribe_topics(self.hass, self._attributes_sub_state)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe when removed."""
@@ -494,7 +495,7 @@ class MqttAvailabilityMixin(Entity):
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
         self._availability_prepare_subscribe_topics()
-        await self._availability_subscribe_topics()
+        self._availability_subscribe_topics()
         self.async_on_remove(
             async_dispatcher_connect(self.hass, MQTT_CONNECTED, self.async_mqtt_connect)
         )
@@ -511,7 +512,7 @@ class MqttAvailabilityMixin(Entity):
 
     async def availability_discovery_update(self, config: DiscoveryInfoType) -> None:
         """Handle updated discovery message."""
-        await self._availability_subscribe_topics()
+        self._availability_subscribe_topics()
 
     def _availability_setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup."""
@@ -579,9 +580,10 @@ class MqttAvailabilityMixin(Entity):
             self._available[topic] = False
             self._available_latest = False
 
-    async def _availability_subscribe_topics(self) -> None:
+    @callback
+    def _availability_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await async_subscribe_topics(self.hass, self._availability_sub_state)
+        async_subscribe_topics(self.hass, self._availability_sub_state)
 
     @callback
     def async_mqtt_connect(self) -> None:
