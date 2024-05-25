@@ -23,10 +23,14 @@ from .singleton import singleton
 
 LLM_API_ASSIST = "assist"
 
-PROMPT_NO_API_CONFIGURED = (
-    "Only if the user wants to control a device, tell them to edit the AI configuration "
-    "and allow access to Home Assistant."
-)
+
+@callback
+def async_render_no_api_prompt(hass: HomeAssistant) -> str:
+    """Return the prompt to be used when no API is configured."""
+    return (
+        "Only if the user wants to control a device, tell them to edit the AI configuration "
+        "and allow access to Home Assistant."
+    )
 
 
 @singleton("llm")
