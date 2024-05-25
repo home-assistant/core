@@ -222,16 +222,17 @@ class GoogleGenerativeAIConversationEntity(
             else:
                 api_prompt = llm.PROMPT_NO_API_CONFIGURED
 
-            prompt = (
-                api_prompt
-                + "\n"
-                + template.Template(
-                    self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT), self.hass
-                ).async_render(
-                    {
-                        "ha_name": self.hass.config.location_name,
-                    },
-                    parse_result=False,
+            prompt = "\n".join(
+                (
+                    api_prompt,
+                    template.Template(
+                        self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT), self.hass
+                    ).async_render(
+                        {
+                            "ha_name": self.hass.config.location_name,
+                        },
+                        parse_result=False,
+                    ),
                 )
             )
 
