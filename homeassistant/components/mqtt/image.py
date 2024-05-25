@@ -5,6 +5,7 @@ from __future__ import annotations
 from base64 import b64decode
 import binascii
 from collections.abc import Callable
+from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -26,7 +27,6 @@ from homeassistant.util import dt as dt_util
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import CONF_ENCODING, CONF_QOS
-from .debug_info import log_messages
 from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     DATA_MQTT,
@@ -143,6 +143,45 @@ class MqttImage(MqttEntity, ImageEntity):
             config.get(CONF_URL_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
 
+    @callback
+    def _image_data_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT messages."""
+        try:
+            if CONF_IMAGE_ENCODING in self._config:
+                self._last_image = b64decode(msg.payload)
+            else:
+                if TYPE_CHECKING:
+                    assert isinstance(msg.payload, bytes)
+                self._last_image = msg.payload
+        except (binascii.Error, ValueError, AssertionError) as err:
+            _LOGGER.error(
+                "Error processing image data received at topic %s: %s",
+                msg.topic,
+                err,
+            )
+            self._last_image = None
+        self._attr_image_last_updated = dt_util.utcnow()
+        self.hass.data[DATA_MQTT].state_write_requests.write_state_request(self)
+
+    @callback
+    def _image_from_url_request_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT messages."""
+        try:
+            url = cv.url(self._url_template(msg.payload))
+            self._attr_image_url = url
+        except MqttValueTemplateException as exc:
+            _LOGGER.warning(exc)
+            return
+        except vol.Invalid:
+            _LOGGER.error(
+                "Invalid image URL '%s' received at topic %s",
+                msg.payload,
+                msg.topic,
+            )
+        self._attr_image_last_updated = dt_util.utcnow()
+        self._cached_image = None
+        self.hass.data[DATA_MQTT].state_write_requests.write_state_request(self)
+
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
@@ -159,56 +198,15 @@ class MqttImage(MqttEntity, ImageEntity):
             if has_topic := self._topic[topic] is not None:
                 topics[topic] = {
                     "topic": self._topic[topic],
-                    "msg_callback": msg_callback,
+                    "msg_callback": partial(self._message_callback, msg_callback, None),
+                    "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
                     "encoding": encoding,
                 }
             return has_topic
 
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        def image_data_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages."""
-            try:
-                if CONF_IMAGE_ENCODING in self._config:
-                    self._last_image = b64decode(msg.payload)
-                else:
-                    if TYPE_CHECKING:
-                        assert isinstance(msg.payload, bytes)
-                    self._last_image = msg.payload
-            except (binascii.Error, ValueError, AssertionError) as err:
-                _LOGGER.error(
-                    "Error processing image data received at topic %s: %s",
-                    msg.topic,
-                    err,
-                )
-                self._last_image = None
-            self._attr_image_last_updated = dt_util.utcnow()
-            self.hass.data[DATA_MQTT].state_write_requests.write_state_request(self)
-
-        add_subscribe_topic(CONF_IMAGE_TOPIC, image_data_received)
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        def image_from_url_request_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages."""
-            try:
-                url = cv.url(self._url_template(msg.payload))
-                self._attr_image_url = url
-            except MqttValueTemplateException as exc:
-                _LOGGER.warning(exc)
-                return
-            except vol.Invalid:
-                _LOGGER.error(
-                    "Invalid image URL '%s' received at topic %s",
-                    msg.payload,
-                    msg.topic,
-                )
-            self._attr_image_last_updated = dt_util.utcnow()
-            self._cached_image = None
-            self.hass.data[DATA_MQTT].state_write_requests.write_state_request(self)
-
-        add_subscribe_topic(CONF_URL_TOPIC, image_from_url_request_received)
+        add_subscribe_topic(CONF_IMAGE_TOPIC, self._image_data_received)
+        add_subscribe_topic(CONF_URL_TOPIC, self._image_from_url_request_received)
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
