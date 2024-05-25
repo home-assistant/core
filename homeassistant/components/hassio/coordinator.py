@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME
@@ -53,6 +53,9 @@ from .const import (
     SupervisorEntityModel,
 )
 from .handler import HassIO, HassioAPIError
+
+if TYPE_CHECKING:
+    from .issues import SupervisorIssues
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,10 +172,10 @@ def get_core_info(hass: HomeAssistant) -> dict[str, Any] | None:
 
 @callback
 @bind_hass
-def get_issues_info(hass: HomeAssistant):
+def get_issues_info(hass: HomeAssistant) -> SupervisorIssues | None:
     """Return Supervisor issues info.
 
-    Async friendly. Returns an instance of issues.SupervisorIssues or None.
+    Async friendly.
     """
     return hass.data.get(DATA_KEY_SUPERVISOR_ISSUES)
 
