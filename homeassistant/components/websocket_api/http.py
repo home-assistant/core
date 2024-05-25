@@ -223,7 +223,7 @@ class WebSocketHandler:
             return
 
         message_queue.append(message)
-        if self._ready_future and self._release_ready_queue_size == 0:
+        if self._release_ready_queue_size == 0:
             # Try to coalesce more messages to reduce the number of writes
             self._release_ready_queue_size = queue_size_before_add + 1
             self._loop.call_soon(self._release_ready_future_or_reschedule)
@@ -254,16 +254,17 @@ class WebSocketHandler:
             or ready_future.done()
             or not (queue_size := len(self._message_queue))
         ):
+            self._release_ready_queue_size = 0
             return
         # If we are below the peak and there are new messages in the queue
         # since the last time we tried to release the ready future, we try again
         # later so we can coalesce more messages.
-        if PENDING_MSG_PEAK > queue_size > self._release_ready_queue_size:
+        if queue_size > self._release_ready_queue_size < PENDING_MSG_PEAK:
             self._release_ready_queue_size = queue_size
             self._loop.call_soon(self._release_ready_future_or_reschedule)
             return
-        ready_future.set_result(None)
         self._release_ready_queue_size = 0
+        ready_future.set_result(None)
 
     @callback
     def _check_write_peak(self, _utc_time: dt.datetime) -> None:
