@@ -1257,9 +1257,7 @@ class MQTT:
 
         last_discovery = self._mqtt_data.last_discovery
         last_subscribe = now if self._pending_subscriptions else self._last_subscribe
-        wait_until = max(
-            last_discovery + DISCOVERY_COOLDOWN, last_subscribe + DISCOVERY_COOLDOWN
-        )
+        wait_until = max(last_discovery, last_subscribe) + DISCOVERY_COOLDOWN
         while now < wait_until:
             await asyncio.sleep(wait_until - now)
             now = time.monotonic()
@@ -1267,9 +1265,7 @@ class MQTT:
             last_subscribe = (
                 now if self._pending_subscriptions else self._last_subscribe
             )
-            wait_until = max(
-                last_discovery + DISCOVERY_COOLDOWN, last_subscribe + DISCOVERY_COOLDOWN
-            )
+            wait_until = max(last_discovery, last_subscribe) + DISCOVERY_COOLDOWN
 
 
 def _matcher_for_topic(subscription: str) -> Callable[[str], bool]:
