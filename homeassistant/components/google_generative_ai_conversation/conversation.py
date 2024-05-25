@@ -263,10 +263,20 @@ class GoogleGenerativeAIConversationEntity(
                 genai_types.BlockedPromptException,
                 genai_types.StopCandidateException,
             ) as err:
-                LOGGER.error("Error sending message: %s", err)
+                LOGGER.error("Error sending message: %s %s", type(err), err)
+
+                if isinstance(
+                    err, genai_types.StopCandidateException
+                ) and "finish_reason: SAFETY\n" in str(err):
+                    error = "The message got blocked by your safety settings"
+                else:
+                    error = (
+                        f"Sorry, I had a problem talking to Google Generative AI: {err}"
+                    )
+
                 intent_response.async_set_error(
                     intent.IntentResponseErrorCode.UNKNOWN,
-                    f"Sorry, I had a problem talking to Google Generative AI: {err}",
+                    error,
                 )
                 return conversation.ConversationResult(
                     response=intent_response, conversation_id=conversation_id
