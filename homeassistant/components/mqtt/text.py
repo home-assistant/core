@@ -49,6 +49,7 @@ from .models import (
     ReceivePayloadType,
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+from .util import check_state_too_long
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -180,6 +181,8 @@ class MqttTextEntity(MqttEntity, TextEntity):
         def handle_state_message_received(msg: ReceiveMessage) -> None:
             """Handle receiving state message via MQTT."""
             payload = str(self._value_template(msg.payload))
+            if check_state_too_long(_LOGGER, payload, self.entity_id, msg):
+                return
             self._attr_native_value = payload
 
         add_subscription(topics, CONF_STATE_TOPIC, handle_state_message_received)

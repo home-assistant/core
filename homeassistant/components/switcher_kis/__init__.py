@@ -5,21 +5,12 @@ from __future__ import annotations
 import logging
 
 from aioswitcher.device import SwitcherBase
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_DEVICE_PASSWORD,
-    CONF_PHONE_ID,
-    DATA_DEVICE,
-    DATA_DISCOVERY,
-    DOMAIN,
-)
+from .const import DATA_DEVICE, DOMAIN
 from .coordinator import SwitcherDataUpdateCoordinator
 from .utils import async_start_bridge, async_stop_bridge
 
@@ -33,40 +24,10 @@ PLATFORMS = [
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_PHONE_ID): cv.string,
-                    vol.Required(CONF_DEVICE_ID): cv.string,
-                    vol.Required(CONF_DEVICE_PASSWORD): cv.string,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the switcher component."""
-    hass.data.setdefault(DOMAIN, {})
-
-    if DOMAIN not in config:
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data={}
-        )
-    )
-    return True
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Switcher from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][DATA_DEVICE] = {}
 
     @callback
@@ -98,12 +59,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Must be ready before dispatcher is called
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    discovery_task = hass.data[DOMAIN].pop(DATA_DISCOVERY, None)
-    if discovery_task is not None:
-        discovered_devices = await discovery_task
-        for device in discovered_devices.values():
-            on_device_data_callback(device)
 
     await async_start_bridge(hass, on_device_data_callback)
 

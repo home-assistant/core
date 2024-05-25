@@ -373,14 +373,14 @@ class EntityTopicState:
     def process_write_state_requests(self, msg: MQTTMessage) -> None:
         """Process the write state requests."""
         while self.subscribe_calls:
-            _, entity = self.subscribe_calls.popitem()
+            entity_id, entity = self.subscribe_calls.popitem()
             try:
                 entity.async_write_ha_state()
             except Exception:
                 _LOGGER.exception(
-                    "Exception raised when updating state of %s, topic: "
+                    "Exception raised while updating state of %s, topic: "
                     "'%s' with payload: %s",
-                    entity.entity_id,
+                    entity_id,
                     msg.topic,
                     msg.payload,
                 )

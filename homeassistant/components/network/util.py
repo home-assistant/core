@@ -85,7 +85,7 @@ def _reset_enabled_adapters(adapters: list[Adapter]) -> None:
 
 
 def _ifaddr_adapter_to_ha(
-    adapter: ifaddr.Adapter, next_hop_address: None | IPv4Address | IPv6Address
+    adapter: ifaddr.Adapter, next_hop_address: IPv4Address | IPv6Address | None
 ) -> Adapter:
     """Convert an ifaddr adapter to ha."""
     ip_v4s: list[IPv4ConfiguredAddress] = []
