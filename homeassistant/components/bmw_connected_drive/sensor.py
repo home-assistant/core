@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import BMWBaseEntity
-from .const import DOMAIN, UNIT_MAP
+from .const import CLIMATE_ACTIVITY_STATE, DOMAIN, UNIT_MAP
 from .coordinator import BMWDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -152,6 +152,15 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         unit_type=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         is_available=lambda v: v.is_lsc_enabled and v.has_combustion_drivetrain,
+    ),
+    BMWSensorEntityDescription(
+        key="activity",
+        translation_key="climate_status",
+        key_class="climate",
+        device_class=SensorDeviceClass.ENUM,
+        options=CLIMATE_ACTIVITY_STATE,
+        value=lambda x, _: x.lower() if x != "UNKNOWN" else None,
+        is_available=lambda v: v.is_remote_climate_stop_enabled,
     ),
 ]
 

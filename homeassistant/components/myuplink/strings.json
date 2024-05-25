@@ -25,5 +25,12 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "alarm": {
+        "name": "Alarm"
+      }
+    }
   }
 }

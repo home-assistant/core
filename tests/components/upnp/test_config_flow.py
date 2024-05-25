@@ -196,7 +196,7 @@ async def test_flow_ssdp_discovery_changed_udn_match_mac(hass: HomeAssistant) ->
             CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
         },
         source=config_entries.SOURCE_SSDP,
-        state=config_entries.ConfigEntryState.LOADED,
+        state=config_entries.ConfigEntryState.NOT_LOADED,
     )
     entry.add_to_hass(hass)
 
@@ -228,7 +228,7 @@ async def test_flow_ssdp_discovery_changed_udn_match_host(hass: HomeAssistant) -
             CONFIG_ENTRY_HOST: TEST_HOST,
         },
         source=config_entries.SOURCE_SSDP,
-        state=config_entries.ConfigEntryState.LOADED,
+        state=config_entries.ConfigEntryState.NOT_LOADED,
     )
     entry.add_to_hass(hass)
 
@@ -266,7 +266,7 @@ async def test_flow_ssdp_discovery_changed_udn_but_st_differs(
             CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
         },
         source=config_entries.SOURCE_SSDP,
-        state=config_entries.ConfigEntryState.LOADED,
+        state=config_entries.ConfigEntryState.NOT_LOADED,
     )
     entry.add_to_hass(hass)
 
@@ -320,7 +320,7 @@ async def test_flow_ssdp_discovery_changed_location(hass: HomeAssistant) -> None
             CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
         },
         source=config_entries.SOURCE_SSDP,
-        state=config_entries.ConfigEntryState.LOADED,
+        state=config_entries.ConfigEntryState.NOT_LOADED,
     )
     entry.add_to_hass(hass)
 

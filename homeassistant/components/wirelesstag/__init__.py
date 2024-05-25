@@ -119,7 +119,7 @@ class WirelessTagPlatform:
                                 ),
                                 tag,
                             )
-                except Exception as ex:  # pylint: disable=broad-except
+                except Exception as ex:  # noqa: BLE001
                     _LOGGER.error(
                         "Unable to handle tag update: %s error: %s",
                         str(tag),

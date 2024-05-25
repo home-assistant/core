@@ -159,7 +159,6 @@ async def test_visible_effect_state_changes(hass: HomeAssistant) -> None:
             KEY_ACTIVE: True,
             KEY_COMPONENTID: "COLOR",
             KEY_ORIGIN: "System",
-            KEY_OWNER: "System",
             KEY_PRIORITY: 250,
             KEY_VALUE: {KEY_RGB: [0, 0, 0]},
             KEY_VISIBLE: True,

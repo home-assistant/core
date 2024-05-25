@@ -255,7 +255,7 @@ class UnknownUser(Unauthorized):
     """When call is made with user ID that doesn't exist."""
 
 
-class ServiceNotFound(HomeAssistantError):
+class ServiceNotFound(ServiceValidationError):
     """Raised when a service is not found."""
 
     def __init__(self, domain: str, service: str) -> None:

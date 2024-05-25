@@ -118,8 +118,8 @@ class AzureDevOpsEntity(CoordinatorEntity[DataUpdateCoordinator[list[DevOpsBuild
         """Initialize the Azure DevOps entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_unique_id: str = "_".join(
-            [entity_description.organization, entity_description.key]
+        self._attr_unique_id: str = (
+            f"{entity_description.organization}_{entity_description.key}"
         )
         self._organization: str = entity_description.organization
         self._project_name: str = entity_description.project.name

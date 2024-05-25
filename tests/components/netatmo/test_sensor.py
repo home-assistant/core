@@ -136,7 +136,7 @@ async def test_process_rf(strength: int, expected: str) -> None:
 
 @pytest.mark.parametrize(
     ("health", "expected"),
-    [(4, "Unhealthy"), (3, "Poor"), (2, "Fair"), (1, "Fine"), (0, "Healthy")],
+    [(4, "unhealthy"), (3, "poor"), (2, "fair"), (1, "fine"), (0, "healthy")],
 )
 async def test_process_health(health: int, expected: str) -> None:
     """Test health index translation."""
@@ -165,17 +165,17 @@ async def test_process_health(health: int, expected: str) -> None:
         ),
         ("12:34:56:80:c1:ea-sum_rain_1", "villa_rain_rain_last_hour", "0"),
         ("12:34:56:80:c1:ea-sum_rain_24", "villa_rain_rain_today", "6.9"),
-        ("12:34:56:03:1b:e4-windangle", "netatmoindoor_garden_direction", "SW"),
+        ("12:34:56:03:1b:e4-windangle", "netatmoindoor_garden_direction", "sw"),
         (
             "12:34:56:03:1b:e4-windangle_value",
             "netatmoindoor_garden_angle",
             "217",
         ),
-        ("12:34:56:03:1b:e4-gustangle", "mystation_garden_gust_direction", "S"),
+        ("12:34:56:03:1b:e4-gustangle", "mystation_garden_gust_direction", "s"),
         (
             "12:34:56:03:1b:e4-gustangle",
             "netatmoindoor_garden_gust_direction",
-            "S",
+            "s",
         ),
         (
             "12:34:56:03:1b:e4-gustangle_value",
@@ -195,7 +195,7 @@ async def test_process_health(health: int, expected: str) -> None:
         (
             "12:34:56:26:68:92-health_idx",
             "baby_bedroom_health",
-            "Fine",
+            "fine",
         ),
         (
             "12:34:56:26:68:92-wifi_status",

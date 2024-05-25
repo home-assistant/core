@@ -146,20 +146,24 @@ async def test_switch_on(
 
 
 @pytest.mark.parametrize(
-    "zone_state_response",
-    [ZONE_3_ON_RESPONSE],
+    ("zone_state_response", "start_state"),
+    [
+        (ZONE_3_ON_RESPONSE, "on"),
+        (ZONE_OFF_RESPONSE, "off"),  # Already off
+    ],
 )
 async def test_switch_off(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     responses: list[AiohttpClientMockResponse],
+    start_state: str,
 ) -> None:
     """Test turning off irrigation switch."""
 
     # Initially the test zone is on
     zone = hass.states.get("switch.rain_bird_sprinkler_3")
     assert zone is not None
-    assert zone.state == "on"
+    assert zone.state == start_state
 
     aioclient_mock.mock_calls.clear()
     responses.extend(

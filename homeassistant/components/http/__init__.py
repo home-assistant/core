@@ -20,7 +20,6 @@ from aiohttp.typedefs import JSONDecoder, StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
 from aiohttp.web_protocol import RequestHandler
 from aiohttp_fast_url_dispatcher import FastUrlDispatcher, attach_fast_url_dispatcher
-from aiohttp_zlib_ng import enable_zlib_ng
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -41,6 +40,7 @@ from homeassistant.helpers.http import (
     HomeAssistantView,
     current_request,
 )
+from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -55,7 +55,7 @@ from homeassistant.util.json import json_loads
 
 from .auth import async_setup_auth
 from .ban import setup_bans
-from .const import KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER  # noqa: F401
+from .const import DOMAIN, KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER  # noqa: F401
 from .cors import setup_cors
 from .decorators import require_admin  # noqa: F401
 from .forwarded import async_setup_forwarded
@@ -64,8 +64,6 @@ from .request_context import setup_request_context
 from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
 from .web_runner import HomeAssistantTCPSite
-
-DOMAIN: Final = "http"
 
 CONF_SERVER_HOST: Final = "server_host"
 CONF_SERVER_PORT: Final = "server_port"
@@ -180,7 +178,9 @@ class ApiConfig:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HTTP API and debug interface."""
-    enable_zlib_ng()
+    # Late import to ensure isal is updated before
+    # we import aiohttp_fast_zlib
+    (await async_import_module(hass, "aiohttp_fast_zlib")).enable()
 
     conf: ConfData | None = config.get(DOMAIN)
 
@@ -531,8 +531,7 @@ class HomeAssistantHTTP:
         # However in Home Assistant components can be discovered after boot.
         # This will now raise a RunTimeError.
         # To work around this we now prevent the router from getting frozen
-        # pylint: disable-next=protected-access
-        self.app._router.freeze = lambda: None  # type: ignore[method-assign]
+        self.app._router.freeze = lambda: None  # type: ignore[method-assign]  # noqa: SLF001
 
         self.runner = web.AppRunner(
             self.app, handler_cancellation=True, shutdown_timeout=10

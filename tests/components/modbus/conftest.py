@@ -47,12 +47,36 @@ class ReadResult:
         return False
 
 
+@pytest.fixture(name="check_config_loaded")
+def check_config_loaded_fixture():
+    """Set default for check_config_loaded."""
+    return True
+
+
+@pytest.fixture(name="register_words")
+def register_words_fixture():
+    """Set default for register_words."""
+    return [0x00, 0x00]
+
+
+@pytest.fixture(name="config_addon")
+def config_addon_fixture():
+    """Add extra configuration items."""
+    return None
+
+
+@pytest.fixture(name="do_exception")
+def do_exception_fixture():
+    """Remove side_effect to pymodbus calls."""
+    return False
+
+
 @pytest.fixture(name="mock_pymodbus")
-def mock_pymodbus_fixture():
+def mock_pymodbus_fixture(do_exception, register_words):
     """Mock pymodbus."""
     mock_pb = mock.AsyncMock()
     mock_pb.close = mock.MagicMock()
-    read_result = ReadResult([])
+    read_result = ReadResult(register_words if register_words else [])
     mock_pb.read_coils.return_value = read_result
     mock_pb.read_discrete_inputs.return_value = read_result
     mock_pb.read_input_registers.return_value = read_result
@@ -61,6 +85,16 @@ def mock_pymodbus_fixture():
     mock_pb.write_registers.return_value = read_result
     mock_pb.write_coil.return_value = read_result
     mock_pb.write_coils.return_value = read_result
+    if do_exception:
+        exc = ModbusException("mocked pymodbus exception")
+        mock_pb.read_coils.side_effect = exc
+        mock_pb.read_discrete_inputs.side_effect = exc
+        mock_pb.read_input_registers.side_effect = exc
+        mock_pb.read_holding_registers.side_effect = exc
+        mock_pb.write_register.side_effect = exc
+        mock_pb.write_registers.side_effect = exc
+        mock_pb.write_coil.side_effect = exc
+        mock_pb.write_coils.side_effect = exc
     with (
         mock.patch(
             "homeassistant.components.modbus.modbus.AsyncModbusTcpClient",
@@ -81,33 +115,9 @@ def mock_pymodbus_fixture():
         yield mock_pb
 
 
-@pytest.fixture(name="check_config_loaded")
-def check_config_loaded_fixture():
-    """Set default for check_config_loaded."""
-    return True
-
-
-@pytest.fixture(name="register_words")
-def register_words_fixture():
-    """Set default for register_words."""
-    return [0x00, 0x00]
-
-
-@pytest.fixture(name="config_addon")
-def config_addon_fixture():
-    """Add entra configuration items."""
-    return None
-
-
-@pytest.fixture(name="do_exception")
-def do_exception_fixture():
-    """Remove side_effect to pymodbus calls."""
-    return False
-
-
 @pytest.fixture(name="mock_modbus")
 async def mock_modbus_fixture(
-    hass, caplog, register_words, check_config_loaded, config_addon, do_config
+    hass, caplog, check_config_loaded, config_addon, do_config, mock_pymodbus
 ):
     """Load integration modbus using mocked pymodbus."""
     conf = copy.deepcopy(do_config)
@@ -132,57 +142,23 @@ async def mock_modbus_fixture(
             }
         ]
     }
-    mock_pb = mock.AsyncMock()
-    mock_pb.close = mock.MagicMock()
+    now = dt_util.utcnow()
     with mock.patch(
-        "homeassistant.components.modbus.modbus.AsyncModbusTcpClient",
-        return_value=mock_pb,
+        "homeassistant.helpers.event.dt_util.utcnow",
+        return_value=now,
         autospec=True,
     ):
-        now = dt_util.utcnow()
-        with mock.patch(
-            "homeassistant.helpers.event.dt_util.utcnow",
-            return_value=now,
-            autospec=True,
-        ):
-            result = await async_setup_component(hass, DOMAIN, config)
-            assert result or not check_config_loaded
-        await hass.async_block_till_done()
-        yield mock_pb
-
-
-@pytest.fixture(name="mock_pymodbus_exception")
-async def mock_pymodbus_exception_fixture(hass, do_exception, mock_modbus):
-    """Trigger update call with time_changed event."""
-    if do_exception:
-        exc = ModbusException("fail read_coils")
-        mock_modbus.read_coils.side_effect = exc
-        mock_modbus.read_discrete_inputs.side_effect = exc
-        mock_modbus.read_input_registers.side_effect = exc
-        mock_modbus.read_holding_registers.side_effect = exc
-
-
-@pytest.fixture(name="mock_pymodbus_return")
-async def mock_pymodbus_return_fixture(hass, register_words, mock_modbus):
-    """Trigger update call with time_changed event."""
-    read_result = ReadResult(register_words if register_words else [])
-    mock_modbus.read_coils.return_value = read_result
-    mock_modbus.read_discrete_inputs.return_value = read_result
-    mock_modbus.read_input_registers.return_value = read_result
-    mock_modbus.read_holding_registers.return_value = read_result
-    mock_modbus.write_register.return_value = read_result
-    mock_modbus.write_registers.return_value = read_result
-    mock_modbus.write_coil.return_value = read_result
-    mock_modbus.write_coils.return_value = read_result
-    return mock_modbus
+        result = await async_setup_component(hass, DOMAIN, config)
+        assert result or not check_config_loaded
+    await hass.async_block_till_done()
+    return mock_pymodbus
 
 
 @pytest.fixture(name="mock_do_cycle")
 async def mock_do_cycle_fixture(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    mock_pymodbus_exception,
-    mock_pymodbus_return,
+    mock_modbus,
 ) -> FrozenDateTimeFactory:
     """Trigger update call with time_changed event."""
     freezer.tick(timedelta(seconds=1))
@@ -207,11 +183,12 @@ async def mock_test_state_fixture(hass, request):
     return request.param
 
 
-@pytest.fixture(name="mock_ha")
-async def mock_ha_fixture(hass, mock_pymodbus_return):
+@pytest.fixture(name="mock_modbus_ha")
+async def mock_modbus_ha_fixture(hass, mock_modbus):
     """Load homeassistant to allow service calls."""
     assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
+    return mock_modbus
 
 
 @pytest.fixture(name="caplog_setup_text")

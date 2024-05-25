@@ -5,8 +5,10 @@
   "postCreateCommand": "script/setup",
   "postStartCommand": "script/bootstrap",
   "containerEnv": {
-    "DEVCONTAINER": "1",
     "PYTHONASYNCIODEBUG": "1"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   // Port 5683 udp is used by Shelly integration
   "appPort": ["8123:8123", "5683:5683/udp"],
@@ -20,12 +22,15 @@
         "visualstudioexptteam.vscodeintellicode",
         "redhat.vscode-yaml",
         "esbenp.prettier-vscode",
-        "GitHub.vscode-pull-request-github"
+        "GitHub.vscode-pull-request-github",
+        "GitHub.copilot"
       ],
       // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.json
       "settings": {
         "python.experiments.optOutFrom": ["pythonTestAdapter"],
-        "python.pythonPath": "/usr/local/bin/python",
+        "python.defaultInterpreterPath": "/home/vscode/.local/ha-venv/bin/python",
+        "python.pythonPath": "/home/vscode/.local/ha-venv/bin/python",
+        "python.terminal.activateEnvInCurrentTerminal": true,
         "python.testing.pytestArgs": ["--no-cov"],
         "editor.formatOnPaste": false,
         "editor.formatOnSave": true,

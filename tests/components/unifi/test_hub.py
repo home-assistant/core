@@ -235,9 +235,6 @@ async def setup_unifi_integration(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    if config_entry.entry_id not in hass.data[UNIFI_DOMAIN]:
-        return None
-
     return config_entry
 
 
@@ -254,7 +251,7 @@ async def test_hub_setup(
         config_entry = await setup_unifi_integration(
             hass, aioclient_mock, system_information_response=SYSTEM_INFORMATION
         )
-        hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+        hub = config_entry.runtime_data
 
     entry = hub.config.entry
     assert len(forward_entry_setup.mock_calls) == 1
@@ -333,7 +330,7 @@ async def test_config_entry_updated(
 ) -> None:
     """Calling reset when the entry has been setup."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
 
     event_call = Mock()
     unsub = async_dispatcher_connect(hass, hub.signal_options_update, event_call)
@@ -356,7 +353,7 @@ async def test_reset_after_successful_setup(
 ) -> None:
     """Calling reset when the entry has been setup."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
 
     result = await hub.async_reset()
     await hass.async_block_till_done()
@@ -369,7 +366,7 @@ async def test_reset_fails(
 ) -> None:
     """Calling reset when the entry has been setup can return false."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_unload",

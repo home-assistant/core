@@ -102,7 +102,7 @@ def test_template_message(arg: str | Exception, expected: str) -> None:
 )
 async def test_home_assistant_error(
     hass: HomeAssistant,
-    exception_args: tuple[Any,],
+    exception_args: tuple[Any, ...],
     exception_kwargs: dict[str, Any],
     args_base_class: tuple[Any],
     message: str,

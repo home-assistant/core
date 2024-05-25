@@ -30,7 +30,17 @@ from .agent_manager import (
     async_get_agent,
     get_agent_manager,
 )
-from .const import HOME_ASSISTANT_AGENT, OLD_HOME_ASSISTANT_AGENT
+from .const import (
+    ATTR_AGENT_ID,
+    ATTR_CONVERSATION_ID,
+    ATTR_LANGUAGE,
+    ATTR_TEXT,
+    DOMAIN,
+    HOME_ASSISTANT_AGENT,
+    OLD_HOME_ASSISTANT_AGENT,
+    SERVICE_PROCESS,
+    SERVICE_RELOAD,
+)
 from .default_agent import async_get_default_agent, async_setup_default_agent
 from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
@@ -52,18 +62,7 @@ __all__ = [
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_TEXT = "text"
-ATTR_LANGUAGE = "language"
-ATTR_AGENT_ID = "agent_id"
-ATTR_CONVERSATION_ID = "conversation_id"
-
-DOMAIN = "conversation"
-
 REGEX_TYPE = type(re.compile(""))
-
-SERVICE_PROCESS = "process"
-SERVICE_RELOAD = "reload"
-
 
 SERVICE_PROCESS_SCHEMA = vol.Schema(
     {
@@ -183,7 +182,10 @@ def async_get_agent_info(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the process service."""
-    entity_component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
+    entity_component: EntityComponent[ConversationEntity] = EntityComponent(
+        _LOGGER, DOMAIN, hass
+    )
+    hass.data[DOMAIN] = entity_component
 
     await async_setup_default_agent(
         hass, entity_component, config.get(DOMAIN, {}).get("intents", {})

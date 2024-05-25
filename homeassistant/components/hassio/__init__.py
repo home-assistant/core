@@ -80,7 +80,7 @@ from .const import (
     DOMAIN,
     HASSIO_UPDATE_INTERVAL,
 )
-from .data import (
+from .coordinator import (
     HassioDataUpdateCoordinator,
     get_addons_changelogs,  # noqa: F401
     get_addons_info,
@@ -196,7 +196,7 @@ SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
     {
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.slug]),
+        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [VALID_ADDON_SLUG]),
     }
 )
 
@@ -211,7 +211,7 @@ SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
     {
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.slug]),
+        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [VALID_ADDON_SLUG]),
     }
 )
 

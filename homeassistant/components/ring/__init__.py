@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from functools import partial
 import logging
+from typing import Any, cast
 
-from ring_doorbell import Auth, Ring
+from ring_doorbell import Auth, Ring, RingDevices
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import APPLICATION_NAME, CONF_TOKEN, __version__
@@ -13,23 +15,26 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import (
-    DOMAIN,
-    PLATFORMS,
-    RING_API,
-    RING_DEVICES,
-    RING_DEVICES_COORDINATOR,
-    RING_NOTIFICATIONS_COORDINATOR,
-)
+from .const import DOMAIN, PLATFORMS
 from .coordinator import RingDataCoordinator, RingNotificationsCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class RingData:
+    """Class to support type hinting of ring data collection."""
+
+    api: Ring
+    devices: RingDevices
+    devices_coordinator: RingDataCoordinator
+    notifications_coordinator: RingNotificationsCoordinator
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
 
-    def token_updater(token):
+    def token_updater(token: dict[str, Any]) -> None:
         """Handle from sync context when token is updated."""
         hass.loop.call_soon_threadsafe(
             partial(
@@ -51,12 +56,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await devices_coordinator.async_config_entry_first_refresh()
     await notifications_coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        RING_API: ring,
-        RING_DEVICES: ring.devices(),
-        RING_DEVICES_COORDINATOR: devices_coordinator,
-        RING_NOTIFICATIONS_COORDINATOR: notifications_coordinator,
-    }
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = RingData(
+        api=ring,
+        devices=ring.devices(),
+        devices_coordinator=devices_coordinator,
+        notifications_coordinator=notifications_coordinator,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -83,8 +88,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
         for info in hass.data[DOMAIN].values():
-            await info[RING_DEVICES_COORDINATOR].async_refresh()
-            await info[RING_NOTIFICATIONS_COORDINATOR].async_refresh()
+            ring_data = cast(RingData, info)
+            await ring_data.devices_coordinator.async_refresh()
+            await ring_data.notifications_coordinator.async_refresh()
 
     # register service
     hass.services.async_register(DOMAIN, "update", async_refresh_all)
@@ -121,8 +127,9 @@ async def _migrate_old_unique_ids(hass: HomeAssistant, entry_id: str) -> None:
     @callback
     def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
         # Old format for camera and light was int
-        if isinstance(entity_entry.unique_id, int):
-            new_unique_id = str(entity_entry.unique_id)
+        unique_id = cast(str | int, entity_entry.unique_id)
+        if isinstance(unique_id, int):
+            new_unique_id = str(unique_id)
             if existing_entity_id := entity_registry.async_get_entity_id(
                 entity_entry.domain, entity_entry.platform, new_unique_id
             ):

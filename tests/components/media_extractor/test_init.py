@@ -9,9 +9,14 @@ import pytest
 from syrupy import SnapshotAssertion
 from yt_dlp import DownloadError
 
-from homeassistant.components.media_extractor import DOMAIN
+from homeassistant.components.media_extractor.const import (
+    ATTR_URL,
+    DOMAIN,
+    SERVICE_EXTRACT_MEDIA_URL,
+)
 from homeassistant.components.media_player import SERVICE_PLAY_MEDIA
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import load_json_object_fixture
@@ -30,6 +35,58 @@ async def test_play_media_service_is_registered(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert hass.services.has_service(DOMAIN, SERVICE_PLAY_MEDIA)
+    assert hass.services.has_service(DOMAIN, SERVICE_EXTRACT_MEDIA_URL)
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        YOUTUBE_VIDEO,
+        SOUNDCLOUD_TRACK,
+        NO_FORMATS_RESPONSE,
+        YOUTUBE_PLAYLIST,
+    ],
+)
+async def test_extract_media_service(
+    hass: HomeAssistant,
+    mock_youtube_dl: MockYoutubeDL,
+    snapshot: SnapshotAssertion,
+    empty_media_extractor_config: dict[str, Any],
+    url: str,
+) -> None:
+    """Test play media service is registered."""
+    await async_setup_component(hass, DOMAIN, empty_media_extractor_config)
+    await hass.async_block_till_done()
+
+    assert (
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_EXTRACT_MEDIA_URL,
+            {ATTR_URL: url},
+            blocking=True,
+            return_response=True,
+        )
+        == snapshot
+    )
+
+
+async def test_extracting_playlist_no_entries(
+    hass: HomeAssistant,
+    mock_youtube_dl: MockYoutubeDL,
+    empty_media_extractor_config: dict[str, Any],
+) -> None:
+    """Test extracting a playlist without entries."""
+
+    await async_setup_component(hass, DOMAIN, empty_media_extractor_config)
+    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_EXTRACT_MEDIA_URL,
+            {ATTR_URL: YOUTUBE_EMPTY_PLAYLIST},
+            blocking=True,
+            return_response=True,
+        )
 
 
 @pytest.mark.parametrize(

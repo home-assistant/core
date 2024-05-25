@@ -1,0 +1,585 @@
+# serializer version: 1
+# name: test_select[select.energy_site_allow_export-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        <EnergyExportMode.NEVER: 'never'>,
+        <EnergyExportMode.BATTERY_OK: 'battery_ok'>,
+        <EnergyExportMode.PV_ONLY: 'pv_only'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.energy_site_allow_export',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Allow export',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'components_customer_preferred_export_rule',
+    'unique_id': '123456-components_customer_preferred_export_rule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[select.energy_site_allow_export-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Energy Site Allow export',
+      'options': list([
+        <EnergyExportMode.NEVER: 'never'>,
+        <EnergyExportMode.BATTERY_OK: 'battery_ok'>,
+        <EnergyExportMode.PV_ONLY: 'pv_only'>,
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.energy_site_allow_export',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'pv_only',
+  })
+# ---
+# name: test_select[select.energy_site_operation_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        <EnergyOperationMode.AUTONOMOUS: 'autonomous'>,
+        <EnergyOperationMode.BACKUP: 'backup'>,
+        <EnergyOperationMode.SELF_CONSUMPTION: 'self_consumption'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.energy_site_operation_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operation mode',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'default_real_mode',
+    'unique_id': '123456-default_real_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[select.energy_site_operation_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Energy Site Operation mode',
+      'options': list([
+        <EnergyOperationMode.AUTONOMOUS: 'autonomous'>,
+        <EnergyOperationMode.BACKUP: 'backup'>,
+        <EnergyOperationMode.SELF_CONSUMPTION: 'self_consumption'>,
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.energy_site_operation_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'self_consumption',
+  })
+# ---
+# name: test_select[select.test_seat_heater_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_seat_heater_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Seat heater front left',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'climate_state_seat_heater_left',
+    'unique_id': 'VINVINVIN-climate_state_seat_heater_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[select.test_seat_heater_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Seat heater front left',
+      'options': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_seat_heater_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_select[select.test_seat_heater_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_seat_heater_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Seat heater front right',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'climate_state_seat_heater_right',
+    'unique_id': 'VINVINVIN-climate_state_seat_heater_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[select.test_seat_heater_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Seat heater front right',
+      'options': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_seat_heater_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_select[select.test_seat_heater_rear_center-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_seat_heater_rear_center',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Seat heater rear center',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'climate_state_seat_heater_rear_center',
+    'unique_id': 'VINVINVIN-climate_state_seat_heater_rear_center',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[select.test_seat_heater_rear_center-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Seat heater rear center',
+      'options': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_seat_heater_rear_center',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_select[select.test_seat_heater_rear_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_seat_heater_rear_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Seat heater rear left',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'climate_state_seat_heater_rear_left',
+    'unique_id': 'VINVINVIN-climate_state_seat_heater_rear_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[select.test_seat_heater_rear_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Seat heater rear left',
+      'options': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_seat_heater_rear_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_select[select.test_seat_heater_rear_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_seat_heater_rear_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Seat heater rear right',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'climate_state_seat_heater_rear_right',
+    'unique_id': 'VINVINVIN-climate_state_seat_heater_rear_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[select.test_seat_heater_rear_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Seat heater rear right',
+      'options': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_seat_heater_rear_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_select[select.test_seat_heater_third_row_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_seat_heater_third_row_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Seat heater third row left',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'climate_state_seat_heater_third_row_left',
+    'unique_id': 'VINVINVIN-climate_state_seat_heater_third_row_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[select.test_seat_heater_third_row_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Seat heater third row left',
+      'options': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_seat_heater_third_row_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_select[select.test_seat_heater_third_row_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_seat_heater_third_row_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Seat heater third row right',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'climate_state_seat_heater_third_row_right',
+    'unique_id': 'VINVINVIN-climate_state_seat_heater_third_row_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[select.test_seat_heater_third_row_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Seat heater third row right',
+      'options': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_seat_heater_third_row_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_select[select.test_steering_wheel_heater-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'low',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_steering_wheel_heater',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Steering wheel heater',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'climate_state_steering_wheel_heat_level',
+    'unique_id': 'VINVINVIN-climate_state_steering_wheel_heat_level',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[select.test_steering_wheel_heater-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Steering wheel heater',
+      'options': list([
+        'off',
+        'low',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_steering_wheel_heater',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

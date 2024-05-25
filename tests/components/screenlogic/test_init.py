@@ -89,9 +89,9 @@ TEST_MIGRATING_ENTITIES = [
     ),
 ]
 
-MIGRATION_CONNECT = lambda *args, **kwargs: stub_async_connect(
-    DATA_MIN_MIGRATION, *args, **kwargs
-)
+
+def _migration_connect(*args, **kwargs):
+    return stub_async_connect(DATA_MIN_MIGRATION, *args, **kwargs)
 
 
 @pytest.mark.parametrize(
@@ -164,7 +164,7 @@ async def test_async_migrate_entries(
         ),
         patch.multiple(
             ScreenLogicGateway,
-            async_connect=MIGRATION_CONNECT,
+            async_connect=_migration_connect,
             is_connected=True,
             _async_connected_request=DEFAULT,
         ),
@@ -236,7 +236,7 @@ async def test_entity_migration_data(
         ),
         patch.multiple(
             ScreenLogicGateway,
-            async_connect=MIGRATION_CONNECT,
+            async_connect=_migration_connect,
             is_connected=True,
             _async_connected_request=DEFAULT,
         ),
@@ -257,9 +257,9 @@ async def test_platform_setup(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test setup for platforms that define expected data."""
-    stub_connect = lambda *args, **kwargs: stub_async_connect(
-        DATA_MISSING_VALUES_CHEM_CHLOR, *args, **kwargs
-    )
+
+    def stub_connect(*args, **kwargs):
+        return stub_async_connect(DATA_MISSING_VALUES_CHEM_CHLOR, *args, **kwargs)
 
     device_prefix = slugify(MOCK_ADAPTER_NAME)
 

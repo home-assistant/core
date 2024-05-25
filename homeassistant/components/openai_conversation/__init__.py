@@ -5,7 +5,6 @@ from __future__ import annotations
 import openai
 import voluptuous as vol
 
-from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import (
@@ -115,5 +114,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     hass.data[DOMAIN].pop(entry.entry_id)
-    conversation.async_unset_agent(hass, entry)
     return True
