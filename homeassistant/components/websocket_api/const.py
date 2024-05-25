@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Any, Final
 
+from homeassistant.const import MAX_EXPECTED_ENTITY_IDS
 from homeassistant.core import HomeAssistant
 
 if TYPE_CHECKING:
@@ -25,7 +26,7 @@ PENDING_MSG_PEAK_TIME: Final = 5
 # Maximum number of messages that can be pending at any given time.
 # This is effectively the upper limit of the number of entities
 # that can fire state changes within ~1 second.
-MAX_PENDING_MSG: Final = 4096
+MAX_PENDING_MSG: Final = MAX_EXPECTED_ENTITY_IDS
 
 ERR_ID_REUSE: Final = "id_reuse"
 ERR_INVALID_FORMAT: Final = "invalid_format"

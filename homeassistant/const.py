@@ -1638,6 +1638,12 @@ FORMAT_DATE: Final = "%Y-%m-%d"
 FORMAT_TIME: Final = "%H:%M:%S"
 FORMAT_DATETIME: Final = f"{FORMAT_DATE} {FORMAT_TIME}"
 
+
+# Maximum entities expected in the state machine
+# This is not a hard limit, but caches and other
+# data structures will be pre-allocated to this size
+MAX_EXPECTED_ENTITY_IDS: Final = 16384
+
 # These can be removed if no deprecated constant are in this module anymore
 __getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
 __dir__ = partial(
