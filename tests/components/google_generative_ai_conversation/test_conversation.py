@@ -2,12 +2,14 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from google.api_core.exceptions import ClientError
+from google.api_core.exceptions import GoogleAPICallError
+import google.generativeai.types as genai_types
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import conversation
+from homeassistant.components.conversation import trace
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -150,6 +152,57 @@ async def test_default_prompt(
     assert mock_get_tools.called == (CONF_LLM_HASS_API in config_entry_options)
 
 
+async def test_chat_history(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that the agent keeps track of the chat history."""
+    with patch("google.generativeai.GenerativeModel") as mock_model:
+        mock_chat = AsyncMock()
+        mock_model.return_value.start_chat.return_value = mock_chat
+        chat_response = MagicMock()
+        mock_chat.send_message_async.return_value = chat_response
+        mock_part = MagicMock()
+        mock_part.function_call = None
+        chat_response.parts = [mock_part]
+        chat_response.text = "1st model response"
+        mock_chat.history = [
+            {"role": "user", "parts": "prompt"},
+            {"role": "model", "parts": "Ok"},
+            {"role": "user", "parts": "1st user request"},
+            {"role": "model", "parts": "1st model response"},
+        ]
+        result = await conversation.async_converse(
+            hass,
+            "1st user request",
+            None,
+            Context(),
+            agent_id=mock_config_entry.entry_id,
+        )
+        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+        assert (
+            result.response.as_dict()["speech"]["plain"]["speech"]
+            == "1st model response"
+        )
+        chat_response.text = "2nd model response"
+        result = await conversation.async_converse(
+            hass,
+            "2nd user request",
+            result.conversation_id,
+            Context(),
+            agent_id=mock_config_entry.entry_id,
+        )
+        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+        assert (
+            result.response.as_dict()["speech"]["plain"]["speech"]
+            == "2nd model response"
+        )
+
+    assert [tuple(mock_call) for mock_call in mock_model.mock_calls] == snapshot
+
+
 @patch(
     "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI.async_get_tools"
 )
@@ -232,6 +285,20 @@ async def test_function_call(
             device_id="test_device",
         ),
     )
+
+    # Test conversating tracing
+    traces = trace.async_get_traces()
+    assert traces
+    last_trace = traces[-1].as_dict()
+    trace_events = last_trace.get("events", [])
+    assert [event["event_type"] for event in trace_events] == [
+        trace.ConversationTraceEventType.ASYNC_PROCESS,
+        trace.ConversationTraceEventType.AGENT_DETAIL,
+        trace.ConversationTraceEventType.LLM_TOOL_CALL,
+    ]
+    # AGENT_DETAIL event contains the raw prompt passed to the model
+    detail_event = trace_events[1]
+    assert "Answer in plain text" in detail_event["data"]["messages"][0]["parts"]
 
 
 @patch(
@@ -325,7 +392,7 @@ async def test_error_handling(
     with patch("google.generativeai.GenerativeModel") as mock_model:
         mock_chat = AsyncMock()
         mock_model.return_value.start_chat.return_value = mock_chat
-        mock_chat.send_message_async.side_effect = ClientError("some error")
+        mock_chat.send_message_async.side_effect = GoogleAPICallError("some error")
         result = await conversation.async_converse(
             hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
         )
@@ -340,7 +407,28 @@ async def test_error_handling(
 async def test_blocked_response(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
 ) -> None:
-    """Test response was blocked."""
+    """Test blocked response."""
+    with patch("google.generativeai.GenerativeModel") as mock_model:
+        mock_chat = AsyncMock()
+        mock_model.return_value.start_chat.return_value = mock_chat
+        mock_chat.send_message_async.side_effect = genai_types.StopCandidateException(
+            "finish_reason: SAFETY\n"
+        )
+        result = await conversation.async_converse(
+            hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+        )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.error_code == "unknown", result
+    assert result.response.as_dict()["speech"]["plain"]["speech"] == (
+        "The message got blocked by your safety settings"
+    )
+
+
+async def test_empty_response(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
+) -> None:
+    """Test empty response."""
     with patch("google.generativeai.GenerativeModel") as mock_model:
         mock_chat = AsyncMock()
         mock_model.return_value.start_chat.return_value = mock_chat
@@ -355,6 +443,32 @@ async def test_blocked_response(
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
         "Sorry, I had a problem getting a response from Google Generative AI."
+    )
+
+
+async def test_invalid_llm_api(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test handling of invalid llm api."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={**mock_config_entry.options, CONF_LLM_HASS_API: "invalid_llm_api"},
+    )
+
+    result = await conversation.async_converse(
+        hass,
+        "hello",
+        None,
+        Context(),
+        agent_id=mock_config_entry.entry_id,
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.error_code == "unknown", result
+    assert result.response.as_dict()["speech"]["plain"]["speech"] == (
+        "Error preparing LLM API: API invalid_llm_api not found"
     )
 
 

@@ -5,13 +5,14 @@ from __future__ import annotations
 from typing import Any, Literal
 
 import google.ai.generativelanguage as glm
-from google.api_core.exceptions import ClientError
+from google.api_core.exceptions import GoogleAPICallError
 import google.generativeai as genai
 import google.generativeai.types as genai_types
 import voluptuous as vol
 from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
+from homeassistant.components.conversation import trace
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
@@ -205,15 +206,6 @@ class GoogleGenerativeAIConversationEntity(
             messages = [{}, {}]
 
         try:
-            prompt = template.Template(
-                self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT), self.hass
-            ).async_render(
-                {
-                    "ha_name": self.hass.config.location_name,
-                },
-                parse_result=False,
-            )
-
             if llm_api:
                 empty_tool_input = llm.ToolInput(
                     tool_name="",
@@ -226,9 +218,24 @@ class GoogleGenerativeAIConversationEntity(
                     device_id=user_input.device_id,
                 )
 
-                prompt = (
-                    await llm_api.async_get_api_prompt(empty_tool_input) + "\n" + prompt
+                api_prompt = await llm_api.async_get_api_prompt(empty_tool_input)
+
+            else:
+                api_prompt = llm.PROMPT_NO_API_CONFIGURED
+
+            prompt = "\n".join(
+                (
+                    template.Template(
+                        self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT), self.hass
+                    ).async_render(
+                        {
+                            "ha_name": self.hass.config.location_name,
+                        },
+                        parse_result=False,
+                    ),
+                    api_prompt,
                 )
+            )
 
         except TemplateError as err:
             LOGGER.error("Error rendering prompt: %s", err)
@@ -244,6 +251,9 @@ class GoogleGenerativeAIConversationEntity(
         messages[1] = {"role": "model", "parts": "Ok"}
 
         LOGGER.debug("Input: '%s' with history: %s", user_input.text, messages)
+        trace.async_conversation_trace_append(
+            trace.ConversationTraceEventType.AGENT_DETAIL, {"messages": messages}
+        )
 
         chat = model.start_chat(history=messages)
         chat_request = user_input.text
@@ -252,15 +262,25 @@ class GoogleGenerativeAIConversationEntity(
             try:
                 chat_response = await chat.send_message_async(chat_request)
             except (
-                ClientError,
+                GoogleAPICallError,
                 ValueError,
                 genai_types.BlockedPromptException,
                 genai_types.StopCandidateException,
             ) as err:
-                LOGGER.error("Error sending message: %s", err)
+                LOGGER.error("Error sending message: %s %s", type(err), err)
+
+                if isinstance(
+                    err, genai_types.StopCandidateException
+                ) and "finish_reason: SAFETY\n" in str(err):
+                    error = "The message got blocked by your safety settings"
+                else:
+                    error = (
+                        f"Sorry, I had a problem talking to Google Generative AI: {err}"
+                    )
+
                 intent_response.async_set_error(
                     intent.IntentResponseErrorCode.UNKNOWN,
-                    f"Sorry, I had a problem talking to Google Generative AI: {err}",
+                    error,
                 )
                 return conversation.ConversationResult(
                     response=intent_response, conversation_id=conversation_id

@@ -9,6 +9,7 @@ from typing import Literal
 import ollama
 
 from homeassistant.components import assist_pipeline, conversation
+from homeassistant.components.conversation import trace
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
@@ -136,6 +137,11 @@ class OllamaConversationEntity(
         # Add new user message
         message_history.messages.append(
             ollama.Message(role=MessageRole.USER.value, content=user_input.text)
+        )
+
+        trace.async_conversation_trace_append(
+            trace.ConversationTraceEventType.AGENT_DETAIL,
+            {"messages": message_history.messages},
         )
 
         # Get response

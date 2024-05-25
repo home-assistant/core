@@ -1821,7 +1821,7 @@ pyegps==0.2.5
 pyenphase==1.20.3
 
 # homeassistant.components.envisalink
-pyenvisalink==4.6
+pyenvisalink==4.7
 
 # homeassistant.components.ephember
 pyephember==0.3.1
@@ -2817,7 +2817,7 @@ vallox-websocket-api==5.1.1
 vehicle==2.2.1
 
 # homeassistant.components.velbus
-velbus-aio==2024.4.1
+velbus-aio==2024.5.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19

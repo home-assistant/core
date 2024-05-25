@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.climate.intent import INTENT_GET_TEMPERATURE
+from homeassistant.components.conversation.trace import (
+    ConversationTraceEventType,
+    async_conversation_trace_append,
+)
 from homeassistant.components.weather.intent import INTENT_GET_WEATHER
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -116,6 +120,10 @@ class API(ABC):
 
     async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
         """Call a LLM tool, validate args and return the response."""
+        async_conversation_trace_append(
+            ConversationTraceEventType.LLM_TOOL_CALL, asdict(tool_input)
+        )
+
         for tool in self.async_get_tools():
             if tool.name == tool_input.tool_name:
                 break
@@ -191,7 +199,10 @@ class AssistAPI(API):
 
     async def async_get_api_prompt(self, tool_input: ToolInput) -> str:
         """Return the prompt for the API."""
-        prompt = "Call the intent tools to control Home Assistant. Just pass the name to the intent."
+        prompt = (
+            "Call the intent tools to control Home Assistant. "
+            "Just pass the name to the intent."
+        )
         if tool_input.device_id:
             device_reg = device_registry.async_get(self.hass)
             device = device_reg.async_get(tool_input.device_id)
