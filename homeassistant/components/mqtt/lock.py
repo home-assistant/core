@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import partial
 import logging
 import re
 from typing import Any
@@ -36,12 +37,7 @@ from .const import (
     CONF_STATE_OPENING,
     CONF_STATE_TOPIC,
 )
-from .debug_info import log_messages
-from .mixins import (
-    MqttEntity,
-    async_setup_entity_entry_helper,
-    write_state_on_attr_change,
-)
+from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -186,57 +182,58 @@ class MqttLock(MqttEntity, LockEntity):
 
         self._valid_states = [config[state] for state in STATE_CONFIG_KEYS]
 
+    @callback
+    def _message_received(self, msg: ReceiveMessage) -> None:
+        """Handle new lock state messages."""
+        payload = self._value_template(msg.payload)
+        if not payload.strip():  # No output from template, ignore
+            _LOGGER.debug(
+                "Ignoring empty payload '%s' after rendering for topic %s",
+                payload,
+                msg.topic,
+            )
+            return
+        if payload == self._config[CONF_PAYLOAD_RESET]:
+            # Reset the state to `unknown`
+            self._attr_is_locked = None
+        elif payload in self._valid_states:
+            self._attr_is_locked = payload == self._config[CONF_STATE_LOCKED]
+            self._attr_is_locking = payload == self._config[CONF_STATE_LOCKING]
+            self._attr_is_open = payload == self._config[CONF_STATE_OPEN]
+            self._attr_is_opening = payload == self._config[CONF_STATE_OPENING]
+            self._attr_is_unlocking = payload == self._config[CONF_STATE_UNLOCKING]
+            self._attr_is_jammed = payload == self._config[CONF_STATE_JAMMED]
+
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-        topics: dict[str, dict[str, Any]] = {}
+        topics: dict[str, dict[str, Any]]
         qos: int = self._config[CONF_QOS]
         encoding: str | None = self._config[CONF_ENCODING] or None
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(
-            self,
-            {
-                "_attr_is_jammed",
-                "_attr_is_locked",
-                "_attr_is_locking",
-                "_attr_is_open",
-                "_attr_is_opening",
-                "_attr_is_unlocking",
-            },
-        )
-        def message_received(msg: ReceiveMessage) -> None:
-            """Handle new lock state messages."""
-            payload = self._value_template(msg.payload)
-            if not payload.strip():  # No output from template, ignore
-                _LOGGER.debug(
-                    "Ignoring empty payload '%s' after rendering for topic %s",
-                    payload,
-                    msg.topic,
-                )
-                return
-            if payload == self._config[CONF_PAYLOAD_RESET]:
-                # Reset the state to `unknown`
-                self._attr_is_locked = None
-            elif payload in self._valid_states:
-                self._attr_is_locked = payload == self._config[CONF_STATE_LOCKED]
-                self._attr_is_locking = payload == self._config[CONF_STATE_LOCKING]
-                self._attr_is_open = payload == self._config[CONF_STATE_OPEN]
-                self._attr_is_opening = payload == self._config[CONF_STATE_OPENING]
-                self._attr_is_unlocking = payload == self._config[CONF_STATE_UNLOCKING]
-                self._attr_is_jammed = payload == self._config[CONF_STATE_JAMMED]
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
             self._optimistic = True
-        else:
-            topics[CONF_STATE_TOPIC] = {
+            return
+        topics = {
+            CONF_STATE_TOPIC: {
                 "topic": self._config.get(CONF_STATE_TOPIC),
-                "msg_callback": message_received,
+                "msg_callback": partial(
+                    self._message_callback,
+                    self._message_received,
+                    {
+                        "_attr_is_jammed",
+                        "_attr_is_locked",
+                        "_attr_is_locking",
+                        "_attr_is_open",
+                        "_attr_is_opening",
+                        "_attr_is_unlocking",
+                    },
+                ),
+                "entity_id": self.entity_id,
                 CONF_QOS: qos,
                 CONF_ENCODING: encoding,
             }
+        }
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
