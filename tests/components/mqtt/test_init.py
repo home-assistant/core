@@ -1050,10 +1050,10 @@ async def test_subscribe_topic_not_initialize(
         await mqtt.async_subscribe(hass, "test-topic", record_calls)
 
 
-async def test_subscribe_no_mqtt_config_entry(
+async def test_subscribe_mqtt_config_entry_disabled(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient
 ) -> None:
-    """Test the subscription of a topic when MQTT has not config entry."""
+    """Test the subscription of a topic when MQTT config entry is disabled."""
     mqtt_mock.connected = True
 
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
