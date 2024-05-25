@@ -32,15 +32,20 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_CHAT_MODEL,
+    CONF_DANGEROUS_BLOCK_THRESHOLD,
+    CONF_HARASSMENT_BLOCK_THRESHOLD,
+    CONF_HATE_BLOCK_THRESHOLD,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_RECOMMENDED,
+    CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
     DEFAULT_PROMPT,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_HARM_BLOCK_THRESHOLD,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_K,
@@ -207,6 +212,30 @@ async def google_generative_ai_config_option_schema(
         )
     ]
 
+    harm_block_thresholds: list[SelectOptionDict] = [
+        SelectOptionDict(
+            label="Block none",
+            value="BLOCK_NONE",
+        ),
+        SelectOptionDict(
+            label="Block few",
+            value="BLOCK_ONLY_HIGH",
+        ),
+        SelectOptionDict(
+            label="Block some",
+            value="BLOCK_MEDIUM_AND_ABOVE",
+        ),
+        SelectOptionDict(
+            label="Block most",
+            value="BLOCK_LOW_AND_ABOVE",
+        ),
+    ]
+    harm_block_thresholds_selector = SelectSelector(
+        SelectSelectorConfig(
+            mode=SelectSelectorMode.DROPDOWN, options=harm_block_thresholds
+        )
+    )
+
     schema.update(
         {
             vol.Optional(
@@ -236,6 +265,32 @@ async def google_generative_ai_config_option_schema(
                 description={"suggested_value": options.get(CONF_MAX_TOKENS)},
                 default=RECOMMENDED_MAX_TOKENS,
             ): int,
+            vol.Optional(
+                CONF_HARASSMENT_BLOCK_THRESHOLD,
+                description={
+                    "suggested_value": options.get(CONF_HARASSMENT_BLOCK_THRESHOLD)
+                },
+                default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+            ): harm_block_thresholds_selector,
+            vol.Optional(
+                CONF_HATE_BLOCK_THRESHOLD,
+                description={"suggested_value": options.get(CONF_HATE_BLOCK_THRESHOLD)},
+                default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+            ): harm_block_thresholds_selector,
+            vol.Optional(
+                CONF_SEXUAL_BLOCK_THRESHOLD,
+                description={
+                    "suggested_value": options.get(CONF_SEXUAL_BLOCK_THRESHOLD)
+                },
+                default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+            ): harm_block_thresholds_selector,
+            vol.Optional(
+                CONF_DANGEROUS_BLOCK_THRESHOLD,
+                description={
+                    "suggested_value": options.get(CONF_DANGEROUS_BLOCK_THRESHOLD)
+                },
+                default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+            ): harm_block_thresholds_selector,
         }
     )
     return schema
