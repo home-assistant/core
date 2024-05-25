@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import partial
 import logging
 import re
 from typing import Any
@@ -34,12 +35,7 @@ from .const import (
     CONF_RETAIN,
     CONF_STATE_TOPIC,
 )
-from .debug_info import log_messages
-from .mixins import (
-    MqttEntity,
-    async_setup_entity_entry_helper,
-    write_state_on_attr_change,
-)
+from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MessageCallbackType,
     MqttCommandTemplate,
@@ -160,32 +156,41 @@ class MqttTextEntity(MqttEntity, TextEntity):
         self._optimistic = optimistic or config.get(CONF_STATE_TOPIC) is None
         self._attr_assumed_state = bool(self._optimistic)
 
+    @callback
+    def _handle_state_message_received(self, msg: ReceiveMessage) -> None:
+        """Handle receiving state message via MQTT."""
+        payload = str(self._value_template(msg.payload))
+        if check_state_too_long(_LOGGER, payload, self.entity_id, msg):
+            return
+        self._attr_native_value = payload
+
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         topics: dict[str, Any] = {}
 
         def add_subscription(
-            topics: dict[str, Any], topic: str, msg_callback: MessageCallbackType
+            topics: dict[str, Any],
+            topic: str,
+            msg_callback: MessageCallbackType,
+            tracked_attributes: set[str],
         ) -> None:
             if self._config.get(topic) is not None:
                 topics[topic] = {
                     "topic": self._config[topic],
-                    "msg_callback": msg_callback,
+                    "msg_callback": partial(
+                        self._message_callback, msg_callback, tracked_attributes
+                    ),
+                    "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
                     "encoding": self._config[CONF_ENCODING] or None,
                 }
 
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_native_value"})
-        def handle_state_message_received(msg: ReceiveMessage) -> None:
-            """Handle receiving state message via MQTT."""
-            payload = str(self._value_template(msg.payload))
-            if check_state_too_long(_LOGGER, payload, self.entity_id, msg):
-                return
-            self._attr_native_value = payload
-
-        add_subscription(topics, CONF_STATE_TOPIC, handle_state_message_received)
+        add_subscription(
+            topics,
+            CONF_STATE_TOPIC,
+            self._handle_state_message_received,
+            {"_attr_native_value"},
+        )
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
