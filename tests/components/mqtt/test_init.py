@@ -214,6 +214,7 @@ async def test_mqtt_await_ack_at_disconnect(
             0,
             False,
         )
+        await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_publish(
