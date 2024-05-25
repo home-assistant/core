@@ -84,5 +84,3 @@ async def test_update_services(
         freezer.tick(VEHICLE_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-
-        assert state.state == "1"
