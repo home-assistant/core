@@ -199,6 +199,7 @@ async def async_subscribe(
     return async_subscribe_internal(hass, topic, msg_callback, qos, encoding)
 
 
+@callback
 def async_subscribe_internal(
     hass: HomeAssistant,
     topic: str,
