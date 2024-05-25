@@ -174,8 +174,8 @@ async def test_assist_api_prompt(
     )
     api = llm.async_get_api(hass, "assist")
     prompt = await api.async_get_api_prompt(tool_input)
-    assert (
-        prompt == "Call the intent tools to control Home Assistant."
+    assert prompt == (
+        "Call the intent tools to control Home Assistant."
         " Just pass the name to the intent."
     )
 
@@ -190,8 +190,8 @@ async def test_assist_api_prompt(
         suggested_area="Test Area",
     ).id
     prompt = await api.async_get_api_prompt(tool_input)
-    assert (
-        prompt == "Call the intent tools to control Home Assistant."
+    assert prompt == (
+        "Call the intent tools to control Home Assistant."
         " Just pass the name to the intent. You are in Test Area."
     )
 
@@ -199,8 +199,8 @@ async def test_assist_api_prompt(
     area = area_registry.async_get_area_by_name("Test Area")
     area_registry.async_update(area.id, floor_id=floor.floor_id)
     prompt = await api.async_get_api_prompt(tool_input)
-    assert (
-        prompt == "Call the intent tools to control Home Assistant."
+    assert prompt == (
+        "Call the intent tools to control Home Assistant."
         " Just pass the name to the intent. You are in Test Area (second floor)."
     )
 
@@ -210,8 +210,8 @@ async def test_assist_api_prompt(
     mock_user.name = "Test User"
     with patch("homeassistant.auth.AuthManager.async_get_user", return_value=mock_user):
         prompt = await api.async_get_api_prompt(tool_input)
-    assert (
-        prompt == "Call the intent tools to control Home Assistant."
+    assert prompt == (
+        "Call the intent tools to control Home Assistant."
         " Just pass the name to the intent. You are in Test Area (second floor)."
         " The user name is Test User."
     )
