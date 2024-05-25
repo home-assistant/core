@@ -29,7 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 class SwitcherData:
     """Data for Switcher integration."""
 
-    bridge: SwitcherBridge
     coordinators: dict[str, SwitcherDataUpdateCoordinator]
 
 
@@ -67,12 +66,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> 
     # Must be ready before dispatcher is called
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    entry.runtime_data = SwitcherData(coordinators={})
     bridge = SwitcherBridge(on_device_data_callback)
-    entry.runtime_data = SwitcherData(bridge=bridge, coordinators={})
     await bridge.start()
 
-    async def stop_bridge(event: Event) -> None:
+    async def stop_bridge(event: Event | None = None) -> None:
         await bridge.stop()
+
+    entry.async_on_unload(stop_bridge)
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
@@ -83,5 +84,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> bool:
     """Unload a config entry."""
-    await entry.runtime_data.bridge.stop()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
