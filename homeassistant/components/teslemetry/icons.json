@@ -109,6 +109,7 @@
           "off": "mdi:car-seat"
         }
       },
+
       "components_customer_preferred_export_rule": {
         "default": "mdi:transmission-tower",
         "state": {
@@ -124,6 +125,14 @@
           "backup": "mdi:battery-charging-100",
           "self_consumption": "mdi:home-battery"
         }
+      }
+    },
+    "device_tracker": {
+      "location": {
+        "default": "mdi:map-marker"
+      },
+      "route": {
+        "default": "mdi:routes"
       }
     },
     "cover": {
