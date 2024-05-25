@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
-
-import attr
 
 from homeassistant.core import HomeAssistant
 
@@ -15,18 +14,18 @@ from .const import DEFAULT_QOS
 from .models import MessageCallbackType
 
 
-@attr.s(slots=True)
+@dataclass(slots=True)
 class EntitySubscription:
     """Class to hold data about an active entity topic subscription."""
 
-    hass: HomeAssistant = attr.ib()
-    topic: str | None = attr.ib()
-    message_callback: MessageCallbackType = attr.ib()
-    subscribe_task: Coroutine[Any, Any, Callable[[], None]] | None = attr.ib()
-    unsubscribe_callback: Callable[[], None] | None = attr.ib()
-    qos: int = attr.ib(default=0)
-    encoding: str = attr.ib(default="utf-8")
-    entity_id: str | None = attr.ib(default=None)
+    hass: HomeAssistant
+    topic: str | None
+    message_callback: MessageCallbackType
+    subscribe_task: Coroutine[Any, Any, Callable[[], None]] | None
+    unsubscribe_callback: Callable[[], None] | None
+    qos: int = 0
+    encoding: str = "utf-8"
+    entity_id: str | None = None
 
     def resubscribe_if_necessary(
         self, hass: HomeAssistant, other: EntitySubscription | None

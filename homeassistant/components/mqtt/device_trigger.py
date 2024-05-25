@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass, field
 import logging
 from typing import TYPE_CHECKING, Any
 
-import attr
 import voluptuous as vol
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
@@ -84,14 +84,14 @@ TRIGGER_DISCOVERY_SCHEMA = MQTT_BASE_SCHEMA.extend(
 LOG_NAME = "Device trigger"
 
 
-@attr.s(slots=True)
+@dataclass(slots=True)
 class TriggerInstance:
     """Attached trigger settings."""
 
-    action: TriggerActionType = attr.ib()
-    trigger_info: TriggerInfo = attr.ib()
-    trigger: Trigger = attr.ib()
-    remove: CALLBACK_TYPE | None = attr.ib(default=None)
+    action: TriggerActionType
+    trigger_info: TriggerInfo
+    trigger: Trigger
+    remove: CALLBACK_TYPE | None = None
 
     async def async_attach_trigger(self) -> None:
         """Attach MQTT trigger."""
@@ -117,21 +117,21 @@ class TriggerInstance:
         )
 
 
-@attr.s(slots=True)
+@dataclass(slots=True, kw_only=True)
 class Trigger:
     """Device trigger settings."""
 
-    device_id: str = attr.ib()
-    discovery_data: DiscoveryInfoType | None = attr.ib()
-    discovery_id: str | None = attr.ib()
-    hass: HomeAssistant = attr.ib()
-    payload: str | None = attr.ib()
-    qos: int | None = attr.ib()
-    subtype: str = attr.ib()
-    topic: str | None = attr.ib()
-    type: str = attr.ib()
-    value_template: str | None = attr.ib()
-    trigger_instances: list[TriggerInstance] = attr.ib(factory=list)
+    device_id: str
+    discovery_data: DiscoveryInfoType | None = None
+    discovery_id: str | None = None
+    hass: HomeAssistant
+    payload: str | None
+    qos: int | None
+    subtype: str
+    topic: str | None
+    type: str
+    value_template: str | None
+    trigger_instances: list[TriggerInstance] = field(default_factory=list)
 
     async def add_trigger(
         self, action: TriggerActionType, trigger_info: TriggerInfo
