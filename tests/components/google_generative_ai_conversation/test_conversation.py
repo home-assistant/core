@@ -286,7 +286,7 @@ async def test_function_call(
         ),
     )
 
-    # Trace conversating tracing
+    # Test conversating tracing
     traces = trace.async_get_traces()
     assert traces
     last_trace = traces[-1].as_dict()
