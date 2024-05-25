@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import partial
 import logging
 
 import voluptuous as vol
@@ -27,12 +28,7 @@ from .const import (
     CONF_RETAIN,
     CONF_STATE_TOPIC,
 )
-from .debug_info import log_messages
-from .mixins import (
-    MqttEntity,
-    async_setup_entity_entry_helper,
-    write_state_on_attr_change,
-)
+from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -113,52 +109,54 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
             config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
 
+    @callback
+    def _message_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT messages."""
+        payload = str(self._value_template(msg.payload))
+        if not payload.strip():  # No output from template, ignore
+            _LOGGER.debug(
+                "Ignoring empty payload '%s' after rendering for topic %s",
+                payload,
+                msg.topic,
+            )
+            return
+        if payload.lower() == "none":
+            self._attr_current_option = None
+            return
+
+        if payload not in self.options:
+            _LOGGER.error(
+                "Invalid option for %s: '%s' (valid options: %s)",
+                self.entity_id,
+                payload,
+                self.options,
+            )
+            return
+        self._attr_current_option = payload
+
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_current_option"})
-        def message_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages."""
-            payload = str(self._value_template(msg.payload))
-            if not payload.strip():  # No output from template, ignore
-                _LOGGER.debug(
-                    "Ignoring empty payload '%s' after rendering for topic %s",
-                    payload,
-                    msg.topic,
-                )
-                return
-            if payload.lower() == "none":
-                self._attr_current_option = None
-                return
-
-            if payload not in self.options:
-                _LOGGER.error(
-                    "Invalid option for %s: '%s' (valid options: %s)",
-                    self.entity_id,
-                    payload,
-                    self.options,
-                )
-                return
-            self._attr_current_option = payload
-
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
             self._attr_assumed_state = True
-        else:
-            self._sub_state = subscription.async_prepare_subscribe_topics(
-                self.hass,
-                self._sub_state,
-                {
-                    "state_topic": {
-                        "topic": self._config.get(CONF_STATE_TOPIC),
-                        "msg_callback": message_received,
-                        "qos": self._config[CONF_QOS],
-                        "encoding": self._config[CONF_ENCODING] or None,
-                    }
-                },
-            )
+            return
+        self._sub_state = subscription.async_prepare_subscribe_topics(
+            self.hass,
+            self._sub_state,
+            {
+                "state_topic": {
+                    "topic": self._config.get(CONF_STATE_TOPIC),
+                    "msg_callback": partial(
+                        self._message_callback,
+                        self._message_received,
+                        {"_attr_current_option"},
+                    ),
+                    "entity_id": self.entity_id,
+                    "qos": self._config[CONF_QOS],
+                    "encoding": self._config[CONF_ENCODING] or None,
+                }
+            },
+        )
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
