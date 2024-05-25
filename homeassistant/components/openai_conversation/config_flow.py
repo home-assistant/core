@@ -86,7 +86,7 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(
-                title="OpenAI Conversation",
+                title="ChatGPT",
                 data=user_input,
                 options={CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
             )
