@@ -1254,13 +1254,15 @@ class MqttEntity(
     def _message_callback(
         self,
         msg_callback: MessageCallbackType,
-        attributes: set[str],
+        attributes: set[str] | None,
         msg: ReceiveMessage,
     ) -> None:
         """Process the message callback."""
-        attrs_snapshot: tuple[tuple[str, Any | UndefinedType], ...] = tuple(
-            (attribute, getattr(self, attribute, UNDEFINED)) for attribute in attributes
-        )
+        if attributes is not None:
+            attrs_snapshot: tuple[tuple[str, Any | UndefinedType], ...] = tuple(
+                (attribute, getattr(self, attribute, UNDEFINED))
+                for attribute in attributes
+            )
         mqtt_data = self.hass.data[DATA_MQTT]
         messages = mqtt_data.debug_info_entities[self.entity_id]["subscriptions"][
             msg.subscribed_topic
@@ -1274,7 +1276,7 @@ class MqttEntity(
             _LOGGER.warning(exc)
             return
 
-        if self._attrs_have_changed(attrs_snapshot):
+        if attributes is not None and self._attrs_have_changed(attrs_snapshot):
             mqtt_data.state_write_requests.write_state_request(self)
 
 
