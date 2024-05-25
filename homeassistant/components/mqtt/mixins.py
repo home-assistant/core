@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Coroutine
 import functools
-from functools import partial, wraps
+from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, cast, final
 
@@ -357,45 +357,6 @@ def init_entity_id_from_config(
         entity.entity_id = async_generate_entity_id(
             entity_id_format, config[CONF_OBJECT_ID], None, hass
         )
-
-
-def write_state_on_attr_change(
-    entity: Entity, attributes: set[str]
-) -> Callable[[MessageCallbackType], MessageCallbackType]:
-    """Wrap an MQTT message callback to track state attribute changes."""
-
-    def _attrs_have_changed(tracked_attrs: dict[str, Any]) -> bool:
-        """Return True if attributes on entity changed or if update is forced."""
-        if not (write_state := (getattr(entity, "_attr_force_update", False))):
-            for attribute, last_value in tracked_attrs.items():
-                if getattr(entity, attribute, UNDEFINED) != last_value:
-                    write_state = True
-                    break
-
-        return write_state
-
-    def _decorator(msg_callback: MessageCallbackType) -> MessageCallbackType:
-        @wraps(msg_callback)
-        def wrapper(msg: ReceiveMessage) -> None:
-            """Track attributes for write state requests."""
-            tracked_attrs: dict[str, Any] = {
-                attribute: getattr(entity, attribute, UNDEFINED)
-                for attribute in attributes
-            }
-            try:
-                msg_callback(msg)
-            except MqttValueTemplateException as exc:
-                _LOGGER.warning(exc)
-                return
-            if not _attrs_have_changed(tracked_attrs):
-                return
-
-            mqtt_data = entity.hass.data[DATA_MQTT]
-            mqtt_data.state_write_requests.write_state_request(entity)
-
-        return wrapper
-
-    return _decorator
 
 
 class MqttAttributesMixin(Entity):
