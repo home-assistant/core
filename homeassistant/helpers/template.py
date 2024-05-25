@@ -7,7 +7,7 @@ import asyncio
 import base64
 import collections.abc
 from collections.abc import Callable, Generator, Iterable
-from contextlib import AbstractContextManager, suppress
+from contextlib import AbstractContextManager
 from contextvars import ContextVar
 from datetime import date, datetime, time, timedelta
 from functools import cache, lru_cache, partial, wraps
@@ -759,8 +759,10 @@ class Template:
         variables = dict(variables or {})
         variables["value"] = value
 
-        with suppress(*JSON_DECODE_EXCEPTIONS):
+        try:  # noqa: SIM105 - suppress is much slower
             variables["value_json"] = json_loads(value)
+        except JSON_DECODE_EXCEPTIONS:
+            pass
 
         try:
             render_result = _render_with_context(
