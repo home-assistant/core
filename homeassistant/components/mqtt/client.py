@@ -835,8 +835,13 @@ class MQTT:
         msg: ReceiveMessage,
     ) -> str:
         """Return a string with the exception message."""
+        # if msg_callback is a partial we return the name of the first argument
+        if isinstance(msg_callback, partial):
+            call_back_name = getattr(msg_callback.args[0], "__name__")  # type: ignore[unreachable]
+        else:
+            call_back_name = getattr(msg_callback, "__name__")
         return (
-            f"Exception in {msg_callback.__name__} when handling msg on "
+            f"Exception in {call_back_name} when handling msg on "
             f"'{msg.topic}': '{msg.payload}'"  # type: ignore[str-bytes-safe]
         )
 
