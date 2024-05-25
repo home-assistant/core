@@ -19,6 +19,7 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
+    DEFAULT_PROMPT,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -94,7 +95,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["options"] == {
         CONF_RECOMMENDED: True,
         CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-        CONF_PROMPT: "",
+        CONF_PROMPT: DEFAULT_PROMPT,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
