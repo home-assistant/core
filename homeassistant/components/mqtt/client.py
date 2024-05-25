@@ -198,7 +198,7 @@ async def async_subscribe(
 def async_subscribe_internal(
     hass: HomeAssistant,
     topic: str,
-    msg_callback: AsyncMessageCallbackType | MessageCallbackType,
+    msg_callback: Callable[[ReceiveMessage], Coroutine[Any, Any, None] | None],
     qos: int = DEFAULT_QOS,
     encoding: str | None = DEFAULT_ENCODING,
 ) -> CALLBACK_TYPE:
