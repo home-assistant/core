@@ -12,7 +12,7 @@ from watchdog.events import (
     EVENT_TYPE_MOVED,
 )
 
-from homeassistant.components.event import EventEntity, EventEntityDescription
+from homeassistant.components.event import EventEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -20,29 +20,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-
-EVENT_DESCRIPTIONS = (
-    EventEntityDescription(
-        key=EVENT_TYPE_CLOSED,
-        translation_key=EVENT_TYPE_CLOSED,
-    ),
-    EventEntityDescription(
-        key=EVENT_TYPE_CREATED,
-        translation_key=EVENT_TYPE_CREATED,
-    ),
-    EventEntityDescription(
-        key=EVENT_TYPE_DELETED,
-        translation_key=EVENT_TYPE_DELETED,
-    ),
-    EventEntityDescription(
-        key=EVENT_TYPE_MODIFIED,
-        translation_key=EVENT_TYPE_MODIFIED,
-    ),
-    EventEntityDescription(
-        key=EVENT_TYPE_MOVED,
-        translation_key=EVENT_TYPE_MOVED,
-    ),
-)
 
 
 async def async_setup_entry(
@@ -52,10 +29,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Folder Watcher event."""
 
-    async_add_entities(
-        FolderWatcherEventEntity(description, entry)
-        for description in EVENT_DESCRIPTIONS
-    )
+    async_add_entities([FolderWatcherEventEntity(entry)])
 
 
 class FolderWatcherEventEntity(EventEntity):
@@ -70,20 +44,19 @@ class FolderWatcherEventEntity(EventEntity):
         EVENT_TYPE_MODIFIED,
         EVENT_TYPE_MOVED,
     ]
+    _attr_name = None
 
     def __init__(
         self,
-        description: EventEntityDescription,
         entry: ConfigEntry,
     ) -> None:
         """Initialise a Xiaomi event entity."""
-        self.entity_description = description
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.title,
             manufacturer="Folder Watcher",
         )
-        self._attr_unique_id = f"{entry.entry_id}-{description.key}"
+        self._attr_unique_id = entry.entry_id
         self._entry = entry
 
     @callback
@@ -95,7 +68,7 @@ class FolderWatcherEventEntity(EventEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
-        signal = f"folder_watcher-{self._entry.entry_id}-{self.entity_description.key}"
+        signal = f"folder_watcher-{self._entry.entry_id}"
         self.async_on_remove(
             async_dispatcher_connect(self.hass, signal, self._async_handle_event)
         )
