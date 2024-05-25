@@ -109,9 +109,6 @@ _RESERVED_NAMES = {
     "jinja_pass_arg",
 }
 
-_GROUP_DOMAIN_PREFIX = "group."
-_ZONE_DOMAIN_PREFIX = "zone."
-
 _COLLECTABLE_STATE_ATTRIBUTES = {
     "state",
     "attributes",
