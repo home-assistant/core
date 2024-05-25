@@ -26,7 +26,6 @@ from .const import (
     MAX_PENDING_MSG,
     PENDING_MSG_PEAK,
     PENDING_MSG_PEAK_TIME,
-    READY_FUTURE_MAX_MESSAGES,
     SIGNAL_WEBSOCKET_CONNECTED,
     SIGNAL_WEBSOCKET_DISCONNECTED,
     URL,
@@ -248,9 +247,7 @@ class WebSocketHandler:
         We will release the ready future if the queue did not grow since the
         last time we tried to release the ready future.
 
-        If we reach READY_FUTURE_MAX_MESSAGES, we will release the ready
-        future immediately so avoid the messages getting to large which
-        can cause Chrome to stall (not not firefox).
+        If we reach the peak, we will release the ready future immediately.
         """
         if (
             not (ready_future := self._ready_future)
@@ -259,7 +256,10 @@ class WebSocketHandler:
         ):
             self._release_ready_queue_size = 0
             return
-        if queue_size > self._release_ready_queue_size < READY_FUTURE_MAX_MESSAGES:
+        # If we are below the peak and there are new messages in the queue
+        # since the last time we tried to release the ready future, we try again
+        # later so we can coalesce more messages.
+        if queue_size > self._release_ready_queue_size < PENDING_MSG_PEAK:
             self._release_ready_queue_size = queue_size
             self._loop.call_soon(self._release_ready_future_or_reschedule)
             return

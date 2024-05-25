@@ -22,7 +22,6 @@ type AsyncWebSocketCommandHandler = Callable[
 DOMAIN: Final = "websocket_api"
 URL: Final = "/api/websocket"
 PENDING_MSG_PEAK: Final = 1024
-READY_FUTURE_MAX_MESSAGES: Final = 128
 PENDING_MSG_PEAK_TIME: Final = 5
 # Maximum number of messages that can be pending at any given time.
 # This is effectively the upper limit of the number of entities
