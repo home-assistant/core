@@ -190,10 +190,6 @@ async def async_subscribe(
 ) -> CALLBACK_TYPE:
     """Subscribe to an MQTT topic.
 
-    This function is internal to the MQTT integration
-    and may change at any time. It should not be considered
-    a stable API.
-
     Call the return value to unsubscribe.
     """
     return async_subscribe_internal(hass, topic, msg_callback, qos, encoding)
@@ -208,6 +204,10 @@ def async_subscribe_internal(
     encoding: str | None = DEFAULT_ENCODING,
 ) -> CALLBACK_TYPE:
     """Subscribe to an MQTT topic.
+
+    This function is internal to the MQTT integration
+    and may change at any time. It should not be considered
+    a stable API.
 
     Call the return value to unsubscribe.
     """
