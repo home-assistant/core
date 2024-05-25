@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import defaultdict
 from collections.abc import AsyncGenerator, Callable, Coroutine, Iterable
 import contextlib
 from dataclasses import dataclass
@@ -428,13 +429,15 @@ class MQTT:
         self.config_entry = config_entry
         self.conf = conf
 
-        self._simple_subscriptions: dict[str, list[Subscription]] = {}
+        self._simple_subscriptions: defaultdict[str, list[Subscription]] = defaultdict(
+            list
+        )
         self._wildcard_subscriptions: list[Subscription] = []
         # _retained_topics prevents a Subscription from receiving a
         # retained message more than once per topic. This prevents flooding
         # already active subscribers when new subscribers subscribe to a topic
         # which has subscribed messages.
-        self._retained_topics: dict[Subscription, set[str]] = {}
+        self._retained_topics: defaultdict[Subscription, set[str]] = defaultdict(set)
         self.connected = False
         self._ha_started = asyncio.Event()
         self._cleanup_on_unload: list[Callable[[], None]] = []
@@ -786,9 +789,7 @@ class MQTT:
         The caller is responsible clearing the cache of _matching_subscriptions.
         """
         if subscription.is_simple_match:
-            self._simple_subscriptions.setdefault(subscription.topic, []).append(
-                subscription
-            )
+            self._simple_subscriptions[subscription.topic].append(subscription)
         else:
             self._wildcard_subscriptions.append(subscription)
 
@@ -1108,7 +1109,7 @@ class MQTT:
 
         for subscription in subscriptions:
             if msg.retain:
-                retained_topics = self._retained_topics.setdefault(subscription, set())
+                retained_topics = self._retained_topics[subscription]
                 # Skip if the subscription already received a retained message
                 if topic in retained_topics:
                     continue
