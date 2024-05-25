@@ -175,8 +175,8 @@ async def test_assist_api_prompt(
     api = llm.async_get_api(hass, "assist")
     prompt = await api.async_get_api_prompt(tool_input)
     assert (
-        prompt
-        == "Call the intent tools to control Home Assistant. Just pass the name to the intent."
+        prompt == "Call the intent tools to control Home Assistant."
+        " Just pass the name to the intent."
     )
 
     entry = MockConfigEntry(title=None)
@@ -191,8 +191,8 @@ async def test_assist_api_prompt(
     ).id
     prompt = await api.async_get_api_prompt(tool_input)
     assert (
-        prompt
-        == "Call the intent tools to control Home Assistant. Just pass the name to the intent. You are in Test Area."
+        prompt == "Call the intent tools to control Home Assistant."
+        " Just pass the name to the intent. You are in Test Area."
     )
 
     floor = floor_registry.async_create("second floor")
@@ -200,8 +200,8 @@ async def test_assist_api_prompt(
     area_registry.async_update(area.id, floor_id=floor.floor_id)
     prompt = await api.async_get_api_prompt(tool_input)
     assert (
-        prompt
-        == "Call the intent tools to control Home Assistant. Just pass the name to the intent. You are in Test Area (second floor)."
+        prompt == "Call the intent tools to control Home Assistant."
+        " Just pass the name to the intent. You are in Test Area (second floor)."
     )
 
     context.user_id = "12345"
@@ -211,6 +211,7 @@ async def test_assist_api_prompt(
     with patch("homeassistant.auth.AuthManager.async_get_user", return_value=mock_user):
         prompt = await api.async_get_api_prompt(tool_input)
     assert (
-        prompt
-        == "Call the intent tools to control Home Assistant. Just pass the name to the intent. You are in Test Area (second floor). The user name is Test User."
+        prompt == "Call the intent tools to control Home Assistant."
+        " Just pass the name to the intent. You are in Test Area (second floor)."
+        " The user name is Test User."
     )
