@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Generator
 from copy import deepcopy
 from datetime import datetime, timedelta
+from functools import partial
 import json
 import logging
 import socket
@@ -2912,11 +2913,45 @@ async def test_message_callback_exception_gets_logged(
     await mqtt_mock_entry()
 
     @callback
-    def bad_handler(*args) -> None:
-        """Record calls."""
+    def bad_handler(msg: ReceiveMessage) -> None:
+        """Handle callback."""
         raise ValueError("This is a bad message callback")
 
     await mqtt.async_subscribe(hass, "test-topic", bad_handler)
+    async_fire_mqtt_message(hass, "test-topic", "test")
+    await hass.async_block_till_done()
+
+    assert (
+        "Exception in bad_handler when handling msg on 'test-topic':"
+        " 'test'" in caplog.text
+    )
+
+
+@pytest.mark.no_fail_on_log_exception
+async def test_message_partial_callback_exception_gets_logged(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test exception raised by message handler."""
+    await mqtt_mock_entry()
+
+    @callback
+    def bad_handler(msg: ReceiveMessage) -> None:
+        """Handle callback."""
+        raise ValueError("This is a bad message callback")
+
+    def parial_handler(
+        msg_callback: MessageCallbackType,
+        attributes: set[str],
+        msg: ReceiveMessage,
+    ) -> None:
+        """Partial callback handler."""
+        msg_callback(msg)
+
+    await mqtt.async_subscribe(
+        hass, "test-topic", partial(parial_handler, bad_handler, {"some_attr"})
+    )
     async_fire_mqtt_message(hass, "test-topic", "test")
     await hass.async_block_till_done()
 
