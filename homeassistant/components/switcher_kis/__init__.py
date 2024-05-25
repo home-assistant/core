@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 
 from aioswitcher.bridge import SwitcherBridge
@@ -25,14 +24,7 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class SwitcherData:
-    """Data for Switcher integration."""
-
-    coordinators: dict[str, SwitcherDataUpdateCoordinator]
-
-
-type SwitcherConfigEntry = ConfigEntry[SwitcherData]
+type SwitcherConfigEntry = ConfigEntry[dict[str, SwitcherDataUpdateCoordinator]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> bool:
@@ -42,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> 
     def on_device_data_callback(device: SwitcherBase) -> None:
         """Use as a callback for device data."""
 
-        coordinators = entry.runtime_data.coordinators
+        coordinators = entry.runtime_data
 
         # Existing device update device data
         if coordinator := coordinators.get(device.device_id):
@@ -66,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> 
     # Must be ready before dispatcher is called
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    entry.runtime_data = SwitcherData(coordinators={})
+    entry.runtime_data = {}
     bridge = SwitcherBridge(on_device_data_callback)
     await bridge.start()
 

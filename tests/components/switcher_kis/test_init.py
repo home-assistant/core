@@ -27,7 +27,7 @@ async def test_update_fail(
     await hass.async_block_till_done()
 
     assert mock_bridge.is_running is True
-    assert len(entry.runtime_data.coordinators) == 2
+    assert len(entry.runtime_data) == 2
 
     async_fire_time_changed(
         hass, dt_util.utcnow() + timedelta(seconds=MAX_UPDATE_INTERVAL_SEC + 1)

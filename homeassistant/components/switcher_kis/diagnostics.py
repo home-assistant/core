@@ -17,7 +17,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: SwitcherConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinators = entry.runtime_data.coordinators
+    coordinators = entry.runtime_data
 
     return async_redact_data(
         {
