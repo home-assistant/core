@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import partial
 import logging
 import math
 from typing import Any
@@ -49,12 +50,7 @@ from .const import (
     CONF_STATE_VALUE_TEMPLATE,
     PAYLOAD_NONE,
 )
-from .debug_info import log_messages
-from .mixins import (
-    MqttEntity,
-    async_setup_entity_entry_helper,
-    write_state_on_attr_change,
-)
+from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MessageCallbackType,
     MqttCommandTemplate,
@@ -338,137 +334,142 @@ class MqttFan(MqttEntity, FanEntity):
             for key, tpl in value_templates.items()
         }
 
+    @callback
+    def _state_received(self, msg: ReceiveMessage) -> None:
+        """Handle new received MQTT message."""
+        payload = self._value_templates[CONF_STATE](msg.payload)
+        if not payload:
+            _LOGGER.debug("Ignoring empty state from '%s'", msg.topic)
+            return
+        if payload == self._payload["STATE_ON"]:
+            self._attr_is_on = True
+        elif payload == self._payload["STATE_OFF"]:
+            self._attr_is_on = False
+        elif payload == PAYLOAD_NONE:
+            self._attr_is_on = None
+
+    @callback
+    def _percentage_received(self, msg: ReceiveMessage) -> None:
+        """Handle new received MQTT message for the percentage."""
+        rendered_percentage_payload = self._value_templates[ATTR_PERCENTAGE](
+            msg.payload
+        )
+        if not rendered_percentage_payload:
+            _LOGGER.debug("Ignoring empty speed from '%s'", msg.topic)
+            return
+        if rendered_percentage_payload == self._payload["PERCENTAGE_RESET"]:
+            self._attr_percentage = None
+            return
+        try:
+            percentage = ranged_value_to_percentage(
+                self._speed_range, int(rendered_percentage_payload)
+            )
+        except ValueError:
+            _LOGGER.warning(
+                (
+                    "'%s' received on topic %s. '%s' is not a valid speed within"
+                    " the speed range"
+                ),
+                msg.payload,
+                msg.topic,
+                rendered_percentage_payload,
+            )
+            return
+        if percentage < 0 or percentage > 100:
+            _LOGGER.warning(
+                (
+                    "'%s' received on topic %s. '%s' is not a valid speed within"
+                    " the speed range"
+                ),
+                msg.payload,
+                msg.topic,
+                rendered_percentage_payload,
+            )
+            return
+        self._attr_percentage = percentage
+
+    @callback
+    def _preset_mode_received(self, msg: ReceiveMessage) -> None:
+        """Handle new received MQTT message for preset mode."""
+        preset_mode = str(self._value_templates[ATTR_PRESET_MODE](msg.payload))
+        if preset_mode == self._payload["PRESET_MODE_RESET"]:
+            self._attr_preset_mode = None
+            return
+        if not preset_mode:
+            _LOGGER.debug("Ignoring empty preset_mode from '%s'", msg.topic)
+            return
+        if not self.preset_modes or preset_mode not in self.preset_modes:
+            _LOGGER.warning(
+                "'%s' received on topic %s. '%s' is not a valid preset mode",
+                msg.payload,
+                msg.topic,
+                preset_mode,
+            )
+            return
+
+        self._attr_preset_mode = preset_mode
+
+    @callback
+    def _oscillation_received(self, msg: ReceiveMessage) -> None:
+        """Handle new received MQTT message for the oscillation."""
+        payload = self._value_templates[ATTR_OSCILLATING](msg.payload)
+        if not payload:
+            _LOGGER.debug("Ignoring empty oscillation from '%s'", msg.topic)
+            return
+        if payload == self._payload["OSCILLATE_ON_PAYLOAD"]:
+            self._attr_oscillating = True
+        elif payload == self._payload["OSCILLATE_OFF_PAYLOAD"]:
+            self._attr_oscillating = False
+
+    @callback
+    def _direction_received(self, msg: ReceiveMessage) -> None:
+        """Handle new received MQTT message for the direction."""
+        direction = self._value_templates[ATTR_DIRECTION](msg.payload)
+        if not direction:
+            _LOGGER.debug("Ignoring empty direction from '%s'", msg.topic)
+            return
+        self._attr_current_direction = str(direction)
+
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         topics: dict[str, Any] = {}
 
-        def add_subscribe_topic(topic: str, msg_callback: MessageCallbackType) -> bool:
+        def add_subscribe_topic(
+            topic: str, msg_callback: MessageCallbackType, tracked_attributes: set[str]
+        ) -> bool:
             """Add a topic to subscribe to."""
             if has_topic := self._topic[topic] is not None:
                 topics[topic] = {
                     "topic": self._topic[topic],
-                    "msg_callback": msg_callback,
+                    "msg_callback": partial(
+                        self._message_callback, msg_callback, tracked_attributes
+                    ),
+                    "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
                     "encoding": self._config[CONF_ENCODING] or None,
                 }
             return has_topic
 
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_is_on"})
-        def state_received(msg: ReceiveMessage) -> None:
-            """Handle new received MQTT message."""
-            payload = self._value_templates[CONF_STATE](msg.payload)
-            if not payload:
-                _LOGGER.debug("Ignoring empty state from '%s'", msg.topic)
-                return
-            if payload == self._payload["STATE_ON"]:
-                self._attr_is_on = True
-            elif payload == self._payload["STATE_OFF"]:
-                self._attr_is_on = False
-            elif payload == PAYLOAD_NONE:
-                self._attr_is_on = None
-
-        add_subscribe_topic(CONF_STATE_TOPIC, state_received)
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_percentage"})
-        def percentage_received(msg: ReceiveMessage) -> None:
-            """Handle new received MQTT message for the percentage."""
-            rendered_percentage_payload = self._value_templates[ATTR_PERCENTAGE](
-                msg.payload
-            )
-            if not rendered_percentage_payload:
-                _LOGGER.debug("Ignoring empty speed from '%s'", msg.topic)
-                return
-            if rendered_percentage_payload == self._payload["PERCENTAGE_RESET"]:
-                self._attr_percentage = None
-                return
-            try:
-                percentage = ranged_value_to_percentage(
-                    self._speed_range, int(rendered_percentage_payload)
-                )
-            except ValueError:
-                _LOGGER.warning(
-                    (
-                        "'%s' received on topic %s. '%s' is not a valid speed within"
-                        " the speed range"
-                    ),
-                    msg.payload,
-                    msg.topic,
-                    rendered_percentage_payload,
-                )
-                return
-            if percentage < 0 or percentage > 100:
-                _LOGGER.warning(
-                    (
-                        "'%s' received on topic %s. '%s' is not a valid speed within"
-                        " the speed range"
-                    ),
-                    msg.payload,
-                    msg.topic,
-                    rendered_percentage_payload,
-                )
-                return
-            self._attr_percentage = percentage
-
-        add_subscribe_topic(CONF_PERCENTAGE_STATE_TOPIC, percentage_received)
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_preset_mode"})
-        def preset_mode_received(msg: ReceiveMessage) -> None:
-            """Handle new received MQTT message for preset mode."""
-            preset_mode = str(self._value_templates[ATTR_PRESET_MODE](msg.payload))
-            if preset_mode == self._payload["PRESET_MODE_RESET"]:
-                self._attr_preset_mode = None
-                return
-            if not preset_mode:
-                _LOGGER.debug("Ignoring empty preset_mode from '%s'", msg.topic)
-                return
-            if not self.preset_modes or preset_mode not in self.preset_modes:
-                _LOGGER.warning(
-                    "'%s' received on topic %s. '%s' is not a valid preset mode",
-                    msg.payload,
-                    msg.topic,
-                    preset_mode,
-                )
-                return
-
-            self._attr_preset_mode = preset_mode
-
-        add_subscribe_topic(CONF_PRESET_MODE_STATE_TOPIC, preset_mode_received)
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_oscillating"})
-        def oscillation_received(msg: ReceiveMessage) -> None:
-            """Handle new received MQTT message for the oscillation."""
-            payload = self._value_templates[ATTR_OSCILLATING](msg.payload)
-            if not payload:
-                _LOGGER.debug("Ignoring empty oscillation from '%s'", msg.topic)
-                return
-            if payload == self._payload["OSCILLATE_ON_PAYLOAD"]:
-                self._attr_oscillating = True
-            elif payload == self._payload["OSCILLATE_OFF_PAYLOAD"]:
-                self._attr_oscillating = False
-
-        if add_subscribe_topic(CONF_OSCILLATION_STATE_TOPIC, oscillation_received):
+        add_subscribe_topic(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
+        add_subscribe_topic(
+            CONF_PERCENTAGE_STATE_TOPIC, self._percentage_received, {"_attr_percentage"}
+        )
+        add_subscribe_topic(
+            CONF_PRESET_MODE_STATE_TOPIC,
+            self._preset_mode_received,
+            {"_attr_preset_mode"},
+        )
+        if add_subscribe_topic(
+            CONF_OSCILLATION_STATE_TOPIC,
+            self._oscillation_received,
+            {"_attr_oscillating"},
+        ):
             self._attr_oscillating = False
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_current_direction"})
-        def direction_received(msg: ReceiveMessage) -> None:
-            """Handle new received MQTT message for the direction."""
-            direction = self._value_templates[ATTR_DIRECTION](msg.payload)
-            if not direction:
-                _LOGGER.debug("Ignoring empty direction from '%s'", msg.topic)
-                return
-            self._attr_current_direction = str(direction)
-
-        add_subscribe_topic(CONF_DIRECTION_STATE_TOPIC, direction_received)
+        add_subscribe_topic(
+            CONF_DIRECTION_STATE_TOPIC,
+            self._direction_received,
+            {"_attr_current_direction"},
+        )
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
