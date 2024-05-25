@@ -224,7 +224,6 @@ class GoogleGenerativeAIConversationEntity(
 
             prompt = "\n".join(
                 (
-                    api_prompt,
                     template.Template(
                         self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT), self.hass
                     ).async_render(
@@ -233,6 +232,7 @@ class GoogleGenerativeAIConversationEntity(
                         },
                         parse_result=False,
                     ),
+                    api_prompt,
                 )
             )
 
