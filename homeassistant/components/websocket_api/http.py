@@ -78,6 +78,7 @@ class WebSocketHandler:
         "_connection",
         "_message_queue",
         "_ready_future",
+        "_ready_call_soon_pending",
     )
 
     def __init__(self, hass: HomeAssistant, request: web.Request) -> None:
@@ -99,6 +100,7 @@ class WebSocketHandler:
         # an asyncio.Queue.
         self._message_queue: deque[bytes | None] = deque()
         self._ready_future: asyncio.Future[None] | None = None
+        self._ready_call_soon_pending: bool = False
 
     def __repr__(self) -> str:
         """Return the representation."""
@@ -219,9 +221,10 @@ class WebSocketHandler:
             return
 
         message_queue.append(message)
-        ready_future = self._ready_future
-        if ready_future and not ready_future.done():
-            ready_future.set_result(None)
+        if not self._ready_call_soon_pending:
+            # Try to coalesce more messages to reduce the number of writes
+            self._ready_call_soon_pending = True
+            self._hass.loop.call_soon(self._release_ready_future)
 
         peak_checker_active = self._peak_checker_unsub is not None
 
@@ -234,6 +237,21 @@ class WebSocketHandler:
             self._peak_checker_unsub = async_call_later(
                 self._hass, PENDING_MSG_PEAK_TIME, self._check_write_peak
             )
+
+    @callback
+    def _release_ready_future(self) -> None:
+        """Release the ready future.
+
+        We do this from a call_soon to try to coalesce
+        more messages to reduce the number of writes.
+        """
+        if (
+            self._message_queue
+            and (ready_future := self._ready_future)
+            and not ready_future.done()
+        ):
+            ready_future.set_result(None)
+        self._ready_call_soon_pending = False
 
     @callback
     def _check_write_peak(self, _utc_time: dt.datetime) -> None:
