@@ -199,7 +199,10 @@ class AssistAPI(API):
 
     async def async_get_api_prompt(self, tool_input: ToolInput) -> str:
         """Return the prompt for the API."""
-        prompt = "Call the intent tools to control Home Assistant. Just pass the name to the intent."
+        prompt = (
+            "Call the intent tools to control Home Assistant. "
+            "Just pass the name to the intent."
+        )
         if tool_input.device_id:
             device_reg = device_registry.async_get(self.hass)
             device = device_reg.async_get(tool_input.device_id)
