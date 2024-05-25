@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import partial
 from typing import Any
 
 import voluptuous as vol
@@ -36,12 +37,7 @@ from .const import (
     CONF_STATE_TOPIC,
     PAYLOAD_NONE,
 )
-from .debug_info import log_messages
-from .mixins import (
-    MqttEntity,
-    async_setup_entity_entry_helper,
-    write_state_on_attr_change,
-)
+from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
@@ -118,38 +114,40 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
             self._config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
 
+    @callback
+    def _state_message_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT state messages."""
+        payload = self._value_template(msg.payload)
+        if payload == self._state_on:
+            self._attr_is_on = True
+        elif payload == self._state_off:
+            self._attr_is_on = False
+        elif payload == PAYLOAD_NONE:
+            self._attr_is_on = None
+
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_is_on"})
-        def state_message_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT state messages."""
-            payload = self._value_template(msg.payload)
-            if payload == self._state_on:
-                self._attr_is_on = True
-            elif payload == self._state_off:
-                self._attr_is_on = False
-            elif payload == PAYLOAD_NONE:
-                self._attr_is_on = None
-
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
             self._optimistic = True
-        else:
-            self._sub_state = subscription.async_prepare_subscribe_topics(
-                self.hass,
-                self._sub_state,
-                {
-                    CONF_STATE_TOPIC: {
-                        "topic": self._config.get(CONF_STATE_TOPIC),
-                        "msg_callback": state_message_received,
-                        "qos": self._config[CONF_QOS],
-                        "encoding": self._config[CONF_ENCODING] or None,
-                    }
-                },
-            )
+            return
+        self._sub_state = subscription.async_prepare_subscribe_topics(
+            self.hass,
+            self._sub_state,
+            {
+                CONF_STATE_TOPIC: {
+                    "topic": self._config.get(CONF_STATE_TOPIC),
+                    "msg_callback": partial(
+                        self._message_callback,
+                        self._state_message_received,
+                        {"_attr_is_on"},
+                    ),
+                    "entity_id": self.entity_id,
+                    "qos": self._config[CONF_QOS],
+                    "encoding": self._config[CONF_ENCODING] or None,
+                }
+            },
+        )
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
