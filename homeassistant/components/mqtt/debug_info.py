@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Callable
 from dataclasses import dataclass
 import datetime as dt
-from functools import wraps
 import time
 from typing import TYPE_CHECKING, Any
 
@@ -19,34 +17,6 @@ from .const import ATTR_DISCOVERY_PAYLOAD, ATTR_DISCOVERY_TOPIC
 from .models import DATA_MQTT, MessageCallbackType, PublishPayloadType
 
 STORED_MESSAGES = 10
-
-
-def log_messages(
-    hass: HomeAssistant, entity_id: str
-) -> Callable[[MessageCallbackType], MessageCallbackType]:
-    """Wrap an MQTT message callback to support message logging."""
-
-    debug_info_entities = hass.data[DATA_MQTT].debug_info_entities
-
-    def _log_message(msg: Any) -> None:
-        """Log message."""
-        messages = debug_info_entities[entity_id]["subscriptions"][
-            msg.subscribed_topic
-        ]["messages"]
-        if msg not in messages:
-            messages.append(msg)
-
-    def _decorator(msg_callback: MessageCallbackType) -> MessageCallbackType:
-        @wraps(msg_callback)
-        def wrapper(msg: Any) -> None:
-            """Log message."""
-            _log_message(msg)
-            msg_callback(msg)
-
-        setattr(wrapper, "__entity_id", entity_id)
-        return wrapper
-
-    return _decorator
 
 
 @dataclass
