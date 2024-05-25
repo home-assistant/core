@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from asyncio import timeout
 from functools import partial
 import mimetypes
 from pathlib import Path
@@ -100,9 +101,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     genai.configure(api_key=entry.data[CONF_API_KEY])
 
     try:
-        await hass.async_add_executor_job(partial(genai.list_models))
-    except ClientError as err:
-        if err.reason == "API_KEY_INVALID":
+        async with timeout(5.0):
+            next(await hass.async_add_executor_job(partial(genai.list_models)), None)
+    except (ClientError, TimeoutError) as err:
+        if isinstance(err, ClientError) and err.reason == "API_KEY_INVALID":
             LOGGER.error("Invalid API key: %s", err)
             return False
         raise ConfigEntryNotReady(err) from err
