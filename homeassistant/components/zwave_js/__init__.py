@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Coroutine
 from contextlib import suppress
 import logging
 from typing import Any
@@ -958,14 +957,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     client: ZwaveClient = entry.runtime_data[DATA_CLIENT]
     driver_events: DriverEvents = entry.runtime_data[DATA_DRIVER_EVENTS]
-
-    tasks: list[Coroutine] = [
-        hass.config_entries.async_forward_entry_unload(entry, platform)
+    platforms = [
+        platform
         for platform, task in driver_events.platform_setup_tasks.items()
         if not task.cancel()
     ]
-
-    unload_ok = all(await asyncio.gather(*tasks)) if tasks else True
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
 
     if client.connected and client.driver:
         await async_disable_server_logging_if_needed(hass, entry, client.driver)
