@@ -207,8 +207,9 @@ class WebSocketHandler:
             message = message.encode("utf-8")
 
         message_queue = self._message_queue
-        queue_size_before_add = len(message_queue)
-        if queue_size_before_add >= MAX_PENDING_MSG:
+        message_queue.append(message)
+        queue_size_after_add = len(message_queue)
+        if queue_size_after_add >= MAX_PENDING_MSG:
             self._logger.error(
                 (
                     "%s: Client unable to keep up with pending messages. Reached %s pending"
@@ -222,15 +223,14 @@ class WebSocketHandler:
             self._cancel()
             return
 
-        message_queue.append(message)
         if self._release_ready_queue_size == 0:
             # Try to coalesce more messages to reduce the number of writes
-            self._release_ready_queue_size = queue_size_before_add + 1
+            self._release_ready_queue_size = queue_size_after_add
             self._loop.call_soon(self._release_ready_future_or_reschedule)
 
         peak_checker_active = self._peak_checker_unsub is not None
 
-        if queue_size_before_add <= PENDING_MSG_PEAK:
+        if queue_size_after_add <= PENDING_MSG_PEAK:
             if peak_checker_active:
                 self._cancel_peak_checker()
             return
