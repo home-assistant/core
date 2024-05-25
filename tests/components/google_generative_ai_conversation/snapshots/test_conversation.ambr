@@ -30,8 +30,8 @@
         'history': list([
           dict({
             'parts': '''
-              Only if the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
               Answer in plain text. Keep it simple and to the point.
+              Only if the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
             ''',
             'role': 'user',
           }),
@@ -83,8 +83,8 @@
         'history': list([
           dict({
             'parts': '''
-              Only if the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
               Answer in plain text. Keep it simple and to the point.
+              Only if the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
             ''',
             'role': 'user',
           }),
@@ -136,8 +136,8 @@
         'history': list([
           dict({
             'parts': '''
-              Call the intent tools to control Home Assistant. Just pass the name to the intent.
               Answer in plain text. Keep it simple and to the point.
+              Call the intent tools to control Home Assistant. Just pass the name to the intent.
             ''',
             'role': 'user',
           }),
@@ -189,8 +189,8 @@
         'history': list([
           dict({
             'parts': '''
-              Call the intent tools to control Home Assistant. Just pass the name to the intent.
               Answer in plain text. Keep it simple and to the point.
+              Call the intent tools to control Home Assistant. Just pass the name to the intent.
             ''',
             'role': 'user',
           }),

@@ -141,7 +141,6 @@ class OpenAIConversationEntity(
 
                 prompt = "\n".join(
                     (
-                        api_prompt,
                         template.Template(
                             options.get(CONF_PROMPT, DEFAULT_PROMPT), self.hass
                         ).async_render(
@@ -150,6 +149,7 @@ class OpenAIConversationEntity(
                             },
                             parse_result=False,
                         ),
+                        api_prompt,
                     )
                 )
 
