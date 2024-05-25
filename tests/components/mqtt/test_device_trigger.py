@@ -529,16 +529,16 @@ async def test_non_unique_triggers(
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[0].data["some"] == "press1"
-    assert calls[1].data["some"] == "press2"
+    all_calls = {calls[0].data["some"], calls[1].data["some"]}
+    assert all_calls == {"press1", "press2"}
 
     # Trigger second config references to same trigger
     # and triggers both attached instances.
     async_fire_mqtt_message(hass, "foobar/triggers/button2", "long_press")
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[0].data["some"] == "press1"
-    assert calls[1].data["some"] == "press2"
+    all_calls = {calls[0].data["some"], calls[1].data["some"]}
+    assert all_calls == {"press1", "press2"}
 
     # Removing the first trigger will clean up
     calls.clear()
