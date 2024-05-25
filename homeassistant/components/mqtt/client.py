@@ -14,7 +14,7 @@ from operator import attrgetter
 import socket
 import ssl
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 import uuid
 
 import certifi
@@ -429,10 +429,10 @@ class MQTT:
         self.config_entry = config_entry
         self.conf = conf
 
-        self._simple_subscriptions: defaultdict[str, list[Subscription]] = defaultdict(
-            list
-        )
-        self._wildcard_subscriptions: list[Subscription] = []
+        self._simple_subscriptions: defaultdict[
+            str, dict[Subscription, Literal[True]]
+        ] = defaultdict(dict)
+        self._wildcard_subscriptions: dict[Subscription, Literal[True]] = {}
         # _retained_topics prevents a Subscription from receiving a
         # retained message more than once per topic. This prevents flooding
         # already active subscribers when new subscribers subscribe to a topic
@@ -789,9 +789,9 @@ class MQTT:
         The caller is responsible clearing the cache of _matching_subscriptions.
         """
         if subscription.is_simple_match:
-            self._simple_subscriptions[subscription.topic].append(subscription)
+            self._simple_subscriptions[subscription.topic][subscription] = True
         else:
-            self._wildcard_subscriptions.append(subscription)
+            self._wildcard_subscriptions[subscription] = True
 
     @callback
     def _async_untrack_subscription(self, subscription: Subscription) -> None:
@@ -805,11 +805,11 @@ class MQTT:
         try:
             if subscription.is_simple_match:
                 simple_subscriptions = self._simple_subscriptions
-                simple_subscriptions[topic].remove(subscription)
+                del simple_subscriptions[topic][subscription]
                 if not simple_subscriptions[topic]:
                     del simple_subscriptions[topic]
             else:
-                self._wildcard_subscriptions.remove(subscription)
+                del self._wildcard_subscriptions[subscription]
         except (KeyError, ValueError) as exc:
             raise HomeAssistantError("Can't remove subscription twice") from exc
 
