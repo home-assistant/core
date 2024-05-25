@@ -22,13 +22,13 @@ from .const import (
     CONF_PROMPT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
-    DEFAULT_CHAT_MODEL,
-    DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
-    DEFAULT_TEMPERATURE,
-    DEFAULT_TOP_P,
     DOMAIN,
     LOGGER,
+    RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_TEMPERATURE,
+    RECOMMENDED_TOP_P,
 )
 
 # Max number of back and forth with the LLM to generate a response
@@ -97,15 +97,14 @@ class OpenAIConversationEntity(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
+        options = self.entry.options
         intent_response = intent.IntentResponse(language=user_input.language)
         llm_api: llm.API | None = None
         tools: list[dict[str, Any]] | None = None
 
-        if self.entry.options.get(CONF_LLM_HASS_API):
+        if options.get(CONF_LLM_HASS_API):
             try:
-                llm_api = llm.async_get_api(
-                    self.hass, self.entry.options[CONF_LLM_HASS_API]
-                )
+                llm_api = llm.async_get_api(self.hass, options[CONF_LLM_HASS_API])
             except HomeAssistantError as err:
                 LOGGER.error("Error getting LLM API: %s", err)
                 intent_response.async_set_error(
@@ -117,26 +116,12 @@ class OpenAIConversationEntity(
                 )
             tools = [_format_tool(tool) for tool in llm_api.async_get_tools()]
 
-        model = self.entry.options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL)
-        max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
-        top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
-        temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
-
         if user_input.conversation_id in self.history:
             conversation_id = user_input.conversation_id
             messages = self.history[conversation_id]
         else:
             conversation_id = ulid.ulid_now()
             try:
-                prompt = template.Template(
-                    self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT), self.hass
-                ).async_render(
-                    {
-                        "ha_name": self.hass.config.location_name,
-                    },
-                    parse_result=False,
-                )
-
                 if llm_api:
                     empty_tool_input = llm.ToolInput(
                         tool_name="",
@@ -149,11 +134,24 @@ class OpenAIConversationEntity(
                         device_id=user_input.device_id,
                     )
 
-                    prompt = (
-                        await llm_api.async_get_api_prompt(empty_tool_input)
-                        + "\n"
-                        + prompt
+                    api_prompt = await llm_api.async_get_api_prompt(empty_tool_input)
+
+                else:
+                    api_prompt = llm.PROMPT_NO_API_CONFIGURED
+
+                prompt = "\n".join(
+                    (
+                        api_prompt,
+                        template.Template(
+                            options.get(CONF_PROMPT, DEFAULT_PROMPT), self.hass
+                        ).async_render(
+                            {
+                                "ha_name": self.hass.config.location_name,
+                            },
+                            parse_result=False,
+                        ),
                     )
+                )
 
             except TemplateError as err:
                 LOGGER.error("Error rendering prompt: %s", err)
@@ -170,7 +168,7 @@ class OpenAIConversationEntity(
 
         messages.append({"role": "user", "content": user_input.text})
 
-        LOGGER.debug("Prompt for %s: %s", model, messages)
+        LOGGER.debug("Prompt: %s", messages)
 
         client = self.hass.data[DOMAIN][self.entry.entry_id]
 
@@ -178,12 +176,12 @@ class OpenAIConversationEntity(
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
                 result = await client.chat.completions.create(
-                    model=model,
+                    model=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
                     messages=messages,
                     tools=tools,
-                    max_tokens=max_tokens,
-                    top_p=top_p,
-                    temperature=temperature,
+                    max_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+                    top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+                    temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
                     user=conversation_id,
                 )
             except openai.OpenAIError as err:
