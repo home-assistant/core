@@ -83,6 +83,9 @@ class Platform(StrEnum):
     WEATHER = "weather"
 
 
+BASE_PLATFORMS: Final = {platform.value for platform in Platform}
+
+
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL: Final = "*"
 
@@ -113,6 +116,7 @@ CONF_ACCESS_TOKEN: Final = "access_token"
 CONF_ADDRESS: Final = "address"
 CONF_AFTER: Final = "after"
 CONF_ALIAS: Final = "alias"
+CONF_LLM_HASS_API = "llm_hass_api"
 CONF_ALLOWLIST_EXTERNAL_URLS: Final = "allowlist_external_urls"
 CONF_API_KEY: Final = "api_key"
 CONF_API_TOKEN: Final = "api_token"

@@ -33,9 +33,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
-from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import MOCK_MAC, init_integration, register_device, register_entity
@@ -560,7 +560,7 @@ async def test_device_not_calibrated(
     hass: HomeAssistant,
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test to create an issue when the device is not calibrated."""
     await init_integration(hass, 1, sleep_period=1000, model=MODEL_VALVE)

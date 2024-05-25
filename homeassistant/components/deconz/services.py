@@ -103,13 +103,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
 
 
-@callback
-def async_unload_services(hass: HomeAssistant) -> None:
-    """Unload deCONZ services."""
-    for service in SUPPORTED_SERVICES:
-        hass.services.async_remove(DOMAIN, service)
-
-
 async def async_configure_service(hub: DeconzHub, data: ReadOnlyDict) -> None:
     """Set attribute of device in deCONZ.
 

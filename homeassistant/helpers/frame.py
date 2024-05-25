@@ -12,7 +12,7 @@ import linecache
 import logging
 import sys
 from types import FrameType
-from typing import Any, TypeVar, cast
+from typing import Any, cast
 
 from homeassistant.core import HomeAssistant, async_get_hass
 from homeassistant.exceptions import HomeAssistantError
@@ -22,8 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 
 # Keep track of integrations already reported to prevent flooding
 _REPORTED_INTEGRATIONS: set[str] = set()
-
-_CallableT = TypeVar("_CallableT", bound=Callable)
 
 
 @dataclass(kw_only=True)
@@ -209,7 +207,7 @@ def _report_integration(
     )
 
 
-def warn_use(func: _CallableT, what: str) -> _CallableT:
+def warn_use[_CallableT: Callable](func: _CallableT, what: str) -> _CallableT:
     """Mock a function to warn when it was about to be used."""
     if asyncio.iscoroutinefunction(func):
 

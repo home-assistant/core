@@ -14,7 +14,7 @@ import reprlib
 import sqlite3
 import ssl
 import threading
-from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, cast
+from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp import client
@@ -204,11 +204,7 @@ class HAFakeDatetime(freezegun.api.FakeDatetime):  # type: ignore[name-defined]
         return ha_datetime_to_fakedatetime(result)
 
 
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-
-
-def check_real(func: Callable[_P, Coroutine[Any, Any, _R]]):
+def check_real[**_P, _R](func: Callable[_P, Coroutine[Any, Any, _R]]):
     """Force a function to require a keyword _test_real to be passed in."""
 
     @functools.wraps(func)
@@ -1038,7 +1034,7 @@ async def _mqtt_mock_entry(
         nonlocal real_mqtt_instance
         real_mqtt_instance = real_mqtt(*args, **kwargs)
         spec = [*dir(real_mqtt_instance), "_mqttc"]
-        mock_mqtt_instance = MqttMockHAClient(
+        mock_mqtt_instance = MagicMock(
             return_value=real_mqtt_instance,
             spec_set=spec,
             wraps=real_mqtt_instance,
@@ -1459,7 +1455,9 @@ def hass_recorder(
             ) -> HomeAssistant:
                 """Set up with params."""
                 if timezone is not None:
-                    hass.config.set_time_zone(timezone)
+                    asyncio.run_coroutine_threadsafe(
+                        hass.config.async_set_time_zone(timezone), hass.loop
+                    ).result()
                 init_recorder_component(hass, config, recorder_db_url)
                 hass.start()
                 hass.block_till_done()

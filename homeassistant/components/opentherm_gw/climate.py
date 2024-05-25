@@ -213,7 +213,7 @@ class OpenThermClimate(ClimateEntity):
     def current_temperature(self):
         """Return the current temperature."""
         if self._current_temperature is None:
-            return
+            return None
         if self.floor_temp is True:
             if self.precision == PRECISION_HALVES:
                 return int(2 * self._current_temperature) / 2

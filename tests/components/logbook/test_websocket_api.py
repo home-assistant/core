@@ -47,9 +47,9 @@ from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
 
 
 @pytest.fixture
-def set_utc(hass):
+async def set_utc(hass):
     """Set timezone to UTC."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
 
 
 def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:

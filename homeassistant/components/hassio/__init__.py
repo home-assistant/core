@@ -80,7 +80,7 @@ from .const import (
     DOMAIN,
     HASSIO_UPDATE_INTERVAL,
 )
-from .data import (
+from .coordinator import (
     HassioDataUpdateCoordinator,
     get_addons_changelogs,  # noqa: F401
     get_addons_info,

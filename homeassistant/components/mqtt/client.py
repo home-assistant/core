@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import defaultdict
 from collections.abc import AsyncGenerator, Callable, Coroutine, Iterable
 import contextlib
 from dataclasses import dataclass
@@ -27,14 +28,23 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJob,
+    HassJobType,
+    HomeAssistant,
+    callback,
+    get_hassjob_callable_job_type,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
-from homeassistant.util.logging import catch_log_exception
+from homeassistant.util.collection import chunked_or_all
+from homeassistant.util.logging import catch_log_exception, log_exception
 
 from .const import (
     CONF_BIRTH_MESSAGE,
@@ -66,6 +76,7 @@ from .const import (
     TRANSPORT_WEBSOCKETS,
 )
 from .models import (
+    DATA_MQTT,
     AsyncMessageCallbackType,
     MessageCallbackType,
     MqttData,
@@ -73,7 +84,7 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
 )
-from .util import get_file_path, get_mqtt_data, mqtt_config_entry_enabled
+from .util import get_file_path, mqtt_config_entry_enabled
 
 if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally
@@ -99,9 +110,12 @@ UNSUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
 RECONNECT_INTERVAL_SECONDS = 10
 
-SocketType = socket.socket | ssl.SSLSocket | Any
+MAX_SUBSCRIBES_PER_CALL = 500
+MAX_UNSUBSCRIBES_PER_CALL = 500
 
-SubscribePayloadType = str | bytes  # Only bytes if encoding is None
+type SocketType = socket.socket | ssl.SSLSocket | mqtt.WebsocketWrapper | Any
+
+type SubscribePayloadType = str | bytes  # Only bytes if encoding is None
 
 
 def publish(
@@ -132,7 +146,7 @@ async def async_publish(
             translation_domain=DOMAIN,
             translation_placeholders={"topic": topic},
         )
-    mqtt_data = get_mqtt_data(hass)
+    mqtt_data = hass.data[DATA_MQTT]
     outgoing_payload = payload
     if not isinstance(payload, bytes):
         if not encoding:
@@ -186,7 +200,7 @@ async def async_subscribe(
             translation_placeholders={"topic": topic},
         )
     try:
-        mqtt_data = get_mqtt_data(hass)
+        mqtt_data = hass.data[DATA_MQTT]
     except KeyError as exc:
         raise HomeAssistantError(
             f"Cannot subscribe to topic '{topic}', "
@@ -197,13 +211,7 @@ async def async_subscribe(
         ) from exc
     return await mqtt_data.client.async_subscribe(
         topic,
-        catch_log_exception(
-            msg_callback,
-            lambda msg: (
-                f"Exception in {msg_callback.__name__} when handling msg on "
-                f"'{msg.topic}': '{msg.payload}'"
-            ),
-        ),
+        msg_callback,
         qos,
         encoding,
     )
@@ -233,12 +241,13 @@ def subscribe(
     return remove
 
 
-@dataclass(frozen=True)
+@dataclass(slots=True, frozen=True)
 class Subscription:
     """Class to hold data about an active subscription."""
 
     topic: str
-    matcher: Any
+    is_simple_match: bool
+    complex_matcher: Callable[[str], bool] | None
     job: HassJob[[ReceiveMessage], Coroutine[Any, Any, None] | None]
     qos: int = 0
     encoding: str | None = "utf-8"
@@ -307,11 +316,6 @@ class MqttClientSetup:
         return self._client
 
 
-def _is_simple_match(topic: str) -> bool:
-    """Return if a topic is a simple match."""
-    return not ("+" in topic or "#" in topic)
-
-
 class EnsureJobAfterCooldown:
     """Ensure a cool down period before executing a job.
 
@@ -328,6 +332,7 @@ class EnsureJobAfterCooldown:
         self._callback = callback_job
         self._task: asyncio.Task | None = None
         self._timer: asyncio.TimerHandle | None = None
+        self._next_execute_time = 0.0
 
     def set_timeout(self, timeout: float) -> None:
         """Set a new timeout period."""
@@ -371,8 +376,28 @@ class EnsureJobAfterCooldown:
         """Ensure we execute after a cooldown period."""
         # We want to reschedule the timer in the future
         # every time this is called.
-        self._async_cancel_timer()
-        self._timer = self._loop.call_later(self._timeout, self.async_execute)
+        next_when = self._loop.time() + self._timeout
+        if not self._timer:
+            self._timer = self._loop.call_at(next_when, self._async_timer_reached)
+            return
+
+        if self._timer.when() < next_when:
+            # Timer already running, set the next execute time
+            # if it fires too early, it will get rescheduled
+            self._next_execute_time = next_when
+
+    @callback
+    def _async_timer_reached(self) -> None:
+        """Handle timer fire."""
+        self._timer = None
+        if self._loop.time() >= self._next_execute_time:
+            self.async_execute()
+            return
+        # Timer fired too early because there were multiple
+        # calls async_schedule. Reschedule the timer.
+        self._timer = self._loop.call_at(
+            self._next_execute_time, self._async_timer_reached
+        )
 
     async def async_cleanup(self) -> None:
         """Cleanup any pending task."""
@@ -404,13 +429,15 @@ class MQTT:
         self.config_entry = config_entry
         self.conf = conf
 
-        self._simple_subscriptions: dict[str, list[Subscription]] = {}
-        self._wildcard_subscriptions: list[Subscription] = []
+        self._simple_subscriptions: defaultdict[str, set[Subscription]] = defaultdict(
+            set
+        )
+        self._wildcard_subscriptions: set[Subscription] = set()
         # _retained_topics prevents a Subscription from receiving a
         # retained message more than once per topic. This prevents flooding
         # already active subscribers when new subscribers subscribe to a topic
         # which has subscribed messages.
-        self._retained_topics: dict[Subscription, set[str]] = {}
+        self._retained_topics: defaultdict[Subscription, set[str]] = defaultdict(set)
         self.connected = False
         self._ha_started = asyncio.Event()
         self._cleanup_on_unload: list[Callable[[], None]] = []
@@ -425,7 +452,7 @@ class MQTT:
         self._should_reconnect: bool = True
         self._available_future: asyncio.Future[bool] | None = None
 
-        self._max_qos: dict[str, int] = {}  # topic, max qos
+        self._max_qos: defaultdict[str, int] = defaultdict(int)  # topic, max qos
         self._pending_subscriptions: dict[str, int] = {}  # topic, qos
         self._unsubscribe_debouncer = EnsureJobAfterCooldown(
             UNSUBSCRIBE_COOLDOWN, self._async_perform_unsubscribes
@@ -540,6 +567,14 @@ class MQTT:
 
     def _increase_socket_buffer_size(self, sock: SocketType) -> None:
         """Increase the socket buffer size."""
+        if not hasattr(sock, "setsockopt") and hasattr(sock, "_socket"):
+            # The WebsocketWrapper does not wrap setsockopt
+            # so we need to get the underlying socket
+            # Remove this once
+            # https://github.com/eclipse/paho.mqtt.python/pull/843
+            # is available.
+            sock = sock._socket  # noqa: SLF001
+
         new_buffer_size = PREFERRED_BUFFER_SIZE
         while True:
             try:
@@ -649,8 +684,7 @@ class MQTT:
             msg_info.mid,
             qos,
         )
-        _raise_on_error(msg_info.rc)
-        await self._async_wait_for_mid(msg_info.mid)
+        await self._async_wait_for_mid_or_raise(msg_info.mid, msg_info.rc)
 
     async def async_connect(self, client_available: asyncio.Future[bool]) -> None:
         """Connect to the host. Does not process messages yet."""
@@ -754,12 +788,10 @@ class MQTT:
 
         The caller is responsible clearing the cache of _matching_subscriptions.
         """
-        if _is_simple_match(subscription.topic):
-            self._simple_subscriptions.setdefault(subscription.topic, []).append(
-                subscription
-            )
+        if subscription.is_simple_match:
+            self._simple_subscriptions[subscription.topic].add(subscription)
         else:
-            self._wildcard_subscriptions.append(subscription)
+            self._wildcard_subscriptions.add(subscription)
 
     @callback
     def _async_untrack_subscription(self, subscription: Subscription) -> None:
@@ -771,7 +803,7 @@ class MQTT:
         """
         topic = subscription.topic
         try:
-            if _is_simple_match(topic):
+            if subscription.is_simple_match:
                 simple_subscriptions = self._simple_subscriptions
                 simple_subscriptions[topic].remove(subscription)
                 if not simple_subscriptions[topic]:
@@ -788,8 +820,8 @@ class MQTT:
         """Queue requested subscriptions."""
         for subscription in subscriptions:
             topic, qos = subscription
-            max_qos = max(qos, self._max_qos.setdefault(topic, qos))
-            self._max_qos[topic] = max_qos
+            if (max_qos := self._max_qos[topic]) < qos:
+                self._max_qos[topic] = (max_qos := qos)
             self._pending_subscriptions[topic] = max_qos
             # Cancel any pending unsubscribe since we are subscribing now
             if topic in self._pending_unsubscribes:
@@ -797,6 +829,17 @@ class MQTT:
         if queue_only:
             return
         self._subscribe_debouncer.async_schedule()
+
+    def _exception_message(
+        self,
+        msg_callback: AsyncMessageCallbackType | MessageCallbackType,
+        msg: ReceiveMessage,
+    ) -> str:
+        """Return a string with the exception message."""
+        return (
+            f"Exception in {msg_callback.__name__} when handling msg on "
+            f"'{msg.topic}': '{msg.payload}'"  # type: ignore[str-bytes-safe]
+        )
 
     async def async_subscribe(
         self,
@@ -812,9 +855,21 @@ class MQTT:
         if not isinstance(topic, str):
             raise HomeAssistantError("Topic needs to be a string!")
 
-        subscription = Subscription(
-            topic, _matcher_for_topic(topic), HassJob(msg_callback), qos, encoding
-        )
+        job_type = get_hassjob_callable_job_type(msg_callback)
+        if job_type is not HassJobType.Callback:
+            # Only wrap the callback with catch_log_exception
+            # if it is not a simple callback since we catch
+            # exceptions for simple callbacks inline for
+            # performance reasons.
+            msg_callback = catch_log_exception(
+                msg_callback, partial(self._exception_message, msg_callback)
+            )
+
+        job = HassJob(msg_callback, job_type=job_type)
+        is_simple_match = not ("+" in topic or "#" in topic)
+        matcher = None if is_simple_match else _matcher_for_topic(topic)
+
+        subscription = Subscription(topic, is_simple_match, matcher, job, qos, encoding)
         self._async_track_subscription(subscription)
         self._matching_subscriptions.cache_clear()
 
@@ -875,17 +930,19 @@ class MQTT:
         self._pending_subscriptions = {}
 
         subscription_list = list(subscriptions.items())
-        result, mid = self._mqttc.subscribe(subscription_list)
+        debug_enabled = _LOGGER.isEnabledFor(logging.DEBUG)
 
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            for topic, qos in subscriptions.items():
-                _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
-        self._last_subscribe = time.monotonic()
+        for chunk in chunked_or_all(subscription_list, MAX_SUBSCRIBES_PER_CALL):
+            result, mid = self._mqttc.subscribe(chunk)
 
-        if result == 0:
-            await self._async_wait_for_mid(mid)
-        else:
-            _raise_on_error(result)
+            if debug_enabled:
+                for topic, qos in subscriptions.items():
+                    _LOGGER.debug(
+                        "Subscribing to %s, mid: %s, qos: %s", topic, mid, qos
+                    )
+            self._last_subscribe = time.monotonic()
+
+            await self._async_wait_for_mid_or_raise(mid, result)
 
     async def _async_perform_unsubscribes(self) -> None:
         """Perform pending MQTT client unsubscribes."""
@@ -894,14 +951,15 @@ class MQTT:
 
         topics = list(self._pending_unsubscribes)
         self._pending_unsubscribes = set()
+        debug_enabled = _LOGGER.isEnabledFor(logging.DEBUG)
 
-        result, mid = self._mqttc.unsubscribe(topics)
-        _raise_on_error(result)
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            for topic in topics:
-                _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
+        for chunk in chunked_or_all(topics, MAX_UNSUBSCRIBES_PER_CALL):
+            result, mid = self._mqttc.unsubscribe(chunk)
+            if debug_enabled:
+                for topic in chunk:
+                    _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
 
-        await self._async_wait_for_mid(mid)
+            await self._async_wait_for_mid_or_raise(mid, result)
 
     async def _async_resubscribe_and_publish_birth_message(
         self, birth_message: PublishMessage
@@ -1014,7 +1072,9 @@ class MQTT:
         subscriptions.extend(
             subscription
             for subscription in self._wildcard_subscriptions
-            if subscription.matcher(topic)
+            # mypy doesn't know that complex_matcher is always set when
+            # is_simple_match is False
+            if subscription.complex_matcher(topic)  # type: ignore[misc]
         )
         return subscriptions
 
@@ -1049,7 +1109,7 @@ class MQTT:
 
         for subscription in subscriptions:
             if msg.retain:
-                retained_topics = self._retained_topics.setdefault(subscription, set())
+                retained_topics = self._retained_topics[subscription]
                 # Skip if the subscription already received a retained message
                 if topic in retained_topics:
                     continue
@@ -1086,7 +1146,18 @@ class MQTT:
                 msg_cache_by_subscription_topic[subscription_topic] = receive_msg
             else:
                 receive_msg = msg_cache_by_subscription_topic[subscription_topic]
-            self.hass.async_run_hass_job(subscription.job, receive_msg)
+            job = subscription.job
+            if job.job_type is HassJobType.Callback:
+                # We do not wrap Callback jobs in catch_log_exception since
+                # its expensive and we have to do it 2x for every entity
+                try:
+                    job.target(receive_msg)
+                except Exception:  # noqa: BLE001
+                    log_exception(
+                        partial(self._exception_message, job.target, receive_msg)
+                    )
+            else:
+                self.hass.async_run_hass_job(job, receive_msg)
         self._mqtt_data.state_write_requests.process_write_state_requests(msg)
 
     @callback
@@ -1152,10 +1223,18 @@ class MQTT:
         if not future.done():
             future.set_exception(asyncio.TimeoutError)
 
-    async def _async_wait_for_mid(self, mid: int) -> None:
-        """Wait for ACK from broker."""
-        # Create the mid event if not created, either _mqtt_handle_mid or _async_wait_for_mid
-        # may be executed first.
+    async def _async_wait_for_mid_or_raise(self, mid: int, result_code: int) -> None:
+        """Wait for ACK from broker or raise on error."""
+        if result_code != 0:
+            # pylint: disable-next=import-outside-toplevel
+            import paho.mqtt.client as mqtt
+
+            raise HomeAssistantError(
+                f"Error talking to MQTT: {mqtt.error_string(result_code)}"
+            )
+
+        # Create the mid event if not created, either _mqtt_handle_mid or
+        # _async_wait_for_mid_or_raise may be executed first.
         future = self._async_get_mid_future(mid)
         loop = self.hass.loop
         timer_handle = loop.call_later(TIMEOUT_ACK, self._async_timeout_mid, future)
@@ -1178,9 +1257,7 @@ class MQTT:
 
         last_discovery = self._mqtt_data.last_discovery
         last_subscribe = now if self._pending_subscriptions else self._last_subscribe
-        wait_until = max(
-            last_discovery + DISCOVERY_COOLDOWN, last_subscribe + DISCOVERY_COOLDOWN
-        )
+        wait_until = max(last_discovery, last_subscribe) + DISCOVERY_COOLDOWN
         while now < wait_until:
             await asyncio.sleep(wait_until - now)
             now = time.monotonic()
@@ -1188,21 +1265,10 @@ class MQTT:
             last_subscribe = (
                 now if self._pending_subscriptions else self._last_subscribe
             )
-            wait_until = max(
-                last_discovery + DISCOVERY_COOLDOWN, last_subscribe + DISCOVERY_COOLDOWN
-            )
+            wait_until = max(last_discovery, last_subscribe) + DISCOVERY_COOLDOWN
 
 
-def _raise_on_error(result_code: int) -> None:
-    """Raise error if error result."""
-    # pylint: disable-next=import-outside-toplevel
-    import paho.mqtt.client as mqtt
-
-    if result_code and (message := mqtt.error_string(result_code)):
-        raise HomeAssistantError(f"Error talking to MQTT: {message}")
-
-
-def _matcher_for_topic(subscription: str) -> Any:
+def _matcher_for_topic(subscription: str) -> Callable[[str], bool]:
     # pylint: disable-next=import-outside-toplevel
     from paho.mqtt.matcher import MQTTMatcher
 

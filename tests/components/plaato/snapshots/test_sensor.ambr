@@ -1,0 +1,574 @@
+# serializer version: 1
+# name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_alcohol_by_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.plaato_plaatodevicetype_airlock_device_name_alcohol_by_volume',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Alcohol By Volume',
+    'platform': 'plaato',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'valid_token_Pins.ABV',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_alcohol_by_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Plaato Plaatodevicetype.Airlock Device_Name Alcohol By Volume',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.plaato_plaatodevicetype_airlock_device_name_alcohol_by_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_batch_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.plaato_plaatodevicetype_airlock_device_name_batch_volume',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Batch Volume',
+    'platform': 'plaato',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'valid_token_Pins.BATCH_VOLUME',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_batch_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Plaato Plaatodevicetype.Airlock Device_Name Batch Volume',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.plaato_plaatodevicetype_airlock_device_name_batch_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_bubbles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.plaato_plaatodevicetype_airlock_device_name_bubbles',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Bubbles',
+    'platform': 'plaato',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'valid_token_Pins.BUBBLES',
+    'unit_of_measurement': '',
+  })
+# ---
+# name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_bubbles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Plaato Plaatodevicetype.Airlock Device_Name Bubbles',
+      'unit_of_measurement': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.plaato_plaatodevicetype_airlock_device_name_bubbles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_bubbles_per_minute-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.plaato_plaatodevicetype_airlock_device_name_bubbles_per_minute',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Bubbles Per Minute',
+    'platform': 'plaato',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'valid_token_Pins.BPM',
+    'unit_of_measurement': 'bpm',
+  })
+# ---
+# name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_bubbles_per_minute-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Plaato Plaatodevicetype.Airlock Device_Name Bubbles Per Minute',
+      'unit_of_measurement': 'bpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.plaato_plaatodevicetype_airlock_device_name_bubbles_per_minute',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_co2_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.plaato_plaatodevicetype_airlock_device_name_co2_volume',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Co2 Volume',
+    'platform': 'plaato',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'valid_token_Pins.CO2_VOLUME',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_co2_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Plaato Plaatodevicetype.Airlock Device_Name Co2 Volume',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.plaato_plaatodevicetype_airlock_device_name_co2_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_original_gravity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.plaato_plaatodevicetype_airlock_device_name_original_gravity',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Original Gravity',
+    'platform': 'plaato',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'valid_token_Pins.OG',
+    'unit_of_measurement': '',
+  })
+# ---
+# name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_original_gravity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Plaato Plaatodevicetype.Airlock Device_Name Original Gravity',
+      'unit_of_measurement': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.plaato_plaatodevicetype_airlock_device_name_original_gravity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_specific_gravity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.plaato_plaatodevicetype_airlock_device_name_specific_gravity',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Specific Gravity',
+    'platform': 'plaato',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'valid_token_Pins.SG',
+    'unit_of_measurement': '',
+  })
+# ---
+# name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_specific_gravity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Plaato Plaatodevicetype.Airlock Device_Name Specific Gravity',
+      'unit_of_measurement': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.plaato_plaatodevicetype_airlock_device_name_specific_gravity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.plaato_plaatodevicetype_airlock_device_name_temperature',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Temperature',
+    'platform': 'plaato',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'valid_token_Pins.TEMPERATURE',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[Airlock][sensor.plaato_plaatodevicetype_airlock_device_name_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Plaato Plaatodevicetype.Airlock Device_Name Temperature',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.plaato_plaatodevicetype_airlock_device_name_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[Keg][sensor.plaato_plaatodevicetype_keg_device_name_beer_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.plaato_plaatodevicetype_keg_device_name_beer_left',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Plaato Plaatodevicetype.Keg Device_Name Beer Left',
+    'platform': 'plaato',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'valid_token_Pins.BEER_LEFT',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[Keg][sensor.plaato_plaatodevicetype_keg_device_name_beer_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'beer_name': 'Beer',
+      'friendly_name': 'Plaato Plaatodevicetype.Keg Device_Name Beer Left',
+      'keg_date': '05/24/24',
+      'mode': 'Co2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.plaato_plaatodevicetype_keg_device_name_beer_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[Keg][sensor.plaato_plaatodevicetype_keg_device_name_last_pour_amount-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.plaato_plaatodevicetype_keg_device_name_last_pour_amount',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Plaato Plaatodevicetype.Keg Device_Name Last Pour Amount',
+    'platform': 'plaato',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'valid_token_Pins.LAST_POUR',
+    'unit_of_measurement': 'oz',
+  })
+# ---
+# name: test_sensors[Keg][sensor.plaato_plaatodevicetype_keg_device_name_last_pour_amount-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'beer_name': 'Beer',
+      'friendly_name': 'Plaato Plaatodevicetype.Keg Device_Name Last Pour Amount',
+      'keg_date': '05/24/24',
+      'mode': 'Co2',
+      'unit_of_measurement': 'oz',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.plaato_plaatodevicetype_keg_device_name_last_pour_amount',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[Keg][sensor.plaato_plaatodevicetype_keg_device_name_percent_beer_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.plaato_plaatodevicetype_keg_device_name_percent_beer_left',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Plaato Plaatodevicetype.Keg Device_Name Percent Beer Left',
+    'platform': 'plaato',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'valid_token_Pins.PERCENT_BEER_LEFT',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[Keg][sensor.plaato_plaatodevicetype_keg_device_name_percent_beer_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'beer_name': 'Beer',
+      'friendly_name': 'Plaato Plaatodevicetype.Keg Device_Name Percent Beer Left',
+      'keg_date': '05/24/24',
+      'mode': 'Co2',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.plaato_plaatodevicetype_keg_device_name_percent_beer_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[Keg][sensor.plaato_plaatodevicetype_keg_device_name_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.plaato_plaatodevicetype_keg_device_name_temperature',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Plaato Plaatodevicetype.Keg Device_Name Temperature',
+    'platform': 'plaato',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'valid_token_Pins.TEMPERATURE',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[Keg][sensor.plaato_plaatodevicetype_keg_device_name_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'beer_name': 'Beer',
+      'device_class': 'temperature',
+      'friendly_name': 'Plaato Plaatodevicetype.Keg Device_Name Temperature',
+      'keg_date': '05/24/24',
+      'mode': 'Co2',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.plaato_plaatodevicetype_keg_device_name_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
