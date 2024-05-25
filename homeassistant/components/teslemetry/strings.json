@@ -111,6 +111,14 @@
         }
       }
     },
+    "device_tracker": {
+      "location": {
+        "name": "Location"
+      },
+      "route": {
+        "name": "Route"
+      }
+    },
     "lock": {
       "charge_state_charge_port_latch": {
         "name": "Charge cable lock"

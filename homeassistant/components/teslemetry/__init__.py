@@ -30,6 +30,7 @@ PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.DEVICE_TRACKER,
     Platform.LOCK,
     Platform.SELECT,
     Platform.SENSOR,
