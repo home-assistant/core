@@ -1,13 +1,22 @@
 """Tests for the llm helpers."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
 
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, intent, llm
+from homeassistant.helpers import (
+    area_registry as ar,
+    config_validation as cv,
+    device_registry as dr,
+    floor_registry as fr,
+    intent,
+    llm,
+)
+
+from tests.common import MockConfigEntry
 
 
 async def test_get_api_no_existing(hass: HomeAssistant) -> None:
@@ -143,3 +152,65 @@ async def test_assist_api_description(hass: HomeAssistant) -> None:
     tool = tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "my intent handler"
+
+
+async def test_assist_api_prompt(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test prompt for the assist API."""
+    context = Context()
+    tool_input = llm.ToolInput(
+        tool_name=None,
+        tool_args=None,
+        platform="test_platform",
+        context=context,
+        user_prompt="test_text",
+        language="*",
+        assistant="test_assistant",
+        device_id="test_device",
+    )
+    api = llm.async_get_api(hass, "assist")
+    prompt = await api.async_get_api_prompt(tool_input)
+    assert (
+        prompt
+        == "Call the intent tools to control Home Assistant. Just pass the name to the intent."
+    )
+
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+    tool_input.device_id = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={("test", "1234")},
+        name="Test Device",
+        manufacturer="Test Manufacturer",
+        model="Test Model",
+        suggested_area="Test Area",
+    ).id
+    prompt = await api.async_get_api_prompt(tool_input)
+    assert (
+        prompt
+        == "Call the intent tools to control Home Assistant. Just pass the name to the intent. You are in Test Area."
+    )
+
+    floor = floor_registry.async_create("second floor")
+    area = area_registry.async_get_area_by_name("Test Area")
+    area_registry.async_update(area.id, floor_id=floor.floor_id)
+    prompt = await api.async_get_api_prompt(tool_input)
+    assert (
+        prompt
+        == "Call the intent tools to control Home Assistant. Just pass the name to the intent. You are in Test Area (second floor)."
+    )
+
+    context.user_id = "12345"
+    mock_user = Mock()
+    mock_user.id = "12345"
+    mock_user.name = "Test User"
+    with patch("homeassistant.auth.AuthManager.async_get_user", return_value=mock_user):
+        prompt = await api.async_get_api_prompt(tool_input)
+    assert (
+        prompt
+        == "Call the intent tools to control Home Assistant. Just pass the name to the intent. You are in Test Area (second floor). The user name is Test User."
+    )
