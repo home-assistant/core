@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections import OrderedDict
 import fnmatch
 from functools import lru_cache
 import re
@@ -36,9 +35,9 @@ class EntityValues:
         if glob is None:
             compiled: dict[re.Pattern[str], Any] | None = None
         else:
-            compiled = OrderedDict()
-            for key, value in glob.items():
-                compiled[re.compile(fnmatch.translate(key))] = value
+            compiled = {
+                re.compile(fnmatch.translate(key)): value for key, value in glob.items()
+            }
 
         self._glob = compiled
 
