@@ -292,7 +292,8 @@ class TimerManager:
 
         timer.cancel()
 
-        self.handlers[timer.device_id](TimerEventType.CANCELLED, timer)
+        if timer.device_id in self.handlers:
+            self.handlers[timer.device_id](TimerEventType.CANCELLED, timer)
         _LOGGER.debug(
             "Timer cancelled: id=%s, name=%s, seconds_left=%s, device_id=%s",
             timer_id,
@@ -320,7 +321,8 @@ class TimerManager:
                 name=f"Timer {timer_id}",
             )
 
-        self.handlers[timer.device_id](TimerEventType.UPDATED, timer)
+        if timer.device_id in self.handlers:
+            self.handlers[timer.device_id](TimerEventType.UPDATED, timer)
 
         if seconds > 0:
             log_verb = "increased"
@@ -357,7 +359,8 @@ class TimerManager:
         task = self.timer_tasks.pop(timer_id)
         task.cancel()
 
-        self.handlers[timer.device_id](TimerEventType.UPDATED, timer)
+        if timer.device_id in self.handlers:
+            self.handlers[timer.device_id](TimerEventType.UPDATED, timer)
         _LOGGER.debug(
             "Timer paused: id=%s, name=%s, seconds_left=%s, device_id=%s",
             timer_id,
@@ -382,7 +385,8 @@ class TimerManager:
             name=f"Timer {timer.id}",
         )
 
-        self.handlers[timer.device_id](TimerEventType.UPDATED, timer)
+        if timer.device_id in self.handlers:
+            self.handlers[timer.device_id](TimerEventType.UPDATED, timer)
         _LOGGER.debug(
             "Timer unpaused: id=%s, name=%s, seconds_left=%s, device_id=%s",
             timer_id,
@@ -397,7 +401,8 @@ class TimerManager:
 
         timer.finish()
 
-        self.handlers[timer.device_id](TimerEventType.FINISHED, timer)
+        if timer.device_id in self.handlers:
+            self.handlers[timer.device_id](TimerEventType.FINISHED, timer)
         _LOGGER.debug(
             "Timer finished: id=%s, name=%s, device_id=%s",
             timer_id,
