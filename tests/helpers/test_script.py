@@ -6247,3 +6247,41 @@ async def test_stopping_run_before_starting(
     # would hang indefinitely.
     run = script._ScriptRun(hass, script_obj, {}, None, True)
     await run.async_stop()
+
+
+async def test_queued_mode_script(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a queued mode script."""
+    context = Context()
+    calls = 0
+
+    async def async_service_handler(*args, **kwargs) -> None:
+        """Service that simulates doing background I/O."""
+        nonlocal calls
+        calls += 1
+        await asyncio.sleep(0)
+
+    hass.services.async_register("test", "simulated_remote", async_service_handler)
+    alias = "event step"
+    sequence = cv.SCRIPT_SCHEMA({"alias": alias, "service": "test.simulated_remote"})
+
+    script_obj = script.Script(
+        hass,
+        sequence,
+        "Test Name",
+        "test_domain",
+        script_mode="queued",
+        running_description="test script",
+    )
+
+    tasks = [
+        hass.async_create_task(script_obj.async_run(context=context)) for _ in range(3)
+    ]
+    await asyncio.gather(*tasks)
+    await hass.async_block_till_done()
+
+    assert calls == 3
+    assert ".test_name:" in caplog.text
+    assert "Test Name: Running test script" in caplog.text
+    assert f"Executing step {alias}" in caplog.text

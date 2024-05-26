@@ -1764,41 +1764,8 @@ async def test_script_queued_mode(hass: HomeAssistant) -> None:
                         {"service": "test.simulated_remote"},
                     ],
                     "mode": "queued",
-                    "max": 10,
                 },
             }
-        },
-    )
-    await hass.async_block_till_done()
-    assert await async_setup_component(
-        hass,
-        "cover",
-        {
-            "cover": [
-                {
-                    "platform": "template",
-                    "covers": {
-                        "shade_north_east": {
-                            "friendly_name": "North east",
-                            "open_cover": {
-                                "service": "script.simulate_service_call",
-                            },
-                            "close_cover": {
-                                "service": "script.simulate_service_call",
-                            },
-                        },
-                        "shade_east": {
-                            "friendly_name": "East",
-                            "open_cover": {
-                                "service": "script.simulate_service_call",
-                            },
-                            "close_cover": {
-                                "service": "script.simulate_service_call",
-                            },
-                        },
-                    },
-                }
-            ]
         },
     )
     await hass.async_block_till_done()
@@ -1806,10 +1773,9 @@ async def test_script_queued_mode(hass: HomeAssistant) -> None:
     tasks = [
         hass.async_create_task(
             hass.services.async_call(
-                "cover",
-                "open_cover",
-                {"entity_id": ["cover.shade_north_east", "cover.shade_east"]},
-                blocking=True,
+                "test",
+                "simulated_remote",
+                blocking=False,
             )
         )
         for _ in range(10)
@@ -1817,4 +1783,4 @@ async def test_script_queued_mode(hass: HomeAssistant) -> None:
     await asyncio.gather(*tasks)
 
     await hass.async_block_till_done()
-    assert calls == 20
+    assert calls == 10
