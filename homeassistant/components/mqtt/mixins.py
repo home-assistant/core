@@ -387,9 +387,10 @@ class MqttAttributesMixin(Entity):
 
     def _attributes_prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        self._attr_tpl = MqttValueTemplate(
-            self._attributes_config.get(CONF_JSON_ATTRS_TEMPLATE), entity=self
-        ).async_render_with_possible_json_value
+        if template := self._attributes_config.get(CONF_JSON_ATTRS_TEMPLATE):
+            self._attr_tpl = MqttValueTemplate(
+                template, entity=self
+            ).async_render_with_possible_json_value
         self._attributes_sub_state = async_prepare_subscribe_topics(
             self.hass,
             self._attributes_sub_state,
@@ -422,9 +423,9 @@ class MqttAttributesMixin(Entity):
     @callback
     def _attributes_message_received(self, msg: ReceiveMessage) -> None:
         """Update extra state attributes."""
-        if TYPE_CHECKING:
-            assert self._attr_tpl is not None
-        payload = self._attr_tpl(msg.payload)
+        payload = (
+            self._attr_tpl(msg.payload) if self._attr_tpl is not None else msg.payload
+        )
         try:
             json_dict = json_loads(payload) if isinstance(payload, str) else None
         except ValueError:
