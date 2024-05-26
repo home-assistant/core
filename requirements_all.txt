@@ -2763,6 +2763,9 @@ transmission-rpc==7.0.3
 # homeassistant.components.twinkly
 ttls==1.5.1
 
+# homeassistant.components.thethingsnetwork
+ttn_client==0.0.4
+
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.1.9
 

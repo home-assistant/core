@@ -1422,7 +1422,6 @@ omit =
     homeassistant/components/tensorflow/image_processing.py
     homeassistant/components/tfiac/climate.py
     homeassistant/components/thermoworks_smoke/sensor.py
-    homeassistant/components/thethingsnetwork/*
     homeassistant/components/thingspeak/*
     homeassistant/components/thinkingcleaner/*
     homeassistant/components/thomson/device_tracker.py
