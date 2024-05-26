@@ -498,10 +498,10 @@ class MqttAvailabilityMixin(Entity):
                 }
 
         for avail_topic_conf in self._avail_topics.values():
-            avail_topic_conf[CONF_AVAILABILITY_TEMPLATE] = MqttValueTemplate(
-                avail_topic_conf[CONF_AVAILABILITY_TEMPLATE],
-                entity=self,
-            ).async_render_with_possible_json_value
+            if template := avail_topic_conf[CONF_AVAILABILITY_TEMPLATE]:
+                avail_topic_conf[CONF_AVAILABILITY_TEMPLATE] = MqttValueTemplate(
+                    template, entity=self
+                ).async_render_with_possible_json_value
 
         self._avail_config = config
 
@@ -537,7 +537,9 @@ class MqttAvailabilityMixin(Entity):
         """Handle a new received MQTT availability message."""
         topic = msg.topic
         avail_topic = self._avail_topics[topic]
-        payload = avail_topic[CONF_AVAILABILITY_TEMPLATE](msg.payload)
+        template = avail_topic[CONF_AVAILABILITY_TEMPLATE]
+        payload = template(msg.payload) if template else msg.payload
+
         if payload == avail_topic[CONF_PAYLOAD_AVAILABLE]:
             self._available[topic] = True
             self._available_latest = True
