@@ -34,7 +34,7 @@
     'platform': 'folder_watcher',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'folder_watcher',
     'unique_id': '1',
     'unit_of_measurement': None,
   })
