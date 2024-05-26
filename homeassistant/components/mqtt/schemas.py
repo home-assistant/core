@@ -71,41 +71,6 @@ SHARED_OPTIONS = [
     CONF_STATE_TOPIC,
 ]
 
-
-def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType:
-    """Validate that a device info entry has at least one identifying value."""
-    if value.get(CONF_IDENTIFIERS) or value.get(CONF_CONNECTIONS):
-        return value
-    raise vol.Invalid(
-        "Device must have at least one identifying value in "
-        "'identifiers' and/or 'connections'"
-    )
-
-
-MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
-    cv.deprecated(CONF_DEPRECATED_VIA_HUB, CONF_VIA_DEVICE),
-    vol.Schema(
-        {
-            vol.Optional(CONF_IDENTIFIERS, default=list): vol.All(
-                cv.ensure_list, [cv.string]
-            ),
-            vol.Optional(CONF_CONNECTIONS, default=list): vol.All(
-                cv.ensure_list, [vol.All(vol.Length(2), [cv.string])]
-            ),
-            vol.Optional(CONF_MANUFACTURER): cv.string,
-            vol.Optional(CONF_MODEL): cv.string,
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_HW_VERSION): cv.string,
-            vol.Optional(CONF_SERIAL_NUMBER): cv.string,
-            vol.Optional(CONF_SW_VERSION): cv.string,
-            vol.Optional(CONF_VIA_DEVICE): cv.string,
-            vol.Optional(CONF_SUGGESTED_AREA): cv.string,
-            vol.Optional(CONF_CONFIGURATION_URL): cv.configuration_url,
-        }
-    ),
-    validate_device_has_at_least_one_identifier,
-)
-
 MQTT_ORIGIN_INFO_SCHEMA = vol.All(
     vol.Schema(
         {
@@ -156,6 +121,17 @@ MQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
 MQTT_AVAILABILITY_SCHEMA = MQTT_AVAILABILITY_SINGLE_SCHEMA.extend(
     MQTT_AVAILABILITY_LIST_SCHEMA.schema
 )
+
+
+def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType:
+    """Validate that a device info entry has at least one identifying value."""
+    if value.get(CONF_IDENTIFIERS) or value.get(CONF_CONNECTIONS):
+        return value
+    raise vol.Invalid(
+        "Device must have at least one identifying value in "
+        "'identifiers' and/or 'connections'"
+    )
+
 
 MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
     cv.deprecated(CONF_DEPRECATED_VIA_HUB, CONF_VIA_DEVICE),
