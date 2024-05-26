@@ -44,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass,
             DOMAIN,
             "manual_migration",
-            breaks_in_ha_version="2024.6.0",
+            breaks_in_ha_version="2024.12.0",
             is_fixable=False,
             severity=ir.IssueSeverity.ERROR,
             translation_key="manual_migration",
