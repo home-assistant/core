@@ -1092,6 +1092,7 @@ async def test_discovery_dhcp_updates_host(
     """Test dhcp discovery updates host and aborts."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        state=config_entries.ConfigEntryState.SETUP_ERROR,
         data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
         unique_id="11:22:33:44:55:aa",
     )
@@ -1121,6 +1122,7 @@ async def test_discovery_dhcp_no_changes(
     """Test dhcp discovery updates host and aborts."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        state=config_entries.ConfigEntryState.SETUP_RETRY,
         data={CONF_HOST: "test8266.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
         unique_id="11:22:33:44:55:aa",
     )

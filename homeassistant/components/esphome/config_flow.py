@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Mapping
+from contextlib import asynccontextmanager
 import json
 import logging
 from typing import Any, cast
@@ -24,6 +25,7 @@ from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -50,6 +52,11 @@ ESPHOME_URL = "https://esphome.io/"
 _LOGGER = logging.getLogger(__name__)
 
 ZERO_NOISE_PSK = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
+
+ENTRY_FAILURE_STATES = {
+    ConfigEntryState.SETUP_ERROR,
+    ConfigEntryState.SETUP_RETRY,
+}
 
 
 class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -288,13 +295,15 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
-    async def try_connect(self, entry: ConfigEntry) -> str | None:
-        """Try connecting to a device and return any errors."""
-        host = entry.data[CONF_HOST]
-        port = entry.data[CONF_PORT]
-        password = entry.data[CONF_PASSWORD]
-        psk = entry.data.get(CONF_NOISE_PSK, "")
-
+    @asynccontextmanager
+    async def _connect_api_client(
+        self,
+        host: str,
+        port: int,
+        password: str | None,
+        *,
+        noise_psk: str | None = None,
+    ) -> APIClient:
         zeroconf_instance = await zeroconf.async_get_instance(self.hass)
 
         cli = APIClient(
@@ -302,17 +311,39 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             port,
             password,
             zeroconf_instance=zeroconf_instance,
-            noise_psk=psk,
+            noise_psk=noise_psk,
         )
 
         try:
-            await cli.connect()
-        except APIConnectionError:
-            return "connection_error"
+            login = password is not None and password != ""
+            await cli.connect(login=login)
+            yield cli
         finally:
             await cli.disconnect(force=True)
 
+    async def try_connect(self, entry: ConfigEntry) -> str | None:
+        """Try connecting to a device and return any errors."""
+        host = entry.data[CONF_HOST]
+        port = entry.data[CONF_PORT]
+        password = entry.data[CONF_PASSWORD]
+        psk = entry.data.get(CONF_NOISE_PSK, "")
+
+        try:
+            async with self._connect_api_client(host, port, password, noise_psk=psk):
+                pass
+        except APIConnectionError:
+            return "connection_error"
+
         return None
+
+    async def _async_node_is_offline(self, entry: ConfigEntry) -> bool:
+        return (
+            entry.state in ENTRY_FAILURE_STATES
+            and not await self._async_node_is_reachable(entry)
+        )
+
+    async def _async_node_is_reachable(self, entry: ConfigEntry) -> bool:
+        return await self.try_connect(entry) is None
 
     async def async_step_dhcp(
         self, discovery_info: dhcp.DhcpServiceInfo
@@ -324,13 +355,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         # for configured devices.
         assert entry is not None
 
-        # Check if the existing entry is still valid
-        error = await self.try_connect(entry)
-
-        if error is not None:
+        if await self._async_node_is_offline(entry):
             _LOGGER.debug(
-                "Invalidated config entry with error %s. Reconfiguring with address %s",
-                error,
+                "Node offline. Reconfiguring with address %s",
                 discovery_info.ip,
             )
             # Update with new connection information if we can't connect
@@ -420,20 +447,14 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def fetch_device_info(self) -> str | None:
         """Fetch device info from API and return any errors."""
-        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
         assert self._host is not None
         assert self._port is not None
-        cli = APIClient(
-            self._host,
-            self._port,
-            "",
-            zeroconf_instance=zeroconf_instance,
-            noise_psk=self._noise_psk,
-        )
 
         try:
-            await cli.connect()
-            self._device_info = await cli.device_info()
+            async with self._connect_api_client(
+                self._host, self._port, "", noise_psk=self._noise_psk
+            ) as cli:
+                self._device_info = await cli.device_info()
         except RequiresEncryptionAPIError:
             return ERROR_REQUIRES_ENCRYPTION_KEY
         except InvalidEncryptionKeyAPIError as ex:
@@ -445,8 +466,6 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             return "resolve_error"
         except APIConnectionError:
             return "connection_error"
-        finally:
-            await cli.disconnect(force=True)
 
         self._name = self._device_info.friendly_name or self._device_info.name
         self._device_name = self._device_info.name
@@ -461,25 +480,18 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def try_login(self) -> str | None:
         """Try logging in to device and return any errors."""
-        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
         assert self._host is not None
         assert self._port is not None
-        cli = APIClient(
-            self._host,
-            self._port,
-            self._password,
-            zeroconf_instance=zeroconf_instance,
-            noise_psk=self._noise_psk,
-        )
 
         try:
-            await cli.connect(login=True)
+            async with self._connect_api_client(
+                self._host, self._port, self._password, noise_psk=self._noise_psk
+            ):
+                pass
         except InvalidAuthAPIError:
             return "invalid_auth"
         except APIConnectionError:
             return "connection_error"
-        finally:
-            await cli.disconnect(force=True)
 
         return None
 
