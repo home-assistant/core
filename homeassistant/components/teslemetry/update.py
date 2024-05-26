@@ -55,7 +55,7 @@ class TeslemetryUpdateEntity(TeslemetryVehicleEntity, UpdateEntity):
             AVAILABLE,
             SCHEDULED,
         ):
-            # Only allow install when an update is available
+            # Only allow install when an update has been fully downloaded
             self._attr_supported_features = (
                 UpdateEntityFeature.PROGRESS | UpdateEntityFeature.INSTALL
             )
@@ -88,7 +88,8 @@ class TeslemetryUpdateEntity(TeslemetryVehicleEntity, UpdateEntity):
             INSTALLING,
         ):
             self._attr_in_progress = (
-                cast(int, self.get("vehicle_state_software_update_install_perc")) or 1
+                cast(int, self.get("vehicle_state_software_update_install_perc"))
+                or True
             )
         else:
             self._attr_in_progress = False
