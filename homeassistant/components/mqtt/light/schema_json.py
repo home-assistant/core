@@ -738,12 +738,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._attr_brightness = kwargs[ATTR_WHITE]
                 should_update = True
 
-        await self.async_publish(
-            str(self._topic[CONF_COMMAND_TOPIC]),
-            json_dumps(message),
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            str(self._topic[CONF_COMMAND_TOPIC]), json_dumps(message)
         )
 
         if self._optimistic:
@@ -763,12 +759,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
         self._set_flash_and_transition(message, **kwargs)
 
-        await self.async_publish(
-            str(self._topic[CONF_COMMAND_TOPIC]),
-            json_dumps(message),
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            str(self._topic[CONF_COMMAND_TOPIC]), json_dumps(message)
         )
 
         if self._optimistic:
