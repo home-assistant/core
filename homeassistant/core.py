@@ -318,6 +318,8 @@ class HassJob[**_P, _R_co]:
     we run the job.
     """
 
+    _job_type: HassJobType | None = None
+
     def __init__(
         self,
         target: Callable[_P, _R_co],
@@ -330,7 +332,10 @@ class HassJob[**_P, _R_co]:
         self.target: Final = target
         self.name = name
         self._cancel_on_shutdown = cancel_on_shutdown
-        self._job_type = job_type
+        if job_type:
+            # Pre-set the cached_property so we
+            # avoid the function call
+            self.__dict__["_job_type"] = job_type
 
     @cached_property
     def job_type(self) -> HassJobType:
