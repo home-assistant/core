@@ -4,9 +4,16 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+TO_REDACT = {
+    CONF_USERNAME,
+    CONF_TOKEN,
+}
 
 
 async def async_get_config_entry_diagnostics(
@@ -21,7 +28,11 @@ async def async_get_config_entry_diagnostics(
 
     entity_states = {entity: hass.states.get(entity) for entity in entities}
 
+    entry_dict = entry.as_dict()
+    if "data" in entry_dict:
+        entry_dict["data"] = async_redact_data(entry_dict["data"], TO_REDACT)
+
     return {
-        "entry": entry.as_dict(),
+        "entry": entry_dict,
         "entities": entity_states,
     }
