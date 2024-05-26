@@ -5,7 +5,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from itertools import chain
+from typing import Any
 
+from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import Scope
 
 from homeassistant.components.number import (
@@ -28,7 +30,7 @@ from .models import TeslemetryEnergyData, TeslemetryVehicleData
 class TeslemetryNumberVehicleEntityDescription(NumberEntityDescription):
     """Describes Teslemetry Number entity."""
 
-    func: Callable
+    func: Callable[[VehicleSpecific, float], Any]
     native_min_value: float
     native_max_value: float
     min_key: str | None = None
@@ -69,7 +71,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryNumberVehicleEntityDescription, ...] = (
 class TeslemetryNumberBatteryEntityDescription(NumberEntityDescription):
     """Describes Teslemetry Number entity."""
 
-    func: Callable
+    func: Callable[[EnergySpecific, float], Any]
     requires: str | None = None
 
 
