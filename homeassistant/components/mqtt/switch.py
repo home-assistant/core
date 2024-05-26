@@ -78,8 +78,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     _entity_id_format = switch.ENTITY_ID_FORMAT
 
     _optimistic: bool
-    _state_on: str
-    _state_off: str
+    _is_on_map: dict[str | bytes, bool | None]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
