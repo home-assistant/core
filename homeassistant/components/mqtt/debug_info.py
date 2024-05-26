@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Callable
 from dataclasses import dataclass
 import datetime as dt
-from functools import wraps
 import time
 from typing import TYPE_CHECKING, Any
 
@@ -19,34 +17,6 @@ from .const import ATTR_DISCOVERY_PAYLOAD, ATTR_DISCOVERY_TOPIC
 from .models import DATA_MQTT, MessageCallbackType, PublishPayloadType
 
 STORED_MESSAGES = 10
-
-
-def log_messages(
-    hass: HomeAssistant, entity_id: str
-) -> Callable[[MessageCallbackType], MessageCallbackType]:
-    """Wrap an MQTT message callback to support message logging."""
-
-    debug_info_entities = hass.data[DATA_MQTT].debug_info_entities
-
-    def _log_message(msg: Any) -> None:
-        """Log message."""
-        messages = debug_info_entities[entity_id]["subscriptions"][
-            msg.subscribed_topic
-        ]["messages"]
-        if msg not in messages:
-            messages.append(msg)
-
-    def _decorator(msg_callback: MessageCallbackType) -> MessageCallbackType:
-        @wraps(msg_callback)
-        def wrapper(msg: Any) -> None:
-            """Log message."""
-            _log_message(msg)
-            msg_callback(msg)
-
-        setattr(wrapper, "__entity_id", entity_id)
-        return wrapper
-
-    return _decorator
 
 
 @dataclass
@@ -86,9 +56,12 @@ def add_subscription(
     hass: HomeAssistant,
     message_callback: MessageCallbackType,
     subscription: str,
+    entity_id: str | None = None,
 ) -> None:
     """Prepare debug data for subscription."""
-    if entity_id := getattr(message_callback, "__entity_id", None):
+    if not entity_id:
+        entity_id = getattr(message_callback, "__entity_id", None)
+    if entity_id:
         entity_info = hass.data[DATA_MQTT].debug_info_entities.setdefault(
             entity_id, {"subscriptions": {}, "discovery_data": {}, "transmitted": {}}
         )
@@ -104,9 +77,12 @@ def remove_subscription(
     hass: HomeAssistant,
     message_callback: MessageCallbackType,
     subscription: str,
+    entity_id: str | None = None,
 ) -> None:
     """Remove debug data for subscription if it exists."""
-    if (entity_id := getattr(message_callback, "__entity_id", None)) and entity_id in (
+    if not entity_id:
+        entity_id = getattr(message_callback, "__entity_id", None)
+    if entity_id and entity_id in (
         debug_info_entities := hass.data[DATA_MQTT].debug_info_entities
     ):
         debug_info_entities[entity_id]["subscriptions"][subscription]["count"] -= 1
