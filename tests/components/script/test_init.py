@@ -1783,8 +1783,6 @@ async def test_script_queued_mode(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         "script",
         "test_main",
-        blocking=False,
+        blocking=True,
     )
-
-    await hass.async_block_till_done()
     assert calls == 2
