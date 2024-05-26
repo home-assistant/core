@@ -293,9 +293,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         host = entry.data[CONF_HOST]
         port = entry.data[CONF_PORT]
         password = entry.data[CONF_PASSWORD]
-        psk = entry.data[CONF_NOISE_PSK]
+        psk = entry.data.get(CONF_NOISE_PSK, "")
 
         zeroconf_instance = await zeroconf.async_get_instance(self.hass)
+
         cli = APIClient(
             host,
             port,

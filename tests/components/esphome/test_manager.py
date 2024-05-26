@@ -602,6 +602,7 @@ async def test_connection_aborted_wrong_device(
     new_info = AsyncMock(
         return_value=DeviceInfo(mac_address="1122334455aa", name="test")
     )
+    mock_client.connect.side_effect = APIConnectionError
     mock_client.device_info = new_info
     result = await hass.config_entries.flow.async_init(
         "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info

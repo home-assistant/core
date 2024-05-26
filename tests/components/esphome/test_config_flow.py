@@ -2,7 +2,7 @@
 
 from ipaddress import ip_address
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from aioesphomeapi import (
     APIClient,
@@ -18,7 +18,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, zeroconf
-from homeassistant.components.esphome import DomainData, dashboard
+from homeassistant.components.esphome import dashboard
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_DEVICE_NAME,
@@ -1102,6 +1102,9 @@ async def test_discovery_dhcp_updates_host(
         hostname="test8266",
         macaddress="1122334455aa",
     )
+
+    mock_client.connect.side_effect = APIConnectionError
+
     result = await hass.config_entries.flow.async_init(
         "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
     )
@@ -1118,19 +1121,17 @@ async def test_discovery_dhcp_no_changes(
     """Test dhcp discovery updates host and aborts."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        data={CONF_HOST: "test8266.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
 
-    mock_entry_data = MagicMock()
-    mock_entry_data.device_info.name = "test8266"
-    domain_data = DomainData.get(hass)
-    domain_data.set_entry_data(entry, mock_entry_data)
+    mock_client.connect.side_effect = None
 
     service_info = dhcp.DhcpServiceInfo(
-        ip="192.168.43.183",
+        ip="192.168.43.184",
         hostname="test8266",
-        macaddress="000000000000",
+        macaddress="1122334455aa",
     )
     result = await hass.config_entries.flow.async_init(
         "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
@@ -1139,7 +1140,7 @@ async def test_discovery_dhcp_no_changes(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    assert entry.data[CONF_HOST] == "192.168.43.183"
+    assert entry.data[CONF_HOST] == "test8266.local"
 
 
 async def test_discovery_hassio(hass: HomeAssistant, mock_dashboard) -> None:
