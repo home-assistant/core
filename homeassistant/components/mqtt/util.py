@@ -114,8 +114,6 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
         hass.data[DATA_MQTT_AVAILABLE] = state_reached_future
     else:
         state_reached_future = hass.data[DATA_MQTT_AVAILABLE]
-        if state_reached_future.done():
-            return state_reached_future.result()
 
     try:
         async with asyncio.timeout(AVAILABILITY_TIMEOUT):
