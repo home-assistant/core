@@ -45,6 +45,7 @@ class FolderWatcherEventEntity(EventEntity):
         EVENT_TYPE_MOVED,
     ]
     _attr_name = None
+    _attr_translation_key = DOMAIN
 
     def __init__(
         self,
