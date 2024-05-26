@@ -27,6 +27,7 @@ class EntitySubscription:
     qos: int = 0
     encoding: str = "utf-8"
     entity_id: str | None = None
+    job_type: HassJobType | None = None
 
     def resubscribe_if_necessary(
         self, hass: HomeAssistant, other: EntitySubscription | None
@@ -67,7 +68,7 @@ class EntitySubscription:
             self.message_callback,
             self.qos,
             self.encoding,
-            HassJobType.Callback,
+            self.job_type,
         )
 
     def _should_resubscribe(self, other: EntitySubscription | None) -> bool:
@@ -117,6 +118,7 @@ def async_prepare_subscribe_topics(
             hass=hass,
             should_subscribe=None,
             entity_id=value.get("entity_id", None),
+            job_type=value.get("job_type", None),
         )
         # Get the current subscription state
         current = current_subscriptions.pop(key, None)
