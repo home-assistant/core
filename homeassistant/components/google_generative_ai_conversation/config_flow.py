@@ -118,7 +118,12 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
                     options=RECOMMENDED_OPTIONS,
                 )
         return self.async_show_form(
-            step_id="api", data_schema=STEP_API_DATA_SCHEMA, errors=errors
+            step_id="api",
+            data_schema=STEP_API_DATA_SCHEMA,
+            description_placeholders={
+                "api_key_url": "https://aistudio.google.com/app/apikey"
+            },
+            errors=errors,
         )
 
     async def async_step_user(
@@ -145,7 +150,10 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.reauth_entry
         return self.async_show_form(
             step_id="reauth_confirm",
-            description_placeholders={CONF_NAME: self.reauth_entry.title},
+            description_placeholders={
+                CONF_NAME: self.reauth_entry.title,
+                CONF_API_KEY: self.reauth_entry.data.get(CONF_API_KEY, ""),
+            },
         )
 
     @staticmethod
