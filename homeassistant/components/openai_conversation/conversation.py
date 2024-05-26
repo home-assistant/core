@@ -138,7 +138,7 @@ class OpenAIConversationEntity(
                     api_prompt = await llm_api.async_get_api_prompt(empty_tool_input)
 
                 else:
-                    api_prompt = llm.PROMPT_NO_API_CONFIGURED
+                    api_prompt = llm.async_render_no_api_prompt(self.hass)
 
                 prompt = "\n".join(
                     (
