@@ -28,7 +28,7 @@ from homeassistant.const import (
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJobType, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import json_dumps
@@ -43,7 +43,6 @@ from .const import (
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
     CONF_QOS,
-    CONF_RETAIN,
     CONF_STATE_TOPIC,
     CONF_STATE_VALUE_TEMPLATE,
     PAYLOAD_EMPTY_JSON,
@@ -282,6 +281,7 @@ class MqttSiren(MqttEntity, SirenEntity):
                     "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
                     "encoding": self._config[CONF_ENCODING] or None,
+                    "job_type": HassJobType.Callback,
                 }
             },
         )
@@ -318,13 +318,7 @@ class MqttSiren(MqttEntity, SirenEntity):
         else:
             payload = json_dumps(template_variables)
         if payload and str(payload) != PAYLOAD_NONE:
-            await self.async_publish(
-                self._config[topic],
-                payload,
-                self._config[CONF_QOS],
-                self._config[CONF_RETAIN],
-                self._config[CONF_ENCODING],
-            )
+            await self.async_publish_with_config(self._config[topic], payload)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on.

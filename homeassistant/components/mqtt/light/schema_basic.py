@@ -37,7 +37,7 @@ from homeassistant.const import (
     CONF_PAYLOAD_ON,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HassJobType, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
@@ -49,7 +49,6 @@ from ..const import (
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
     CONF_QOS,
-    CONF_RETAIN,
     CONF_STATE_TOPIC,
     CONF_STATE_VALUE_TEMPLATE,
     PAYLOAD_NONE,
@@ -580,6 +579,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                     "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
                     "encoding": self._config[CONF_ENCODING] or None,
+                    "job_type": HassJobType.Callback,
                 }
 
         add_topic(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
@@ -664,13 +664,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         async def publish(topic: str, payload: PublishPayloadType) -> None:
             """Publish an MQTT message."""
-            await self.async_publish(
-                str(self._topic[topic]),
-                payload,
-                self._config[CONF_QOS],
-                self._config[CONF_RETAIN],
-                self._config[CONF_ENCODING],
-            )
+            await self.async_publish_with_config(str(self._topic[topic]), payload)
 
         def scale_rgbx(
             color: tuple[int, ...],
@@ -875,12 +869,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         This method is a coroutine.
         """
-        await self.async_publish(
-            str(self._topic[CONF_COMMAND_TOPIC]),
-            self._payload["off"],
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            str(self._topic[CONF_COMMAND_TOPIC]), self._payload["off"]
         )
 
         if self._optimistic:

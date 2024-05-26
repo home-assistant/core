@@ -30,7 +30,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HassJobType, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
@@ -83,6 +83,7 @@ from .const import (
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE,
     CONF_QOS,
+    CONF_RETAIN,
     CONF_SCHEMA,
     CONF_SERIAL_NUMBER,
     CONF_SUGGESTED_AREA,
@@ -387,9 +388,10 @@ class MqttAttributesMixin(Entity):
 
     def _attributes_prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        self._attr_tpl = MqttValueTemplate(
-            self._attributes_config.get(CONF_JSON_ATTRS_TEMPLATE), entity=self
-        ).async_render_with_possible_json_value
+        if template := self._attributes_config.get(CONF_JSON_ATTRS_TEMPLATE):
+            self._attr_tpl = MqttValueTemplate(
+                template, entity=self
+            ).async_render_with_possible_json_value
         self._attributes_sub_state = async_prepare_subscribe_topics(
             self.hass,
             self._attributes_sub_state,
@@ -404,6 +406,7 @@ class MqttAttributesMixin(Entity):
                     "entity_id": self.entity_id,
                     "qos": self._attributes_config.get(CONF_QOS),
                     "encoding": self._attributes_config[CONF_ENCODING] or None,
+                    "job_type": HassJobType.Callback,
                 }
             },
         )
@@ -422,9 +425,9 @@ class MqttAttributesMixin(Entity):
     @callback
     def _attributes_message_received(self, msg: ReceiveMessage) -> None:
         """Update extra state attributes."""
-        if TYPE_CHECKING:
-            assert self._attr_tpl is not None
-        payload = self._attr_tpl(msg.payload)
+        payload = (
+            self._attr_tpl(msg.payload) if self._attr_tpl is not None else msg.payload
+        )
         try:
             json_dict = json_loads(payload) if isinstance(payload, str) else None
         except ValueError:
@@ -495,10 +498,10 @@ class MqttAvailabilityMixin(Entity):
                 }
 
         for avail_topic_conf in self._avail_topics.values():
-            avail_topic_conf[CONF_AVAILABILITY_TEMPLATE] = MqttValueTemplate(
-                avail_topic_conf[CONF_AVAILABILITY_TEMPLATE],
-                entity=self,
-            ).async_render_with_possible_json_value
+            if template := avail_topic_conf[CONF_AVAILABILITY_TEMPLATE]:
+                avail_topic_conf[CONF_AVAILABILITY_TEMPLATE] = MqttValueTemplate(
+                    template, entity=self
+                ).async_render_with_possible_json_value
 
         self._avail_config = config
 
@@ -518,6 +521,7 @@ class MqttAvailabilityMixin(Entity):
                 "entity_id": self.entity_id,
                 "qos": self._avail_config[CONF_QOS],
                 "encoding": self._avail_config[CONF_ENCODING] or None,
+                "job_type": HassJobType.Callback,
             }
             for topic in self._avail_topics
         }
@@ -533,7 +537,9 @@ class MqttAvailabilityMixin(Entity):
         """Handle a new received MQTT availability message."""
         topic = msg.topic
         avail_topic = self._avail_topics[topic]
-        payload = avail_topic[CONF_AVAILABILITY_TEMPLATE](msg.payload)
+        template = avail_topic[CONF_AVAILABILITY_TEMPLATE]
+        payload = template(msg.payload) if template else msg.payload
+
         if payload == avail_topic[CONF_PAYLOAD_AVAILABLE]:
             self._available[topic] = True
             self._available_latest = True
@@ -1151,6 +1157,18 @@ class MqttEntity(
             qos,
             retain,
             encoding,
+        )
+
+    async def async_publish_with_config(
+        self, topic: str, payload: PublishPayloadType
+    ) -> None:
+        """Publish payload to a topic using config."""
+        await self.async_publish(
+            topic,
+            payload,
+            self._config[CONF_QOS],
+            self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     @staticmethod

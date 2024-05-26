@@ -27,7 +27,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     EntityCategory,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HassJobType, HomeAssistant
 from homeassistant.generated.mqtt import MQTT
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -1189,7 +1189,9 @@ async def help_test_entity_id_update_subscriptions(
     assert state is not None
     assert mqtt_mock.async_subscribe.call_count == len(topics) + 2 + DISCOVERY_COUNT
     for topic in topics:
-        mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
+        mqtt_mock.async_subscribe.assert_any_call(
+            topic, ANY, ANY, ANY, HassJobType.Callback
+        )
     mqtt_mock.async_subscribe.reset_mock()
 
     entity_registry.async_update_entity(
@@ -1203,7 +1205,9 @@ async def help_test_entity_id_update_subscriptions(
     state = hass.states.get(f"{domain}.milk")
     assert state is not None
     for topic in topics:
-        mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
+        mqtt_mock.async_subscribe.assert_any_call(
+            topic, ANY, ANY, ANY, HassJobType.Callback
+        )
 
 
 async def help_test_entity_id_update_discovery_update(

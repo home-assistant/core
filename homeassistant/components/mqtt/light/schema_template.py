@@ -29,7 +29,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HassJobType, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
@@ -41,7 +41,6 @@ from ..const import (
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
     CONF_QOS,
-    CONF_RETAIN,
     CONF_STATE_TOPIC,
     PAYLOAD_NONE,
 )
@@ -282,6 +281,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                     "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
                     "encoding": self._config[CONF_ENCODING] or None,
+                    "job_type": HassJobType.Callback,
                 }
             },
         )
@@ -364,12 +364,9 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         if ATTR_TRANSITION in kwargs:
             values["transition"] = kwargs[ATTR_TRANSITION]
 
-        await self.async_publish(
+        await self.async_publish_with_config(
             str(self._topics[CONF_COMMAND_TOPIC]),
             self._command_templates[CONF_COMMAND_ON_TEMPLATE](None, values),
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
         )
 
         if self._optimistic:
@@ -387,12 +384,9 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         if ATTR_TRANSITION in kwargs:
             values["transition"] = kwargs[ATTR_TRANSITION]
 
-        await self.async_publish(
+        await self.async_publish_with_config(
             str(self._topics[CONF_COMMAND_TOPIC]),
             self._command_templates[CONF_COMMAND_OFF_TEMPLATE](None, values),
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
         )
 
         if self._optimistic:

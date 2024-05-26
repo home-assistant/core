@@ -17,7 +17,7 @@ from homeassistant.components.lawn_mower import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJobType, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -192,6 +192,7 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
                     "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
                     "encoding": self._config[CONF_ENCODING] or None,
+                    "job_type": HassJobType.Callback,
                 }
             },
         )
@@ -212,14 +213,7 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
         if self._attr_assumed_state:
             self._attr_activity = activity
             self.async_write_ha_state()
-
-        await self.async_publish(
-            self._command_topics[option],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._command_topics[option], payload)
 
     async def async_start_mowing(self) -> None:
         """Start or resume mowing."""

@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     MAX_LENGTH_STATE_STATE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJobType, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -32,7 +32,6 @@ from .const import (
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
     CONF_QOS,
-    CONF_RETAIN,
     CONF_STATE_TOPIC,
 )
 from .mixins import MqttEntity, async_setup_entity_entry_helper
@@ -183,6 +182,7 @@ class MqttTextEntity(MqttEntity, TextEntity):
                     "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
                     "encoding": self._config[CONF_ENCODING] or None,
+                    "job_type": HassJobType.Callback,
                 }
 
         add_subscription(
@@ -203,14 +203,7 @@ class MqttTextEntity(MqttEntity, TextEntity):
     async def async_set_value(self, value: str) -> None:
         """Change the text."""
         payload = self._command_template(value)
-
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
         if self._optimistic:
             self._attr_native_value = value
             self.async_write_ha_state()
