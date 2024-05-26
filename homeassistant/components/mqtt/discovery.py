@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJobType, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -319,10 +319,14 @@ async def async_start(  # noqa: C901
                 hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None
             )
 
-    # async_subscribe will never suspend so there is no need to create a task
-    # here and its faster to await them in sequence
     mqtt_data.discovery_unsubscribe = [
-        await mqtt.async_subscribe(hass, topic, async_discovery_message_received, 0)
+        mqtt.async_subscribe_internal(
+            hass,
+            topic,
+            async_discovery_message_received,
+            0,
+            job_type=HassJobType.Callback,
+        )
         for topic in (
             f"{discovery_topic}/+/+/config",
             f"{discovery_topic}/+/+/+/config",

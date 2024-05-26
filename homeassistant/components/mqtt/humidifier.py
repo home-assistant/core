@@ -30,7 +30,7 @@ from homeassistant.const import (
     CONF_PAYLOAD_ON,
     CONF_STATE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJobType, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
@@ -293,6 +293,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 "entity_id": self.entity_id,
                 "qos": qos,
                 "encoding": self._config[CONF_ENCODING] or None,
+                "job_type": HassJobType.Callback,
             }
 
     @callback

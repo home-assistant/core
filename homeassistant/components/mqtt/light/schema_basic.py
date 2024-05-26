@@ -37,7 +37,7 @@ from homeassistant.const import (
     CONF_PAYLOAD_ON,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HassJobType, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
@@ -580,6 +580,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                     "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
                     "encoding": self._config[CONF_ENCODING] or None,
+                    "job_type": HassJobType.Callback,
                 }
 
         add_topic(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})

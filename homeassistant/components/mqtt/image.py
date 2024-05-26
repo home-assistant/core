@@ -16,7 +16,7 @@ from homeassistant.components import image
 from homeassistant.components.image import DEFAULT_CONTENT_TYPE, ImageEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJobType, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
@@ -202,6 +202,7 @@ class MqttImage(MqttEntity, ImageEntity):
                     "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
                     "encoding": encoding,
+                    "job_type": HassJobType.Callback,
                 }
             return has_topic
 

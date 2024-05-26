@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJobType, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
@@ -232,6 +232,7 @@ class MqttLock(MqttEntity, LockEntity):
                 "entity_id": self.entity_id,
                 CONF_QOS: qos,
                 CONF_ENCODING: encoding,
+                "job_type": HassJobType.Callback,
             }
         }
 
