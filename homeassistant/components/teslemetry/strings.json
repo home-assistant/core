@@ -239,6 +239,11 @@
         }
       }
     },
+    "media_player": {
+      "media": {
+        "name": "[%key:component::media_player::title%]"
+      }
+    },
     "cover": {
       "charge_state_charge_port_door_open": {
         "name": "Charge port door"
