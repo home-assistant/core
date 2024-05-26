@@ -28,6 +28,7 @@ from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
 
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DEVICE_TRACKER,
