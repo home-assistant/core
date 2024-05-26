@@ -94,7 +94,7 @@ def async_log_discovery_origin_info(
     """Log information about the discovery and origin."""
     # We only log origin info once per device discovery
     if discovery_payload.device_discovery:
-        _LOGGER.info(message)
+        _LOGGER.log(level, message)
         return
     if CONF_ORIGIN not in discovery_payload:
         _LOGGER.log(level, message)
