@@ -1765,6 +1765,8 @@ async def test_script_queued_mode(hass: HomeAssistant) -> None:
                             "parallel": [
                                 {"service": "script.test_sub"},
                                 {"service": "script.test_sub"},
+                                {"service": "script.test_sub"},
+                                {"service": "script.test_sub"},
                             ]
                         }
                     ]
