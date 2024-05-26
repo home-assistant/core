@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
-from functools import partial
 import logging
-from typing import Any
 
 import voluptuous as vol
 
@@ -31,13 +29,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    HassJobType,
-    HomeAssistant,
-    State,
-    callback,
-)
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
@@ -46,7 +38,7 @@ from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_RO_SCHEMA
-from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, PAYLOAD_NONE
+from .const import CONF_STATE_TOPIC, PAYLOAD_NONE
 from .mixins import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttValueTemplate,
@@ -289,25 +281,13 @@ class MqttSensor(MqttEntity, RestoreSensor):
         if CONF_LAST_RESET_VALUE_TEMPLATE in self._config:
             _update_last_reset(msg)
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        topics: dict[str, dict[str, Any]] = {}
-
-        topics["state_topic"] = {
-            "topic": self._config[CONF_STATE_TOPIC],
-            "msg_callback": partial(
-                self._message_callback,
-                self._state_message_received,
-                {"_attr_native_value", "_attr_last_reset", "_expired"},
-            ),
-            "entity_id": self.entity_id,
-            "qos": self._config[CONF_QOS],
-            "encoding": self._config[CONF_ENCODING] or None,
-            "job_type": HassJobType.Callback,
-        }
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
+        self.add_subscription(
+            CONF_STATE_TOPIC,
+            self._state_message_received,
+            {"_attr_native_value", "_attr_last_reset", "_expired"},
         )
 
     async def _subscribe_topics(self) -> None:

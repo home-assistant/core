@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import partial
 import logging
 from typing import Any
 
@@ -29,7 +28,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HassJobType, callback
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
@@ -37,13 +36,7 @@ import homeassistant.util.color as color_util
 
 from .. import subscription
 from ..config import MQTT_RW_SCHEMA
-from ..const import (
-    CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_STATE_TOPIC,
-    PAYLOAD_NONE,
-)
+from ..const import CONF_COMMAND_TOPIC, CONF_STATE_TOPIC, PAYLOAD_NONE
 from ..mixins import MqttEntity
 from ..models import (
     MqttCommandTemplate,
@@ -254,35 +247,19 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             else:
                 _LOGGER.warning("Unsupported effect value received")
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-        if self._topics[CONF_STATE_TOPIC] is None:
-            return
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass,
-            self._sub_state,
+        self.add_subscription(
+            CONF_STATE_TOPIC,
+            self._state_received,
             {
-                "state_topic": {
-                    "topic": self._topics[CONF_STATE_TOPIC],
-                    "msg_callback": partial(
-                        self._message_callback,
-                        self._state_received,
-                        {
-                            "_attr_brightness",
-                            "_attr_color_mode",
-                            "_attr_color_temp",
-                            "_attr_effect",
-                            "_attr_hs_color",
-                            "_attr_is_on",
-                        },
-                    ),
-                    "entity_id": self.entity_id,
-                    "qos": self._config[CONF_QOS],
-                    "encoding": self._config[CONF_ENCODING] or None,
-                    "job_type": HassJobType.Callback,
-                }
+                "_attr_brightness",
+                "_attr_color_mode",
+                "_attr_color_temp",
+                "_attr_effect",
+                "_attr_hs_color",
+                "_attr_is_on",
             },
         )
 
