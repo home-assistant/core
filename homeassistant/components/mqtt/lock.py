@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import partial
+import logging
 import re
 from typing import Any
 
@@ -17,7 +19,7 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJobType, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
@@ -30,18 +32,11 @@ from .const import (
     CONF_ENCODING,
     CONF_PAYLOAD_RESET,
     CONF_QOS,
-    CONF_RETAIN,
     CONF_STATE_OPEN,
     CONF_STATE_OPENING,
     CONF_STATE_TOPIC,
 )
-from .debug_info import log_messages
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entity_entry_helper,
-    write_state_on_attr_change,
-)
+from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -49,6 +44,9 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_CODE_FORMAT = "code_format"
 
@@ -183,51 +181,59 @@ class MqttLock(MqttEntity, LockEntity):
 
         self._valid_states = [config[state] for state in STATE_CONFIG_KEYS]
 
+    @callback
+    def _message_received(self, msg: ReceiveMessage) -> None:
+        """Handle new lock state messages."""
+        payload = self._value_template(msg.payload)
+        if not payload.strip():  # No output from template, ignore
+            _LOGGER.debug(
+                "Ignoring empty payload '%s' after rendering for topic %s",
+                payload,
+                msg.topic,
+            )
+            return
+        if payload == self._config[CONF_PAYLOAD_RESET]:
+            # Reset the state to `unknown`
+            self._attr_is_locked = None
+        elif payload in self._valid_states:
+            self._attr_is_locked = payload == self._config[CONF_STATE_LOCKED]
+            self._attr_is_locking = payload == self._config[CONF_STATE_LOCKING]
+            self._attr_is_open = payload == self._config[CONF_STATE_OPEN]
+            self._attr_is_opening = payload == self._config[CONF_STATE_OPENING]
+            self._attr_is_unlocking = payload == self._config[CONF_STATE_UNLOCKING]
+            self._attr_is_jammed = payload == self._config[CONF_STATE_JAMMED]
+
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-        topics: dict[str, dict[str, Any]] = {}
+        topics: dict[str, dict[str, Any]]
         qos: int = self._config[CONF_QOS]
         encoding: str | None = self._config[CONF_ENCODING] or None
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(
-            self,
-            {
-                "_attr_is_jammed",
-                "_attr_is_locked",
-                "_attr_is_locking",
-                "_attr_is_open",
-                "_attr_is_opening",
-                "_attr_is_unlocking",
-            },
-        )
-        def message_received(msg: ReceiveMessage) -> None:
-            """Handle new lock state messages."""
-            if (payload := self._value_template(msg.payload)) == self._config[
-                CONF_PAYLOAD_RESET
-            ]:
-                # Reset the state to `unknown`
-                self._attr_is_locked = None
-            elif payload in self._valid_states:
-                self._attr_is_locked = payload == self._config[CONF_STATE_LOCKED]
-                self._attr_is_locking = payload == self._config[CONF_STATE_LOCKING]
-                self._attr_is_open = payload == self._config[CONF_STATE_OPEN]
-                self._attr_is_opening = payload == self._config[CONF_STATE_OPENING]
-                self._attr_is_unlocking = payload == self._config[CONF_STATE_UNLOCKING]
-                self._attr_is_jammed = payload == self._config[CONF_STATE_JAMMED]
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
             self._optimistic = True
-        else:
-            topics[CONF_STATE_TOPIC] = {
+            return
+        topics = {
+            CONF_STATE_TOPIC: {
                 "topic": self._config.get(CONF_STATE_TOPIC),
-                "msg_callback": message_received,
+                "msg_callback": partial(
+                    self._message_callback,
+                    self._message_received,
+                    {
+                        "_attr_is_jammed",
+                        "_attr_is_locked",
+                        "_attr_is_locking",
+                        "_attr_is_open",
+                        "_attr_is_opening",
+                        "_attr_is_unlocking",
+                    },
+                ),
+                "entity_id": self.entity_id,
                 CONF_QOS: qos,
                 CONF_ENCODING: encoding,
+                "job_type": HassJobType.Callback,
             }
+        }
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
@@ -237,7 +243,7 @@ class MqttLock(MqttEntity, LockEntity):
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device.
@@ -248,13 +254,7 @@ class MqttLock(MqttEntity, LockEntity):
             ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None
         }
         payload = self._command_template(self._config[CONF_PAYLOAD_LOCK], tpl_vars)
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
         if self._optimistic:
             # Optimistically assume that the lock has changed state.
             self._attr_is_locked = True
@@ -269,13 +269,7 @@ class MqttLock(MqttEntity, LockEntity):
             ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None
         }
         payload = self._command_template(self._config[CONF_PAYLOAD_UNLOCK], tpl_vars)
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
         if self._optimistic:
             # Optimistically assume that the lock has changed state.
             self._attr_is_locked = False
@@ -290,13 +284,7 @@ class MqttLock(MqttEntity, LockEntity):
             ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None
         }
         payload = self._command_template(self._config[CONF_PAYLOAD_OPEN], tpl_vars)
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
         if self._optimistic:
             # Optimistically assume that the lock unlocks when opened.
             self._attr_is_open = True

@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME
@@ -53,7 +53,9 @@ from .const import (
     SupervisorEntityModel,
 )
 from .handler import HassIO, HassioAPIError
-from .issues import SupervisorIssues
+
+if TYPE_CHECKING:
+    from .issues import SupervisorIssues
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -275,7 +277,7 @@ def async_remove_addons_from_dev_reg(
             dev_reg.async_remove_device(dev.id)
 
 
-class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
+class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to retrieve Hass.io status."""
 
     def __init__(
