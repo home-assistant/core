@@ -288,14 +288,61 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
+    async def try_connect(self, entry) -> str | None:
+        """Try conecting to a device and return any errors."""
+        host = entry.data[CONF_HOST]
+        port = entry.data[CONF_PORT]
+        password = entry.data[CONF_PASSWORD]
+        psk = entry.data[CONF_NOISE_PSK]
+
+        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
+        cli = APIClient(
+            host,
+            port,
+            password,
+            zeroconf_instance=zeroconf_instance,
+            noise_psk=psk,
+        )
+
+        try:
+            await cli.connect()
+        except APIConnectionError:
+            return "connection_error"
+        finally:
+            await cli.disconnect(force=True)
+
+        return None
+    
     async def async_step_dhcp(
         self, discovery_info: dhcp.DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
-        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
-        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
-        # This should never happen since we only listen to DHCP requests
+        entry = await self.async_set_unique_id(
+            format_mac(discovery_info.macaddress)
+        )
+        # entry should always be valid since we only listen to DHCP requests
         # for configured devices.
+
+        # Check if the existing entry is still valid
+        error = await self.try_connect(entry)
+
+        if error is not None:
+            _LOGGER.debug(
+                "Invalidated config entry with error %s." +
+                  " Reconfiguring with address %s",
+                error,
+                discovery_info.ip
+            )
+            # Update with new connection information if we can't connect
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: discovery_info.ip}
+            )
+        else:
+            _LOGGER.debug(
+                "Config entry with address %s still valid",
+                discovery_info.ip
+            )
+
         return self.async_abort(reason="already_configured")
 
     async def async_step_hassio(
