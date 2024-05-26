@@ -11,12 +11,7 @@ from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_APP_ID,
-    DOMAIN,
-    PLATFORMS,
-    TTN_API_HOST,
-)
+from .const import CONF_APP_ID, DOMAIN, PLATFORMS, TTN_API_HOST
 from .coordinator import TTNCoordinator
 
 _LOGGER = logging.getLogger(__name__)
