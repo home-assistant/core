@@ -6266,7 +6266,7 @@ async def test_disallowed_recursion(
         running_description="test script1",
     )
 
-    sequence2 = cv.SCRIPT_SCHEMA({"alias": alias, "service": "test.call_script_1"})
+    sequence2 = cv.SCRIPT_SCHEMA({"alias": alias, "service": "test.call_script_3"})
     script2_obj = script.Script(
         hass,
         sequence2,
@@ -6276,17 +6276,33 @@ async def test_disallowed_recursion(
         running_description="test script2",
     )
 
+    sequence3 = cv.SCRIPT_SCHEMA({"alias": alias, "service": "test.call_script_1"})
+    script3_obj = script.Script(
+        hass,
+        sequence3,
+        "Test Name3",
+        "test_domain3",
+        script_mode="queued",
+        running_description="test script3",
+    )
+
     async def async_service_handler_1(*args, **kwargs) -> None:
-        """Simulate a service that runs the script again."""
-        await script2_obj.async_run(context=context)
-
-    hass.services.async_register("test", "call_script_2", async_service_handler_1)
-
-    async def async_service_handler_2(*args, **kwargs) -> None:
         """Simulate a service that runs the script again."""
         await script1_obj.async_run(context=context)
 
-    hass.services.async_register("test", "call_script_1", async_service_handler_2)
+    hass.services.async_register("test", "call_script_1", async_service_handler_1)
+
+    async def async_service_handler_2(*args, **kwargs) -> None:
+        """Simulate a service that runs the script again."""
+        await script2_obj.async_run(context=context)
+
+    hass.services.async_register("test", "call_script_2", async_service_handler_2)
+
+    async def async_service_handler_3(*args, **kwargs) -> None:
+        """Simulate a service that runs the script again."""
+        await script3_obj.async_run(context=context)
+
+    hass.services.async_register("test", "call_script_3", async_service_handler_3)
 
     await script1_obj.async_run(context=context)
     await hass.async_block_till_done()
@@ -6294,7 +6310,12 @@ async def test_disallowed_recursion(
     assert calls == 0
     assert (
         "Test Name1: Disallowed recursion detected, "
-        "test_domain2.Test Name2 tried to start test_domain1.Test Name1"
-        " when it was already called from test_domain1.Test Name1 earlier:"
+        "test_domain3.Test Name3 tried to start test_domain1.Test Name1"
+        " which is already running in the current execution path; "
+        "Traceback (most recent call last):"
     ) in caplog.text
-    assert "- test_domain1.Test Name1\n- test_domain2.Test Name2" in caplog.text
+    assert (
+        "- test_domain1.Test Name1\n"
+        "- test_domain2.Test Name2\n"
+        "- test_domain3.Test Name3"
+    ) in caplog.text

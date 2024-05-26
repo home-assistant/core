@@ -1733,8 +1733,8 @@ class Script:
             self._log(
                 "Disallowed recursion detected, "
                 f"{script_stack[-1].partition('-')[0]} tried to start "
-                f"{self.domain}.{self.name} when it was already called "
-                f"from {self.domain}.{self.name} earlier:\n"
+                f"{self.domain}.{self.name} which is already running "
+                "in the current execution path; "
                 "Traceback (most recent call last):\n"
                 f"{"\n".join(formatted_stack)}",
                 level=logging.WARNING,
