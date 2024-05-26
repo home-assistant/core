@@ -1744,7 +1744,7 @@ async def test_responses_no_response(hass: HomeAssistant) -> None:
 
 
 async def test_script_queued_mode(hass: HomeAssistant) -> None:
-    """Test calling a script in queued mode in multiple tasks."""
+    """Test calling a queued mode script called in parallel."""
     calls = 0
 
     async def async_service_handler(*args, **kwargs) -> None:
