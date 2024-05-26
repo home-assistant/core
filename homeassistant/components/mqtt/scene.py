@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN
+from .const import CONF_COMMAND_TOPIC, CONF_RETAIN
 from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic
@@ -83,10 +83,6 @@ class MqttScene(
 
         This method is a coroutine.
         """
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            self._config[CONF_PAYLOAD_ON],
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_COMMAND_TOPIC], self._config[CONF_PAYLOAD_ON]
         )

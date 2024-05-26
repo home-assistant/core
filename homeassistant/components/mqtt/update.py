@@ -16,7 +16,7 @@ from homeassistant.components.update import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_VALUE_TEMPLATE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJobType, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -229,6 +229,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                     "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
                     "encoding": self._config[CONF_ENCODING] or None,
+                    "job_type": HassJobType.Callback,
                 }
 
         add_subscription(
@@ -264,14 +265,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
     ) -> None:
         """Update the current value."""
         payload = self._config[CONF_PAYLOAD_INSTALL]
-
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
 
     @property
     def supported_features(self) -> UpdateEntityFeature:

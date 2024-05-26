@@ -27,7 +27,7 @@ from homeassistant.const import (
     CONF_PAYLOAD_ON,
     CONF_STATE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJobType, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
@@ -45,7 +45,6 @@ from .const import (
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
     CONF_QOS,
-    CONF_RETAIN,
     CONF_STATE_TOPIC,
     CONF_STATE_VALUE_TEMPLATE,
     PAYLOAD_NONE,
@@ -447,6 +446,7 @@ class MqttFan(MqttEntity, FanEntity):
                     "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
                     "encoding": self._config[CONF_ENCODING] or None,
+                    "job_type": HassJobType.Callback,
                 }
             return has_topic
 
@@ -496,12 +496,8 @@ class MqttFan(MqttEntity, FanEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[CONF_STATE](self._payload["STATE_ON"])
-        await self.async_publish(
-            self._topic[CONF_COMMAND_TOPIC],
-            mqtt_payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_COMMAND_TOPIC], mqtt_payload
         )
         if percentage:
             await self.async_set_percentage(percentage)
@@ -517,12 +513,8 @@ class MqttFan(MqttEntity, FanEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[CONF_STATE](self._payload["STATE_OFF"])
-        await self.async_publish(
-            self._topic[CONF_COMMAND_TOPIC],
-            mqtt_payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_COMMAND_TOPIC], mqtt_payload
         )
         if self._optimistic:
             self._attr_is_on = False
@@ -537,14 +529,9 @@ class MqttFan(MqttEntity, FanEntity):
             percentage_to_ranged_value(self._speed_range, percentage)
         )
         mqtt_payload = self._command_templates[ATTR_PERCENTAGE](percentage_payload)
-        await self.async_publish(
-            self._topic[CONF_PERCENTAGE_COMMAND_TOPIC],
-            mqtt_payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_PERCENTAGE_COMMAND_TOPIC], mqtt_payload
         )
-
         if self._optimistic_percentage:
             self._attr_percentage = percentage
             self.async_write_ha_state()
@@ -555,15 +542,9 @@ class MqttFan(MqttEntity, FanEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[ATTR_PRESET_MODE](preset_mode)
-
-        await self.async_publish(
-            self._topic[CONF_PRESET_MODE_COMMAND_TOPIC],
-            mqtt_payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_PRESET_MODE_COMMAND_TOPIC], mqtt_payload
         )
-
         if self._optimistic_preset_mode:
             self._attr_preset_mode = preset_mode
             self.async_write_ha_state()
@@ -581,15 +562,9 @@ class MqttFan(MqttEntity, FanEntity):
             mqtt_payload = self._command_templates[ATTR_OSCILLATING](
                 self._payload["OSCILLATE_OFF_PAYLOAD"]
             )
-
-        await self.async_publish(
-            self._topic[CONF_OSCILLATION_COMMAND_TOPIC],
-            mqtt_payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_OSCILLATION_COMMAND_TOPIC], mqtt_payload
         )
-
         if self._optimistic_oscillation:
             self._attr_oscillating = oscillating
             self.async_write_ha_state()
@@ -600,15 +575,9 @@ class MqttFan(MqttEntity, FanEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[ATTR_DIRECTION](direction)
-
-        await self.async_publish(
-            self._topic[CONF_DIRECTION_COMMAND_TOPIC],
-            mqtt_payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_DIRECTION_COMMAND_TOPIC], mqtt_payload
         )
-
         if self._optimistic_direction:
             self._attr_current_direction = direction
             self.async_write_ha_state()

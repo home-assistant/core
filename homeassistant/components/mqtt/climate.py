@@ -43,7 +43,7 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJobType, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
@@ -429,6 +429,7 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
                 "entity_id": self.entity_id,
                 "qos": qos,
                 "encoding": self._config[CONF_ENCODING] or None,
+                "job_type": HassJobType.Callback,
             }
 
     def render_template(
@@ -515,13 +516,7 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
 
     async def _publish(self, topic: str, payload: PublishPayloadType) -> None:
         if self._topic[topic] is not None:
-            await self.async_publish(
-                self._topic[topic],
-                payload,
-                self._config[CONF_QOS],
-                self._config[CONF_RETAIN],
-                self._config[CONF_ENCODING],
-            )
+            await self.async_publish_with_config(self._topic[topic], payload)
 
     async def _set_climate_attribute(
         self,

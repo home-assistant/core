@@ -26,7 +26,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJobType, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -39,7 +39,6 @@ from .const import (
     CONF_ENCODING,
     CONF_PAYLOAD_RESET,
     CONF_QOS,
-    CONF_RETAIN,
     CONF_STATE_TOPIC,
 )
 from .mixins import MqttEntity, async_setup_entity_entry_helper
@@ -214,6 +213,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
                     "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
                     "encoding": self._config[CONF_ENCODING] or None,
+                    "job_type": HassJobType.Callback,
                 }
             },
         )
@@ -238,11 +238,4 @@ class MqttNumber(MqttEntity, RestoreNumber):
         if self._attr_assumed_state:
             self._attr_native_value = current_number
             self.async_write_ha_state()
-
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)

@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJobType, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -33,7 +33,6 @@ from .const import (
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
     CONF_QOS,
-    CONF_RETAIN,
     CONF_STATE_TOPIC,
     PAYLOAD_NONE,
 )
@@ -145,6 +144,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
                     "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
                     "encoding": self._config[CONF_ENCODING] or None,
+                    "job_type": HassJobType.Callback,
                 }
             },
         )
@@ -161,12 +161,8 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
         This method is a coroutine.
         """
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            self._config[CONF_PAYLOAD_ON],
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_COMMAND_TOPIC], self._config[CONF_PAYLOAD_ON]
         )
         if self._optimistic:
             # Optimistically assume that switch has changed state.
@@ -178,12 +174,8 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
         This method is a coroutine.
         """
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            self._config[CONF_PAYLOAD_OFF],
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_COMMAND_TOPIC], self._config[CONF_PAYLOAD_OFF]
         )
         if self._optimistic:
             # Optimistically assume that switch has changed state.
