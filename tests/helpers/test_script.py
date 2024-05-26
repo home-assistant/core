@@ -6247,3 +6247,53 @@ async def test_stopping_run_before_starting(
     # would hang indefinitely.
     run = script._ScriptRun(hass, script_obj, {}, None, True)
     await run.async_stop()
+
+
+async def test_disallowed_recursion(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a queued mode script disallowed recursion."""
+    context = Context()
+    calls = 0
+    alias = "event step"
+    sequence1 = cv.SCRIPT_SCHEMA({"alias": alias, "service": "test.call_script_2"})
+    script1_obj = script.Script(
+        hass,
+        sequence1,
+        "Test Name1",
+        "test_domain1",
+        script_mode="queued",
+        running_description="test script1",
+    )
+
+    sequence2 = cv.SCRIPT_SCHEMA({"alias": alias, "service": "test.call_script_1"})
+    script2_obj = script.Script(
+        hass,
+        sequence2,
+        "Test Name2",
+        "test_domain2",
+        script_mode="queued",
+        running_description="test script2",
+    )
+
+    async def async_service_handler_1(*args, **kwargs) -> None:
+        """Simulate a service that runs the script again."""
+        await script2_obj.async_run(context=context)
+
+    hass.services.async_register("test", "call_script_2", async_service_handler_1)
+
+    async def async_service_handler_2(*args, **kwargs) -> None:
+        """Simulate a service that runs the script again."""
+        await script1_obj.async_run(context=context)
+
+    hass.services.async_register("test", "call_script_1", async_service_handler_2)
+
+    await script1_obj.async_run(context=context)
+    await hass.async_block_till_done()
+
+    assert calls == 0
+    assert (
+        "Disallowed recursion detected while attempt to add run to stack" in caplog.text
+    )
+    assert "1: test_domain1.Test Name1" in caplog.text
+    assert "2: test_domain2.Test Name2" in caplog.text
