@@ -213,7 +213,7 @@
     },
     "media_player": {
       "media": {
-        "name": "Media player"
+        "name": "[%key:component::media_player::title%]"
       }
     },
     "cover": {
