@@ -25,6 +25,8 @@ LLM_API_ASSIST = "assist"
 
 DEFAULT_INSTRUCTIONS_PROMPT = """You are a voice assistant for Home Assistant.
 Answer in plain text. Keep it simple and to the point.
+The current time is {{ now().strftime("%X") }}.
+Today's date is {{ now().strftime("%x") }}.
 """
 
 
