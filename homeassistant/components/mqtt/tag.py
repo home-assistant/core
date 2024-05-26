@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components import tag
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_VALUE_TEMPLATE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HassJobType, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -142,28 +142,32 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
         update_device(self.hass, self._config_entry, config)
         await self.subscribe_topics()
 
+    @callback
+    def _async_tag_scanned(self, msg: ReceiveMessage) -> None:
+        """Handle new tag scanned."""
+        try:
+            tag_id = str(self._value_template(msg.payload, "")).strip()
+        except MqttValueTemplateException as exc:
+            _LOGGER.warning(exc)
+            return
+        if not tag_id:  # No output from template, ignore
+            return
+
+        self.hass.async_create_task(
+            tag.async_scan_tag(self.hass, tag_id, self.device_id)
+        )
+
     async def subscribe_topics(self) -> None:
         """Subscribe to MQTT topics."""
-
-        async def tag_scanned(msg: ReceiveMessage) -> None:
-            try:
-                tag_id = str(self._value_template(msg.payload, "")).strip()
-            except MqttValueTemplateException as exc:
-                _LOGGER.warning(exc)
-                return
-            if not tag_id:  # No output from template, ignore
-                return
-
-            await tag.async_scan_tag(self.hass, tag_id, self.device_id)
-
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
             self._sub_state,
             {
                 "state_topic": {
                     "topic": self._config[CONF_TOPIC],
-                    "msg_callback": tag_scanned,
+                    "msg_callback": self._async_tag_scanned,
                     "qos": self._config[CONF_QOS],
+                    "job_type": HassJobType.Callback,
                 }
             },
         )

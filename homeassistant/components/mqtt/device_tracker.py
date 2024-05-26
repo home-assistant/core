@@ -25,7 +25,7 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_NOT_HOME,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJobType, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -155,6 +155,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                     ),
                     "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
+                    "job_type": HassJobType.Callback,
                 }
             },
         )

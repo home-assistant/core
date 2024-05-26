@@ -28,7 +28,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJobType, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
@@ -478,6 +478,7 @@ class MqttCover(MqttEntity, CoverEntity):
                 "entity_id": self.entity_id,
                 "qos": self._config[CONF_QOS],
                 "encoding": self._config[CONF_ENCODING] or None,
+                "job_type": HassJobType.Callback,
             }
 
         if self._config.get(CONF_STATE_TOPIC):
@@ -491,6 +492,7 @@ class MqttCover(MqttEntity, CoverEntity):
                 "entity_id": self.entity_id,
                 "qos": self._config[CONF_QOS],
                 "encoding": self._config[CONF_ENCODING] or None,
+                "job_type": HassJobType.Callback,
             }
 
         if self._config.get(CONF_TILT_STATUS_TOPIC) is not None:
@@ -504,6 +506,7 @@ class MqttCover(MqttEntity, CoverEntity):
                 "entity_id": self.entity_id,
                 "qos": self._config[CONF_QOS],
                 "encoding": self._config[CONF_ENCODING] or None,
+                "job_type": HassJobType.Callback,
             }
 
         self._sub_state = subscription.async_prepare_subscribe_topics(

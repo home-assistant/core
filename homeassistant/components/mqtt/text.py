@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     MAX_LENGTH_STATE_STATE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJobType, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -183,6 +183,7 @@ class MqttTextEntity(MqttEntity, TextEntity):
                     "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
                     "encoding": self._config[CONF_ENCODING] or None,
+                    "job_type": HassJobType.Callback,
                 }
 
         add_subscription(

@@ -31,7 +31,7 @@ from homeassistant.const import (
     STATE_IDLE,
     STATE_PAUSED,
 )
-from homeassistant.core import HomeAssistant, async_get_hass, callback
+from homeassistant.core import HassJobType, HomeAssistant, async_get_hass, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -346,6 +346,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
                 "entity_id": self.entity_id,
                 "qos": self._config[CONF_QOS],
                 "encoding": self._config[CONF_ENCODING] or None,
+                "job_type": HassJobType.Callback,
             }
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
