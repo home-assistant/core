@@ -212,7 +212,7 @@ def _state_diff(
         additions = defaultdict(dict)
         diff = {STATE_DIFF_ADDITIONS: additions}
         for key, value in new_attributes.items():
-            if old_attributes.get(key) != value:
+            if key not in old_attributes or old_attributes[key] != value:
                 additions[COMPRESSED_STATE_ATTRIBUTES][key] = value
         if removed := old_attributes.keys() - new_attributes:
             # sets are not JSON serializable by default so we convert to list
