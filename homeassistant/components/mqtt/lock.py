@@ -32,7 +32,6 @@ from .const import (
     CONF_ENCODING,
     CONF_PAYLOAD_RESET,
     CONF_QOS,
-    CONF_RETAIN,
     CONF_STATE_OPEN,
     CONF_STATE_OPENING,
     CONF_STATE_TOPIC,
@@ -254,13 +253,7 @@ class MqttLock(MqttEntity, LockEntity):
             ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None
         }
         payload = self._command_template(self._config[CONF_PAYLOAD_LOCK], tpl_vars)
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
         if self._optimistic:
             # Optimistically assume that the lock has changed state.
             self._attr_is_locked = True
@@ -275,13 +268,7 @@ class MqttLock(MqttEntity, LockEntity):
             ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None
         }
         payload = self._command_template(self._config[CONF_PAYLOAD_UNLOCK], tpl_vars)
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
         if self._optimistic:
             # Optimistically assume that the lock has changed state.
             self._attr_is_locked = False
@@ -296,13 +283,7 @@ class MqttLock(MqttEntity, LockEntity):
             ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None
         }
         payload = self._command_template(self._config[CONF_PAYLOAD_OPEN], tpl_vars)
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
         if self._optimistic:
             # Optimistically assume that the lock unlocks when opened.
             self._attr_is_open = True

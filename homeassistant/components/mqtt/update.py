@@ -264,14 +264,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
     ) -> None:
         """Update the current value."""
         payload = self._config[CONF_PAYLOAD_INSTALL]
-
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
 
     @property
     def supported_features(self) -> UpdateEntityFeature:

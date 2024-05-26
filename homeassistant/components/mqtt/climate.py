@@ -515,13 +515,7 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
 
     async def _publish(self, topic: str, payload: PublishPayloadType) -> None:
         if self._topic[topic] is not None:
-            await self.async_publish(
-                self._topic[topic],
-                payload,
-                self._config[CONF_QOS],
-                self._config[CONF_RETAIN],
-                self._config[CONF_ENCODING],
-            )
+            await self.async_publish_with_config(self._topic[topic], payload)
 
     async def _set_climate_attribute(
         self,

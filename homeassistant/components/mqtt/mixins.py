@@ -83,6 +83,7 @@ from .const import (
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE,
     CONF_QOS,
+    CONF_RETAIN,
     CONF_SCHEMA,
     CONF_SERIAL_NUMBER,
     CONF_SUGGESTED_AREA,
@@ -1152,6 +1153,18 @@ class MqttEntity(
             qos,
             retain,
             encoding,
+        )
+
+    async def async_publish_with_config(
+        self, topic: str, payload: PublishPayloadType
+    ) -> None:
+        """Publish payload to a topic using config."""
+        await self.async_publish(
+            topic,
+            payload,
+            self._config[CONF_QOS],
+            self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     @staticmethod

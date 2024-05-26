@@ -309,13 +309,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         """Publish via mqtt."""
         variables = {"action": action, "code": code}
         payload = self._command_template(None, variables=variables)
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
 
     def _validate_code(self, code: str | None, state: str) -> bool:
         """Validate given code."""

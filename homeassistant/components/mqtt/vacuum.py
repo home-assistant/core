@@ -359,13 +359,8 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         """Publish a command."""
         if self._command_topic is None:
             return
-
-        await self.async_publish(
-            self._command_topic,
-            self._payloads[_FEATURE_PAYLOADS[feature]],
-            qos=self._config[CONF_QOS],
-            retain=self._config[CONF_RETAIN],
-            encoding=self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._command_topic, self._payloads[_FEATURE_PAYLOADS[feature]]
         )
         self.async_write_ha_state()
 
@@ -401,13 +396,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             or (fan_speed not in self.fan_speed_list)
         ):
             return
-        await self.async_publish(
-            self._set_fan_speed_topic,
-            fan_speed,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._set_fan_speed_topic, fan_speed)
 
     async def async_send_command(
         self,
@@ -427,10 +416,4 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             payload = json_dumps(message)
         else:
             payload = command
-        await self.async_publish(
-            self._send_command_topic,
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._send_command_topic, payload)

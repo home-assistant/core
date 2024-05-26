@@ -43,7 +43,6 @@ from .const import (
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
     CONF_QOS,
-    CONF_RETAIN,
     CONF_STATE_TOPIC,
     CONF_STATE_VALUE_TEMPLATE,
     PAYLOAD_EMPTY_JSON,
@@ -318,13 +317,7 @@ class MqttSiren(MqttEntity, SirenEntity):
         else:
             payload = json_dumps(template_variables)
         if payload and str(payload) != PAYLOAD_NONE:
-            await self.async_publish(
-                self._config[topic],
-                payload,
-                self._config[CONF_QOS],
-                self._config[CONF_RETAIN],
-                self._config[CONF_ENCODING],
-            )
+            await self.async_publish_with_config(self._config[topic], payload)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on.

@@ -32,7 +32,6 @@ from .const import (
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
     CONF_QOS,
-    CONF_RETAIN,
     CONF_STATE_TOPIC,
 )
 from .mixins import MqttEntity, async_setup_entity_entry_helper
@@ -203,14 +202,7 @@ class MqttTextEntity(MqttEntity, TextEntity):
     async def async_set_value(self, value: str) -> None:
         """Change the text."""
         payload = self._command_template(value)
-
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
         if self._optimistic:
             self._attr_native_value = value
             self.async_write_ha_state()

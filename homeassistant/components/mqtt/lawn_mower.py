@@ -212,14 +212,7 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
         if self._attr_assumed_state:
             self._attr_activity = activity
             self.async_write_ha_state()
-
-        await self.async_publish(
-            self._command_topics[option],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._command_topics[option], payload)
 
     async def async_start_mowing(self) -> None:
         """Start or resume mowing."""

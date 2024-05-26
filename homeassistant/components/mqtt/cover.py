@@ -519,12 +519,8 @@ class MqttCover(MqttEntity, CoverEntity):
 
         This method is a coroutine.
         """
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            self._config[CONF_PAYLOAD_OPEN],
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_COMMAND_TOPIC], self._config[CONF_PAYLOAD_OPEN]
         )
         if self._optimistic:
             # Optimistically assume that cover has changed state.
@@ -538,12 +534,8 @@ class MqttCover(MqttEntity, CoverEntity):
 
         This method is a coroutine.
         """
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            self._config[CONF_PAYLOAD_CLOSE],
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_COMMAND_TOPIC], self._config[CONF_PAYLOAD_CLOSE]
         )
         if self._optimistic:
             # Optimistically assume that cover has changed state.
@@ -557,12 +549,8 @@ class MqttCover(MqttEntity, CoverEntity):
 
         This method is a coroutine.
         """
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            self._config[CONF_PAYLOAD_STOP],
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_COMMAND_TOPIC], self._config[CONF_PAYLOAD_STOP]
         )
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
@@ -577,12 +565,8 @@ class MqttCover(MqttEntity, CoverEntity):
             "tilt_max": self._config.get(CONF_TILT_MAX),
         }
         tilt_payload = self._set_tilt_template(tilt_open_position, variables=variables)
-        await self.async_publish(
-            self._config[CONF_TILT_COMMAND_TOPIC],
-            tilt_payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_TILT_COMMAND_TOPIC], tilt_payload
         )
         if self._tilt_optimistic:
             self._attr_current_cover_tilt_position = self._tilt_open_percentage
@@ -602,12 +586,8 @@ class MqttCover(MqttEntity, CoverEntity):
         tilt_payload = self._set_tilt_template(
             tilt_closed_position, variables=variables
         )
-        await self.async_publish(
-            self._config[CONF_TILT_COMMAND_TOPIC],
-            tilt_payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_TILT_COMMAND_TOPIC], tilt_payload
         )
         if self._tilt_optimistic:
             self._attr_current_cover_tilt_position = self._tilt_closed_percentage
@@ -630,13 +610,8 @@ class MqttCover(MqttEntity, CoverEntity):
             "tilt_max": self._config.get(CONF_TILT_MAX),
         }
         tilt_rendered = self._set_tilt_template(tilt_ranged, variables=variables)
-
-        await self.async_publish(
-            self._config[CONF_TILT_COMMAND_TOPIC],
-            tilt_rendered,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_TILT_COMMAND_TOPIC], tilt_rendered
         )
         if self._tilt_optimistic:
             _LOGGER.debug("Set tilt value optimistic")
@@ -660,13 +635,8 @@ class MqttCover(MqttEntity, CoverEntity):
         position_rendered = self._set_position_template(
             position_ranged, variables=variables
         )
-
-        await self.async_publish(
-            self._config[CONF_SET_POSITION_TOPIC],
-            position_rendered,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_SET_POSITION_TOPIC], position_rendered
         )
         if self._optimistic:
             self._update_state(
