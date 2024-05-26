@@ -6,17 +6,15 @@ import pytest
 from ttn_client import TTNSensorValue
 
 from homeassistant.components.thethingsnetwork.const import (
-    CONF_API_KEY,
     CONF_APP_ID,
-    CONF_HOSTNAME,
     DOMAIN,
-    TTN_API_HOSTNAME,
+    TTN_API_HOST,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_API_KEY, CONF_HOST
 
 from tests.common import MockConfigEntry
 
-HOSTNAME = "example.com"
+HOST = "example.com"
 APP_ID = "my_app"
 API_KEY = "my_api_key"
 
@@ -72,17 +70,10 @@ def mock_config_entry() -> MockConfigEntry:
         title=APP_ID,
         data={
             CONF_APP_ID: APP_ID,
-            CONF_HOSTNAME: TTN_API_HOSTNAME,
+            CONF_HOST: TTN_API_HOST,
             CONF_API_KEY: API_KEY,
         },
     )
-
-
-async def init_integration(hass: HomeAssistant, config_entry):
-    """Mock TTNClient."""
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
 
 
 @pytest.fixture

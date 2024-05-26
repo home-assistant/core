@@ -5,18 +5,18 @@ import logging
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_API_KEY,
     CONF_APP_ID,
-    CONF_HOSTNAME,
+    CONF_DEPRECATED_ACCESS_KEY,
     DOMAIN,
     PLATFORMS,
-    TTN_API_HOSTNAME,
+    TTN_API_HOST,
 )
 from .coordinator import TTNCoordinator
 
@@ -24,10 +24,11 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
+        # Configuration via yaml not longer supported - keeping to warn about migration
         DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_APP_ID): cv.string,
-                vol.Required(CONF_API_KEY): cv.string,
+                vol.Required(CONF_DEPRECATED_ACCESS_KEY): cv.string,
             }
         )
     },
@@ -43,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass,
             DOMAIN,
             "manual_migration",
-            breaks_in_ha_version="2024.11.0",
+            breaks_in_ha_version="2024.6.0",
             is_fixable=False,
             severity=ir.IssueSeverity.ERROR,
             translation_key="manual_migration",
@@ -62,8 +63,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug(
         "Set up %s at %s",
-        entry.data[CONF_APP_ID],
-        entry.data.get(CONF_HOSTNAME, TTN_API_HOSTNAME),
+        entry.data[CONF_API_KEY],
+        entry.data.get(CONF_HOST, TTN_API_HOST),
     )
 
     coordinator = TTNCoordinator(hass, entry)
@@ -82,8 +83,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug(
         "Remove %s at %s",
-        entry.data[CONF_APP_ID],
-        entry.data.get(CONF_HOSTNAME, TTN_API_HOSTNAME),
+        entry.data[CONF_API_KEY],
+        entry.data.get(CONF_HOST, TTN_API_HOST),
     )
 
     # Unload entities created for each supported platform

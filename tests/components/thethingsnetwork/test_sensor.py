@@ -3,6 +3,7 @@
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from . import init_integration
 from .conftest import (
     APP_ID,
     DATA_UPDATE,
@@ -11,7 +12,6 @@ from .conftest import (
     DEVICE_ID,
     DEVICE_ID_2,
     DOMAIN,
-    init_integration,
 )
 
 

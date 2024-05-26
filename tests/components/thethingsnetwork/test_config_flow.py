@@ -3,19 +3,16 @@
 import pytest
 from ttn_client import TTNAuthError
 
-from homeassistant.components.thethingsnetwork.const import (
-    CONF_API_KEY,
-    CONF_APP_ID,
-    CONF_HOSTNAME,
-    DOMAIN,
-)
+from homeassistant.components.thethingsnetwork.const import CONF_APP_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import API_KEY, APP_ID, HOSTNAME, init_integration
+from . import init_integration
+from .conftest import API_KEY, APP_ID, HOST
 
-USER_DATA = {CONF_HOSTNAME: HOSTNAME, CONF_APP_ID: APP_ID, CONF_API_KEY: API_KEY}
+USER_DATA = {CONF_HOST: HOST, CONF_APP_ID: APP_ID, CONF_API_KEY: API_KEY}
 
 
 async def test_user(hass: HomeAssistant, mock_ttnclient) -> None:
@@ -36,31 +33,22 @@ async def test_user(hass: HomeAssistant, mock_ttnclient) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == APP_ID
-    assert result["data"][CONF_HOSTNAME] == HOSTNAME
+    assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_APP_ID] == APP_ID
     assert result["data"][CONF_API_KEY] == API_KEY
 
 
 @pytest.mark.parametrize(
-    ("fetch_data_exceptiom", "base_error"),
+    ("fetch_data_exception", "base_error"),
     [(TTNAuthError, "invalid_auth"), (Exception, "unknown")],
 )
-async def test_user_erors(
-    hass: HomeAssistant, fetch_data_exceptiom, base_error, mock_ttnclient
+async def test_user_errors(
+    hass: HomeAssistant, fetch_data_exception, base_error, mock_ttnclient
 ) -> None:
     """Test user config errors."""
 
-    # Set client fetch data mock
-    mock_fetch_data_exceptiom = None
-
-    def mock_fetch_data():
-        if mock_fetch_data_exceptiom:
-            raise mock_fetch_data_exceptiom
-
-    mock_ttnclient.return_value.fetch_data.side_effect = mock_fetch_data
-
     # Test error
-    mock_fetch_data_exceptiom = fetch_data_exceptiom
+    mock_ttnclient.return_value.fetch_data.side_effect = fetch_data_exception
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -70,13 +58,36 @@ async def test_user_erors(
     assert base_error in result["errors"]["base"]
 
     # Recover
-    mock_fetch_data_exceptiom = None
+    mock_ttnclient.return_value.fetch_data.side_effect = None
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
         data=USER_DATA,
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_duplicate_entry(
+    hass: HomeAssistant, mock_ttnclient, mock_config_entry
+) -> None:
+    """Test that duplicate entries are caught."""
+
+    await init_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data=USER_DATA,
+    )
+    assert result["type"] is FlowResultType.ABORT
 
 
 async def test_step_reauth(

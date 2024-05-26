@@ -6,17 +6,12 @@ import logging
 from ttn_client import TTNAuthError, TTNClient
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    CONF_API_KEY,
-    CONF_APP_ID,
-    CONF_HOSTNAME,
-    FIRST_FETCH_H,
-    POLLING_PERIOD_S,
-)
+from .const import CONF_APP_ID, POLLING_PERIOD_S
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,10 +33,9 @@ class TTNCoordinator(DataUpdateCoordinator[TTNClient.DATA_TYPE]):
         )
 
         self._client = TTNClient(
-            entry.data[CONF_HOSTNAME],
+            entry.data[CONF_HOST],
             entry.data[CONF_APP_ID],
             entry.data[CONF_API_KEY],
-            FIRST_FETCH_H,
             push_callback=self._push_callback,
         )
 
@@ -55,7 +49,6 @@ class TTNCoordinator(DataUpdateCoordinator[TTNClient.DATA_TYPE]):
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             measurements = await self._client.fetch_data()
-            _LOGGER.debug("fetched data: %s", measurements)
         except TTNAuthError as err:
             # Raising ConfigEntryAuthFailed will cancel future updates
             # and start a config flow with SOURCE_REAUTH (async_step_reauth)
@@ -63,6 +56,7 @@ class TTNCoordinator(DataUpdateCoordinator[TTNClient.DATA_TYPE]):
             raise ConfigEntryAuthFailed from err
         else:
             # Return measurements
+            _LOGGER.debug("fetched data: %s", measurements)
             return measurements
 
     async def _push_callback(self, data: TTNClient.DATA_TYPE) -> None:

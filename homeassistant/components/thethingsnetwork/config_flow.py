@@ -8,13 +8,14 @@ from ttn_client import TTNAuthError, TTNClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
 
-from .const import CONF_API_KEY, CONF_APP_ID, CONF_HOSTNAME, DOMAIN, TTN_API_HOSTNAME
+from .const import CONF_APP_ID, DOMAIN, TTN_API_HOST
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,9 +25,7 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize flow."""
-        self._reauth_entry: ConfigEntry | None = None
+    _reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
@@ -36,7 +35,7 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             client = TTNClient(
-                user_input[CONF_HOSTNAME],
+                user_input[CONF_HOST],
                 user_input[CONF_APP_ID],
                 user_input[CONF_API_KEY],
                 0,
@@ -46,11 +45,11 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
             except TTNAuthError:
                 _LOGGER.exception("Error authenticating with The Things Network")
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-exception-caught
+            except Exception:
                 _LOGGER.exception("Unknown error occurred")
                 errors["base"] = "unknown"
 
-            if len(errors) == 0:
+            if not errors:
                 # Create entry
                 if self._reauth_entry:
                     return self.async_update_reload_and_abort(
@@ -71,12 +70,12 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
             if self._reauth_entry:
                 user_input = self._reauth_entry.data
             else:
-                user_input = {CONF_HOSTNAME: TTN_API_HOSTNAME}
+                user_input = {CONF_HOST: TTN_API_HOST}
 
         schema = self.add_suggested_values_to_schema(
             vol.Schema(
                 {
-                    vol.Required(CONF_HOSTNAME): str,
+                    vol.Required(CONF_HOST): str,
                     vol.Required(CONF_APP_ID): str,
                     vol.Required(CONF_API_KEY): TextSelector(
                         TextSelectorConfig(
