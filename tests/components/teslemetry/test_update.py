@@ -9,7 +9,7 @@ from tesla_fleet_api.exceptions import VehicleOffline
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.components.teslemetry.update import INSTALLING
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -56,13 +56,17 @@ async def test_update_offline(
 
 
 async def test_update_services(
-    hass: HomeAssistant, mock_vehicle_data, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    mock_vehicle_data,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Tests that the update services work."""
-    #
+
     await setup_platform(hass, [Platform.UPDATE])
 
     entity_id = "update.test_update"
+
     with patch(
         "homeassistant.components.teslemetry.VehicleSpecific.schedule_software_update",
         return_value=COMMAND_OK,
@@ -73,14 +77,13 @@ async def test_update_services(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        state = hass.states.get(entity_id)
-        assert state.state == STATE_ON
         call.assert_called_once()
 
-        VEHICLE_DATA["response"]["vehicle_state"]["software_update"]["status"] = (
-            INSTALLING
-        )
-        mock_vehicle_data.return_value = VEHICLE_DATA
-        freezer.tick(VEHICLE_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    VEHICLE_DATA["response"]["vehicle_state"]["software_update"]["status"] = INSTALLING
+    mock_vehicle_data.return_value = VEHICLE_DATA
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.attributes["in_progress"] == 1
