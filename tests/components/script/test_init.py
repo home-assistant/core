@@ -1751,7 +1751,6 @@ async def test_script_queued_mode(hass: HomeAssistant) -> None:
         """Service that simulates doing background I/O."""
         nonlocal calls
         calls += 1
-        await asyncio.sleep(0)
 
     hass.services.async_register("test", "simulated_remote", async_service_handler)
     assert await async_setup_component(
