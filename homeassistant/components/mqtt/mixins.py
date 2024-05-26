@@ -14,7 +14,9 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONFIGURATION_URL,
+    ATTR_CONNECTIONS,
     ATTR_HW_VERSION,
+    ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NAME,
@@ -970,48 +972,30 @@ class MqttDiscoveryUpdateMixin(Entity):
             self._removed_from_hass = True
 
 
+_CONF_TO_ATTR = {
+    CONF_MANUFACTURER: ATTR_MANUFACTURER,
+    CONF_MODEL: ATTR_MODEL,
+    CONF_NAME: ATTR_NAME,
+    CONF_HW_VERSION: ATTR_HW_VERSION,
+    CONF_SERIAL_NUMBER: ATTR_SERIAL_NUMBER,
+    CONF_SW_VERSION: ATTR_SW_VERSION,
+    CONF_SUGGESTED_AREA: ATTR_SUGGESTED_AREA,
+    CONF_CONFIGURATION_URL: ATTR_CONFIGURATION_URL,
+}
+
+
 def device_info_from_specifications(
-    specifications: dict[str, Any] | None,
+    specs: dict[str, Any] | None,
 ) -> DeviceInfo | None:
     """Return a device description for device registry."""
-    if not specifications:
+    if not specs:
         return None
-
-    info = DeviceInfo(
-        identifiers={(DOMAIN, id_) for id_ in specifications[CONF_IDENTIFIERS]},
-        connections={
-            (conn_[0], conn_[1]) for conn_ in specifications[CONF_CONNECTIONS]
-        },
-    )
-
-    if CONF_MANUFACTURER in specifications:
-        info[ATTR_MANUFACTURER] = specifications[CONF_MANUFACTURER]
-
-    if CONF_MODEL in specifications:
-        info[ATTR_MODEL] = specifications[CONF_MODEL]
-
-    if CONF_NAME in specifications:
-        info[ATTR_NAME] = specifications[CONF_NAME]
-
-    if CONF_HW_VERSION in specifications:
-        info[ATTR_HW_VERSION] = specifications[CONF_HW_VERSION]
-
-    if CONF_SERIAL_NUMBER in specifications:
-        info[ATTR_SERIAL_NUMBER] = specifications[CONF_SERIAL_NUMBER]
-
-    if CONF_SW_VERSION in specifications:
-        info[ATTR_SW_VERSION] = specifications[CONF_SW_VERSION]
-
-    if CONF_VIA_DEVICE in specifications:
-        info[ATTR_VIA_DEVICE] = (DOMAIN, specifications[CONF_VIA_DEVICE])
-
-    if CONF_SUGGESTED_AREA in specifications:
-        info[ATTR_SUGGESTED_AREA] = specifications[CONF_SUGGESTED_AREA]
-
-    if CONF_CONFIGURATION_URL in specifications:
-        info[ATTR_CONFIGURATION_URL] = specifications[CONF_CONFIGURATION_URL]
-
-    return info
+    info = {_CONF_TO_ATTR[k]: v for k, v in specs.items() if k in _CONF_TO_ATTR}
+    info[ATTR_IDENTIFIERS] = {(DOMAIN, id_) for id_ in specs[CONF_IDENTIFIERS]}
+    info[ATTR_CONNECTIONS] = {(conn[0], conn[1]) for conn in specs[CONF_CONNECTIONS]}
+    if CONF_VIA_DEVICE in specs:
+        info[ATTR_VIA_DEVICE] = (DOMAIN, specs[CONF_VIA_DEVICE])
+    return cast(DeviceInfo, info)
 
 
 class MqttEntityDeviceInfo(Entity):
