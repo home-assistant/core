@@ -72,8 +72,7 @@ from .const import (  # noqa: F401
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
-    MQTT_CONNECTED,
-    MQTT_DISCONNECTED,
+    MQTT_CONNECTION_STATE,
     RELOADABLE_PLATFORMS,
     TEMPLATE_ERRORS,
 )
@@ -477,27 +476,14 @@ def async_subscribe_connection_status(
     """Subscribe to MQTT connection changes."""
     connection_status_callback_job = HassJob(connection_status_callback)
 
-    async def connected() -> None:
-        task = hass.async_run_hass_job(connection_status_callback_job, True)
+    async def _async_connection_state_changed(state: bool) -> None:
+        task = hass.async_run_hass_job(connection_status_callback_job, state)
         if task:
             await task
 
-    async def disconnected() -> None:
-        task = hass.async_run_hass_job(connection_status_callback_job, False)
-        if task:
-            await task
-
-    subscriptions = {
-        "connect": async_dispatcher_connect(hass, MQTT_CONNECTED, connected),
-        "disconnect": async_dispatcher_connect(hass, MQTT_DISCONNECTED, disconnected),
-    }
-
-    @callback
-    def unsubscribe() -> None:
-        subscriptions["connect"]()
-        subscriptions["disconnect"]()
-
-    return unsubscribe
+    return async_dispatcher_connect(
+        hass, MQTT_CONNECTION_STATE, _async_connection_state_changed
+    )
 
 
 def is_connected(hass: HomeAssistant) -> bool:
