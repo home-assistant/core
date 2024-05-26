@@ -13,7 +13,7 @@ from homeassistant.components import camera
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJobType, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -124,6 +124,7 @@ class MqttCamera(MqttEntity, Camera):
                     "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
                     "encoding": None,
+                    "job_type": HassJobType.Callback,
                 }
             },
         )

@@ -26,7 +26,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HassJobType, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.event as evt
@@ -248,6 +248,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                     "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
                     "encoding": self._config[CONF_ENCODING] or None,
+                    "job_type": HassJobType.Callback,
                 }
             },
         )
