@@ -1741,3 +1741,80 @@ async def test_responses_no_response(hass: HomeAssistant) -> None:
         )
         is None
     )
+
+
+async def test_script_queued_mode(hass: HomeAssistant) -> None:
+    """Test calling a script in queued mode in multiple tasks."""
+    calls = 0
+
+    async def async_service_handler(*args, **kwargs) -> None:
+        """Service that simulates doing background I/O."""
+        nonlocal calls
+        calls += 1
+        await asyncio.sleep(0)
+
+    hass.services.async_register("test", "simulated_remote", async_service_handler)
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "simulate_service_call": {
+                    "sequence": [
+                        {"service": "test.simulated_remote"},
+                    ],
+                    "mode": "queued",
+                    "max": 10,
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert await async_setup_component(
+        hass,
+        "cover",
+        {
+            "cover": [
+                {
+                    "platform": "template",
+                    "covers": {
+                        "shade_north_east": {
+                            "friendly_name": "North east",
+                            "open_cover": {
+                                "service": "script.simulate_service_call",
+                            },
+                            "close_cover": {
+                                "service": "script.simulate_service_call",
+                            },
+                        },
+                        "shade_east": {
+                            "friendly_name": "East",
+                            "open_cover": {
+                                "service": "script.simulate_service_call",
+                            },
+                            "close_cover": {
+                                "service": "script.simulate_service_call",
+                            },
+                        },
+                    },
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    tasks = [
+        hass.async_create_task(
+            hass.services.async_call(
+                "cover",
+                "open_cover",
+                {"entity_id": ["cover.shade_north_east", "cover.shade_east"]},
+                blocking=True,
+            )
+        )
+        for _ in range(10)
+    ]
+    await asyncio.gather(*tasks)
+
+    await hass.async_block_till_done()
+    assert calls == 20
