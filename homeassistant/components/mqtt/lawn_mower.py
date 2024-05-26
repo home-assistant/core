@@ -165,6 +165,7 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
             )
             return
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         if not self.add_subscription(

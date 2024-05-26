@@ -425,6 +425,7 @@ class MqttFan(MqttEntity, FanEntity):
             return
         self._attr_current_direction = str(direction)
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})

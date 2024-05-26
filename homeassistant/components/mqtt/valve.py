@@ -334,6 +334,7 @@ class MqttValve(MqttEntity, ValveEntity):
         else:
             self._process_binary_valve_update(msg, state_payload)
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(

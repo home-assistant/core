@@ -202,6 +202,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         if isinstance(latest_version, str) and latest_version != "":
             self._attr_latest_version = latest_version
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(

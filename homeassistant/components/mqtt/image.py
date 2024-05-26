@@ -179,6 +179,7 @@ class MqttImage(MqttEntity, ImageEntity):
         self._cached_image = None
         self.hass.data[DATA_MQTT].state_write_requests.write_state_request(self)
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(

@@ -126,6 +126,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
             return
         self._attr_current_option = payload
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         if not self.add_subscription(

@@ -281,6 +281,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         if CONF_LAST_RESET_VALUE_TEMPLATE in self._config:
             _update_last_reset(msg)
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(

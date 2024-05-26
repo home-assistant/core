@@ -230,6 +230,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                 self.hass, off_delay, self._off_delay_listener
             )
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(

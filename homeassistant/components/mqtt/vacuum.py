@@ -328,6 +328,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             del payload[STATE]
         self._update_state_attributes(payload)
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(

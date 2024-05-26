@@ -1227,6 +1227,7 @@ class MqttEntity(
         """(Re)Setup the entity."""
 
     @abstractmethod
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 

@@ -200,6 +200,7 @@ class MqttLock(MqttEntity, LockEntity):
             self._attr_is_unlocking = payload == self._config[CONF_STATE_UNLOCKING]
             self._attr_is_jammed = payload == self._config[CONF_STATE_JAMMED]
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(

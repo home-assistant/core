@@ -106,6 +106,7 @@ class MqttCamera(MqttEntity, Camera):
                 assert isinstance(msg.payload, bytes)
             self._last_image = msg.payload
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 

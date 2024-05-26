@@ -391,6 +391,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
         self._attr_mode = mode
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})

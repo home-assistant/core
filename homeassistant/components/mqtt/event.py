@@ -179,6 +179,7 @@ class MqttEvent(MqttEntity, EventEntity):
         mqtt_data = self.hass.data[DATA_MQTT]
         mqtt_data.state_write_requests.write_state_request(self)
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(CONF_STATE_TOPIC, self._event_received, None)

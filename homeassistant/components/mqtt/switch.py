@@ -117,6 +117,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
         elif payload == PAYLOAD_NONE:
             self._attr_is_on = None
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         if not self.add_subscription(

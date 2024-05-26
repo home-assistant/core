@@ -281,6 +281,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
                 assert isinstance(payload, str)
             self._attr_current_operation = payload
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         # add subscriptions for WaterHeaterEntity

@@ -135,6 +135,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                 assert isinstance(msg.payload, str)
             self._location_name = msg.payload
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(

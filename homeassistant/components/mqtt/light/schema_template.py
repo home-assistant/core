@@ -247,6 +247,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             else:
                 _LOGGER.warning("Unsupported effect value received")
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(

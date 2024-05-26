@@ -190,6 +190,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
 
         self._attr_native_value = num_value
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         if not self.add_subscription(

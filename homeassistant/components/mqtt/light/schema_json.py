@@ -488,6 +488,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             with suppress(KeyError):
                 self._attr_effect = cast(str, values["effect"])
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(

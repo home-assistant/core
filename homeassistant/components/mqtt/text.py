@@ -155,6 +155,7 @@ class MqttTextEntity(MqttEntity, TextEntity):
             return
         self._attr_native_value = payload
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(

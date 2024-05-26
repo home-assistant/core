@@ -454,6 +454,7 @@ class MqttCover(MqttEntity, CoverEntity):
                 STATE_CLOSED if self.current_cover_position == 0 else STATE_OPEN
             )
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(

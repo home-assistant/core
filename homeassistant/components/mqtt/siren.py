@@ -258,6 +258,7 @@ class MqttSiren(MqttEntity, SirenEntity):
             self._extra_attributes = dict(self._extra_attributes)
             self._update(process_turn_on_params(self, params))
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         if not self.add_subscription(
