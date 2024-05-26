@@ -454,6 +454,11 @@
       "vehicle_state_valet_mode": {
         "name": "Valet mode"
       }
+    },
+    "update": {
+      "vehicle_state_software_update_status": {
+        "name": "[%key:component::update::title%]"
+      }
     }
   },
   "exceptions": {
