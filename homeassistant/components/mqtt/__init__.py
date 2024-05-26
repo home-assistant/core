@@ -14,7 +14,7 @@ from homeassistant import config as conf_util
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISCOVERY, CONF_PAYLOAD, SERVICE_RELOAD
-from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import (
     ConfigValidationError,
     ServiceValidationError,
@@ -72,8 +72,7 @@ from .const import (  # noqa: F401
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
-    MQTT_CONNECTED,
-    MQTT_DISCONNECTED,
+    MQTT_CONNECTION_STATE,
     RELOADABLE_PLATFORMS,
     TEMPLATE_ERRORS,
 )
@@ -475,29 +474,9 @@ def async_subscribe_connection_status(
     hass: HomeAssistant, connection_status_callback: ConnectionStatusCallback
 ) -> Callable[[], None]:
     """Subscribe to MQTT connection changes."""
-    connection_status_callback_job = HassJob(connection_status_callback)
-
-    async def connected() -> None:
-        task = hass.async_run_hass_job(connection_status_callback_job, True)
-        if task:
-            await task
-
-    async def disconnected() -> None:
-        task = hass.async_run_hass_job(connection_status_callback_job, False)
-        if task:
-            await task
-
-    subscriptions = {
-        "connect": async_dispatcher_connect(hass, MQTT_CONNECTED, connected),
-        "disconnect": async_dispatcher_connect(hass, MQTT_DISCONNECTED, disconnected),
-    }
-
-    @callback
-    def unsubscribe() -> None:
-        subscriptions["connect"]()
-        subscriptions["disconnect"]()
-
-    return unsubscribe
+    return async_dispatcher_connect(
+        hass, MQTT_CONNECTION_STATE, connection_status_callback
+    )
 
 
 def is_connected(hass: HomeAssistant) -> bool:

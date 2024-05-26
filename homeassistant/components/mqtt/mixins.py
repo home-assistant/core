@@ -92,8 +92,7 @@ from .const import (
     CONF_VIA_DEVICE,
     DEFAULT_ENCODING,
     DOMAIN,
-    MQTT_CONNECTED,
-    MQTT_DISCONNECTED,
+    MQTT_CONNECTION_STATE,
 )
 from .debug_info import log_message
 from .discovery import (
@@ -461,11 +460,10 @@ class MqttAvailabilityMixin(Entity):
         self._availability_prepare_subscribe_topics()
         self._availability_subscribe_topics()
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, MQTT_CONNECTED, self.async_mqtt_connect)
-        )
-        self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, MQTT_DISCONNECTED, self.async_mqtt_connect
+                self.hass,
+                MQTT_CONNECTION_STATE,
+                self.async_mqtt_connection_state_changed,
             )
         )
 
@@ -553,7 +551,7 @@ class MqttAvailabilityMixin(Entity):
         async_subscribe_topics_internal(self.hass, self._availability_sub_state)
 
     @callback
-    def async_mqtt_connect(self) -> None:
+    def async_mqtt_connection_state_changed(self, state: bool) -> None:
         """Update state on connection/disconnection to MQTT broker."""
         if not self.hass.is_stopping:
             self.async_write_ha_state()
