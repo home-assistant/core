@@ -1071,6 +1071,7 @@ class MqttEntity(
         self._attr_unique_id = config.get(CONF_UNIQUE_ID)
         self._sub_state: dict[str, EntitySubscription] = {}
         self._discovery = discovery_data is not None
+        self._subscriptions: dict[str, dict[str, Any]]
 
         # Load config
         self._setup_from_config(self._config)
@@ -1097,7 +1098,14 @@ class MqttEntity(
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
         await super().async_added_to_hass()
+        self._subscriptions = {}
         self._prepare_subscribe_topics()
+        if self._subscriptions:
+            self._sub_state = subscription.async_prepare_subscribe_topics(
+                self.hass,
+                self._sub_state,
+                self._subscriptions,
+            )
         await self._subscribe_topics()
         await self.mqtt_async_added_to_hass()
 
@@ -1122,7 +1130,14 @@ class MqttEntity(
         self.attributes_prepare_discovery_update(config)
         self.availability_prepare_discovery_update(config)
         self.device_info_discovery_update(config)
+        self._subscriptions = {}
         self._prepare_subscribe_topics()
+        if self._subscriptions:
+            self._sub_state = subscription.async_prepare_subscribe_topics(
+                self.hass,
+                self._sub_state,
+                self._subscriptions,
+            )
 
         # Finalize MQTT subscriptions
         await self.attributes_discovery_update(config)
@@ -1212,6 +1227,7 @@ class MqttEntity(
         """(Re)Setup the entity."""
 
     @abstractmethod
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
@@ -1259,6 +1275,35 @@ class MqttEntity(
 
         if attributes is not None and self._attrs_have_changed(attrs_snapshot):
             mqtt_data.state_write_requests.write_state_request(self)
+
+    def add_subscription(
+        self,
+        state_topic_config_key: str,
+        msg_callback: Callable[[ReceiveMessage], None],
+        tracked_attributes: set[str] | None,
+        disable_encoding: bool = False,
+    ) -> bool:
+        """Add a subscription."""
+        qos: int = self._config[CONF_QOS]
+        encoding: str | None = None
+        if not disable_encoding:
+            encoding = self._config[CONF_ENCODING] or None
+        if (
+            state_topic_config_key in self._config
+            and self._config[state_topic_config_key] is not None
+        ):
+            self._subscriptions[state_topic_config_key] = {
+                "topic": self._config[state_topic_config_key],
+                "msg_callback": partial(
+                    self._message_callback, msg_callback, tracked_attributes
+                ),
+                "entity_id": self.entity_id,
+                "qos": qos,
+                "encoding": encoding,
+                "job_type": HassJobType.Callback,
+            }
+            return True
+        return False
 
 
 def update_device(

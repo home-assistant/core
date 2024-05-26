@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import partial
 import logging
 from typing import Any, cast
 
@@ -31,7 +30,7 @@ from homeassistant.const import (
     STATE_IDLE,
     STATE_PAUSED,
 )
-from homeassistant.core import HassJobType, HomeAssistant, async_get_hass, callback
+from homeassistant.core import HomeAssistant, async_get_hass, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -43,8 +42,6 @@ from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import (
     CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
     CONF_RETAIN,
     CONF_SCHEMA,
     CONF_STATE_TOPIC,
@@ -331,25 +328,13 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             del payload[STATE]
         self._update_state_attributes(payload)
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        topics: dict[str, Any] = {}
-
-        if state_topic := self._config.get(CONF_STATE_TOPIC):
-            topics["state_position_topic"] = {
-                "topic": state_topic,
-                "msg_callback": partial(
-                    self._message_callback,
-                    self._state_message_received,
-                    {"_attr_battery_level", "_attr_fan_speed", "_attr_state"},
-                ),
-                "entity_id": self.entity_id,
-                "qos": self._config[CONF_QOS],
-                "encoding": self._config[CONF_ENCODING] or None,
-                "job_type": HassJobType.Callback,
-            }
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
+        self.add_subscription(
+            CONF_STATE_TOPIC,
+            self._state_message_received,
+            {"_attr_battery_level", "_attr_fan_speed", "_attr_state"},
         )
 
     async def _subscribe_topics(self) -> None:

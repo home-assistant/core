@@ -8,7 +8,7 @@ from homeassistant.components import notify
 from homeassistant.components.notify import NotifyEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -68,6 +68,7 @@ class MqttNotify(MqttEntity, NotifyEntity):
             config.get(CONF_COMMAND_TEMPLATE), entity=self
         ).async_render
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
