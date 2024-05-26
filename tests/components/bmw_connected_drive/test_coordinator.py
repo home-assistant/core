@@ -10,7 +10,7 @@ import respx
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.issue_registry import IssueRegistry
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import FIXTURE_CONFIG_ENTRY
@@ -100,7 +100,7 @@ async def test_init_reauth(
     hass: HomeAssistant,
     bmw_fixture: respx.Router,
     freezer: FrozenDateTimeFactory,
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the reauth form."""
 

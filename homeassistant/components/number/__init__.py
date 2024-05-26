@@ -15,8 +15,13 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
-from homeassistant.core import HomeAssistant, ServiceCall, async_get_hass, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    async_get_hass_or_none,
+    callback,
+)
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -213,10 +218,9 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 "value",
             )
         ):
-            hass: HomeAssistant | None = None
-            with suppress(HomeAssistantError):
-                hass = async_get_hass()
-            report_issue = async_suggest_report_issue(hass, module=cls.__module__)
+            report_issue = async_suggest_report_issue(
+                async_get_hass_or_none(), module=cls.__module__
+            )
             _LOGGER.warning(
                 (
                     "%s::%s is overriding deprecated methods on an instance of "

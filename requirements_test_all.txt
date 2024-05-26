@@ -78,7 +78,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.45.0
+PySwitchbot==0.46.1
 
 # homeassistant.components.syncthru
 PySyncThru==0.7.10
@@ -344,7 +344,7 @@ aiosolaredge==0.2.0
 aiosteamist==0.3.2
 
 # homeassistant.components.switcher_kis
-aioswitcher==3.4.1
+aioswitcher==3.4.3
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -380,7 +380,7 @@ aiowithings==2.1.0
 aioymaps==1.2.2
 
 # homeassistant.components.airgradient
-airgradient==0.4.0
+airgradient==0.4.1
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -458,6 +458,12 @@ axis==61
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
+
+# homeassistant.components.azure_data_explorer
+azure-kusto-data[aio]==3.1.0
+
+# homeassistant.components.azure_data_explorer
+azure-kusto-ingest==3.1.0
 
 # homeassistant.components.holiday
 babel==2.13.1
@@ -778,7 +784,7 @@ getmac==0.9.4
 gios==4.0.0
 
 # homeassistant.components.glances
-glances-api==0.6.0
+glances-api==0.7.0
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -797,7 +803,7 @@ google-cloud-pubsub==2.13.11
 google-generativeai==0.5.4
 
 # homeassistant.components.nest
-google-nest-sdm==3.0.4
+google-nest-sdm==4.0.4
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -809,7 +815,7 @@ gotailwind==0.2.3
 govee-ble==0.31.2
 
 # homeassistant.components.govee_light_local
-govee-local-api==1.4.5
+govee-local-api==1.5.0
 
 # homeassistant.components.gpsd
 gps3==0.33.3
@@ -846,13 +852,13 @@ ha-ffmpeg==3.2.0
 ha-iotawattpy==0.1.2
 
 # homeassistant.components.philips_js
-ha-philipsjs==3.1.1
+ha-philipsjs==3.2.1
 
 # homeassistant.components.habitica
 habitipy==0.3.1
 
 # homeassistant.components.bluetooth
-habluetooth==3.0.1
+habluetooth==3.1.1
 
 # homeassistant.components.cloud
 hass-nabucasa==0.81.0
@@ -880,7 +886,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.48
+holidays==0.49
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240501.1
@@ -1302,7 +1308,7 @@ py-nextbusnext==1.0.2
 py-nightscout==1.2.2
 
 # homeassistant.components.ecovacs
-py-sucks==0.9.9
+py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
 py-synologydsm-api==2.4.2
@@ -1390,7 +1396,7 @@ pycsspeechtts==1.0.8
 pydaikin==2.11.1
 
 # homeassistant.components.deconz
-pydeconz==115
+pydeconz==116
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
@@ -1593,6 +1599,9 @@ pyoctoprintapi==0.1.12
 # homeassistant.components.openuv
 pyopenuv==2023.02.0
 
+# homeassistant.components.openweathermap
+pyopenweathermap==0.0.9
+
 # homeassistant.components.opnsense
 pyopnsense==0.4.0
 
@@ -1609,9 +1618,6 @@ pyotp==2.8.0
 
 # homeassistant.components.overkiz
 pyoverkiz==1.13.10
-
-# homeassistant.components.openweathermap
-pyowm==3.2.0
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -1656,7 +1662,7 @@ pyrituals==0.0.6
 pyroute2==0.7.5
 
 # homeassistant.components.rympro
-pyrympro==0.0.7
+pyrympro==0.0.8
 
 # homeassistant.components.sabnzbd
 pysabnzbd==1.1.1
@@ -2057,7 +2063,7 @@ streamlabswater==1.0.1
 stringcase==1.2.0
 
 # homeassistant.components.subaru
-subarulink==0.7.9
+subarulink==0.7.11
 
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
@@ -2131,6 +2137,9 @@ transmission-rpc==7.0.3
 # homeassistant.components.twinkly
 ttls==1.5.1
 
+# homeassistant.components.thethingsnetwork
+ttn_client==0.0.4
+
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.1.9
 
@@ -2179,7 +2188,7 @@ vallox-websocket-api==5.1.1
 vehicle==2.2.1
 
 # homeassistant.components.velbus
-velbus-aio==2024.4.1
+velbus-aio==2024.5.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -2191,7 +2200,8 @@ vilfo-api-client==0.5.0
 voip-utils==0.1.0
 
 # homeassistant.components.google_generative_ai_conversation
-voluptuous-openapi==0.0.3
+# homeassistant.components.openai_conversation
+voluptuous-openapi==0.0.4
 
 # homeassistant.components.volvooncall
 volvooncall==0.10.3
