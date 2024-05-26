@@ -335,7 +335,7 @@ class HassJob[**_P, _R_co]:
         if job_type:
             # Pre-set the cached_property so we
             # avoid the function call
-            self.__dict__["_job_type"] = job_type
+            self.__dict__["job_type"] = job_type
 
     @cached_property
     def job_type(self) -> HassJobType:
