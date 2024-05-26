@@ -221,7 +221,7 @@ def _state_diff(
             diff[STATE_DIFF_REMOVALS] = {COMPRESSED_STATE_ATTRIBUTES: list(removed)}
     else:
         additions = {}
-        diff = {STATE_DIFF_ADDITIONS: {}}
+        diff = {STATE_DIFF_ADDITIONS: additions}
 
     new_state_context = new_state.context
     old_state_context = old_state.context
