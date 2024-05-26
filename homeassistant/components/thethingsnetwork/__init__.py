@@ -28,7 +28,7 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_APP_ID): cv.string,
-                vol.Required(CONF_DEPRECATED_ACCESS_KEY): cv.string,
+                vol.Required("access_key"): cv.string,
             }
         )
     },
