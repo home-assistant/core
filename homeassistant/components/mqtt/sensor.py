@@ -210,76 +210,77 @@ class MqttSensor(MqttEntity, RestoreSensor):
         ).async_render_with_possible_json_value
 
     @callback
+    def _update_state(self, msg: ReceiveMessage) -> None:
+        # auto-expire enabled?
+        if self._expire_after is not None and self._expire_after > 0:
+            # When self._expire_after is set, and we receive a message, assume
+            # device is not expired since it has to be to receive the message
+            self._expired = False
+
+            # Reset old trigger
+            if self._expiration_trigger:
+                self._expiration_trigger()
+
+            # Set new trigger
+            self._expiration_trigger = async_call_later(
+                self.hass, self._expire_after, self._value_is_expired
+            )
+
+        payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
+        if payload is PayloadSentinel.DEFAULT:
+            return
+        new_value = str(payload)
+        if self._numeric_state_expected:
+            if new_value == "":
+                _LOGGER.debug("Ignore empty state from '%s'", msg.topic)
+            elif new_value == PAYLOAD_NONE:
+                self._attr_native_value = None
+            else:
+                self._attr_native_value = new_value
+            return
+        if self.device_class in {
+            None,
+            SensorDeviceClass.ENUM,
+        } and not check_state_too_long(_LOGGER, new_value, self.entity_id, msg):
+            self._attr_native_value = new_value
+            return
+        try:
+            if (payload_datetime := dt_util.parse_datetime(new_value)) is None:
+                raise ValueError
+        except ValueError:
+            _LOGGER.warning(
+                "Invalid state message '%s' from '%s'", msg.payload, msg.topic
+            )
+            self._attr_native_value = None
+            return
+        if self.device_class == SensorDeviceClass.DATE:
+            self._attr_native_value = payload_datetime.date()
+            return
+        self._attr_native_value = payload_datetime
+
+    @callback
+    def _update_last_reset(self, msg: ReceiveMessage) -> None:
+        payload = self._last_reset_template(msg.payload)
+
+        if not payload:
+            _LOGGER.debug("Ignoring empty last_reset message from '%s'", msg.topic)
+            return
+        try:
+            last_reset = dt_util.parse_datetime(str(payload))
+            if last_reset is None:
+                raise ValueError
+            self._attr_last_reset = last_reset
+        except ValueError:
+            _LOGGER.warning(
+                "Invalid last_reset message '%s' from '%s'", msg.payload, msg.topic
+            )
+
+    @callback
     def _state_message_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT state messages."""
-
-        def _update_state(msg: ReceiveMessage) -> None:
-            # auto-expire enabled?
-            if self._expire_after is not None and self._expire_after > 0:
-                # When self._expire_after is set, and we receive a message, assume
-                # device is not expired since it has to be to receive the message
-                self._expired = False
-
-                # Reset old trigger
-                if self._expiration_trigger:
-                    self._expiration_trigger()
-
-                # Set new trigger
-                self._expiration_trigger = async_call_later(
-                    self.hass, self._expire_after, self._value_is_expired
-                )
-
-            payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
-            if payload is PayloadSentinel.DEFAULT:
-                return
-            new_value = str(payload)
-            if self._numeric_state_expected:
-                if new_value == "":
-                    _LOGGER.debug("Ignore empty state from '%s'", msg.topic)
-                elif new_value == PAYLOAD_NONE:
-                    self._attr_native_value = None
-                else:
-                    self._attr_native_value = new_value
-                return
-            if self.device_class in {
-                None,
-                SensorDeviceClass.ENUM,
-            } and not check_state_too_long(_LOGGER, new_value, self.entity_id, msg):
-                self._attr_native_value = new_value
-                return
-            try:
-                if (payload_datetime := dt_util.parse_datetime(new_value)) is None:
-                    raise ValueError
-            except ValueError:
-                _LOGGER.warning(
-                    "Invalid state message '%s' from '%s'", msg.payload, msg.topic
-                )
-                self._attr_native_value = None
-                return
-            if self.device_class == SensorDeviceClass.DATE:
-                self._attr_native_value = payload_datetime.date()
-                return
-            self._attr_native_value = payload_datetime
-
-        def _update_last_reset(msg: ReceiveMessage) -> None:
-            payload = self._last_reset_template(msg.payload)
-
-            if not payload:
-                _LOGGER.debug("Ignoring empty last_reset message from '%s'", msg.topic)
-                return
-            try:
-                last_reset = dt_util.parse_datetime(str(payload))
-                if last_reset is None:
-                    raise ValueError
-                self._attr_last_reset = last_reset
-            except ValueError:
-                _LOGGER.warning(
-                    "Invalid last_reset message '%s' from '%s'", msg.payload, msg.topic
-                )
-
-        _update_state(msg)
+        self._update_state(msg)
         if CONF_LAST_RESET_VALUE_TEMPLATE in self._config:
-            _update_last_reset(msg)
+            self._update_last_reset(msg)
 
     @callback
     def _prepare_subscribe_topics(self) -> None:
