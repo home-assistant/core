@@ -1,0 +1,6 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'api_key': 'REDACTED (length: 3)',
+  })
+# ---
