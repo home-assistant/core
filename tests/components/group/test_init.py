@@ -33,7 +33,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
 from homeassistant.setup import async_setup_component
 
 from . import common
