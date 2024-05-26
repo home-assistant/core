@@ -23,6 +23,10 @@ from .singleton import singleton
 
 LLM_API_ASSIST = "assist"
 
+DEFAULT_INSTRUCTIONS_PROMPT = """You are a voice assistant for Home Assistant.
+Answer in plain text. Keep it simple and to the point.
+"""
+
 
 @callback
 def async_render_no_api_prompt(hass: HomeAssistant) -> str:
