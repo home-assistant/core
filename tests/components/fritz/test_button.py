@@ -71,7 +71,6 @@ async def test_buttons(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_press_action.assert_called_once()
 
         button = hass.states.get(entity_id)
@@ -105,7 +104,6 @@ async def test_wol_button(
             {ATTR_ENTITY_ID: "button.printer_wake_on_lan"},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_press_action.assert_called_once_with("AA:BB:CC:00:11:22")
 
         button = hass.states.get("button.printer_wake_on_lan")

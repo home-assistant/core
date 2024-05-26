@@ -14,13 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
-from .const import (
-    CONF_COMMAND_TEMPLATE,
-    CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_RETAIN,
-)
+from .const import CONF_COMMAND_TEMPLATE, CONF_COMMAND_TOPIC, CONF_RETAIN
 from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
@@ -91,10 +85,4 @@ class MqttButton(MqttEntity, ButtonEntity):
         This method is a coroutine.
         """
         payload = self._command_template(self._config[CONF_PAYLOAD_PRESS])
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)

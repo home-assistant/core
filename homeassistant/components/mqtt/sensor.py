@@ -31,7 +31,13 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    HassJobType,
+    HomeAssistant,
+    State,
+    callback,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
@@ -41,7 +47,7 @@ from homeassistant.util import dt as dt_util
 from . import subscription
 from .config import MQTT_RO_SCHEMA
 from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, PAYLOAD_NONE
-from .mixins import MqttAvailability, MqttEntity, async_setup_entity_entry_helper
+from .mixins import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttValueTemplate,
     PayloadSentinel,
@@ -297,6 +303,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
             "entity_id": self.entity_id,
             "qos": self._config[CONF_QOS],
             "encoding": self._config[CONF_ENCODING] or None,
+            "job_type": HassJobType.Callback,
         }
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
@@ -305,7 +312,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     @callback
     def _value_is_expired(self, *_: datetime) -> None:
@@ -318,6 +325,6 @@ class MqttSensor(MqttEntity, RestoreSensor):
     def available(self) -> bool:
         """Return true if the device is available and value has not expired."""
         # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
-        return MqttAvailability.available.fget(self) and (  # type: ignore[attr-defined]
+        return MqttAvailabilityMixin.available.fget(self) and (  # type: ignore[attr-defined]
             self._expire_after is None or not self._expired
         )

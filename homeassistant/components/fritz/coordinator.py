@@ -46,9 +46,6 @@ from .const import (
     DEFAULT_USERNAME,
     DOMAIN,
     FRITZ_EXCEPTIONS,
-    SERVICE_CLEANUP,
-    SERVICE_REBOOT,
-    SERVICE_RECONNECT,
     SERVICE_SET_GUEST_WIFI_PW,
     MeshRoles,
 )
@@ -730,30 +727,6 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             )
 
         try:
-            if service_call.service == SERVICE_REBOOT:
-                _LOGGER.warning(
-                    'Service "fritz.reboot" is deprecated, please use the corresponding'
-                    " button entity instead"
-                )
-                await self.async_trigger_reboot()
-                return
-
-            if service_call.service == SERVICE_RECONNECT:
-                _LOGGER.warning(
-                    'Service "fritz.reconnect" is deprecated, please use the'
-                    " corresponding button entity instead"
-                )
-                await self.async_trigger_reconnect()
-                return
-
-            if service_call.service == SERVICE_CLEANUP:
-                _LOGGER.warning(
-                    'Service "fritz.cleanup" is deprecated, please use the'
-                    " corresponding button entity instead"
-                )
-                await self.async_trigger_cleanup(config_entry)
-                return
-
             if service_call.service == SERVICE_SET_GUEST_WIFI_PW:
                 await self.async_trigger_set_guest_password(
                     service_call.data.get("password"),

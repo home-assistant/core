@@ -93,8 +93,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
-    HomeAssistant,
     async_get_hass,
+    async_get_hass_or_none,
     split_entity_id,
     valid_entity_id,
 )
@@ -662,11 +662,7 @@ def template(value: Any | None) -> template_helper.Template:
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
 
-    hass: HomeAssistant | None = None
-    with contextlib.suppress(HomeAssistantError):
-        hass = async_get_hass()
-
-    template_value = template_helper.Template(str(value), hass)
+    template_value = template_helper.Template(str(value), async_get_hass_or_none())
 
     try:
         template_value.ensure_valid()
@@ -684,11 +680,7 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
     if not template_helper.is_template_string(str(value)):
         raise vol.Invalid("template value does not contain a dynamic template")
 
-    hass: HomeAssistant | None = None
-    with contextlib.suppress(HomeAssistantError):
-        hass = async_get_hass()
-
-    template_value = template_helper.Template(str(value), hass)
+    template_value = template_helper.Template(str(value), async_get_hass_or_none())
 
     try:
         template_value.ensure_valid()

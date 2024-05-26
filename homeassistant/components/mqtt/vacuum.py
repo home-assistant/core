@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import partial
 import logging
 from typing import Any, cast
 
@@ -30,7 +31,7 @@ from homeassistant.const import (
     STATE_IDLE,
     STATE_PAUSED,
 )
-from homeassistant.core import HomeAssistant, async_get_hass, callback
+from homeassistant.core import HassJobType, HomeAssistant, async_get_hass, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -49,12 +50,7 @@ from .const import (
     CONF_STATE_TOPIC,
     DOMAIN,
 )
-from .debug_info import log_messages
-from .mixins import (
-    MqttEntity,
-    async_setup_entity_entry_helper,
-    write_state_on_attr_change,
-)
+from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic
@@ -322,33 +318,35 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         self._attr_fan_speed = self._state_attrs.get(FAN_SPEED, 0)
         self._attr_battery_level = max(0, min(100, self._state_attrs.get(BATTERY, 0)))
 
+    @callback
+    def _state_message_received(self, msg: ReceiveMessage) -> None:
+        """Handle state MQTT message."""
+        payload = json_loads_object(msg.payload)
+        if STATE in payload and (
+            (state := payload[STATE]) in POSSIBLE_STATES or state is None
+        ):
+            self._attr_state = (
+                POSSIBLE_STATES[cast(str, state)] if payload[STATE] else None
+            )
+            del payload[STATE]
+        self._update_state_attributes(payload)
+
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         topics: dict[str, Any] = {}
 
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(
-            self, {"_attr_battery_level", "_attr_fan_speed", "_attr_state"}
-        )
-        def state_message_received(msg: ReceiveMessage) -> None:
-            """Handle state MQTT message."""
-            payload = json_loads_object(msg.payload)
-            if STATE in payload and (
-                (state := payload[STATE]) in POSSIBLE_STATES or state is None
-            ):
-                self._attr_state = (
-                    POSSIBLE_STATES[cast(str, state)] if payload[STATE] else None
-                )
-                del payload[STATE]
-            self._update_state_attributes(payload)
-
         if state_topic := self._config.get(CONF_STATE_TOPIC):
             topics["state_position_topic"] = {
                 "topic": state_topic,
-                "msg_callback": state_message_received,
+                "msg_callback": partial(
+                    self._message_callback,
+                    self._state_message_received,
+                    {"_attr_battery_level", "_attr_fan_speed", "_attr_state"},
+                ),
+                "entity_id": self.entity_id,
                 "qos": self._config[CONF_QOS],
                 "encoding": self._config[CONF_ENCODING] or None,
+                "job_type": HassJobType.Callback,
             }
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
@@ -356,19 +354,14 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     async def _async_publish_command(self, feature: VacuumEntityFeature) -> None:
         """Publish a command."""
         if self._command_topic is None:
             return
-
-        await self.async_publish(
-            self._command_topic,
-            self._payloads[_FEATURE_PAYLOADS[feature]],
-            qos=self._config[CONF_QOS],
-            retain=self._config[CONF_RETAIN],
-            encoding=self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._command_topic, self._payloads[_FEATURE_PAYLOADS[feature]]
         )
         self.async_write_ha_state()
 
@@ -404,13 +397,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             or (fan_speed not in self.fan_speed_list)
         ):
             return
-        await self.async_publish(
-            self._set_fan_speed_topic,
-            fan_speed,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._set_fan_speed_topic, fan_speed)
 
     async def async_send_command(
         self,
@@ -430,10 +417,4 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             payload = json_dumps(message)
         else:
             payload = command
-        await self.async_publish(
-            self._send_command_topic,
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._send_command_topic, payload)

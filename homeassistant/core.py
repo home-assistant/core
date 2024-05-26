@@ -268,8 +268,16 @@ def async_get_hass() -> HomeAssistant:
     This should be used where it's very cumbersome or downright impossible to pass
     hass to the code which needs it.
     """
-    if not _hass.hass:
+    if not (hass := async_get_hass_or_none()):
         raise HomeAssistantError("async_get_hass called from the wrong thread")
+    return hass
+
+
+def async_get_hass_or_none() -> HomeAssistant | None:
+    """Return the HomeAssistant instance or None.
+
+    Returns None when called from the wrong thread.
+    """
     return _hass.hass
 
 

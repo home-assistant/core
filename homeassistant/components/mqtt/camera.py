@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from base64 import b64decode
+from functools import partial
 import logging
 from typing import TYPE_CHECKING
 
@@ -12,7 +13,7 @@ from homeassistant.components import camera
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJobType, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -20,7 +21,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import CONF_QOS, CONF_TOPIC
-from .debug_info import log_messages
 from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
@@ -97,19 +97,18 @@ class MqttCamera(MqttEntity, Camera):
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @callback
+    def _image_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT messages."""
+        if CONF_IMAGE_ENCODING in self._config:
+            self._last_image = b64decode(msg.payload)
+        else:
+            if TYPE_CHECKING:
+                assert isinstance(msg.payload, bytes)
+            self._last_image = msg.payload
+
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        def message_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages."""
-            if CONF_IMAGE_ENCODING in self._config:
-                self._last_image = b64decode(msg.payload)
-            else:
-                if TYPE_CHECKING:
-                    assert isinstance(msg.payload, bytes)
-                self._last_image = msg.payload
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
@@ -117,16 +116,22 @@ class MqttCamera(MqttEntity, Camera):
             {
                 "state_topic": {
                     "topic": self._config[CONF_TOPIC],
-                    "msg_callback": message_received,
+                    "msg_callback": partial(
+                        self._message_callback,
+                        self._image_received,
+                        None,
+                    ),
+                    "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
                     "encoding": None,
+                    "job_type": HassJobType.Callback,
                 }
             },
         )
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None

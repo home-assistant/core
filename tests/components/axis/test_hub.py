@@ -2,7 +2,7 @@
 
 from ipaddress import ip_address
 from unittest import mock
-from unittest.mock import Mock, call, patch
+from unittest.mock import ANY, Mock, call, patch
 
 import axis as axislib
 import pytest
@@ -90,7 +90,7 @@ async def test_device_support_mqtt(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_config_entry
 ) -> None:
     """Successful setup."""
-    mqtt_call = call(f"axis/{MAC}/#", mock.ANY, 0, "utf-8")
+    mqtt_call = call(f"axis/{MAC}/#", mock.ANY, 0, "utf-8", ANY)
     assert mqtt_call in mqtt_mock.async_subscribe.call_args_list
 
     topic = f"axis/{MAC}/event/tns:onvif/Device/tns:axis/Sensor/PIR/$source/sensor/0"

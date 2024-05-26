@@ -39,6 +39,7 @@ from .client import (  # noqa: F401
     MQTT,
     async_publish,
     async_subscribe,
+    async_subscribe_internal,
     publish,
     subscribe,
 )
@@ -311,7 +312,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         def collect_msg(msg: ReceiveMessage) -> None:
             messages.append((msg.topic, str(msg.payload).replace("\n", "")))
 
-        unsub = await async_subscribe(hass, call.data["topic"], collect_msg)
+        unsub = async_subscribe_internal(hass, call.data["topic"], collect_msg)
 
         def write_dump() -> None:
             with open(hass.config.path("mqtt_dump.txt"), "w", encoding="utf8") as fp:
@@ -459,7 +460,7 @@ async def websocket_subscribe(
 
     # Perform UTF-8 decoding directly in callback routine
     qos: int = msg.get("qos", DEFAULT_QOS)
-    connection.subscriptions[msg["id"]] = await async_subscribe(
+    connection.subscriptions[msg["id"]] = async_subscribe_internal(
         hass, msg["topic"], forward_messages, encoding=None, qos=qos
     )
 
@@ -522,24 +523,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     mqtt_client = mqtt_data.client
 
     # Unload publish and dump services.
-    hass.services.async_remove(
-        DOMAIN,
-        SERVICE_PUBLISH,
-    )
-    hass.services.async_remove(
-        DOMAIN,
-        SERVICE_DUMP,
-    )
+    hass.services.async_remove(DOMAIN, SERVICE_PUBLISH)
+    hass.services.async_remove(DOMAIN, SERVICE_DUMP)
 
     # Stop the discovery
     await discovery.async_stop(hass)
     # Unload the platforms
-    await asyncio.gather(
-        *(
-            hass.config_entries.async_forward_entry_unload(entry, component)
-            for component in mqtt_data.platforms_loaded
-        )
-    )
+    await hass.config_entries.async_unload_platforms(entry, mqtt_data.platforms_loaded)
     mqtt_data.platforms_loaded = set()
     await asyncio.sleep(0)
     # Unsubscribe reload dispatchers
