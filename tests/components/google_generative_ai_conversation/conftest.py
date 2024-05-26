@@ -14,7 +14,17 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_config_entry(hass):
+def mock_genai():
+    """Mock the genai call in async_setup_entry."""
+    with patch(
+        "homeassistant.components.google_generative_ai_conversation.genai.list_models",
+        return_value=iter([]),
+    ):
+        yield
+
+
+@pytest.fixture
+def mock_config_entry(hass, mock_genai):
     """Mock a config entry."""
     entry = MockConfigEntry(
         domain="google_generative_ai_conversation",

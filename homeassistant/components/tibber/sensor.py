@@ -342,8 +342,8 @@ class TibberSensor(SensorEntity):
             self._home_name = tibber_home.info["viewer"]["home"]["address"].get(
                 "address1", ""
             )
-        self._device_name: None | str = None
-        self._model: None | str = None
+        self._device_name: str | None = None
+        self._model: str | None = None
 
     @property
     def device_info(self) -> DeviceInfo:

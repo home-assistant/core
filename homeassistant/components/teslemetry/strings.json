@@ -96,6 +96,26 @@
         "name": "Tire pressure warning rear right"
       }
     },
+    "button": {
+      "boombox": {
+        "name": "Play fart"
+      },
+      "enable_keyless_driving": {
+        "name": "Keyless driving"
+      },
+      "flash_lights": {
+        "name": "Flash lights"
+      },
+      "homelink": {
+        "name": "Homelink"
+      },
+      "honk": {
+        "name": "Honk horn"
+      },
+      "wake": {
+        "name": "Wake"
+      }
+    },
     "climate": {
       "driver_temp": {
         "name": "[%key:component::climate::title%]",
@@ -109,6 +129,14 @@
             }
           }
         }
+      }
+    },
+    "device_tracker": {
+      "location": {
+        "name": "Location"
+      },
+      "route": {
+        "name": "Route"
       }
     },
     "lock": {
@@ -209,6 +237,11 @@
           "backup": "Backup",
           "self_consumption": "Self consumption"
         }
+      }
+    },
+    "media_player": {
+      "media": {
+        "name": "[%key:component::media_player::title%]"
       }
     },
     "number": {

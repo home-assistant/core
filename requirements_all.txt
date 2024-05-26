@@ -371,7 +371,7 @@ aiosolaredge==0.2.0
 aiosteamist==0.3.2
 
 # homeassistant.components.switcher_kis
-aioswitcher==3.4.1
+aioswitcher==3.4.3
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -1646,7 +1646,7 @@ py-nightscout==1.2.2
 py-schluter==0.1.7
 
 # homeassistant.components.ecovacs
-py-sucks==0.9.9
+py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
 py-synologydsm-api==2.4.2
@@ -1821,7 +1821,7 @@ pyegps==0.2.5
 pyenphase==1.20.3
 
 # homeassistant.components.envisalink
-pyenvisalink==4.6
+pyenvisalink==4.7
 
 # homeassistant.components.ephember
 pyephember==0.3.1
@@ -2817,7 +2817,7 @@ vallox-websocket-api==5.1.1
 vehicle==2.2.1
 
 # homeassistant.components.velbus
-velbus-aio==2024.4.1
+velbus-aio==2024.5.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19

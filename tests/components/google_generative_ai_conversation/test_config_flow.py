@@ -9,15 +9,20 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_CHAT_MODEL,
+    CONF_DANGEROUS_BLOCK_THRESHOLD,
+    CONF_HARASSMENT_BLOCK_THRESHOLD,
+    CONF_HATE_BLOCK_THRESHOLD,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_RECOMMENDED,
+    CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
-    CONF_TONE_PROMPT,
     CONF_TOP_K,
     CONF_TOP_P,
+    DEFAULT_PROMPT,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_HARM_BLOCK_THRESHOLD,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
@@ -46,7 +51,7 @@ def mock_models():
     model_10_pro.name = "models/gemini-pro"
     with patch(
         "homeassistant.components.google_generative_ai_conversation.config_flow.genai.list_models",
-        return_value=[model_15_flash, model_10_pro],
+        return_value=iter([model_15_flash, model_10_pro]),
     ):
         yield
 
@@ -90,7 +95,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["options"] == {
         CONF_RECOMMENDED: True,
         CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-        CONF_TONE_PROMPT: "",
+        CONF_PROMPT: DEFAULT_PROMPT,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -102,7 +107,7 @@ async def test_form(hass: HomeAssistant) -> None:
             {
                 CONF_RECOMMENDED: True,
                 CONF_LLM_HASS_API: "none",
-                CONF_TONE_PROMPT: "bla",
+                CONF_PROMPT: "bla",
             },
             {
                 CONF_RECOMMENDED: False,
@@ -117,6 +122,10 @@ async def test_form(hass: HomeAssistant) -> None:
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_TOP_K: RECOMMENDED_TOP_K,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
             },
         ),
         (
@@ -132,12 +141,12 @@ async def test_form(hass: HomeAssistant) -> None:
             {
                 CONF_RECOMMENDED: True,
                 CONF_LLM_HASS_API: "assist",
-                CONF_TONE_PROMPT: "",
+                CONF_PROMPT: "",
             },
             {
                 CONF_RECOMMENDED: True,
                 CONF_LLM_HASS_API: "assist",
-                CONF_TONE_PROMPT: "",
+                CONF_PROMPT: "",
             },
         ),
     ],

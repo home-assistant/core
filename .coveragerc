@@ -729,7 +729,6 @@ omit =
     homeassistant/components/lookin/sensor.py
     homeassistant/components/loqed/sensor.py
     homeassistant/components/luci/device_tracker.py
-    homeassistant/components/luftdaten/sensor.py
     homeassistant/components/lupusec/__init__.py
     homeassistant/components/lupusec/alarm_control_panel.py
     homeassistant/components/lupusec/binary_sensor.py
@@ -1706,10 +1705,6 @@ omit =
     homeassistant/components/zeroconf/models.py
     homeassistant/components/zeroconf/usage.py
     homeassistant/components/zestimate/sensor.py
-    homeassistant/components/zeversolar/__init__.py
-    homeassistant/components/zeversolar/coordinator.py
-    homeassistant/components/zeversolar/entity.py
-    homeassistant/components/zeversolar/sensor.py
     homeassistant/components/zha/core/cluster_handlers/*
     homeassistant/components/zha/core/device.py
     homeassistant/components/zha/core/gateway.py

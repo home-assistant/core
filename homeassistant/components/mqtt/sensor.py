@@ -41,7 +41,7 @@ from homeassistant.util import dt as dt_util
 from . import subscription
 from .config import MQTT_RO_SCHEMA
 from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, PAYLOAD_NONE
-from .mixins import MqttAvailability, MqttEntity, async_setup_entity_entry_helper
+from .mixins import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttValueTemplate,
     PayloadSentinel,
@@ -49,6 +49,7 @@ from .models import (
     ReceivePayloadType,
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+from .util import check_state_too_long
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -242,7 +243,10 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 else:
                     self._attr_native_value = new_value
                 return
-            if self.device_class in {None, SensorDeviceClass.ENUM}:
+            if self.device_class in {
+                None,
+                SensorDeviceClass.ENUM,
+            } and not check_state_too_long(_LOGGER, new_value, self.entity_id, msg):
                 self._attr_native_value = new_value
                 return
             try:
@@ -301,7 +305,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     @callback
     def _value_is_expired(self, *_: datetime) -> None:
@@ -314,6 +318,6 @@ class MqttSensor(MqttEntity, RestoreSensor):
     def available(self) -> bool:
         """Return true if the device is available and value has not expired."""
         # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
-        return MqttAvailability.available.fget(self) and (  # type: ignore[attr-defined]
+        return MqttAvailabilityMixin.available.fget(self) and (  # type: ignore[attr-defined]
             self._expire_after is None or not self._expired
         )
