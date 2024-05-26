@@ -248,7 +248,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "target_temperature_step",
     "target_temperature_high",
     "target_temperature_low",
-    "preset_mode",
+    "min_temperature_range" "preset_mode",
     "preset_modes",
     "is_aux_heat",
     "fan_mode",
@@ -302,6 +302,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_target_humidity: float | None = None
     _attr_target_temperature_high: float | None
     _attr_target_temperature_low: float | None
+    _attr_min_temperature_range: float | None
     _attr_target_temperature_step: float | None = None
     _attr_target_temperature: float | None = None
     _attr_temperature_unit: str
@@ -635,6 +636,14 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_target_temperature_low
 
     @cached_property
+    def min_temperature_range(self) -> float | None:
+        """Return the minimum setpoint deadband when using a temperature range.
+
+        Requires ClimateEntityFeature.TARGET_TEMPERATURE_RANGE.
+        """
+        return self._attr_min_temperature_range
+
+    @cached_property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp.
 
@@ -947,6 +956,21 @@ async def async_service_temperature_set(
                 )
         else:
             kwargs[value] = temp
+
+    if (
+        (min_temp_range := entity.min_temperature_range)
+        and (low_temp := kwargs.get(ATTR_TARGET_TEMP_LOW))
+        and (high_temp := kwargs.get(ATTR_TARGET_TEMP_HIGH))
+        and high_temp - low_temp < min_temp_range
+    ):
+        # Ensure there is a minimum gap from the new temp.
+        if (
+            entity.target_temperature_high
+            and abs(high_temp - entity.target_temperature_high) < 0.01
+        ):
+            kwargs[ATTR_TARGET_TEMP_HIGH] = low_temp + min_temp_range
+        else:
+            kwargs[ATTR_TARGET_TEMP_LOW] = high_temp - min_temp_range
 
     await entity.async_set_temperature(**kwargs)
 
