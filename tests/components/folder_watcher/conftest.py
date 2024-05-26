@@ -29,7 +29,7 @@ def mock_setup_entry() -> Generator[None, None, None]:
 async def load_int(
     hass: HomeAssistant, tmp_path: Path, freezer: FrozenDateTimeFactory
 ) -> MockConfigEntry:
-    """Set up the Sensibo integration in Home Assistant."""
+    """Set up the Folder watcher integration in Home Assistant."""
     freezer.move_to("2022-04-19 10:31:02+00:00")
     path = tmp_path.as_posix()
     hass.config.allowlist_external_dirs = {path}

@@ -33,7 +33,7 @@ async def async_setup_entry(
 
 
 class FolderWatcherEventEntity(EventEntity):
-    """Representation of a Xiaomi event entity."""
+    """Representation of a Folder watcher event entity."""
 
     _attr_should_poll = False
     _attr_has_entity_name = True
@@ -50,11 +50,11 @@ class FolderWatcherEventEntity(EventEntity):
         self,
         entry: ConfigEntry,
     ) -> None:
-        """Initialise a Xiaomi event entity."""
+        """Initialise a Folder watcher event entity."""
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.title,
-            manufacturer="Folder Watcher",
+            manufacturer="Folder watcher",
         )
         self._attr_unique_id = entry.entry_id
         self._entry = entry
