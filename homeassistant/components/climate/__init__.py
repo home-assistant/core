@@ -67,6 +67,7 @@ from .const import (  # noqa: F401
     ATTR_MAX_TEMP,
     ATTR_MIN_HUMIDITY,
     ATTR_MIN_TEMP,
+    ATTR_MIN_TEMP_RANGE,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
     ATTR_SWING_MODE,
@@ -248,7 +249,8 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "target_temperature_step",
     "target_temperature_high",
     "target_temperature_low",
-    "min_temperature_range" "preset_mode",
+    "min_temperature_range",
+    "preset_mode",
     "preset_modes",
     "is_aux_heat",
     "fan_mode",
@@ -302,7 +304,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_target_humidity: float | None = None
     _attr_target_temperature_high: float | None
     _attr_target_temperature_low: float | None
-    _attr_min_temperature_range: float | None
+    _attr_min_temperature_range: float | None = None
     _attr_target_temperature_step: float | None = None
     _attr_target_temperature: float | None = None
     _attr_temperature_unit: str
@@ -522,6 +524,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         supported_features = self.supported_features
         temperature_unit = self.temperature_unit
         precision = self.precision
+        min_temp_range = self.min_temperature_range
         hass = self.hass
 
         data: dict[str, str | float | None] = {
@@ -545,6 +548,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             data[ATTR_TARGET_TEMP_LOW] = show_temp(
                 hass, self.target_temperature_low, temperature_unit, precision
             )
+            data[ATTR_MIN_TEMP_RANGE] = min_temp_range
 
         if (current_humidity := self.current_humidity) is not None:
             data[ATTR_CURRENT_HUMIDITY] = current_humidity
