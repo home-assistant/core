@@ -201,6 +201,7 @@ def async_subscribe_internal(
     msg_callback: Callable[[ReceiveMessage], Coroutine[Any, Any, None] | None],
     qos: int = DEFAULT_QOS,
     encoding: str | None = DEFAULT_ENCODING,
+    job_type: HassJobType | None = None,
 ) -> CALLBACK_TYPE:
     """Subscribe to an MQTT topic.
 
@@ -228,7 +229,7 @@ def async_subscribe_internal(
             translation_domain=DOMAIN,
             translation_placeholders={"topic": topic},
         )
-    return client.async_subscribe(topic, msg_callback, qos, encoding)
+    return client.async_subscribe(topic, msg_callback, qos, encoding, job_type)
 
 
 @bind_hass
@@ -867,12 +868,14 @@ class MQTT:
         msg_callback: Callable[[ReceiveMessage], Coroutine[Any, Any, None] | None],
         qos: int,
         encoding: str | None = None,
+        job_type: HassJobType | None = None,
     ) -> Callable[[], None]:
         """Set up a subscription to a topic with the provided qos."""
         if not isinstance(topic, str):
             raise HomeAssistantError("Topic needs to be a string!")
 
-        job_type = get_hassjob_callable_job_type(msg_callback)
+        if job_type is None:
+            job_type = get_hassjob_callable_job_type(msg_callback)
         if job_type is not HassJobType.Callback:
             # Only wrap the callback with catch_log_exception
             # if it is not a simple callback since we catch

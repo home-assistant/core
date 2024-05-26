@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJobType, HomeAssistant, callback
 
 from . import debug_info
 from .client import async_subscribe_internal
@@ -62,7 +62,12 @@ class EntitySubscription:
         if not self.should_subscribe or not self.topic:
             return
         self.unsubscribe_callback = async_subscribe_internal(
-            self.hass, self.topic, self.message_callback, self.qos, self.encoding
+            self.hass,
+            self.topic,
+            self.message_callback,
+            self.qos,
+            self.encoding,
+            HassJobType.Callback,
         )
 
     def _should_resubscribe(self, other: EntitySubscription | None) -> bool:
