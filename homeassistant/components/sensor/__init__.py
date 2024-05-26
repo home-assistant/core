@@ -788,7 +788,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         sensor_options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
         if "suggested_display_precision" not in sensor_options:
-            if not display_precision:
+            if display_precision is None:
                 return
         elif sensor_options["suggested_display_precision"] == display_precision:
             return
