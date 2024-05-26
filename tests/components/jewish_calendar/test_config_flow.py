@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant import config_entries, setup
-from homeassistant.components.jewish_calendar import (
+from homeassistant.components.jewish_calendar.const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,

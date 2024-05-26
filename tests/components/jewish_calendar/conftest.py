@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.jewish_calendar import const
+from homeassistant.components.jewish_calendar.const import DEFAULT_NAME, DOMAIN
 
 from tests.common import MockConfigEntry
 
@@ -14,8 +14,8 @@ from tests.common import MockConfigEntry
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title=const.DEFAULT_NAME,
-        domain=const.DOMAIN,
+        title=DEFAULT_NAME,
+        domain=DOMAIN,
     )
 
 
