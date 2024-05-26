@@ -131,8 +131,12 @@ class MqttSensor(MqttEntity, RestoreSensor):
     _expiration_trigger: CALLBACK_TYPE | None = None
     _expire_after: int | None
     _expired: bool | None
-    _template: Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType]
-    _last_reset_template: Callable[[ReceivePayloadType], ReceivePayloadType]
+    _template: (
+        Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType] | None
+    ) = None
+    _last_reset_template: Callable[[ReceivePayloadType], ReceivePayloadType] | None = (
+        None
+    )
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Restore state for entities with expire_after set."""
@@ -172,8 +176,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
             )
 
     async def async_will_remove_from_hass(self) -> None:
-        """Remove exprire triggers."""
-        # Clean up expire triggers
+        """Remove expire triggers."""
         if self._expiration_trigger:
             _LOGGER.debug("Clean up expire after trigger for %s", self.entity_id)
             self._expiration_trigger()
@@ -202,12 +205,14 @@ class MqttSensor(MqttEntity, RestoreSensor):
         else:
             self._expired = None
 
-        self._template = MqttValueTemplate(
-            self._config.get(CONF_VALUE_TEMPLATE), entity=self
-        ).async_render_with_possible_json_value
-        self._last_reset_template = MqttValueTemplate(
-            self._config.get(CONF_LAST_RESET_VALUE_TEMPLATE), entity=self
-        ).async_render_with_possible_json_value
+        if value_template := config.get(CONF_VALUE_TEMPLATE):
+            self._template = MqttValueTemplate(
+                value_template, entity=self
+            ).async_render_with_possible_json_value
+        if last_reset_template := config.get(CONF_LAST_RESET_VALUE_TEMPLATE):
+            self._last_reset_template = MqttValueTemplate(
+                last_reset_template, entity=self
+            ).async_render_with_possible_json_value
 
     @callback
     def _update_state(self, msg: ReceiveMessage) -> None:
@@ -226,7 +231,10 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 self.hass, self._expire_after, self._value_is_expired
             )
 
-        payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
+        if template := self._template:
+            payload = template(msg.payload, PayloadSentinel.DEFAULT)
+        else:
+            payload = msg.payload
         if payload is PayloadSentinel.DEFAULT:
             return
         new_value = str(payload)
@@ -260,8 +268,8 @@ class MqttSensor(MqttEntity, RestoreSensor):
 
     @callback
     def _update_last_reset(self, msg: ReceiveMessage) -> None:
-        payload = self._last_reset_template(msg.payload)
-
+        template = self._last_reset_template
+        payload = msg.payload if template is None else template(msg.payload)
         if not payload:
             _LOGGER.debug("Ignoring empty last_reset message from '%s'", msg.topic)
             return
