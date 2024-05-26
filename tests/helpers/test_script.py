@@ -6293,7 +6293,8 @@ async def test_disallowed_recursion(
 
     assert calls == 0
     assert (
-        "Disallowed recursion detected while attempt to add run to stack" in caplog.text
-    )
-    assert "1: test_domain1.Test Name1" in caplog.text
-    assert "2: test_domain2.Test Name2" in caplog.text
+        "Test Name1: Disallowed recursion detected, "
+        "test_domain2.Test Name2 tried to start test_domain1.Test Name1"
+        " when it was already called from test_domain1.Test Name1 earlier:"
+    ) in caplog.text
+    assert "- test_domain1.Test Name1\n- test_domain2.Test Name2" in caplog.text

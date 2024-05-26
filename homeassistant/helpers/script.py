@@ -1728,13 +1728,15 @@ class Script:
         ):
             script_execution_set("disallowed_recursion_detected")
             formatted_stack = [
-                f"- {idx+1}: {name_id.partition('-')[0]}"
-                for idx, name_id in enumerate(script_stack)
+                f"- {name_id.partition('-')[0]}" for name_id in script_stack
             ]
             self._log(
-                "Disallowed recursion detected while attempt to "
-                f"add run to stack: "
-                f"\n{"\n".join(formatted_stack)}",
+                "Disallowed recursion detected, "
+                f"{script_stack[-1].partition('-')[0]} tried to start "
+                f"{self.domain}.{self.name} when it was already called "
+                f"from {self.domain}.{self.name} earlier:\n"
+                "Traceback (most recent call last):\n"
+                f"{"\n".join(formatted_stack)}",
                 level=logging.WARNING,
             )
             return None
