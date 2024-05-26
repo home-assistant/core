@@ -9,7 +9,6 @@ from homeassistant.components.jewish_calendar.const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
-    CONF_LANGUAGE,
     DEFAULT_CANDLE_LIGHT,
     DEFAULT_DIASPORA,
     DEFAULT_HAVDALAH_OFFSET_MINUTES,
@@ -19,6 +18,7 @@ from homeassistant.components.jewish_calendar.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_ELEVATION,
+    CONF_LANGUAGE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
