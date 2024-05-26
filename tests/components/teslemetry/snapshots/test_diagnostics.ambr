@@ -62,7 +62,7 @@
           'components_grid_services_enabled': False,
           'components_load_meter': True,
           'components_net_meter_mode': 'battery_ok',
-          'components_off_grid_vehicle_charging_reserve_supported': False,
+          'components_off_grid_vehicle_charging_reserve_supported': True,
           'components_set_islanding_mode_enabled': True,
           'components_show_grid_import_battery_source_cards': True,
           'components_solar': True,
