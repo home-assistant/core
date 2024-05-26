@@ -88,6 +88,7 @@ async def test_duplicate_entry(
         data=USER_DATA,
     )
     assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_step_reauth(
