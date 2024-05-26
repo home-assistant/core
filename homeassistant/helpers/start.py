@@ -36,7 +36,7 @@ def _async_at_core_state(
         hass.async_run_hass_job(at_start_job, hass)
         return lambda: None
 
-    unsub: None | CALLBACK_TYPE = None
+    unsub: CALLBACK_TYPE | None = None
 
     @callback
     def _matched_event(event: Event) -> None:

@@ -65,6 +65,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             required_domains={DOMAIN},
             required_features=MediaPlayerEntityFeature.NEXT_TRACK,
             required_states={MediaPlayerState.PLAYING},
+            description="Skips a media player to the next item",
         ),
     )
     intent.async_register(
@@ -81,6 +82,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
                     vol.Coerce(int), vol.Range(min=0, max=100), lambda val: val / 100
                 )
             },
+            description="Sets the volume of a media player",
         ),
     )
 
@@ -97,6 +99,7 @@ class MediaPauseHandler(intent.ServiceIntentHandler):
             required_domains={DOMAIN},
             required_features=MediaPlayerEntityFeature.PAUSE,
             required_states={MediaPlayerState.PLAYING},
+            description="Pauses a media player",
         )
         self.last_paused = last_paused
 
@@ -130,6 +133,7 @@ class MediaUnpauseHandler(intent.ServiceIntentHandler):
             SERVICE_MEDIA_PLAY,
             required_domains={DOMAIN},
             required_states={MediaPlayerState.PAUSED},
+            description="Resumes a media player",
         )
         self.last_paused = last_paused
 

@@ -552,11 +552,9 @@ async def test_send_key(hass: HomeAssistant, remote: Mock) -> None:
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     state = hass.states.get(ENTITY_ID)
-    # key and update called
+    # key called
     assert remote.control.call_count == 1
     assert remote.control.call_args_list == [call("KEY_VOLUP")]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
     assert state.state == STATE_ON
 
 
@@ -583,14 +581,12 @@ async def test_send_key_connection_closed_retry_succeed(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     state = hass.states.get(ENTITY_ID)
-    # key because of retry two times and update called
+    # key because of retry two times
     assert remote.control.call_count == 2
     assert remote.control.call_args_list == [
         call("KEY_VOLUP"),
         call("KEY_VOLUP"),
     ]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
     assert state.state == STATE_ON
 
 
@@ -914,11 +910,9 @@ async def test_volume_up(hass: HomeAssistant, remote: Mock) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    # key and update called
+    # key called
     assert remote.control.call_count == 1
     assert remote.control.call_args_list == [call("KEY_VOLUP")]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
 
 
 async def test_volume_down(hass: HomeAssistant, remote: Mock) -> None:
@@ -927,11 +921,9 @@ async def test_volume_down(hass: HomeAssistant, remote: Mock) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_DOWN, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    # key and update called
+    # key called
     assert remote.control.call_count == 1
     assert remote.control.call_args_list == [call("KEY_VOLDOWN")]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
 
 
 async def test_mute_volume(hass: HomeAssistant, remote: Mock) -> None:
@@ -943,11 +935,9 @@ async def test_mute_volume(hass: HomeAssistant, remote: Mock) -> None:
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: True},
         True,
     )
-    # key and update called
+    # key called
     assert remote.control.call_count == 1
     assert remote.control.call_args_list == [call("KEY_MUTE")]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
 
 
 async def test_media_play(hass: HomeAssistant, remote: Mock) -> None:
@@ -956,20 +946,16 @@ async def test_media_play(hass: HomeAssistant, remote: Mock) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_MEDIA_PLAY, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    # key and update called
+    # key called
     assert remote.control.call_count == 1
     assert remote.control.call_args_list == [call("KEY_PLAY")]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
 
     await hass.services.async_call(
         DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    # key and update called
+    # key called
     assert remote.control.call_count == 2
     assert remote.control.call_args_list == [call("KEY_PLAY"), call("KEY_PAUSE")]
-    assert remote.close.call_count == 2
-    assert remote.close.call_args_list == [call(), call()]
 
 
 async def test_media_pause(hass: HomeAssistant, remote: Mock) -> None:
@@ -978,20 +964,16 @@ async def test_media_pause(hass: HomeAssistant, remote: Mock) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_MEDIA_PAUSE, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    # key and update called
+    # key called
     assert remote.control.call_count == 1
     assert remote.control.call_args_list == [call("KEY_PAUSE")]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
 
     await hass.services.async_call(
         DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    # key and update called
+    # key called
     assert remote.control.call_count == 2
     assert remote.control.call_args_list == [call("KEY_PAUSE"), call("KEY_PLAY")]
-    assert remote.close.call_count == 2
-    assert remote.close.call_args_list == [call(), call()]
 
 
 async def test_media_next_track(hass: HomeAssistant, remote: Mock) -> None:
@@ -1000,11 +982,9 @@ async def test_media_next_track(hass: HomeAssistant, remote: Mock) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_MEDIA_NEXT_TRACK, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    # key and update called
+    # key  called
     assert remote.control.call_count == 1
     assert remote.control.call_args_list == [call("KEY_CHUP")]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
 
 
 async def test_media_previous_track(hass: HomeAssistant, remote: Mock) -> None:
@@ -1013,11 +993,9 @@ async def test_media_previous_track(hass: HomeAssistant, remote: Mock) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    # key and update called
+    # key called
     assert remote.control.call_count == 1
     assert remote.control.call_args_list == [call("KEY_CHDOWN")]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
 
 
 @pytest.mark.usefixtures("remotews", "rest_api")
@@ -1074,8 +1052,6 @@ async def test_play_media(hass: HomeAssistant, remote: Mock) -> None:
         call("KEY_6"),
         call("KEY_ENTER"),
     ]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
     assert sleep.call_count == 3
 
 
@@ -1095,10 +1071,8 @@ async def test_play_media_invalid_type(hass: HomeAssistant) -> None:
             },
             True,
         )
-        # only update called
+        # control not called
         assert remote.control.call_count == 0
-        assert remote.close.call_count == 0
-        assert remote.call_count == 1
 
 
 async def test_play_media_channel_as_string(hass: HomeAssistant) -> None:
@@ -1117,10 +1091,8 @@ async def test_play_media_channel_as_string(hass: HomeAssistant) -> None:
             },
             True,
         )
-        # only update called
+        # control not called
         assert remote.control.call_count == 0
-        assert remote.close.call_count == 0
-        assert remote.call_count == 1
 
 
 async def test_play_media_channel_as_non_positive(hass: HomeAssistant) -> None:
@@ -1138,10 +1110,8 @@ async def test_play_media_channel_as_non_positive(hass: HomeAssistant) -> None:
             },
             True,
         )
-        # only update called
+        # control not called
         assert remote.control.call_count == 0
-        assert remote.close.call_count == 0
-        assert remote.call_count == 1
 
 
 async def test_select_source(hass: HomeAssistant, remote: Mock) -> None:
@@ -1153,11 +1123,9 @@ async def test_select_source(hass: HomeAssistant, remote: Mock) -> None:
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "HDMI"},
         True,
     )
-    # key and update called
+    # key called
     assert remote.control.call_count == 1
     assert remote.control.call_args_list == [call("KEY_HDMI")]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
 
 
 async def test_select_source_invalid_source(hass: HomeAssistant) -> None:
@@ -1171,10 +1139,8 @@ async def test_select_source_invalid_source(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "INVALID"},
             True,
         )
-        # only update called
+        # control not called
         assert remote.control.call_count == 0
-        assert remote.close.call_count == 0
-        assert remote.call_count == 1
 
 
 @pytest.mark.usefixtures("rest_api")

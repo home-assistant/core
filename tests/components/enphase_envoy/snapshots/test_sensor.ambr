@@ -20740,6 +20740,98 @@
     'unique_id': '1234_production_ct_status_flags',
     'unit_of_measurement': None,
   })
+# name: test_sensor[sensor.envoy_1234_lifetime_net_energy_production_l1-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_lifetime_net_energy_production_l2-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_lifetime_net_energy_production_l3-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_meter_status_flags_active_net_consumption_ct-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_meter_status_flags_active_net_consumption_ct_l1-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_meter_status_flags_active_net_consumption_ct_l2-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_meter_status_flags_active_net_consumption_ct_l3-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_meter_status_flags_active_production_ct-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_meter_status_flags_active_production_ct_l1-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_meter_status_flags_active_production_ct_l2-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_meter_status_flags_active_production_ct_l3-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_meter_status_flags_active_storage_ct-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_meter_status_flags_active_storage_ct_l1-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_meter_status_flags_active_storage_ct_l2-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_meter_status_flags_active_storage_ct_l3-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_metering_status_net_consumption_ct-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_metering_status_net_consumption_ct_l1-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_metering_status_net_consumption_ct_l2-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_metering_status_net_consumption_ct_l3-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_metering_status_production_ct-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_metering_status_production_ct_l1-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_metering_status_production_ct_l2-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_metering_status_production_ct_l3-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_metering_status_storage_ct-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_metering_status_storage_ct_l1-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_metering_status_storage_ct_l2-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_metering_status_storage_ct_l3-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_voltage_net_consumption_ct-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_voltage_net_consumption_ct_l1-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_voltage_net_consumption_ct_l2-state]
+  None
+# ---
+# name: test_sensor[sensor.envoy_1234_voltage_net_consumption_ct_l3-state]
+  None
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_meter_status_flags_active_production_ct-state]
   None
