@@ -14,7 +14,7 @@ from homeassistant import config as conf_util
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISCOVERY, CONF_PAYLOAD, SERVICE_RELOAD
-from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import (
     ConfigValidationError,
     ServiceValidationError,
@@ -474,15 +474,8 @@ def async_subscribe_connection_status(
     hass: HomeAssistant, connection_status_callback: ConnectionStatusCallback
 ) -> Callable[[], None]:
     """Subscribe to MQTT connection changes."""
-    connection_status_callback_job = HassJob(connection_status_callback)
-
-    async def _async_connection_state_changed(state: bool) -> None:
-        task = hass.async_run_hass_job(connection_status_callback_job, state)
-        if task:
-            await task
-
     return async_dispatcher_connect(
-        hass, MQTT_CONNECTION_STATE, _async_connection_state_changed
+        hass, MQTT_CONNECTION_STATE, connection_status_callback
     )
 
 
