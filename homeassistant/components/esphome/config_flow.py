@@ -318,23 +318,23 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
         entry = await self.async_set_unique_id(format_mac(discovery_info.macaddress))
-        # entry should always be valid since we only listen to DHCP requests
+
+        # entry should never be None since we only listen to DHCP requests
         # for configured devices.
-
-        # Check if the existing entry is still valid
-        error = await self.try_connect(entry)
-
-        if error is not None:
-            _LOGGER.debug(
-                "Invalidated config entry with error %s."
-                + " Reconfiguring with address %s",
-                error,
-                discovery_info.ip,
-            )
-            # Update with new connection information if we can't connect
-            self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
-        else:
-            _LOGGER.debug("Config entry with address %s still valid", discovery_info.ip)
+        if entry is not None: 
+            # Check if the existing entry is still valid
+            error = await self.try_connect(entry)
+    
+            if error is not None:
+                _LOGGER.debug(
+                    "Invalidated config entry with error %s. Reconfiguring with address %s",
+                    error,
+                    discovery_info.ip,
+                )
+                # Update with new connection information if we can't connect
+                self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+            else:
+                _LOGGER.debug("Config entry with address %s still valid", discovery_info.ip)
 
         return self.async_abort(reason="already_configured")
 
