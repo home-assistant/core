@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components import tag
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_VALUE_TEMPLATE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJobType, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -167,6 +167,7 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
                     "topic": self._config[CONF_TOPIC],
                     "msg_callback": self._async_tag_scanned,
                     "qos": self._config[CONF_QOS],
+                    "job_type": HassJobType.Callback,
                 }
             },
         )

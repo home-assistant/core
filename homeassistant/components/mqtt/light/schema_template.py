@@ -29,7 +29,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HassJobType, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
@@ -282,6 +282,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                     "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
                     "encoding": self._config[CONF_ENCODING] or None,
+                    "job_type": HassJobType.Callback,
                 }
             },
         )

@@ -47,7 +47,7 @@ from homeassistant.const import (
     CONF_XY,
     STATE_ON,
 )
-from homeassistant.core import async_get_hass, callback
+from homeassistant.core import HassJobType, async_get_hass, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.json import json_dumps
@@ -522,6 +522,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                     "entity_id": self.entity_id,
                     "qos": self._config[CONF_QOS],
                     "encoding": self._config[CONF_ENCODING] or None,
+                    "job_type": HassJobType.Callback,
                 }
             },
         )

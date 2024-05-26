@@ -30,7 +30,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HassJobType, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
@@ -405,6 +405,7 @@ class MqttAttributesMixin(Entity):
                     "entity_id": self.entity_id,
                     "qos": self._attributes_config.get(CONF_QOS),
                     "encoding": self._attributes_config[CONF_ENCODING] or None,
+                    "job_type": HassJobType.Callback,
                 }
             },
         )
@@ -519,6 +520,7 @@ class MqttAvailabilityMixin(Entity):
                 "entity_id": self.entity_id,
                 "qos": self._avail_config[CONF_QOS],
                 "encoding": self._avail_config[CONF_ENCODING] or None,
+                "job_type": HassJobType.Callback,
             }
             for topic in self._avail_topics
         }
