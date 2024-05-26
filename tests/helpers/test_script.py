@@ -6286,23 +6286,20 @@ async def test_disallowed_recursion(
         running_description="test script3",
     )
 
-    async def async_service_handler_1(*args, **kwargs) -> None:
-        """Simulate a service that runs the script again."""
+    async def _async_service_handler_1(*args, **kwargs) -> None:
         await script1_obj.async_run(context=context)
 
-    hass.services.async_register("test", "call_script_1", async_service_handler_1)
+    hass.services.async_register("test", "call_script_1", _async_service_handler_1)
 
-    async def async_service_handler_2(*args, **kwargs) -> None:
-        """Simulate a service that runs the script again."""
+    async def _async_service_handler_2(*args, **kwargs) -> None:
         await script2_obj.async_run(context=context)
 
-    hass.services.async_register("test", "call_script_2", async_service_handler_2)
+    hass.services.async_register("test", "call_script_2", _async_service_handler_2)
 
-    async def async_service_handler_3(*args, **kwargs) -> None:
-        """Simulate a service that runs the script again."""
+    async def _async_service_handler_3(*args, **kwargs) -> None:
         await script3_obj.async_run(context=context)
 
-    hass.services.async_register("test", "call_script_3", async_service_handler_3)
+    hass.services.async_register("test", "call_script_3", _async_service_handler_3)
 
     await script1_obj.async_run(context=context)
     await hass.async_block_till_done()
