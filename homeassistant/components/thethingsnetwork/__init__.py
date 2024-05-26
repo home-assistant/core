@@ -13,7 +13,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_APP_ID,
-    CONF_DEPRECATED_ACCESS_KEY,
     DOMAIN,
     PLATFORMS,
     TTN_API_HOST,
