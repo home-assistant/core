@@ -506,7 +506,7 @@ async def async_setup_entry(
     entry: SystemMonitorConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up System Montor sensors based on a config entry."""
+    """Set up System Monitor sensors based on a config entry."""
     entities: list[SystemMonitorSensor] = []
     legacy_resources: set[str] = set(entry.options.get("resources", []))
     loaded_resources: set[str] = set()

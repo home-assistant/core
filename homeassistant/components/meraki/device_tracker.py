@@ -21,7 +21,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 CONF_VALIDATOR = "validator"
 CONF_SECRET = "secret"
 URL = "/api/meraki"
-VERSION = "2.0"
+ACCEPTED_VERSIONS = ["2.0", "2.1"]
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,7 +74,7 @@ class MerakiView(HomeAssistantView):
         if data["secret"] != self.secret:
             _LOGGER.error("Invalid Secret received from Meraki")
             return self.json_message("Invalid secret", HTTPStatus.UNPROCESSABLE_ENTITY)
-        if data["version"] != VERSION:
+        if data["version"] not in ACCEPTED_VERSIONS:
             _LOGGER.error("Invalid API version: %s", data["version"])
             return self.json_message("Invalid version", HTTPStatus.UNPROCESSABLE_ENTITY)
         _LOGGER.debug("Valid Secret")

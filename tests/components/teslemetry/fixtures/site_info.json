@@ -41,6 +41,44 @@
       "battery_type": "ac_powerwall",
       "configurable": true,
       "grid_services_enabled": false,
+      "gateways": [
+        {
+          "device_id": "gateway-id",
+          "din": "gateway-din",
+          "serial_number": "CN00000000J50D",
+          "part_number": "1152100-14-J",
+          "part_type": 10,
+          "part_name": "Tesla Backup Gateway 2",
+          "is_active": true,
+          "site_id": "1234-abcd",
+          "firmware_version": "24.4.0 0fe780c9",
+          "updated_datetime": "2024-05-14T00:00:00.000Z"
+        }
+      ],
+      "batteries": [
+        {
+          "device_id": "battery-1-id",
+          "din": "battery-1-din",
+          "serial_number": "TG000000001DA5",
+          "part_number": "3012170-10-B",
+          "part_type": 2,
+          "part_name": "Powerwall 2",
+          "nameplate_max_charge_power": 5000,
+          "nameplate_max_discharge_power": 5000,
+          "nameplate_energy": 13500
+        },
+        {
+          "device_id": "battery-2-id",
+          "din": "battery-2-din",
+          "serial_number": "TG000000002DA5",
+          "part_number": "3012170-05-C",
+          "part_type": 2,
+          "part_name": "Powerwall 2",
+          "nameplate_max_charge_power": 5000,
+          "nameplate_max_discharge_power": 5000,
+          "nameplate_energy": 13500
+        }
+      ],
       "wall_connectors": [
         {
           "device_id": "123abc",
@@ -59,7 +97,7 @@
       "system_alerts_enabled": true
     },
     "version": "23.44.0 eb113390",
-    "battery_count": 3,
+    "battery_count": 2,
     "tou_settings": {
       "optimization_strategy": "economics",
       "schedule": [

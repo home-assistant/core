@@ -52,6 +52,7 @@ async def test_esphome_device_service_calls_not_allowed(
         Awaitable[MockESPHomeDevice],
     ],
     caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a device with service calls not allowed."""
     entity_info = []
@@ -74,7 +75,6 @@ async def test_esphome_device_service_calls_not_allowed(
     )
     await hass.async_block_till_done()
     assert len(mock_esphome_test) == 0
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(
         "esphome", "service_calls_not_enabled-11:22:33:44:55:aa"
     )
@@ -95,6 +95,7 @@ async def test_esphome_device_service_calls_allowed(
         Awaitable[MockESPHomeDevice],
     ],
     caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a device with service calls are allowed."""
     await async_setup_component(hass, "tag", {})
@@ -126,7 +127,6 @@ async def test_esphome_device_service_calls_allowed(
         )
     )
     await hass.async_block_till_done()
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(
         "esphome", "service_calls_not_enabled-11:22:33:44:55:aa"
     )
@@ -254,6 +254,7 @@ async def test_esphome_device_with_old_bluetooth(
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
         Awaitable[MockESPHomeDevice],
     ],
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a device with old bluetooth creates an issue."""
     entity_info = []
@@ -267,7 +268,6 @@ async def test_esphome_device_with_old_bluetooth(
         device_info={"bluetooth_proxy_feature_flags": 1, "esphome_version": "2023.3.0"},
     )
     await hass.async_block_till_done()
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(
         "esphome", "ble_firmware_outdated-11:22:33:44:55:AA"
     )
@@ -284,6 +284,7 @@ async def test_esphome_device_with_password(
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
         Awaitable[MockESPHomeDevice],
     ],
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a device with legacy password creates an issue."""
     entity_info = []
@@ -308,7 +309,6 @@ async def test_esphome_device_with_password(
         entry=entry,
     )
     await hass.async_block_till_done()
-    issue_registry = ir.async_get(hass)
     assert (
         issue_registry.async_get_issue(
             # This issue uses the ESPHome mac address which
@@ -327,6 +327,7 @@ async def test_esphome_device_with_current_bluetooth(
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
         Awaitable[MockESPHomeDevice],
     ],
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a device with recent bluetooth does not create an issue."""
     entity_info = []
@@ -343,7 +344,6 @@ async def test_esphome_device_with_current_bluetooth(
         },
     )
     await hass.async_block_till_done()
-    issue_registry = ir.async_get(hass)
     assert (
         # This issue uses the ESPHome device info mac address which
         # is always UPPER case

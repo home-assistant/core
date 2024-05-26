@@ -39,6 +39,7 @@ from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
+from .helpers.json import json_bytes, json_fragment
 from .util.hass_dict import HassKey
 from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
@@ -761,6 +762,11 @@ class Integration:
         self._missing_platforms_cache = hass.data[DATA_MISSING_PLATFORMS]
         self._top_level_files = top_level_files or set()
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
+
+    @cached_property
+    def manifest_json_fragment(self) -> json_fragment:
+        """Return manifest as a JSON fragment."""
+        return json_fragment(json_bytes(self.manifest))
 
     @cached_property
     def name(self) -> str:
@@ -1671,6 +1677,14 @@ def async_get_issue_tracker(
     if not integration and not integration_domain and not module:
         # If we know nothing about the entity, suggest opening an issue on HA core
         return issue_tracker
+
+    if (
+        not integration
+        and (hass and integration_domain)
+        and (comps_or_future := hass.data.get(DATA_CUSTOM_COMPONENTS))
+        and not isinstance(comps_or_future, asyncio.Future)
+    ):
+        integration = comps_or_future.get(integration_domain)
 
     if not integration and (hass and integration_domain):
         with suppress(IntegrationNotLoaded):
