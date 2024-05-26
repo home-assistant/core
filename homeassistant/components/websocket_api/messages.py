@@ -15,7 +15,7 @@ from homeassistant.const import (
     COMPRESSED_STATE_LAST_UPDATED,
     COMPRESSED_STATE_STATE,
 )
-from homeassistant.core import Event, EventStateChangedData, State
+from homeassistant.core import CompressedState, Event, EventStateChangedData
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import (
     JSON_DUMP,
@@ -177,7 +177,14 @@ def _partial_cached_state_diff_message(event: Event[EventStateChangedData]) -> b
     )
 
 
-def _state_diff_event(event: Event[EventStateChangedData]) -> dict:
+def _state_diff_event(
+    event: Event[EventStateChangedData],
+) -> dict[
+    str,
+    list[str]
+    | dict[str, CompressedState]
+    | dict[str, dict[str, dict[str, str | list[str]]]],
+]:
     """Convert a state_changed event to the minimal version.
 
     State update example
@@ -188,21 +195,10 @@ def _state_diff_event(event: Event[EventStateChangedData]) -> dict:
         "r": [entity_id,…]
     }
     """
-    if (event_new_state := event.data["new_state"]) is None:
+    if (new_state := event.data["new_state"]) is None:
         return {ENTITY_EVENT_REMOVE: [event.data["entity_id"]]}
-    if (event_old_state := event.data["old_state"]) is None:
-        return {
-            ENTITY_EVENT_ADD: {
-                event_new_state.entity_id: event_new_state.as_compressed_state
-            }
-        }
-    return _state_diff(event_old_state, event_new_state)
-
-
-def _state_diff(
-    old_state: State, new_state: State
-) -> dict[str, dict[str, dict[str, dict[str, str | list[str]]]]]:
-    """Create a diff dict that can be used to overlay changes."""
+    if (old_state := event.data["old_state"]) is None:
+        return {ENTITY_EVENT_ADD: {new_state.entity_id: new_state.as_compressed_state}}
     additions: dict[str, Any] = {}
     diff: dict[str, dict[str, Any]] = {STATE_DIFF_ADDITIONS: additions}
     new_state_context = new_state.context

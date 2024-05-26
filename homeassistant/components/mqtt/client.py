@@ -69,8 +69,7 @@ from .const import (
     DEFAULT_WS_HEADERS,
     DEFAULT_WS_PATH,
     DOMAIN,
-    MQTT_CONNECTED,
-    MQTT_DISCONNECTED,
+    MQTT_CONNECTION_STATE,
     PROTOCOL_5,
     PROTOCOL_31,
     TRANSPORT_WEBSOCKETS,
@@ -1033,7 +1032,7 @@ class MQTT:
             return
 
         self.connected = True
-        async_dispatcher_send(self.hass, MQTT_CONNECTED)
+        async_dispatcher_send(self.hass, MQTT_CONNECTION_STATE, True)
         _LOGGER.debug(
             "Connected to MQTT server %s:%s (%s)",
             self.conf[CONF_BROKER],
@@ -1229,7 +1228,7 @@ class MQTT:
         # result is set make sure the first connection result is set
         self._async_connection_result(False)
         self.connected = False
-        async_dispatcher_send(self.hass, MQTT_DISCONNECTED)
+        async_dispatcher_send(self.hass, MQTT_CONNECTION_STATE, False)
         _LOGGER.warning(
             "Disconnected from MQTT server %s:%s (%s)",
             self.conf[CONF_BROKER],

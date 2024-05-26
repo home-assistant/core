@@ -2,7 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from google.api_core.exceptions import ClientError
+from google.api_core.exceptions import ClientError, DeadlineExceeded
+from google.rpc.error_details_pb2 import ErrorInfo
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -220,29 +221,39 @@ async def test_generate_content_service_with_non_image(
         )
 
 
-async def test_config_entry_not_ready(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+@pytest.mark.parametrize(
+    ("side_effect", "state", "reauth"),
+    [
+        (
+            ClientError("some error"),
+            ConfigEntryState.SETUP_ERROR,
+            False,
+        ),
+        (
+            DeadlineExceeded("deadline exceeded"),
+            ConfigEntryState.SETUP_RETRY,
+            False,
+        ),
+        (
+            ClientError(
+                "invalid api key", error_info=ErrorInfo(reason="API_KEY_INVALID")
+            ),
+            ConfigEntryState.SETUP_ERROR,
+            True,
+        ),
+    ],
+)
+async def test_config_entry_error(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, side_effect, state, reauth
 ) -> None:
-    """Test configuration entry not ready."""
+    """Test different configuration entry errors."""
     with patch(
-        "homeassistant.components.google_generative_ai_conversation.genai.list_models",
-        side_effect=ClientError("error"),
+        "homeassistant.components.google_generative_ai_conversation.genai.get_model",
+        side_effect=side_effect,
     ):
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_config_entry_setup_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test configuration entry setup error."""
-    with patch(
-        "homeassistant.components.google_generative_ai_conversation.genai.list_models",
-        side_effect=ClientError("error", error_info="API_KEY_INVALID"),
-    ):
-        mock_config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+        assert mock_config_entry.state is state
+        mock_config_entry.async_get_active_flows(hass, {"reauth"})
+        assert any(mock_config_entry.async_get_active_flows(hass, {"reauth"})) is reauth
