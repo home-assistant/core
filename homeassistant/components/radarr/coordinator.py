@@ -24,6 +24,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+import homeassistant.util.dt as dt_util
 
 from .const import DEFAULT_MAX_RECORDS, DOMAIN, LOGGER
 
@@ -183,8 +184,11 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
 
     async def _async_get_events(self, _date: date) -> None:
         """Return events from specified date."""
+        info = await dt_util.async_get_time_zone(self.hass.config.time_zone)
+        offset = info and info.utcoffset(dt_util.now())
+        days = timedelta(days=0 if offset and offset < timedelta() else 1)
         self._events.extend(
-            _get_calendar_event(evt)
+            _get_calendar_event(days, evt)
             for evt in await self.api_client.async_get_calendar(
                 start_date=_date, end_date=_date + timedelta(days=1)
             )
@@ -192,9 +196,10 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
         )
 
 
-def _get_calendar_event(event: RadarrCalendarItem) -> RadarrEvent:
+def _get_calendar_event(offset: timedelta, event: RadarrCalendarItem) -> RadarrEvent:
     """Return a RadarrEvent from an API event."""
     _date, _type = event.releaseDateType()
+    _date += offset
     return RadarrEvent(
         summary=event.title,
         start=_date - timedelta(days=1),
