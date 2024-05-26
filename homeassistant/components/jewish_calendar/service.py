@@ -52,127 +52,37 @@ OUTPUT_SCHEMA = {
 }
 
 
-class JewishCalendarServices:
-    """Registers services for the jewish_calendar integration."""
+def async_setup_services(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    """Register the services."""
+    data = hass.data[DOMAIN][config_entry.entry_id]
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-        """Register the services."""
-        data = hass.data[DOMAIN][config_entry.entry_id]
+    location = data[CONF_LOCATION]
+    hebrew = data[CONF_LANGUAGE] == "hebrew"
+    candle_lighting_offset = data[CONF_CANDLE_LIGHT_MINUTES]
+    havdalah_offset = data[CONF_HAVDALAH_OFFSET_MINUTES]
+    diaspora = data[CONF_DIASPORA]
 
-        self._location = data["location"]
-        self._hebrew = data["language"] == "hebrew"
-        self._candle_lighting_offset = data["candle_lighting_offset"]
-        self._havdalah_offset = data["havdalah_offset"]
-        self._diaspora = data["diaspora"]
-
-        hass.services.async_register(
-            DOMAIN,
-            "get_gregorian_date",
-            self.get_gregorian_date,
-            schema=vol.Schema(
-                {
-                    vol.Optional("date"): cv.datetime,
-                    **OUTPUT_SCHEMA,
-                }
-            ),
-            supports_response=SupportsResponse.ONLY,
-        )
-        hass.services.async_register(
-            DOMAIN,
-            "get_gregorian_date_range",
-            self.get_gregorian_date_range,
-            schema=vol.Schema(
-                {
-                    vol.Optional("date"): cv.datetime,
-                    vol.Required("number_of_days"): vol.All(
-                        vol.Coerce(int), vol.Range(min=1)
-                    ),
-                    **OUTPUT_SCHEMA,
-                }
-            ),
-            supports_response=SupportsResponse.ONLY,
-        )
-        hass.services.async_register(
-            DOMAIN,
-            "get_hebrew_date",
-            self.get_hebrew_date,
-            schema=vol.Schema(
-                {
-                    vol.Optional("year"): vol.Coerce(int),
-                    vol.Required("month"): vol.All(
-                        vol.In(MONTH_INPUT_MAP.keys()), MONTH_INPUT_MAP.get
-                    ),
-                    vol.Required("day"): vol.Coerce(int),
-                    **OUTPUT_SCHEMA,
-                }
-            ),
-            supports_response=SupportsResponse.ONLY,
-        )
-        hass.services.async_register(
-            DOMAIN,
-            "get_holidays",
-            self.get_holidays,
-            schema=vol.Schema(
-                vol.Or(
-                    {
-                        vol.Optional("year"): vol.Coerce(int),
-                        vol.Optional("holidays"): vol.All(
-                            cv.ensure_list,
-                            [vol.In(HOLIDAY_INPUT_MAP.keys())],
-                            [HOLIDAY_INPUT_MAP.get],
-                        ),
-                        **OUTPUT_SCHEMA,
-                    },
-                    {
-                        vol.Optional("year"): vol.Coerce(int),
-                        vol.Optional("types"): vol.All(
-                            cv.ensure_list,
-                            [cv.enum(htables.HolidayTypes)],
-                        ),
-                        **OUTPUT_SCHEMA,
-                    },
-                )
-            ),
-            supports_response=SupportsResponse.ONLY,
-        )
-        hass.services.async_register(
-            DOMAIN,
-            "get_next_holiday",
-            self.get_next_holiday,
-            schema=vol.Schema(
-                {
-                    vol.Optional("date"): cv.datetime,
-                    vol.Optional("types"): vol.All(
-                        cv.ensure_list,
-                        [cv.enum(htables.HolidayTypes)],
-                    ),
-                    **OUTPUT_SCHEMA,
-                }
-            ),
-            supports_response=SupportsResponse.ONLY,
-        )
-
-    async def get_gregorian_date(self, call: ServiceCall) -> ServiceResponse:
+    async def get_gregorian_date(call: ServiceCall) -> ServiceResponse:
         """Service call that returns Hebrew date info for a Gregorian date."""
-        return self._build_response(
+        return build_response(
             HDate(
-                self.resolve_date_param(call),
-                diaspora=self._diaspora,
-                hebrew=self._hebrew,
+                resolve_date_param(call),
+                diaspora=diaspora,
+                hebrew=hebrew,
             ),
             call,
         )
 
-    async def get_gregorian_date_range(self, call: ServiceCall) -> ServiceResponse:
+    async def get_gregorian_date_range(call: ServiceCall) -> ServiceResponse:
         """Service call that returns Hebrew date info for a range of Gregorian dates."""
-        start = self.resolve_date_param(call)
+        start = resolve_date_param(call)
         return {
             "dates": [
-                self._build_response(
+                build_response(
                     HDate(
                         start + dt.timedelta(days=i),
-                        diaspora=self._diaspora,
-                        hebrew=self._hebrew,
+                        diaspora=diaspora,
+                        hebrew=hebrew,
                     ),
                     call,
                 )
@@ -180,7 +90,7 @@ class JewishCalendarServices:
             ]
         }
 
-    async def get_hebrew_date(self, call: ServiceCall) -> ServiceResponse:
+    async def get_hebrew_date(call: ServiceCall) -> ServiceResponse:
         """Service call that returns Hebrew date info for a Hebrew date."""
         today: HebrewDate = cast(HebrewDate, HDate(dt_util.now()).hdate)
 
@@ -190,8 +100,8 @@ class JewishCalendarServices:
                 call.data["month"],
                 call.data["day"],
             ),
-            diaspora=self._diaspora,
-            hebrew=self._hebrew,
+            diaspora=diaspora,
+            hebrew=hebrew,
         )
         # If the user passed Adar II in a non-leap year, reset to Adar.
         # The HDate implementation treats ADAR_I as ADAR and ADAR_II as
@@ -205,11 +115,11 @@ class JewishCalendarServices:
                 htables.Months.ADAR,
                 call.data["day"],
             )
-        return self._build_response(date, call)
+        return build_response(date, call)
 
-    async def get_holidays(self, call: ServiceCall) -> ServiceResponse:
+    async def get_holidays(call: ServiceCall) -> ServiceResponse:
         """Service call that returns Hebrew date info for a holiday in a given year."""
-        date = self._get_day_in_year(call)
+        date = get_day_in_year(call)
         holidays = None
         if call.data.get("holidays"):
             holidays = call.data["holidays"]
@@ -219,19 +129,19 @@ class JewishCalendarServices:
         results = date.get_holidays_for_year(types)
         return {
             "holidays": [
-                self._build_response(hdateInfo, call)
+                build_response(hdateInfo, call)
                 for holiday, hdateInfo in results
                 if not holidays or holiday in holidays
             ]
         }
 
-    async def get_next_holiday(self, call: ServiceCall) -> ServiceResponse:
+    async def get_next_holiday(call: ServiceCall) -> ServiceResponse:
         """Service call that returns Hebrew date info for a holiday in a given year."""
-        date = self.resolve_date_param(call)
+        date = resolve_date_param(call)
         hdateInfo = HDate(
             date,
-            diaspora=self._diaspora,
-            hebrew=self._hebrew,
+            diaspora=diaspora,
+            hebrew=hebrew,
         )
         types = call.data.get("types", [])
         while True:
@@ -243,13 +153,13 @@ class JewishCalendarServices:
             # If we found nothing this year, wrap around to next year.
             hdateInfo = HDate(
                 heb_date=HebrewDate(cast(HebrewDate, hdateInfo.hdate).year + 1, 1, 1),
-                diaspora=self._diaspora,
-                hebrew=self._hebrew,
+                diaspora=diaspora,
+                hebrew=hebrew,
             )
 
-        return self._build_response(results[0], call)
+        return build_response(results[0], call)
 
-    def _get_day_in_year(self, call: ServiceCall) -> HDate:
+    def get_day_in_year(call: ServiceCall) -> HDate:
         """Get the HDate in the user-specified year, defaulting to this year."""
         return HDate(
             # If the user specified a year, use that year.
@@ -257,11 +167,11 @@ class JewishCalendarServices:
             heb_date=(
                 HebrewDate(call.data["year"], 1, 1) if call.data.get("year") else None
             ),
-            diaspora=self._diaspora,
-            hebrew=self._hebrew,
+            diaspora=diaspora,
+            hebrew=hebrew,
         )
 
-    def _build_response(self, hdateInfo: HDate, call: ServiceCall) -> JsonObjectType:
+    def build_response(hdateInfo: HDate, call: ServiceCall) -> JsonObjectType:
         """Build a response for a service call."""
         hdate = cast(HebrewDate, hdateInfo.hdate)
 
@@ -315,16 +225,16 @@ class JewishCalendarServices:
         if call.data.get("include_zmanim"):
             zmanim = Zmanim(
                 hdateInfo.gdate,
-                candle_lighting_offset=self._candle_lighting_offset,
-                havdalah_offset=self._havdalah_offset,
-                location=self._location,
+                candle_lighting_offset=candle_lighting_offset,
+                havdalah_offset=havdalah_offset,
+                location=location,
             )
             result["zmanim"] = {
                 key: value.isoformat() for key, value in zmanim.zmanim.items()
             }
         return result
 
-    def resolve_date_param(self, call: ServiceCall) -> dt.date:
+    def resolve_date_param(call: ServiceCall) -> dt.date:
         """Parse a date from a service's parameters into a date object."""
         if not call.data.get("date"):
             return dt_util.now().date()
@@ -333,10 +243,97 @@ class JewishCalendarServices:
 
         zmanim = Zmanim(
             date,
-            location=self._location,
+            location=location,
         )
         if date.astimezone(date.tzinfo) > zmanim.zmanim["sunset"].astimezone(
             date.tzinfo
         ):
             return date.date() + dt.timedelta(days=1)
         return date.date()
+
+    hass.services.async_register(
+        DOMAIN,
+        "get_gregorian_date",
+        get_gregorian_date,
+        schema=vol.Schema(
+            {
+                vol.Optional("date"): cv.datetime,
+                **OUTPUT_SCHEMA,
+            }
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "get_gregorian_date_range",
+        get_gregorian_date_range,
+        schema=vol.Schema(
+            {
+                vol.Optional("date"): cv.datetime,
+                vol.Required("number_of_days"): vol.All(
+                    vol.Coerce(int), vol.Range(min=1)
+                ),
+                **OUTPUT_SCHEMA,
+            }
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "get_hebrew_date",
+        get_hebrew_date,
+        schema=vol.Schema(
+            {
+                vol.Optional("year"): vol.Coerce(int),
+                vol.Required("month"): vol.All(
+                    vol.In(MONTH_INPUT_MAP.keys()), MONTH_INPUT_MAP.get
+                ),
+                vol.Required("day"): vol.Coerce(int),
+                **OUTPUT_SCHEMA,
+            }
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "get_holidays",
+        get_holidays,
+        schema=vol.Schema(
+            vol.Or(
+                {
+                    vol.Optional("year"): vol.Coerce(int),
+                    vol.Optional("holidays"): vol.All(
+                        cv.ensure_list,
+                        [vol.In(HOLIDAY_INPUT_MAP.keys())],
+                        [HOLIDAY_INPUT_MAP.get],
+                    ),
+                    **OUTPUT_SCHEMA,
+                },
+                {
+                    vol.Optional("year"): vol.Coerce(int),
+                    vol.Optional("types"): vol.All(
+                        cv.ensure_list,
+                        [cv.enum(htables.HolidayTypes)],
+                    ),
+                    **OUTPUT_SCHEMA,
+                },
+            )
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "get_next_holiday",
+        get_next_holiday,
+        schema=vol.Schema(
+            {
+                vol.Optional("date"): cv.datetime,
+                vol.Optional("types"): vol.All(
+                    cv.ensure_list,
+                    [cv.enum(htables.HolidayTypes)],
+                ),
+                **OUTPUT_SCHEMA,
+            }
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )

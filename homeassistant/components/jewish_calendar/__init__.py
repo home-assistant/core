@@ -22,8 +22,6 @@ import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .service import JewishCalendarServices
-
 from .binary_sensor import BINARY_SENSORS
 from .const import (
     CONF_CANDLE_LIGHT_MINUTES,
@@ -37,6 +35,7 @@ from .const import (
     DOMAIN,
 )
 from .sensor import INFO_SENSORS, TIME_SENSORS
+from .service import async_setup_services
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -156,7 +155,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         async_update_unique_ids(ent_reg, config_entry.entry_id, old_prefix)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    JewishCalendarServices(hass, config_entry)
+    async_setup_services(hass, config_entry)
 
     async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
         # Trigger update of states for all platforms
