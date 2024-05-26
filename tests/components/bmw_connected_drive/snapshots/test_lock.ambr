@@ -1,0 +1,69 @@
+# serializer version: 1
+# name: test_entity_state_attrs
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
+        'car': 'iX xDrive50',
+        'door_lock_state': 'LOCKED',
+        'friendly_name': 'iX xDrive50 Lock',
+        'supported_features': <LockEntityFeature: 0>,
+        'vin': 'WBA00000000DEMO01',
+      }),
+      'context': <ANY>,
+      'entity_id': 'lock.ix_xdrive50_lock',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'locked',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
+        'car': 'i4 eDrive40',
+        'door_lock_state': 'LOCKED',
+        'friendly_name': 'i4 eDrive40 Lock',
+        'supported_features': <LockEntityFeature: 0>,
+        'vin': 'WBA00000000DEMO02',
+      }),
+      'context': <ANY>,
+      'entity_id': 'lock.i4_edrive40_lock',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'locked',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
+        'car': 'M340i xDrive',
+        'door_lock_state': 'LOCKED',
+        'friendly_name': 'M340i xDrive Lock',
+        'supported_features': <LockEntityFeature: 0>,
+        'vin': 'WBA00000000DEMO03',
+      }),
+      'context': <ANY>,
+      'entity_id': 'lock.m340i_xdrive_lock',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'locked',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
+        'car': 'i3 (+ REX)',
+        'door_lock_state': 'UNLOCKED',
+        'friendly_name': 'i3 (+ REX) Lock',
+        'supported_features': <LockEntityFeature: 0>,
+        'vin': 'WBY00000000REXI01',
+      }),
+      'context': <ANY>,
+      'entity_id': 'lock.i3_rex_lock',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unlocked',
+    }),
+  ])
+# ---
