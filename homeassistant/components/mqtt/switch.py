@@ -28,22 +28,10 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import subscription
 from .config import MQTT_RW_SCHEMA
-from .const import (
-    CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_RETAIN,
-    CONF_STATE_TOPIC,
-    PAYLOAD_NONE,
-)
-from .debug_info import log_messages
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entity_entry_helper,
-    write_state_on_attr_change,
-)
+from .const import CONF_COMMAND_TOPIC, CONF_STATE_TOPIC, PAYLOAD_NONE
+from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, ReceiveMessage
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
 DEFAULT_NAME = "MQTT Switch"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -118,42 +106,30 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
             self._config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
 
+    @callback
+    def _state_message_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT state messages."""
+        payload = self._value_template(msg.payload)
+        if payload == self._state_on:
+            self._attr_is_on = True
+        elif payload == self._state_off:
+            self._attr_is_on = False
+        elif payload == PAYLOAD_NONE:
+            self._attr_is_on = None
+
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_is_on"})
-        def state_message_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT state messages."""
-            payload = self._value_template(msg.payload)
-            if payload == self._state_on:
-                self._attr_is_on = True
-            elif payload == self._state_off:
-                self._attr_is_on = False
-            elif payload == PAYLOAD_NONE:
-                self._attr_is_on = None
-
-        if self._config.get(CONF_STATE_TOPIC) is None:
+        if not self.add_subscription(
+            CONF_STATE_TOPIC, self._state_message_received, {"_attr_is_on"}
+        ):
             # Force into optimistic mode.
             self._optimistic = True
-        else:
-            self._sub_state = subscription.async_prepare_subscribe_topics(
-                self.hass,
-                self._sub_state,
-                {
-                    CONF_STATE_TOPIC: {
-                        "topic": self._config.get(CONF_STATE_TOPIC),
-                        "msg_callback": state_message_received,
-                        "qos": self._config[CONF_QOS],
-                        "encoding": self._config[CONF_ENCODING] or None,
-                    }
-                },
-            )
+            return
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
         if self._optimistic and (last_state := await self.async_get_last_state()):
             self._attr_is_on = last_state.state == STATE_ON
@@ -163,12 +139,8 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
         This method is a coroutine.
         """
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            self._config[CONF_PAYLOAD_ON],
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_COMMAND_TOPIC], self._config[CONF_PAYLOAD_ON]
         )
         if self._optimistic:
             # Optimistically assume that switch has changed state.
@@ -180,12 +152,8 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
         This method is a coroutine.
         """
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            self._config[CONF_PAYLOAD_OFF],
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_COMMAND_TOPIC], self._config[CONF_PAYLOAD_OFF]
         )
         if self._optimistic:
             # Optimistically assume that switch has changed state.

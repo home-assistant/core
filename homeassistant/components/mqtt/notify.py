@@ -8,25 +8,16 @@ from homeassistant.components import notify
 from homeassistant.components.notify import NotifyEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
-from .const import (
-    CONF_COMMAND_TEMPLATE,
-    CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_RETAIN,
-)
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entity_entry_helper,
-)
+from .const import CONF_COMMAND_TEMPLATE, CONF_COMMAND_TOPIC, CONF_RETAIN
+from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic
 
 DEFAULT_NAME = "MQTT notify"
@@ -77,6 +68,7 @@ class MqttNotify(MqttEntity, NotifyEntity):
             config.get(CONF_COMMAND_TEMPLATE), entity=self
         ).async_render
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
@@ -86,10 +78,4 @@ class MqttNotify(MqttEntity, NotifyEntity):
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
         payload = self._command_template(message)
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)

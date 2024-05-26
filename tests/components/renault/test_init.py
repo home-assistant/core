@@ -11,6 +11,10 @@ from renault_api.gigya.exceptions import GigyaException, InvalidCredentialsExcep
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
+
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -108,3 +112,48 @@ async def test_setup_entry_missing_vehicle_details(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_registry_cleanup(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test being able to remove a disconnected device."""
+    assert await async_setup_component(hass, "config", {})
+    entry_id = config_entry.entry_id
+    device_registry = dr.async_get(hass)
+    live_id = "VF1AAAAA555777999"
+    dead_id = "VF1AAAAA555777888"
+
+    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 0
+    device_registry.async_get_or_create(
+        config_entry_id=entry_id,
+        identifiers={(DOMAIN, dead_id)},
+        manufacturer="Renault",
+        model="Zoe",
+        name="REGISTRATION-NUMBER",
+        sw_version="X101VE",
+    )
+    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 1
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
+
+    # Try to remove "VF1AAAAA555777999" - fails as it is live
+    device = device_registry.async_get_device(identifiers={(DOMAIN, live_id)})
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device.id, entry_id)
+    assert not response["success"]
+    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
+    assert device_registry.async_get_device(identifiers={(DOMAIN, live_id)}) is not None
+
+    # Try to remove "VF1AAAAA555777888" - succeeds as it is dead
+    device = device_registry.async_get_device(identifiers={(DOMAIN, dead_id)})
+    response = await client.remove_device(device.id, entry_id)
+    assert response["success"]
+    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 1
+    assert device_registry.async_get_device(identifiers={(DOMAIN, dead_id)}) is None

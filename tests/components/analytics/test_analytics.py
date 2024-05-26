@@ -246,7 +246,7 @@ async def test_send_usage(
 
     assert analytics.preferences[ATTR_BASE]
     assert analytics.preferences[ATTR_USAGE]
-    hass.config.components = ["default_config"]
+    hass.config.components.add("default_config")
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
@@ -280,7 +280,7 @@ async def test_send_usage_with_supervisor(
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
     assert analytics.preferences[ATTR_BASE]
     assert analytics.preferences[ATTR_USAGE]
-    hass.config.components = ["default_config"]
+    hass.config.components.add("default_config")
 
     with (
         patch(
@@ -344,7 +344,7 @@ async def test_send_statistics(
     await analytics.save_preferences({ATTR_BASE: True, ATTR_STATISTICS: True})
     assert analytics.preferences[ATTR_BASE]
     assert analytics.preferences[ATTR_STATISTICS]
-    hass.config.components = ["default_config"]
+    hass.config.components.add("default_config")
 
     with patch(
         "homeassistant.config.load_yaml_config_file",

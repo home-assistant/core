@@ -9,11 +9,12 @@ from typing import TYPE_CHECKING, cast
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Event
+from homeassistant.util.collection import chunked
 from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS
 
 from ..db_schema import EventData
 from ..queries import get_shared_event_datas
-from ..util import chunked, execute_stmt_lambda_element
+from ..util import execute_stmt_lambda_element
 from . import BaseLRUTableManager
 
 if TYPE_CHECKING:

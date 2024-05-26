@@ -14,11 +14,11 @@ from .entity import AuroraEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AuroraConfigEntry,
-    async_add_entries: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
 
-    async_add_entries(
+    async_add_entities(
         [
             AuroraSensor(
                 coordinator=entry.runtime_data,

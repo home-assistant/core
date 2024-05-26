@@ -6,7 +6,7 @@ from collections.abc import Callable
 from contextlib import suppress
 import logging
 import string
-from typing import Any, TypeVar, cast
+from typing import Any, cast
 
 from aiohttp import web
 import prometheus_client
@@ -62,7 +62,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import as_timestamp
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-_MetricBaseT = TypeVar("_MetricBaseT", bound=MetricWrapperBase)
 _LOGGER = logging.getLogger(__name__)
 
 API_ENDPOINT = "/api/prometheus"
@@ -303,7 +302,7 @@ class PrometheusMetrics:
             labels.extend(extra_labels)
         return list(labels)
 
-    def _metric(
+    def _metric[_MetricBaseT: MetricWrapperBase](
         self,
         metric: str,
         factory: type[_MetricBaseT],

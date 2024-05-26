@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from synology_dsm.api.surveillance_station.camera import SynoCamera
 from synology_dsm.exceptions import (
@@ -28,19 +28,14 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-_DataT = TypeVar("_DataT")
 
 
-_T = TypeVar("_T", bound="SynologyDSMUpdateCoordinator")
-_P = ParamSpec("_P")
-
-
-def async_re_login_on_expired(
-    func: Callable[Concatenate[_T, _P], Awaitable[_DataT]],
-) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, _DataT]]:
+def async_re_login_on_expired[_T: SynologyDSMUpdateCoordinator[Any], **_P, _R](
+    func: Callable[Concatenate[_T, _P], Awaitable[_R]],
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R]]:
     """Define a wrapper to re-login when expired."""
 
-    async def _async_wrap(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> _DataT:
+    async def _async_wrap(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         for attempts in range(2):
             try:
                 return await func(self, *args, **kwargs)
@@ -61,7 +56,7 @@ def async_re_login_on_expired(
     return _async_wrap
 
 
-class SynologyDSMUpdateCoordinator(DataUpdateCoordinator[_DataT]):
+class SynologyDSMUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """DataUpdateCoordinator base class for synology_dsm."""
 
     def __init__(

@@ -5,8 +5,8 @@
       "Opening_P": "100"
     },
     "Light": {
-      "On_B": "true",
-      "On_P": "100"
+      "On_B": "false",
+      "On_P": "0"
     }
   },
   "test2": {
@@ -15,8 +15,8 @@
       "Opening_P": "0"
     },
     "Light": {
-      "On_B": "false",
-      "On_P": "0"
+      "On_B": "true",
+      "On_P": "100"
     }
   },
   "test3": {
