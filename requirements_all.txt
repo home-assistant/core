@@ -1646,7 +1646,7 @@ py-nightscout==1.2.2
 py-schluter==0.1.7
 
 # homeassistant.components.ecovacs
-py-sucks==0.9.9
+py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
 py-synologydsm-api==2.4.2
