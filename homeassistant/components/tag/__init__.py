@@ -11,16 +11,21 @@ import voluptuous as vol
 from homeassistant.const import CONF_NAME
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import collection
+from homeassistant.helpers import collection, entity_registry as er
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DEFAULT_NAME, DEVICE_ID, DOMAIN, EVENT_TAG_SCANNED, TAG_ID
+from .const import DEFAULT_NAME, DEVICE_ID, DOMAIN, EVENT_TAG_SCANNED, LOGGER, TAG_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +36,7 @@ STORAGE_VERSION = 1
 
 TAG_DATA: HassKey[TagStorageCollection] = HassKey(DOMAIN)
 TAGS_ENTITIES = "tags_entities"
+SIGNAL_TAG_CHANGED = "signal_tag_changed"
 
 CREATE_FIELDS = {
     vol.Optional(TAG_ID): cv.string,
@@ -102,6 +108,8 @@ class TagStorageCollection(collection.DictStorageCollection):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Tag component."""
+    component = EntityComponent[TagEntity](LOGGER, DOMAIN, hass)
+    hass.data[DOMAIN] = {}
     id_manager = TagIDManager()
     hass.data[TAG_DATA] = storage_collection = TagStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
@@ -112,7 +120,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
-    entities: dict[str, TagEntity] = {}
+    entities: list[TagEntity] = []
 
     async def tag_change_listener(
         change_type: str, item_id: str, updated_config: dict
@@ -125,45 +133,52 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         if change_type == collection.CHANGE_ADDED:
             # When tags are added to storage
-            entities[updated_config[TAG_ID]] = TagEntity(
-                hass,
-                updated_config.get(CONF_NAME, DEFAULT_NAME),
-                updated_config[TAG_ID],
-                updated_config.get(LAST_SCANNED),
-                updated_config.get(DEVICE_ID),
+            await component.async_add_entities(
+                [
+                    TagEntity(
+                        hass,
+                        updated_config.get(CONF_NAME, DEFAULT_NAME),
+                        updated_config[TAG_ID],
+                        updated_config.get(LAST_SCANNED),
+                        updated_config.get(DEVICE_ID),
+                    )
+                ]
             )
-            await entities[updated_config[TAG_ID]].async_add_initial_state()
 
         if change_type == collection.CHANGE_UPDATED:
             # When tags are changed or updated in storage
-            if entities[updated_config[TAG_ID]]._last_scanned != updated_config.get(  # noqa: SLF001
-                LAST_SCANNED
-            ):
-                entities[updated_config[TAG_ID]].async_handle_event(
-                    updated_config.get(DEVICE_ID),
-                    updated_config.get(LAST_SCANNED),
-                )
+            async_dispatcher_send(
+                hass,
+                SIGNAL_TAG_CHANGED,
+                updated_config.get(DEVICE_ID),
+                updated_config.get(LAST_SCANNED),
+            )
 
         # Deleted tags
         if change_type == collection.CHANGE_REMOVED:
             # When tags is removed from storage
-            await entities[updated_config[TAG_ID]].async_remove()
-            entity_id = entities[updated_config[TAG_ID]].entity_id
-            hass.states.async_remove(entity_id)
-            entities.pop(updated_config[TAG_ID])
+            entity_reg = er.async_get(hass)
+            entity_id = entity_reg.async_get_entity_id(
+                DOMAIN, DOMAIN, updated_config[TAG_ID]
+            )
+            if entity_id:
+                entity_reg.async_remove(entity_id)
 
     storage_collection.async_add_listener(tag_change_listener)
 
     for tag in storage_collection.async_items():
         _LOGGER.debug("Adding tag: %s", tag)
-        entities[tag[TAG_ID]] = TagEntity(
-            hass,
-            tag.get(CONF_NAME, DEFAULT_NAME),
-            tag[TAG_ID],
-            tag.get(LAST_SCANNED),
-            tag.get(DEVICE_ID),
+        entities.append(
+            TagEntity(
+                hass,
+                tag.get(CONF_NAME, DEFAULT_NAME),
+                tag[TAG_ID],
+                tag.get(LAST_SCANNED),
+                tag.get(DEVICE_ID),
+            )
         )
-        await entities[tag[TAG_ID]].async_add_initial_state()
+
+    await component.async_add_entities(entities)
 
     return True
 
@@ -228,6 +243,7 @@ class TagEntity(Entity):
         self.hass = hass
         self._attr_name = name
         self._tag_id = tag_id
+        self._attr_unique_id = tag_id
         self._last_device_id: str | None = device_id
         self._last_scanned = last_scanned
 
@@ -268,6 +284,13 @@ class TagEntity(Entity):
         """Return the state attributes of the sun."""
         return {TAG_ID: self._tag_id, LAST_SCANNED_BY_DEVICE_ID: self._last_device_id}
 
-    async def async_add_initial_state(self) -> None:
-        """Add initial state."""
-        self.async_write_ha_state()
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_TAG_CHANGED,
+                self.async_handle_event,
+            )
+        )

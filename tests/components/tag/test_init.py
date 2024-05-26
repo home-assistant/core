@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components.tag import DOMAIN, async_scan_tag
 from homeassistant.const import CONF_NAME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import collection
+from homeassistant.helpers import collection, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -186,6 +186,7 @@ async def test_entity_created_and_removed(
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
     storage_setup,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test tag entity created and removed."""
     caplog.at_level(logging.DEBUG)
@@ -211,6 +212,8 @@ async def test_entity_created_and_removed(
     entity = hass.states.get("tag.kitchen_tag")
     assert entity
     assert entity.state == STATE_UNKNOWN
+    entity_id = entity.entity_id
+    assert entity_registry.async_get(entity_id)
 
     now = dt_util.utcnow()
     freezer.move_to(now)
@@ -232,3 +235,4 @@ async def test_entity_created_and_removed(
 
     entity = hass.states.get("tag.kitchen_tag")
     assert not entity
+    assert not entity_registry.async_get(entity_id)
