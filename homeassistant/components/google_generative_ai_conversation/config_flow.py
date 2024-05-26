@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from functools import partial
 import logging
 from types import MappingProxyType
 from typing import Any
 
-from google.api_core.exceptions import ClientError
+from google.api_core.exceptions import ClientError, GoogleAPICallError
 import google.generativeai as genai
 import voluptuous as vol
 
@@ -17,7 +18,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
@@ -54,7 +55,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_API_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
     }
@@ -73,7 +74,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     genai.configure(api_key=data[CONF_API_KEY])
-    await hass.async_add_executor_job(partial(genai.list_models))
+
+    def get_first_model():
+        return next(genai.list_models(request_options={"timeout": 5.0}), None)
+
+    await hass.async_add_executor_job(partial(get_first_model))
 
 
 class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -81,36 +86,74 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize a new GoogleGenerativeAIConfigFlow."""
+        self.reauth_entry: ConfigEntry | None = None
+
+    async def async_step_api(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                await validate_input(self.hass, user_input)
+            except GoogleAPICallError as err:
+                if isinstance(err, ClientError) and err.reason == "API_KEY_INVALID":
+                    errors["base"] = "invalid_auth"
+                else:
+                    errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                if self.reauth_entry:
+                    return self.async_update_reload_and_abort(
+                        self.reauth_entry,
+                        data=user_input,
+                    )
+                return self.async_create_entry(
+                    title="Google Generative AI",
+                    data=user_input,
+                    options=RECOMMENDED_OPTIONS,
+                )
+        return self.async_show_form(
+            step_id="api",
+            data_schema=STEP_API_DATA_SCHEMA,
+            description_placeholders={
+                "api_key_url": "https://aistudio.google.com/app/apikey"
+            },
+            errors=errors,
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
+        return await self.async_step_api()
 
-        errors = {}
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle configuration by re-auth."""
+        self.reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_confirm()
 
-        try:
-            await validate_input(self.hass, user_input)
-        except ClientError as err:
-            if err.reason == "API_KEY_INVALID":
-                errors["base"] = "invalid_auth"
-            else:
-                errors["base"] = "cannot_connect"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            return self.async_create_entry(
-                title="Google Generative AI",
-                data=user_input,
-                options=RECOMMENDED_OPTIONS,
-            )
-
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is not None:
+            return await self.async_step_api()
+        assert self.reauth_entry
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="reauth_confirm",
+            description_placeholders={
+                CONF_NAME: self.reauth_entry.title,
+                CONF_API_KEY: self.reauth_entry.data.get(CONF_API_KEY, ""),
+            },
         )
 
     @staticmethod
