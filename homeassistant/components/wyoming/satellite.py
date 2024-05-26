@@ -23,6 +23,7 @@ from wyoming.wake import Detect, Detection
 
 from homeassistant.components import assist_pipeline, intent, stt, tts
 from homeassistant.components.assist_pipeline import select as pipeline_select
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
 
 from .const import DOMAIN
@@ -51,10 +52,15 @@ class WyomingSatellite:
     """Remove voice satellite running the Wyoming protocol."""
 
     def __init__(
-        self, hass: HomeAssistant, service: WyomingService, device: SatelliteDevice
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        service: WyomingService,
+        device: SatelliteDevice,
     ) -> None:
         """Initialize satellite."""
         self.hass = hass
+        self.config_entry = config_entry
         self.service = service
         self.device = device
         self.is_running = True
@@ -150,7 +156,8 @@ class WyomingSatellite:
     def _send_pause(self) -> None:
         """Send a pause message to satellite."""
         if self._client is not None:
-            self.hass.async_create_background_task(
+            self.config_entry.async_create_background_task(
+                self.hass,
                 self._client.write_event(PauseSatellite().event()),
                 "pause satellite",
             )
@@ -215,11 +222,11 @@ class WyomingSatellite:
         send_ping = True
 
         # Read events and check for pipeline end in parallel
-        pipeline_ended_task = self.hass.async_create_background_task(
-            self._pipeline_ended_event.wait(), "satellite pipeline ended"
+        pipeline_ended_task = self.config_entry.async_create_background_task(
+            self.hass, self._pipeline_ended_event.wait(), "satellite pipeline ended"
         )
-        client_event_task = self.hass.async_create_background_task(
-            self._client.read_event(), "satellite event read"
+        client_event_task = self.config_entry.async_create_background_task(
+            self.hass, self._client.read_event(), "satellite event read"
         )
         pending = {pipeline_ended_task, client_event_task}
 
@@ -230,8 +237,8 @@ class WyomingSatellite:
             if send_ping:
                 # Ensure satellite is still connected
                 send_ping = False
-                self.hass.async_create_background_task(
-                    self._send_delayed_ping(), "ping satellite"
+                self.config_entry.async_create_background_task(
+                    self.hass, self._send_delayed_ping(), "ping satellite"
                 )
 
             async with asyncio.timeout(_PING_TIMEOUT):
@@ -242,8 +249,12 @@ class WyomingSatellite:
                     # Pipeline run end event was received
                     _LOGGER.debug("Pipeline finished")
                     self._pipeline_ended_event.clear()
-                    pipeline_ended_task = self.hass.async_create_background_task(
-                        self._pipeline_ended_event.wait(), "satellite pipeline ended"
+                    pipeline_ended_task = (
+                        self.config_entry.async_create_background_task(
+                            self.hass,
+                            self._pipeline_ended_event.wait(),
+                            "satellite pipeline ended",
+                        )
                     )
                     pending.add(pipeline_ended_task)
 
@@ -315,8 +326,8 @@ class WyomingSatellite:
                     _LOGGER.debug("Unexpected event from satellite: %s", client_event)
 
                 # Next event
-                client_event_task = self.hass.async_create_background_task(
-                    self._client.read_event(), "satellite event read"
+                client_event_task = self.config_entry.async_create_background_task(
+                    self.hass, self._client.read_event(), "satellite event read"
                 )
                 pending.add(client_event_task)
 
@@ -356,7 +367,8 @@ class WyomingSatellite:
         )
         self._is_pipeline_running = True
         self._pipeline_ended_event.clear()
-        self.hass.async_create_background_task(
+        self.config_entry.async_create_background_task(
+            self.hass,
             assist_pipeline.async_pipeline_from_audio_stream(
                 self.hass,
                 context=Context(),
@@ -584,6 +596,6 @@ class WyomingSatellite:
 
         if event is not None:
             # Send timer event to satellite
-            self.hass.async_create_background_task(
-                self._client.write_event(event), "timer event"
+            self.config_entry.async_create_background_task(
+                self.hass, self._client.write_event(event), "wyoming timer event"
             )
