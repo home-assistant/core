@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from . import DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 
 
 @dataclass(frozen=True)
