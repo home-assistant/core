@@ -14,7 +14,7 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from .const import ATTR_DISCOVERY_PAYLOAD, ATTR_DISCOVERY_TOPIC
-from .models import DATA_MQTT, MessageCallbackType, PublishPayloadType
+from .models import DATA_MQTT, PublishPayloadType
 
 STORED_MESSAGES = 10
 
@@ -53,41 +53,33 @@ def log_message(
 
 
 def add_subscription(
-    hass: HomeAssistant,
-    message_callback: MessageCallbackType,
-    subscription: str,
-    entity_id: str | None = None,
+    hass: HomeAssistant, subscription: str, entity_id: str | None
 ) -> None:
     """Prepare debug data for subscription."""
-    if not entity_id:
-        entity_id = getattr(message_callback, "__entity_id", None)
     if entity_id:
         entity_info = hass.data[DATA_MQTT].debug_info_entities.setdefault(
             entity_id, {"subscriptions": {}, "discovery_data": {}, "transmitted": {}}
         )
         if subscription not in entity_info["subscriptions"]:
             entity_info["subscriptions"][subscription] = {
-                "count": 0,
+                "count": 1,
                 "messages": deque([], STORED_MESSAGES),
             }
-        entity_info["subscriptions"][subscription]["count"] += 1
+        else:
+            entity_info["subscriptions"][subscription]["count"] += 1
 
 
 def remove_subscription(
-    hass: HomeAssistant,
-    message_callback: MessageCallbackType,
-    subscription: str,
-    entity_id: str | None = None,
+    hass: HomeAssistant, subscription: str, entity_id: str | None
 ) -> None:
     """Remove debug data for subscription if it exists."""
-    if not entity_id:
-        entity_id = getattr(message_callback, "__entity_id", None)
     if entity_id and entity_id in (
         debug_info_entities := hass.data[DATA_MQTT].debug_info_entities
     ):
-        debug_info_entities[entity_id]["subscriptions"][subscription]["count"] -= 1
-        if not debug_info_entities[entity_id]["subscriptions"][subscription]["count"]:
-            debug_info_entities[entity_id]["subscriptions"].pop(subscription)
+        subscriptions = debug_info_entities[entity_id]["subscriptions"]
+        subscriptions[subscription]["count"] -= 1
+        if not subscriptions[subscription]["count"]:
+            subscriptions.pop(subscription)
 
 
 def add_entity_discovery_data(

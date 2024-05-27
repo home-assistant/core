@@ -1,10 +1,11 @@
 """Configure tests for the Twitch integration."""
 
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Generator
 import time
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from twitchAPI.object.api import FollowedChannel, Stream, TwitchUser, UserSubscription
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -14,11 +15,10 @@ from homeassistant.components.twitch.const import DOMAIN, OAUTH2_TOKEN, OAUTH_SC
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-from tests.components.twitch import TwitchMock
-from tests.test_util.aiohttp import AiohttpClientMocker
+from . import TwitchIterObject, get_generator
 
-type ComponentSetup = Callable[[TwitchMock | None], Awaitable[None]]
+from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -92,23 +92,32 @@ def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
     )
 
 
-@pytest.fixture(name="twitch_mock")
-def twitch_mock() -> TwitchMock:
+@pytest.fixture
+def twitch_mock() -> Generator[AsyncMock, None, None]:
     """Return as fixture to inject other mocks."""
-    return TwitchMock()
-
-
-@pytest.fixture(name="twitch")
-def mock_twitch(twitch_mock: TwitchMock):
-    """Mock Twitch."""
     with (
         patch(
             "homeassistant.components.twitch.Twitch",
-            return_value=twitch_mock,
-        ),
+            autospec=True,
+        ) as mock_client,
         patch(
             "homeassistant.components.twitch.config_flow.Twitch",
-            return_value=twitch_mock,
+            new=mock_client,
         ),
     ):
-        yield twitch_mock
+        mock_client.return_value.get_users = lambda *args, **kwargs: get_generator(
+            "get_users.json", TwitchUser
+        )
+        mock_client.return_value.get_followed_channels.return_value = TwitchIterObject(
+            "get_followed_channels.json", FollowedChannel
+        )
+        mock_client.return_value.get_streams.return_value = get_generator(
+            "get_streams.json", Stream
+        )
+        mock_client.return_value.check_user_subscription.return_value = (
+            UserSubscription(
+                **load_json_object_fixture("check_user_subscription.json", DOMAIN)
+            )
+        )
+        mock_client.return_value.has_required_auth.return_value = True
+        yield mock_client
