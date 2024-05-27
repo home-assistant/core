@@ -3,7 +3,7 @@
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.tag import DOMAIN, TAGS, async_scan_tag
+from homeassistant.components.tag import DOMAIN, async_scan_tag
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import collection
 from homeassistant.setup import async_setup_component
@@ -13,7 +13,7 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-def storage_setup(hass, hass_storage):
+def storage_setup(hass: HomeAssistant, hass_storage):
     """Storage setup."""
 
     async def _storage(items=None):
@@ -128,7 +128,7 @@ async def test_tag_id_exists(
 ) -> None:
     """Test scanning tags."""
     assert await storage_setup()
-    changes = track_changes(hass.data[DOMAIN][TAGS])
+    changes = track_changes(hass.data[DOMAIN])
     client = await hass_ws_client(hass)
 
     await client.send_json({"id": 2, "type": f"{DOMAIN}/create", "tag_id": "test tag"})
