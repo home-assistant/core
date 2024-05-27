@@ -8,7 +8,7 @@ from homeassistant.components import button
 from homeassistant.components.button import DEVICE_CLASSES_SCHEMA, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -44,7 +44,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT button through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttButton,
@@ -73,6 +73,7 @@ class MqttButton(MqttEntity, ButtonEntity):
         ).async_render
         self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
