@@ -318,8 +318,6 @@ class HassJob[**_P, _R_co]:
     we run the job.
     """
 
-    _job_type: HassJobType | None = None
-
     def __init__(
         self,
         target: Callable[_P, _R_co],
@@ -340,7 +338,7 @@ class HassJob[**_P, _R_co]:
     @cached_property
     def job_type(self) -> HassJobType:
         """Return the job type."""
-        return self._job_type or get_hassjob_callable_job_type(self.target)
+        return get_hassjob_callable_job_type(self.target)
 
     @property
     def cancel_on_shutdown(self) -> bool | None:
