@@ -88,6 +88,10 @@ async def test_fan_base(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state.attributes["preset_mode"] == "natural_wind"
+    set_node_attribute(air_purifier, 1, 514, 10, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.attributes["preset_mode"] == "sleep_wind"
 
 
 async def test_fan_turn_on_with_percentage(
@@ -131,13 +135,14 @@ async def test_fan_turn_on_with_preset_mode(
         value=2,
     )
     # test again with wind feature as preset mode
+    matter_client.write_attribute.reset_mock()
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "natural_wind"},
         blocking=True,
     )
-    assert matter_client.write_attribute.call_count == 2
+    assert matter_client.write_attribute.call_count == 1
     assert matter_client.write_attribute.call_args == call(
         node_id=air_purifier.node_id,
         attribute_path="1/514/10",
@@ -145,17 +150,39 @@ async def test_fan_turn_on_with_preset_mode(
     )
     # test again where preset_mode is omitted in the service call
     # which should select a default preset mode
+    matter_client.write_attribute.reset_mock()
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert matter_client.write_attribute.call_count == 3
+    assert matter_client.write_attribute.call_count == 1
     assert matter_client.write_attribute.call_args == call(
         node_id=air_purifier.node_id,
         attribute_path="1/514/0",
         value=5,
+    )
+    # test again if wind mode is explicitly turned off when we set a new preset mode
+    matter_client.write_attribute.reset_mock()
+    set_node_attribute(air_purifier, 1, 514, 10, 2)
+    await trigger_subscription_callback(hass, matter_client)
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "medium"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 2
+    assert matter_client.write_attribute.call_args_list[0] == call(
+        node_id=air_purifier.node_id,
+        attribute_path="1/514/10",
+        value=0,
+    )
+    assert matter_client.write_attribute.call_args == call(
+        node_id=air_purifier.node_id,
+        attribute_path="1/514/0",
+        value=2,
     )
 
 
