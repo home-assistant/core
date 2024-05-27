@@ -13,7 +13,7 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = getLogger(__name__)
 
-Status = dict[str, Any] | None
+type Status = dict[str, Any] | None
 
 
 class SwitchBotCoordinator(DataUpdateCoordinator[Status]):

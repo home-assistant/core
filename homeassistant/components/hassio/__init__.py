@@ -27,10 +27,9 @@ from homeassistant.core import (
     HassJob,
     HomeAssistant,
     ServiceCall,
-    async_get_hass,
+    async_get_hass_or_none,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -80,7 +79,7 @@ from .const import (
     DOMAIN,
     HASSIO_UPDATE_INTERVAL,
 )
-from .data import (
+from .coordinator import (
     HassioDataUpdateCoordinator,
     get_addons_changelogs,  # noqa: F401
     get_addons_info,
@@ -160,10 +159,7 @@ VALID_ADDON_SLUG = vol.Match(re.compile(r"^[-_.A-Za-z0-9]+$"))
 def valid_addon(value: Any) -> str:
     """Validate value is a valid addon slug."""
     value = VALID_ADDON_SLUG(value)
-
-    hass: HomeAssistant | None = None
-    with suppress(HomeAssistantError):
-        hass = async_get_hass()
+    hass = async_get_hass_or_none()
 
     if hass and (addons := get_addons_info(hass)) is not None and value not in addons:
         raise vol.Invalid("Not a valid add-on slug")

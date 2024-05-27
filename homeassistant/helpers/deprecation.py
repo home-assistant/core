@@ -3,19 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from contextlib import suppress
 from enum import Enum
 import functools
 import inspect
 import logging
-from typing import Any, NamedTuple, ParamSpec, TypeVar
-
-_ObjectT = TypeVar("_ObjectT", bound=object)
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
+from typing import Any, NamedTuple
 
 
-def deprecated_substitute(
+def deprecated_substitute[_ObjectT: object](
     substitute_name: str,
 ) -> Callable[[Callable[[_ObjectT], Any]], Callable[[_ObjectT], Any]]:
     """Help migrate properties to new names.
@@ -92,7 +87,7 @@ def get_deprecated(
     return config.get(new_name, default)
 
 
-def deprecated_class(
+def deprecated_class[**_P, _R](
     replacement: str, *, breaks_in_ha_version: str | None = None
 ) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
     """Mark class as deprecated and provide a replacement class to be used instead.
@@ -117,7 +112,7 @@ def deprecated_class(
     return deprecated_decorator
 
 
-def deprecated_function(
+def deprecated_function[**_P, _R](
     replacement: str, *, breaks_in_ha_version: str | None = None
 ) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
     """Mark function as deprecated and provide a replacement to be used instead.
@@ -171,8 +166,7 @@ def _print_deprecation_warning_internal(
     log_when_no_integration_is_found: bool,
 ) -> None:
     # pylint: disable=import-outside-toplevel
-    from homeassistant.core import HomeAssistant, async_get_hass
-    from homeassistant.exceptions import HomeAssistantError
+    from homeassistant.core import async_get_hass_or_none
     from homeassistant.loader import async_suggest_report_issue
 
     from .frame import MissingIntegrationFrame, get_integration_frame
@@ -195,11 +189,8 @@ def _print_deprecation_warning_internal(
             )
     else:
         if integration_frame.custom_integration:
-            hass: HomeAssistant | None = None
-            with suppress(HomeAssistantError):
-                hass = async_get_hass()
             report_issue = async_suggest_report_issue(
-                hass,
+                async_get_hass_or_none(),
                 integration_domain=integration_frame.integration,
                 module=integration_frame.module,
             )

@@ -42,9 +42,9 @@ def platforms() -> list[Platform]:
 
 
 @pytest.fixture(autouse=True)
-def set_time_zone(hass: HomeAssistant):
+async def set_time_zone(hass: HomeAssistant):
     """Set the time zone for the tests."""
-    hass.config.set_time_zone(TZ_NAME)
+    await hass.config.async_set_time_zone(TZ_NAME)
 
 
 def get_events_url(entity: str, start: str, end: str) -> str:
