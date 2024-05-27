@@ -2,12 +2,14 @@
 
 from functools import partial
 
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.components.media_player.const import MediaClass, MediaType
 from homeassistant.components.sonos.media_browser import (
     build_item_response,
+    fix_image_url,
     get_thumbnail_url_full,
 )
 from homeassistant.core import HomeAssistant
@@ -177,3 +179,33 @@ async def test_browse_media_library_albums(
     assert response["success"]
     assert response["result"]["children"] == snapshot
     assert soco_mock.music_library.browse_by_idstring.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("album_art_uri", "expected_result"),
+    [
+        (
+            "http://192.168.42.2:1400/getaa?u=x-file-cifs%3a%2f%2f192.168.42.100%2fmusic%2fCarpenters%2f_Avenue%2520Q_'s%2520Playlist%2f01%2520Rainy%2520Days%2520and%2520Mondays.m4a&v=56",
+            "http://192.168.42.2:1400/getaa?u=x-file-cifs://192.168.42.100/music/Carpenters/_Avenue%20Q_%27s%20Playlist/01%20Rainy%20Days%20and%20Mondays.m4a&v=56",
+        ),
+        (
+            "http://192.168.42.2:1400/getaa?u=x-file-cifs%3a%2f%2f192.168.42.100%2fmusic%2fOasis%2f(What's%2520the%2520Story)%2520Morning%2520Glory_%2f03%2520Wonderwall.m4a&v=56",
+            "http://192.168.42.2:1400/getaa?u=x-file-cifs://192.168.42.100/music/Oasis/%28What%27s%20the%20Story%29%20Morning%20Glory_/03%20Wonderwall.m4a&v=56",
+        ),
+        (
+            "http://192.168.42.2:1400/getaa?u=x-file-cifs%3a%2f%2f192.168.42.100%2fmusic%2fThe%2520Grateful%2520Dead%2fShakedown%2520Street%2520%2b%2520Bonus%2520Material%2f01%2520Good%2520Lovin'.m4a&v=56",
+            "http://192.168.42.2:1400/getaa?u=x-file-cifs://192.168.42.100/music/The%20Grateful%20Dead/Shakedown%20Street%20%2B%20Bonus%20Material/01%20Good%20Lovin%27.m4a&v=56",
+        ),
+        (
+            "http://192.168.42.2:1400/getaa?u=x-file-cifs%3a%2f%2f192.168.42.100%2fmusic%2fiTunes%2520Music%2fSantana%2fAbraxas%2f01%2520Singing%2520Winds,%2520Crying%2520Beasts.m4a&v=56",
+            "http://192.168.42.2:1400/getaa?u=x-file-cifs://192.168.42.100/music/iTunes%20Music/Santana/Abraxas/01%20Singing%20Winds%2C%20Crying%20Beasts.m4a&v=56",
+        ),
+        (
+            "http://192.168.42.2:1400/getaa?u=x-file-cifs%3a%2f%2f192.168.42.100%2fmusic%2fCarlos%2520Santana%2520%2526%2520Buddy%2520Miles%2fCarlos%2520Santana%2520%2526%2520Buddy%2520Miles!%2520Live!%2f01%2520Marbles%2520(Live).m4a&v=56",
+            "http://192.168.42.2:1400/getaa?u=x-file-cifs://192.168.42.100/music/Carlos%20Santana%20%26%20Buddy%20Miles/Carlos%20Santana%20%26%20Buddy%20Miles%21%20Live%21/01%20Marbles%20%28Live%29.m4a&v=56",
+        ),
+    ],
+)
+def test_fix_sonos_image_url(album_art_uri: str, expected_result: str) -> None:
+    """Tests processing the image URL targeting specific characters that need encoding."""
+    assert fix_image_url(album_art_uri) == expected_result

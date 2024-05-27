@@ -82,7 +82,7 @@
       'media_class': 'album',
       'media_content_id': "A:ALBUM/A%20Hard%20Day's%20Night",
       'media_content_type': 'album',
-      'thumbnail': "http://192.168.42.2:1400/getaa?u=x-file-cifs://192.168.42.100/music/The%20Beatles/A%20Hard%20Day's%20Night/01%20A%20Hard%20Day's%20Night%201.m4a&v=53",
+      'thumbnail': 'http://192.168.42.2:1400/getaa?u=x-file-cifs://192.168.42.100/music/The%20Beatles/A%20Hard%20Day%27s%20Night/01%20A%20Hard%20Day%27s%20Night%201.m4a&v=53',
       'title': "A Hard Day's Night",
     }),
     dict({
