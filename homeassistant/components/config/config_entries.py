@@ -660,12 +660,14 @@ async def config_subentry_list(
     if entry is None:
         return
 
-    result = {
-        "subentries": {
-            subentry_id: {"title": subentry.title}
-            for subentry_id, subentry in entry.subentries.items()
+    result = [
+        {
+            "subentry_id": subentry.subentry_id,
+            "title": subentry.title,
+            "unique_id": subentry.unique_id,
         }
-    }
+        for subentry_id, subentry in entry.subentries.items()
+    ]
     connection.send_result(msg["id"], result)
 
 
