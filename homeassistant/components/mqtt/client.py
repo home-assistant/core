@@ -111,6 +111,8 @@ RECONNECT_INTERVAL_SECONDS = 10
 MAX_SUBSCRIBES_PER_CALL = 500
 MAX_UNSUBSCRIBES_PER_CALL = 500
 
+MAX_PACKETS_TO_READ = 500
+
 type SocketType = socket.socket | ssl.SSLSocket | mqtt.WebsocketWrapper | Any
 
 type SubscribePayloadType = str | bytes  # Only bytes if encoding is None
@@ -567,7 +569,7 @@ class MQTT:
     @callback
     def _async_reader_callback(self, client: mqtt.Client) -> None:
         """Handle reading data from the socket."""
-        if (status := client.loop_read()) != 0:
+        if (status := client.loop_read(MAX_PACKETS_TO_READ)) != 0:
             self._async_on_disconnect(status)
 
     @callback
