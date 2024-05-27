@@ -29,7 +29,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.network import is_link_local
 
 from . import AxisConfigEntry
@@ -86,7 +86,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
 
             else:
                 serial = api.vapix.serial_number
-                await self.async_set_unique_id(dr.format_mac(serial))
+                await self.async_set_unique_id(format_mac(serial))
 
                 self._abort_if_unique_id_configured(
                     updates={
@@ -188,7 +188,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
         return await self._process_discovered_device(
             {
                 CONF_HOST: discovery_info.ip,
-                CONF_MAC: dr.format_mac(discovery_info.macaddress),
+                CONF_MAC: format_mac(discovery_info.macaddress),
                 CONF_NAME: discovery_info.hostname,
                 CONF_PORT: 80,
             }
@@ -202,7 +202,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
         return await self._process_discovered_device(
             {
                 CONF_HOST: url.hostname,
-                CONF_MAC: dr.format_mac(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]),
+                CONF_MAC: format_mac(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]),
                 CONF_NAME: f"{discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]}",
                 CONF_PORT: url.port,
             }
@@ -215,7 +215,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
         return await self._process_discovered_device(
             {
                 CONF_HOST: discovery_info.host,
-                CONF_MAC: dr.format_mac(discovery_info.properties["macaddress"]),
+                CONF_MAC: format_mac(discovery_info.properties["macaddress"]),
                 CONF_NAME: discovery_info.name.split(".", 1)[0],
                 CONF_PORT: discovery_info.port,
             }

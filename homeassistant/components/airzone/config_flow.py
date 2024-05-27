@@ -14,7 +14,8 @@ from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.helpers import aiohttp_client, device_registry as dr
+from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
 
@@ -73,7 +74,7 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 if mac:
                     await self.async_set_unique_id(
-                        dr.format_mac(mac), raise_on_progress=False
+                        format_mac(mac), raise_on_progress=False
                     )
                     self._abort_if_unique_id_configured(
                         updates={
@@ -104,7 +105,7 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._async_abort_entries_match({CONF_HOST: self._discovered_ip})
 
-        await self.async_set_unique_id(dr.format_mac(self._discovered_mac))
+        await self.async_set_unique_id(format_mac(self._discovered_mac))
         self._abort_if_unique_id_configured()
 
         options = ConnectionOptions(self._discovered_ip)
@@ -151,7 +152,7 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 if mac is None:
                     mac = self._discovered_mac
 
-                await self.async_set_unique_id(dr.format_mac(mac))
+                await self.async_set_unique_id(format_mac(mac))
                 self._abort_if_unique_id_configured(
                     updates={
                         CONF_HOST: user_input[CONF_HOST],

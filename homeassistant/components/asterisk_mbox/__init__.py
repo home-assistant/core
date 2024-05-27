@@ -13,13 +13,10 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import (
-    config_validation as cv,
-    discovery,
-    issue_registry as ir,
-)
+from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_connect
-from homeassistant.helpers.issue_registry import IssueSeverity
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,7 +52,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     password: str = conf[CONF_PASSWORD]
 
     hass.data[DOMAIN] = AsteriskData(hass, host, port, password, config)
-    ir.create_issue(
+    create_issue(
         hass,
         DOMAIN,
         "deprecated_integration",

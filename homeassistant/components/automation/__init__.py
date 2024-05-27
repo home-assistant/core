@@ -55,7 +55,7 @@ from homeassistant.exceptions import (
     ServiceNotFound,
     TemplateError,
 )
-from homeassistant.helpers import condition, issue_registry as ir
+from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import (
     DeprecatedConstant,
@@ -65,7 +65,7 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.issue_registry import IssueSeverity
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
     ATTR_CUR,
@@ -724,7 +724,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                         variables, trigger_context, started_action
                     )
             except ServiceNotFound as err:
-                ir.async_create_issue(
+                async_create_issue(
                     self.hass,
                     DOMAIN,
                     f"{self.entity_id}_service_not_found_{err.domain}.{err.service}",

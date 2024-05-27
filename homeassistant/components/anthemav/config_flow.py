@@ -12,7 +12,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_PORT
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DEVICE_TIMEOUT_SECONDS, DOMAIN
 
@@ -70,7 +71,7 @@ class AnthemAVConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             errors["base"] = "cannot_receive_deviceinfo"
         else:
-            user_input[CONF_MAC] = dr.format_mac(avr.protocol.macaddress)
+            user_input[CONF_MAC] = format_mac(avr.protocol.macaddress)
             user_input[CONF_MODEL] = avr.protocol.model
             await self.async_set_unique_id(user_input[CONF_MAC])
             self._abort_if_unique_id_configured()

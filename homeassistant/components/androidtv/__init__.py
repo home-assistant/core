@@ -32,7 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import STORAGE_DIR
 
@@ -82,7 +82,7 @@ def get_androidtv_mac(dev_props: dict[str, Any]) -> str | None:
     """Return formatted mac from device properties."""
     for prop_mac in (PROP_ETHMAC, PROP_WIFIMAC):
         if if_mac := dev_props.get(prop_mac):
-            mac = dr.format_mac(if_mac)
+            mac = format_mac(if_mac)
             if mac not in _INVALID_MACS:
                 return mac
     return None

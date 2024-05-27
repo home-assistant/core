@@ -8,7 +8,7 @@ import axis
 
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from ..const import ATTR_MANUFACTURER, DOMAIN as AXIS_DOMAIN
@@ -35,7 +35,7 @@ class AxisHub:
 
         self.fw_version = api.vapix.firmware_version
         self.product_type = api.vapix.product_type
-        self.unique_id = dr.format_mac(api.vapix.serial_number)
+        self.unique_id = format_mac(api.vapix.serial_number)
 
         self.additional_diagnostics: dict[str, Any] = {}
 

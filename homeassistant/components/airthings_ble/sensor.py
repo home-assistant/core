@@ -26,7 +26,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.helpers.entity_registry import (
+    RegistryEntry,
+    async_entries_for_device,
+)
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -121,7 +124,7 @@ def async_migrate(hass: HomeAssistant, address: str, sensor_name: str) -> None:
         )
     ):
         return
-    entities = er.async_entries_for_device(
+    entities = async_entries_for_device(
         ent_reg,
         device_id=device.id,
         include_disabled_entities=True,

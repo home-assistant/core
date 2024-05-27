@@ -22,7 +22,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_ENABLE_IME, DOMAIN
 from .helpers import create_api, get_enable_ime
@@ -66,7 +66,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                 await api.async_generate_cert_if_missing()
                 self.name, self.mac = await api.async_get_name_and_mac()
                 assert self.mac
-                await self.async_set_unique_id(dr.format_mac(self.mac))
+                await self.async_set_unique_id(format_mac(self.mac))
                 self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
                 return await self._async_start_pair()
             except (CannotConnect, ConnectionClosed):
@@ -144,7 +144,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         self.mac = discovery_info.properties.get("bt")
         if not self.mac:
             return self.async_abort(reason="cannot_connect")
-        await self.async_set_unique_id(dr.format_mac(self.mac))
+        await self.async_set_unique_id(format_mac(self.mac))
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self.host, CONF_NAME: self.name}
         )
