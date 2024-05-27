@@ -631,6 +631,9 @@ class MQTT:
             self._increase_socket_buffer_size(sock)
             self.loop.add_reader(sock, partial(self._async_reader_callback, client))
         self._async_start_misc_loop()
+        # Try to consume the buffer right away so it doesn't fill up
+        # since add_reader will wait for the next loop iteration
+        self._async_reader_callback(client)
 
     @callback
     def _async_on_socket_close(
