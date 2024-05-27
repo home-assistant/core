@@ -1,4 +1,4 @@
-"""Provides diagnostics for local calendar."""
+"""Provides diagnostics for Zeversolar."""
 
 from typing import Any
 
