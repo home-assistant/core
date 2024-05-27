@@ -162,7 +162,6 @@ from homeassistant.util import dt as dt_util
 from . import indieauth, login_flow, mfa_setup_flow
 
 DOMAIN = "auth"
-STRICT_CONNECTION_URL = "/auth/strict_connection/temp_token"
 
 type StoreResultType = Callable[[str, Credentials], str]
 type RetrieveResultType = Callable[[str, str], Credentials | None]
@@ -188,7 +187,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(RevokeTokenView())
     hass.http.register_view(LinkUserView(retrieve_result))
     hass.http.register_view(OAuth2AuthorizeCallbackView())
-    hass.http.register_view(StrictConnectionTempTokenView())
 
     websocket_api.async_register_command(hass, websocket_current_user)
     websocket_api.async_register_command(hass, websocket_create_long_lived_access_token)
@@ -323,7 +321,6 @@ class TokenView(HomeAssistantView):
                 status_code=HTTPStatus.FORBIDDEN,
             )
 
-        await hass.auth.session.async_create_session(request, refresh_token)
         return self.json(
             {
                 "access_token": access_token,
@@ -392,7 +389,6 @@ class TokenView(HomeAssistantView):
                 status_code=HTTPStatus.FORBIDDEN,
             )
 
-        await hass.auth.session.async_create_session(request, refresh_token)
         return self.json(
             {
                 "access_token": access_token,
@@ -439,20 +435,6 @@ class LinkUserView(HomeAssistantView):
         if linked_user != user:
             await hass.auth.async_link_user(user, credentials)
         return self.json_message("User linked")
-
-
-class StrictConnectionTempTokenView(HomeAssistantView):
-    """View to get temporary strict connection token."""
-
-    url = STRICT_CONNECTION_URL
-    name = "api:auth:strict_connection:temp_token"
-    requires_auth = False
-
-    async def get(self, request: web.Request) -> web.Response:
-        """Get a temporary token and redirect to main page."""
-        hass = request.app[KEY_HASS]
-        await hass.auth.session.async_create_temp_unauthorized_session(request)
-        raise web.HTTPSeeOther(location="/")
 
 
 @callback

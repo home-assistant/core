@@ -17,6 +17,7 @@ from wyoming.info import Info
 from wyoming.ping import Ping, Pong
 from wyoming.pipeline import PipelineStage, RunPipeline
 from wyoming.satellite import RunSatellite
+from wyoming.timer import TimerCancelled, TimerFinished, TimerStarted, TimerUpdated
 from wyoming.tts import Synthesize
 from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
@@ -26,6 +27,7 @@ from homeassistant.components.wyoming.data import WyomingService
 from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import intent as intent_helper
 from homeassistant.setup import async_setup_component
 
 from . import SATELLITE_INFO, WAKE_WORD_INFO, MockAsyncTcpClient
@@ -111,6 +113,18 @@ class SatelliteAsyncTcpClient(MockAsyncTcpClient):
         self.ping_event = asyncio.Event()
         self.ping: Ping | None = None
 
+        self.timer_started_event = asyncio.Event()
+        self.timer_started: TimerStarted | None = None
+
+        self.timer_updated_event = asyncio.Event()
+        self.timer_updated: TimerUpdated | None = None
+
+        self.timer_cancelled_event = asyncio.Event()
+        self.timer_cancelled: TimerCancelled | None = None
+
+        self.timer_finished_event = asyncio.Event()
+        self.timer_finished: TimerFinished | None = None
+
         self._mic_audio_chunk = AudioChunk(
             rate=16000, width=2, channels=1, audio=b"chunk"
         ).event()
@@ -159,6 +173,18 @@ class SatelliteAsyncTcpClient(MockAsyncTcpClient):
         elif Ping.is_type(event.type):
             self.ping = Ping.from_event(event)
             self.ping_event.set()
+        elif TimerStarted.is_type(event.type):
+            self.timer_started = TimerStarted.from_event(event)
+            self.timer_started_event.set()
+        elif TimerUpdated.is_type(event.type):
+            self.timer_updated = TimerUpdated.from_event(event)
+            self.timer_updated_event.set()
+        elif TimerCancelled.is_type(event.type):
+            self.timer_cancelled = TimerCancelled.from_event(event)
+            self.timer_cancelled_event.set()
+        elif TimerFinished.is_type(event.type):
+            self.timer_finished = TimerFinished.from_event(event)
+            self.timer_finished_event.set()
 
     async def read_event(self) -> Event | None:
         """Receive."""
@@ -1083,3 +1109,186 @@ async def test_wake_word_phrase(hass: HomeAssistant) -> None:
         assert (
             mock_run_pipeline.call_args.kwargs.get("wake_word_phrase") == "Test Phrase"
         )
+
+
+async def test_timers(hass: HomeAssistant) -> None:
+    """Test timer events."""
+    assert await async_setup_component(hass, "intent", {})
+
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch(
+            "homeassistant.components.wyoming.satellite.AsyncTcpClient",
+            SatelliteAsyncTcpClient([]),
+        ) as mock_client,
+    ):
+        entry = await setup_config_entry(hass)
+        device: SatelliteDevice = hass.data[wyoming.DOMAIN][
+            entry.entry_id
+        ].satellite.device
+
+        async with asyncio.timeout(1):
+            await mock_client.connect_event.wait()
+            await mock_client.run_satellite_event.wait()
+
+        # Start timer
+        result = await intent_helper.async_handle(
+            hass,
+            "test",
+            intent_helper.INTENT_START_TIMER,
+            {
+                "name": {"value": "test timer"},
+                "hours": {"value": 1},
+                "minutes": {"value": 2},
+                "seconds": {"value": 3},
+            },
+            device_id=device.device_id,
+        )
+
+        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        async with asyncio.timeout(1):
+            await mock_client.timer_started_event.wait()
+            timer_started = mock_client.timer_started
+            assert timer_started is not None
+            assert timer_started.id
+            assert timer_started.name == "test timer"
+            assert timer_started.start_hours == 1
+            assert timer_started.start_minutes == 2
+            assert timer_started.start_seconds == 3
+            assert timer_started.total_seconds == (1 * 60 * 60) + (2 * 60) + 3
+
+        # Pause
+        mock_client.timer_updated_event.clear()
+        result = await intent_helper.async_handle(
+            hass,
+            "test",
+            intent_helper.INTENT_PAUSE_TIMER,
+            {},
+            device_id=device.device_id,
+        )
+
+        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        async with asyncio.timeout(1):
+            await mock_client.timer_updated_event.wait()
+            timer_updated = mock_client.timer_updated
+            assert timer_updated is not None
+            assert timer_updated.id == timer_started.id
+            assert not timer_updated.is_active
+
+        # Resume
+        mock_client.timer_updated_event.clear()
+        result = await intent_helper.async_handle(
+            hass,
+            "test",
+            intent_helper.INTENT_UNPAUSE_TIMER,
+            {},
+            device_id=device.device_id,
+        )
+
+        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        async with asyncio.timeout(1):
+            await mock_client.timer_updated_event.wait()
+            timer_updated = mock_client.timer_updated
+            assert timer_updated is not None
+            assert timer_updated.id == timer_started.id
+            assert timer_updated.is_active
+
+        # Add time
+        mock_client.timer_updated_event.clear()
+        result = await intent_helper.async_handle(
+            hass,
+            "test",
+            intent_helper.INTENT_INCREASE_TIMER,
+            {
+                "hours": {"value": 2},
+                "minutes": {"value": 3},
+                "seconds": {"value": 4},
+            },
+            device_id=device.device_id,
+        )
+
+        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        async with asyncio.timeout(1):
+            await mock_client.timer_updated_event.wait()
+            timer_updated = mock_client.timer_updated
+            assert timer_updated is not None
+            assert timer_updated.id == timer_started.id
+            assert timer_updated.total_seconds > timer_started.total_seconds
+
+        # Remove time
+        mock_client.timer_updated_event.clear()
+        result = await intent_helper.async_handle(
+            hass,
+            "test",
+            intent_helper.INTENT_DECREASE_TIMER,
+            {
+                "hours": {"value": 2},
+                "minutes": {"value": 3},
+                "seconds": {"value": 5},  # remove 1 extra second
+            },
+            device_id=device.device_id,
+        )
+
+        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        async with asyncio.timeout(1):
+            await mock_client.timer_updated_event.wait()
+            timer_updated = mock_client.timer_updated
+            assert timer_updated is not None
+            assert timer_updated.id == timer_started.id
+            assert timer_updated.total_seconds < timer_started.total_seconds
+
+        # Cancel
+        result = await intent_helper.async_handle(
+            hass,
+            "test",
+            intent_helper.INTENT_CANCEL_TIMER,
+            {},
+            device_id=device.device_id,
+        )
+
+        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        async with asyncio.timeout(1):
+            await mock_client.timer_cancelled_event.wait()
+            timer_cancelled = mock_client.timer_cancelled
+            assert timer_cancelled is not None
+            assert timer_cancelled.id == timer_started.id
+
+        # Start a new timer
+        mock_client.timer_started_event.clear()
+        result = await intent_helper.async_handle(
+            hass,
+            "test",
+            intent_helper.INTENT_START_TIMER,
+            {
+                "name": {"value": "test timer"},
+                "minutes": {"value": 1},
+            },
+            device_id=device.device_id,
+        )
+
+        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        async with asyncio.timeout(1):
+            await mock_client.timer_started_event.wait()
+            timer_started = mock_client.timer_started
+            assert timer_started is not None
+
+        # Finished
+        result = await intent_helper.async_handle(
+            hass,
+            "test",
+            intent_helper.INTENT_DECREASE_TIMER,
+            {
+                "minutes": {"value": 1},  # force finish
+            },
+            device_id=device.device_id,
+        )
+
+        assert result.response_type == intent_helper.IntentResponseType.ACTION_DONE
+        async with asyncio.timeout(1):
+            await mock_client.timer_finished_event.wait()
+            timer_finished = mock_client.timer_finished
+            assert timer_finished is not None
+            assert timer_finished.id == timer_started.id

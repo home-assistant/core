@@ -90,7 +90,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.46.0
+PySwitchbot==0.46.1
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -371,7 +371,7 @@ aiosolaredge==0.2.0
 aiosteamist==0.3.2
 
 # homeassistant.components.switcher_kis
-aioswitcher==3.4.1
+aioswitcher==3.4.3
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -1087,7 +1087,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.48
+holidays==0.49
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240501.1
@@ -1649,7 +1649,7 @@ py-nightscout==1.2.2
 py-schluter==0.1.7
 
 # homeassistant.components.ecovacs
-py-sucks==0.9.9
+py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
 py-synologydsm-api==2.4.2
@@ -1824,7 +1824,7 @@ pyegps==0.2.5
 pyenphase==1.20.3
 
 # homeassistant.components.envisalink
-pyenvisalink==4.6
+pyenvisalink==4.7
 
 # homeassistant.components.ephember
 pyephember==0.3.1
@@ -2653,7 +2653,7 @@ streamlabswater==1.0.1
 stringcase==1.2.0
 
 # homeassistant.components.subaru
-subarulink==0.7.9
+subarulink==0.7.11
 
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
@@ -2766,6 +2766,9 @@ transmission-rpc==7.0.3
 # homeassistant.components.twinkly
 ttls==1.5.1
 
+# homeassistant.components.thethingsnetwork
+ttn_client==0.0.4
+
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.1.9
 
@@ -2820,7 +2823,7 @@ vallox-websocket-api==5.1.1
 vehicle==2.2.1
 
 # homeassistant.components.velbus
-velbus-aio==2024.4.1
+velbus-aio==2024.5.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -2894,7 +2897,7 @@ wled==0.18.0
 wolf-comm==0.0.8
 
 # homeassistant.components.wyoming
-wyoming==1.5.3
+wyoming==1.5.4
 
 # homeassistant.components.xbox
 xbox-webapi==2.0.11

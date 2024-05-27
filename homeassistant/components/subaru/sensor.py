@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
 
 import subarulink.const as sc
 
@@ -23,11 +23,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 from homeassistant.util.unit_conversion import DistanceConverter, VolumeConverter
-from homeassistant.util.unit_system import (
-    LENGTH_UNITS,
-    PRESSURE_UNITS,
-    US_CUSTOMARY_SYSTEM,
-)
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import get_device_info
 from .const import (
@@ -58,7 +54,7 @@ SAFETY_SENSORS = [
         key=sc.ODOMETER,
         translation_key="odometer",
         device_class=SensorDeviceClass.DISTANCE,
-        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        native_unit_of_measurement=UnitOfLength.MILES,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 ]
@@ -68,42 +64,42 @@ API_GEN_2_SENSORS = [
     SensorEntityDescription(
         key=sc.AVG_FUEL_CONSUMPTION,
         translation_key="average_fuel_consumption",
-        native_unit_of_measurement=FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS,
+        native_unit_of_measurement=FUEL_CONSUMPTION_MILES_PER_GALLON,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.DIST_TO_EMPTY,
         translation_key="range",
         device_class=SensorDeviceClass.DISTANCE,
-        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        native_unit_of_measurement=UnitOfLength.MILES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_FL,
         translation_key="tire_pressure_front_left",
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=UnitOfPressure.HPA,
+        native_unit_of_measurement=UnitOfPressure.PSI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_FR,
         translation_key="tire_pressure_front_right",
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=UnitOfPressure.HPA,
+        native_unit_of_measurement=UnitOfPressure.PSI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_RL,
         translation_key="tire_pressure_rear_left",
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=UnitOfPressure.HPA,
+        native_unit_of_measurement=UnitOfPressure.PSI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_RR,
         translation_key="tire_pressure_rear_right",
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=UnitOfPressure.HPA,
+        native_unit_of_measurement=UnitOfPressure.PSI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
@@ -205,32 +201,15 @@ class SubaruSensor(
         self._attr_unique_id = f"{self.vin}_{description.key}"
 
     @property
-    def native_value(self) -> None | int | float:
+    def native_value(self) -> int | float | None:
         """Return the state of the sensor."""
-        vehicle_data = self.coordinator.data[self.vin]
-        current_value = vehicle_data[VEHICLE_STATUS].get(self.entity_description.key)
-        unit = self.entity_description.native_unit_of_measurement
-        unit_system = self.hass.config.units
-
-        if current_value is None:
-            return None
-
-        if unit in LENGTH_UNITS:
-            return round(unit_system.length(current_value, cast(str, unit)), 1)
-
-        if unit in PRESSURE_UNITS and unit_system == US_CUSTOMARY_SYSTEM:
-            return round(
-                unit_system.pressure(current_value, cast(str, unit)),
-                1,
-            )
+        current_value = self.coordinator.data[self.vin][VEHICLE_STATUS].get(
+            self.entity_description.key
+        )
 
         if (
-            unit
-            in [
-                FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS,
-                FUEL_CONSUMPTION_MILES_PER_GALLON,
-            ]
-            and unit_system == US_CUSTOMARY_SYSTEM
+            self.entity_description.key == sc.AVG_FUEL_CONSUMPTION
+            and self.hass.config.units == METRIC_SYSTEM
         ):
             return round((100.0 * L_PER_GAL) / (KM_PER_MI * current_value), 1)
 
@@ -239,23 +218,12 @@ class SubaruSensor(
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit_of_measurement of the device."""
-        unit = self.entity_description.native_unit_of_measurement
-
-        if unit in LENGTH_UNITS:
-            return self.hass.config.units.length_unit
-
-        if unit in PRESSURE_UNITS:
-            if self.hass.config.units == US_CUSTOMARY_SYSTEM:
-                return self.hass.config.units.pressure_unit
-
-        if unit in [
-            FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS,
-            FUEL_CONSUMPTION_MILES_PER_GALLON,
-        ]:
-            if self.hass.config.units == US_CUSTOMARY_SYSTEM:
-                return FUEL_CONSUMPTION_MILES_PER_GALLON
-
-        return unit
+        if (
+            self.entity_description.key == sc.AVG_FUEL_CONSUMPTION
+            and self.hass.config.units == METRIC_SYSTEM
+        ):
+            return FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS
+        return self.entity_description.native_unit_of_measurement
 
     @property
     def available(self) -> bool:

@@ -96,6 +96,26 @@
         "name": "Tire pressure warning rear right"
       }
     },
+    "button": {
+      "boombox": {
+        "name": "Play fart"
+      },
+      "enable_keyless_driving": {
+        "name": "Keyless driving"
+      },
+      "flash_lights": {
+        "name": "Flash lights"
+      },
+      "homelink": {
+        "name": "Homelink"
+      },
+      "honk": {
+        "name": "Honk horn"
+      },
+      "wake": {
+        "name": "Wake"
+      }
+    },
     "climate": {
       "driver_temp": {
         "name": "[%key:component::climate::title%]",
@@ -109,6 +129,14 @@
             }
           }
         }
+      }
+    },
+    "device_tracker": {
+      "location": {
+        "name": "Location"
+      },
+      "route": {
+        "name": "Route"
       }
     },
     "lock": {
@@ -209,6 +237,39 @@
           "backup": "Backup",
           "self_consumption": "Self consumption"
         }
+      }
+    },
+    "media_player": {
+      "media": {
+        "name": "[%key:component::media_player::title%]"
+      }
+    },
+    "number": {
+      "backup_reserve_percent": {
+        "name": "Backup reserve"
+      },
+      "charge_state_charge_current_request": {
+        "name": "Charge current"
+      },
+      "charge_state_charge_limit_soc": {
+        "name": "Charge limit"
+      },
+      "off_grid_vehicle_charging_reserve": {
+        "name": "Off grid reserve"
+      }
+    },
+    "cover": {
+      "charge_state_charge_port_door_open": {
+        "name": "Charge port door"
+      },
+      "vehicle_state_ft": {
+        "name": "Frunk"
+      },
+      "vehicle_state_rt": {
+        "name": "Trunk"
+      },
+      "windows": {
+        "name": "Windows"
       }
     },
     "sensor": {
@@ -392,6 +453,11 @@
       },
       "vehicle_state_valet_mode": {
         "name": "Valet mode"
+      }
+    },
+    "update": {
+      "vehicle_state_software_update_status": {
+        "name": "[%key:component::update::title%]"
       }
     }
   },

@@ -6,7 +6,6 @@
 aiodns==3.2.0
 aiohttp==3.9.5
 aiohttp_cors==0.7.0
-aiohttp_session==2.12.0
 aiohttp-fast-url-dispatcher==0.3.0
 aiohttp-fast-zlib==0.1.0
 aiozoneinfo==0.1.0

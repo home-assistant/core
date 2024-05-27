@@ -2,6 +2,8 @@
 
 from datetime import timedelta
 
+import pytest
+
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonDeviceClass
 from homeassistant.components.unifi.const import CONF_SITE_ID
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
@@ -16,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 import homeassistant.util.dt as dt_util
-
-from .test_hub import setup_unifi_integration
 
 from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -60,17 +60,10 @@ WLAN = {
 }
 
 
-async def test_restart_device_button(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
-    websocket_mock,
-) -> None:
-    """Test restarting device button."""
-    config_entry = await setup_unifi_integration(
-        hass,
-        aioclient_mock,
-        devices_response=[
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
             {
                 "board_rev": 3,
                 "device_id": "mock-id",
@@ -83,8 +76,18 @@ async def test_restart_device_button(
                 "type": "usw",
                 "version": "4.0.42.10433",
             }
-        ],
-    )
+        ]
+    ],
+)
+async def test_restart_device_button(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    setup_config_entry,
+    websocket_mock,
+) -> None:
+    """Test restarting device button."""
+    config_entry = setup_config_entry
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 1
 
     ent_reg_entry = entity_registry.async_get("button.switch_restart")
@@ -127,17 +130,10 @@ async def test_restart_device_button(
     assert hass.states.get("button.switch_restart").state != STATE_UNAVAILABLE
 
 
-async def test_power_cycle_poe(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
-    websocket_mock,
-) -> None:
-    """Test restarting device button."""
-    config_entry = await setup_unifi_integration(
-        hass,
-        aioclient_mock,
-        devices_response=[
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
             {
                 "board_rev": 3,
                 "device_id": "mock-id",
@@ -166,8 +162,18 @@ async def test_power_cycle_poe(
                     },
                 ],
             }
-        ],
-    )
+        ]
+    ],
+)
+async def test_power_cycle_poe(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    setup_config_entry,
+    websocket_mock,
+) -> None:
+    """Test restarting device button."""
+    config_entry = setup_config_entry
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 2
 
     ent_reg_entry = entity_registry.async_get("button.switch_port_1_power_cycle")
@@ -214,17 +220,16 @@ async def test_power_cycle_poe(
     )
 
 
+@pytest.mark.parametrize("wlan_payload", [[WLAN]])
 async def test_wlan_regenerate_password(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
+    setup_config_entry,
     websocket_mock,
 ) -> None:
     """Test WLAN regenerate password button."""
-
-    config_entry = await setup_unifi_integration(
-        hass, aioclient_mock, wlans_response=[WLAN]
-    )
+    config_entry = setup_config_entry
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 0
 
     button_regenerate_password = "button.ssid_1_regenerate_password"
