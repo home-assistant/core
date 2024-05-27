@@ -29,7 +29,6 @@ async def test_device_tracker(
 
         mock_tractive_client.send_position_event(hass)
         mock_tractive_client.send_hardware_event(hass)
-
         await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -52,7 +51,6 @@ async def test_source_type_phone(
         },
     )
     mock_tractive_client.send_hardware_event(hass)
-
     await hass.async_block_till_done()
 
     assert (
