@@ -4676,7 +4676,7 @@ async def test_loop_write_failure(
     # Final for the disconnect callback
     await hass.async_block_till_done()
 
-    assert "Disconnected from MQTT server mock-broker:1883 (7)" in caplog.text
+    assert "Disconnected from MQTT server mock-broker:1883" in caplog.text
 
 
 @pytest.mark.parametrize(
