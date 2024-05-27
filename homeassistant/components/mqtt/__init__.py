@@ -20,7 +20,12 @@ from homeassistant.exceptions import (
     ServiceValidationError,
     Unauthorized,
 )
-from homeassistant.helpers import config_validation as cv, event as ev, template
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    event as ev,
+    template,
+)
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import async_get_platforms
@@ -31,7 +36,8 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_integration
+from homeassistant.loader import async_get_integration, async_get_loaded_integration
+from homeassistant.setup import SetupPhases, async_pause_setup
 
 # Loading the config flow file will register the flow
 from . import debug_info, discovery
@@ -252,7 +258,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.add_update_listener(_async_config_entry_updated)
         )
 
-        await mqtt_data.client.async_connect(client_available)
         return (mqtt_data, conf)
 
     client_available: asyncio.Future[bool]
@@ -262,6 +267,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         client_available = hass.data[DATA_MQTT_AVAILABLE]
 
     mqtt_data, conf = await _setup_client(client_available)
+    platforms_used = platforms_from_config(mqtt_data.config)
+    platforms_used.update(
+        entry.domain
+        for entry in er.async_entries_for_config_entry(
+            er.async_get(hass), entry.entry_id
+        )
+    )
+    integration = async_get_loaded_integration(hass, DOMAIN)
+    # Preload platforms we know we are going to use so
+    # discovery can setup each platform synchronously
+    # and avoid creating a flood of tasks at startup
+    # while waiting for the the imports to complete
+    if not integration.platforms_are_loaded(platforms_used):
+        with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PLATFORMS):
+            await integration.async_get_platforms(platforms_used)
+
+    # Wait to connect until the platforms are loaded so
+    # we can be sure discovery does not have to wait for
+    # each platform to load when we get the flood of retained
+    # messages on connect
+    await mqtt_data.client.async_connect(client_available)
 
     async def async_publish_service(call: ServiceCall) -> None:
         """Handle MQTT publish service calls."""
@@ -392,7 +418,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
 
-    platforms_used = platforms_from_config(mqtt_data.config)
     await async_forward_entry_setup_and_setup_discovery(hass, entry, platforms_used)
     # Setup reload service after all platforms have loaded
     await async_setup_reload_service()
