@@ -395,19 +395,17 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
 }
 
 # Blacklist of imports that should be using the namespace
-_FORCE_NAMESPACE_IMPORT: dict[tuple[str, str], str] = {
-    ("homeassistant.helpers.area_registry", "async_get"): "ar.async_get",
-    (
-        "homeassistant.helpers.device_registry",
+_FORCE_NAMESPACE_IMPORT: dict[tuple[str, str], set[str]] = {
+    ("homeassistant.helpers.area_registry", "ar"): {"async_get"},
+    ("homeassistant.helpers.device_registry", "dr"): {
+        "async_get",
         "async_entries_for_config_entry",
-    ): "dr.async_entries_for_config_entry",
-    ("homeassistant.helpers.device_registry", "async_get"): "dr.async_get",
-    (
-        "homeassistant.helpers.entity_registry",
+    },
+    ("homeassistant.helpers.entity_registry", "er"): {
+        "async_get",
         "async_entries_for_config_entry",
-    ): "er.async_entries_for_config_entry",
-    ("homeassistant.helpers.entity_registry", "async_get"): "er.async_get",
-    ("homeassistant.helpers.issue_registry", "async_get"): "ir.async_get",
+    },
+    ("homeassistant.helpers.issue_registry", "ir"): {"async_get"},
 }
 
 
@@ -552,9 +550,11 @@ class HassImportsFormatChecker(BaseChecker):
         self, node: nodes.ImportFrom, module: str, name: str
     ) -> None:
         for key, value in _FORCE_NAMESPACE_IMPORT.items():
-            if module == key[0] and name == key[1]:
+            if module == key[0] and name in value:
                 self.add_message(
-                    "hass-helper-namespace-import", node=node, args=(name, value)
+                    "hass-helper-namespace-import",
+                    node=node,
+                    args=(name, f"{key[1]}.{name}"),
                 )
 
 
