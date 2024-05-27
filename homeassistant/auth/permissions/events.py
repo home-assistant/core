@@ -17,21 +17,23 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     EVENT_THEMES_UPDATED,
 )
-from homeassistant.helpers.area_registry import EVENT_AREA_REGISTRY_UPDATED
-from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
-from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
-from homeassistant.helpers.issue_registry import EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.util.event_type import EventType
 
 # These are events that do not contain any sensitive data
 # Except for state_changed, which is handled accordingly.
 SUBSCRIBE_ALLOWLIST: Final[set[EventType[Any] | str]] = {
-    EVENT_AREA_REGISTRY_UPDATED,
+    ar.EVENT_AREA_REGISTRY_UPDATED,
     EVENT_COMPONENT_LOADED,
     EVENT_CORE_CONFIG_UPDATE,
-    EVENT_DEVICE_REGISTRY_UPDATED,
-    EVENT_ENTITY_REGISTRY_UPDATED,
-    EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
+    dr.EVENT_DEVICE_REGISTRY_UPDATED,
+    er.EVENT_ENTITY_REGISTRY_UPDATED,
+    ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
     EVENT_LOVELACE_UPDATED,
     EVENT_PANELS_UPDATED,
     EVENT_RECORDER_5MIN_STATISTICS_GENERATED,

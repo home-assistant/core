@@ -13,8 +13,7 @@ import voluptuous as vol
 
 from homeassistant.core import async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 
 from ..models import AuthFlowResult, Credentials, UserMeta
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
@@ -28,13 +27,13 @@ _CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
 
 
 def _create_repair_and_validate(config: dict[str, Any]) -> dict[str, Any]:
-    async_create_issue(
+    ir.async_create_issue(
         async_get_hass(),
         "auth",
         "deprecated_legacy_api_password",
         breaks_in_ha_version="2024.6.0",
         is_fixable=False,
-        severity=IssueSeverity.WARNING,
+        severity=ir.IssueSeverity.WARNING,
         translation_key="deprecated_legacy_api_password",
     )
 
