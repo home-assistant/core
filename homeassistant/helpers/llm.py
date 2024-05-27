@@ -185,6 +185,13 @@ class AssistAPI(API):
     IGNORE_INTENTS = {
         intent.INTENT_NEVERMIND,
         intent.INTENT_GET_STATE,
+        intent.INTENT_TIMER_STATUS,
+        intent.INTENT_PAUSE_TIMER,
+        intent.INTENT_START_TIMER,
+        intent.INTENT_CANCEL_TIMER,
+        intent.INTENT_UNPAUSE_TIMER,
+        intent.INTENT_DECREASE_TIMER,
+        intent.INTENT_INCREASE_TIMER,
         INTENT_GET_WEATHER,
         INTENT_GET_TEMPERATURE,
     }
