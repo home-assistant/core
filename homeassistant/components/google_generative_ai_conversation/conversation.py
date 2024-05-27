@@ -12,6 +12,7 @@ import voluptuous as vol
 from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
+from homeassistant.components.conversation import trace
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
@@ -31,7 +32,6 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
-    DEFAULT_PROMPT,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
@@ -220,12 +220,15 @@ class GoogleGenerativeAIConversationEntity(
                 api_prompt = await llm_api.async_get_api_prompt(empty_tool_input)
 
             else:
-                api_prompt = llm.PROMPT_NO_API_CONFIGURED
+                api_prompt = llm.async_render_no_api_prompt(self.hass)
 
             prompt = "\n".join(
                 (
                     template.Template(
-                        self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT), self.hass
+                        self.entry.options.get(
+                            CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                        ),
+                        self.hass,
                     ).async_render(
                         {
                             "ha_name": self.hass.config.location_name,
@@ -250,6 +253,9 @@ class GoogleGenerativeAIConversationEntity(
         messages[1] = {"role": "model", "parts": "Ok"}
 
         LOGGER.debug("Input: '%s' with history: %s", user_input.text, messages)
+        trace.async_conversation_trace_append(
+            trace.ConversationTraceEventType.AGENT_DETAIL, {"messages": messages}
+        )
 
         chat = model.start_chat(history=messages)
         chat_request = user_input.text

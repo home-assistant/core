@@ -174,6 +174,7 @@ def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
         """Run event loop."""
 
         loop._thread_ident = threading.get_ident()
+        hass._loop_thread_id = loop._thread_ident
         loop.run_forever()
         loop_stop_event.set()
 

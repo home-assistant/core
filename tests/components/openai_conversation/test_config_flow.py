@@ -7,6 +7,7 @@ from openai import APIConnectionError, AuthenticationError, BadRequestError
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.openai_conversation.config_flow import RECOMMENDED_OPTIONS
 from homeassistant.components.openai_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -62,6 +63,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "api_key": "bla",
     }
+    assert result2["options"] == RECOMMENDED_OPTIONS
     assert len(mock_setup_entry.mock_calls) == 1
 
 
