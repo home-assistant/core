@@ -211,7 +211,13 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
     async def async_clean_room(self, rooms: list[str], **kwargs: Any) -> None:
         """Clean specific rooms."""
         rooms_to_clean = []
-        valid_rooms = self.available_rooms or []
+        available_rooms: list[str] | None = self.available_rooms
+
+        if available_rooms is None:
+            valid_rooms: list[str] = []
+        else:
+            valid_rooms = [room.lower() for room in available_rooms]
+
         for room in rooms:
             if room in valid_rooms:
                 rooms_to_clean.append(room)
