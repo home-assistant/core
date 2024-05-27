@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Coroutine
-import functools
 from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, cast, final
@@ -169,31 +168,20 @@ def async_handle_schema_error(
     )
 
 
-async def _async_discover_coro(
+def _handle_discovery_failure(
     hass: HomeAssistant,
-    domain: str,
-    async_setup: Callable[[MQTTDiscoveryPayload], Coroutine[Any, Any, None]],
     discovery_payload: MQTTDiscoveryPayload,
 ) -> None:
-    """Discover and add an MQTT entity, automation or tag."""
-    if coro_or_none := _async_discover(
-        hass, domain, None, async_setup, discovery_payload
-    ):
-        await coro_or_none
+    """Handle discovery failure."""
+    discovery_hash = discovery_payload.discovery_data[ATTR_DISCOVERY_HASH]
+    clear_discovery_hash(hass, discovery_hash)
+    async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None)
 
 
-@callback
-def _async_discover(
-    hass: HomeAssistant,
-    domain: str,
-    setup: Callable[[MQTTDiscoveryPayload], None] | None,
-    async_setup: Callable[[MQTTDiscoveryPayload], Coroutine[Any, Any, None]] | None,
-    discovery_payload: MQTTDiscoveryPayload,
-) -> Coroutine[Any, Any, None] | None:
-    """Discover and add an MQTT entity, automation or tag.
-
-    setup is to be run in the event loop when there is nothing to be awaited.
-    """
+def _verify_mqtt_config_entry_enabled_for_discovery(
+    hass: HomeAssistant, domain: str, discovery_payload: MQTTDiscoveryPayload
+) -> bool:
+    """Verify MQTT config entry is enabled or log warning."""
     if not mqtt_config_entry_enabled(hass):
         _LOGGER.warning(
             (
@@ -203,24 +191,8 @@ def _async_discover(
             domain,
             discovery_payload,
         )
-        return None
-    discovery_data = discovery_payload.discovery_data
-    try:
-        if setup is not None:
-            setup(discovery_payload)
-        elif async_setup is not None:
-            return async_setup(discovery_payload)
-    except vol.Invalid as err:
-        discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
-        clear_discovery_hash(hass, discovery_hash)
-        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None)
-        async_handle_schema_error(discovery_payload, err)
-    except Exception:
-        discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
-        clear_discovery_hash(hass, discovery_hash)
-        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None)
-        raise
-    return None
+        return False
+    return True
 
 
 class _SetupNonEntityHelperCallbackProtocol(Protocol):  # pragma: no cover
@@ -241,20 +213,29 @@ def async_setup_non_entity_entry_helper(
     """Set up automation or tag creation dynamically through MQTT discovery."""
     mqtt_data = hass.data[DATA_MQTT]
 
-    async def async_setup_from_discovery(
+    async def _async_setup_non_entity_entry_from_discovery(
         discovery_payload: MQTTDiscoveryPayload,
     ) -> None:
         """Set up an MQTT entity, automation or tag from discovery."""
-        config: ConfigType = discovery_schema(discovery_payload)
-        await async_setup(config, discovery_data=discovery_payload.discovery_data)
+        if not _verify_mqtt_config_entry_enabled_for_discovery(
+            hass, domain, discovery_payload
+        ):
+            return
+        try:
+            config: ConfigType = discovery_schema(discovery_payload)
+            await async_setup(config, discovery_data=discovery_payload.discovery_data)
+        except vol.Invalid as err:
+            _handle_discovery_failure(hass, discovery_payload)
+            async_handle_schema_error(discovery_payload, err)
+        except Exception:
+            _handle_discovery_failure(hass, discovery_payload)
+            raise
 
     mqtt_data.reload_dispatchers.append(
         async_dispatcher_connect(
             hass,
             MQTT_DISCOVERY_NEW.format(domain, "mqtt"),
-            functools.partial(
-                _async_discover_coro, hass, domain, async_setup_from_discovery
-            ),
+            _async_setup_non_entity_entry_from_discovery,
         )
     )
 
@@ -274,27 +255,36 @@ def async_setup_entity_entry_helper(
     mqtt_data = hass.data[DATA_MQTT]
 
     @callback
-    def async_setup_from_discovery(
+    def _async_setup_entity_entry_from_discovery(
         discovery_payload: MQTTDiscoveryPayload,
     ) -> None:
         """Set up an MQTT entity from discovery."""
         nonlocal entity_class
-        config: DiscoveryInfoType = discovery_schema(discovery_payload)
-        if schema_class_mapping is not None:
-            entity_class = schema_class_mapping[config[CONF_SCHEMA]]
-        if TYPE_CHECKING:
-            assert entity_class is not None
-        async_add_entities(
-            [entity_class(hass, config, entry, discovery_payload.discovery_data)]
-        )
+        if not _verify_mqtt_config_entry_enabled_for_discovery(
+            hass, domain, discovery_payload
+        ):
+            return
+        try:
+            config: DiscoveryInfoType = discovery_schema(discovery_payload)
+            if schema_class_mapping is not None:
+                entity_class = schema_class_mapping[config[CONF_SCHEMA]]
+            if TYPE_CHECKING:
+                assert entity_class is not None
+            async_add_entities(
+                [entity_class(hass, config, entry, discovery_payload.discovery_data)]
+            )
+        except vol.Invalid as err:
+            _handle_discovery_failure(hass, discovery_payload)
+            async_handle_schema_error(discovery_payload, err)
+        except Exception:
+            _handle_discovery_failure(hass, discovery_payload)
+            raise
 
     mqtt_data.reload_dispatchers.append(
         async_dispatcher_connect(
             hass,
             MQTT_DISCOVERY_NEW.format(domain, "mqtt"),
-            functools.partial(
-                _async_discover, hass, domain, async_setup_from_discovery, None
-            ),
+            _async_setup_entity_entry_from_discovery,
         )
     )
 
