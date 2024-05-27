@@ -750,7 +750,7 @@ class DanfossAdaptationRunControl(ZCLEnumSelectEntity):
 class DanfossControlAlgorithmScaleFactorEnum(types.enum8):
     """The time scale factor for changing the opening of the valve.
 
-    Not all values were given, therefore there are some extrapolated values with a margin of error of about 5 minutes.
+    Not all values are given, therefore there are some extrapolated values with a margin of error of about 5 minutes.
     This is implemented as an enum here, but is a number on the device.
     """
 
