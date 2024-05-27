@@ -50,6 +50,9 @@ def mock_tractive_client() -> Generator[AsyncMock, None, None]:
             details=AsyncMock(return_value=tracker_details),
             hw_info=AsyncMock(return_value=tracker_hw_info),
             pos_report=AsyncMock(return_value=tracker_pos_report),
+            set_live_tracking_active=AsyncMock(return_value={"pending": True}),
+            set_buzzer_active=AsyncMock(return_value={"pending": True}),
+            set_led_active=AsyncMock(return_value={"pending": True}),
         )
 
         def send_hardware_event(hass, event: dict[str, Any] | None = None):

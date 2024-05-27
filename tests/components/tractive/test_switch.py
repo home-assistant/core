@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from aiotractive.exceptions import TractiveError
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -63,6 +64,11 @@ async def test_switch_on(
     mock_tractive_client.send_switch_event(hass, {"led": True})
     await hass.async_block_till_done()
 
+    assert mock_tractive_client.tracker.return_value.set_led_active.call_count == 1
+    assert (
+        mock_tractive_client.tracker.return_value.set_led_active.call_args[0][0] is True
+    )
+
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
@@ -93,6 +99,12 @@ async def test_switch_off(
     )
     mock_tractive_client.send_switch_event(hass, {"buzzer": False})
     await hass.async_block_till_done()
+
+    assert mock_tractive_client.tracker.return_value.set_buzzer_active.call_count == 1
+    assert (
+        mock_tractive_client.tracker.return_value.set_buzzer_active.call_args[0][0]
+        is False
+    )
 
     state = hass.states.get(entity_id)
     assert state
@@ -125,6 +137,83 @@ async def test_live_tracking_switch(
     mock_tractive_client.send_switch_event(hass, {"live_tracking": False})
     await hass.async_block_till_done()
 
+    assert (
+        mock_tractive_client.tracker.return_value.set_live_tracking_active.call_count
+        == 1
+    )
+    assert (
+        mock_tractive_client.tracker.return_value.set_live_tracking_active.call_args[0][
+            0
+        ]
+        is False
+    )
+
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
+
+
+async def test_switch_on_with_exception(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the switch turn on with exception."""
+    entity_id = "switch.test_pet_tracker_led"
+
+    await init_integration(hass, mock_config_entry)
+
+    mock_tractive_client.send_switch_event(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+
+    mock_tractive_client.tracker.return_value.set_led_active.side_effect = TractiveError
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+
+
+async def test_switch_off_with_exception(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the switch turn off with exception."""
+    entity_id = "switch.test_pet_tracker_buzzer"
+
+    await init_integration(hass, mock_config_entry)
+
+    mock_tractive_client.send_switch_event(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+
+    mock_tractive_client.tracker.return_value.set_buzzer_active.side_effect = (
+        TractiveError
+    )
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
