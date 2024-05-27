@@ -26,22 +26,29 @@ from .const import ACCESS_TOKEN, EXPIRATION, EXPIRATION_OLD, PASSWORD, USERNAME
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize(
-    "expiration",
-    [
-        EXPIRATION,
-        EXPIRATION_OLD,
-    ],
-)
 async def test_load_unload(
     hass: HomeAssistant,
-    expiration: datetime,
     mock_config_entry: MockConfigEntry,
     mock_fyta_connector: AsyncMock,
 ) -> None:
     """Test load and unload."""
 
-    mock_fyta_connector.expiration = datetime.fromisoformat(expiration).replace(
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_load_unload_expired_token(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fyta_connector: AsyncMock,
+) -> None:
+    """Test load and unload."""
+
+    mock_fyta_connector.expiration = datetime.fromisoformat(EXPIRATION_OLD).replace(
         tzinfo=UTC
     )
     await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
@@ -49,7 +56,10 @@ async def test_load_unload(
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert len(mock_fyta_connector.login.mock_calls) == 1
+    assert mock_config_entry.data[CONF_EXPIRATION] == EXPIRATION
 
 
 @pytest.mark.parametrize(
