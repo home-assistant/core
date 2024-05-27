@@ -1,14 +1,22 @@
 """Common fixtures for the Tractive tests."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiotractive.trackable_object import TrackableObject
 from aiotractive.tracker import Tracker
 import pytest
 
-from homeassistant.components.tractive.const import DOMAIN
+from homeassistant.components.tractive.const import (
+    DOMAIN,
+    TRACKER_HARDWARE_STATUS_UPDATED,
+    TRACKER_POSITION_UPDATED,
+    TRACKER_SWITCH_STATUS_UPDATED,
+    TRACKER_WELLNESS_STATUS_UPDATED,
+)
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -42,6 +50,65 @@ def mock_tractive_client() -> Generator[AsyncMock, None, None]:
             hw_info=AsyncMock(return_value=tracker_hw_info),
             pos_report=AsyncMock(return_value=tracker_pos_report),
         )
+
+        def send_hardware_event(hass, event: dict[str, Any] | None = None):
+            """Send hardware event."""
+            if event is None:
+                event = {
+                    "battery_level": 88,
+                    "tracker_state": "operational",
+                    "battery_charging": False,
+                }
+            async_dispatcher_send(
+                hass, f"{TRACKER_HARDWARE_STATUS_UPDATED}-device_id_123", event
+            )
+
+        def send_status_event(hass, event: dict[str, Any] | None = None):
+            """Send status event."""
+            if event is None:
+                event = {
+                    "activity_label": "ok",
+                    "calories": 999,
+                    "daily_goal": 200,
+                    "minutes_active": 150,
+                    "minutes_day_sleep": 100,
+                    "minutes_night_sleep": 300,
+                    "minutes_rest": 122,
+                    "sleep_label": "good",
+                }
+            async_dispatcher_send(
+                hass, f"{TRACKER_WELLNESS_STATUS_UPDATED}-pet_id_123", event
+            )
+
+        def send_position_event(hass, event: dict[str, Any] | None = None):
+            """Send position event."""
+            if event is None:
+                event = {
+                    "latitude": 22.333,
+                    "longitude": 44.555,
+                    "accuracy": 99,
+                    "sensor_used": "GPS",
+                }
+            async_dispatcher_send(
+                hass, f"{TRACKER_POSITION_UPDATED}-device_id_123", event
+            )
+
+        def send_switch_event(hass, event: dict[str, Any] | None = None):
+            """Send switch event."""
+            if event is None:
+                event = {
+                    "buzzer": True,
+                    "led": False,
+                    "live_tracking": True,
+                }
+            async_dispatcher_send(
+                hass, f"{TRACKER_SWITCH_STATUS_UPDATED}-device_id_123", event
+            )
+
+        client.send_hardware_event = send_hardware_event
+        client.send_status_event = send_status_event
+        client.send_position_event = send_position_event
+        client.send_switch_event = send_switch_event
 
         yield client
 
