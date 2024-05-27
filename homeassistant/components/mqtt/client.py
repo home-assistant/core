@@ -148,7 +148,7 @@ async def async_publish(
         )
     mqtt_data = hass.data[DATA_MQTT]
     outgoing_payload = payload
-    if not isinstance(payload, bytes):
+    if not isinstance(payload, bytes) and payload is not None:
         if not encoding:
             _LOGGER.error(
                 (
@@ -1130,7 +1130,7 @@ class MQTT:
             " retained" if msg.retain else "",
             topic,
             msg.qos,
-            msg.payload[0:8192],
+            msg.payload[0:8192] if msg.payload is not None else "<NULL>",
         )
         subscriptions = self._matching_subscriptions(topic)
         msg_cache_by_subscription_topic: dict[str, ReceiveMessage] = {}
