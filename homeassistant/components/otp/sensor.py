@@ -8,13 +8,14 @@ import pyotp
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
-DEFAULT_NAME = "OTP Sensor"
+from .const import DEFAULT_NAME
 
 TIME_STEP = 30  # Default time step assumed by Google Authenticator
 
@@ -38,6 +39,14 @@ async def async_setup_platform(
     token = config[CONF_TOKEN]
 
     async_add_entities([TOTPSensor(name, token)], True)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the OTP sensor."""
+
+    async_add_entities([TOTPSensor(entry.title, entry.data[CONF_TOKEN])], True)
 
 
 # Only TOTP supported at the moment, HOTP might be added later
