@@ -394,8 +394,7 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
     ],
 }
 
-# Should be gradually synchronised with pyproject.toml
-# [tool.ruff.lint.flake8-import-conventions.extend-aliases]
+# Black list of imports that should be using the namespace
 _FORCE_NAMESPACE_IMPORT: dict[tuple[str, str], str] = {
     ("homeassistant.helpers.area_registry", "async_get"): "ar.async_get",
     ("homeassistant.helpers.device_registry", "async_get"): "dr.async_get",
@@ -457,7 +456,7 @@ class HassImportsFormatChecker(BaseChecker):
         if self.current_package is None:
             return
         for module, _alias in node.names:
-            if module.startswith("{self.current_package}."):
+            if module.startswith(f"{self.current_package}."):
                 self.add_message("hass-relative-import", node=node)
                 continue
             if module.startswith("homeassistant.components.") and module.endswith(
