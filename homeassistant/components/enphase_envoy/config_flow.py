@@ -231,36 +231,6 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-
-class EnvoyOptionsFlowHandler(OptionsFlowWithConfigEntry):
-    """Envoy config flow options handler."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
-                        default=self.config_entry.options.get(
-                            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
-                            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
-                        ),
-                    ): bool,
-                }
-            ),
-            description_placeholders={
-                CONF_SERIAL: self.config_entry.unique_id,
-                CONF_HOST: self.config_entry.data.get("host"),
-            },
-
-
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -327,4 +297,34 @@ class EnvoyOptionsFlowHandler(OptionsFlowWithConfigEntry):
             ),
             description_placeholders=description_placeholders,
             errors=errors,
+        )
+
+
+class EnvoyOptionsFlowHandler(OptionsFlowWithConfigEntry):
+    """Envoy config flow options handler."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
+                        default=self.config_entry.options.get(
+                            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
+                            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
+                        ),
+                    ): bool,
+                }
+            ),
+            description_placeholders={
+                CONF_SERIAL: self.config_entry.unique_id,
+                CONF_HOST: self.config_entry.data.get("host"),
+            },
         )

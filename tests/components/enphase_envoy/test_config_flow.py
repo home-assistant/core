@@ -16,7 +16,7 @@ from homeassistant.components.enphase_envoy.const import (
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
     PLATFORMS,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAM
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
