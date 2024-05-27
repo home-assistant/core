@@ -22,6 +22,6 @@ CLIENT_VERSION = "0.1.1"
 CLIENT_MODEL = "homeassistant"
 
 # List of platforms that support config entry
-SUPPORTED_PLATFORMS = [Platform.COVER, Platform.LIGHT, Platform.SWITCH]
+SUPPORTED_PLATFORMS = [Platform.SWITCH]
 
 SENSOR_TYPE = "7"
