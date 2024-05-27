@@ -93,6 +93,9 @@ def async_log_discovery_origin_info(
 ) -> None:
     """Log information about the discovery and origin."""
     # We only log origin info once per device discovery
+    if not _LOGGER.isEnabledFor(level):
+        # bail early if logging is disabled
+        return
     if discovery_payload.device_discovery:
         _LOGGER.log(level, message)
         return
