@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import partial
 from typing import Any
 
 import voluptuous as vol
@@ -20,7 +19,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     STATE_ON,
 )
-from homeassistant.core import HassJobType, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -29,13 +28,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import subscription
 from .config import MQTT_RW_SCHEMA
-from .const import (
-    CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_STATE_TOPIC,
-    PAYLOAD_NONE,
-)
+from .const import CONF_COMMAND_TOPIC, CONF_STATE_TOPIC, PAYLOAD_NONE
 from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
@@ -67,7 +60,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT switch through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttSwitch,
@@ -85,8 +78,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     _entity_id_format = switch.ENTITY_ID_FORMAT
 
     _optimistic: bool
-    _state_on: str
-    _state_off: str
+    _is_on_map: dict[str | bytes, bool | None]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
@@ -97,18 +89,17 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
-
         state_on: str | None = config.get(CONF_STATE_ON)
-        self._state_on = state_on if state_on else config[CONF_PAYLOAD_ON]
-
         state_off: str | None = config.get(CONF_STATE_OFF)
-        self._state_off = state_off if state_off else config[CONF_PAYLOAD_OFF]
-
+        self._is_on_map = {
+            state_on if state_on else config[CONF_PAYLOAD_ON]: True,
+            state_off if state_off else config[CONF_PAYLOAD_OFF]: False,
+            PAYLOAD_NONE: None,
+        }
         self._optimistic = (
             config[CONF_OPTIMISTIC] or config.get(CONF_STATE_TOPIC) is None
         )
         self._attr_assumed_state = bool(self._optimistic)
-
         self._value_template = MqttValueTemplate(
             self._config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
@@ -116,38 +107,18 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     @callback
     def _state_message_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT state messages."""
-        payload = self._value_template(msg.payload)
-        if payload == self._state_on:
-            self._attr_is_on = True
-        elif payload == self._state_off:
-            self._attr_is_on = False
-        elif payload == PAYLOAD_NONE:
-            self._attr_is_on = None
+        if (payload := self._value_template(msg.payload)) in self._is_on_map:
+            self._attr_is_on = self._is_on_map[payload]
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        if self._config.get(CONF_STATE_TOPIC) is None:
+        if not self.add_subscription(
+            CONF_STATE_TOPIC, self._state_message_received, {"_attr_is_on"}
+        ):
             # Force into optimistic mode.
             self._optimistic = True
             return
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass,
-            self._sub_state,
-            {
-                CONF_STATE_TOPIC: {
-                    "topic": self._config.get(CONF_STATE_TOPIC),
-                    "msg_callback": partial(
-                        self._message_callback,
-                        self._state_message_received,
-                        {"_attr_is_on"},
-                    ),
-                    "entity_id": self.entity_id,
-                    "qos": self._config[CONF_QOS],
-                    "encoding": self._config[CONF_ENCODING] or None,
-                    "job_type": HassJobType.Callback,
-                }
-            },
-        )
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""

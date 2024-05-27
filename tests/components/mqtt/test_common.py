@@ -16,7 +16,7 @@ import yaml
 from homeassistant import config as module_hass_config
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
-from homeassistant.components.mqtt.const import MQTT_DISCONNECTED
+from homeassistant.components.mqtt.const import MQTT_CONNECTION_STATE
 from homeassistant.components.mqtt.mixins import MQTT_ATTRIBUTES_BLOCKED
 from homeassistant.components.mqtt.models import PublishPayloadType
 from homeassistant.config_entries import ConfigEntryState
@@ -115,7 +115,7 @@ async def help_test_availability_when_connection_lost(
     assert state and state.state != STATE_UNAVAILABLE
 
     mqtt_mock.connected = False
-    async_dispatcher_send(hass, MQTT_DISCONNECTED)
+    async_dispatcher_send(hass, MQTT_CONNECTION_STATE, False)
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")

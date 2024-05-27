@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import partial
 import logging
 from typing import Any
 
@@ -17,7 +16,7 @@ from homeassistant.components.event import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_VALUE_TEMPLATE
-from homeassistant.core import HassJobType, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -25,13 +24,7 @@ from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads_object
 
 from . import subscription
 from .config import MQTT_RO_SCHEMA
-from .const import (
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_STATE_TOPIC,
-    PAYLOAD_EMPTY_JSON,
-    PAYLOAD_NONE,
-)
+from .const import CONF_STATE_TOPIC, PAYLOAD_EMPTY_JSON, PAYLOAD_NONE
 from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     DATA_MQTT,
@@ -81,7 +74,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT event through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttEvent,
@@ -186,26 +179,10 @@ class MqttEvent(MqttEntity, EventEntity):
         mqtt_data = self.hass.data[DATA_MQTT]
         mqtt_data.state_write_requests.write_state_request(self)
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        topics: dict[str, dict[str, Any]] = {}
-
-        topics["state_topic"] = {
-            "topic": self._config[CONF_STATE_TOPIC],
-            "msg_callback": partial(
-                self._message_callback,
-                self._event_received,
-                None,
-            ),
-            "entity_id": self.entity_id,
-            "qos": self._config[CONF_QOS],
-            "encoding": self._config[CONF_ENCODING] or None,
-            "job_type": HassJobType.Callback,
-        }
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
-        )
+        self.add_subscription(CONF_STATE_TOPIC, self._event_received, None)
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""

@@ -7,7 +7,6 @@ LOGGER = logging.getLogger(__package__)
 
 CONF_RECOMMENDED = "recommended"
 CONF_PROMPT = "prompt"
-DEFAULT_PROMPT = """Answer in plain text. Keep it simple and to the point."""
 CONF_CHAT_MODEL = "chat_model"
 RECOMMENDED_CHAT_MODEL = "gpt-4o"
 CONF_MAX_TOKENS = "max_tokens"
