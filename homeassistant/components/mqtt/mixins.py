@@ -169,11 +169,12 @@ def async_handle_schema_error(
     )
 
 
-async def _async_discover(
+@callback
+def _async_discover(
     hass: HomeAssistant,
     domain: str,
     setup: Callable[[MQTTDiscoveryPayload], None] | None,
-    async_setup: Callable[[MQTTDiscoveryPayload], Coroutine[Any, Any, None]] | None,
+    async_setup: Callable[[MQTTDiscoveryPayload], None] | None,
     discovery_payload: MQTTDiscoveryPayload,
 ) -> None:
     """Discover and add an MQTT entity, automation or tag.
@@ -195,7 +196,7 @@ async def _async_discover(
         if setup is not None:
             setup(discovery_payload)
         elif async_setup is not None:
-            await async_setup(discovery_payload)
+            async_setup(discovery_payload)
     except vol.Invalid as err:
         discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
         clear_discovery_hash(hass, discovery_hash)
@@ -211,7 +212,8 @@ async def _async_discover(
 class _SetupNonEntityHelperCallbackProtocol(Protocol):  # pragma: no cover
     """Callback protocol for async_setup in async_setup_non_entity_entry_helper."""
 
-    async def __call__(
+    @callback
+    def __call__(
         self, config: ConfigType, discovery_data: DiscoveryInfoType
     ) -> None: ...
 
@@ -225,12 +227,13 @@ async def async_setup_non_entity_entry_helper(
     """Set up automation or tag creation dynamically through MQTT discovery."""
     mqtt_data = hass.data[DATA_MQTT]
 
-    async def async_setup_from_discovery(
+    @callback
+    def async_setup_from_discovery(
         discovery_payload: MQTTDiscoveryPayload,
     ) -> None:
         """Set up an MQTT entity, automation or tag from discovery."""
         config: ConfigType = discovery_schema(discovery_payload)
-        await async_setup(config, discovery_data=discovery_payload.discovery_data)
+        async_setup(config, discovery_data=discovery_payload.discovery_data)
 
     mqtt_data.reload_dispatchers.append(
         async_dispatcher_connect(
