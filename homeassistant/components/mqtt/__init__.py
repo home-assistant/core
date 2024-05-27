@@ -24,20 +24,18 @@ from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
     event as ev,
+    issue_registry as ir,
     template,
 )
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import async_get_platforms
-from homeassistant.helpers.issue_registry import (
-    async_delete_issue,
-    async_get as async_get_issue_registry,
-)
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, async_get_loaded_integration
 from homeassistant.setup import SetupPhases, async_pause_setup
+from homeassistant.util.async_ import create_eager_task
 
 # Loading the config flow file will register the flow
 from . import debug_info, discovery
@@ -185,14 +183,14 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
 @callback
 def _async_remove_mqtt_issues(hass: HomeAssistant, mqtt_data: MqttData) -> None:
     """Unregister open config issues."""
-    issue_registry = async_get_issue_registry(hass)
+    issue_registry = ir.async_get(hass)
     open_issues = [
         issue_id
         for (domain, issue_id), issue_entry in issue_registry.issues.items()
         if domain == DOMAIN and issue_entry.translation_key == "invalid_platform_config"
     ]
     for issue in open_issues:
-        async_delete_issue(hass, DOMAIN, issue)
+        ir.async_delete_issue(hass, DOMAIN, issue)
 
 
 async def async_check_config_schema(
@@ -393,9 +391,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Reload the modern yaml platforms
         mqtt_platforms = async_get_platforms(hass, DOMAIN)
         tasks = [
-            entity.async_remove()
+            create_eager_task(entity.async_remove())
             for mqtt_platform in mqtt_platforms
-            for entity in mqtt_platform.entities.values()
+            for entity in list(mqtt_platform.entities.values())
             if getattr(entity, "_discovery_data", None) is None
             and mqtt_platform.config_entry
             and mqtt_platform.domain in RELOADABLE_PLATFORMS

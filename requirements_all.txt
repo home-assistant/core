@@ -553,7 +553,7 @@ beautifulsoup4==4.12.3
 bellows==0.38.4
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected[china]==0.15.2
+bimmer-connected[china]==0.15.3
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -1386,7 +1386,7 @@ netdata==1.1.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==3.0.1
+nettigo-air-monitor==3.1.0
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -2251,7 +2251,7 @@ python-gitlab==1.6.0
 python-homeassistant-analytics==0.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v5.0.0
+python-homewizard-energy==v6.0.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -2704,7 +2704,7 @@ temperusb==1.6.1
 # tensorflow==2.5.0
 
 # homeassistant.components.teslemetry
-tesla-fleet-api==0.4.9
+tesla-fleet-api==0.5.12
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
@@ -2945,7 +2945,7 @@ youless-api==1.1.1
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2024.04.09
+yt-dlp==2024.05.26
 
 # homeassistant.components.zamg
 zamg==0.3.6

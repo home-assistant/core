@@ -15,7 +15,7 @@ from .const import DEFAULT_QOS
 from .models import MessageCallbackType
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class EntitySubscription:
     """Class to hold data about an active entity topic subscription."""
 
@@ -26,8 +26,8 @@ class EntitySubscription:
     unsubscribe_callback: Callable[[], None] | None
     qos: int = 0
     encoding: str = "utf-8"
-    entity_id: str | None = None
-    job_type: HassJobType | None = None
+    entity_id: str | None
+    job_type: HassJobType | None
 
     def resubscribe_if_necessary(
         self, hass: HomeAssistant, other: EntitySubscription | None
@@ -42,18 +42,14 @@ class EntitySubscription:
         if other is not None and other.unsubscribe_callback is not None:
             other.unsubscribe_callback()
             # Clear debug data if it exists
-            debug_info.remove_subscription(
-                self.hass, other.message_callback, str(other.topic), other.entity_id
-            )
+            debug_info.remove_subscription(self.hass, str(other.topic), other.entity_id)
 
         if self.topic is None:
             # We were asked to remove the subscription or not to create it
             return
 
         # Prepare debug data
-        debug_info.add_subscription(
-            self.hass, self.message_callback, self.topic, self.entity_id
-        )
+        debug_info.add_subscription(self.hass, self.topic, self.entity_id)
 
         self.should_subscribe = True
 
@@ -110,15 +106,15 @@ def async_prepare_subscribe_topics(
     for key, value in topics.items():
         # Extract the new requested subscription
         requested = EntitySubscription(
-            topic=value.get("topic", None),
-            message_callback=value.get("msg_callback", None),
+            topic=value.get("topic"),
+            message_callback=value["msg_callback"],
             unsubscribe_callback=None,
             qos=value.get("qos", DEFAULT_QOS),
             encoding=value.get("encoding", "utf-8"),
             hass=hass,
             should_subscribe=None,
-            entity_id=value.get("entity_id", None),
-            job_type=value.get("job_type", None),
+            entity_id=value.get("entity_id"),
+            job_type=value.get("job_type"),
         )
         # Get the current subscription state
         current = current_subscriptions.pop(key, None)
@@ -132,7 +128,6 @@ def async_prepare_subscribe_topics(
             # Clear debug data if it exists
             debug_info.remove_subscription(
                 hass,
-                remaining.message_callback,
                 str(remaining.topic),
                 remaining.entity_id,
             )

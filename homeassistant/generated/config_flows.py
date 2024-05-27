@@ -318,6 +318,7 @@ FLOWS = {
         "matter",
         "meater",
         "medcom_ble",
+        "media_extractor",
         "melcloud",
         "melnor",
         "met",

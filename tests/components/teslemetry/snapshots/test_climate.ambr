@@ -41,7 +41,7 @@
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': <TeslemetryClimateSide.DRIVER: 'driver_temp'>,
-    'unique_id': 'VINVINVIN-driver_temp',
+    'unique_id': 'LRWXF7EK4KC700000-driver_temp',
     'unit_of_measurement': None,
   })
 # ---
@@ -116,7 +116,7 @@
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': <TeslemetryClimateSide.DRIVER: 'driver_temp'>,
-    'unique_id': 'VINVINVIN-driver_temp',
+    'unique_id': 'LRWXF7EK4KC700000-driver_temp',
     'unit_of_measurement': None,
   })
 # ---
@@ -191,7 +191,7 @@
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': <TeslemetryClimateSide.DRIVER: 'driver_temp'>,
-    'unique_id': 'VINVINVIN-driver_temp',
+    'unique_id': 'LRWXF7EK4KC700000-driver_temp',
     'unit_of_measurement': None,
   })
 # ---
