@@ -23,7 +23,7 @@ from functools import cache
 import logging
 from random import randint
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Generic, Self, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Generic, NotRequired, Self, TypedDict, cast
 
 from async_interrupt import interrupt
 from propcache import cached_property
@@ -319,7 +319,7 @@ class ConfigSubentryData(TypedDict):
     """Container for configuration subentry data."""
 
     data: Mapping[str, Any]
-    subentry_id: str
+    subentry_id: NotRequired[str]
     title: str
     unique_id: str | None
 
@@ -434,14 +434,15 @@ class ConfigEntry(Generic[_DataT]):
         subentries_data = subentries_data or {}
         subentries = {}
         for subentry_data in subentries_data:
-            subentry_kwargs = {
-                "data": MappingProxyType(subentry_data["data"]),
-                "title": subentry_data["title"],
-                "unique_id": subentry_data.get("unique_id"),
-            }
+            subentry_kwargs = {}
             if "subentry_id" in subentry_data:
                 subentry_kwargs["subentry_id"] = subentry_data["subentry_id"]
-            subentry = ConfigSubentry(**subentry_kwargs)  # type: ignore[arg-type]
+            subentry = ConfigSubentry(
+                data=MappingProxyType(subentry_data["data"]),
+                title=subentry_data["title"],
+                unique_id=subentry_data.get("unique_id"),
+                **subentry_kwargs,
+            )
             subentries[subentry.subentry_id] = subentry
 
         _setter(self, "subentries", MappingProxyType(subentries))
