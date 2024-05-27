@@ -1,6 +1,7 @@
 """Music Player Daemon config flow."""
 
 from asyncio import timeout
+from contextlib import suppress
 from socket import gaierror
 from typing import Any
 
@@ -75,6 +76,8 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
                 await client.connect(import_config[CONF_HOST], import_config[CONF_PORT])
                 if CONF_PASSWORD in import_config:
                     await client.password(import_config[CONF_PASSWORD])
+                with suppress(mpd.ConnectionError):
+                    client.disconnect()
         except (
             TimeoutError,
             gaierror,
