@@ -1130,7 +1130,7 @@ class MQTT:
             " retained" if msg.retain else "",
             topic,
             msg.qos,
-            msg.payload[0:8192] if msg.payload is not None else "<NULL>",
+            msg.payload[0:8192],
         )
         subscriptions = self._matching_subscriptions(topic)
         msg_cache_by_subscription_topic: dict[str, ReceiveMessage] = {}
