@@ -40,7 +40,7 @@ async def async_get_config_entry_diagnostics(
         "utilisation": {},
         "is_system_loaded": True,
         "api_details": {
-            "fetching_entities": syno_api._fetching_entities,  # pylint: disable=protected-access
+            "fetching_entities": syno_api._fetching_entities,  # noqa: SLF001
         },
     }
 

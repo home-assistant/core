@@ -11,11 +11,11 @@ if TYPE_CHECKING:
     from .connection import ActiveConnection
 
 
-WebSocketCommandHandler = Callable[
-    [HomeAssistant, "ActiveConnection", dict[str, Any]], None
+type WebSocketCommandHandler = Callable[
+    [HomeAssistant, ActiveConnection, dict[str, Any]], None
 ]
-AsyncWebSocketCommandHandler = Callable[
-    [HomeAssistant, "ActiveConnection", dict[str, Any]], Awaitable[None]
+type AsyncWebSocketCommandHandler = Callable[
+    [HomeAssistant, ActiveConnection, dict[str, Any]], Awaitable[None]
 ]
 
 DOMAIN: Final = "websocket_api"

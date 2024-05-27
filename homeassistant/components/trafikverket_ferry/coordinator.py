@@ -77,7 +77,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
             datetime.combine(
                 departure_day,
                 self._time,
-                dt_util.get_time_zone(self.hass.config.time_zone),
+                dt_util.get_default_time_zone(),
             )
             if self._time
             else dt_util.now()

@@ -71,7 +71,7 @@
       },
       "reauth_confirm": {
         "title": "Re-authentication required with the MQTT broker",
-        "description": "The MQTT broker reported an authentication error. Please confirm the brokers correct usernname and password.",
+        "description": "The MQTT broker reported an authentication error. Please confirm the brokers correct username and password.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"

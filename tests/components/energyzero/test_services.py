@@ -146,8 +146,7 @@ async def test_service_called_with_unloaded_entry(
     service: str,
 ) -> None:
     """Test service calls with unloaded config entry."""
-
-    await mock_config_entry.async_unload(hass)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
     data = {"config_entry": mock_config_entry.entry_id, "incl_vat": True}
 

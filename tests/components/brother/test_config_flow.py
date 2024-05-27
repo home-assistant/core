@@ -1,8 +1,7 @@
 """Define tests for the Brother Printer config flow."""
 
 from ipaddress import ip_address
-import json
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from brother import SnmpError, UnsupportedModelError
 import pytest
@@ -14,7 +13,9 @@ from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry, load_fixture
+from . import init_integration
+
+from tests.common import MockConfigEntry
 
 CONFIG = {CONF_HOST: "127.0.0.1", CONF_TYPE: "laser"}
 
@@ -31,65 +32,21 @@ async def test_show_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_create_entry_with_hostname(hass: HomeAssistant) -> None:
-    """Test that the user step works with printer hostname."""
-    with (
-        patch("brother.Brother.initialize"),
-        patch(
-            "brother.Brother._get_data",
-            return_value=json.loads(load_fixture("printer_data.json", "brother")),
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_HOST: "example.local", CONF_TYPE: "laser"},
-        )
+@pytest.mark.parametrize("host", ["example.local", "127.0.0.1", "2001:db8::1428:57ab"])
+async def test_create_entry(
+    hass: HomeAssistant, host: str, mock_brother_client: AsyncMock
+) -> None:
+    """Test that the user step works with printer hostname/IPv4/IPv6."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: host, CONF_TYPE: "laser"},
+    )
 
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "HL-L2340DW 0123456789"
-        assert result["data"][CONF_HOST] == "example.local"
-        assert result["data"][CONF_TYPE] == "laser"
-
-
-async def test_create_entry_with_ipv4_address(hass: HomeAssistant) -> None:
-    """Test that the user step works with printer IPv4 address."""
-    with (
-        patch("brother.Brother.initialize"),
-        patch(
-            "brother.Brother._get_data",
-            return_value=json.loads(load_fixture("printer_data.json", "brother")),
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
-        )
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "HL-L2340DW 0123456789"
-        assert result["data"][CONF_HOST] == "127.0.0.1"
-        assert result["data"][CONF_TYPE] == "laser"
-
-
-async def test_create_entry_with_ipv6_address(hass: HomeAssistant) -> None:
-    """Test that the user step works with printer IPv6 address."""
-    with (
-        patch("brother.Brother.initialize"),
-        patch(
-            "brother.Brother._get_data",
-            return_value=json.loads(load_fixture("printer_data.json", "brother")),
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_HOST: "2001:db8::1428:57ab", CONF_TYPE: "laser"},
-        )
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "HL-L2340DW 0123456789"
-        assert result["data"][CONF_HOST] == "2001:db8::1428:57ab"
-        assert result["data"][CONF_TYPE] == "laser"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "HL-L2340DW 0123456789"
+    assert result["data"][CONF_HOST] == host
+    assert result["data"][CONF_TYPE] == "laser"
 
 
 async def test_invalid_hostname(hass: HomeAssistant) -> None:
@@ -103,97 +60,87 @@ async def test_invalid_hostname(hass: HomeAssistant) -> None:
     assert result["errors"] == {CONF_HOST: "wrong_host"}
 
 
-@pytest.mark.parametrize("exc", [ConnectionError, TimeoutError])
-async def test_connection_error(hass: HomeAssistant, exc: Exception) -> None:
+@pytest.mark.parametrize(
+    ("exc", "base_error"),
+    [
+        (ConnectionError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
+        (SnmpError("SNMP error"), "snmp_error"),
+    ],
+)
+async def test_errors(
+    hass: HomeAssistant, exc: Exception, base_error: str, mock_brother_client: AsyncMock
+) -> None:
     """Test connection to host error."""
-    with (
-        patch("brother.Brother.initialize"),
-        patch("brother.Brother._get_data", side_effect=exc),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
-        )
+    mock_brother_client.async_update.side_effect = exc
 
-        assert result["errors"] == {"base": "cannot_connect"}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+    )
 
-
-async def test_snmp_error(hass: HomeAssistant) -> None:
-    """Test SNMP error."""
-    with (
-        patch("brother.Brother.initialize"),
-        patch("brother.Brother._get_data", side_effect=SnmpError("error")),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
-        )
-
-        assert result["errors"] == {"base": "snmp_error"}
+    assert result["errors"] == {"base": base_error}
 
 
 async def test_unsupported_model_error(hass: HomeAssistant) -> None:
     """Test unsupported printer model error."""
-    with (
-        patch("brother.Brother.initialize"),
-        patch("brother.Brother._get_data", side_effect=UnsupportedModelError("error")),
+    with patch(
+        "homeassistant.components.brother.Brother.create",
+        new=AsyncMock(side_effect=UnsupportedModelError("error")),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "unsupported_model"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_model"
 
 
-async def test_device_exists_abort(hass: HomeAssistant) -> None:
+async def test_device_exists_abort(
+    hass: HomeAssistant,
+    mock_brother_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test we abort config flow if Brother printer already configured."""
-    with (
-        patch("brother.Brother.initialize"),
-        patch(
-            "brother.Brother._get_data",
-            return_value=json.loads(load_fixture("printer_data.json", "brother")),
-        ),
-    ):
-        MockConfigEntry(domain=DOMAIN, unique_id="0123456789", data=CONFIG).add_to_hass(
-            hass
-        )
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
-        )
+    await init_integration(hass, mock_config_entry)
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize("exc", [ConnectionError, TimeoutError, SnmpError("error")])
-async def test_zeroconf_exception(hass: HomeAssistant, exc: Exception) -> None:
+async def test_zeroconf_exception(
+    hass: HomeAssistant, exc: Exception, mock_brother_client: AsyncMock
+) -> None:
     """Test we abort zeroconf flow on exception."""
-    with (
-        patch("brother.Brother.initialize"),
-        patch("brother.Brother._get_data", side_effect=exc),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
-                ip_address=ip_address("127.0.0.1"),
-                ip_addresses=[ip_address("127.0.0.1")],
-                hostname="example.local.",
-                name="Brother Printer",
-                port=None,
-                properties={},
-                type="mock_type",
-            ),
-        )
+    mock_brother_client.async_update.side_effect = exc
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "cannot_connect"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="example.local.",
+            name="Brother Printer",
+            port=None,
+            properties={},
+            type="mock_type",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_zeroconf_unsupported_model(hass: HomeAssistant) -> None:
     """Test unsupported printer model error."""
-    with (
-        patch("brother.Brother.initialize"),
-        patch("brother.Brother._get_data") as mock_get_data,
+    with patch(
+        "homeassistant.components.brother.Brother.create",
+        new=AsyncMock(side_effect=UnsupportedModelError("error")),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -209,46 +156,37 @@ async def test_zeroconf_unsupported_model(hass: HomeAssistant) -> None:
             ),
         )
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "unsupported_model"
-        assert len(mock_get_data.mock_calls) == 0
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_model"
 
 
-async def test_zeroconf_device_exists_abort(hass: HomeAssistant) -> None:
+async def test_zeroconf_device_exists_abort(
+    hass: HomeAssistant,
+    mock_brother_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test we abort zeroconf flow if Brother printer already configured."""
-    with (
-        patch("brother.Brother.initialize"),
-        patch(
-            "brother.Brother._get_data",
-            return_value=json.loads(load_fixture("printer_data.json", "brother")),
+    await init_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="example.local.",
+            name="Brother Printer",
+            port=None,
+            properties={},
+            type="mock_type",
         ),
-    ):
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            unique_id="0123456789",
-            data={CONF_HOST: "example.local", CONF_TYPE: "laser"},
-        )
-        entry.add_to_hass(hass)
+    )
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
-                ip_address=ip_address("127.0.0.1"),
-                ip_addresses=[ip_address("127.0.0.1")],
-                hostname="example.local.",
-                name="Brother Printer",
-                port=None,
-                properties={},
-                type="mock_type",
-            ),
-        )
-
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
     # Test config entry got updated with latest IP
-    assert entry.data["host"] == "127.0.0.1"
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"
 
 
 async def test_zeroconf_no_probe_existing_device(hass: HomeAssistant) -> None:
@@ -256,8 +194,8 @@ async def test_zeroconf_no_probe_existing_device(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, unique_id="0123456789", data=CONFIG)
     entry.add_to_hass(hass)
     with (
-        patch("brother.Brother.initialize"),
-        patch("brother.Brother._get_data") as mock_get_data,
+        patch("homeassistant.components.brother.Brother.initialize"),
+        patch("homeassistant.components.brother.Brother._get_data") as mock_get_data,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -279,39 +217,34 @@ async def test_zeroconf_no_probe_existing_device(hass: HomeAssistant) -> None:
     assert len(mock_get_data.mock_calls) == 0
 
 
-async def test_zeroconf_confirm_create_entry(hass: HomeAssistant) -> None:
+async def test_zeroconf_confirm_create_entry(
+    hass: HomeAssistant, mock_brother_client: AsyncMock
+) -> None:
     """Test zeroconf confirmation and create config entry."""
-    with (
-        patch("brother.Brother.initialize"),
-        patch(
-            "brother.Brother._get_data",
-            return_value=json.loads(load_fixture("printer_data.json", "brother")),
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="example.local.",
+            name="Brother Printer",
+            port=None,
+            properties={},
+            type="mock_type",
         ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
-                ip_address=ip_address("127.0.0.1"),
-                ip_addresses=[ip_address("127.0.0.1")],
-                hostname="example.local.",
-                name="Brother Printer",
-                port=None,
-                properties={},
-                type="mock_type",
-            ),
-        )
+    )
 
-        assert result["step_id"] == "zeroconf_confirm"
-        assert result["description_placeholders"]["model"] == "HL-L2340DW"
-        assert result["description_placeholders"]["serial_number"] == "0123456789"
-        assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+    assert result["description_placeholders"]["model"] == "HL-L2340DW"
+    assert result["description_placeholders"]["serial_number"] == "0123456789"
+    assert result["type"] is FlowResultType.FORM
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_TYPE: "laser"}
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_TYPE: "laser"}
+    )
 
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "HL-L2340DW 0123456789"
-        assert result["data"][CONF_HOST] == "127.0.0.1"
-        assert result["data"][CONF_TYPE] == "laser"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "HL-L2340DW 0123456789"
+    assert result["data"][CONF_HOST] == "127.0.0.1"
+    assert result["data"][CONF_TYPE] == "laser"

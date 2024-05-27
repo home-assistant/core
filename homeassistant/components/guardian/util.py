@@ -6,7 +6,7 @@ from collections.abc import Callable, Coroutine, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate
 
 from aioguardian.errors import GuardianError
 
@@ -20,13 +20,9 @@ from .const import LOGGER
 if TYPE_CHECKING:
     from . import GuardianEntity
 
-    _GuardianEntityT = TypeVar("_GuardianEntityT", bound=GuardianEntity)
-
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=30)
 
 SIGNAL_REBOOT_REQUESTED = "guardian_reboot_requested_{0}"
-
-_P = ParamSpec("_P")
 
 
 @dataclass
@@ -64,7 +60,7 @@ def async_finish_entity_domain_replacements(
 
 
 @callback
-def convert_exceptions_to_homeassistant_error(
+def convert_exceptions_to_homeassistant_error[_GuardianEntityT: GuardianEntity, **_P](
     func: Callable[Concatenate[_GuardianEntityT, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_GuardianEntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate to handle exceptions from the Guardian API."""

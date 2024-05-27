@@ -32,7 +32,7 @@ async def test_control_event(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test event update updates correct event object."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
 
     await setup_rfx_test_cfg(
@@ -60,7 +60,7 @@ async def test_status_event(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test event update updates correct event object."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
 
     await setup_rfx_test_cfg(

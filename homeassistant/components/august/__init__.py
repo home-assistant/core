@@ -7,7 +7,7 @@ from collections.abc import Callable, Coroutine, Iterable, ValuesView
 from datetime import datetime
 from itertools import chain
 import logging
-from typing import Any, ParamSpec, TypeVar
+from typing import Any
 
 from aiohttp import ClientError, ClientResponseError
 from yalexs.activity import ActivityTypes
@@ -36,9 +36,6 @@ from .gateway import AugustGateway
 from .subscriber import AugustSubscriberMixin
 from .util import async_create_august_clientsession
 
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-
 _LOGGER = logging.getLogger(__name__)
 
 API_CACHED_ATTRS = {
@@ -49,7 +46,7 @@ API_CACHED_ATTRS = {
 }
 YALEXS_BLE_DOMAIN = "yalexs_ble"
 
-AugustConfigEntry = ConfigEntry["AugustData"]
+type AugustConfigEntry = ConfigEntry[AugustData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -151,8 +148,8 @@ class AugustData(AugustSubscriberMixin):
         token = self._august_gateway.access_token
         # This used to be a gather but it was less reliable with august's recent api changes.
         user_data = await self._api.async_get_user(token)
-        locks = await self._api.async_get_operable_locks(token)
-        doorbells = await self._api.async_get_doorbells(token)
+        locks: list[Lock] = await self._api.async_get_operable_locks(token)
+        doorbells: list[Doorbell] = await self._api.async_get_doorbells(token)
         if not doorbells:
             doorbells = []
         if not locks:
@@ -170,19 +167,6 @@ class AugustData(AugustSubscriberMixin):
         # detail as we cannot determine if they are usable.
         # This also allows us to avoid checking for
         # detail being None all over the place
-
-        # Currently we know how to feed data to yalexe_ble
-        # but we do not know how to send it to homekit_controller
-        # yet
-        _async_trigger_ble_lock_discovery(
-            self._hass,
-            [
-                lock_detail
-                for lock_detail in self._device_detail_by_id.values()
-                if isinstance(lock_detail, LockDetail) and lock_detail.offline_key
-            ],
-        )
-
         self._remove_inoperative_locks()
         self._remove_inoperative_doorbells()
 
@@ -337,28 +321,26 @@ class AugustData(AugustSubscriberMixin):
             [str, str], Coroutine[Any, Any, DoorbellDetail | LockDetail]
         ],
     ) -> None:
-        _LOGGER.debug(
-            "Started retrieving detail for %s (%s)",
-            device.device_name,
-            device.device_id,
-        )
+        device_id = device.device_id
+        device_name = device.device_name
+        _LOGGER.debug("Started retrieving detail for %s (%s)", device_name, device_id)
 
         try:
-            self._device_detail_by_id[device.device_id] = await api_call(
-                self._august_gateway.access_token, device.device_id
-            )
+            detail = await api_call(self._august_gateway.access_token, device_id)
         except ClientError as ex:
             _LOGGER.error(
                 "Request error trying to retrieve %s details for %s. %s",
-                device.device_id,
-                device.device_name,
+                device_id,
+                device_name,
                 ex,
             )
-        _LOGGER.debug(
-            "Completed retrieving detail for %s (%s)",
-            device.device_name,
-            device.device_id,
-        )
+        _LOGGER.debug("Completed retrieving detail for %s (%s)", device_name, device_id)
+        # If the key changes after startup we need to trigger a
+        # discovery to keep it up to date
+        if isinstance(detail, LockDetail) and detail.offline_key:
+            _async_trigger_ble_lock_discovery(self._hass, [detail])
+
+        self._device_detail_by_id[device_id] = detail
 
     def get_device(self, device_id: str) -> Doorbell | Lock | None:
         """Get a device by id."""
@@ -418,7 +400,7 @@ class AugustData(AugustSubscriberMixin):
             hyper_bridge,
         )
 
-    async def _async_call_api_op_requires_bridge(
+    async def _async_call_api_op_requires_bridge[**_P, _R](
         self,
         device_id: str,
         func: Callable[_P, Coroutine[Any, Any, _R]],

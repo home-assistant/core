@@ -34,7 +34,6 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VizioAppsDataUpdateCoordinator
 from .const import (
     CONF_ADDITIONAL_CONFIGS,
     CONF_APPS,
@@ -53,6 +52,7 @@ from .const import (
     VIZIO_SOUND_MODE,
     VIZIO_VOLUME,
 )
+from .coordinator import VizioAppsDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
