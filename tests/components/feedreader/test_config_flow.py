@@ -18,7 +18,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .const import URL, VALID_CONFIG_DEFAULT
+from .const import FEED_TITLE, URL, VALID_CONFIG_DEFAULT
 
 from tests.common import MockConfigEntry
 
@@ -58,7 +58,7 @@ async def test_user(hass: HomeAssistant, feedparser, setup_entry) -> None:
         result["flow_id"], user_input={CONF_URL: URL, CONF_MAX_ENTRIES: 5}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "RSS Sample"
+    assert result["title"] == FEED_TITLE
     assert result["data"][CONF_URL] == URL
     assert result["data"][CONF_MAX_ENTRIES] == 5
 
@@ -73,7 +73,7 @@ async def test_import(hass: HomeAssistant, feedparser, setup_entry) -> None:
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert config_entries
     assert len(config_entries) == 1
-    assert config_entries[0].title == "RSS Sample"
+    assert config_entries[0].title == FEED_TITLE
     assert config_entries[0].data[CONF_URL] == URL
     assert config_entries[0].data[CONF_MAX_ENTRIES] == DEFAULT_MAX_ENTRIES
 
@@ -118,7 +118,7 @@ async def test_user_errors(
         result["flow_id"], user_input={CONF_URL: URL, CONF_MAX_ENTRIES: 5}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "RSS Sample"
+    assert result["title"] == FEED_TITLE
     assert result["data"][CONF_URL] == URL
     assert result["data"][CONF_MAX_ENTRIES] == 5
 
