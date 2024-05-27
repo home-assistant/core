@@ -132,7 +132,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         timezone=config_entry.data.get(CONF_TIME_ZONE, hass.config.time_zone),
     )
 
-    prefix = get_unique_prefix(
+    old_prefix = get_unique_prefix(
         location, language, candle_lighting_offset, havdalah_offset
     )
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
@@ -141,7 +141,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         CONF_LOCATION: location,
         CONF_CANDLE_LIGHT_MINUTES: candle_lighting_offset,
         CONF_HAVDALAH_OFFSET_MINUTES: havdalah_offset,
-        "prefix": prefix,
+        "old_prefix": old_prefix,
     }
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

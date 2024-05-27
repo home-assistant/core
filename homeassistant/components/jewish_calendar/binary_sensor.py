@@ -72,19 +72,18 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Jewish Calendar binary sensors."""
+    entry = hass.data[DOMAIN][config.entry_id]
     for description in BINARY_SENSORS:
         async_update_unique_id(
             hass,
             config.entry_id,
-            hass.data[DOMAIN]["prefix"],
+            entry["old_prefix"],
             BINARY_SENSOR_DOMAIN,
             description.key,
         )
 
     async_add_entities(
-        JewishCalendarBinarySensor(
-            config.entry_id, hass.data[DOMAIN][config.entry_id], description
-        )
+        JewishCalendarBinarySensor(config.entry_id, entry, description)
         for description in BINARY_SENSORS
     )
 

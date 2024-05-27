@@ -157,6 +157,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Jewish calendar sensors ."""
     entry = hass.data[DOMAIN][config.entry_id]
+    for sensor in (*INFO_SENSORS, *TIME_SENSORS):
+        async_update_unique_id(
+            hass,
+            config.entry_id,
+            entry["old_prefix"],
+            SENSOR_DOMAIN,
+            sensor.key,
+        )
+
     sensors = [
         JewishCalendarSensor(config.entry_id, entry, description)
         for description in INFO_SENSORS
@@ -165,15 +174,6 @@ async def async_setup_entry(
         JewishCalendarTimeSensor(config.entry_id, entry, description)
         for description in TIME_SENSORS
     )
-
-    for sensor in sensors:
-        async_update_unique_id(
-            hass,
-            config.entry_id,
-            hass.data[DOMAIN]["prefix"],
-            SENSOR_DOMAIN,
-            sensor.entity_description.key,
-        )
 
     async_add_entities(sensors)
 
