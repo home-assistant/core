@@ -121,12 +121,11 @@ async def async_start(  # noqa: C901
             hass, MQTT_DISCOVERY_NEW.format(component, "mqtt"), discovery_payload
         )
 
-    async def _async_component_setup(discovery_payload: MQTTDiscoveryPayload) -> None:
+    async def _async_component_setup(
+        component: str, discovery_payload: MQTTDiscoveryPayload
+    ) -> None:
         """Perform component set up."""
-        discovery_hash = discovery_payload.discovery_data[ATTR_DISCOVERY_HASH]
-        component, _ = discovery_hash
-        platform_setup_lock.setdefault(component, asyncio.Lock())
-        async with platform_setup_lock[component]:
+        async with platform_setup_lock.setdefault(component, asyncio.Lock()):
             if component not in mqtt_data.platforms_loaded:
                 await async_forward_entry_setup_and_setup_discovery(
                     hass, config_entry, {component}
@@ -296,7 +295,9 @@ async def async_start(  # noqa: C901
 
         if component not in mqtt_data.platforms_loaded and payload:
             # Load component first
-            config_entry.async_create_task(hass, _async_component_setup(payload))
+            config_entry.async_create_task(
+                hass, _async_component_setup(component, payload)
+            )
         elif already_discovered:
             # Dispatch update
             message = f"Component has already been discovered: {component} {discovery_id}, sending update"
