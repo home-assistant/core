@@ -135,19 +135,20 @@ async def test_fan_turn_on_with_preset_mode(
         value=2,
     )
     # test again with wind feature as preset mode
-    matter_client.write_attribute.reset_mock()
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "natural_wind"},
-        blocking=True,
-    )
-    assert matter_client.write_attribute.call_count == 1
-    assert matter_client.write_attribute.call_args == call(
-        node_id=air_purifier.node_id,
-        attribute_path="1/514/10",
-        value=2,
-    )
+    for preset_mode, value in (("natural_wind", 2), ("sleep_wind", 1)):
+        matter_client.write_attribute.reset_mock()
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: preset_mode},
+            blocking=True,
+        )
+        assert matter_client.write_attribute.call_count == 1
+        assert matter_client.write_attribute.call_args == call(
+            node_id=air_purifier.node_id,
+            attribute_path="1/514/10",
+            value=value,
+        )
     # test again where preset_mode is omitted in the service call
     # which should select a default preset mode
     matter_client.write_attribute.reset_mock()
