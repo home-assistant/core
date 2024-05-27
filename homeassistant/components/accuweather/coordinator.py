@@ -9,7 +9,7 @@ from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExcee
 from aiohttp.client_exceptions import ClientConnectorError
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     TimestampDataUpdateCoordinator,
@@ -107,10 +107,10 @@ class AccuWeatherDailyForecastDataUpdateCoordinator(
         return result
 
 
-def _get_device_info(location_key: str, name: str) -> DeviceInfo:
+def _get_device_info(location_key: str, name: str) -> dr.DeviceInfo:
     """Get device info."""
-    return DeviceInfo(
-        entry_type=DeviceEntryType.SERVICE,
+    return dr.DeviceInfo(
+        entry_type=dr.DeviceEntryType.SERVICE,
         identifiers={(DOMAIN, location_key)},
         manufacturer=MANUFACTURER,
         name=name,

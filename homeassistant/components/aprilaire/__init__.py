@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def ready_callback(ready: bool):
         if ready:
-            mac_address = format_mac(coordinator.data[Attribute.MAC_ADDRESS])
+            mac_address = dr.format_mac(coordinator.data[Attribute.MAC_ADDRESS])
 
             if mac_address != entry.unique_id:
                 raise ConfigEntryAuthFailed("Invalid MAC address")

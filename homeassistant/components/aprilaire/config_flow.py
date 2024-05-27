@@ -10,8 +10,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
@@ -58,7 +58,7 @@ class AprilaireConfigFlow(ConfigFlow, domain=DOMAIN):
         mac_address = coordinator.data.get(Attribute.MAC_ADDRESS)
 
         if ready and mac_address is not None:
-            await self.async_set_unique_id(format_mac(mac_address))
+            await self.async_set_unique_id(dr.format_mac(mac_address))
 
             self._abort_if_unique_id_configured()
 

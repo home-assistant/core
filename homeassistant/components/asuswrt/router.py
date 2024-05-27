@@ -18,8 +18,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -236,7 +235,7 @@ class AsusWrtRouter:
         for entry in track_entries:
             if entry.domain != TRACKER_DOMAIN:
                 continue
-            device_mac = format_mac(entry.unique_id)
+            device_mac = dr.format_mac(entry.unique_id)
 
             # migrate entity unique ID if wrong formatted
             if device_mac != entry.unique_id:
@@ -377,9 +376,9 @@ class AsusWrtRouter:
         return req_reload
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> dr.DeviceInfo:
         """Return the device information."""
-        info = DeviceInfo(
+        info = dr.DeviceInfo(
             identifiers={(DOMAIN, self._entry.unique_id or "AsusWRT")},
             name=self.host,
             model=self._api.model or "Asus Router",

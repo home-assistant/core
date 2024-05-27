@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from axis.models.event import Event, EventTopic
 
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
@@ -60,7 +60,7 @@ class AxisEntity(Entity):
         """Initialize the Axis event."""
         self.hub = hub
 
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             identifiers={(AXIS_DOMAIN, hub.unique_id)},
             serial_number=hub.unique_id,
         )

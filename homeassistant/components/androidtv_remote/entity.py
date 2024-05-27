@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
@@ -31,8 +31,8 @@ class AndroidTVRemoteBaseEntity(Entity):
         device_info = api.device_info
         assert config_entry.unique_id
         assert device_info
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, config_entry.data[CONF_MAC])},
+        self._attr_device_info = dr.DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, config_entry.data[CONF_MAC])},
             identifiers={(DOMAIN, config_entry.unique_id)},
             name=self._name,
             manufacturer=device_info["manufacturer"],

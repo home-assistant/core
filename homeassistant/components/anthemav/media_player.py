@@ -16,7 +16,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -80,7 +80,7 @@ class AnthemAVR(MediaPlayerEntity):
         if zone_number > 1:
             unique_id = f"{mac_address}_{zone_number}"
             self._attr_unique_id = unique_id
-            self._attr_device_info = DeviceInfo(
+            self._attr_device_info = dr.DeviceInfo(
                 identifiers={(DOMAIN, unique_id)},
                 name=f"Zone {zone_number}",
                 manufacturer=MANUFACTURER,
@@ -89,7 +89,7 @@ class AnthemAVR(MediaPlayerEntity):
             )
         else:
             self._attr_unique_id = mac_address
-            self._attr_device_info = DeviceInfo(
+            self._attr_device_info = dr.DeviceInfo(
                 identifiers={(DOMAIN, mac_address)},
                 name=name,
                 manufacturer=MANUFACTURER,

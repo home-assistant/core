@@ -23,8 +23,8 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
@@ -212,7 +212,7 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
         """Get list of connected devices."""
         api_devices = await self._api.async_get_connected_devices()
         return {
-            format_mac(mac): WrtDevice(dev.ip, dev.name, None)
+            dr.format_mac(mac): WrtDevice(dev.ip, dev.name, None)
             for mac, dev in api_devices.items()
         }
 
@@ -232,7 +232,7 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
         """Get label mac information."""
         label_mac = await self._get_nvram_info("LABEL_MAC")
         if label_mac and "label_mac" in label_mac:
-            self._label_mac = format_mac(label_mac["label_mac"])
+            self._label_mac = dr.format_mac(label_mac["label_mac"])
 
     async def _get_firmware(self) -> None:
         """Get firmware information."""
@@ -328,7 +328,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
 
         # get main router properties
         if mac := self._api.mac:
-            self._label_mac = format_mac(mac)
+            self._label_mac = dr.format_mac(mac)
         self._firmware = self._api.firmware
         self._model = self._api.model
 
@@ -340,7 +340,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
         """Get list of connected devices."""
         api_devices = await self._api.async_get_connected_devices()
         return {
-            format_mac(mac): WrtDevice(dev.ip, dev.name, dev.node)
+            dr.format_mac(mac): WrtDevice(dev.ip, dev.name, dev.node)
             for mac, dev in api_devices.items()
         }
 

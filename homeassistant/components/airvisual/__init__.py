@@ -34,9 +34,9 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -366,13 +366,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if device_automations := automation.automations_with_device(
                 hass, old_device_entry.id
             ):
-                async_create_issue(
+                ir.async_create_issue(
                     hass,
                     DOMAIN,
                     f"airvisual_pro_migration_{entry.entry_id}",
                     is_fixable=False,
                     is_persistent=True,
-                    severity=IssueSeverity.WARNING,
+                    severity=ir.IssueSeverity.WARNING,
                     translation_key="airvisual_pro_migration",
                     translation_placeholders={
                         "ip_address": ip_address,

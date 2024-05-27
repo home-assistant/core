@@ -36,7 +36,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import Airtouch5ConfigEntry
@@ -134,7 +134,7 @@ class Airtouch5AC(Airtouch5ClimateEntity):
         super().__init__(client)
         self._ability = ability
         self._attr_unique_id = f"ac_{ability.ac_number}"
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, f"ac_{ability.ac_number}")},
             name=f"AC {ability.ac_number}",
             manufacturer="Polyaire",
@@ -284,7 +284,7 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
         self._name = name
 
         self._attr_unique_id = f"zone_{name.zone_number}"
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, f"zone_{name.zone_number}")},
             name=name.zone_name,
             manufacturer="Polyaire",

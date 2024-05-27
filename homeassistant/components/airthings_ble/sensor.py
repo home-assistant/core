@@ -23,17 +23,8 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import (
-    CONNECTION_BLUETOOTH,
-    DeviceInfo,
-    async_get as device_async_get,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import (
-    RegistryEntry,
-    async_entries_for_device,
-    async_get as entity_async_get,
-)
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -115,25 +106,25 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
 @callback
 def async_migrate(hass: HomeAssistant, address: str, sensor_name: str) -> None:
     """Migrate entities to new unique ids (with BLE Address)."""
-    ent_reg = entity_async_get(hass)
+    ent_reg = er.async_get(hass)
     unique_id_trailer = f"_{sensor_name}"
     new_unique_id = f"{address}{unique_id_trailer}"
     if ent_reg.async_get_entity_id(DOMAIN, Platform.SENSOR, new_unique_id):
         # New unique id already exists
         return
-    dev_reg = device_async_get(hass)
+    dev_reg = dr.async_get(hass)
     if not (
         device := dev_reg.async_get_device(
-            connections={(CONNECTION_BLUETOOTH, address)}
+            connections={(dr.CONNECTION_BLUETOOTH, address)}
         )
     ):
         return
-    entities = async_entries_for_device(
+    entities = er.async_entries_for_device(
         ent_reg,
         device_id=device.id,
         include_disabled_entities=True,
     )
-    matching_reg_entry: RegistryEntry | None = None
+    matching_reg_entry: er.RegistryEntry | None = None
     for entry in entities:
         if entry.unique_id.endswith(unique_id_trailer) and (
             not matching_reg_entry or "(" not in entry.unique_id
@@ -209,10 +200,10 @@ class AirthingsSensor(
             name += f" ({identifier})"
 
         self._attr_unique_id = f"{airthings_device.address}_{entity_description.key}"
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             connections={
                 (
-                    CONNECTION_BLUETOOTH,
+                    dr.CONNECTION_BLUETOOTH,
                     airthings_device.address,
                 )
             },

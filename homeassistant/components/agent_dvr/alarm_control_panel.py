@@ -13,7 +13,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AgentDVRConfigEntry
@@ -50,7 +50,7 @@ class AgentBaseStation(AlarmControlPanelEntity):
         """Initialize the alarm control panel."""
         self._client = client
         self._attr_unique_id = f"{client.unique}_CP"
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             identifiers={(AGENT_DOMAIN, client.unique)},
             name=f"{client.name} {CONST_ALARM_CONTROL_PANEL_NAME}",
             manufacturer="Agent",

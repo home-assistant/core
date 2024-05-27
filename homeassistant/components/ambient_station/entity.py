@@ -5,7 +5,7 @@ from __future__ import annotations
 from aioambient.util import get_public_device_id
 
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
@@ -30,7 +30,7 @@ class AmbientWeatherEntity(Entity):
         self._ambient = ambient
 
         public_device_id = get_public_device_id(mac_address)
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             configuration_url=(
                 f"https://ambientweather.net/dashboard/{public_device_id}"
             ),

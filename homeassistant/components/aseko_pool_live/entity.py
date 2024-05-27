@@ -2,7 +2,7 @@
 
 from aioaseko import Unit
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -22,7 +22,7 @@ class AsekoEntity(CoordinatorEntity[AsekoDataUpdateCoordinator]):
         self._device_model = f"ASIN AQUA {self._unit.type}"
         self._device_name = self._unit.name if self._unit.name else self._device_model
 
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             name=self._device_name,
             identifiers={(DOMAIN, str(self._unit.serial_number))},
             manufacturer="Aseko",

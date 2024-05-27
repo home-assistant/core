@@ -24,7 +24,6 @@ from aioairzone_cloud.exceptions import AirzoneCloudError
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
@@ -66,7 +65,7 @@ class AirzoneAidooEntity(AirzoneEntity):
 
         self.aidoo_id = aidoo_id
 
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, aidoo_id)},
             manufacturer=MANUFACTURER,
             name=aidoo_data[AZD_NAME],
@@ -109,7 +108,7 @@ class AirzoneGroupEntity(AirzoneEntity):
 
         self.group_id = group_id
 
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, group_id)},
             manufacturer=MANUFACTURER,
             name=group_data[AZD_NAME],
@@ -151,7 +150,7 @@ class AirzoneHotWaterEntity(AirzoneEntity):
 
         self.dhw_id = dhw_id
 
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, dhw_id)},
             manufacturer=MANUFACTURER,
             name=dhw_data[AZD_NAME],
@@ -192,7 +191,7 @@ class AirzoneInstallationEntity(AirzoneEntity):
 
         self.inst_id = inst_id
 
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, inst_id)},
             manufacturer=MANUFACTURER,
             name=inst_data[AZD_NAME],
@@ -238,7 +237,7 @@ class AirzoneSystemEntity(AirzoneEntity):
 
         self.system_id = system_id
 
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, system_id)},
             manufacturer=MANUFACTURER,
             name=system_data[AZD_NAME],
@@ -267,7 +266,7 @@ class AirzoneWebServerEntity(AirzoneEntity):
 
         self.ws_id = ws_id
 
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, ws_id)},
             identifiers={(DOMAIN, ws_id)},
             manufacturer=MANUFACTURER,
@@ -298,7 +297,7 @@ class AirzoneZoneEntity(AirzoneEntity):
         self.system_id = zone_data[AZD_SYSTEM_ID]
         self.zone_id = zone_id
 
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, zone_id)},
             manufacturer=MANUFACTURER,
             name=zone_data[AZD_NAME],

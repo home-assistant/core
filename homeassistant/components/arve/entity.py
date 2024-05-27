@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from asyncarve import ArveDeviceInfo
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -32,7 +32,7 @@ class ArveDeviceEntity(CoordinatorEntity[ArveCoordinator]):
 
         self._attr_unique_id = f"{serial_number}_{description.key}"
 
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, serial_number)},
             manufacturer="Calanda Air AG",
             model="Arve Sens Pro",

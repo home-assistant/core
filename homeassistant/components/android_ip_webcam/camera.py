@@ -11,7 +11,7 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -47,7 +47,7 @@ class IPWebcamCamera(MjpegCamera):
             password=coordinator.config_entry.data.get(CONF_PASSWORD, ""),
         )
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}-camera"
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             name=coordinator.config_entry.data[CONF_HOST],
         )

@@ -10,8 +10,7 @@ import pyaprilaire.client
 from pyaprilaire.const import MODELS, Attribute, FunctionalDomain
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import BaseDataUpdateCoordinatorProtocol
 
 from .const import DOMAIN
@@ -175,17 +174,17 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
         return "Unknown"
 
     @property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> dr.DeviceInfo | None:
         """Get the device info for the thermostat."""
         return self.create_device_info(self.data)
 
-    def create_device_info(self, data: dict[str, Any]) -> DeviceInfo | None:
+    def create_device_info(self, data: dict[str, Any]) -> dr.DeviceInfo | None:
         """Create the device info for the thermostat."""
 
         if data is None or Attribute.MAC_ADDRESS not in data or self.unique_id is None:
             return None
 
-        device_info = DeviceInfo(
+        device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             name=self.create_device_name(data),
             manufacturer="Aprilaire",

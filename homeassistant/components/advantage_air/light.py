@@ -4,7 +4,7 @@ from typing import Any
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AdvantageAirDataConfigEntry
@@ -51,7 +51,7 @@ class AdvantageAirLight(AdvantageAirEntity, LightEntity):
 
         self._id: str = light["id"]
         self._attr_unique_id += f"-{self._id}"
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             identifiers={(ADVANTAGE_AIR_DOMAIN, self._attr_unique_id)},
             via_device=(ADVANTAGE_AIR_DOMAIN, self.coordinator.data["system"]["rid"]),
             manufacturer="Advantage Air",

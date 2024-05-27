@@ -3,7 +3,7 @@
 from jaraco.abode.automation import Automation as AbodeAuto
 from jaraco.abode.devices.base import Device as AbodeDev
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 
 from . import AbodeSystem
@@ -83,9 +83,9 @@ class AbodeDevice(AbodeEntity):
         }
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> dr.DeviceInfo:
         """Return device registry information for this entity."""
-        return DeviceInfo(
+        return dr.DeviceInfo(
             identifiers={(DOMAIN, self._device.id)},
             manufacturer="Abode",
             model=self._device.type,

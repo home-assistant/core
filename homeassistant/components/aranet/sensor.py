@@ -34,7 +34,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -130,9 +130,9 @@ def _device_key_to_bluetooth_entity_key(
 
 def _sensor_device_info_to_hass(
     adv: Aranet4Advertisement,
-) -> DeviceInfo:
+) -> dr.DeviceInfo:
     """Convert a sensor device info to hass device info."""
-    hass_device_info = DeviceInfo({})
+    hass_device_info = dr.DeviceInfo({})
     if adv.readings and adv.readings.name:
         hass_device_info[ATTR_NAME] = adv.readings.name
         hass_device_info[ATTR_MANUFACTURER] = ARANET_MANUFACTURER_NAME
