@@ -97,7 +97,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(self, user_input: dict[str, Any]):
         """Import a config entry."""
 
         if CONF_HOST in user_input:
