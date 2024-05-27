@@ -223,49 +223,50 @@ async def test_publish(
 ) -> None:
     """Test the publish function."""
     mqtt_mock = await mqtt_mock_entry()
+    publish_mock: MagicMock = mqtt_mock._mqttc.publish
     await mqtt.async_publish(hass, "test-topic", "test-payload")
     await hass.async_block_till_done()
-    assert mqtt_mock.async_publish.called
-    assert mqtt_mock.async_publish.call_args[0] == (
+    assert publish_mock.called
+    assert publish_mock.call_args[0] == (
         "test-topic",
         "test-payload",
         0,
         False,
     )
-    mqtt_mock.reset_mock()
+    publish_mock.reset_mock()
 
     await mqtt.async_publish(hass, "test-topic", "test-payload", 2, True)
     await hass.async_block_till_done()
-    assert mqtt_mock.async_publish.called
-    assert mqtt_mock.async_publish.call_args[0] == (
+    assert publish_mock.called
+    assert publish_mock.call_args[0] == (
         "test-topic",
         "test-payload",
         2,
         True,
     )
-    mqtt_mock.reset_mock()
+    publish_mock.reset_mock()
 
     mqtt.publish(hass, "test-topic2", "test-payload2")
     await hass.async_block_till_done()
-    assert mqtt_mock.async_publish.called
-    assert mqtt_mock.async_publish.call_args[0] == (
+    assert publish_mock.called
+    assert publish_mock.call_args[0] == (
         "test-topic2",
         "test-payload2",
         0,
         False,
     )
-    mqtt_mock.reset_mock()
+    publish_mock.reset_mock()
 
     mqtt.publish(hass, "test-topic2", "test-payload2", 2, True)
     await hass.async_block_till_done()
-    assert mqtt_mock.async_publish.called
-    assert mqtt_mock.async_publish.call_args[0] == (
+    assert publish_mock.called
+    assert publish_mock.call_args[0] == (
         "test-topic2",
         "test-payload2",
         2,
         True,
     )
-    mqtt_mock.reset_mock()
+    publish_mock.reset_mock()
 
     # test binary pass-through
     mqtt.publish(
@@ -276,14 +277,33 @@ async def test_publish(
         False,
     )
     await hass.async_block_till_done()
-    assert mqtt_mock.async_publish.called
-    assert mqtt_mock.async_publish.call_args[0] == (
+    assert publish_mock.called
+    assert publish_mock.call_args[0] == (
         "test-topic3",
         b"\xde\xad\xbe\xef",
         0,
         False,
     )
     mqtt_mock.reset_mock()
+
+    # test null payload
+    mqtt.publish(
+        hass,
+        "test-topic3",
+        None,
+        0,
+        False,
+    )
+    await hass.async_block_till_done()
+    assert publish_mock.called
+    assert publish_mock.call_args[0] == (
+        "test-topic3",
+        None,
+        0,
+        False,
+    )
+
+    publish_mock.reset_mock()
 
 
 async def test_convert_outgoing_payload(hass: HomeAssistant) -> None:
