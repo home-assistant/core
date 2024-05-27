@@ -19,7 +19,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: TedeeConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: TedeeApiCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
     # dict has sensitive info as key, redact manually
     data = {
         index: lock.to_dict()
