@@ -7,7 +7,7 @@ import functools
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import device_trigger
@@ -29,13 +29,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
     """Set up MQTT device automation dynamically through MQTT discovery."""
 
     setup = functools.partial(_async_setup_automation, hass, config_entry=config_entry)
-    await async_setup_non_entity_entry_helper(
+    async_setup_non_entity_entry_helper(
         hass, "device_automation", setup, DISCOVERY_SCHEMA
     )
 
 
-@callback
-def _async_setup_automation(
+async def _async_setup_automation(
     hass: HomeAssistant,
     config: ConfigType,
     config_entry: ConfigEntry,
@@ -43,11 +42,8 @@ def _async_setup_automation(
 ) -> None:
     """Set up an MQTT device automation."""
     if config[CONF_AUTOMATION_TYPE] == AUTOMATION_TYPE_TRIGGER:
-        config_entry.async_create_task(
-            hass,
-            device_trigger.async_setup_trigger(
-                hass, config, config_entry, discovery_data
-            ),
+        await device_trigger.async_setup_trigger(
+            hass, config, config_entry, discovery_data
         )
 
 

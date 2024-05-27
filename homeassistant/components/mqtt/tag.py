@@ -57,11 +57,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
     """Set up MQTT tag scanner dynamically through MQTT discovery."""
 
     setup = functools.partial(_async_setup_tag, hass, config_entry=config_entry)
-    await async_setup_non_entity_entry_helper(hass, TAG, setup, DISCOVERY_SCHEMA)
+    async_setup_non_entity_entry_helper(hass, TAG, setup, DISCOVERY_SCHEMA)
 
 
-@callback
-def _async_setup_tag(
+async def _async_setup_tag(
     hass: HomeAssistant,
     config: ConfigType,
     config_entry: ConfigEntry,
@@ -83,7 +82,7 @@ def _async_setup_tag(
         config_entry,
     )
 
-    tag_scanner.subscribe_topics()
+    await tag_scanner.subscribe_topics()
 
     if device_id:
         tags[device_id][discovery_id] = tag_scanner
@@ -141,7 +140,7 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
             hass=self.hass,
         ).async_render_with_possible_json_value
         update_device(self.hass, self._config_entry, config)
-        self.subscribe_topics()
+        await self.subscribe_topics()
 
     @callback
     def _async_tag_scanned(self, msg: ReceiveMessage) -> None:
@@ -158,8 +157,7 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
             tag.async_scan_tag(self.hass, tag_id, self.device_id)
         )
 
-    @callback
-    def subscribe_topics(self) -> None:
+    async def subscribe_topics(self) -> None:
         """Subscribe to MQTT topics."""
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
