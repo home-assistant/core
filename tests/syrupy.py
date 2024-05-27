@@ -143,7 +143,14 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
     @classmethod
     def _serializable_config_entry(cls, data: ConfigEntry) -> SerializableData:
         """Prepare a Home Assistant config entry for serialization."""
-        return ConfigEntrySnapshot(data.as_dict() | {"entry_id": ANY})
+        serialized = ConfigEntrySnapshot(data.as_dict())
+
+        # Remove keys that are not needed for snapshot comparison
+        serialized.pop("entry_id")
+        serialized.pop("pref_disable_new_entities")
+        serialized.pop("pref_disable_polling")
+
+        return serialized
 
     @classmethod
     def _serializable_device_registry_entry(
@@ -153,12 +160,18 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         serialized = DeviceRegistryEntrySnapshot(
             attrs.asdict(data)
             | {
-                "config_entries": ANY,
-                "id": ANY,
+                "via_device_id": ANY if data.via_device_id else None,
             }
         )
-        if serialized["via_device_id"] is not None:
-            serialized["via_device_id"] = ANY
+
+        # Remove keys that are not needed for snapshot comparison
+        serialized.pop("area_id")  # Areas are only user controllable
+        serialized.pop("config_entries")  # Config entries are UUIDs
+        serialized.pop("id")  # UUIDs are not stable
+        serialized.pop("is_new")
+        serialized.pop("labels")  # Labels are only user controllable
+        serialized.pop("name_by_user")  # Names are only user settable
+
         return serialized
 
     @classmethod
@@ -169,19 +182,33 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         serialized = EntityRegistryEntrySnapshot(
             attrs.asdict(data)
             | {
-                "config_entry_id": ANY,
-                "device_id": ANY,
-                "id": ANY,
+                "config_entry_id": ANY if data.config_entry_id else None,
+                "device_id": ANY if data.device_id else None,
                 "options": {k: dict(v) for k, v in data.options.items()},
             }
         )
-        serialized.pop("categories")
+
+        # Remove keys that are not needed for snapshot comparison
+        serialized.pop("aliases")  # Aliases are only user controllable
+        serialized.pop("area_id")  # Areas are only user controllable
+        serialized.pop("categories")  # Categories are only user controllable
+        serialized.pop("device_class")  # Device classes are only user settable
+        serialized.pop("icon")  # Icons are only user settable
+        serialized.pop("id")  # UUIDs are not stable
+        serialized.pop("labels")  # Labels are only user controllable
+        serialized.pop("name")  # Names are only user settable
+
         return serialized
 
     @classmethod
     def _serializable_flow_result(cls, data: FlowResult) -> SerializableData:
         """Prepare a Home Assistant flow result for serialization."""
-        return FlowResultSnapshot(data | {"flow_id": ANY})
+        serialized = FlowResultSnapshot(data)
+
+        # Remove keys that are not needed for snapshot comparison
+        serialized.pop("flow_id")
+
+        return serialized
 
     @classmethod
     def _serializable_issue_registry_entry(
@@ -193,15 +220,15 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
     @classmethod
     def _serializable_state(cls, data: State) -> SerializableData:
         """Prepare a Home Assistant State for serialization."""
-        return StateSnapshot(
-            data.as_dict()
-            | {
-                "context": ANY,
-                "last_changed": ANY,
-                "last_reported": ANY,
-                "last_updated": ANY,
-            }
-        )
+        serialized = StateSnapshot(data.as_dict())
+
+        # Remove keys that are not needed for snapshot comparison
+        serialized.pop("context")
+        serialized.pop("last_changed")
+        serialized.pop("last_reported")
+        serialized.pop("last_updated")
+
+        return serialized
 
 
 class _IntFlagWrapper:
