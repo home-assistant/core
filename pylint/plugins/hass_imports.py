@@ -397,6 +397,7 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
 # Blacklist of imports that should be using the namespace
 _FORCE_NAMESPACE_IMPORT: dict[tuple[str, str], set[str]] = {
     ("homeassistant.helpers.area_registry", "ar"): {"async_get"},
+    ("homeassistant.helpers.category_registry", "cr"): {"async_get"},
     ("homeassistant.helpers.device_registry", "dr"): {
         "async_get",
         "async_entries_for_config_entry",
@@ -405,7 +406,9 @@ _FORCE_NAMESPACE_IMPORT: dict[tuple[str, str], set[str]] = {
         "async_get",
         "async_entries_for_config_entry",
     },
+    ("homeassistant.helpers.floor_registry", "fr"): {"async_get"},
     ("homeassistant.helpers.issue_registry", "ir"): {"async_get"},
+    ("homeassistant.helpers.label_registry", "lr"): {"async_get"},
 }
 
 
