@@ -40,9 +40,7 @@ def mock_fyta_connector():
         tzinfo=UTC
     )
     mock_fyta_connector.client = AsyncMock(autospec=True)
-    mock_fyta_connector.update_all_plants = AsyncMock(
-        return_value=load_json_object_fixture("plant_status.json", FYTA_DOMAIN)
-    )
+    mock_fyta_connector.update_all_plants.return_value=load_json_object_fixture("plant_status.json", FYTA_DOMAIN)
     mock_fyta_connector.plant_list = load_json_object_fixture(
         "plant_list.json", FYTA_DOMAIN
     )
