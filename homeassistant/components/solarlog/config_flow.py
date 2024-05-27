@@ -1,13 +1,14 @@
 """Config flow for solarlog integration."""
 
 import logging
+from typing import Any
 from urllib.parse import ParseResult, urlparse
 
 from solarlog_cli.solarlog_connector import SolarLogConnector
 from solarlog_cli.solarlog_exceptions import SolarLogConnectionError, SolarLogError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
@@ -57,7 +58,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return True
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
@@ -97,7 +98,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]):
+    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry."""
 
         user_input = {
@@ -105,6 +106,6 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_NAME: DEFAULT_NAME,
             "extended_data": False,
             **user_input,
-       }
+        }
 
         return await self.async_step_user(user_input)
