@@ -109,23 +109,29 @@ async def async_start(  # noqa: C901
     mqtt_data = hass.data[DATA_MQTT]
     platform_setup_lock: dict[str, asyncio.Lock] = {}
 
-    async def _async_component_setup(discovery_payload: MQTTDiscoveryPayload) -> None:
-        """Perform component set up."""
+    @callback
+    def _async_add_component(discovery_payload: MQTTDiscoveryPayload) -> None:
+        """Add a component from a discovery message."""
         discovery_hash = discovery_payload.discovery_data[ATTR_DISCOVERY_HASH]
         component, discovery_id = discovery_hash
-        platform_setup_lock.setdefault(component, asyncio.Lock())
-        async with platform_setup_lock[component]:
-            if component not in mqtt_data.platforms_loaded:
-                await async_forward_entry_setup_and_setup_discovery(
-                    hass, config_entry, {component}
-                )
-        # Add component
         message = f"Found new component: {component} {discovery_id}"
         async_log_discovery_origin_info(message, discovery_payload)
         mqtt_data.discovery_already_discovered.add(discovery_hash)
         async_dispatcher_send(
             hass, MQTT_DISCOVERY_NEW.format(component, "mqtt"), discovery_payload
         )
+
+    async def _async_component_setup(discovery_payload: MQTTDiscoveryPayload) -> None:
+        """Perform component set up."""
+        discovery_hash = discovery_payload.discovery_data[ATTR_DISCOVERY_HASH]
+        component, _ = discovery_hash
+        platform_setup_lock.setdefault(component, asyncio.Lock())
+        async with platform_setup_lock[component]:
+            if component not in mqtt_data.platforms_loaded:
+                await async_forward_entry_setup_and_setup_discovery(
+                    hass, config_entry, {component}
+                )
+        _async_add_component(discovery_payload)
 
     @callback
     def async_discovery_message_received(msg: ReceiveMessage) -> None:  # noqa: C901
@@ -299,13 +305,7 @@ async def async_start(  # noqa: C901
                 hass, MQTT_DISCOVERY_UPDATED.format(*discovery_hash), payload
             )
         elif payload:
-            # Add component
-            message = f"Found new component: {component} {discovery_id}"
-            async_log_discovery_origin_info(message, payload)
-            mqtt_data.discovery_already_discovered.add(discovery_hash)
-            async_dispatcher_send(
-                hass, MQTT_DISCOVERY_NEW.format(component, "mqtt"), payload
-            )
+            _async_add_component(payload)
         else:
             # Unhandled discovery message
             async_dispatcher_send(
