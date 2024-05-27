@@ -25,7 +25,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -154,7 +154,7 @@ async def _async_setup_block_entry(
     device_entry = None
     if entry.unique_id is not None:
         device_entry = dev_reg.async_get_device(
-            connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
+            connections={(CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
         )
     # https://github.com/home-assistant/core/pull/48076
     if device_entry and entry.entry_id not in device_entry.config_entries:
@@ -240,7 +240,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
     device_entry = None
     if entry.unique_id is not None:
         device_entry = dev_reg.async_get_device(
-            connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
+            connections={(CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
         )
     # https://github.com/home-assistant/core/pull/48076
     if device_entry and entry.entry_id not in device_entry.config_entries:
