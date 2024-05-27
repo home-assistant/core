@@ -396,11 +396,11 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
 
 # Should be gradually synchronised with pyproject.toml
 # [tool.ruff.lint.flake8-import-conventions.extend-aliases]
-_NAMESPACE_IMPORT: dict[str, str] = {
-    "homeassistant.helpers.area_registry": "ar",
-    "homeassistant.helpers.device_registry": "dr",
-    "homeassistant.helpers.entity_registry": "er",
-    "homeassistant.helpers.issue_registry": "ir",
+_FORCE_NAMESPACE_IMPORT: dict[tuple[str, str], str] = {
+    ("homeassistant.helpers.area_registry", "async_get"): "ar.async_get",
+    ("homeassistant.helpers.device_registry", "async_get"): "dr.async_get",
+    ("homeassistant.helpers.entity_registry", "async_get"): "er.async_get",
+    ("homeassistant.helpers.issue_registry", "async_get"): "ir.async_get",
 }
 
 
@@ -539,21 +539,16 @@ class HassImportsFormatChecker(BaseChecker):
                             args=(import_match.string, obsolete_import.reason),
                         )
         for name in node.names:
-            if self._has_invalid_namespace_import(node, node.modname, name[0], name[1]):
+            if self._has_invalid_namespace_import(node, node.modname, name[0]):
                 return
 
     def _has_invalid_namespace_import(
-        self, node: nodes.ImportFrom, module: str, name: str, alias: str | None
+        self, node: nodes.ImportFrom, module: str, name: str
     ) -> bool:
-        # Rule only applies to function imports
-        if not name[0].islower():
-            return False
-        for helper, shorthand in _NAMESPACE_IMPORT.items():
-            if module.startswith(helper) and alias != shorthand:
+        for key, value in _FORCE_NAMESPACE_IMPORT.items():
+            if module == key[0] and name == key[1]:
                 self.add_message(
-                    "hass-helper-namespace-import",
-                    node=node,
-                    args=(name, f"{shorthand}.{name}"),
+                    "hass-helper-namespace-import", node=node, args=(name, value)
                 )
                 return True
         return False

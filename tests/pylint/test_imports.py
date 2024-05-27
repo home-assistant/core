@@ -255,46 +255,17 @@ def test_bad_root_import(
 
 
 @pytest.mark.parametrize(
-    ("import_node", "module_name"),
-    [
-        (
-            "from homeassistant.helpers.issue_registry import AClass",
-            "tests.components.pylint_test.climate",
-        ),
-        (
-            "from homeassistant.helpers.issue_registry import A_CONSTANT",
-            "tests.components.pylint_test.climate",
-        ),
-    ],
-)
-def test_good_namespace_import(
-    linter: UnittestLinter,
-    imports_checker: BaseChecker,
-    import_node: str,
-    module_name: str,
-) -> None:
-    """Ensure good namespace imports are accepted."""
-
-    node = astroid.extract_node(
-        f"{import_node} #@",
-        module_name,
-    )
-    imports_checker.visit_module(node.parent)
-
-    with assert_no_messages(linter):
-        if import_node.startswith("import"):
-            imports_checker.visit_import(node)
-        if import_node.startswith("from"):
-            imports_checker.visit_importfrom(node)
-
-
-@pytest.mark.parametrize(
     ("import_node", "module_name", "expected_args"),
     [
         (
-            "from homeassistant.helpers.issue_registry import a_function",
+            "from homeassistant.helpers.issue_registry import async_get",
             "tests.components.pylint_test.climate",
-            ("a_function", "ir.a_function"),
+            ("async_get", "ir.async_get"),
+        ),
+        (
+            "from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry",
+            "tests.components.pylint_test.climate",
+            ("async_get", "ir.async_get"),
         ),
     ],
 )
@@ -325,7 +296,4 @@ def test_bad_namespace_import(
             end_col_offset=len(import_node),
         ),
     ):
-        if import_node.startswith("import"):
-            imports_checker.visit_import(node)
-        if import_node.startswith("from"):
-            imports_checker.visit_importfrom(node)
+        imports_checker.visit_importfrom(node)
