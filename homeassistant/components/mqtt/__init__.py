@@ -32,6 +32,7 @@ from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
+from homeassistant.util.async_ import create_eager_task
 
 # Loading the config flow file will register the flow
 from . import debug_info, discovery
@@ -375,9 +376,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Reload the modern yaml platforms
             mqtt_platforms = async_get_platforms(hass, DOMAIN)
             tasks = [
-                entity.async_remove()
+                create_eager_task(entity.async_remove())
                 for mqtt_platform in mqtt_platforms
-                for entity in mqtt_platform.entities.values()
+                for entity in list(mqtt_platform.entities.values())
                 if getattr(entity, "_discovery_data", None) is None
                 and mqtt_platform.config_entry
                 and mqtt_platform.domain in RELOADABLE_PLATFORMS
