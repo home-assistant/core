@@ -100,22 +100,11 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input: dict[str, Any]):
         """Import a config entry."""
 
-        if CONF_HOST in user_input:
-            url = urlparse(user_input[CONF_HOST], "http")
-            netloc = url.netloc or url.path
-            path = url.path if url.netloc else ""
-            url = ParseResult("http", netloc, path, *url[3:])
-            user_input[CONF_HOST] = url.geturl()
-
-            if self._host_in_configuration_exists(user_input[CONF_HOST]):
-                return self.async_abort(reason="already_configured")
-        else:
-            user_input |= {CONF_HOST: DEFAULT_HOST}
-
-        if CONF_NAME not in user_input:
-            user_input |= {CONF_NAME: DEFAULT_NAME}
-
-        if "extended_data" not in user_input:
-            user_input |= {"extended_data": False}
+        user_input = {
+            CONF_HOST: DEFAULT_HOST,
+            CONF_NAME: DEFAULT_NAME,
+            "extended_data": False,
+            **user_input,
+       }
 
         return await self.async_step_user(user_input)
