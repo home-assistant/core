@@ -434,12 +434,13 @@ class HomeAssistant:
         self.import_executor = InterruptibleThreadPoolExecutor(
             max_workers=1, thread_name_prefix="ImportExecutor"
         )
+        self._loop_thread_id = getattr(
+            self.loop, "_thread_ident", getattr(self.loop, "_thread_id")
+        )
 
     def verify_event_loop_thread(self, what: str) -> None:
         """Report and raise if we are not running in the event loop thread."""
-        if (
-            loop_thread_ident := self.loop.__dict__.get("_thread_ident")
-        ) and loop_thread_ident != threading.get_ident():
+        if self._loop_thread_id != threading.get_ident():
             from .helpers import frame  # pylint: disable=import-outside-toplevel
 
             # frame is a circular import, so we import it here
