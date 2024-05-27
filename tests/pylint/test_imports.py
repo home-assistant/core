@@ -258,11 +258,11 @@ def test_bad_root_import(
     ("import_node", "module_name"),
     [
         (
-            "import homeassistant.helpers.issue_registry as ir",
+            "from homeassistant.helpers.issue_registry import AClass",
             "tests.components.pylint_test.climate",
         ),
         (
-            "from homeassistant.helpers import issue_registry as ir",
+            "from homeassistant.helpers.issue_registry import A_CONSTANT",
             "tests.components.pylint_test.climate",
         ),
     ],
@@ -289,19 +289,12 @@ def test_good_namespace_import(
 
 
 @pytest.mark.parametrize(
-    ("import_node", "module_name"),
+    ("import_node", "module_name", "expected_args"),
     [
         (
-            "import homeassistant.helpers.issue_registry as issue_registry",
+            "from homeassistant.helpers.issue_registry import a_function",
             "tests.components.pylint_test.climate",
-        ),
-        (
-            "from homeassistant.helpers import issue_registry",
-            "tests.components.pylint_test.climate",
-        ),
-        (
-            "from homeassistant.helpers.issue_registry import IssueSeverity",
-            "tests.components.pylint_test.climate",
+            ("a_function", "ir.a_function"),
         ),
     ],
 )
@@ -310,6 +303,7 @@ def test_bad_namespace_import(
     imports_checker: BaseChecker,
     import_node: str,
     module_name: str,
+    expected_args: tuple[str, ...],
 ) -> None:
     """Ensure bad namespace imports are rejected."""
 
@@ -324,7 +318,7 @@ def test_bad_namespace_import(
         pylint.testutils.MessageTest(
             msg_id="hass-helper-namespace-import",
             node=node,
-            args=None,
+            args=expected_args,
             line=1,
             col_offset=0,
             end_line=1,

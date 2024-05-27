@@ -432,7 +432,7 @@ class HassImportsFormatChecker(BaseChecker):
             "from the component root",
         ),
         "W7425": (
-            "Helper import should be using the namespace",
+            "%s should be used via the namespace: %s",
             "hass-helper-namespace-import",
             "Used when a helper should be used via the namespace",
         ),
@@ -452,22 +452,11 @@ class HassImportsFormatChecker(BaseChecker):
             # Strip name of the current module
             self.current_package = node.name[: node.name.rfind(".")]
 
-    def _check_namespace_import(
-        self, node: nodes.Import, module: str, alias: str | None
-    ) -> bool:
-        for helper, shorthand in _NAMESPACE_IMPORT.items():
-            if module.startswith(helper) and alias != shorthand:
-                self.add_message("hass-helper-namespace-import", node=node)
-                return False
-        return True
-
     def visit_import(self, node: nodes.Import) -> None:
         """Check for improper `import _` invocations."""
         if self.current_package is None:
             return
         for module, _alias in node.names:
-            if not self._check_namespace_import(node, module, _alias):
-                continue
             if module.startswith("{self.current_package}."):
                 self.add_message("hass-relative-import", node=node)
                 continue
@@ -550,10 +539,24 @@ class HassImportsFormatChecker(BaseChecker):
                             args=(import_match.string, obsolete_import.reason),
                         )
         for name in node.names:
-            if not self._check_namespace_import(
-                node, f"{node.modname}.{name[0]}", name[1]
-            ):
-                continue
+            if self._has_invalid_namespace_import(node, node.modname, name[0], name[1]):
+                return
+
+    def _has_invalid_namespace_import(
+        self, node: nodes.ImportFrom, module: str, name: str, alias: str | None
+    ) -> bool:
+        # Rule only applies to function imports
+        if not name[0].islower():
+            return False
+        for helper, shorthand in _NAMESPACE_IMPORT.items():
+            if module.startswith(helper) and alias != shorthand:
+                self.add_message(
+                    "hass-helper-namespace-import",
+                    node=node,
+                    args=(name, f"{shorthand}.{name}"),
+                )
+                return True
+        return False
 
 
 def register(linter: PyLinter) -> None:
