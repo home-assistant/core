@@ -34,7 +34,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
     singleton,
 )
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -413,7 +413,7 @@ def update_device_fw_info(
     dev_reg = dr.async_get(hass)
     if device := dev_reg.async_get_device(
         identifiers={(DOMAIN, entry.entry_id)},
-        connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
+        connections={(CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
     ):
         if device.sw_version == shellydevice.firmware_version:
             return
