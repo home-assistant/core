@@ -23,7 +23,6 @@ from .const import (
     CONF_PROMPT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
-    DEFAULT_PROMPT,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
@@ -143,7 +142,8 @@ class OpenAIConversationEntity(
                 prompt = "\n".join(
                     (
                         template.Template(
-                            options.get(CONF_PROMPT, DEFAULT_PROMPT), self.hass
+                            options.get(CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT),
+                            self.hass,
                         ).async_render(
                             {
                                 "ha_name": self.hass.config.location_name,

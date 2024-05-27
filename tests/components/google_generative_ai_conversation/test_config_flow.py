@@ -7,6 +7,9 @@ from google.rpc.error_details_pb2 import ErrorInfo
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.google_generative_ai_conversation.config_flow import (
+    RECOMMENDED_OPTIONS,
+)
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_DANGEROUS_BLOCK_THRESHOLD,
@@ -19,7 +22,6 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
-    DEFAULT_PROMPT,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -30,7 +32,6 @@ from homeassistant.components.google_generative_ai_conversation.const import (
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import llm
 
 from tests.common import MockConfigEntry
 
@@ -92,11 +93,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "api_key": "bla",
     }
-    assert result2["options"] == {
-        CONF_RECOMMENDED: True,
-        CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-        CONF_PROMPT: DEFAULT_PROMPT,
-    }
+    assert result2["options"] == RECOMMENDED_OPTIONS
     assert len(mock_setup_entry.mock_calls) == 1
 
 

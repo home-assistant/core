@@ -32,7 +32,6 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
-    DEFAULT_PROMPT,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
@@ -226,7 +225,10 @@ class GoogleGenerativeAIConversationEntity(
             prompt = "\n".join(
                 (
                     template.Template(
-                        self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT), self.hass
+                        self.entry.options.get(
+                            CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                        ),
+                        self.hass,
                     ).async_render(
                         {
                             "ha_name": self.hass.config.location_name,
