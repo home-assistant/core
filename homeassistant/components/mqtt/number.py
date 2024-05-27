@@ -35,18 +35,10 @@ from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
     CONF_PAYLOAD_RESET,
-    CONF_QOS,
-    CONF_RETAIN,
     CONF_STATE_TOPIC,
 )
-from .debug_info import log_messages
-from .mixins import (
-    MqttEntity,
-    async_setup_entity_entry_helper,
-    write_state_on_attr_change,
-)
+from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -118,7 +110,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT number through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttNumber,
@@ -165,64 +157,52 @@ class MqttNumber(MqttEntity, RestoreNumber):
         self._attr_native_step = config[CONF_STEP]
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
 
+    @callback
+    def _message_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT messages."""
+        num_value: int | float | None
+        payload = str(self._value_template(msg.payload))
+        if not payload.strip():
+            _LOGGER.debug("Ignoring empty state update from '%s'", msg.topic)
+            return
+        try:
+            if payload == self._config[CONF_PAYLOAD_RESET]:
+                num_value = None
+            elif payload.isnumeric():
+                num_value = int(payload)
+            else:
+                num_value = float(payload)
+        except ValueError:
+            _LOGGER.warning("Payload '%s' is not a Number", msg.payload)
+            return
+
+        if num_value is not None and (
+            num_value < self.min_value or num_value > self.max_value
+        ):
+            _LOGGER.error(
+                "Invalid value for %s: %s (range %s - %s)",
+                self.entity_id,
+                num_value,
+                self.min_value,
+                self.max_value,
+            )
+            return
+
+        self._attr_native_value = num_value
+
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_native_value"})
-        def message_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages."""
-            num_value: int | float | None
-            payload = str(self._value_template(msg.payload))
-            if not payload.strip():
-                _LOGGER.debug("Ignoring empty state update from '%s'", msg.topic)
-                return
-            try:
-                if payload == self._config[CONF_PAYLOAD_RESET]:
-                    num_value = None
-                elif payload.isnumeric():
-                    num_value = int(payload)
-                else:
-                    num_value = float(payload)
-            except ValueError:
-                _LOGGER.warning("Payload '%s' is not a Number", msg.payload)
-                return
-
-            if num_value is not None and (
-                num_value < self.min_value or num_value > self.max_value
-            ):
-                _LOGGER.error(
-                    "Invalid value for %s: %s (range %s - %s)",
-                    self.entity_id,
-                    num_value,
-                    self.min_value,
-                    self.max_value,
-                )
-                return
-
-            self._attr_native_value = num_value
-
-        if self._config.get(CONF_STATE_TOPIC) is None:
+        if not self.add_subscription(
+            CONF_STATE_TOPIC, self._message_received, {"_attr_native_value"}
+        ):
             # Force into optimistic mode.
             self._attr_assumed_state = True
-        else:
-            self._sub_state = subscription.async_prepare_subscribe_topics(
-                self.hass,
-                self._sub_state,
-                {
-                    "state_topic": {
-                        "topic": self._config.get(CONF_STATE_TOPIC),
-                        "msg_callback": message_received,
-                        "qos": self._config[CONF_QOS],
-                        "encoding": self._config[CONF_ENCODING] or None,
-                    }
-                },
-            )
+            return
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
         if self._attr_assumed_state and (
             last_number_data := await self.async_get_last_number_data()
@@ -240,11 +220,4 @@ class MqttNumber(MqttEntity, RestoreNumber):
         if self._attr_assumed_state:
             self._attr_native_value = current_number
             self.async_write_ha_state()
-
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)

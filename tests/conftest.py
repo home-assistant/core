@@ -1023,7 +1023,7 @@ async def _mqtt_mock_entry(
         mock_mqtt_instance.connected = True
         mqtt_client_mock.on_connect(mqtt_client_mock, None, 0, 0, 0)
 
-        async_dispatcher_send(hass, mqtt.MQTT_CONNECTED)
+        async_dispatcher_send(hass, mqtt.MQTT_CONNECTION_STATE, True)
         await hass.async_block_till_done()
 
         return mock_mqtt_instance

@@ -787,10 +787,10 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             display_precision = max(0, display_precision + ratio_log)
 
         sensor_options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
-        if (
-            "suggested_display_precision" in sensor_options
-            and sensor_options["suggested_display_precision"] == display_precision
-        ):
+        if "suggested_display_precision" not in sensor_options:
+            if display_precision is None:
+                return
+        elif sensor_options["suggested_display_precision"] == display_precision:
             return
 
         registry = er.async_get(self.hass)

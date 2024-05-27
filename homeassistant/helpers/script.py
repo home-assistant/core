@@ -157,7 +157,7 @@ SCRIPT_DEBUG_CONTINUE_STOP: SignalTypeFormat[Literal["continue", "stop"]] = (
 )
 SCRIPT_DEBUG_CONTINUE_ALL = "script_debug_continue_all"
 
-script_stack_cv: ContextVar[list[int] | None] = ContextVar("script_stack", default=None)
+script_stack_cv: ContextVar[list[str] | None] = ContextVar("script_stack", default=None)
 
 
 class ScriptData(TypedDict):
@@ -452,7 +452,7 @@ class _ScriptRun:
         if (script_stack := script_stack_cv.get()) is None:
             script_stack = []
             script_stack_cv.set(script_stack)
-        script_stack.append(id(self._script))
+        script_stack.append(self._script.unique_id)
         response = None
 
         try:
@@ -1401,6 +1401,7 @@ class Script:
         self.sequence = sequence
         template.attach(hass, self.sequence)
         self.name = name
+        self.unique_id = f"{domain}.{name}-{id(self)}"
         self.domain = domain
         self.running_description = running_description or f"{domain} script"
         self._change_listener = change_listener
@@ -1723,10 +1724,21 @@ class Script:
         if (
             self.script_mode in (SCRIPT_MODE_RESTART, SCRIPT_MODE_QUEUED)
             and script_stack is not None
-            and id(self) in script_stack
+            and self.unique_id in script_stack
         ):
             script_execution_set("disallowed_recursion_detected")
-            self._log("Disallowed recursion detected", level=logging.WARNING)
+            formatted_stack = [
+                f"- {name_id.partition('-')[0]}" for name_id in script_stack
+            ]
+            self._log(
+                "Disallowed recursion detected, "
+                f"{script_stack[-1].partition('-')[0]} tried to start "
+                f"{self.domain}.{self.name} which is already running "
+                "in the current execution path; "
+                "Traceback (most recent call last):\n"
+                f"{"\n".join(formatted_stack)}",
+                level=logging.WARNING,
+            )
             return None
 
         if self.script_mode != SCRIPT_MODE_QUEUED:
