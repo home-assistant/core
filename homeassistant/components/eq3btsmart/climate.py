@@ -19,10 +19,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
     DeviceInfo,
-    async_get,
     format_mac,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -158,7 +158,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
     def _async_on_device_updated(self) -> None:
         """Handle updated device data from the thermostat."""
 
-        device_registry = async_get(self.hass)
+        device_registry = dr.async_get(self.hass)
         if device := device_registry.async_get_device(
             connections={(CONNECTION_BLUETOOTH, self._eq3_config.mac_address)},
         ):
