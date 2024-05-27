@@ -197,17 +197,23 @@ async def test_assist_api_prompt(
     area = area_registry.async_get_area_by_name("Test Area")
     area_registry.async_update(area.id, aliases=["Alternative name"])
     entry1 = entity_registry.async_get_or_create(
-        "light", "kitchen", "mock-id-kitchen", original_name="Kitchen"
+        "light",
+        "kitchen",
+        "mock-id-kitchen",
+        original_name="Kitchen",
+        suggested_object_id="kitchen",
     )
     entry2 = entity_registry.async_get_or_create(
         "light",
         "living_room",
         "mock-id-living-room",
         original_name="Living Room",
+        suggested_object_id="living_room",
         device_id=device.id,
     )
     hass.states.async_set(entry1.entity_id, "on", {"friendly_name": "Kitchen"})
     hass.states.async_set(entry2.entity_id, "on", {"friendly_name": "Living Room"})
+
     # Set options for registered entities
     ws_client = await hass_ws_client(hass)
     await ws_client.send_json_auto_id(
