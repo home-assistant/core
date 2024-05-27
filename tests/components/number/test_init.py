@@ -36,6 +36,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
@@ -359,14 +360,20 @@ async def test_set_value(
     state = hass.states.get("number.test")
     assert state.state == "60.0"
 
-    # test ValueError trigger
-    with pytest.raises(ValueError):
+    # test range validation
+    with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_VALUE,
             {ATTR_VALUE: 110.0, ATTR_ENTITY_ID: "number.test"},
             blocking=True,
         )
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "out_of_range"
+    assert (
+        str(exc.value)
+        == "Value 110.0 for number.test is outside valid range 0.0 - 100.0"
+    )
 
     await hass.async_block_till_done()
     state = hass.states.get("number.test")

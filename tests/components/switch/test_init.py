@@ -9,9 +9,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import common
+from .common import MockSwitch
 
 from tests.common import (
-    MockToggleEntity,
     MockUser,
     help_test_all,
     import_and_test_deprecated_constant_enum,
@@ -20,10 +20,10 @@ from tests.common import (
 
 
 @pytest.fixture(autouse=True)
-def entities(hass: HomeAssistant, mock_toggle_entities: list[MockToggleEntity]):
+def entities(hass: HomeAssistant, mock_switch_entities: list[MockSwitch]):
     """Initialize the test switch."""
-    setup_test_component_platform(hass, switch.DOMAIN, mock_toggle_entities)
-    return mock_toggle_entities
+    setup_test_component_platform(hass, switch.DOMAIN, mock_switch_entities)
+    return mock_switch_entities
 
 
 async def test_methods(

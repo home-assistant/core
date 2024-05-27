@@ -160,7 +160,7 @@ async def test_gateway_port_poe_switch(
     assert entity.state == "on"
 
 
-async def test_gaateway_wan_port_has_no_poe_switch(
+async def test_gateway_wan_port_has_no_poe_switch(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
 ) -> None:

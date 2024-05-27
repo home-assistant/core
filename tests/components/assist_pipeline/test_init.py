@@ -727,7 +727,7 @@ def test_pipeline_run_equality(hass: HomeAssistant, init_components) -> None:
         event_callback=event_callback,
     )
 
-    assert run_1 == run_1
+    assert run_1 == run_1  # noqa: PLR0124
     assert run_1 != run_2
     assert run_1 != 1234
 

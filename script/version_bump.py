@@ -104,7 +104,7 @@ def bump_version(
         raise ValueError(f"Unsupported type: {bump_type}")
 
     temp = Version("0")
-    temp._version = version._version._replace(**to_change)
+    temp._version = version._version._replace(**to_change)  # noqa: SLF001
     return Version(str(temp))
 
 

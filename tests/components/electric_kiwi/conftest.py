@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Generator
 from time import time
 from unittest.mock import AsyncMock, patch
-import zoneinfo
 
 from electrickiwi_api.model import AccountBalance, Hop, HopIntervals
 import pytest
@@ -24,10 +23,8 @@ CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 REDIRECT_URI = "https://example.com/auth/external/callback"
 
-TZ_NAME = "Pacific/Auckland"
-TIMEZONE = zoneinfo.ZoneInfo(TZ_NAME)
-YieldFixture = Generator[AsyncMock, None, None]
-ComponentSetup = Callable[[], Awaitable[bool]]
+type YieldFixture = Generator[AsyncMock, None, None]
+type ComponentSetup = Callable[[], Awaitable[bool]]
 
 
 @pytest.fixture(autouse=True)
@@ -63,7 +60,7 @@ def component_setup(
 @pytest.fixture(name="config_entry")
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create mocked config entry."""
-    entry = MockConfigEntry(
+    return MockConfigEntry(
         title="Electric Kiwi",
         domain=DOMAIN,
         data={
@@ -79,7 +76,6 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         },
         unique_id=DOMAIN,
     )
-    return entry
 
 
 @pytest.fixture

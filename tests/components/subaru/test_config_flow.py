@@ -12,6 +12,7 @@ from homeassistant.components.subaru import config_flow
 from homeassistant.components.subaru.const import CONF_UPDATE_ENABLED, DOMAIN
 from homeassistant.const import CONF_DEVICE_ID, CONF_PIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
@@ -45,7 +46,7 @@ async def test_user_form_init(user_form) -> None:
     assert user_form["errors"] is None
     assert user_form["handler"] == DOMAIN
     assert user_form["step_id"] == "user"
-    assert user_form["type"] == "form"
+    assert user_form["type"] is FlowResultType.FORM
 
 
 async def test_user_form_repeat_identifier(hass: HomeAssistant, user_form) -> None:
@@ -64,7 +65,7 @@ async def test_user_form_repeat_identifier(hass: HomeAssistant, user_form) -> No
             TEST_CREDS,
         )
     assert len(mock_connect.mock_calls) == 0
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -79,7 +80,7 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, user_form) -> None:
             TEST_CREDS,
         )
     assert len(mock_connect.mock_calls) == 1
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -94,7 +95,7 @@ async def test_user_form_invalid_auth(hass: HomeAssistant, user_form) -> None:
             TEST_CREDS,
         )
     assert len(mock_connect.mock_calls) == 1
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -207,7 +208,7 @@ async def test_two_factor_request_fail(
             user_input={config_flow.CONF_CONTACT_METHOD: "email@addr.com"},
         )
     assert len(mock_two_factor_request.mock_calls) == 1
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "two_factor_request_failed"
 
 
@@ -302,7 +303,7 @@ async def test_pin_form_bad_pin_format(hass: HomeAssistant, pin_form) -> None:
         )
     assert len(mock_test_pin.mock_calls) == 0
     assert len(mock_update_saved_pin.mock_calls) == 1
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "bad_pin_format"}
 
 
@@ -361,7 +362,7 @@ async def test_pin_form_incorrect_pin(hass: HomeAssistant, pin_form) -> None:
         )
     assert len(mock_test_pin.mock_calls) == 1
     assert len(mock_update_saved_pin.mock_calls) == 1
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "incorrect_pin"}
 
 
@@ -370,7 +371,7 @@ async def test_option_flow_form(options_form) -> None:
     assert options_form["description_placeholders"] is None
     assert options_form["errors"] is None
     assert options_form["step_id"] == "init"
-    assert options_form["type"] == "form"
+    assert options_form["type"] is FlowResultType.FORM
 
 
 async def test_option_flow(hass: HomeAssistant, options_form) -> None:
@@ -381,7 +382,7 @@ async def test_option_flow(hass: HomeAssistant, options_form) -> None:
             CONF_UPDATE_ENABLED: False,
         },
     )
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_UPDATE_ENABLED: False,
     }

@@ -7,9 +7,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components import script
 from homeassistant.components.script import DOMAIN, EVENT_SCRIPT_STARTED, ScriptEntity
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
@@ -729,7 +729,7 @@ async def test_extraction_functions(
 ) -> None:
     """Test extraction functions."""
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
 
     device_in_both = device_registry.async_get_or_create(
@@ -1741,3 +1741,46 @@ async def test_responses_no_response(hass: HomeAssistant) -> None:
         )
         is None
     )
+
+
+async def test_script_queued_mode(hass: HomeAssistant) -> None:
+    """Test calling a queued mode script called in parallel."""
+    calls = 0
+
+    async def async_service_handler(*args, **kwargs) -> None:
+        """Service that simulates doing background I/O."""
+        nonlocal calls
+        calls += 1
+        await asyncio.sleep(0)
+
+    hass.services.async_register("test", "simulated_remote", async_service_handler)
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "test_main": {
+                    "sequence": [
+                        {
+                            "parallel": [
+                                {"service": "script.test_sub"},
+                                {"service": "script.test_sub"},
+                                {"service": "script.test_sub"},
+                                {"service": "script.test_sub"},
+                            ]
+                        }
+                    ]
+                },
+                "test_sub": {
+                    "mode": "queued",
+                    "sequence": [
+                        {"service": "test.simulated_remote"},
+                    ],
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call("script", "test_main", blocking=True)
+    assert calls == 4

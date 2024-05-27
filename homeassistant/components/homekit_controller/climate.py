@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, Any, Final
+from typing import Any, Final
 
 from aiohomekit.model.characteristics import (
     ActivationStateValues,
@@ -48,12 +49,6 @@ from homeassistant.util.percentage import (
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import HomeKitEntity
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 _LOGGER = logging.getLogger(__name__)
 

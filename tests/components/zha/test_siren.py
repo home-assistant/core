@@ -5,10 +5,9 @@ from unittest.mock import ANY, call, patch
 
 import pytest
 from zigpy.const import SIG_EP_PROFILE
-import zigpy.profiles.zha as zha
+from zigpy.profiles import zha
 import zigpy.zcl
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.security as security
+from zigpy.zcl.clusters import general, security
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.siren import (

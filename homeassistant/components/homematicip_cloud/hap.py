@@ -100,7 +100,7 @@ class HomematicipHAP:
             )
         except HmipcConnectionError as err:
             raise ConfigEntryNotReady from err
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             _LOGGER.error("Error connecting with HomematicIP Cloud: %s", err)
             return False
 

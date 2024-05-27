@@ -33,7 +33,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
         context={"source": SOURCE_BLUETOOTH},
         data=SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     with patch_async_setup_entry() as mock_setup_entry, patch_microbot_api():
@@ -43,7 +43,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     assert len(mock_setup_entry.mock_calls) == 0
 
@@ -64,7 +64,7 @@ async def test_bluetooth_discovery_already_setup(hass: HomeAssistant) -> None:
             context={"source": SOURCE_BLUETOOTH},
             data=SERVICE_INFO,
         )
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -78,7 +78,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] == {}
 
@@ -89,7 +89,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "link"
     assert result2["errors"] is None
 
@@ -100,7 +100,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["result"].data == {
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
         CONF_ACCESS_TOKEN: ANY,
@@ -125,7 +125,7 @@ async def test_user_setup_already_configured(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
@@ -141,7 +141,7 @@ async def test_user_no_devices(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
@@ -158,7 +158,7 @@ async def test_no_link(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] == {}
 
@@ -168,7 +168,7 @@ async def test_no_link(hass: HomeAssistant) -> None:
             USER_INPUT,
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "link"
     with (
         patch(
@@ -183,7 +183,7 @@ async def test_no_link(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "link"
     assert result3["errors"] == {"base": "linking"}
 

@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import contextlib
+from functools import cached_property
 import itertools
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import voluptuous as vol
 
@@ -22,6 +23,7 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
     Event,
+    EventStateChangedData,
     HomeAssistant,
     State,
     callback,
@@ -31,7 +33,6 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     TrackTemplate,
     TrackTemplateResult,
     TrackTemplateResultInfo,
@@ -57,11 +58,6 @@ from .const import (
     CONF_AVAILABILITY_TEMPLATE,
     CONF_PICTURE,
 )
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -193,7 +189,7 @@ class _TemplateAttribute:
         self,
         event: Event[EventStateChangedData] | None,
         template: Template,
-        last_result: str | None | TemplateError,
+        last_result: str | TemplateError | None,
         result: str | TemplateError,
     ) -> None:
         """Handle a template result event callback."""
@@ -442,7 +438,7 @@ class TemplateEntity(Entity):
         try:
             calculated_state = self._async_calculate_state()
             validate_state(calculated_state.state)
-        except Exception as err:  # pylint: disable=broad-exception-caught
+        except Exception as err:  # noqa: BLE001
             self._preview_callback(None, None, None, str(err))
         else:
             assert self._template_result_info
@@ -468,8 +464,7 @@ class TemplateEntity(Entity):
             template_var_tup = TrackTemplate(template, variables)
             is_availability_template = False
             for attribute in attributes:
-                # pylint: disable-next=protected-access
-                if attribute._attribute == "_attr_available":
+                if attribute._attribute == "_attr_available":  # noqa: SLF001
                     has_availability_template = True
                     is_availability_template = True
                 attribute.async_setup()
@@ -539,7 +534,7 @@ class TemplateEntity(Entity):
         self._async_setup_templates()
         try:
             self._async_template_startup(None, log_template_error)
-        except Exception as err:  # pylint: disable=broad-exception-caught
+        except Exception as err:  # noqa: BLE001
             preview_callback(None, None, None, str(err))
         return self._call_on_remove_callbacks
 

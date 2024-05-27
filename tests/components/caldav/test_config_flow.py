@@ -35,7 +35,7 @@ async def test_form(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert not result.get("errors")
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -49,7 +49,7 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == TEST_USERNAME
     assert result2.get("data") == {
         CONF_URL: TEST_URL,
@@ -93,7 +93,7 @@ async def test_caldav_client_error(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") == {"base": expected_error}
 
 
@@ -113,7 +113,7 @@ async def test_reauth_success(
             "entry_id": config_entry.entry_id,
         },
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -124,7 +124,7 @@ async def test_reauth_success(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == FlowResultType.ABORT
+    assert result2.get("type") is FlowResultType.ABORT
     assert result2.get("reason") == "reauth_successful"
 
     # Verify updated configuration entry
@@ -154,7 +154,7 @@ async def test_reauth_failure(
             "entry_id": config_entry.entry_id,
         },
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     dav_client.return_value.principal.side_effect = DAVError
@@ -167,7 +167,7 @@ async def test_reauth_failure(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") == {"base": "cannot_connect"}
 
     # Complete the form and it succeeds this time
@@ -180,7 +180,7 @@ async def test_reauth_failure(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == FlowResultType.ABORT
+    assert result2.get("type") is FlowResultType.ABORT
     assert result2.get("reason") == "reauth_successful"
 
     # Verify updated configuration entry
@@ -223,7 +223,7 @@ async def test_multiple_config_entries(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert not result.get("errors")
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -232,7 +232,7 @@ async def test_multiple_config_entries(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == user_input[CONF_USERNAME]
     assert result2.get("data") == {
         **user_input,
@@ -271,7 +271,7 @@ async def test_duplicate_config_entries(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert not result.get("errors")
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -280,5 +280,5 @@ async def test_duplicate_config_entries(
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") == FlowResultType.ABORT
+    assert result2.get("type") is FlowResultType.ABORT
     assert result2.get("reason") == "already_configured"

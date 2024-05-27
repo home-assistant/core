@@ -90,9 +90,7 @@ class QVRProCamera(Camera):
     @property
     def extra_state_attributes(self):
         """Get the state attributes."""
-        attrs = {"qvr_guid": self.guid}
-
-        return attrs
+        return {"qvr_guid": self.guid}
 
     def camera_image(
         self, width: int | None = None, height: int | None = None

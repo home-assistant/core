@@ -281,6 +281,9 @@ async def matrix_bot(
     assert await async_setup_component(hass, MATRIX_DOMAIN, MOCK_CONFIG_DATA)
     assert await async_setup_component(hass, NOTIFY_DOMAIN, MOCK_CONFIG_DATA)
     await hass.async_block_till_done()
+
+    # Accessing hass.data in tests is not desirable, but all the tests here
+    # currently do this.
     assert isinstance(matrix_bot := hass.data[MATRIX_DOMAIN], MatrixBot)
 
     await hass.async_start()

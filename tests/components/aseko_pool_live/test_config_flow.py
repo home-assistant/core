@@ -19,7 +19,7 @@ async def test_async_step_user_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
 
@@ -48,7 +48,7 @@ async def test_async_step_user_success(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "aseko@example.com"
     assert result2["data"] == {
         CONF_EMAIL: "aseko@example.com",
@@ -86,7 +86,7 @@ async def test_async_step_user_exception(
             },
         )
 
-        assert result2["type"] == FlowResultType.FORM
+        assert result2["type"] is FlowResultType.FORM
         assert result2["errors"] == {"base": reason}
 
 
@@ -119,7 +119,7 @@ async def test_get_account_info_exceptions(
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": reason}
 
 
@@ -141,7 +141,7 @@ async def test_async_step_reauth_success(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
@@ -154,7 +154,7 @@ async def test_async_step_reauth_success(hass: HomeAssistant) -> None:
             {CONF_EMAIL: "aseko@example.com", CONF_PASSWORD: "passw0rd"},
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -200,5 +200,5 @@ async def test_async_step_reauth_exception(
             },
         )
 
-        assert result2["type"] == FlowResultType.FORM
+        assert result2["type"] is FlowResultType.FORM
         assert result2["errors"] == {"base": reason}

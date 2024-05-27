@@ -183,7 +183,7 @@ def get_schema_version(session_maker: Callable[[], Session]) -> int | None:
     try:
         with session_scope(session=session_maker(), read_only=True) as session:
             return _get_schema_version(session)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Error when determining DB schema version")
         return None
 
@@ -492,7 +492,7 @@ def _modify_columns(
     if engine.dialect.name == SupportedDialect.POSTGRESQL:
         columns_def = [
             "ALTER {column} TYPE {type}".format(
-                **dict(zip(["column", "type"], col_def.split(" ", 1)))
+                **dict(zip(["column", "type"], col_def.split(" ", 1), strict=False))
             )
             for col_def in columns_def
         ]
@@ -1788,7 +1788,7 @@ def initialize_database(session_maker: Callable[[], Session]) -> bool:
         with session_scope(session=session_maker()) as session:
             return _initialize_database(session)
 
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Error when initialise database")
         return False
 

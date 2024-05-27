@@ -14,6 +14,7 @@ from homeassistant.components.hassio import (
     HassioAPIError,
 )
 from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -317,7 +318,7 @@ async def test_stats_addon_sensor(
     freezer.tick(config_entries.RELOAD_AFTER_UPDATE_DELAY)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert config_entry.state is config_entries.ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     # Verify the entity is still enabled
     assert entity_registry.async_get(entity_id).disabled_by is None
 

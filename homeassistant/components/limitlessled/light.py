@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar, cast
+from typing import Any, Concatenate, cast
 
 from limitlessled import Color
 from limitlessled.bridge import Bridge
@@ -39,9 +39,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.color import color_hs_to_RGB, color_temperature_mired_to_kelvin
-
-_LimitlessLEDGroupT = TypeVar("_LimitlessLEDGroupT", bound="LimitlessLEDGroup")
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -176,7 +173,7 @@ def setup_platform(
     add_entities(lights)
 
 
-def state(
+def state[_LimitlessLEDGroupT: LimitlessLEDGroup, **_P](
     new_state: bool,
 ) -> Callable[
     [Callable[Concatenate[_LimitlessLEDGroupT, int, Pipeline, _P], Any]],
@@ -200,14 +197,14 @@ def state(
             transition_time = DEFAULT_TRANSITION
             if self.effect == EFFECT_COLORLOOP:
                 self.group.stop()
-            self._attr_effect = None  # pylint: disable=protected-access
+            self._attr_effect = None
             # Set transition time.
             if ATTR_TRANSITION in kwargs:
                 transition_time = int(cast(float, kwargs[ATTR_TRANSITION]))
             # Do group type-specific work.
             function(self, transition_time, pipeline, *args, **kwargs)
             # Update state.
-            self._attr_is_on = new_state  # pylint: disable=protected-access
+            self._attr_is_on = new_state
             self.group.enqueue(pipeline)
             self.schedule_update_ha_state()
 

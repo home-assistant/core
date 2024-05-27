@@ -103,13 +103,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
 
 
-@callback
-def async_unload_services(hass: HomeAssistant) -> None:
-    """Unload deCONZ services."""
-    for service in SUPPORTED_SERVICES:
-        hass.services.async_remove(DOMAIN, service)
-
-
 async def async_configure_service(hub: DeconzHub, data: ReadOnlyDict) -> None:
     """Set attribute of device in deCONZ.
 
@@ -160,8 +153,9 @@ async def async_remove_orphaned_entries_service(hub: DeconzHub) -> None:
     entities_to_be_removed = []
     devices_to_be_removed = [
         entry.id
-        for entry in device_registry.devices.values()
-        if hub.config_entry.entry_id in entry.config_entries
+        for entry in device_registry.devices.get_devices_for_config_entry_id(
+            hub.config_entry.entry_id
+        )
     ]
 
     # Don't remove the Gateway host entry

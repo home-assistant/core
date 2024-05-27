@@ -43,7 +43,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
             data=WAVE_SERVICE_INFO,
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     assert result["description_placeholders"] == {
         "name": "Airthings Wave Plus (123456)"
@@ -54,7 +54,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
             result["flow_id"], user_input={"not": "empty"}
         )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Airthings Wave Plus (123456)"
     assert result["result"].unique_id == "cc:cc:cc:cc:cc:cc"
 
@@ -67,7 +67,7 @@ async def test_bluetooth_discovery_no_BLEDevice(hass: HomeAssistant) -> None:
             context={"source": SOURCE_BLUETOOTH},
             data=WAVE_SERVICE_INFO,
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -87,7 +87,7 @@ async def test_bluetooth_discovery_airthings_ble_update_failed(
                 data=WAVE_SERVICE_INFO,
             )
 
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == reason
 
 
@@ -103,7 +103,7 @@ async def test_bluetooth_discovery_already_setup(hass: HomeAssistant) -> None:
         context={"source": SOURCE_BLUETOOTH},
         data=WAVE_DEVICE_INFO,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -127,7 +127,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
     assert result["data_schema"] is not None
@@ -146,7 +146,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
         )
 
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Airthings Wave Plus (123456)"
     assert result["result"].unique_id == "cc:cc:cc:cc:cc:cc"
 
@@ -160,7 +160,7 @@ async def test_user_setup_no_device(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
@@ -178,7 +178,7 @@ async def test_user_setup_existing_and_unknown_device(hass: HomeAssistant) -> No
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
@@ -196,7 +196,7 @@ async def test_user_setup_unknown_error(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
@@ -214,7 +214,7 @@ async def test_user_setup_unable_to_connect(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -227,5 +227,5 @@ async def test_unsupported_device(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"

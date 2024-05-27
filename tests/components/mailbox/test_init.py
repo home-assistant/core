@@ -9,7 +9,7 @@ from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.bootstrap import async_setup_component
-import homeassistant.components.mailbox as mailbox
+from homeassistant.components import mailbox
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType

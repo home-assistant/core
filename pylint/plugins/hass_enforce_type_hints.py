@@ -23,6 +23,10 @@ _COMMON_ARGUMENTS: dict[str, list[str]] = {
     "hass": ["HomeAssistant", "HomeAssistant | None"]
 }
 _PLATFORMS: set[str] = {platform.value for platform in Platform}
+_KNOWN_GENERIC_TYPES: set[str] = {
+    "ConfigEntry",
+}
+_KNOWN_GENERIC_TYPES_TUPLE = tuple(_KNOWN_GENERIC_TYPES)
 
 
 class _Special(Enum):
@@ -2974,6 +2978,16 @@ def _is_valid_type(
         and not in_return
         and isinstance(node, nodes.Name)
         and node.name in ("float", "int")
+    ):
+        return True
+
+    # Allow subscripts or type aliases for generic types
+    if (
+        isinstance(node, nodes.Subscript)
+        and isinstance(node.value, nodes.Name)
+        and node.value.name in _KNOWN_GENERIC_TYPES
+        or isinstance(node, nodes.Name)
+        and node.name.endswith(_KNOWN_GENERIC_TYPES_TUPLE)
     ):
         return True
 

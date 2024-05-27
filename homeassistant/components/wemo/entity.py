@@ -11,7 +11,7 @@ from pywemo.exceptions import ActionException
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .wemo_device import DeviceCoordinator
+from .coordinator import DeviceCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

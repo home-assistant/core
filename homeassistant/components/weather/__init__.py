@@ -6,21 +6,11 @@ import abc
 from collections.abc import Callable, Iterable
 from contextlib import suppress
 from datetime import timedelta
-from functools import partial
+from functools import cached_property, partial
 import logging
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Final,
-    Generic,
-    Literal,
-    Required,
-    TypedDict,
-    TypeVar,
-    cast,
-    final,
-)
+from typing import Any, Final, Generic, Literal, Required, TypedDict, cast, final
 
+from typing_extensions import TypeVar
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -84,12 +74,6 @@ from .const import (
 )
 from .websocket_api import async_setup as async_setup_ws_api
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CONDITION_CLASS = "condition_class"
@@ -144,21 +128,25 @@ LEGACY_SERVICE_GET_FORECAST: Final = "get_forecast"
 SERVICE_GET_FORECASTS: Final = "get_forecasts"
 
 _ObservationUpdateCoordinatorT = TypeVar(
-    "_ObservationUpdateCoordinatorT", bound="DataUpdateCoordinator[Any]"
+    "_ObservationUpdateCoordinatorT",
+    bound=DataUpdateCoordinator[Any],
+    default=DataUpdateCoordinator[dict[str, Any]],
 )
-
-# Note:
-# Mypy bug https://github.com/python/mypy/issues/9424 prevents us from making the
-# forecast cooordinators optional, bound=TimestampDataUpdateCoordinator[Any] | None
 
 _DailyForecastUpdateCoordinatorT = TypeVar(
-    "_DailyForecastUpdateCoordinatorT", bound="TimestampDataUpdateCoordinator[Any]"
+    "_DailyForecastUpdateCoordinatorT",
+    bound=TimestampDataUpdateCoordinator[Any],
+    default=TimestampDataUpdateCoordinator[None],
 )
 _HourlyForecastUpdateCoordinatorT = TypeVar(
-    "_HourlyForecastUpdateCoordinatorT", bound="TimestampDataUpdateCoordinator[Any]"
+    "_HourlyForecastUpdateCoordinatorT",
+    bound=TimestampDataUpdateCoordinator[Any],
+    default=_DailyForecastUpdateCoordinatorT,
 )
 _TwiceDailyForecastUpdateCoordinatorT = TypeVar(
-    "_TwiceDailyForecastUpdateCoordinatorT", bound="TimestampDataUpdateCoordinator[Any]"
+    "_TwiceDailyForecastUpdateCoordinatorT",
+    bound=TimestampDataUpdateCoordinator[Any],
+    default=_DailyForecastUpdateCoordinatorT,
 )
 
 # mypy: disallow-any-generics
@@ -1071,8 +1059,7 @@ async def async_get_forecasts_service(
     if native_forecast_list is None:
         converted_forecast_list = []
     else:
-        # pylint: disable-next=protected-access
-        converted_forecast_list = weather._convert_forecast(native_forecast_list)
+        converted_forecast_list = weather._convert_forecast(native_forecast_list)  # noqa: SLF001
     return {
         "forecast": converted_forecast_list,
     }
@@ -1096,8 +1083,8 @@ class CoordinatorWeatherEntity(
         *,
         context: Any = None,
         daily_coordinator: _DailyForecastUpdateCoordinatorT | None = None,
-        hourly_coordinator: _DailyForecastUpdateCoordinatorT | None = None,
-        twice_daily_coordinator: _DailyForecastUpdateCoordinatorT | None = None,
+        hourly_coordinator: _HourlyForecastUpdateCoordinatorT | None = None,
+        twice_daily_coordinator: _TwiceDailyForecastUpdateCoordinatorT | None = None,
         daily_forecast_valid: timedelta | None = None,
         hourly_forecast_valid: timedelta | None = None,
         twice_daily_forecast_valid: timedelta | None = None,
@@ -1251,19 +1238,12 @@ class CoordinatorWeatherEntity(
 
 class SingleCoordinatorWeatherEntity(
     CoordinatorWeatherEntity[
-        _ObservationUpdateCoordinatorT,
-        TimestampDataUpdateCoordinator[None],
-        TimestampDataUpdateCoordinator[None],
-        TimestampDataUpdateCoordinator[None],
+        _ObservationUpdateCoordinatorT, TimestampDataUpdateCoordinator[None]
     ],
 ):
     """A class for weather entities using a single DataUpdateCoordinators.
 
-    This class is added as a convenience because:
-    - Deriving from CoordinatorWeatherEntity requires specifying all type parameters
-    until we upgrade to Python 3.12 which supports defaults
-    - Mypy bug https://github.com/python/mypy/issues/9424 prevents us from making the
-    forecast cooordinator type vars optional
+    This class is added as a convenience.
     """
 
     def __init__(

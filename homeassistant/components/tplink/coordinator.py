@@ -7,6 +7,7 @@ import logging
 
 from kasa import AuthenticationException, SmartDevice, SmartDeviceException
 
+from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
@@ -19,6 +20,8 @@ REQUEST_REFRESH_DELAY = 0.35
 
 class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """DataUpdateCoordinator to gather data for a specific TPLink device."""
+
+    config_entry: config_entries.ConfigEntry
 
     def __init__(
         self,

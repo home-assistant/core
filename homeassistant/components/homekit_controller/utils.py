@@ -12,7 +12,7 @@ from homeassistant.core import Event, HomeAssistant
 from .const import CONTROLLER
 from .storage import async_get_entity_storage
 
-IidTuple = tuple[int, int | None, int | None]
+type IidTuple = tuple[int, int | None, int | None]
 
 
 def unique_id_to_iids(unique_id: str) -> IidTuple | None:
@@ -77,9 +77,7 @@ async def async_get_controller(hass: HomeAssistant) -> Controller:
 
     # Right now _async_stop_homekit_controller is only called on HA exiting
     # So we don't have to worry about leaking a callback here.
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _async_stop_homekit_controller, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_homekit_controller)
 
     await controller.async_start()
 

@@ -90,9 +90,9 @@ async def test_upload_large_file(
             file_upload.TEMP_DIR_NAME + f"-{getrandbits(10):03x}",
         ),
         patch(
-            # Patch one megabyte to 8 bytes to prevent having to use big files in tests
+            # Patch one megabyte to 50 bytes to prevent having to use big files in tests
             "homeassistant.components.file_upload.ONE_MEGABYTE",
-            8,
+            50,
         ),
     ):
         res = await client.post("/api/file_upload", data={"file": large_file_io})
@@ -152,9 +152,9 @@ async def test_upload_large_file_fails(
             file_upload.TEMP_DIR_NAME + f"-{getrandbits(10):03x}",
         ),
         patch(
-            # Patch one megabyte to 8 bytes to prevent having to use big files in tests
+            # Patch one megabyte to 50 bytes to prevent having to use big files in tests
             "homeassistant.components.file_upload.ONE_MEGABYTE",
-            8,
+            50,
         ),
         patch(
             "homeassistant.components.file_upload.Path.open", return_value=_mock_open()

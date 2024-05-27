@@ -37,7 +37,7 @@ from homeassistant.const import (
     URL_API_TEMPLATE,
 )
 import homeassistant.core as ha
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.exceptions import (
     InvalidEntityFormatError,
     InvalidStateError,
@@ -46,10 +46,10 @@ from homeassistant.exceptions import (
     Unauthorized,
 )
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.json import json_dumps, json_fragment
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.event_type import EventType
 from homeassistant.util.json import json_loads
 
 _LOGGER = logging.getLogger(__name__)
@@ -135,7 +135,7 @@ class APIEventStream(HomeAssistantView):
         stop_obj = object()
         to_write: asyncio.Queue[object | str] = asyncio.Queue()
 
-        restrict: list[str] | None = None
+        restrict: list[EventType[Any] | str] | None = None
         if restrict_str := request.query.get("restrict"):
             restrict = [*restrict_str.split(","), EVENT_HOMEASSISTANT_STOP]
 
@@ -284,7 +284,8 @@ class APIEntityStateView(HomeAssistantView):
 
         # Read the state back for our response
         status_code = HTTPStatus.CREATED if is_new_state else HTTPStatus.OK
-        assert (state := hass.states.get(entity_id))
+        state = hass.states.get(entity_id)
+        assert state
         resp = self.json(state.as_dict(), status_code)
 
         resp.headers.add("Location", f"/api/states/{entity_id}")
@@ -398,7 +399,6 @@ class APIDomainServicesView(HomeAssistantView):
         cancel_listen = hass.bus.async_listen(
             EVENT_STATE_CHANGED,
             _async_save_changed_entities,
-            run_immediately=True,
         )
 
         try:

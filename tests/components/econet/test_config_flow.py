@@ -20,7 +20,7 @@ async def test_bad_credentials(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with (
@@ -38,7 +38,7 @@ async def test_bad_credentials(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {
             "base": "invalid_auth",
@@ -51,7 +51,7 @@ async def test_generic_error_from_library(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with (
@@ -69,7 +69,7 @@ async def test_generic_error_from_library(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {
             "base": "cannot_connect",
@@ -82,7 +82,7 @@ async def test_auth_worked(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with (
@@ -100,7 +100,7 @@ async def test_auth_worked(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == {
             CONF_EMAIL: "admin@localhost.com",
             CONF_PASSWORD: "password0",
@@ -120,7 +120,7 @@ async def test_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with (
@@ -138,5 +138,5 @@ async def test_already_configured(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

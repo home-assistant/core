@@ -71,7 +71,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 # Fixture group for device API endpoint.
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def load_device_file() -> str:
     """Fixture for loading device file."""
     return load_fixture("device.json", DOMAIN)
@@ -92,7 +92,7 @@ def load_systems_jv_file(load_systems_file: str) -> dict[str, Any]:
     return json_loads(load_systems_file)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def load_systems_file() -> str:
     """Load fixture file for systems."""
     return load_fixture("systems-2dev.json", DOMAIN)

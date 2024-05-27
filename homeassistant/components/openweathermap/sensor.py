@@ -10,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
@@ -29,13 +28,15 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
+from . import OpenweathermapConfigEntry
 from .const import (
+    ATTR_API_CLOUD_COVERAGE,
     ATTR_API_CLOUDS,
     ATTR_API_CONDITION,
+    ATTR_API_CURRENT,
+    ATTR_API_DAILY_FORECAST,
     ATTR_API_DEW_POINT,
     ATTR_API_FEELS_LIKE_TEMPERATURE,
-    ATTR_API_FORECAST,
-    ATTR_API_FORECAST_CONDITION,
     ATTR_API_FORECAST_PRECIPITATION,
     ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_API_FORECAST_PRESSURE,
@@ -57,11 +58,9 @@ from .const import (
     ATTRIBUTION,
     DEFAULT_NAME,
     DOMAIN,
-    ENTRY_NAME,
-    ENTRY_WEATHER_COORDINATOR,
     MANUFACTURER,
 )
-from .weather_update_coordinator import WeatherUpdateCoordinator
+from .coordinator import WeatherUpdateCoordinator
 
 WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -164,7 +163,7 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 )
 FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key=ATTR_API_FORECAST_CONDITION,
+        key=ATTR_API_CONDITION,
         name="Condition",
     ),
     SensorEntityDescription(
@@ -213,7 +212,7 @@ FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.WIND_SPEED,
     ),
     SensorEntityDescription(
-        key=ATTR_API_CLOUDS,
+        key=ATTR_API_CLOUD_COVERAGE,
         name="Cloud coverage",
         native_unit_of_measurement=PERCENTAGE,
     ),
@@ -222,13 +221,13 @@ FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OpenweathermapConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up OpenWeatherMap sensor entities based on a config entry."""
-    domain_data = hass.data[DOMAIN][config_entry.entry_id]
-    name = domain_data[ENTRY_NAME]
-    weather_coordinator = domain_data[ENTRY_WEATHER_COORDINATOR]
+    domain_data = config_entry.runtime_data
+    name = domain_data.name
+    weather_coordinator = domain_data.coordinator
 
     entities: list[AbstractOpenWeatherMapSensor] = [
         OpenWeatherMapSensor(
@@ -315,7 +314,9 @@ class OpenWeatherMapSensor(AbstractOpenWeatherMapSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state of the device."""
-        return self._weather_coordinator.data.get(self.entity_description.key, None)
+        return self._weather_coordinator.data[ATTR_API_CURRENT].get(
+            self.entity_description.key
+        )
 
 
 class OpenWeatherMapForecastSensor(AbstractOpenWeatherMapSensor):
@@ -335,11 +336,8 @@ class OpenWeatherMapForecastSensor(AbstractOpenWeatherMapSensor):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the device."""
-        forecasts = self._weather_coordinator.data.get(ATTR_API_FORECAST)
-        if not forecasts:
-            return None
-
-        value = forecasts[0].get(self.entity_description.key, None)
+        forecasts = self._weather_coordinator.data[ATTR_API_DAILY_FORECAST]
+        value = forecasts[0].get(self.entity_description.key)
         if (
             value
             and self.entity_description.device_class is SensorDeviceClass.TIMESTAMP

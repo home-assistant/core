@@ -57,6 +57,6 @@ async def test_setup_retry(
     mock_client.read_char.side_effect = original_read_char
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_entry.state is ConfigEntryState.LOADED
