@@ -8,7 +8,6 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
 from . import TedeeConfigEntry
-from .coordinator import TedeeApiCoordinator
 
 TO_REDACT = {
     "lock_id",
