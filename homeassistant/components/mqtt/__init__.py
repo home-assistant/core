@@ -36,10 +36,9 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_integration
-from homeassistant.util.async_ import create_eager_task
 from homeassistant.loader import async_get_integration, async_get_loaded_integration
 from homeassistant.setup import SetupPhases, async_pause_setup
+from homeassistant.util.async_ import create_eager_task
 
 # Loading the config flow file will register the flow
 from . import debug_info, discovery
