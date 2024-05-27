@@ -735,12 +735,7 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
                 self._migrate_discovery = discovery_topic
                 _LOGGER.debug("Migrating component: %s", discovery_hash)
                 self.hass.async_create_task(
-                    async_publish(
-                        self.hass,
-                        self._discovery_data[ATTR_DISCOVERY_TOPIC],
-                        None,
-                        retain=True,
-                    )
+                    async_remove_discovery_payload(self.hass, self._discovery_data)
                 )
 
             if discovery_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]:
@@ -930,12 +925,7 @@ class MqttDiscoveryUpdateMixin(Entity):
                     migrate_discovery = discovery_topic
                     _LOGGER.debug("Migrating component: %s", self.entity_id)
                     self.hass.async_create_task(
-                        async_publish(
-                            self.hass,
-                            self._discovery_data[ATTR_DISCOVERY_TOPIC],
-                            None,
-                            retain=True,
-                        )
+                        async_remove_discovery_payload(self.hass, self._discovery_data)
                     )
                 if old_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]:
                     # Non-empty, changed payload: Notify component
