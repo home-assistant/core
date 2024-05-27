@@ -19,10 +19,9 @@ from homeassistant.const import SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from . import DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -141,20 +140,6 @@ TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
         icon="mdi:weather-night",
     ),
 )
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Jewish calendar sensors from YAML.
-
-    The YAML platform config is automatically
-    imported to a config entry, this method can be removed
-    when YAML support is removed.
-    """
 
 
 async def async_setup_entry(

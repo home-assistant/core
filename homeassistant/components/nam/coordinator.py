@@ -1,15 +1,14 @@
 """The Nettigo Air Monitor coordinator."""
 
-import asyncio
 import logging
 
-from aiohttp.client_exceptions import ClientConnectorError
 from nettigo_air_monitor import (
     ApiError,
     InvalidSensorDataError,
     NAMSensors,
     NettigoAirMonitor,
 )
+from tenacity import RetryError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -47,11 +46,10 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator[NAMSensors]):
     async def _async_update_data(self) -> NAMSensors:
         """Update data via library."""
         try:
-            async with asyncio.timeout(10):
-                data = await self.nam.async_update()
+            data = await self.nam.async_update()
         # We do not need to catch AuthFailed exception here because sensor data is
         # always available without authorization.
-        except (ApiError, ClientConnectorError, InvalidSensorDataError) as error:
+        except (ApiError, InvalidSensorDataError, RetryError) as error:
             raise UpdateFailed(error) from error
 
         return data

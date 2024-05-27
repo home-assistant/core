@@ -344,7 +344,7 @@ aiosolaredge==0.2.0
 aiosteamist==0.3.2
 
 # homeassistant.components.switcher_kis
-aioswitcher==3.4.1
+aioswitcher==3.4.3
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -478,7 +478,7 @@ beautifulsoup4==4.12.3
 bellows==0.38.4
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected[china]==0.15.2
+bimmer-connected[china]==0.15.3
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
@@ -886,7 +886,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.48
+holidays==0.49
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240501.1
@@ -1122,7 +1122,7 @@ nessclient==1.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==3.0.1
+nettigo-air-monitor==3.1.0
 
 # homeassistant.components.nexia
 nexia==2.0.8
@@ -1308,7 +1308,7 @@ py-nextbusnext==1.0.2
 py-nightscout==1.2.2
 
 # homeassistant.components.ecovacs
-py-sucks==0.9.9
+py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
 py-synologydsm-api==2.4.2
@@ -1754,7 +1754,7 @@ python-fullykiosk==0.0.12
 python-homeassistant-analytics==0.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v5.0.0
+python-homewizard-energy==v6.0.0
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -2063,7 +2063,7 @@ streamlabswater==1.0.1
 stringcase==1.2.0
 
 # homeassistant.components.subaru
-subarulink==0.7.9
+subarulink==0.7.11
 
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
@@ -2096,7 +2096,7 @@ temescal==0.5
 temperusb==1.6.1
 
 # homeassistant.components.teslemetry
-tesla-fleet-api==0.4.9
+tesla-fleet-api==0.5.12
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
@@ -2136,6 +2136,9 @@ transmission-rpc==7.0.3
 
 # homeassistant.components.twinkly
 ttls==1.5.1
+
+# homeassistant.components.thethingsnetwork
+ttn_client==0.0.4
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.1.9
@@ -2247,7 +2250,7 @@ wled==0.18.0
 wolf-comm==0.0.8
 
 # homeassistant.components.wyoming
-wyoming==1.5.3
+wyoming==1.5.4
 
 # homeassistant.components.xbox
 xbox-webapi==2.0.11
@@ -2292,7 +2295,7 @@ youless-api==1.1.1
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2024.04.09
+yt-dlp==2024.05.26
 
 # homeassistant.components.zamg
 zamg==0.3.6

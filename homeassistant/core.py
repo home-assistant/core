@@ -268,8 +268,16 @@ def async_get_hass() -> HomeAssistant:
     This should be used where it's very cumbersome or downright impossible to pass
     hass to the code which needs it.
     """
-    if not _hass.hass:
+    if not (hass := async_get_hass_or_none()):
         raise HomeAssistantError("async_get_hass called from the wrong thread")
+    return hass
+
+
+def async_get_hass_or_none() -> HomeAssistant | None:
+    """Return the HomeAssistant instance or None.
+
+    Returns None when called from the wrong thread.
+    """
     return _hass.hass
 
 
@@ -322,12 +330,15 @@ class HassJob[**_P, _R_co]:
         self.target: Final = target
         self.name = name
         self._cancel_on_shutdown = cancel_on_shutdown
-        self._job_type = job_type
+        if job_type:
+            # Pre-set the cached_property so we
+            # avoid the function call
+            self.__dict__["job_type"] = job_type
 
     @cached_property
     def job_type(self) -> HassJobType:
         """Return the job type."""
-        return self._job_type or get_hassjob_callable_job_type(self.target)
+        return get_hassjob_callable_job_type(self.target)
 
     @property
     def cancel_on_shutdown(self) -> bool | None:
@@ -423,12 +434,13 @@ class HomeAssistant:
         self.import_executor = InterruptibleThreadPoolExecutor(
             max_workers=1, thread_name_prefix="ImportExecutor"
         )
+        self._loop_thread_id = getattr(
+            self.loop, "_thread_ident", getattr(self.loop, "_thread_id")
+        )
 
     def verify_event_loop_thread(self, what: str) -> None:
         """Report and raise if we are not running in the event loop thread."""
-        if (
-            loop_thread_ident := self.loop.__dict__.get("_thread_ident")
-        ) and loop_thread_ident != threading.get_ident():
+        if self._loop_thread_id != threading.get_ident():
             from .helpers import frame  # pylint: disable=import-outside-toplevel
 
             # frame is a circular import, so we import it here
@@ -1247,6 +1259,14 @@ class Context:
     def __eq__(self, other: object) -> bool:
         """Compare contexts."""
         return isinstance(other, Context) and self.id == other.id
+
+    def __copy__(self) -> Context:
+        """Create a shallow copy of this context."""
+        return Context(user_id=self.user_id, parent_id=self.parent_id, id=self.id)
+
+    def __deepcopy__(self, memo: dict[int, Any]) -> Context:
+        """Create a deep copy of this context."""
+        return Context(user_id=self.user_id, parent_id=self.parent_id, id=self.id)
 
     @cached_property
     def _as_dict(self) -> dict[str, str | None]:

@@ -17,8 +17,7 @@ from tests.common import MockConfigEntry
 def mock_genai():
     """Mock the genai call in async_setup_entry."""
     with patch(
-        "homeassistant.components.google_generative_ai_conversation.genai.list_models",
-        return_value=iter([]),
+        "homeassistant.components.google_generative_ai_conversation.genai.get_model"
     ):
         yield
 
