@@ -397,6 +397,9 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
 # Should be gradually synchronised with pyproject.toml
 # [tool.ruff.lint.flake8-import-conventions.extend-aliases]
 _NAMESPACE_IMPORT: dict[str, str] = {
+    "homeassistant.helpers.area_registry": "ar",
+    "homeassistant.helpers.device_registry": "dr",
+    "homeassistant.helpers.entity_registry": "er",
     "homeassistant.helpers.issue_registry": "ir",
 }
 
