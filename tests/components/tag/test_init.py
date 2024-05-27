@@ -13,7 +13,7 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-def storage_setup(hass, hass_storage):
+def storage_setup(hass: HomeAssistant, hass_storage):
     """Storage setup."""
 
     async def _storage(items=None):

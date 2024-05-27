@@ -14,8 +14,8 @@ from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DEVICE_ID, DOMAIN, EVENT_TAG_SCANNED, TAG_ID
 
@@ -25,6 +25,8 @@ LAST_SCANNED = "last_scanned"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 TAGS = "tags"
+
+TAG_DATA: HassKey[dict[str, TagStorageCollection]] = HassKey(DOMAIN)
 
 CREATE_FIELDS = {
     vol.Optional(TAG_ID): cv.string,
@@ -94,9 +96,9 @@ class TagStorageCollection(collection.DictStorageCollection):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Tag component."""
-    hass.data[DOMAIN] = {}
+    hass.data[TAG_DATA] = {}
     id_manager = TagIDManager()
-    hass.data[DOMAIN][TAGS] = storage_collection = TagStorageCollection(
+    hass.data[TAG_DATA][TAGS] = storage_collection = TagStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
         id_manager,
     )
@@ -108,7 +110,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-@bind_hass
 async def async_scan_tag(
     hass: HomeAssistant,
     tag_id: str,
@@ -119,7 +120,7 @@ async def async_scan_tag(
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("tag component has not been set up.")
 
-    helper = hass.data[DOMAIN][TAGS]
+    helper = hass.data[TAG_DATA][TAGS]
 
     # Get name from helper, default value None if not present in data
     tag_name = None
