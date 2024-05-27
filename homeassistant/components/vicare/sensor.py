@@ -694,6 +694,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         key="photovoltaic_energy_production_today",
         translation_key="photovoltaic_energy_production_today",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_getter=lambda api: api.getPhotovoltaicProductionCumulatedCurrentDay(),
         unit_getter=lambda api: api.getPhotovoltaicProductionCumulatedUnit(),
