@@ -35,22 +35,42 @@ def calls(hass: HomeAssistant) -> list[ServiceCall]:
     return async_mock_service(hass, "test", "automation")
 
 
+@pytest.mark.parametrize(
+    ("discovery_topic", "data"),
+    [
+        (
+            "homeassistant/device_automation/0AFFD2/bla/config",
+            '{ "automation_type":"trigger",'
+            '  "device":{"identifiers":["0AFFD2"]},'
+            '  "payload": "short_press",'
+            '  "topic": "foobar/triggers/button1",'
+            '  "type": "button_short_press",'
+            '  "subtype": "button_1" }',
+        ),
+        (
+            "homeassistant/device/0AFFD2/config",
+            '{ "device":{"identifiers":["0AFFD2"]},'
+            '  "o": {"name": "foobar"}, "cmp": '
+            '{ "bla": {'
+            '  "automation_type":"trigger", '
+            '  "payload": "short_press",'
+            '  "topic": "foobar/triggers/button1",'
+            '  "type": "button_short_press",'
+            '  "subtype": "button_1",'
+            '  "platform":"device_automation"}}}',
+        ),
+    ],
+)
 async def test_get_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    discovery_topic: str,
+    data: str,
 ) -> None:
     """Test we get the expected triggers from a discovered mqtt device."""
     await mqtt_mock_entry()
-    data1 = (
-        '{ "automation_type":"trigger",'
-        '  "device":{"identifiers":["0AFFD2"]},'
-        '  "payload": "short_press",'
-        '  "topic": "foobar/triggers/button1",'
-        '  "type": "button_short_press",'
-        '  "subtype": "button_1" }'
-    )
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data1)
+    async_fire_mqtt_message(hass, discovery_topic, data)
     await hass.async_block_till_done()
 
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
