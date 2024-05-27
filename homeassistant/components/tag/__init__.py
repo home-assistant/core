@@ -145,7 +145,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 ]
             )
 
-        if change_type == collection.CHANGE_UPDATED:
+        elif change_type == collection.CHANGE_UPDATED:
             # When tags are changed or updated in storage
             async_dispatcher_send(
                 hass,
@@ -155,8 +155,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
         # Deleted tags
-        if change_type == collection.CHANGE_REMOVED:
-            # When tags is removed from storage
+        elif change_type == collection.CHANGE_REMOVED:
+            # When tags are removed from storage
             entity_reg = er.async_get(hass)
             entity_id = entity_reg.async_get_entity_id(
                 DOMAIN, DOMAIN, updated_config[TAG_ID]
@@ -206,16 +206,16 @@ async def async_scan_tag(
         context=context,
     )
 
-    _add_device_id = {}
+    extra_kwargs = {}
     if device_id:
-        _add_device_id[DEVICE_ID] = device_id
+        extra_kwargs[DEVICE_ID] = device_id
     if tag_id in storage_collection.data:
         await storage_collection.async_update_item(
-            tag_id, {LAST_SCANNED: dt_util.utcnow(), **_add_device_id}
+            tag_id, {LAST_SCANNED: dt_util.utcnow(), **extra_kwargs}
         )
     else:
         await storage_collection.async_create_item(
-            {TAG_ID: tag_id, LAST_SCANNED: dt_util.utcnow(), **_add_device_id}
+            {TAG_ID: tag_id, LAST_SCANNED: dt_util.utcnow(), **extra_kwargs}
         )
     _LOGGER.debug("Tag: %s scanned by device: %s", tag_id, device_id)
 
@@ -226,9 +226,6 @@ class TagEntity(Entity):
     _unrecorded_attributes = frozenset({TAG_ID})
     _attr_translation_key = DOMAIN
     _attr_should_poll = False
-
-    # Implements it's own platform
-    _no_platform_reported = True
 
     def __init__(
         self,
@@ -258,11 +255,11 @@ class TagEntity(Entity):
         """Handle the Tag scan event."""
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
-                "Tag scanned for %s with device %s last scanned before %s and scanned now %s",
+                "Tag %s scanned by device %s at %s, last scanned at %s",
                 self._tag_id,
                 device_id,
-                self._last_scanned,
                 last_scanned,
+                self._last_scanned,
             )
         self._last_device_id = device_id
         self._last_scanned = last_scanned
