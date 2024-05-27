@@ -17,11 +17,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
+    entity_registry as er,
     intent,
     llm,
 )
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -47,9 +49,11 @@ async def test_default_prompt(
     mock_init_component,
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     agent_id: str | None,
     config_entry_options: {},
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that the default prompt works."""
     entry = MockConfigEntry(title=None)
@@ -64,46 +68,70 @@ async def test_default_prompt(
         mock_config_entry,
         options={**mock_config_entry.options, **config_entry_options},
     )
+    entities = []
 
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={("test", "1234")},
-        name="Test Device",
-        manufacturer="Test Manufacturer",
-        model="Test Model",
-        suggested_area="Test Area",
-    )
-    for i in range(3):
+    def create_entity(device: dr.DeviceEntry) -> None:
+        """Create an entity for a device and track entity_id."""
+        entity = entity_registry.async_get_or_create(
+            "light",
+            "test",
+            device.id,
+            device_id=device.id,
+            original_name=str(device.name),
+            suggested_object_id=str(device.name),
+        )
+        entity.write_unavailable_state(hass)
+        entities.append(entity.entity_id)
+
+    create_entity(
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            connections={("test", f"{i}abcd")},
-            name="Test Service",
+            connections={("test", "1234")},
+            name="Test Device",
             manufacturer="Test Manufacturer",
             model="Test Model",
             suggested_area="Test Area",
-            entry_type=dr.DeviceEntryType.SERVICE,
         )
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={("test", "5678")},
-        name="Test Device 2",
-        manufacturer="Test Manufacturer 2",
-        model="Device 2",
-        suggested_area="Test Area 2",
     )
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={("test", "9876")},
-        name="Test Device 3",
-        manufacturer="Test Manufacturer 3",
-        model="Test Model 3A",
-        suggested_area="Test Area 2",
+    for i in range(3):
+        create_entity(
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                connections={("test", f"{i}abcd")},
+                name="Test Service",
+                manufacturer="Test Manufacturer",
+                model="Test Model",
+                suggested_area="Test Area",
+                entry_type=dr.DeviceEntryType.SERVICE,
+            )
+        )
+    create_entity(
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={("test", "5678")},
+            name="Test Device 2",
+            manufacturer="Test Manufacturer 2",
+            model="Device 2",
+            suggested_area="Test Area 2",
+        )
     )
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={("test", "qwer")},
-        name="Test Device 4",
-        suggested_area="Test Area 2",
+    create_entity(
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={("test", "9876")},
+            name="Test Device 3",
+            manufacturer="Test Manufacturer 3",
+            model="Test Model 3A",
+            suggested_area="Test Area 2",
+        )
+    )
+    create_entity(
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={("test", "qwer")},
+            name="Test Device 4",
+            suggested_area="Test Area 2",
+        )
     )
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -116,21 +144,40 @@ async def test_default_prompt(
     device_registry.async_update_device(
         device.id, disabled_by=dr.DeviceEntryDisabler.USER
     )
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={("test", "9876-no-name")},
-        manufacturer="Test Manufacturer NoName",
-        model="Test Model NoName",
-        suggested_area="Test Area 2",
+    create_entity(device)
+    create_entity(
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={("test", "9876-no-name")},
+            manufacturer="Test Manufacturer NoName",
+            model="Test Model NoName",
+            suggested_area="Test Area 2",
+        )
     )
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={("test", "9876-integer-values")},
-        name=1,
-        manufacturer=2,
-        model=3,
-        suggested_area="Test Area 2",
+    create_entity(
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={("test", "9876-integer-values")},
+            name=1,
+            manufacturer=2,
+            model=3,
+            suggested_area="Test Area 2",
+        )
     )
+
+    # Set options for registered entities
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {
+            "type": "homeassistant/expose_entity",
+            "assistants": ["conversation"],
+            "entity_ids": entities,
+            "should_expose": True,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+
     with (
         patch("google.generativeai.GenerativeModel") as mock_model,
         patch(
