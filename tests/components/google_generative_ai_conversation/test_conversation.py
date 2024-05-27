@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun import freeze_time
 from google.api_core.exceptions import GoogleAPICallError
 import google.generativeai.types as genai_types
 import pytest
@@ -21,6 +22,13 @@ from homeassistant.helpers import (
 )
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def freeze_the_time():
+    """Freeze the time."""
+    with freeze_time("2024-05-24 12:00:00", tz_offset=0):
+        yield
 
 
 @pytest.mark.parametrize(
