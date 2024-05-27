@@ -39,6 +39,7 @@ ATTR_COURSE = "course"
 ATTR_COMMENT = "comment"
 ATTR_FROM = "from"
 ATTR_FORMAT = "format"
+ATTR_OBJECT_NAME = "object_name"
 ATTR_POS_AMBIGUITY = "posambiguity"
 ATTR_SPEED = "speed"
 
@@ -50,7 +51,7 @@ DEFAULT_TIMEOUT = 30.0
 
 FILTER_PORT = 14580
 
-MSG_FORMATS = ["compressed", "uncompressed", "mic-e"]
+MSG_FORMATS = ["compressed", "uncompressed", "mic-e", "object"]
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
@@ -181,7 +182,10 @@ class AprsListenerThread(threading.Thread):
         """Receive message and process if position."""
         _LOGGER.debug("APRS message received: %s", str(msg))
         if msg[ATTR_FORMAT] in MSG_FORMATS:
-            dev_id = slugify(msg[ATTR_FROM])
+            if msg[ATTR_FORMAT] == "object":
+                dev_id = slugify(msg[ATTR_OBJECT_NAME])
+            else:
+                dev_id = slugify(msg[ATTR_FROM])
             lat = msg[ATTR_LATITUDE]
             lon = msg[ATTR_LONGITUDE]
 

@@ -209,6 +209,14 @@ async def test_update_state_via_state_topic(
         async_fire_mqtt_message(hass, "alarm/state", state)
         assert hass.states.get(entity_id).state == state
 
+    # Ignore empty payload (last state is STATE_ALARM_TRIGGERED)
+    async_fire_mqtt_message(hass, "alarm/state", "")
+    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+
+    # Reset state on `None` payload
+    async_fire_mqtt_message(hass, "alarm/state", "None")
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_ignore_update_state_if_unknown_via_state_topic(
@@ -1282,7 +1290,7 @@ async def test_reload_after_invalid_config(
 ) -> None:
     """Test reloading yaml config fails."""
     with patch(
-        "homeassistant.components.mqtt.async_delete_issue"
+        "homeassistant.components.mqtt.ir.async_delete_issue"
     ) as mock_async_remove_issue:
         assert await mqtt_mock_entry()
         assert hass.states.get("alarm_control_panel.test") is None

@@ -37,7 +37,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     try:
         scsgate = SCSGate(device=device, logger=_LOGGER)
         scsgate.start()
-    except Exception as exception:  # pylint: disable=broad-except
+    except Exception as exception:  # noqa: BLE001
         _LOGGER.error("Cannot setup SCSGate component: %s", exception)
         return False
 
@@ -94,7 +94,7 @@ class SCSGate:
 
             try:
                 self._devices[message.entity].process_event(message)
-            except Exception as exception:  # pylint: disable=broad-except
+            except Exception as exception:  # noqa: BLE001
                 msg = f"Exception while processing event: {exception}"
                 self._logger.error(msg)
         else:

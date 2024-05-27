@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import datetime
-from typing import Any, TypeVar
+from typing import Any
 
 import voluptuous as vol
 
@@ -55,10 +55,8 @@ UNITS: dict[str, str] = {
 }
 ICON = "mdi:chart-line"
 
-_T = TypeVar("_T", bound=dict[str, Any])
 
-
-def exactly_two_period_keys(conf: _T) -> _T:
+def exactly_two_period_keys[_T: dict[str, Any]](conf: _T) -> _T:
     """Ensure exactly 2 of CONF_PERIOD_KEYS are provided."""
     if sum(param in conf for param in CONF_PERIOD_KEYS) != 2:
         raise vol.Invalid(

@@ -71,16 +71,13 @@ class HomeworksButton(HomeworksEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         await self.hass.async_add_executor_job(
-            # pylint: disable-next=protected-access
-            self._controller._send,
+            self._controller._send,  # noqa: SLF001
             f"KBP, {self._addr}, {self._idx}",
         )
         if not self._release_delay:
             return
         await asyncio.sleep(self._release_delay)
-        # pylint: disable-next=protected-access
         await self.hass.async_add_executor_job(
-            # pylint: disable-next=protected-access
-            self._controller._send,
+            self._controller._send,  # noqa: SLF001
             f"KBR, {self._addr}, {self._idx}",
         )

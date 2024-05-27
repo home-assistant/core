@@ -26,8 +26,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TotalConnectDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import TotalConnectDataUpdateCoordinator
 from .entity import TotalConnectLocationEntity
 
 SERVICE_ALARM_ARM_AWAY_INSTANT = "arm_away_instant"

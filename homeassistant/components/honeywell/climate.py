@@ -35,7 +35,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -99,7 +103,7 @@ async def async_setup_entry(
     heat_away_temp = entry.options.get(CONF_HEAT_AWAY_TEMPERATURE)
 
     data: HoneywellData = hass.data[DOMAIN][entry.entry_id]
-
+    _async_migrate_unique_id(hass, data.devices)
     async_add_entities(
         [
             HoneywellUSThermostat(data, device, cool_away_temp, heat_away_temp)
@@ -107,6 +111,21 @@ async def async_setup_entry(
         ]
     )
     remove_stale_devices(hass, entry, data.devices)
+
+
+def _async_migrate_unique_id(
+    hass: HomeAssistant, devices: dict[str, SomeComfortDevice]
+) -> None:
+    """Migrate entities to string."""
+    entity_registry = er.async_get(hass)
+    for device in devices.values():
+        entity_id = entity_registry.async_get_entity_id(
+            "climate", DOMAIN, device.deviceid
+        )
+        if entity_id is not None:
+            entity_registry.async_update_entity(
+                entity_id, new_unique_id=str(device.deviceid)
+            )
 
 
 def remove_stale_devices(
@@ -161,7 +180,7 @@ class HoneywellUSThermostat(ClimateEntity):
         self._away = False
         self._retry = 0
 
-        self._attr_unique_id = device.deviceid
+        self._attr_unique_id = str(device.deviceid)
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.deviceid)},
@@ -195,13 +214,13 @@ class HoneywellUSThermostat(ClimateEntity):
                 ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
 
-        if device._data.get("canControlHumidification"):
+        if device._data.get("canControlHumidification"):  # noqa: SLF001
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
 
         if device.raw_ui_data.get("SwitchEmergencyHeatAllowed"):
             self._attr_supported_features |= ClimateEntityFeature.AUX_HEAT
 
-        if not device._data.get("hasFan"):
+        if not device._data.get("hasFan"):  # noqa: SLF001
             return
 
         # not all honeywell fans support all modes

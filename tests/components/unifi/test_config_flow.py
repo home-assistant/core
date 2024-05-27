@@ -279,14 +279,10 @@ async def test_flow_aborts_configuration_updated(
 ) -> None:
     """Test config flow aborts since a connected config entry already exists."""
     entry = MockConfigEntry(
-        domain=UNIFI_DOMAIN, data={"host": "1.2.3.4", "site": "office"}, unique_id="2"
-    )
-    entry.add_to_hass(hass)
-
-    entry = MockConfigEntry(
         domain=UNIFI_DOMAIN, data={"host": "1.2.3.4", "site": "site_id"}, unique_id="1"
     )
     entry.add_to_hass(hass)
+    entry.runtime_data = None
 
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -393,7 +389,7 @@ async def test_reauth_flow_update_configuration(
 ) -> None:
     """Verify reauth flow can update hub configuration."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
     hub.websocket.available = False
 
     result = await hass.config_entries.flow.async_init(
@@ -570,19 +566,6 @@ async def test_simple_option_flow(
         CONF_TRACK_DEVICES: False,
         CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
     }
-
-
-async def test_option_flow_integration_not_setup(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test advanced config flow options."""
-    config_entry = await setup_unifi_integration(hass, aioclient_mock)
-
-    hass.data[UNIFI_DOMAIN].pop(config_entry.entry_id)
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "integration_not_setup"
 
 
 async def test_form_ssdp(hass: HomeAssistant) -> None:

@@ -138,7 +138,7 @@ async def test_load_and_unload(
     assert config_entry.state is ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    assert await config_entry.async_unload(hass)
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
@@ -218,7 +218,7 @@ async def test_stale_device_removal(
         for device in device_entries_other
     )
 
-    assert await config_entry.async_unload(hass)
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 

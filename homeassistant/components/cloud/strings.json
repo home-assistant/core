@@ -5,14 +5,6 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
-  "exceptions": {
-    "strict_connection_not_enabled": {
-      "message": "Strict connection is not enabled for cloud requests"
-    },
-    "no_url_available": {
-      "message": "No cloud URL available.\nPlease mark sure you have a working Remote UI."
-    }
-  },
   "system_health": {
     "info": {
       "can_reach_cert_server": "Reach Certificate Server",
@@ -81,10 +73,6 @@
     }
   },
   "services": {
-    "create_temporary_strict_connection_url": {
-      "name": "Create a temporary strict connection URL",
-      "description": "Create a temporary strict connection URL, which can be used to login on another device."
-    },
     "remote_connect": {
       "name": "Remote connect",
       "description": "Makes the instance UI accessible from outside of the local network by using Home Assistant Cloud."

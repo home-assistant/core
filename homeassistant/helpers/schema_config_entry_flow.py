@@ -356,7 +356,6 @@ class SchemaConfigFlowHandler(ConfigFlow, ABC):
             self: SchemaConfigFlowHandler, user_input: dict[str, Any] | None = None
         ) -> ConfigFlowResult:
             """Handle a config flow step."""
-            # pylint: disable-next=protected-access
             return await self._common_handler.async_step(step_id, user_input)
 
         return _async_step
@@ -450,7 +449,6 @@ class SchemaOptionsFlowHandler(OptionsFlowWithConfigEntry):
             self: SchemaConfigFlowHandler, user_input: dict[str, Any] | None = None
         ) -> ConfigFlowResult:
             """Handle an options flow step."""
-            # pylint: disable-next=protected-access
             return await self._common_handler.async_step(step_id, user_input)
 
         return _async_step

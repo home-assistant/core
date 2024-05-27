@@ -97,10 +97,14 @@ DATA_KEY_CORE = "core"
 DATA_KEY_HOST = "host"
 DATA_KEY_SUPERVISOR_ISSUES = "supervisor_issues"
 
+PLACEHOLDER_KEY_ADDON = "addon"
+PLACEHOLDER_KEY_ADDON_URL = "addon_url"
 PLACEHOLDER_KEY_REFERENCE = "reference"
 PLACEHOLDER_KEY_COMPONENTS = "components"
 
 ISSUE_KEY_SYSTEM_DOCKER_CONFIG = "issue_system_docker_config"
+ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING = "issue_addon_detached_addon_missing"
+ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED = "issue_addon_detached_addon_removed"
 
 CORE_CONTAINER = "homeassistant"
 SUPERVISOR_CONTAINER = "hassio_supervisor"

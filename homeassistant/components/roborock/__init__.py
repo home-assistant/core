@@ -9,6 +9,7 @@ import logging
 from typing import Any
 
 from roborock import HomeDataRoom, RoborockException, RoborockInvalidCredentials
+from roborock.code_mappings import RoborockCategory
 from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, UserData
 from roborock.version_1_apis.roborock_mqtt_client_v1 import RoborockMqttClientV1
 from roborock.web_api import RoborockApiClient
@@ -96,6 +97,7 @@ def build_setup_functions(
             hass, user_data, device, product_info[device.product_id], home_data_rooms
         )
         for device in device_map.values()
+        if product_info[device.product_id].category == RoborockCategory.VACUUM
     ]
 
 

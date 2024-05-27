@@ -6,7 +6,6 @@ from datetime import timedelta
 from aiounifi.models.message import MessageKey
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -38,7 +37,7 @@ from homeassistant.util import dt as dt_util
 
 from .test_hub import CONTROLLER_HOST, ENTRY_CONFIG, SITE, setup_unifi_integration
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIENT_1 = {
@@ -1628,11 +1627,8 @@ async def test_updating_unique_id(
         ],
     }
 
-    config_entry = config_entries.ConfigEntry(
-        version=1,
-        minor_version=1,
+    config_entry = MockConfigEntry(
         domain=UNIFI_DOMAIN,
-        title="Mock Title",
         data=ENTRY_CONFIG,
         source="test",
         options={},

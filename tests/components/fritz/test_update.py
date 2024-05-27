@@ -104,7 +104,7 @@ async def test_available_update_can_be_installed(
     fc_class_mock().override_services({**MOCK_FB_SERVICES, **AVAILABLE_UPDATE})
 
     with patch(
-        "homeassistant.components.fritz.common.FritzBoxTools.async_trigger_firmware_update",
+        "homeassistant.components.fritz.coordinator.FritzBoxTools.async_trigger_firmware_update",
         return_value=True,
     ) as mocked_update_call:
         entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)

@@ -142,6 +142,9 @@ async def websocket_list_agents(
         agent = manager.async_get_agent(agent_info.id)
         assert agent is not None
 
+        if isinstance(agent, ConversationEntity):
+            continue
+
         supported_languages = agent.supported_languages
         if language and supported_languages != MATCH_ALL:
             supported_languages = language_util.matches(
@@ -308,9 +311,9 @@ def _get_debug_targets(
 
 def _get_unmatched_slots(
     result: RecognizeResult,
-) -> dict[str, str | int]:
+) -> dict[str, str | int | float]:
     """Return a dict of unmatched text/range slot entities."""
-    unmatched_slots: dict[str, str | int] = {}
+    unmatched_slots: dict[str, str | int | float] = {}
     for entity in result.unmatched_entities_list:
         if isinstance(entity, UnmatchedTextEntity):
             if entity.text == MISSING_ENTITY:

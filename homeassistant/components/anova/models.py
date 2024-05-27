@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from anova_wifi import AnovaPrecisionCooker
+from anova_wifi import AnovaApi
 
 from .coordinator import AnovaCoordinator
 
@@ -12,5 +12,5 @@ class AnovaData:
     """Data for the Anova integration."""
 
     api_jwt: str
-    precision_cookers: list[AnovaPrecisionCooker]
     coordinators: list[AnovaCoordinator]
+    api: AnovaApi
