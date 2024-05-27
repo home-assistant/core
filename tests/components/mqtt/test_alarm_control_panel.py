@@ -1290,7 +1290,7 @@ async def test_reload_after_invalid_config(
 ) -> None:
     """Test reloading yaml config fails."""
     with patch(
-        "homeassistant.components.mqtt.async_delete_issue"
+        "homeassistant.components.mqtt.ir.async_delete_issue"
     ) as mock_async_remove_issue:
         assert await mqtt_mock_entry()
         assert hass.states.get("alarm_control_panel.test") is None
