@@ -192,10 +192,9 @@ async def test_onboarding_user(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     hass_client_no_auth: ClientSessionGenerator,
+    area_registry: ar.AreaRegistry,
 ) -> None:
     """Test creating a new user."""
-    area_registry = ar.async_get(hass)
-
     # Create an existing area to mimic an integration creating an area
     # before onboarding is done.
     area_registry.async_create("Living Room")
