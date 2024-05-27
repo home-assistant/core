@@ -285,7 +285,7 @@ class AuthStore:
     def async_edit_expiry_date(
         self, refresh_token: models.RefreshToken, *, disable_expiry_date: bool
     ) -> None:
-        """Edit epiry date from refresh token."""
+        """Edit expiry date of a refresh token."""
         if disable_expiry_date:
             refresh_token.expire_at = None
         else:
