@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from contextlib import suppress
 from dataclasses import dataclass
 import functools
 from functools import cached_property
@@ -14,7 +13,7 @@ import sys
 from types import FrameType
 from typing import Any, cast
 
-from homeassistant.core import HomeAssistant, async_get_hass
+from homeassistant.core import async_get_hass_or_none
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_suggest_report_issue
 
@@ -176,11 +175,8 @@ def _report_integration(
         return
     _REPORTED_INTEGRATIONS.add(key)
 
-    hass: HomeAssistant | None = None
-    with suppress(HomeAssistantError):
-        hass = async_get_hass()
     report_issue = async_suggest_report_issue(
-        hass,
+        async_get_hass_or_none(),
         integration_domain=integration_frame.integration,
         module=integration_frame.module,
     )

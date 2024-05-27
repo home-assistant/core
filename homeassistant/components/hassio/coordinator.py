@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME
@@ -53,7 +53,9 @@ from .const import (
     SupervisorEntityModel,
 )
 from .handler import HassIO, HassioAPIError
-from .issues import SupervisorIssues
+
+if TYPE_CHECKING:
+    from .issues import SupervisorIssues
 
 _LOGGER = logging.getLogger(__name__)
 

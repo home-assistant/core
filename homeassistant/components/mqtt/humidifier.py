@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import partial
 import logging
 from typing import Any
 
@@ -45,9 +44,6 @@ from .const import (
     CONF_COMMAND_TOPIC,
     CONF_CURRENT_HUMIDITY_TEMPLATE,
     CONF_CURRENT_HUMIDITY_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_RETAIN,
     CONF_STATE_TOPIC,
     CONF_STATE_VALUE_TEMPLATE,
     PAYLOAD_NONE,
@@ -188,7 +184,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT humidifier through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttHumidifier,
@@ -274,26 +270,6 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             ).async_render_with_possible_json_value
             for key, tpl in value_templates.items()
         }
-
-    def add_subscription(
-        self,
-        topics: dict[str, dict[str, Any]],
-        topic: str,
-        msg_callback: Callable[[ReceiveMessage], None],
-        tracked_attributes: set[str],
-    ) -> None:
-        """Add a subscription."""
-        qos: int = self._config[CONF_QOS]
-        if topic in self._topic and self._topic[topic] is not None:
-            topics[topic] = {
-                "topic": self._topic[topic],
-                "msg_callback": partial(
-                    self._message_callback, msg_callback, tracked_attributes
-                ),
-                "entity_id": self.entity_id,
-                "qos": qos,
-                "encoding": self._config[CONF_ENCODING] or None,
-            }
 
     @callback
     def _state_received(self, msg: ReceiveMessage) -> None:
@@ -415,34 +391,25 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
         self._attr_mode = mode
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        topics: dict[str, Any] = {}
-
+        self.add_subscription(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
         self.add_subscription(
-            topics, CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"}
+            CONF_ACTION_TOPIC, self._action_received, {"_attr_action"}
         )
         self.add_subscription(
-            topics, CONF_ACTION_TOPIC, self._action_received, {"_attr_action"}
-        )
-        self.add_subscription(
-            topics,
             CONF_CURRENT_HUMIDITY_TOPIC,
             self._current_humidity_received,
             {"_attr_current_humidity"},
         )
         self.add_subscription(
-            topics,
             CONF_TARGET_HUMIDITY_STATE_TOPIC,
             self._target_humidity_received,
             {"_attr_target_humidity"},
         )
         self.add_subscription(
-            topics, CONF_MODE_STATE_TOPIC, self._mode_received, {"_attr_mode"}
-        )
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
+            CONF_MODE_STATE_TOPIC, self._mode_received, {"_attr_mode"}
         )
 
     async def _subscribe_topics(self) -> None:
@@ -455,12 +422,8 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[CONF_STATE](self._payload["STATE_ON"])
-        await self.async_publish(
-            self._topic[CONF_COMMAND_TOPIC],
-            mqtt_payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_COMMAND_TOPIC], mqtt_payload
         )
         if self._optimistic:
             self._attr_is_on = True
@@ -472,12 +435,8 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[CONF_STATE](self._payload["STATE_OFF"])
-        await self.async_publish(
-            self._topic[CONF_COMMAND_TOPIC],
-            mqtt_payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_COMMAND_TOPIC], mqtt_payload
         )
         if self._optimistic:
             self._attr_is_on = False
@@ -489,14 +448,9 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[ATTR_HUMIDITY](humidity)
-        await self.async_publish(
-            self._topic[CONF_TARGET_HUMIDITY_COMMAND_TOPIC],
-            mqtt_payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_TARGET_HUMIDITY_COMMAND_TOPIC], mqtt_payload
         )
-
         if self._optimistic_target_humidity:
             self._attr_target_humidity = humidity
             self.async_write_ha_state()
@@ -511,15 +465,9 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             return
 
         mqtt_payload = self._command_templates[ATTR_MODE](mode)
-
-        await self.async_publish(
-            self._topic[CONF_MODE_COMMAND_TOPIC],
-            mqtt_payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_MODE_COMMAND_TOPIC], mqtt_payload
         )
-
         if self._optimistic_mode:
             self._attr_mode = mode
             self.async_write_ha_state()
