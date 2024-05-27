@@ -3,7 +3,7 @@
 from py_aosmith import AOSmithAPIClient
 from py_aosmith.models import Device as AOSmithDevice
 
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -21,7 +21,7 @@ class AOSmithEntity[
         """Initialize the entity."""
         super().__init__(coordinator)
         self.junction_id = junction_id
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, junction_id)},
         )
 

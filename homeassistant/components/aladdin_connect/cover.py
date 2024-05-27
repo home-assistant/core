@@ -12,7 +12,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPENING
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.helpers import device_registry as dr
+import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, STATES_MAP, SUPPORTED_FEATURES
@@ -81,7 +82,7 @@ class AladdinDevice(CoverEntity):
         self._number = device["door_number"]
         self._serial = device["serial"]
 
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self._device_id}-{self._number}")},
             name=device["name"],
             manufacturer="Overhead Door",

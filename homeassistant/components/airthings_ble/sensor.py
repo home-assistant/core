@@ -24,7 +24,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -115,7 +117,7 @@ def async_migrate(hass: HomeAssistant, address: str, sensor_name: str) -> None:
     dev_reg = dr.async_get(hass)
     if not (
         device := dev_reg.async_get_device(
-            connections={(dr.CONNECTION_BLUETOOTH, address)}
+            connections={(CONNECTION_BLUETOOTH, address)}
         )
     ):
         return
@@ -124,7 +126,7 @@ def async_migrate(hass: HomeAssistant, address: str, sensor_name: str) -> None:
         device_id=device.id,
         include_disabled_entities=True,
     )
-    matching_reg_entry: er.RegistryEntry | None = None
+    matching_reg_entry: RegistryEntry | None = None
     for entry in entities:
         if entry.unique_id.endswith(unique_id_trailer) and (
             not matching_reg_entry or "(" not in entry.unique_id
@@ -200,10 +202,10 @@ class AirthingsSensor(
             name += f" ({identifier})"
 
         self._attr_unique_id = f"{airthings_device.address}_{entity_description.key}"
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             connections={
                 (
-                    dr.CONNECTION_BLUETOOTH,
+                    CONNECTION_BLUETOOTH,
                     airthings_device.address,
                 )
             },

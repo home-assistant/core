@@ -28,6 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -286,9 +287,9 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
         return attrs
 
     @property
-    def device_info(self) -> dr.DeviceInfo:
+    def device_info(self) -> DeviceInfo:
         """Device information."""
-        info = dr.DeviceInfo(
+        info = DeviceInfo(
             identifiers={(DOMAIN, self._device.uuid)},
             manufacturer="Awair",
             model=self._device.model,

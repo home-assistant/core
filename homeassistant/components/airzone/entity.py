@@ -28,6 +28,7 @@ from aioairzone.exceptions import AirzoneError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
@@ -60,7 +61,7 @@ class AirzoneSystemEntity(AirzoneEntity):
 
         self.system_id = system_data[AZD_ID]
 
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.entry_id}_{self.system_id}")},
             manufacturer=MANUFACTURER,
             model=self.get_airzone_value(AZD_MODEL),
@@ -95,7 +96,7 @@ class AirzoneHotWaterEntity(AirzoneEntity):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.entry_id}_dhw")},
             manufacturer=MANUFACTURER,
             model="DHW",
@@ -136,7 +137,7 @@ class AirzoneWebServerEntity(AirzoneEntity):
 
         mac = self.get_airzone_value(AZD_MAC)
 
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, mac)},
             identifiers={(DOMAIN, f"{entry.entry_id}_ws")},
             manufacturer=MANUFACTURER,
@@ -168,7 +169,7 @@ class AirzoneZoneEntity(AirzoneEntity):
         self.system_zone_id = system_zone_id
         self.zone_id = zone_data[AZD_ID]
 
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.entry_id}_{system_zone_id}")},
             manufacturer=MANUFACTURER,
             model=self.get_airzone_value(AZD_THERMOSTAT_MODEL),

@@ -5,7 +5,7 @@ from typing import Any
 from advantage_air import ApiError
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -48,7 +48,7 @@ class AdvantageAirAcEntity(AdvantageAirEntity):
         self.ac_key: str = ac_key
         self._attr_unique_id += f"-{ac_key}"
 
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             via_device=(DOMAIN, self.coordinator.data["system"]["rid"]),
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="Advantage Air",
@@ -100,7 +100,7 @@ class AdvantageAirThingEntity(AdvantageAirEntity):
         self._id = thing["id"]
         self._attr_unique_id += f"-{self._id}"
 
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             via_device=(DOMAIN, self.coordinator.data["system"]["rid"]),
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="Advantage Air",

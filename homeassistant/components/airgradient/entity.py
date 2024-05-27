@@ -1,6 +1,6 @@
 """Base class for AirGradient entities."""
 
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -15,7 +15,7 @@ class AirGradientEntity(CoordinatorEntity[AirGradientDataUpdateCoordinator]):
     def __init__(self, coordinator: AirGradientDataUpdateCoordinator) -> None:
         """Initialize airgradient entity."""
         super().__init__(coordinator)
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data.serial_number)},
             model=coordinator.data.model,
             manufacturer="AirGradient",

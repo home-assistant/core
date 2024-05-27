@@ -5,7 +5,7 @@ from __future__ import annotations
 from adguardhome import AdGuardHomeError
 
 from homeassistant.config_entries import SOURCE_HASSIO
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from . import AdGuardConfigEntry, AdGuardData
@@ -49,7 +49,7 @@ class AdGuardHomeEntity(Entity):
         raise NotImplementedError
 
     @property
-    def device_info(self) -> dr.DeviceInfo:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this AdGuard Home instance."""
         if self._entry.source == SOURCE_HASSIO:
             config_url = "homeassistant://hassio/ingress/a0d7b954_adguard"
@@ -58,8 +58,8 @@ class AdGuardHomeEntity(Entity):
         else:
             config_url = f"http://{self.adguard.host}:{self.adguard.port}"
 
-        return dr.DeviceInfo(
-            entry_type=dr.DeviceEntryType.SERVICE,
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={
                 (  # type: ignore[arg-type]
                     DOMAIN,

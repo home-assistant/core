@@ -11,8 +11,8 @@ import aioapcaccess
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     REQUEST_REFRESH_DEFAULT_IMMEDIATE,
     DataUpdateCoordinator,
@@ -74,9 +74,9 @@ class APCUPSdCoordinator(DataUpdateCoordinator[APCUPSdData]):
         self._port = port
 
     @property
-    def device_info(self) -> dr.DeviceInfo:
+    def device_info(self) -> DeviceInfo:
         """Return the DeviceInfo of this APC UPS, if serial number is available."""
-        return dr.DeviceInfo(
+        return DeviceInfo(
             identifiers={(DOMAIN, self.data.serial_no or self.config_entry.entry_id)},
             model=self.data.model,
             manufacturer="APC",

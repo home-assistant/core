@@ -10,8 +10,8 @@ from aioairq import AirQ
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, MANUFACTURER, UPDATE_INTERVAL
@@ -42,7 +42,7 @@ class AirQCoordinator(DataUpdateCoordinator):
         )
         self.device_id = entry.unique_id
         assert self.device_id is not None
-        self.device_info = dr.DeviceInfo(
+        self.device_info = DeviceInfo(
             manufacturer=MANUFACTURER,
             identifiers={(DOMAIN, self.device_id)},
         )
@@ -54,7 +54,7 @@ class AirQCoordinator(DataUpdateCoordinator):
         if "name" not in self.device_info:
             info = await self.airq.fetch_device_info()
             self.device_info.update(
-                dr.DeviceInfo(
+                DeviceInfo(
                     name=info["name"],
                     model=info["model"],
                     sw_version=info["sw_version"],

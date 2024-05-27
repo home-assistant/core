@@ -9,6 +9,7 @@ from yalexs.util import get_configuration_url
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN, AugustData
@@ -29,7 +30,7 @@ class AugustEntityMixin(Entity):
         self._data = data
         self._device = device
         detail = self._detail
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             manufacturer=MANUFACTURER,
             model=detail.model,

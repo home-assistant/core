@@ -20,7 +20,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -208,8 +208,8 @@ class AirlySensor(CoordinatorEntity[AirlyDataUpdateCoordinator], SensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._attr_device_info = dr.DeviceInfo(
-            entry_type=dr.DeviceEntryType.SERVICE,
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{coordinator.latitude}-{coordinator.longitude}")},
             manufacturer=MANUFACTURER,
             name=name,

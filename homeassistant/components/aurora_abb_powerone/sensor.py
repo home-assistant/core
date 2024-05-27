@@ -26,7 +26,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -159,7 +159,7 @@ class AuroraSensor(CoordinatorEntity[AuroraAbbDataUpdateCoordinator], SensorEnti
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._attr_unique_id = f"{data[ATTR_SERIAL_NUMBER]}_{entity_description.key}"
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, data[ATTR_SERIAL_NUMBER])},
             manufacturer=MANUFACTURER,
             model=data[ATTR_MODEL],

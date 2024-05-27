@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -156,8 +156,8 @@ class AirNowSensor(CoordinatorEntity[AirNowDataUpdateCoordinator], SensorEntity)
 
         self.entity_description = description
         self._attr_unique_id = f"{_device_id}-{description.key.lower()}"
-        self._attr_device_info = dr.DeviceInfo(
-            entry_type=dr.DeviceEntryType.SERVICE,
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, _device_id)},
             manufacturer=DEFAULT_NAME,
             name=DEFAULT_NAME,

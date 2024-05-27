@@ -19,6 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -376,9 +377,9 @@ class AsusWrtRouter:
         return req_reload
 
     @property
-    def device_info(self) -> dr.DeviceInfo:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        info = dr.DeviceInfo(
+        info = DeviceInfo(
             identifiers={(DOMAIN, self._entry.unique_id or "AsusWRT")},
             name=self.host,
             model=self._api.model or "Asus Router",

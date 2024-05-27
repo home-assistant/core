@@ -24,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -135,9 +135,9 @@ class AirVisualProEntity(CoordinatorEntity):
         self.entity_description = description
 
     @property
-    def device_info(self) -> dr.DeviceInfo:
+    def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
-        return dr.DeviceInfo(
+        return DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.data["serial_number"])},
             manufacturer="AirVisual",
             model=self.coordinator.data["status"]["model"],

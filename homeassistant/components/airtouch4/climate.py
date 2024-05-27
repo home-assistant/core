@@ -19,7 +19,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -105,7 +105,7 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         self._info = info
         self._unit = self._airtouch.GetAcs()[ac_number]
         self._attr_unique_id = f"ac_{ac_number}"
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"ac_{ac_number}")},
             name=f"AC {ac_number}",
             manufacturer="Airtouch",
@@ -214,7 +214,7 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         self._airtouch = coordinator.airtouch
         self._info = info
         self._unit = self._airtouch.GetGroupByGroupNumber(group_number)
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, group_number)},
             manufacturer="Airtouch",
             model="Airtouch 4",

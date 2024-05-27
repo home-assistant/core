@@ -2,7 +2,7 @@
 
 from homeassistant.components.update import UpdateEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AdvantageAirDataConfigEntry
@@ -31,7 +31,7 @@ class AdvantageAirApp(AdvantageAirEntity, UpdateEntity):
     def __init__(self, instance: AdvantageAirData) -> None:
         """Initialize the Advantage Air App."""
         super().__init__(instance)
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={
                 (ADVANTAGE_AIR_DOMAIN, self.coordinator.data["system"]["rid"])
             },

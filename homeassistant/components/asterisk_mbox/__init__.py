@@ -19,6 +19,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_connect
+from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,7 +62,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         breaks_in_ha_version="2024.9.0",
         is_fixable=False,
         issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
+        severity=IssueSeverity.WARNING,
         translation_key="deprecated_integration",
         translation_placeholders={
             "domain": DOMAIN,

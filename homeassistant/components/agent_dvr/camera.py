@@ -8,7 +8,7 @@ from agent import AgentError
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
@@ -81,7 +81,7 @@ class AgentCamera(MjpegCamera):
             mjpeg_url=f"{device.client._server_url}{device.mjpeg_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",  # noqa: SLF001
             still_image_url=f"{device.client._server_url}{device.still_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",  # noqa: SLF001
         )
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(AGENT_DOMAIN, self.unique_id)},
             manufacturer="Agent",
             model="Camera",

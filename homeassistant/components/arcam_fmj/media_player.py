@@ -23,7 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -107,7 +107,7 @@ class ArcamFmj(MediaPlayerEntity):
             self._attr_supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
         self._attr_unique_id = f"{uuid}-{state.zn}"
         self._attr_entity_registry_enabled_default = state.zn == 1
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, uuid),
             },

@@ -37,6 +37,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -372,7 +373,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     f"airvisual_pro_migration_{entry.entry_id}",
                     is_fixable=False,
                     is_persistent=True,
-                    severity=ir.IssueSeverity.WARNING,
+                    severity=IssueSeverity.WARNING,
                     translation_key="airvisual_pro_migration",
                     translation_placeholders={
                         "ip_address": ip_address,

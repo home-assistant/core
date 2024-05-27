@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from . import (
@@ -129,7 +129,7 @@ class AndroidTVEntity(Entity):
         )
         info = self.aftv.device_properties
         model = info.get(ATTR_MODEL)
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             model=f"{model} ({device_type})" if model else device_type,
             name=device_name,
         )
@@ -140,9 +140,7 @@ class AndroidTVEntity(Entity):
         if sw_version := info.get(ATTR_SW_VERSION):
             self._attr_device_info[ATTR_SW_VERSION] = sw_version
         if mac := get_androidtv_mac(info):
-            self._attr_device_info[ATTR_CONNECTIONS] = {
-                (dr.CONNECTION_NETWORK_MAC, mac)
-            }
+            self._attr_device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, mac)}
 
         # ADB exceptions to catch
         if not self.aftv.adb_server_ip:

@@ -9,8 +9,8 @@ from pyatag import AtagException, AtagOne
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -80,9 +80,9 @@ class AtagEntity(CoordinatorEntity[DataUpdateCoordinator[AtagOne]]):
         self._attr_unique_id = f"{coordinator.data.id}-{atag_id}"
 
     @property
-    def device_info(self) -> dr.DeviceInfo:
+    def device_info(self) -> DeviceInfo:
         """Return info for device registry."""
-        return dr.DeviceInfo(
+        return DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.data.id)},
             manufacturer="Atag",
             model="Atag One",

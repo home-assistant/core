@@ -1,6 +1,6 @@
 """The aurora component."""
 
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, DOMAIN
@@ -24,8 +24,8 @@ class AuroraEntity(CoordinatorEntity[AuroraDataUpdateCoordinator]):
 
         self._attr_translation_key = translation_key
         self._attr_unique_id = f"{coordinator.latitude}_{coordinator.longitude}"
-        self._attr_device_info = dr.DeviceInfo(
-            entry_type=dr.DeviceEntryType.SERVICE,
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="NOAA",
             model="Aurora Visibility Sensor",

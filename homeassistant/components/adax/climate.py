@@ -23,8 +23,8 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ACCOUNT_ID, CONNECTION_TYPE, DOMAIN, LOCAL
@@ -83,7 +83,7 @@ class AdaxDevice(ClimateEntity):
         self._adax_data_handler = adax_data_handler
 
         self._attr_unique_id = f"{heater_data['homeId']}_{heater_data['id']}"
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, heater_data["id"])},
             # Instead of setting the device name to the entity name, adax
             # should be updated to set has_entity_name = True, and set the entity
@@ -151,7 +151,7 @@ class LocalAdaxDevice(ClimateEntity):
         """Initialize the heater."""
         self._adax_data_handler = adax_data_handler
         self._attr_unique_id = unique_id
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             manufacturer="Adax",
         )
