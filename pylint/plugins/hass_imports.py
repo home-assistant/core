@@ -397,7 +397,15 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
 # Black list of imports that should be using the namespace
 _FORCE_NAMESPACE_IMPORT: dict[tuple[str, str], str] = {
     ("homeassistant.helpers.area_registry", "async_get"): "ar.async_get",
+    (
+        "homeassistant.helpers.device_registry",
+        "async_entries_for_config_entry",
+    ): "dr.async_entries_for_config_entry",
     ("homeassistant.helpers.device_registry", "async_get"): "dr.async_get",
+    (
+        "homeassistant.helpers.entity_registry",
+        "async_entries_for_config_entry",
+    ): "er.async_entries_for_config_entry",
     ("homeassistant.helpers.entity_registry", "async_get"): "er.async_get",
     ("homeassistant.helpers.issue_registry", "async_get"): "ir.async_get",
 }
@@ -538,19 +546,16 @@ class HassImportsFormatChecker(BaseChecker):
                             args=(import_match.string, obsolete_import.reason),
                         )
         for name in node.names:
-            if self._has_invalid_namespace_import(node, node.modname, name[0]):
-                return
+            self._has_invalid_namespace_import(node, node.modname, name[0])
 
     def _has_invalid_namespace_import(
         self, node: nodes.ImportFrom, module: str, name: str
-    ) -> bool:
+    ) -> None:
         for key, value in _FORCE_NAMESPACE_IMPORT.items():
             if module == key[0] and name == key[1]:
                 self.add_message(
                     "hass-helper-namespace-import", node=node, args=(name, value)
                 )
-                return True
-        return False
 
 
 def register(linter: PyLinter) -> None:
