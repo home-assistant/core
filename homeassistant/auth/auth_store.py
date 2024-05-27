@@ -282,13 +282,13 @@ class AuthStore:
         self._async_schedule_save()
 
     @callback
-    def async_edit_expiry_date(
+    def async_set_expiry_date(
         self, refresh_token: models.RefreshToken, *, disable_expiry_date: bool
     ) -> None:
-        """Edit expiry date of a refresh token."""
+        """Set expiry date of a refresh token."""
         if disable_expiry_date:
             refresh_token.expire_at = None
-        else:
+        elif not refresh_token.expire_at:
             refresh_token.expire_at = (
                 refresh_token.last_used_at or dt_util.utcnow()
             ).timestamp() + REFRESH_TOKEN_EXPIRATION

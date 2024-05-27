@@ -688,14 +688,14 @@ async def test_ws_sign_path(
     assert expires.total_seconds() == 20
 
 
-async def test_ws_edit_expiry_date_refresh_token(
+async def test_ws_set_expiry_date_refresh_token(
     hass: HomeAssistant,
     hass_admin_user: MockUser,
     hass_admin_credential: Credentials,
     hass_ws_client: WebSocketGenerator,
     hass_access_token: str,
 ) -> None:
-    """Test editing expiry date from a refresh token."""
+    """Test setting expiry date from a refresh token."""
     assert await async_setup_component(hass, "auth", {"http": {}})
 
     refresh_token = await hass.auth.async_create_refresh_token(
@@ -706,7 +706,7 @@ async def test_ws_edit_expiry_date_refresh_token(
 
     await ws_client.send_json_auto_id(
         {
-            "type": "auth/edit_expiry_date_refresh_token",
+            "type": "auth/refresh_token_set_expiry_date",
             "refresh_token_id": refresh_token.id,
             "disable_expiry_date": True,
         }
@@ -719,7 +719,7 @@ async def test_ws_edit_expiry_date_refresh_token(
 
     await ws_client.send_json_auto_id(
         {
-            "type": "auth/edit_expiry_date_refresh_token",
+            "type": "auth/refresh_token_set_expiry_date",
             "refresh_token_id": refresh_token.id,
             "disable_expiry_date": False,
         }
@@ -743,7 +743,7 @@ async def test_ws_remove_expiry_date_refresh_token_error(
 
     await ws_client.send_json_auto_id(
         {
-            "type": "auth/edit_expiry_date_refresh_token",
+            "type": "auth/refresh_token_set_expiry_date",
             "refresh_token_id": "invalid",
             "disable_expiry_date": False,
         }
