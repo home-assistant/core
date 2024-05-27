@@ -19,4 +19,5 @@ async def async_get_description_placeholders(hass: HomeAssistant) -> dict[str, s
     return {
         "more_info_url": f"https://www.home-assistant.io/integrations/{DOMAIN}/",
         "create_creds_url": "https://dev.myuplink.com/apps",
+        "callback_url": "https://my.home-assistant.io/redirect/oauth",
     }
