@@ -955,7 +955,7 @@ class MQTT:
             result, mid = self._mqttc.subscribe(chunk)
 
             if debug_enabled:
-                for topic, qos in subscriptions.items():
+                for topic, qos in chunk:
                     _LOGGER.debug(
                         "Subscribing to %s, mid: %s, qos: %s", topic, mid, qos
                     )
