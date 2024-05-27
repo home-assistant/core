@@ -23,7 +23,9 @@ async def test_sensor(
     """Test states of the sensor."""
     with patch("homeassistant.components.tractive.PLATFORMS", [Platform.SENSOR]):
         await init_integration(hass, mock_config_entry)
+
         mock_tractive_client.send_hardware_event(hass)
         mock_tractive_client.send_status_event(hass)
+
         await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

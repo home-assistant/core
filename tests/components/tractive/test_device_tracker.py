@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.device_tracker import SourceType
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -25,7 +26,36 @@ async def test_device_tracker(
         "homeassistant.components.tractive.PLATFORMS", [Platform.DEVICE_TRACKER]
     ):
         await init_integration(hass, mock_config_entry)
+
         mock_tractive_client.send_position_event(hass)
         mock_tractive_client.send_hardware_event(hass)
+
         await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_source_type_phone(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the device tracker with source type phone."""
+    await init_integration(hass, mock_config_entry)
+
+    mock_tractive_client.send_position_event(
+        hass,
+        {
+            "latitude": 22.333,
+            "longitude": 44.555,
+            "accuracy": 99,
+            "sensor_used": "PHONE",
+        },
+    )
+    mock_tractive_client.send_hardware_event(hass)
+
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("device_tracker.test_pet_tracker").attributes["source_type"]
+        is SourceType.BLUETOOTH
+    )

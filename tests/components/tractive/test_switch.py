@@ -23,6 +23,8 @@ async def test_switch(
     """Test states of the switch."""
     with patch("homeassistant.components.tractive.PLATFORMS", [Platform.SWITCH]):
         await init_integration(hass, mock_config_entry)
+
         mock_tractive_client.send_switch_event(hass)
+
         await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
