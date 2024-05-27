@@ -163,6 +163,8 @@ build.json @home-assistant/supervisor
 /tests/components/awair/ @ahayworth @danielsjf
 /homeassistant/components/axis/ @Kane610
 /tests/components/axis/ @Kane610
+/homeassistant/components/azure_data_explorer/ @kaareseras
+/tests/components/azure_data_explorer/ @kaareseras
 /homeassistant/components/azure_devops/ @timmo001
 /tests/components/azure_devops/ @timmo001
 /homeassistant/components/azure_event_hub/ @eavanvalkenburg
@@ -1420,7 +1422,8 @@ build.json @home-assistant/supervisor
 /tests/components/thermobeacon/ @bdraco
 /homeassistant/components/thermopro/ @bdraco @h3ss
 /tests/components/thermopro/ @bdraco @h3ss
-/homeassistant/components/thethingsnetwork/ @fabaff
+/homeassistant/components/thethingsnetwork/ @angelnu
+/tests/components/thethingsnetwork/ @angelnu
 /homeassistant/components/thread/ @home-assistant/core
 /tests/components/thread/ @home-assistant/core
 /homeassistant/components/tibber/ @danielhiversen

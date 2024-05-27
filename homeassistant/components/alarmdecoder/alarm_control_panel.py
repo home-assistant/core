@@ -9,7 +9,6 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     CodeFormat,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
     STATE_ALARM_ARMED_AWAY,
@@ -24,13 +23,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import AlarmDecoderConfigEntry
 from .const import (
     CONF_ALT_NIGHT_MODE,
     CONF_AUTO_BYPASS,
     CONF_CODE_ARM_REQUIRED,
-    DATA_AD,
     DEFAULT_ARM_OPTIONS,
-    DOMAIN,
     OPTIONS_ARM,
     SIGNAL_PANEL_MESSAGE,
 )
@@ -43,15 +41,16 @@ ATTR_KEYPRESS = "keypress"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AlarmDecoderConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up for AlarmDecoder alarm panels."""
     options = entry.options
     arm_options = options.get(OPTIONS_ARM, DEFAULT_ARM_OPTIONS)
-    client = hass.data[DOMAIN][entry.entry_id][DATA_AD]
 
     entity = AlarmDecoderAlarmPanel(
-        client=client,
+        client=entry.runtime_data.client,
         auto_bypass=arm_options[CONF_AUTO_BYPASS],
         code_arm_required=arm_options[CONF_CODE_ARM_REQUIRED],
         alt_night_mode=arm_options[CONF_ALT_NIGHT_MODE],

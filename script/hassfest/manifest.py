@@ -117,11 +117,15 @@ NO_IOT_CLASS = [
 # https://github.com/home-assistant/developers.home-assistant/pull/1512
 NO_DIAGNOSTICS = [
     "dlna_dms",
-    "fronius",
     "gdacs",
     "geonetnz_quakes",
     "google_assistant_sdk",
+    # diagnostics wouldn't really add anything (no data to provide)
+    "google_generative_ai_conversation",
     "hyperion",
+    # Modbus is excluded because it doesn't have to have a config flow
+    # according to ADR-0010, since it's a protocol integration. This
+    # means that it can't implement diagnostics.
     "modbus",
     "nightscout",
     "pvpc_hourly_pricing",

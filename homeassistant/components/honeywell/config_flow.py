@@ -54,6 +54,7 @@ class HoneywellConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm re-authentication with Honeywell."""
         errors: dict[str, str] = {}
         assert self.entry is not None
+
         if user_input:
             try:
                 await self.is_valid(
@@ -63,14 +64,12 @@ class HoneywellConfigFlow(ConfigFlow, domain=DOMAIN):
 
             except aiosomecomfort.AuthError:
                 errors["base"] = "invalid_auth"
-
             except (
                 aiosomecomfort.ConnectionError,
                 aiosomecomfort.ConnectionTimeout,
                 TimeoutError,
             ):
                 errors["base"] = "cannot_connect"
-
             else:
                 return self.async_update_reload_and_abort(
                     self.entry,
@@ -83,7 +82,8 @@ class HoneywellConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
-                REAUTH_SCHEMA, self.entry.data
+                REAUTH_SCHEMA,
+                self.entry.data,
             ),
             errors=errors,
             description_placeholders={"name": "Honeywell"},
@@ -91,7 +91,7 @@ class HoneywellConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Create config entry. Show the setup form to the user."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             try:
                 await self.is_valid(**user_input)
@@ -103,7 +103,6 @@ class HoneywellConfigFlow(ConfigFlow, domain=DOMAIN):
                 TimeoutError,
             ):
                 errors["base"] = "cannot_connect"
-
             if not errors:
                 return self.async_create_entry(
                     title=DOMAIN,
@@ -115,7 +114,9 @@ class HoneywellConfigFlow(ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_PASSWORD): str,
         }
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(data_schema), errors=errors
+            step_id="user",
+            data_schema=vol.Schema(data_schema),
+            errors=errors,
         )
 
     async def is_valid(self, **kwargs) -> bool:

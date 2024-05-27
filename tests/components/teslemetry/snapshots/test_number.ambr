@@ -1,0 +1,231 @@
+# serializer version: 1
+# name: test_number[number.energy_site_backup_reserve-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.energy_site_backup_reserve',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
+    'original_icon': 'mdi:battery-alert',
+    'original_name': 'Backup reserve',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'backup_reserve_percent',
+    'unique_id': '123456-backup_reserve_percent',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_number[number.energy_site_backup_reserve-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Energy Site Backup reserve',
+      'icon': 'mdi:battery-alert',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.energy_site_backup_reserve',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_number[number.energy_site_off_grid_reserve-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.energy_site_off_grid_reserve',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
+    'original_icon': 'mdi:battery-unknown',
+    'original_name': 'Off grid reserve',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'off_grid_vehicle_charging_reserve',
+    'unique_id': '123456-off_grid_vehicle_charging_reserve',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_number[number.energy_site_off_grid_reserve-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Energy Site Off grid reserve',
+      'icon': 'mdi:battery-unknown',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.energy_site_off_grid_reserve',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_number[number.test_charge_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 16,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.test_charge_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Charge current',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_charge_current_request',
+    'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_current_request',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_number[number.test_charge_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Test Charge current',
+      'max': 16,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.test_charge_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '16',
+  })
+# ---
+# name: test_number[number.test_charge_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 50,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.test_charge_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Charge limit',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_charge_limit_soc',
+    'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_limit_soc',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_number[number.test_charge_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Test Charge limit',
+      'max': 100,
+      'min': 50,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.test_charge_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
