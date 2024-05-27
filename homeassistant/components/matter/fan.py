@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from chip.clusters import Objects as clusters
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
@@ -22,10 +22,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
-
-if TYPE_CHECKING:
-    pass
-
 
 FanControlFeature = clusters.FanControl.Bitmaps.Feature
 WindBitmap = clusters.FanControl.Bitmaps.WindBitmap
