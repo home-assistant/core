@@ -905,7 +905,7 @@ async def test_entries_excludes_ignore_and_disabled(
 
 
 async def test_saving_and_loading(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_storage: dict[str, Any]
 ) -> None:
     """Test that we're saving and loading correctly."""
     mock_integration(
@@ -922,7 +922,17 @@ async def test_saving_and_loading(
         async def async_step_user(self, user_input=None):
             """Test user step."""
             await self.async_set_unique_id("unique")
-            return self.async_create_entry(title="Test Title", data={"token": "abcd"})
+            subentries = [
+                config_entries.ConfigSubentryData(
+                    data={"foo": "bar"}, title="subentry 1"
+                ),
+                config_entries.ConfigSubentryData(
+                    data={"sun": "moon"}, title="subentry 2", unique_id="very_unique"
+                ),
+            ]
+            return self.async_create_entry(
+                title="Test Title", data={"token": "abcd"}, subentries=subentries
+            )
 
     with mock_config_flow("test", TestFlow):
         await hass.config_entries.flow.async_init(
@@ -971,6 +981,98 @@ async def test_saving_and_loading(
     # To execute the save
     await hass.async_block_till_done()
 
+    stored_data = hass_storage["core.config_entries"]
+    assert stored_data == {
+        "data": {
+            "entries": [
+                {
+                    "created_at": ANY,
+                    "data": {
+                        "token": "abcd",
+                    },
+                    "disabled_by": None,
+                    "discovery_keys": {},
+                    "domain": "test",
+                    "entry_id": ANY,
+                    "minor_version": 1,
+                    "modified_at": ANY,
+                    "options": {},
+                    "pref_disable_new_entities": True,
+                    "pref_disable_polling": True,
+                    "source": "user",
+                    "subentries": [
+                        {
+                            "data": {"foo": "bar"},
+                            "subentry_id": ANY,
+                            "title": "subentry 1",
+                            "unique_id": None,
+                        },
+                        {
+                            "data": {"sun": "moon"},
+                            "subentry_id": ANY,
+                            "title": "subentry 2",
+                            "unique_id": "very_unique",
+                        },
+                    ],
+                    "title": "Test Title",
+                    "unique_id": "unique",
+                    "version": 5,
+                },
+                {
+                    "created_at": ANY,
+                    "data": {
+                        "username": "bla",
+                    },
+                    "disabled_by": None,
+                    "discovery_keys": {
+                        "test": [
+                            {"domain": "test", "key": "blah", "version": 1},
+                        ],
+                    },
+                    "domain": "test",
+                    "entry_id": ANY,
+                    "minor_version": 1,
+                    "modified_at": ANY,
+                    "options": {},
+                    "pref_disable_new_entities": False,
+                    "pref_disable_polling": False,
+                    "source": "user",
+                    "subentries": [],
+                    "title": "Test 2 Title",
+                    "unique_id": None,
+                    "version": 3,
+                },
+                {
+                    "created_at": ANY,
+                    "data": {
+                        "username": "bla",
+                    },
+                    "disabled_by": None,
+                    "discovery_keys": {
+                        "test": [
+                            {"domain": "test", "key": ["a", "b"], "version": 1},
+                        ],
+                    },
+                    "domain": "test",
+                    "entry_id": ANY,
+                    "minor_version": 1,
+                    "modified_at": ANY,
+                    "options": {},
+                    "pref_disable_new_entities": False,
+                    "pref_disable_polling": False,
+                    "source": "user",
+                    "subentries": [],
+                    "title": "Test 2 Title",
+                    "unique_id": None,
+                    "version": 3,
+                },
+            ],
+        },
+        "key": "core.config_entries",
+        "minor_version": 5,
+        "version": 1,
+    }
+
     # Now load written data in new config manager
     manager = config_entries.ConfigEntries(hass, {})
     await manager.async_initialize()
@@ -982,6 +1084,25 @@ async def test_saving_and_loading(
         hass.config_entries.async_entries(), manager.async_entries(), strict=False
     ):
         assert orig.as_dict() == loaded.as_dict()
+
+    hass.config_entries.async_update_entry(
+        entry_1,
+        pref_disable_polling=False,
+        pref_disable_new_entities=False,
+    )
+
+    # To trigger the call_later
+    freezer.tick(1.0)
+    async_fire_time_changed(hass)
+    # To execute the save
+    await hass.async_block_till_done()
+
+    # Assert no data is lost when storing again
+    expected_stored_data = stored_data
+    expected_stored_data["data"]["entries"][0]["modified_at"] = ANY
+    expected_stored_data["data"]["entries"][0]["pref_disable_new_entities"] = False
+    expected_stored_data["data"]["entries"][0]["pref_disable_polling"] = False
+    assert hass_storage["core.config_entries"] == expected_stored_data | {}
 
 
 @freeze_time("2024-02-14 12:00:00")
@@ -1424,7 +1545,9 @@ async def test_update_subentry_and_trigger_listener(
     entry.add_to_manager(manager)
     update_listener_calls = []
 
-    subentry = config_entries.ConfigSubentry({"test": "test"}, "test", "Mock title")
+    subentry = config_entries.ConfigSubentry(
+        data={"test": "test"}, unique_id="test", title="Mock title"
+    )
 
     async def update_listener(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
@@ -1781,13 +1904,8 @@ async def test_create_entry_subentries(
 
     subentrydata = config_entries.ConfigSubentryData(
         data={"test": "test"},
-        subentry_id="test",
         title="Mock title",
-    )
-    subentry = config_entries.ConfigSubentry(
-        subentrydata["data"],
-        "test",
-        subentrydata["title"],
+        unique_id="test",
     )
 
     async def mock_async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -1834,7 +1952,15 @@ async def test_create_entry_subentries(
         assert len(entries) == 1
         assert entries[0].supports_subentries is False
         assert entries[0].data == {"example": "data"}
-        assert entries[0].subentries == {"test": subentry}
+        assert len(entries[0].subentries) == 1
+        subentry_id = list(entries[0].subentries)[0]
+        subentry = config_entries.ConfigSubentry(
+            data=subentrydata["data"],
+            subentry_id=subentry_id,
+            title=subentrydata["title"],
+            unique_id="test",
+        )
+        assert entries[0].subentries == {subentry_id: subentry}
 
 
 async def test_entry_subentry(
@@ -1870,17 +1996,21 @@ async def test_entry_subentry(
             flow,
             {
                 "data": {"second": True},
-                "subentry_id": "test",
                 "title": "Mock title",
                 "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
+                "unique_id": "test",
             },
         )
 
         assert entry.data == {"first": True}
         assert entry.options == {}
+        subentry_id = list(entry.subentries)[0]
         assert entry.subentries == {
-            "test": config_entries.ConfigSubentry(
-                {"second": True}, "test", "Mock title"
+            subentry_id: config_entries.ConfigSubentry(
+                data={"second": True},
+                subentry_id=subentry_id,
+                title="Mock title",
+                unique_id="test",
             )
         }
         assert entry.supports_subentries is True
@@ -1920,9 +2050,9 @@ async def test_entry_subentry_non_string(
                 flow,
                 {
                     "data": {"second": True},
-                    "subentry_id": 123,
                     "title": "Mock title",
                     "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
+                    "unique_id": 123,
                 },
             )
 
@@ -1936,7 +2066,14 @@ async def test_entry_subentry_duplicate(
     entry = MockConfigEntry(
         domain="test",
         data={"first": True},
-        subentries=[{"data": {}, "subentry_id": "test", "title": "Mock title"}],
+        subentries_data=[
+            {
+                "data": {},
+                "subentry_id": "blabla",
+                "title": "Mock title",
+                "unique_id": "test",
+            }
+        ],
     )
     entry.add_to_manager(manager)
 
@@ -1965,9 +2102,9 @@ async def test_entry_subentry_duplicate(
                 flow,
                 {
                     "data": {"second": True},
-                    "subentry_id": "test",
                     "title": "Mock title",
                     "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
+                    "unique_id": "test",
                 },
             )
 
@@ -2055,9 +2192,9 @@ async def test_entry_subentry_deleted_config_entry(
                 flow,
                 {
                     "data": {"second": True},
-                    "subentry_id": "test",
                     "title": "Mock title",
                     "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
+                    "unique_id": "test",
                 },
             )
 
@@ -4238,7 +4375,9 @@ async def test_updating_entry_with_and_without_changes(
 
     assert manager.async_update_entry(entry) is False
 
-    subentry = config_entries.ConfigSubentry({"test": "test"}, "test", "Mock title")
+    subentry = config_entries.ConfigSubentry(
+        data={"test": "test"}, title="Mock title", unique_id="test"
+    )
 
     for change, expected_value in (
         ({"data": {"second": True, "third": 456}}, {"second": True, "third": 456}),
@@ -5788,7 +5927,7 @@ async def test_unhashable_unique_id_fails(
         minor_version=1,
         options={},
         source="test",
-        subentries={},
+        subentries_data={},
         title="title",
         unique_id=unique_id,
         version=1,
@@ -5896,7 +6035,7 @@ async def test_hashable_unique_id(
         minor_version=1,
         options={},
         source="test",
-        subentries={},
+        subentries_data={},
         title="title",
         unique_id=unique_id,
         version=1,

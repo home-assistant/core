@@ -15,7 +15,7 @@ from collections.abc import (
 )
 from contextvars import ContextVar
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, StrEnum
 import functools
@@ -321,25 +321,32 @@ class ConfigSubentryData(TypedDict):
     data: Mapping[str, Any]
     subentry_id: str
     title: str
+    unique_id: str | None
 
 
 class SubentryFlowResult(FlowResult, total=False):
     """Typed result dict for subentry flow."""
 
-    subentry_id: str
+    unique_id: str | None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ConfigSubentry:
     """Container for a configuration subentry."""
 
     data: MappingProxyType[str, Any]
-    subentry_id: str
+    subentry_id: str = field(default_factory=ulid_util.ulid_now)
     title: str
+    unique_id: str | None
 
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this subentry."""
-        return {"data": dict(self.data), "title": self.title}
+        return {
+            "data": dict(self.data),
+            "subentry_id": self.subentry_id,
+            "title": self.title,
+            "unique_id": self.unique_id,
+        }
 
 
 class ConfigEntry(Generic[_DataT]):
@@ -397,7 +404,7 @@ class ConfigEntry(Generic[_DataT]):
         pref_disable_polling: bool | None = None,
         source: str,
         state: ConfigEntryState = ConfigEntryState.NOT_LOADED,
-        subentries: Iterable[ConfigSubentryData] | None,
+        subentries_data: Iterable[ConfigSubentryData] | None,
         title: str,
         unique_id: str | None,
         version: int,
@@ -424,16 +431,20 @@ class ConfigEntry(Generic[_DataT]):
         _setter(self, "options", MappingProxyType(options or {}))
 
         # Subentries
-        subentries = subentries or {}
-        _subentries = {
-            subentry["subentry_id"]: ConfigSubentry(
-                MappingProxyType(subentry["data"]),
-                subentry["subentry_id"],
-                subentry["title"],
-            )
-            for subentry in subentries
-        }
-        _setter(self, "subentries", MappingProxyType(_subentries))
+        subentries_data = subentries_data or {}
+        subentries = {}
+        for subentry_data in subentries_data:
+            subentry_kwargs = {
+                "data": MappingProxyType(subentry_data["data"]),
+                "title": subentry_data["title"],
+                "unique_id": subentry_data.get("unique_id"),
+            }
+            if "subentry_id" in subentry_data:
+                subentry_kwargs["subentry_id"] = subentry_data["subentry_id"]
+            subentry = ConfigSubentry(**subentry_kwargs)  # type: ignore[arg-type]
+            subentries[subentry.subentry_id] = subentry
+
+        _setter(self, "subentries", MappingProxyType(subentries))
 
         # Entry system options
         if pref_disable_new_entities is None:
@@ -1562,7 +1573,7 @@ class ConfigEntriesFlowManager(
             minor_version=result["minor_version"],
             options=result["options"],
             source=flow.context["source"],
-            subentries=result["subentries"],
+            subentries_data=result["subentries"],
             title=result["title"],
             unique_id=flow.unique_id,
             version=result["version"],
@@ -2077,7 +2088,7 @@ class ConfigEntries:
                 pref_disable_new_entities=entry["pref_disable_new_entities"],
                 pref_disable_polling=entry["pref_disable_polling"],
                 source=entry["source"],
-                subentries=entry["subentries"],
+                subentries_data=entry["subentries"],
                 title=entry["title"],
                 unique_id=entry["unique_id"],
                 version=entry["version"],
@@ -3166,12 +3177,13 @@ class ConfigSubentryFlowManager(
         if entry is None:
             raise UnknownEntry(flow.handler)
 
-        if "subentry_id" not in result or not isinstance(
-            subentry_id := result["subentry_id"], str
-        ):
-            raise HomeAssistantError("subentry_id must be a string")
+        unique_id = result.get("unique_id")
+        if "unique_id" in result and not isinstance(unique_id, str):
+            raise HomeAssistantError("unique_id must be a string")
 
-        if subentry_id in entry.subentries:
+        if any(
+            subentry.unique_id == unique_id for subentry in entry.subentries.values()
+        ):
             raise data_entry_flow.AbortFlow("already_configured")
 
         self.hass.config_entries.async_update_entry(
@@ -3179,7 +3191,9 @@ class ConfigSubentryFlowManager(
             subentries=[
                 *entry.subentries.values(),
                 ConfigSubentry(
-                    MappingProxyType(result["data"]), subentry_id, result["title"]
+                    data=MappingProxyType(result["data"]),
+                    title=result["title"],
+                    unique_id=unique_id,
                 ),
             ],
         )
@@ -3202,7 +3216,7 @@ class ConfigSubentryFlow(data_entry_flow.FlowHandler[FlowContext, SubentryFlowRe
         data: Mapping[str, Any],
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,
-        subentry_id: str,
+        unique_id: str,
     ) -> SubentryFlowResult:
         """Finish config flow and create a config entry."""
         result = super().async_create_entry(
@@ -3212,7 +3226,7 @@ class ConfigSubentryFlow(data_entry_flow.FlowHandler[FlowContext, SubentryFlowRe
             description_placeholders=description_placeholders,
         )
 
-        result["subentry_id"] = subentry_id
+        result["unique_id"] = unique_id
 
         return result
 
