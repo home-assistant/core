@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 import urllib.error
 
 import feedparser
@@ -98,7 +98,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
-        assert config_entry is not None
+        if TYPE_CHECKING:
+            assert config_entry is not None
         self._config_entry = config_entry
         return await self.async_step_reconfigure_confirm()
 
