@@ -431,8 +431,8 @@ class HomeAssistant:
         self.import_executor = InterruptibleThreadPoolExecutor(
             max_workers=1, thread_name_prefix="ImportExecutor"
         )
-        self._loop_thread_id = (
-            self.loop.__dict__.get("_thread_ident") or threading.get_ident()
+        self._loop_thread_id = getattr(
+            self.loop, "_thread_ident", getattr(self.loop, "_thread_id")
         )
 
     def verify_event_loop_thread(self, what: str) -> None:
