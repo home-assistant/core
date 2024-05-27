@@ -13,14 +13,14 @@ from . import init_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_sensor(
+async def test_device_tracker(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     mock_tractive_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test states of the sensor."""
+    """Test states of the device_tracker."""
     with patch(
         "homeassistant.components.tractive.PLATFORMS", [Platform.DEVICE_TRACKER]
     ):
