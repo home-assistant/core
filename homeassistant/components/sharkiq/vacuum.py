@@ -268,7 +268,10 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
     @property
     def available_rooms(self) -> list | None:
         """Return a list of rooms available to clean."""
-        return self.sharkiq.get_room_list()
+        room_list = self.sharkiq.get_property_value(Properties.ROBOT_ROOM_LIST)
+        if room_list:
+            return room_list.split(":")[1:]
+        return []
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
