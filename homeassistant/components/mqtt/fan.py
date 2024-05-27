@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import partial
 import logging
 import math
 from typing import Any
@@ -27,7 +26,7 @@ from homeassistant.const import (
     CONF_PAYLOAD_ON,
     CONF_STATE,
 )
-from homeassistant.core import HassJobType, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
@@ -43,15 +42,12 @@ from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
     CONF_STATE_TOPIC,
     CONF_STATE_VALUE_TEMPLATE,
     PAYLOAD_NONE,
 )
 from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import (
-    MessageCallbackType,
     MqttCommandTemplate,
     MqttValueTemplate,
     PublishPayloadType,
@@ -195,7 +191,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT fan through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttFan,
@@ -429,50 +425,28 @@ class MqttFan(MqttEntity, FanEntity):
             return
         self._attr_current_direction = str(direction)
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        topics: dict[str, Any] = {}
-
-        def add_subscribe_topic(
-            topic: str, msg_callback: MessageCallbackType, tracked_attributes: set[str]
-        ) -> bool:
-            """Add a topic to subscribe to."""
-            if has_topic := self._topic[topic] is not None:
-                topics[topic] = {
-                    "topic": self._topic[topic],
-                    "msg_callback": partial(
-                        self._message_callback, msg_callback, tracked_attributes
-                    ),
-                    "entity_id": self.entity_id,
-                    "qos": self._config[CONF_QOS],
-                    "encoding": self._config[CONF_ENCODING] or None,
-                    "job_type": HassJobType.Callback,
-                }
-            return has_topic
-
-        add_subscribe_topic(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
-        add_subscribe_topic(
+        self.add_subscription(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
+        self.add_subscription(
             CONF_PERCENTAGE_STATE_TOPIC, self._percentage_received, {"_attr_percentage"}
         )
-        add_subscribe_topic(
+        self.add_subscription(
             CONF_PRESET_MODE_STATE_TOPIC,
             self._preset_mode_received,
             {"_attr_preset_mode"},
         )
-        if add_subscribe_topic(
+        if self.add_subscription(
             CONF_OSCILLATION_STATE_TOPIC,
             self._oscillation_received,
             {"_attr_oscillating"},
         ):
             self._attr_oscillating = False
-        add_subscribe_topic(
+        self.add_subscription(
             CONF_DIRECTION_STATE_TOPIC,
             self._direction_received,
             {"_attr_current_direction"},
-        )
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
         )
 
     async def _subscribe_topics(self) -> None:

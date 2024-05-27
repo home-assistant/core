@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import partial
 import logging
 
 import voluptuous as vol
@@ -12,7 +11,7 @@ from homeassistant.components import select
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE
-from homeassistant.core import HassJobType, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -20,13 +19,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import subscription
 from .config import MQTT_RW_SCHEMA
-from .const import (
-    CONF_COMMAND_TEMPLATE,
-    CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_STATE_TOPIC,
-)
+from .const import CONF_COMMAND_TEMPLATE, CONF_COMMAND_TOPIC, CONF_STATE_TOPIC
 from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
@@ -68,7 +61,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT select through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttSelect,
@@ -133,30 +126,15 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
             return
         self._attr_current_option = payload
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        if self._config.get(CONF_STATE_TOPIC) is None:
+        if not self.add_subscription(
+            CONF_STATE_TOPIC, self._message_received, {"_attr_current_option"}
+        ):
             # Force into optimistic mode.
             self._attr_assumed_state = True
             return
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass,
-            self._sub_state,
-            {
-                "state_topic": {
-                    "topic": self._config.get(CONF_STATE_TOPIC),
-                    "msg_callback": partial(
-                        self._message_callback,
-                        self._message_received,
-                        {"_attr_current_option"},
-                    ),
-                    "entity_id": self.entity_id,
-                    "qos": self._config[CONF_QOS],
-                    "encoding": self._config[CONF_ENCODING] or None,
-                    "job_type": HassJobType.Callback,
-                }
-            },
-        )
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""

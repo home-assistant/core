@@ -10,7 +10,7 @@ from homeassistant.components import scene
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PAYLOAD_ON
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -44,7 +44,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT scene through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttScene,
@@ -72,6 +72,7 @@ class MqttScene(
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 

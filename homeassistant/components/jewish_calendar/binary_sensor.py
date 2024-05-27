@@ -19,7 +19,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from .const import DEFAULT_NAME, DOMAIN
@@ -57,20 +56,6 @@ BINARY_SENSORS: tuple[JewishCalendarBinarySensorEntityDescription, ...] = (
         is_on=lambda state: bool(state.motzei_shabbat_chag),
     ),
 )
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Jewish calendar binary sensors from YAML.
-
-    The YAML platform config is automatically
-    imported to a config entry, this method can be removed
-    when YAML support is removed.
-    """
 
 
 async def async_setup_entry(

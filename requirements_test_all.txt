@@ -478,7 +478,7 @@ beautifulsoup4==4.12.3
 bellows==0.38.4
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected[china]==0.15.2
+bimmer-connected[china]==0.15.3
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
@@ -1754,7 +1754,7 @@ python-fullykiosk==0.0.12
 python-homeassistant-analytics==0.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v5.0.0
+python-homewizard-energy==v6.0.0
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -2250,7 +2250,7 @@ wled==0.18.0
 wolf-comm==0.0.8
 
 # homeassistant.components.wyoming
-wyoming==1.5.3
+wyoming==1.5.4
 
 # homeassistant.components.xbox
 xbox-webapi==2.0.11
@@ -2295,7 +2295,7 @@ youless-api==1.1.1
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2024.04.09
+yt-dlp==2024.05.26
 
 # homeassistant.components.zamg
 zamg==0.3.6
