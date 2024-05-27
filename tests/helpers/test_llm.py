@@ -90,6 +90,7 @@ async def test_assist_api(hass: HomeAssistant) -> None:
     assert str(tool) == "<IntentTool - test_intent>"
 
     test_context = Context()
+    assert test_context.json_fragment  # To reproduce an error case in tracing
     intent_response = intent.IntentResponse("*")
     intent_response.matched_states = [State("light.matched", "on")]
     intent_response.unmatched_states = [State("light.unmatched", "on")]
