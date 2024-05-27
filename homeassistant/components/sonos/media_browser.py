@@ -47,7 +47,7 @@ type GetBrowseImageUrlType = Callable[[str, str, str | None], str]
 
 
 def fix_image_url(url: str) -> str:
-    """Update the image url to fully encode characters that need to be escaped for the media_browser UI.
+    """Update the image url to fully encode characters to allow image display in media_browser UI.
 
     Images whose file path contains characters such as ',()+ are not loaded without escaping them.
     """
