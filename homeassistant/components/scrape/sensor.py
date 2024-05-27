@@ -101,7 +101,7 @@ async def async_setup_entry(
     """Set up the Scrape sensor entry."""
     entities: list = []
 
-    coordinator: ScrapeCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
     config = dict(entry.options)
     for sensor in config["sensor"]:
         sensor_config: ConfigType = vol.Schema(
