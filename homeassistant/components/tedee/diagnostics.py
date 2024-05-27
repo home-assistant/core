@@ -8,7 +8,6 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
 from .coordinator import TedeeApiCoordinator
 
 TO_REDACT = {
@@ -20,7 +19,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: TedeeApiCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: TedeeApiCoordinator = entry.runtime_data
     # dict has sensitive info as key, redact manually
     data = {
         index: lock.to_dict()
