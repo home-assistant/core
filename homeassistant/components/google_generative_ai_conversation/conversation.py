@@ -5,36 +5,41 @@ from __future__ import annotations
 from typing import Any, Literal
 
 import google.ai.generativelanguage as glm
-from google.api_core.exceptions import ClientError
+from google.api_core.exceptions import GoogleAPICallError
 import google.generativeai as genai
 import google.generativeai.types as genai_types
 import voluptuous as vol
 from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
+from homeassistant.components.conversation import trace
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, TemplateError
-from homeassistant.helpers import intent, llm, template
+from homeassistant.helpers import device_registry as dr, intent, llm, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import ulid
 
 from .const import (
     CONF_CHAT_MODEL,
+    CONF_DANGEROUS_BLOCK_THRESHOLD,
+    CONF_HARASSMENT_BLOCK_THRESHOLD,
+    CONF_HATE_BLOCK_THRESHOLD,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
+    CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
-    DEFAULT_CHAT_MODEL,
-    DEFAULT_MAX_TOKENS,
-    DEFAULT_PROMPT,
-    DEFAULT_TEMPERATURE,
-    DEFAULT_TOP_K,
-    DEFAULT_TOP_P,
     DOMAIN,
     LOGGER,
+    RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_HARM_BLOCK_THRESHOLD,
+    RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_TEMPERATURE,
+    RECOMMENDED_TOP_K,
+    RECOMMENDED_TOP_P,
 )
 
 # Max number of back and forth with the LLM to generate a response
@@ -106,13 +111,20 @@ class GoogleGenerativeAIConversationEntity(
     """Google Generative AI conversation agent."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the agent."""
         self.entry = entry
         self.history: dict[str, list[genai_types.ContentType]] = {}
-        self._attr_name = entry.title
         self._attr_unique_id = entry.entry_id
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=entry.title,
+            manufacturer="Google",
+            model="Generative AI",
+            entry_type=dr.DeviceEntryType.SERVICE,
+        )
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
@@ -156,17 +168,30 @@ class GoogleGenerativeAIConversationEntity(
                 )
             tools = [_format_tool(tool) for tool in llm_api.async_get_tools()]
 
-        raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
         model = genai.GenerativeModel(
-            model_name=self.entry.options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL),
+            model_name=self.entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
             generation_config={
                 "temperature": self.entry.options.get(
-                    CONF_TEMPERATURE, DEFAULT_TEMPERATURE
+                    CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
                 ),
-                "top_p": self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P),
-                "top_k": self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K),
+                "top_p": self.entry.options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+                "top_k": self.entry.options.get(CONF_TOP_K, RECOMMENDED_TOP_K),
                 "max_output_tokens": self.entry.options.get(
-                    CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS
+                    CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
+                ),
+            },
+            safety_settings={
+                "HARASSMENT": self.entry.options.get(
+                    CONF_HARASSMENT_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
+                ),
+                "HATE": self.entry.options.get(
+                    CONF_HATE_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
+                ),
+                "SEXUAL": self.entry.options.get(
+                    CONF_SEXUAL_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
+                ),
+                "DANGEROUS": self.entry.options.get(
+                    CONF_DANGEROUS_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
                 ),
             },
             tools=tools or None,
@@ -180,7 +205,40 @@ class GoogleGenerativeAIConversationEntity(
             messages = [{}, {}]
 
         try:
-            prompt = self._async_generate_prompt(raw_prompt, llm_api)
+            if llm_api:
+                empty_tool_input = llm.ToolInput(
+                    tool_name="",
+                    tool_args={},
+                    platform=DOMAIN,
+                    context=user_input.context,
+                    user_prompt=user_input.text,
+                    language=user_input.language,
+                    assistant=conversation.DOMAIN,
+                    device_id=user_input.device_id,
+                )
+
+                api_prompt = await llm_api.async_get_api_prompt(empty_tool_input)
+
+            else:
+                api_prompt = llm.async_render_no_api_prompt(self.hass)
+
+            prompt = "\n".join(
+                (
+                    template.Template(
+                        self.entry.options.get(
+                            CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                        ),
+                        self.hass,
+                    ).async_render(
+                        {
+                            "ha_name": self.hass.config.location_name,
+                        },
+                        parse_result=False,
+                    ),
+                    api_prompt,
+                )
+            )
+
         except TemplateError as err:
             LOGGER.error("Error rendering prompt: %s", err)
             intent_response.async_set_error(
@@ -195,6 +253,9 @@ class GoogleGenerativeAIConversationEntity(
         messages[1] = {"role": "model", "parts": "Ok"}
 
         LOGGER.debug("Input: '%s' with history: %s", user_input.text, messages)
+        trace.async_conversation_trace_append(
+            trace.ConversationTraceEventType.AGENT_DETAIL, {"messages": messages}
+        )
 
         chat = model.start_chat(history=messages)
         chat_request = user_input.text
@@ -203,15 +264,25 @@ class GoogleGenerativeAIConversationEntity(
             try:
                 chat_response = await chat.send_message_async(chat_request)
             except (
-                ClientError,
+                GoogleAPICallError,
                 ValueError,
                 genai_types.BlockedPromptException,
                 genai_types.StopCandidateException,
             ) as err:
-                LOGGER.error("Error sending message: %s", err)
+                LOGGER.error("Error sending message: %s %s", type(err), err)
+
+                if isinstance(
+                    err, genai_types.StopCandidateException
+                ) and "finish_reason: SAFETY\n" in str(err):
+                    error = "The message got blocked by your safety settings"
+                else:
+                    error = (
+                        f"Sorry, I had a problem talking to Google Generative AI: {err}"
+                    )
+
                 intent_response.async_set_error(
                     intent.IntentResponseErrorCode.UNKNOWN,
-                    f"Sorry, I had a problem talking to Google Generative AI: {err}",
+                    error,
                 )
                 return conversation.ConversationResult(
                     response=intent_response, conversation_id=conversation_id
@@ -221,7 +292,7 @@ class GoogleGenerativeAIConversationEntity(
             if not chat_response.parts:
                 intent_response.async_set_error(
                     intent.IntentResponseErrorCode.UNKNOWN,
-                    "Sorry, I had a problem talking to Google Generative AI. Likely blocked",
+                    "Sorry, I had a problem getting a response from Google Generative AI.",
                 )
                 return conversation.ConversationResult(
                     response=intent_response, conversation_id=conversation_id
@@ -266,19 +337,4 @@ class GoogleGenerativeAIConversationEntity(
         intent_response.async_set_speech(chat_response.text)
         return conversation.ConversationResult(
             response=intent_response, conversation_id=conversation_id
-        )
-
-    def _async_generate_prompt(self, raw_prompt: str, llm_api: llm.API | None) -> str:
-        """Generate a prompt for the user."""
-        raw_prompt += "\n"
-        if llm_api:
-            raw_prompt += llm_api.prompt_template
-        else:
-            raw_prompt += llm.PROMPT_NO_API_CONFIGURED
-
-        return template.Template(raw_prompt, self.hass).async_render(
-            {
-                "ha_name": self.hass.config.location_name,
-            },
-            parse_result=False,
         )

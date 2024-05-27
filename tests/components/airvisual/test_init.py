@@ -101,7 +101,10 @@ async def test_migration_1_2(hass: HomeAssistant, mock_pyairvisual) -> None:
 
 
 async def test_migration_2_3(
-    hass: HomeAssistant, mock_pyairvisual, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    mock_pyairvisual,
+    device_registry: dr.DeviceRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test migrating from version 2 to 3."""
     entry = MockConfigEntry(
@@ -134,5 +137,4 @@ async def test_migration_2_3(
         for domain, entry_count in ((DOMAIN, 0), (AIRVISUAL_PRO_DOMAIN, 1)):
             assert len(hass.config_entries.async_entries(domain)) == entry_count
 
-        issue_registry = ir.async_get(hass)
         assert len(issue_registry.issues) == 1

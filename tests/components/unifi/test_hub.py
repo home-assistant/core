@@ -1,9 +1,10 @@
 """Test UniFi Network."""
 
+from collections.abc import Callable
 from copy import deepcopy
 from datetime import timedelta
 from http import HTTPStatus
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import aiounifi
 import pytest
@@ -15,8 +16,6 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.unifi.const import (
     CONF_SITE_ID,
-    CONF_TRACK_CLIENTS,
-    CONF_TRACK_DEVICES,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
@@ -29,6 +28,7 @@ from homeassistant.components.unifi.const import (
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.components.unifi.hub import get_unifi_api
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -39,7 +39,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -239,18 +238,15 @@ async def setup_unifi_integration(
 
 
 async def test_hub_setup(
-    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    aioclient_mock: AiohttpClientMocker,
+    prepare_config_entry: Callable[[], ConfigEntry],
 ) -> None:
     """Successful setup."""
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
         return_value=True,
     ) as forward_entry_setup:
-        config_entry = await setup_unifi_integration(
-            hass, aioclient_mock, system_information_response=SYSTEM_INFORMATION
-        )
+        config_entry = await prepare_config_entry()
         hub = config_entry.runtime_data
 
     entry = hub.config.entry
@@ -291,109 +287,53 @@ async def test_hub_setup(
     assert device_entry.sw_version == "7.4.162"
 
 
-async def test_hub_not_accessible(hass: HomeAssistant) -> None:
-    """Retry to login gets scheduled when connection fails."""
-    with patch(
-        "homeassistant.components.unifi.hub.get_unifi_api",
-        side_effect=CannotConnect,
-    ):
-        await setup_unifi_integration(hass)
-    assert hass.data[UNIFI_DOMAIN] == {}
-
-
-async def test_hub_trigger_reauth_flow(hass: HomeAssistant) -> None:
-    """Failed authentication trigger a reauthentication flow."""
-    with (
-        patch(
-            "homeassistant.components.unifi.get_unifi_api",
-            side_effect=AuthenticationRequired,
-        ),
-        patch.object(hass.config_entries.flow, "async_init") as mock_flow_init,
-    ):
-        await setup_unifi_integration(hass)
-        mock_flow_init.assert_called_once()
-    assert hass.data[UNIFI_DOMAIN] == {}
-
-
-async def test_hub_unknown_error(hass: HomeAssistant) -> None:
-    """Unknown errors are handled."""
-    with patch(
-        "homeassistant.components.unifi.hub.get_unifi_api",
-        side_effect=Exception,
-    ):
-        await setup_unifi_integration(hass)
-    assert hass.data[UNIFI_DOMAIN] == {}
-
-
-async def test_config_entry_updated(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Calling reset when the entry has been setup."""
-    config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    hub = config_entry.runtime_data
-
-    event_call = Mock()
-    unsub = async_dispatcher_connect(hass, hub.signal_options_update, event_call)
-
-    hass.config_entries.async_update_entry(
-        config_entry, options={CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False}
-    )
-    await hass.async_block_till_done()
-
-    assert config_entry.options[CONF_TRACK_CLIENTS] is False
-    assert config_entry.options[CONF_TRACK_DEVICES] is False
-
-    event_call.assert_called_once()
-
-    unsub()
-
-
 async def test_reset_after_successful_setup(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, setup_config_entry: ConfigEntry
 ) -> None:
     """Calling reset when the entry has been setup."""
-    config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    hub = config_entry.runtime_data
+    config_entry = setup_config_entry
+    assert config_entry.state is ConfigEntryState.LOADED
 
-    result = await hub.async_reset()
-    await hass.async_block_till_done()
-
-    assert result is True
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_reset_fails(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, setup_config_entry: ConfigEntry
 ) -> None:
     """Calling reset when the entry has been setup can return false."""
-    config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    hub = config_entry.runtime_data
+    config_entry = setup_config_entry
+    assert config_entry.state is ConfigEntryState.LOADED
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_unload",
         return_value=False,
     ):
-        result = await hub.async_reset()
-        await hass.async_block_till_done()
-
-    assert result is False
+        assert not await hass.config_entries.async_unload(config_entry.entry_id)
+        assert config_entry.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.parametrize(
+    "client_payload",
+    [
+        [
+            {
+                "hostname": "client",
+                "ip": "10.0.0.1",
+                "is_wired": True,
+                "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
+                "mac": "00:00:00:00:00:01",
+            },
+        ]
+    ],
+)
 async def test_connection_state_signalling(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     mock_device_registry,
+    setup_config_entry: ConfigEntry,
     websocket_mock,
 ) -> None:
     """Verify connection statesignalling and connection state are working."""
-    client = {
-        "hostname": "client",
-        "ip": "10.0.0.1",
-        "is_wired": True,
-        "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
-        "mac": "00:00:00:00:00:01",
-    }
-    await setup_unifi_integration(hass, aioclient_mock, clients_response=[client])
-
     # Controller is connected
     assert hass.states.get("device_tracker.client").state == "home"
 
@@ -407,11 +347,12 @@ async def test_connection_state_signalling(
 
 
 async def test_reconnect_mechanism(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_mock
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    setup_config_entry: ConfigEntry,
+    websocket_mock,
 ) -> None:
     """Verify reconnect prints only on first reconnection try."""
-    await setup_unifi_integration(hass, aioclient_mock)
-
     aioclient_mock.clear_requests()
     aioclient_mock.get(f"https://{DEFAULT_HOST}:1234/", status=HTTPStatus.BAD_GATEWAY)
 
@@ -435,11 +376,13 @@ async def test_reconnect_mechanism(
     ],
 )
 async def test_reconnect_mechanism_exceptions(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_mock, exception
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    setup_config_entry: ConfigEntry,
+    websocket_mock,
+    exception,
 ) -> None:
     """Verify async_reconnect calls expected methods."""
-    await setup_unifi_integration(hass, aioclient_mock)
-
     with (
         patch("aiounifi.Controller.login", side_effect=exception),
         patch(
@@ -450,20 +393,6 @@ async def test_reconnect_mechanism_exceptions(
 
         await websocket_mock.reconnect()
         mock_reconnect.assert_called_once()
-
-
-async def test_get_unifi_api(hass: HomeAssistant) -> None:
-    """Successful call."""
-    with patch("aiounifi.Controller.login", return_value=True):
-        assert await get_unifi_api(hass, ENTRY_CONFIG)
-
-
-async def test_get_unifi_api_verify_ssl_false(hass: HomeAssistant) -> None:
-    """Successful call with verify ssl set to false."""
-    hub_data = dict(ENTRY_CONFIG)
-    hub_data[CONF_VERIFY_SSL] = False
-    with patch("aiounifi.Controller.login", return_value=True):
-        assert await get_unifi_api(hass, hub_data)
 
 
 @pytest.mark.parametrize(
