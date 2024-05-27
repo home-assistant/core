@@ -288,7 +288,7 @@ async def test_correct_config_discovery(
                 '"url":"https://bla2mqtt.example.com/support"},'
                 '"dev":{"identifiers":["bla"]}}',
             ),
-            "bin_sens1 bla",
+            "bla bin_sens1",
         ),
     ],
 )
