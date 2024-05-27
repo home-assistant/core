@@ -252,3 +252,86 @@ def test_bad_root_import(
             imports_checker.visit_import(node)
         if import_node.startswith("from"):
             imports_checker.visit_importfrom(node)
+
+
+@pytest.mark.parametrize(
+    ("import_node", "module_name"),
+    [
+        (
+            "import homeassistant.helpers.issue_registry as ir",
+            "tests.components.pylint_test.climate",
+        ),
+        (
+            "from homeassistant.helpers import issue_registry as ir",
+            "tests.components.pylint_test.climate",
+        ),
+    ],
+)
+def test_good_namespace_import(
+    linter: UnittestLinter,
+    imports_checker: BaseChecker,
+    import_node: str,
+    module_name: str,
+) -> None:
+    """Ensure good namespace imports are accepted."""
+
+    node = astroid.extract_node(
+        f"{import_node} #@",
+        module_name,
+    )
+    imports_checker.visit_module(node.parent)
+
+    with assert_no_messages(linter):
+        if import_node.startswith("import"):
+            imports_checker.visit_import(node)
+        if import_node.startswith("from"):
+            imports_checker.visit_importfrom(node)
+
+
+@pytest.mark.parametrize(
+    ("import_node", "module_name"),
+    [
+        (
+            "import homeassistant.helpers.issue_registry as issue_registry",
+            "tests.components.pylint_test.climate",
+        ),
+        (
+            "from homeassistant.helpers import issue_registry",
+            "tests.components.pylint_test.climate",
+        ),
+        (
+            "from homeassistant.helpers.issue_registry import IssueSeverity",
+            "tests.components.pylint_test.climate",
+        ),
+    ],
+)
+def test_bad_namespace_import(
+    linter: UnittestLinter,
+    imports_checker: BaseChecker,
+    import_node: str,
+    module_name: str,
+) -> None:
+    """Ensure bad namespace imports are rejected."""
+
+    node = astroid.extract_node(
+        f"{import_node} #@",
+        module_name,
+    )
+    imports_checker.visit_module(node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-helper-namespace-import",
+            node=node,
+            args=None,
+            line=1,
+            col_offset=0,
+            end_line=1,
+            end_col_offset=len(import_node),
+        ),
+    ):
+        if import_node.startswith("import"):
+            imports_checker.visit_import(node)
+        if import_node.startswith("from"):
+            imports_checker.visit_importfrom(node)
