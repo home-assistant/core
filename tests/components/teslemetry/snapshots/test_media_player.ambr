@@ -29,7 +29,7 @@
     'previous_unique_id': None,
     'supported_features': <MediaPlayerEntityFeature: 16437>,
     'translation_key': 'media',
-    'unique_id': 'VINVINVIN-media',
+    'unique_id': 'LRWXF7EK4KC700000-media',
     'unit_of_measurement': None,
   })
 # ---
@@ -107,7 +107,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'media',
-    'unique_id': 'VINVINVIN-media',
+    'unique_id': 'LRWXF7EK4KC700000-media',
     'unit_of_measurement': None,
   })
 # ---
