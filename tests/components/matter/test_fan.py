@@ -17,7 +17,7 @@ from homeassistant.components.fan import (
     SERVICE_SET_DIRECTION,
     FanEntityFeature,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 
 from .common import (
@@ -83,6 +83,11 @@ async def test_fan_base(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state.attributes["oscillating"] is True
+    # handle wind mode active translates to correct preset
+    set_node_attribute(air_purifier, 1, 514, 10, 2)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.attributes["preset_mode"] == "natural_wind"
 
 
 async def test_fan_turn_on_with_percentage(
@@ -138,6 +143,62 @@ async def test_fan_turn_on_with_preset_mode(
         attribute_path="1/514/10",
         value=2,
     )
+    # test again where preset_mode is omitted in the service call
+    # which should select a default preset mode
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 3
+    assert matter_client.write_attribute.call_args == call(
+        node_id=air_purifier.node_id,
+        attribute_path="1/514/0",
+        value=5,
+    )
+
+
+async def test_fan_turn_off(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    air_purifier: MatterNode,
+):
+    """Test turning off the fan."""
+    entity_id = "fan.air_purifier"
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=air_purifier.node_id,
+        attribute_path="1/514/0",
+        value=0,
+    )
+    matter_client.write_attribute.reset_mock()
+    # test again if wind mode is turned off
+    set_node_attribute(air_purifier, 1, 514, 10, 2)
+    await trigger_subscription_callback(hass, matter_client)
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 2
+    assert matter_client.write_attribute.call_args_list[0] == call(
+        node_id=air_purifier.node_id,
+        attribute_path="1/514/10",
+        value=0,
+    )
+    assert matter_client.write_attribute.call_args_list[1] == call(
+        node_id=air_purifier.node_id,
+        attribute_path="1/514/0",
+        value=0,
+    )
 
 
 async def test_fan_oscillate(
@@ -154,11 +215,13 @@ async def test_fan_oscillate(
             {ATTR_ENTITY_ID: entity_id, ATTR_OSCILLATING: oscillating},
             blocking=True,
         )
+        assert matter_client.write_attribute.call_count == 1
         assert matter_client.write_attribute.call_args == call(
             node_id=air_purifier.node_id,
             attribute_path="1/514/8",
             value=value,
         )
+        matter_client.write_attribute.reset_mock()
 
 
 async def test_fan_set_direction(
@@ -175,8 +238,10 @@ async def test_fan_set_direction(
             {ATTR_ENTITY_ID: entity_id, ATTR_DIRECTION: direction},
             blocking=True,
         )
+        assert matter_client.write_attribute.call_count == 1
         assert matter_client.write_attribute.call_args == call(
             node_id=air_purifier.node_id,
             attribute_path="1/514/11",
             value=value,
         )
+        matter_client.write_attribute.reset_mock()

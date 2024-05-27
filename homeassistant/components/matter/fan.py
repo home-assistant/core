@@ -81,8 +81,9 @@ class MatterFan(MatterEntity, FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn fan off."""
-        # always clear the wind setting when turning off
-        await self._set_wind_mode(None)
+        # clear the wind setting if its currently set
+        if self._attr_preset_mode in [PRESET_NATURAL_WIND, PRESET_SLEEP_WIND]:
+            await self._set_wind_mode(None)
         await self.matter_client.write_attribute(
             node_id=self._endpoint.node.node_id,
             attribute_path=create_attribute_path_from_attribute(
@@ -112,7 +113,6 @@ class MatterFan(MatterEntity, FanEntity):
 
         # clear the wind setting if its currently set
         if self._attr_preset_mode in [PRESET_NATURAL_WIND, PRESET_SLEEP_WIND]:
-            # always clear the wind setting when turning off
             await self._set_wind_mode(None)
 
         await self.matter_client.write_attribute(
