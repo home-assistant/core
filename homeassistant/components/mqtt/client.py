@@ -952,10 +952,12 @@ class MQTT:
         debug_enabled = _LOGGER.isEnabledFor(logging.DEBUG)
 
         for chunk in chunked_or_all(subscription_list, MAX_SUBSCRIBES_PER_CALL):
-            result, mid = self._mqttc.subscribe(chunk)
+            chunk_tuple = tuple(chunk)
+
+            result, mid = self._mqttc.subscribe(chunk_tuple)
 
             if debug_enabled:
-                for topic, qos in chunk:
+                for topic, qos in chunk_tuple:
                     _LOGGER.debug(
                         "Subscribing to %s, mid: %s, qos: %s", topic, mid, qos
                     )
@@ -973,9 +975,11 @@ class MQTT:
         debug_enabled = _LOGGER.isEnabledFor(logging.DEBUG)
 
         for chunk in chunked_or_all(topics, MAX_UNSUBSCRIBES_PER_CALL):
-            result, mid = self._mqttc.unsubscribe(chunk)
+            chunk_list = list(chunk)
+
+            result, mid = self._mqttc.unsubscribe(chunk_list)
             if debug_enabled:
-                for topic in chunk:
+                for topic in chunk_list:
                     _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
 
             await self._async_wait_for_mid_or_raise(mid, result)
