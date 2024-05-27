@@ -41,6 +41,8 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
                     await client.connect(user_input[CONF_HOST], user_input[CONF_PORT])
                     if CONF_PASSWORD in user_input:
                         await client.password(user_input[CONF_PASSWORD])
+                    with suppress(mpd.ConnectionError):
+                        client.disconnect()
             except (
                 TimeoutError,
                 gaierror,
