@@ -54,7 +54,6 @@ MQTT_DISCOVERY_UPDATED: SignalTypeFormat[MQTTDiscoveryPayload] = SignalTypeForma
 MQTT_DISCOVERY_NEW: SignalTypeFormat[MQTTDiscoveryPayload] = SignalTypeFormat(
     "mqtt_discovery_new_{}_{}"
 )
-MQTT_DISCOVERY_NEW_COMPONENT = "mqtt_discovery_new_component"
 MQTT_DISCOVERY_DONE: SignalTypeFormat[Any] = SignalTypeFormat(
     "mqtt_discovery_done_{}_{}"
 )
@@ -127,12 +126,6 @@ async def async_start(  # noqa: C901
         async_dispatcher_send(
             hass, MQTT_DISCOVERY_NEW.format(component, "mqtt"), discovery_payload
         )
-
-    mqtt_data.reload_dispatchers.append(
-        async_dispatcher_connect(
-            hass, MQTT_DISCOVERY_NEW_COMPONENT, _async_component_setup
-        )
-    )
 
     @callback
     def async_discovery_message_received(msg: ReceiveMessage) -> None:  # noqa: C901
@@ -297,7 +290,7 @@ async def async_start(  # noqa: C901
 
         if component not in mqtt_data.platforms_loaded and payload:
             # Load component first
-            async_dispatcher_send(hass, MQTT_DISCOVERY_NEW_COMPONENT, payload)
+            config_entry.async_create_task(hass, _async_component_setup(payload))
         elif already_discovered:
             # Dispatch update
             message = f"Component has already been discovered: {component} {discovery_id}, sending update"
