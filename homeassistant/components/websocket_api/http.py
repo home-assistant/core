@@ -24,7 +24,6 @@ from .auth import AUTH_REQUIRED_MESSAGE, AuthPhase
 from .const import (
     DATA_CONNECTIONS,
     MAX_PENDING_MSG,
-    PENDING_MSG_MAX_FORCE_READY,
     PENDING_MSG_PEAK,
     PENDING_MSG_PEAK_TIME,
     SIGNAL_WEBSOCKET_CONNECTED,
@@ -68,7 +67,6 @@ class WebSocketHandler:
 
     __slots__ = (
         "_hass",
-        "_loop",
         "_request",
         "_wsock",
         "_handle_task",
@@ -80,13 +78,11 @@ class WebSocketHandler:
         "_connection",
         "_message_queue",
         "_ready_future",
-        "_release_ready_queue_size",
     )
 
     def __init__(self, hass: HomeAssistant, request: web.Request) -> None:
         """Initialize an active connection."""
         self._hass = hass
-        self._loop = hass.loop
         self._request: web.Request = request
         self._wsock = web.WebSocketResponse(heartbeat=55)
         self._handle_task: asyncio.Task | None = None
@@ -103,7 +99,6 @@ class WebSocketHandler:
         # an asyncio.Queue.
         self._message_queue: deque[bytes | None] = deque()
         self._ready_future: asyncio.Future[None] | None = None
-        self._release_ready_queue_size: int = 0
 
     def __repr__(self) -> str:
         """Return the representation."""
@@ -131,7 +126,7 @@ class WebSocketHandler:
         message_queue = self._message_queue
         logger = self._logger
         wsock = self._wsock
-        loop = self._loop
+        loop = self._hass.loop
         debug = logger.debug
         is_enabled_for = logger.isEnabledFor
         logging_debug = logging.DEBUG
@@ -208,9 +203,8 @@ class WebSocketHandler:
             message = message.encode("utf-8")
 
         message_queue = self._message_queue
-        message_queue.append(message)
-        queue_size_after_add = len(message_queue)
-        if queue_size_after_add >= MAX_PENDING_MSG:
+        queue_size_before_add = len(message_queue)
+        if queue_size_before_add >= MAX_PENDING_MSG:
             self._logger.error(
                 (
                     "%s: Client unable to keep up with pending messages. Reached %s pending"
@@ -224,14 +218,14 @@ class WebSocketHandler:
             self._cancel()
             return
 
-        if self._release_ready_queue_size == 0:
-            # Try to coalesce more messages to reduce the number of writes
-            self._release_ready_queue_size = queue_size_after_add
-            self._loop.call_soon(self._release_ready_future_or_reschedule)
+        message_queue.append(message)
+        ready_future = self._ready_future
+        if ready_future and not ready_future.done():
+            ready_future.set_result(None)
 
         peak_checker_active = self._peak_checker_unsub is not None
 
-        if queue_size_after_add <= PENDING_MSG_PEAK:
+        if queue_size_before_add <= PENDING_MSG_PEAK:
             if peak_checker_active:
                 self._cancel_peak_checker()
             return
@@ -240,33 +234,6 @@ class WebSocketHandler:
             self._peak_checker_unsub = async_call_later(
                 self._hass, PENDING_MSG_PEAK_TIME, self._check_write_peak
             )
-
-    @callback
-    def _release_ready_future_or_reschedule(self) -> None:
-        """Release the ready future or reschedule.
-
-        We will release the ready future if the queue did not grow since the
-        last time we tried to release the ready future.
-
-        If we reach PENDING_MSG_MAX_FORCE_READY, we will release the ready future
-        immediately so avoid the coalesced messages from growing too large.
-        """
-        if (
-            not (ready_future := self._ready_future)
-            or ready_future.done()
-            or not (queue_size := len(self._message_queue))
-        ):
-            self._release_ready_queue_size = 0
-            return
-        # If we are below the max pending to force ready, and there are new messages
-        # in the queue since the last time we tried to release the ready future, we
-        # try again later so we can coalesce more messages.
-        if queue_size > self._release_ready_queue_size < PENDING_MSG_MAX_FORCE_READY:
-            self._release_ready_queue_size = queue_size
-            self._loop.call_soon(self._release_ready_future_or_reschedule)
-            return
-        self._release_ready_queue_size = 0
-        ready_future.set_result(None)
 
     @callback
     def _check_write_peak(self, _utc_time: dt.datetime) -> None:
