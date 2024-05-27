@@ -175,21 +175,23 @@ class MatterFan(MatterEntity, FanEntity):
         if not hasattr(self, "_attr_preset_modes"):
             self._calculate_features()
         if self._attr_supported_features & FanEntityFeature.DIRECTION:
+            direction_value = self.get_matter_attribute_value(
+                clusters.FanControl.Attributes.AirflowDirection
+            )
             self._attr_current_direction = (
-                DIRECTION_FORWARD
-                if self.get_matter_attribute_value(
-                    clusters.FanControl.Attributes.AirflowDirection
-                )
-                == clusters.FanControl.Enums.AirflowDirectionEnum.kForward
-                else DIRECTION_REVERSE
+                DIRECTION_REVERSE
+                if direction_value
+                == clusters.FanControl.Enums.AirflowDirectionEnum.kReverse
+                else DIRECTION_FORWARD
             )
         if self._attr_supported_features & FanEntityFeature.OSCILLATE:
             self._attr_oscillating = (
                 self.get_matter_attribute_value(
                     clusters.FanControl.Attributes.RockSetting
                 )
-                is not None
+                != 0
             )
+
         # speed percentage is always provided
         current_percent = self.get_matter_attribute_value(
             clusters.FanControl.Attributes.PercentCurrent
@@ -285,7 +287,9 @@ class MatterFan(MatterEntity, FanEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.FAN,
-        entity_description=FanEntityDescription(key="MatterFan", name=None),
+        entity_description=FanEntityDescription(
+            key="MatterFan", name=None, translation_key="fan"
+        ),
         entity_class=MatterFan,
         # FanEntityFeature
         required_attributes=(

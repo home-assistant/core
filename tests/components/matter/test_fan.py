@@ -1,17 +1,23 @@
-"""Test Matter fan."""
-from math import floor
+"""Test Matter Fan platform."""
+
 from unittest.mock import MagicMock, call
 
-from chip.clusters import Objects as clusters
+from matter_server.client.models.node import MatterNode
 import pytest
 
-
-# https://developers.home-assistant.io/docs/core/entity/fan/
-# https://github.com/home-assistant/core/blob/dev/homeassistant/components/fan/__init__.py
 from homeassistant.components.fan import (
-    STATE_ON,
+    ATTR_DIRECTION,
+    ATTR_OSCILLATING,
+    ATTR_PERCENTAGE,
+    ATTR_PRESET_MODE,
+    DIRECTION_FORWARD,
+    DIRECTION_REVERSE,
+    DOMAIN as FAN_DOMAIN,
+    SERVICE_OSCILLATE,
+    SERVICE_SET_DIRECTION,
     FanEntityFeature,
 )
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 
 from .common import (
@@ -21,450 +27,156 @@ from .common import (
 )
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
-@pytest.mark.parametrize(
-    ("fixture", "entity_id"),
-    [
-        ("fan_lift", "fan.mock_lift_fan"),
-        ("fan_pa-lift", "fan.longan_link_wncv_da01"),
-        ("fan_full", "fan.mock_full_fan"),
-    ],
-)
-async def test_cover(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    fixture: str,
-    entity_id: str,
-) -> None:
-    """Test fan commands that always are implemented."""
-
-    fan = await setup_integration_with_node_fixture(
-        hass,
-        fixture,
-        matter_client,
+@pytest.fixture(name="air_purifier")
+async def air_purifier_fixture(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> MatterNode:
+    """Fixture for a Air Purifier node (containing Fan cluster)."""
+    return await setup_integration_with_node_fixture(
+        hass, "air-purifier", matter_client
     )
-
-    await hass.services.async_call(
-        "cover",
-        "close_cover",
-        {
-            "entity_id": entity_id,
-        },
-        blocking=True,
-    )
-
-    assert matter_client.send_device_command.call_count == 1
-    assert matter_client.send_device_command.call_args == call(
-        node_id=fan.node_id,
-        endpoint_id=1,
-        command=clusters.WindowCovering.Commands.DownOrClose(),
-    )
-    matter_client.send_device_command.reset_mock()
-
-    await hass.services.async_call(
-        "cover",
-        "stop_cover",
-        {
-            "entity_id": entity_id,
-        },
-        blocking=True,
-    )
-
-    assert matter_client.send_device_command.call_count == 1
-    assert matter_client.send_device_command.call_args == call(
-        node_id=fan.node_id,
-        endpoint_id=1,
-        command=clusters.WindowCovering.Commands.StopMotion(),
-    )
-    matter_client.send_device_command.reset_mock()
-
-    await hass.services.async_call(
-        "cover",
-        "open_cover",
-        {
-            "entity_id": entity_id,
-        },
-        blocking=True,
-    )
-
-    assert matter_client.send_device_command.call_count == 1
-    assert matter_client.send_device_command.call_args == call(
-        node_id=fan.node_id,
-        endpoint_id=1,
-        command=clusters.WindowCovering.Commands.UpOrOpen(),
-    )
-    matter_client.send_device_command.reset_mock()
 
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
-@pytest.mark.parametrize(
-    ("fixture", "entity_id"),
-    [
-        ("fan_lift", "fan.mock_lift_fan"),
-        ("fan_pa-lift", "fan.longan_link_wncv_da01"),
-        ("fan_full", "fan.mock_full_fan"),
-    ],
-)
-async def test_cover_lift(
+async def test_fan_base(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    fixture: str,
-    entity_id: str,
+    air_purifier: MatterNode,
 ) -> None:
-    """Test fan devices with lift and position aware lift features."""
-
-    fan = await setup_integration_with_node_fixture(
-        hass,
-        fixture,
-        matter_client,
-    )
-
-    await hass.services.async_call(
-        "cover",
-        "set_cover_position",
-        {
-            "entity_id": entity_id,
-            "position": 50,
-        },
-        blocking=True,
-    )
-
-    assert matter_client.send_device_command.call_count == 1
-    assert matter_client.send_device_command.call_args == call(
-        node_id=fan.node_id,
-        endpoint_id=1,
-        command=clusters.WindowCovering.Commands.GoToLiftPercentage(5000),
-    )
-    matter_client.send_device_command.reset_mock()
-
-    set_node_attribute(fan, 1, 258, 10, 0b001010)
-    await trigger_subscription_callback(hass, matter_client)
-
+    """Test Fan platform."""
+    entity_id = "fan.air_purifier"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_CLOSING
-
-    set_node_attribute(fan, 1, 258, 10, 0b000101)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OPENING
-
-
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
-@pytest.mark.parametrize(
-    ("fixture", "entity_id"),
-    [
-        ("fan_lift", "fan.mock_lift_fan"),
-    ],
-)
-async def test_cover_lift_only(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    fixture: str,
-    entity_id: str,
-) -> None:
-    """Test fan devices with lift feature and without position aware lift feature."""
-
-    fan = await setup_integration_with_node_fixture(
-        hass,
-        fixture,
-        matter_client,
-    )
-
-    set_node_attribute(fan, 1, 258, 14, None)
-    set_node_attribute(fan, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "unknown"
-
-    set_node_attribute(fan, 1, 258, 65529, [0, 1, 2])
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.attributes["supported_features"] & FanEntityFeature.SET_POSITION == 0
-
-    set_node_attribute(fan, 1, 258, 65529, [0, 1, 2, 5])
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.attributes["supported_features"] & FanEntityFeature.SET_POSITION != 0
-
-
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
-@pytest.mark.parametrize(
-    ("fixture", "entity_id"),
-    [
-        ("fan_pa-lift", "fan.longan_link_wncv_da01"),
-    ],
-)
-async def test_cover_position_aware_lift(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    fixture: str,
-    entity_id: str,
-) -> None:
-    """Test fan devices with position aware lift features."""
-
-    fan = await setup_integration_with_node_fixture(
-        hass,
-        fixture,
-        matter_client,
-    )
-
-    state = hass.states.get(entity_id)
-    assert state
+    assert state.attributes["preset_modes"] == [
+        "low",
+        "medium",
+        "high",
+        "auto",
+        "natural_wind",
+        "sleep_wind",
+    ]
+    assert state.attributes["direction"] == "forward"
+    assert state.attributes["oscillating"] is False
+    assert state.attributes["percentage"] is None
+    assert state.attributes["percentage_step"] == 10
+    assert state.attributes["preset_mode"] == "auto"
     mask = (
-        FanEntityFeature.OPEN
-        | FanEntityFeature.CLOSE
-        | FanEntityFeature.STOP
-        | FanEntityFeature.SET_POSITION
+        FanEntityFeature.DIRECTION
+        | FanEntityFeature.OSCILLATE
+        | FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.SET_SPEED
     )
     assert state.attributes["supported_features"] & mask == mask
-
-    for position in (0, 9999):
-        set_node_attribute(fan, 1, 258, 14, position)
-        set_node_attribute(fan, 1, 258, 10, 0b000000)
-        await trigger_subscription_callback(hass, matter_client)
-
-        state = hass.states.get(entity_id)
-        assert state
-        assert state.attributes["current_position"] == 100 - floor(position / 100)
-        assert state.state == STATE_OPEN
-
-    set_node_attribute(fan, 1, 258, 14, 10000)
-    set_node_attribute(fan, 1, 258, 10, 0b000000)
+    # handle fan mode update
+    set_node_attribute(air_purifier, 1, 514, 0, 1)
     await trigger_subscription_callback(hass, matter_client)
-
     state = hass.states.get(entity_id)
-    assert state
-    assert state.attributes["current_position"] == 0
-    assert state.state == STATE_CLOSED
+    assert state.attributes["preset_mode"] == "low"
+    # handle direction update
+    set_node_attribute(air_purifier, 1, 514, 11, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.attributes["direction"] == "reverse"
+    # handle rock/oscillation update
+    set_node_attribute(air_purifier, 1, 514, 8, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.attributes["oscillating"] is True
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
-@pytest.mark.parametrize(
-    ("fixture", "entity_id"),
-    [
-        ("fan_tilt", "fan.mock_tilt_fan"),
-        ("fan_pa-tilt", "fan.mock_pa_tilt_fan"),
-        ("fan_full", "fan.mock_full_fan"),
-    ],
-)
-async def test_cover_tilt(
+async def test_fan_turn_on_with_percentage(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    fixture: str,
-    entity_id: str,
-) -> None:
-    """Test fan devices with tilt and position aware tilt features."""
-
-    fan = await setup_integration_with_node_fixture(
-        hass,
-        fixture,
-        matter_client,
-    )
-
+    air_purifier: MatterNode,
+):
+    """Test turning on the fan with a specific percentage."""
+    entity_id = "fan.air_purifier"
     await hass.services.async_call(
-        "cover",
-        "set_cover_tilt_position",
-        {
-            "entity_id": entity_id,
-            "tilt_position": 50,
-        },
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 50},
         blocking=True,
     )
-
-    assert matter_client.send_device_command.call_count == 1
-    assert matter_client.send_device_command.call_args == call(
-        node_id=fan.node_id,
-        endpoint_id=1,
-        command=clusters.WindowCovering.Commands.GoToTiltPercentage(5000),
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=air_purifier.node_id,
+        attribute_path="1/514/2",
+        value=50,
     )
-    matter_client.send_device_command.reset_mock()
-
-    await trigger_subscription_callback(hass, matter_client)
-
-    set_node_attribute(fan, 1, 258, 10, 0b100010)
-    await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_CLOSING
-
-    set_node_attribute(fan, 1, 258, 10, 0b010001)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OPENING
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
-@pytest.mark.parametrize(
-    ("fixture", "entity_id"),
-    [
-        ("fan_tilt", "fan.mock_tilt_fan"),
-    ],
-)
-async def test_cover_tilt_only(
+async def test_fan_turn_on_with_preset_mode(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    fixture: str,
-    entity_id: str,
-) -> None:
-    """Test fan devices with tilt feature and without position aware tilt feature."""
-
-    fan = await setup_integration_with_node_fixture(
-        hass,
-        fixture,
-        matter_client,
+    air_purifier: MatterNode,
+):
+    """Test turning on the fan with a specific preset mode."""
+    entity_id = "fan.air_purifier"
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "medium"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=air_purifier.node_id,
+        attribute_path="1/514/0",
+        value=2,
+    )
+    # test again with wind feature as preset mode
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "natural_wind"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 2
+    assert matter_client.write_attribute.call_args == call(
+        node_id=air_purifier.node_id,
+        attribute_path="1/514/10",
+        value=2,
     )
 
-    set_node_attribute(fan, 1, 258, 65529, [0, 1, 2])
-    await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert (
-        state.attributes["supported_features"] & FanEntityFeature.SET_TILT_POSITION
-        == 0
-    )
-
-    set_node_attribute(fan, 1, 258, 65529, [0, 1, 2, 8])
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert (
-        state.attributes["supported_features"] & FanEntityFeature.SET_TILT_POSITION
-        != 0
-    )
-
-
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
-@pytest.mark.parametrize(
-    ("fixture", "entity_id"),
-    [
-        ("fan_pa-tilt", "fan.mock_pa_tilt_fan"),
-    ],
-)
-async def test_cover_position_aware_tilt(
+async def test_fan_oscillate(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    fixture: str,
-    entity_id: str,
-) -> None:
-    """Test fan devices with position aware tilt feature."""
-
-    fan = await setup_integration_with_node_fixture(
-        hass,
-        fixture,
-        matter_client,
-    )
-
-    state = hass.states.get(entity_id)
-    assert state
-    mask = (
-        FanEntityFeature.OPEN
-        | FanEntityFeature.CLOSE
-        | FanEntityFeature.STOP
-        | FanEntityFeature.SET_TILT_POSITION
-    )
-    assert state.attributes["supported_features"] & mask == mask
-
-    for tilt_position in (0, 9999, 10000):
-        set_node_attribute(fan, 1, 258, 15, tilt_position)
-        set_node_attribute(fan, 1, 258, 10, 0b000000)
-        await trigger_subscription_callback(hass, matter_client)
-
-        state = hass.states.get(entity_id)
-        assert state
-        assert state.attributes["current_tilt_position"] == 100 - floor(
-            tilt_position / 100
+    air_purifier: MatterNode,
+):
+    """Test oscillating the fan."""
+    entity_id = "fan.air_purifier"
+    for oscillating, value in ((True, 1), (False, 0)):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_OSCILLATE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OSCILLATING: oscillating},
+            blocking=True,
+        )
+        assert matter_client.write_attribute.call_args == call(
+            node_id=air_purifier.node_id,
+            attribute_path="1/514/8",
+            value=value,
         )
 
 
-async def test_fan_full_features(
+async def test_fan_set_direction(
     hass: HomeAssistant,
     matter_client: MagicMock,
-) -> None:
-    """Test fan devices with all the features."""
-
-    fan = await setup_integration_with_node_fixture(
-        hass,
-        "fan_full",
-        matter_client,
-    )
-    entity_id = "fan.mock_full_fan"
-
-    state = hass.states.get(entity_id)
-    # https://github.com/home-assistant/core/blob/dev/homeassistant/components/fan/__init__.py#L56
-    assert state
-    mask = (
-        FanEntityFeature.SET_SPEED
-        | FanEntityFeature.OSCILLATE
-        | FanEntityFeature.DIRECTION
-        | FanEntityFeature.PRESET_MODE
-    )
-    assert state.attributes["supported_features"] & mask == mask
-
-    # SET_SPEED
-    set_node_attribute(fan, 1, 258, 14, 10000)
-    set_node_attribute(fan, 1, 258, 15, 10000)
-    set_node_attribute(fan, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == SET_SPEED
-
-    # OSCILLATE
-    set_node_attribute(fan, 1, 258, 14, 5000)
-    set_node_attribute(fan, 1, 258, 15, 10000)
-    set_node_attribute(fan, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == OSCILLATE
-
-    # DIRECTION
-    set_node_attribute(fan, 1, 258, 14, 10000)
-    set_node_attribute(fan, 1, 258, 15, 5000)
-    set_node_attribute(fan, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == DIRECTION
-
-    # PRESET_MODE
-    set_node_attribute(fan, 1, 258, 14, 5000)
-    set_node_attribute(fan, 1, 258, 15, 5000)
-    set_node_attribute(fan, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == PRESET_MODE
-
-    # unknown
-    set_node_attribute(fan, 1, 258, 14, None)
-    set_node_attribute(fan, 1, 258, 15, None)
-    set_node_attribute(fan, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "unknown"
+    air_purifier: MatterNode,
+):
+    """Test oscillating the fan."""
+    entity_id = "fan.air_purifier"
+    for direction, value in ((DIRECTION_FORWARD, 0), (DIRECTION_REVERSE, 1)):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_DIRECTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_DIRECTION: direction},
+            blocking=True,
+        )
+        assert matter_client.write_attribute.call_args == call(
+            node_id=air_purifier.node_id,
+            attribute_path="1/514/11",
+            value=value,
+        )
