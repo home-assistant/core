@@ -24,9 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 LAST_SCANNED = "last_scanned"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-TAGS = "tags"
 
-TAG_DATA: HassKey[dict[str, TagStorageCollection]] = HassKey(DOMAIN)
+TAG_DATA: HassKey[TagStorageCollection] = HassKey(DOMAIN)
 
 CREATE_FIELDS = {
     vol.Optional(TAG_ID): cv.string,
@@ -96,9 +95,8 @@ class TagStorageCollection(collection.DictStorageCollection):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Tag component."""
-    hass.data[TAG_DATA] = {}
     id_manager = TagIDManager()
-    hass.data[TAG_DATA][TAGS] = storage_collection = TagStorageCollection(
+    hass.data[TAG_DATA] = storage_collection = TagStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
         id_manager,
     )
@@ -120,11 +118,11 @@ async def async_scan_tag(
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("tag component has not been set up.")
 
-    helper = hass.data[TAG_DATA][TAGS]
+    storage_collection = hass.data[TAG_DATA]
 
     # Get name from helper, default value None if not present in data
     tag_name = None
-    if tag_data := helper.data.get(tag_id):
+    if tag_data := storage_collection.data.get(tag_id):
         tag_name = tag_data.get(CONF_NAME)
 
     hass.bus.async_fire(
@@ -133,8 +131,12 @@ async def async_scan_tag(
         context=context,
     )
 
-    if tag_id in helper.data:
-        await helper.async_update_item(tag_id, {LAST_SCANNED: dt_util.utcnow()})
+    if tag_id in storage_collection.data:
+        await storage_collection.async_update_item(
+            tag_id, {LAST_SCANNED: dt_util.utcnow()}
+        )
     else:
-        await helper.async_create_item({TAG_ID: tag_id, LAST_SCANNED: dt_util.utcnow()})
+        await storage_collection.async_create_item(
+            {TAG_ID: tag_id, LAST_SCANNED: dt_util.utcnow()}
+        )
     _LOGGER.debug("Tag: %s scanned by device: %s", tag_id, device_id)
