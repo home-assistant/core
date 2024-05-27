@@ -33,7 +33,7 @@ PLATFORMS = [
 
 _LOGGER = logging.getLogger(__name__)
 
-type TedeeConfigEntry = ConfigEntry[None]
+type TedeeConfigEntry = ConfigEntry[TedeeApiCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> bool:
