@@ -10,6 +10,7 @@ import pytest
 
 from homeassistant.components.tractive.const import (
     DOMAIN,
+    SERVER_UNAVAILABLE,
     TRACKER_HARDWARE_STATUS_UPDATED,
     TRACKER_POSITION_UPDATED,
     TRACKER_SWITCH_STATUS_UPDATED,
@@ -105,10 +106,15 @@ def mock_tractive_client() -> Generator[AsyncMock, None, None]:
                 hass, f"{TRACKER_SWITCH_STATUS_UPDATED}-device_id_123", event
             )
 
+        def send_server_unavailable_event(hass):
+            """Send server unavailable event."""
+            async_dispatcher_send(hass, f"{SERVER_UNAVAILABLE}-12345")
+
         client.send_hardware_event = send_hardware_event
         client.send_status_event = send_status_event
         client.send_position_event = send_position_event
         client.send_switch_event = send_switch_event
+        client.send_server_unavailable_event = send_server_unavailable_event
 
         yield client
 

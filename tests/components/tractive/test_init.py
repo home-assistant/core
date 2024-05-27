@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.tractive.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
@@ -134,3 +134,32 @@ async def test_unsubscribe_on_ha_stop(
         await hass.async_block_till_done()
 
     assert mock_unsuscribe.called
+
+
+async def test_server_unavailable(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test states of the sensor."""
+    entity_id = "sensor.test_pet_tracker_battery"
+
+    await init_integration(hass, mock_config_entry)
+
+    # send event to make the entity available
+    mock_tractive_client.send_hardware_event(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    # send server unavailable event, the entity should be unavailable
+    mock_tractive_client.send_server_unavailable_event(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # send event to make the entity available once again
+    mock_tractive_client.send_hardware_event(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
