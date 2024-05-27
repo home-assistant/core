@@ -67,6 +67,7 @@ FLOWS = {
         "aussie_broadband",
         "awair",
         "axis",
+        "azure_data_explorer",
         "azure_devops",
         "azure_event_hub",
         "baf",

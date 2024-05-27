@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from datetime import date, datetime, timedelta
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING
 
 from aiowithings import (
     Activity,
@@ -30,12 +30,10 @@ from .const import LOGGER
 if TYPE_CHECKING:
     from . import WithingsConfigEntry
 
-_T = TypeVar("_T")
-
 UPDATE_INTERVAL = timedelta(minutes=10)
 
 
-class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
+class WithingsDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Base coordinator."""
 
     config_entry: WithingsConfigEntry
@@ -75,14 +73,14 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
         )
         await self.async_request_refresh()
 
-    async def _async_update_data(self) -> _T:
+    async def _async_update_data(self) -> _DataT:
         try:
             return await self._internal_update_data()
         except (WithingsUnauthorizedError, WithingsAuthenticationFailedError) as exc:
             raise ConfigEntryAuthFailed from exc
 
     @abstractmethod
-    async def _internal_update_data(self) -> _T:
+    async def _internal_update_data(self) -> _DataT:
         """Update coordinator data."""
 
 

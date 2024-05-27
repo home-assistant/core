@@ -55,9 +55,9 @@ from tests.common import (
 
 
 @pytest.fixture(autouse=True)
-def set_utc(hass: HomeAssistant):
+async def set_utc(hass: HomeAssistant):
     """Set timezone to UTC."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
 
 
 @pytest.mark.parametrize(

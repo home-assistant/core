@@ -46,6 +46,7 @@ async def test_call_tool_no_existing(hass: HomeAssistant) -> None:
                 None,
                 None,
                 None,
+                None,
             ),
         )
 
@@ -87,6 +88,7 @@ async def test_assist_api(hass: HomeAssistant) -> None:
         user_prompt="test_text",
         language="*",
         assistant="test_assistant",
+        device_id="test_device",
     )
 
     with patch(
@@ -106,6 +108,7 @@ async def test_assist_api(hass: HomeAssistant) -> None:
         test_context,
         "*",
         "test_assistant",
+        "test_device",
     )
     assert response == {
         "card": {},
@@ -118,3 +121,21 @@ async def test_assist_api(hass: HomeAssistant) -> None:
         "response_type": "action_done",
         "speech": {},
     }
+
+
+async def test_assist_api_description(hass: HomeAssistant) -> None:
+    """Test intent description with Assist API."""
+
+    class MyIntentHandler(intent.IntentHandler):
+        intent_type = "test_intent"
+        description = "my intent handler"
+
+    intent.async_register(hass, MyIntentHandler())
+
+    assert len(llm.async_get_apis(hass)) == 1
+    api = llm.async_get_api(hass, "assist")
+    tools = api.async_get_tools()
+    assert len(tools) == 1
+    tool = tools[0]
+    assert tool.name == "test_intent"
+    assert tool.description == "my intent handler"

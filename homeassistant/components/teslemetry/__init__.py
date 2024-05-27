@@ -30,6 +30,7 @@ PLATFORMS: Final = [
     Platform.CLIMATE,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 

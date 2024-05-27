@@ -9,6 +9,7 @@ aiohttp_cors==0.7.0
 aiohttp_session==2.12.0
 aiohttp-fast-url-dispatcher==0.3.0
 aiohttp-fast-zlib==0.1.0
+aiozoneinfo==0.1.0
 astral==2.2
 async-interrupt==1.1.1
 attrs==23.2.0

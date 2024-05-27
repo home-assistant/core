@@ -18,8 +18,8 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: SamsungTVConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    bridge = entry.runtime_data
+    coordinator = entry.runtime_data
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
-        "device_info": await bridge.async_device_info(),
+        "device_info": await coordinator.bridge.async_device_info(),
     }

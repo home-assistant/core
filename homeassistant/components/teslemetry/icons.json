@@ -135,6 +135,41 @@
       "wall_connector_state": {
         "default": "mdi:ev-station"
       }
+    },
+    "switch": {
+      "charge_state_user_charge_enable_request": {
+        "default": "mdi:ev-station"
+      },
+      "climate_state_auto_seat_climate_left": {
+        "default": "mdi:car-seat-heater",
+        "state": {
+          "off": "mdi:car-seat"
+        }
+      },
+      "climate_state_auto_seat_climate_right": {
+        "default": "mdi:car-seat-heater",
+        "state": {
+          "off": "mdi:car-seat"
+        }
+      },
+      "climate_state_auto_steering_wheel_heat": {
+        "default": "mdi:steering"
+      },
+      "climate_state_defrost_mode": {
+        "default": "mdi:snowflake-melt"
+      },
+      "components_disallow_charge_from_grid_with_solar_installed": {
+        "state": {
+          "false": "mdi:transmission-tower",
+          "true": "mdi:solar-power"
+        }
+      },
+      "vehicle_state_sentry_mode": {
+        "default": "mdi:shield-car"
+      },
+      "vehicle_state_valet_mode": {
+        "default": "mdi:speedometer-slow"
+      }
     }
   }
 }

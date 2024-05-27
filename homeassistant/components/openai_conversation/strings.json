@@ -18,10 +18,11 @@
       "init": {
         "data": {
           "prompt": "Prompt Template",
-          "model": "Completion Model",
+          "chat_model": "[%key:common::generic::model%]",
           "max_tokens": "Maximum tokens to return in response",
           "temperature": "Temperature",
-          "top_p": "Top P"
+          "top_p": "Top P",
+          "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]"
         }
       }
     }

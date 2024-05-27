@@ -17,7 +17,7 @@ import pathlib
 import threading
 import time
 from types import FrameType, ModuleType
-from typing import Any, NoReturn, TypeVar
+from typing import Any, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
@@ -199,10 +199,7 @@ def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
     loop.close()
 
 
-_T = TypeVar("_T", bound=Mapping[str, Any] | Sequence[Any])
-
-
-class StoreWithoutWriteLoad(storage.Store[_T]):
+class StoreWithoutWriteLoad[_T: (Mapping[str, Any] | Sequence[Any])](storage.Store[_T]):
     """Fake store that does not write or load. Used for testing."""
 
     async def async_save(self, *args: Any, **kwargs: Any) -> None:
@@ -235,7 +232,7 @@ async def async_test_home_assistant(
     orig_async_add_job = hass.async_add_job
     orig_async_add_executor_job = hass.async_add_executor_job
     orig_async_create_task_internal = hass.async_create_task_internal
-    orig_tz = dt_util.DEFAULT_TIME_ZONE
+    orig_tz = dt_util.get_default_time_zone()
 
     def async_add_job(target, *args, eager_start: bool = False):
         """Add job."""
@@ -282,7 +279,7 @@ async def async_test_home_assistant(
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
     hass.config.elevation = 0
-    hass.config.set_time_zone("US/Pacific")
+    await hass.config.async_set_time_zone("US/Pacific")
     hass.config.units = METRIC_SYSTEM
     hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
@@ -364,7 +361,7 @@ async def async_test_home_assistant(
     yield hass
 
     # Restore timezone, it is set when creating the hass object
-    dt_util.DEFAULT_TIME_ZONE = orig_tz
+    dt_util.set_default_time_zone(orig_tz)
 
 
 def async_mock_service(

@@ -86,6 +86,7 @@ class HoneywellConfigFlow(ConfigFlow, domain=DOMAIN):
                 REAUTH_SCHEMA, self.entry.data
             ),
             errors=errors,
+            description_placeholders={"name": "Honeywell"},
         )
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:

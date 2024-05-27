@@ -158,8 +158,8 @@ def _check_state(hass, category, entity_id):
 
 
 @pytest.fixture
-def _set_utc_time_zone(hass):
-    hass.config.set_time_zone("UTC")
+async def _set_utc_time_zone(hass):
+    await hass.config.async_set_time_zone("UTC")
 
 
 @pytest.fixture

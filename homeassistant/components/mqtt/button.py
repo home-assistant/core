@@ -21,12 +21,9 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
 )
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entity_entry_helper,
-)
+from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic
 
 CONF_PAYLOAD_PRESS = "payload_press"

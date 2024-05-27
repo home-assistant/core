@@ -18,13 +18,19 @@
     "step": {
       "init": {
         "data": {
-          "prompt": "Prompt Template",
+          "recommended": "Recommended settings",
+          "prompt": "Prompt",
+          "tone_prompt": "Tone",
           "chat_model": "[%key:common::generic::model%]",
           "temperature": "Temperature",
           "top_p": "Top P",
           "top_k": "Top K",
           "max_tokens": "Maximum tokens to return in response",
           "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]"
+        },
+        "data_description": {
+          "prompt": "Extra data to provide to the LLM. This can be a template.",
+          "tone_prompt": "Instructions for the LLM on the style of the generated text. This can be a template."
         }
       }
     }

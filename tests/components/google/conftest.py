@@ -27,8 +27,8 @@ from homeassistant.util import dt as dt_util
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-ApiResult = Callable[[dict[str, Any]], None]
-ComponentSetup = Callable[[], Awaitable[bool]]
+type ApiResult = Callable[[dict[str, Any]], None]
+type ComponentSetup = Callable[[], Awaitable[bool]]
 type AsyncYieldFixture[_T] = AsyncGenerator[_T, None]
 
 
@@ -330,11 +330,11 @@ def mock_insert_event(
 
 
 @pytest.fixture(autouse=True)
-def set_time_zone(hass):
+async def set_time_zone(hass):
     """Set the time zone for the tests."""
     # Set our timezone to CST/Regina so we can check calculations
     # This keeps UTC-6 all year round
-    hass.config.set_time_zone("America/Regina")
+    await hass.config.async_set_time_zone("America/Regina")
 
 
 @pytest.fixture

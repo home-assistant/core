@@ -20,7 +20,6 @@ from .config import MQTT_BASE_SCHEMA
 from .const import ATTR_DISCOVERY_HASH, CONF_QOS, CONF_TOPIC
 from .discovery import MQTTDiscoveryPayload
 from .mixins import (
-    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     MqttDiscoveryDeviceUpdate,
     async_handle_schema_error,
     async_setup_non_entity_entry_helper,
@@ -28,13 +27,15 @@ from .mixins import (
     update_device,
 )
 from .models import (
+    DATA_MQTT,
     MqttValueTemplate,
     MqttValueTemplateException,
     ReceiveMessage,
     ReceivePayloadType,
 )
+from .schemas import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from .subscription import EntitySubscription
-from .util import get_mqtt_data, valid_subscribe_topic
+from .util import valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,7 +71,7 @@ async def _async_setup_tag(
     discovery_id = discovery_hash[1]
 
     device_id = update_device(hass, config_entry, config)
-    if device_id is not None and device_id not in (tags := get_mqtt_data(hass).tags):
+    if device_id is not None and device_id not in (tags := hass.data[DATA_MQTT].tags):
         tags[device_id] = {}
 
     tag_scanner = MQTTTagScanner(
@@ -91,7 +92,7 @@ async def _async_setup_tag(
 
 def async_has_tags(hass: HomeAssistant, device_id: str) -> bool:
     """Device has tag scanners."""
-    if device_id not in (tags := get_mqtt_data(hass).tags):
+    if device_id not in (tags := hass.data[DATA_MQTT].tags):
         return False
     return tags[device_id] != {}
 
@@ -176,4 +177,4 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
             self.hass, self._sub_state
         )
         if self.device_id:
-            get_mqtt_data(self.hass).tags[self.device_id].pop(discovery_id)
+            self.hass.data[DATA_MQTT].tags[self.device_id].pop(discovery_id)
