@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import partial
 import logging
 from typing import Any
 
@@ -37,14 +36,7 @@ import homeassistant.util.color as color_util
 
 from .. import subscription
 from ..config import MQTT_RW_SCHEMA
-from ..const import (
-    CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_RETAIN,
-    CONF_STATE_TOPIC,
-    PAYLOAD_NONE,
-)
+from ..const import CONF_COMMAND_TOPIC, CONF_STATE_TOPIC, PAYLOAD_NONE
 from ..mixins import MqttEntity
 from ..models import (
     MqttCommandTemplate,
@@ -255,34 +247,19 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             else:
                 _LOGGER.warning("Unsupported effect value received")
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-        if self._topics[CONF_STATE_TOPIC] is None:
-            return
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass,
-            self._sub_state,
+        self.add_subscription(
+            CONF_STATE_TOPIC,
+            self._state_received,
             {
-                "state_topic": {
-                    "topic": self._topics[CONF_STATE_TOPIC],
-                    "msg_callback": partial(
-                        self._message_callback,
-                        self._state_received,
-                        {
-                            "_attr_brightness",
-                            "_attr_color_mode",
-                            "_attr_color_temp",
-                            "_attr_effect",
-                            "_attr_hs_color",
-                            "_attr_is_on",
-                        },
-                    ),
-                    "entity_id": self.entity_id,
-                    "qos": self._config[CONF_QOS],
-                    "encoding": self._config[CONF_ENCODING] or None,
-                }
+                "_attr_brightness",
+                "_attr_color_mode",
+                "_attr_color_temp",
+                "_attr_effect",
+                "_attr_hs_color",
+                "_attr_is_on",
             },
         )
 
@@ -364,12 +341,9 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         if ATTR_TRANSITION in kwargs:
             values["transition"] = kwargs[ATTR_TRANSITION]
 
-        await self.async_publish(
+        await self.async_publish_with_config(
             str(self._topics[CONF_COMMAND_TOPIC]),
             self._command_templates[CONF_COMMAND_ON_TEMPLATE](None, values),
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
         )
 
         if self._optimistic:
@@ -387,12 +361,9 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         if ATTR_TRANSITION in kwargs:
             values["transition"] = kwargs[ATTR_TRANSITION]
 
-        await self.async_publish(
+        await self.async_publish_with_config(
             str(self._topics[CONF_COMMAND_TOPIC]),
             self._command_templates[CONF_COMMAND_OFF_TEMPLATE](None, values),
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
         )
 
         if self._optimistic:

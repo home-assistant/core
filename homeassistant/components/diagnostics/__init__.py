@@ -15,8 +15,12 @@ import voluptuous as vol
 from homeassistant.components import http, websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, integration_platform
-from homeassistant.helpers.device_registry import DeviceEntry, async_get
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    integration_platform,
+)
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
     find_paths_unserializable_data,
@@ -280,7 +284,7 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
             )
 
         # Device diagnostics
-        dev_reg = async_get(hass)
+        dev_reg = dr.async_get(hass)
         if sub_id is None:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 

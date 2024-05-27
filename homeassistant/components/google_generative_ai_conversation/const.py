@@ -5,7 +5,6 @@ import logging
 DOMAIN = "google_generative_ai_conversation"
 LOGGER = logging.getLogger(__package__)
 CONF_PROMPT = "prompt"
-DEFAULT_PROMPT = "Answer in plain text. Keep it simple and to the point."
 
 CONF_RECOMMENDED = "recommended"
 CONF_CHAT_MODEL = "chat_model"
