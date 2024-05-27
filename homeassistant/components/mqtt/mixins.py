@@ -826,6 +826,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         discovery_hash: tuple[str, str] | None = (
             self._discovery_data[ATTR_DISCOVERY_HASH] if self._discovery_data else None
         )
+        migrate_discovery: str | None = None
 
         async def _async_remove_state_and_registry_entry(
             self: MqttDiscoveryUpdateMixin,
@@ -876,6 +877,8 @@ class MqttDiscoveryUpdateMixin(Entity):
             As this callback can fire when nothing has changed, this
             is a normal function to avoid task creation until it is needed.
             """
+            nonlocal migrate_discovery
+
             _LOGGER.debug(
                 "Got update for entity with hash: %s '%s'",
                 discovery_hash,
@@ -887,6 +890,13 @@ class MqttDiscoveryUpdateMixin(Entity):
             old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
             debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
             if not payload:
+                if migrate_discovery is not None:
+                    # Ignore update of migrated discovery config and update
+                    # active discovery topic
+                    self._discovery_data[ATTR_DISCOVERY_TOPIC] = migrate_discovery
+                    migrate_discovery = None
+                    _LOGGER.info("Component successfully migrated: %s", self.entity_id)
+                    return
                 # Empty payload: Remove component
                 _LOGGER.info("Removing component: %s", self.entity_id)
                 self.hass.async_create_task(
@@ -895,6 +905,19 @@ class MqttDiscoveryUpdateMixin(Entity):
                     )
                 )
             elif self._discovery_update:
+                discovery_topic = payload.discovery_data[ATTR_DISCOVERY_TOPIC]
+                if discovery_topic != self._discovery_data[ATTR_DISCOVERY_TOPIC]:
+                    # Make sure the old discovery topic is removed
+                    migrate_discovery = payload.discovery_data[ATTR_DISCOVERY_TOPIC]
+                    _LOGGER.debug("Migrating component: %s", self.entity_id)
+                    self.hass.async_create_task(
+                        async_publish(
+                            self.hass,
+                            self._discovery_data[ATTR_DISCOVERY_TOPIC],
+                            None,
+                            retain=True,
+                        )
+                    )
                 if old_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]:
                     # Non-empty, changed payload: Notify component
                     _LOGGER.info("Updating component: %s", self.entity_id)
