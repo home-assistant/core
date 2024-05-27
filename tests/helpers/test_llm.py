@@ -20,7 +20,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml
 
 from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_get_api_no_existing(hass: HomeAssistant) -> None:
@@ -164,7 +163,6 @@ async def test_assist_api_prompt(
     entity_registry: er.EntityRegistry,
     area_registry: ar.AreaRegistry,
     floor_registry: fr.FloorRegistry,
-    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test prompt for the assist API."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -214,21 +212,108 @@ async def test_assist_api_prompt(
     hass.states.async_set(entry1.entity_id, "on", {"friendly_name": "Kitchen"})
     hass.states.async_set(entry2.entity_id, "on", {"friendly_name": "Living Room"})
 
-    # Set options for registered entities
-    ws_client = await hass_ws_client(hass)
-    await ws_client.send_json_auto_id(
-        {
-            "type": "homeassistant/expose_entity",
-            "assistants": ["conversation"],
-            "entity_ids": [entry1.entity_id, entry2.entity_id],
-            "should_expose": True,
-        }
+    def create_entity(device: dr.DeviceEntry, write_state=True) -> None:
+        """Create an entity for a device and track entity_id."""
+        entity = entity_registry.async_get_or_create(
+            "light",
+            "test",
+            device.id,
+            device_id=device.id,
+            original_name=str(device.name or "Unnamed Device"),
+            suggested_object_id=str(device.name or "unnamed_device"),
+        )
+        if write_state:
+            entity.write_unavailable_state(hass)
+
+    create_entity(
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={("test", "1234")},
+            name="Test Device",
+            manufacturer="Test Manufacturer",
+            model="Test Model",
+            suggested_area="Test Area",
+        )
     )
-    response = await ws_client.receive_json()
-    assert response["success"]
+    for i in range(3):
+        create_entity(
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                connections={("test", f"{i}abcd")},
+                name="Test Service",
+                manufacturer="Test Manufacturer",
+                model="Test Model",
+                suggested_area="Test Area",
+                entry_type=dr.DeviceEntryType.SERVICE,
+            )
+        )
+    create_entity(
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={("test", "5678")},
+            name="Test Device 2",
+            manufacturer="Test Manufacturer 2",
+            model="Device 2",
+            suggested_area="Test Area 2",
+        )
+    )
+    create_entity(
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={("test", "9876")},
+            name="Test Device 3",
+            manufacturer="Test Manufacturer 3",
+            model="Test Model 3A",
+            suggested_area="Test Area 2",
+        )
+    )
+    create_entity(
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={("test", "qwer")},
+            name="Test Device 4",
+            suggested_area="Test Area 2",
+        )
+    )
+    device2 = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={("test", "9876-disabled")},
+        name="Test Device 3 - disabled",
+        manufacturer="Test Manufacturer 3",
+        model="Test Model 3A",
+        suggested_area="Test Area 2",
+    )
+    device_registry.async_update_device(
+        device2.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    create_entity(device2, False)
+    create_entity(
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={("test", "9876-no-name")},
+            manufacturer="Test Manufacturer NoName",
+            model="Test Model NoName",
+            suggested_area="Test Area 2",
+        )
+    )
+    create_entity(
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={("test", "9876-integer-values")},
+            name=1,
+            manufacturer=2,
+            model=3,
+            suggested_area="Test Area 2",
+        )
+    )
 
     exposed_entities = llm._get_exposed_entities(hass, tool_input.assistant)
     assert exposed_entities == {
+        "light.1": {
+            "areas": "Test Area 2",
+            "names": "1",
+            "state": "unavailable",
+        },
         entry1.entity_id: {
             "names": "Kitchen",
             "state": "on",
@@ -237,6 +322,46 @@ async def test_assist_api_prompt(
             "areas": "Test Area, Alternative name",
             "names": "Living Room",
             "state": "on",
+        },
+        "light.test_device": {
+            "areas": "Test Area, Alternative name",
+            "names": "Test Device",
+            "state": "unavailable",
+        },
+        "light.test_device_2": {
+            "areas": "Test Area 2",
+            "names": "Test Device 2",
+            "state": "unavailable",
+        },
+        "light.test_device_3": {
+            "areas": "Test Area 2",
+            "names": "Test Device 3",
+            "state": "unavailable",
+        },
+        "light.test_device_4": {
+            "areas": "Test Area 2",
+            "names": "Test Device 4",
+            "state": "unavailable",
+        },
+        "light.test_service": {
+            "areas": "Test Area, Alternative name",
+            "names": "Test Service",
+            "state": "unavailable",
+        },
+        "light.test_service_2": {
+            "areas": "Test Area, Alternative name",
+            "names": "Test Service",
+            "state": "unavailable",
+        },
+        "light.test_service_3": {
+            "areas": "Test Area, Alternative name",
+            "names": "Test Service",
+            "state": "unavailable",
+        },
+        "light.unnamed_device": {
+            "areas": "Test Area 2",
+            "names": "Unnamed Device",
+            "state": "unavailable",
         },
     }
     exposed_entities_prompt = (
