@@ -1259,6 +1259,14 @@ class Context:
         """Compare contexts."""
         return isinstance(other, Context) and self.id == other.id
 
+    def __copy__(self) -> Context:
+        """Create a shallow copy of this context."""
+        return Context(user_id=self.user_id, parent_id=self.parent_id, id=self.id)
+
+    def __deepcopy__(self, memo: dict[int, Any]) -> Context:
+        """Create a deep copy of this context."""
+        return Context(user_id=self.user_id, parent_id=self.parent_id, id=self.id)
+
     @cached_property
     def _as_dict(self) -> dict[str, str | None]:
         """Return a dictionary representation of the context.
