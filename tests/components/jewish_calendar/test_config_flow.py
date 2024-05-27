@@ -2,9 +2,12 @@
 
 from unittest.mock import AsyncMock
 
+from hdate import Location
 import pytest
 
 from homeassistant import config_entries, setup
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSORS
+from homeassistant.components.jewish_calendar import get_unique_prefix
 from homeassistant.components.jewish_calendar.const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
@@ -26,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+import homeassistant.helpers.entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -92,13 +96,35 @@ async def test_import_with_options(hass: HomeAssistant) -> None:
             CONF_LONGITUDE: 35.235,
         }
     }
+    # Create an entry in the entity registry with the data from conf
+    ent_reg = er.async_get(hass)
+    location = Location(
+        latitude=31.76,
+        longitude=35.235,
+        timezone=hass.config.time_zone,
+        altitude=hass.config.elevation,
+        diaspora=DEFAULT_DIASPORA,
+    )
+    old_prefix = get_unique_prefix(location, DEFAULT_LANGUAGE, 20, 50)
+    old_entity = ent_reg.async_get_or_create(
+        BINARY_SENSORS, DOMAIN, unique_id=f"{old_prefix}_erev_shabbat_hag"
+    )
 
+    # Save the existing unique_id, DEFAULT_LANGUAGE should be part of it
+    old_unique_id = old_entity.unique_id
+    assert DEFAULT_LANGUAGE in old_unique_id
+
+    # Simulate HomeAssistant setting up the component
     assert await async_setup_component(hass, DOMAIN, conf.copy())
     await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].data == conf[DOMAIN]
+
+    # Assert that the unique_id was updated
+    assert ent_reg.async_get(old_entity.entity_id).unique_id != old_unique_id
+    assert DEFAULT_LANGUAGE not in ent_reg.async_get(old_entity.entity_id).unique_id
 
 
 async def test_single_instance_allowed(
