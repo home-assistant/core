@@ -45,12 +45,13 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.data_entry_flow import BaseServiceInfo
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    discovery_flow,
+from homeassistant.helpers import config_validation as cv, discovery_flow
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceRegistry,
+    async_get,
+    format_mac,
 )
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
     async_track_state_added_domain,
@@ -242,7 +243,7 @@ class WatcherBase:
         matchers = self._integration_matchers
         registered_devices_domains = matchers.registered_devices_domains
 
-        dev_reg = dr.async_get(self.hass)
+        dev_reg: DeviceRegistry = async_get(self.hass)
         if device := dev_reg.async_get_device(
             connections={(CONNECTION_NETWORK_MAC, formatted_mac)}
         ):

@@ -11,8 +11,11 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.decorators import require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry, DeviceEntryDisabler
+from homeassistant.helpers.device_registry import (
+    DeviceEntry,
+    DeviceEntryDisabler,
+    async_get,
+)
 
 
 @callback
@@ -39,7 +42,7 @@ def websocket_list_devices(
     msg: dict[str, Any],
 ) -> None:
     """Handle list devices command."""
-    registry = dr.async_get(hass)
+    registry = async_get(hass)
     # Build start of response message
     msg_json_prefix = (
         f'{{"id":{msg["id"]},"type": "{websocket_api.const.TYPE_RESULT}",'
@@ -77,7 +80,7 @@ def websocket_update_device(
     msg: dict[str, Any],
 ) -> None:
     """Handle update device websocket command."""
-    registry = dr.async_get(hass)
+    registry = async_get(hass)
 
     msg.pop("type")
     msg_id = msg.pop("id")
@@ -109,7 +112,7 @@ async def websocket_remove_config_entry_from_device(
     msg: dict[str, Any],
 ) -> None:
     """Remove config entry from a device."""
-    registry = dr.async_get(hass)
+    registry = async_get(hass)
     config_entry_id = msg["config_entry_id"]
     device_id = msg["device_id"]
 

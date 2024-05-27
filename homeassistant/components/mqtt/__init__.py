@@ -24,12 +24,15 @@ from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
     event as ev,
-    issue_registry as ir,
     template,
 )
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import async_get_platforms
+from homeassistant.helpers.issue_registry import (
+    async_delete_issue,
+    async_get as async_get_issue_registry,
+)
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
@@ -182,14 +185,14 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
 @callback
 def _async_remove_mqtt_issues(hass: HomeAssistant, mqtt_data: MqttData) -> None:
     """Unregister open config issues."""
-    issue_registry = ir.async_get(hass)
+    issue_registry = async_get_issue_registry(hass)
     open_issues = [
         issue_id
         for (domain, issue_id), issue_entry in issue_registry.issues.items()
         if domain == DOMAIN and issue_entry.translation_key == "invalid_platform_config"
     ]
     for issue in open_issues:
-        ir.async_delete_issue(hass, DOMAIN, issue)
+        async_delete_issue(hass, DOMAIN, issue)
 
 
 async def async_check_config_schema(
