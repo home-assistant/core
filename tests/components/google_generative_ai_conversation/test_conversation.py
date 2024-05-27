@@ -191,8 +191,8 @@ async def test_default_prompt(
         mock_chat.send_message_async.return_value = chat_response
         mock_part = MagicMock()
         mock_part.function_call = None
+        mock_part.text = "Hi there!"
         chat_response.parts = [mock_part]
-        chat_response.text = "Hi there!"
         result = await conversation.async_converse(
             hass,
             "hello",
@@ -221,8 +221,8 @@ async def test_chat_history(
         mock_chat.send_message_async.return_value = chat_response
         mock_part = MagicMock()
         mock_part.function_call = None
+        mock_part.text = "1st model response"
         chat_response.parts = [mock_part]
-        chat_response.text = "1st model response"
         mock_chat.history = [
             {"role": "user", "parts": "prompt"},
             {"role": "model", "parts": "Ok"},
@@ -241,7 +241,8 @@ async def test_chat_history(
             result.response.as_dict()["speech"]["plain"]["speech"]
             == "1st model response"
         )
-        chat_response.text = "2nd model response"
+        mock_part.text = "2nd model response"
+        chat_response.parts = [mock_part]
         result = await conversation.async_converse(
             hass,
             "2nd user request",
@@ -294,8 +295,8 @@ async def test_function_call(
         mock_part.function_call.args = {"param1": ["test_value"]}
 
         def tool_call(hass, tool_input):
-            mock_part.function_call = False
-            chat_response.text = "Hi there!"
+            mock_part.function_call = None
+            mock_part.text = "Hi there!"
             return {"result": "Test response"}
 
         mock_tool.async_call.side_effect = tool_call
@@ -392,8 +393,8 @@ async def test_function_exception(
         mock_part.function_call.args = {"param1": 1}
 
         def tool_call(hass, tool_input):
-            mock_part.function_call = False
-            chat_response.text = "Hi there!"
+            mock_part.function_call = None
+            mock_part.text = "Hi there!"
             raise HomeAssistantError("Test tool exception")
 
         mock_tool.async_call.side_effect = tool_call
