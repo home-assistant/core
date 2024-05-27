@@ -21,7 +21,12 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import JsonObjectType
 
-DOMAIN = "jewish_calendar"
+from .const import (
+    CONF_CANDLE_LIGHT_MINUTES,
+    CONF_DIASPORA,
+    CONF_HAVDALAH_OFFSET_MINUTES,
+    DOMAIN,
+)
 
 LOGGER = logging.getLogger(__name__)
 # Maps Hebrew & English month names to Months enum values.
