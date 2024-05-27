@@ -18,7 +18,6 @@ from homeassistant.components.mqtt.abbreviations import (
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_DONE,
     MQTT_DISCOVERY_NEW,
-    MQTT_DISCOVERY_NEW_COMPONENT,
     MQTT_DISCOVERY_UPDATED,
     MQTTDiscoveryPayload,
     async_start,
@@ -2237,7 +2236,6 @@ async def test_update_with_bad_config_not_breaks_discovery(
     "signal_message",
     [
         MQTT_DISCOVERY_NEW,
-        MQTT_DISCOVERY_NEW_COMPONENT,
         MQTT_DISCOVERY_UPDATED,
         MQTT_DISCOVERY_DONE,
     ],
