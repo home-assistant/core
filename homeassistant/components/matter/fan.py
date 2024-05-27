@@ -192,6 +192,8 @@ class MatterFan(MatterEntity, FanEntity):
         current_percent = self.get_matter_attribute_value(
             clusters.FanControl.Attributes.PercentCurrent
         )
+        # NOTE that a device may give back 255 as a special value to indicate that
+        # the speed is under automatic control and not set to a specific value.
         self._attr_percentage = None if current_percent == 255 else current_percent
 
         # get preset mode from fan mode (and wind feature if available)
