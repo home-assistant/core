@@ -682,6 +682,7 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
         self._config_entry = config_entry
         self._config_entry_id = config_entry.entry_id
         self._skip_device_removal: bool = False
+        self._migrate_discovery: str | None = None
 
         discovery_hash = get_discovery_hash(discovery_data)
         self._remove_discovery_updated = async_dispatcher_connect(
@@ -720,20 +721,39 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
             discovery_hash,
             discovery_payload,
         )
-        if (
-            discovery_payload
-            and discovery_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
-        ):
-            _LOGGER.debug(
-                "Updating %s with hash %s",
-                self.log_name,
-                discovery_hash,
-            )
-            try:
-                await self.async_update(discovery_payload)
-            finally:
-                send_discovery_done(self.hass, self._discovery_data)
-            self._discovery_data[ATTR_DISCOVERY_PAYLOAD] = discovery_payload
+        if not discovery_payload and self._migrate_discovery is not None:
+            # Ignore empty update of migrated and removed discovery config
+            self._discovery_data[ATTR_DISCOVERY_TOPIC] = self._migrate_discovery
+            self._migrate_discovery = None
+            _LOGGER.info("Component successfully migrated: %s", discovery_hash)
+            return
+
+        if discovery_payload:
+            discovery_topic = discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC]
+            if discovery_topic != self._discovery_data[ATTR_DISCOVERY_TOPIC]:
+                # Make sure the old discovery topic is removed
+                self._migrate_discovery = discovery_topic
+                _LOGGER.debug("Migrating component: %s", discovery_hash)
+                self.hass.async_create_task(
+                    async_publish(
+                        self.hass,
+                        self._discovery_data[ATTR_DISCOVERY_TOPIC],
+                        None,
+                        retain=True,
+                    )
+                )
+
+            if discovery_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]:
+                _LOGGER.debug(
+                    "Updating %s with hash %s",
+                    self.log_name,
+                    discovery_hash,
+                )
+                try:
+                    await self.async_update(discovery_payload)
+                finally:
+                    send_discovery_done(self.hass, self._discovery_data)
+                self._discovery_data[ATTR_DISCOVERY_PAYLOAD] = discovery_payload
         elif not discovery_payload:
             # Unregister and clean up the current discovery instance
             stop_discovery_updates(
@@ -891,8 +911,7 @@ class MqttDiscoveryUpdateMixin(Entity):
             debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
             if not payload:
                 if migrate_discovery is not None:
-                    # Ignore update of migrated discovery config and update
-                    # active discovery topic
+                    # Ignore empty update of migrated and removed discovery config
                     self._discovery_data[ATTR_DISCOVERY_TOPIC] = migrate_discovery
                     migrate_discovery = None
                     _LOGGER.info("Component successfully migrated: %s", self.entity_id)
@@ -908,7 +927,7 @@ class MqttDiscoveryUpdateMixin(Entity):
                 discovery_topic = payload.discovery_data[ATTR_DISCOVERY_TOPIC]
                 if discovery_topic != self._discovery_data[ATTR_DISCOVERY_TOPIC]:
                     # Make sure the old discovery topic is removed
-                    migrate_discovery = payload.discovery_data[ATTR_DISCOVERY_TOPIC]
+                    migrate_discovery = discovery_topic
                     _LOGGER.debug("Migrating component: %s", self.entity_id)
                     self.hass.async_create_task(
                         async_publish(
