@@ -1,0 +1,95 @@
+# serializer version: 1
+# name: test_vehicle_sensors[sensor.skoda_11zkz3_apk_expiration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.skoda_11zkz3_apk_expiration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATE: 'date'>,
+    'original_icon': None,
+    'original_name': 'APK expiration',
+    'platform': 'rdw',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'apk_expiration',
+    'unique_id': '11ZKZ3_apk_expiration',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_vehicle_sensors[sensor.skoda_11zkz3_apk_expiration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'date',
+      'friendly_name': 'Skoda 11ZKZ3 APK expiration',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.skoda_11zkz3_apk_expiration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2022-01-04',
+  })
+# ---
+# name: test_vehicle_sensors[sensor.skoda_11zkz3_ascription_date-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.skoda_11zkz3_ascription_date',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATE: 'date'>,
+    'original_icon': None,
+    'original_name': 'Ascription date',
+    'platform': 'rdw',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'ascription_date',
+    'unique_id': '11ZKZ3_ascription_date',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_vehicle_sensors[sensor.skoda_11zkz3_ascription_date-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'date',
+      'friendly_name': 'Skoda 11ZKZ3 Ascription date',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.skoda_11zkz3_ascription_date',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-11-04',
+  })
+# ---

@@ -1,0 +1,94 @@
+# serializer version: 1
+# name: test_vehicle_binary_sensors[binary_sensor.skoda_11zkz3_liability_insured-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.skoda_11zkz3_liability_insured',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Liability insured',
+    'platform': 'rdw',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'liability_insured',
+    'unique_id': '11ZKZ3_liability_insured',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_vehicle_binary_sensors[binary_sensor.skoda_11zkz3_liability_insured-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Skoda 11ZKZ3 Liability insured',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.skoda_11zkz3_liability_insured',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_vehicle_binary_sensors[binary_sensor.skoda_11zkz3_pending_recall-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.skoda_11zkz3_pending_recall',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Pending recall',
+    'platform': 'rdw',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pending_recall',
+    'unique_id': '11ZKZ3_pending_recall',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_vehicle_binary_sensors[binary_sensor.skoda_11zkz3_pending_recall-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Skoda 11ZKZ3 Pending recall',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.skoda_11zkz3_pending_recall',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
