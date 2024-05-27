@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from vehicle import Vehicle
@@ -29,17 +29,6 @@ def mock_setup_entry() -> Generator[None, None, None]:
     """Mock setting up a config entry."""
     with patch("homeassistant.components.rdw.async_setup_entry", return_value=True):
         yield
-
-
-@pytest.fixture
-def mock_rdw_config_flow() -> Generator[None, MagicMock, None]:
-    """Return a mocked RDW client."""
-    with patch(
-        "homeassistant.components.rdw.config_flow.RDW", autospec=True
-    ) as rdw_mock:
-        rdw = rdw_mock.return_value
-        rdw.vehicle.return_value = Vehicle.from_json(load_fixture("rdw/11ZKZ3.json"))
-        yield rdw
 
 
 @pytest.fixture
