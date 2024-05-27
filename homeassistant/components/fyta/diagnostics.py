@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -14,6 +14,7 @@ from .const import DOMAIN
 TO_REDACT = [
     CONF_PASSWORD,
     CONF_USERNAME,
+    CONF_ACCESS_TOKEN,
 ]
 
 

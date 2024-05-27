@@ -3,7 +3,7 @@
   dict({
     'config_entry': dict({
       'data': dict({
-        'access_token': '123xyz',
+        'access_token': '**REDACTED**',
         'expiration': '2030-12-31T10:00:00+00:00',
         'password': '**REDACTED**',
         'username': '**REDACTED**',
