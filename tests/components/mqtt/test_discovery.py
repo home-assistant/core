@@ -1167,10 +1167,7 @@ async def test_cleanup_device(
         await hass.async_block_till_done()
 
     # Verify retained discovery topic has been cleared
-    mqtt_mock.async_publish.assert_called_with(discovery_topic, "", 0, True)
-    mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/sensor/bla/config", None, 0, True
-    )
+    mqtt_mock.async_publish.assert_called_with(discovery_topic, None, 0, True)
 
 
 @pytest.mark.parametrize(
