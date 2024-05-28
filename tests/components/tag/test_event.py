@@ -19,7 +19,7 @@ TEST_DEVICE_ID = "device id"
 
 @pytest.fixture
 def storage_setup_named_tag(
-    hass,
+    hass: HomeAssistant,
     hass_storage,
 ):
     """Storage setup for test case of named tags."""
@@ -67,7 +67,7 @@ async def test_named_tag_scanned_event(
 
 
 @pytest.fixture
-def storage_setup_unnamed_tag(hass, hass_storage):
+def storage_setup_unnamed_tag(hass: HomeAssistant, hass_storage):
     """Storage setup for test case of unnamed tags."""
 
     async def _storage(items=None):

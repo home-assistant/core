@@ -38,6 +38,7 @@ SENSOR_FIXTURES = (
 )
 async def test_sensor(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     mock_envoy: AsyncMock,

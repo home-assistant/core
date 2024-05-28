@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -34,6 +33,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.variance import ignore_variance
 
+from . import TeslemetryConfigEntry
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryEnergyLiveEntity,
@@ -413,7 +413,9 @@ ENERGY_INFO_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Teslemetry sensor platform from a config entry."""
     async_add_entities(

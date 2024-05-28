@@ -9,10 +9,10 @@ from typing import Any
 from tesla_fleet_api.const import Scope
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import TeslemetryConfigEntry
 from .entity import TeslemetryVehicleEntity
 from .models import TeslemetryVehicleData
 
@@ -49,7 +49,9 @@ DESCRIPTIONS: tuple[TeslemetryButtonEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Teslemetry Button platform from a config entry."""
 
