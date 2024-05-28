@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry, mock_registry
 
 
 async def test_unique_id_migration(
-    mock_hc, hass: HomeAssistant, mock_write_config
+    mock_hc, hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_write_config
 ) -> None:
     """Test migration of switch unique ids to stable ones."""
     entry = MockConfigEntry(
@@ -72,16 +72,14 @@ async def test_unique_id_migration(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
-
-    switch_tv = ent_reg.async_get(ENTITY_WATCH_TV)
+    switch_tv = entity_registry.async_get(ENTITY_WATCH_TV)
     assert switch_tv.unique_id == f"activity_{WATCH_TV_ACTIVITY_ID}"
 
-    switch_nile = ent_reg.async_get(ENTITY_NILE_TV)
+    switch_nile = entity_registry.async_get(ENTITY_NILE_TV)
     assert switch_nile.unique_id == f"activity_{NILE_TV_ACTIVITY_ID}"
 
-    switch_music = ent_reg.async_get(ENTITY_PLAY_MUSIC)
+    switch_music = entity_registry.async_get(ENTITY_PLAY_MUSIC)
     assert switch_music.unique_id == f"activity_{PLAY_MUSIC_ACTIVITY_ID}"
 
-    select_activities = ent_reg.async_get(ENTITY_SELECT)
+    select_activities = entity_registry.async_get(ENTITY_SELECT)
     assert select_activities.unique_id == f"{HUB_NAME}_activities"

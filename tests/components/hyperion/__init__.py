@@ -174,13 +174,16 @@ def call_registered_callback(
 
 
 def register_test_entity(
-    hass: HomeAssistant, domain: str, type_name: str, entity_id: str
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    domain: str,
+    type_name: str,
+    entity_id: str,
 ) -> None:
     """Register a test entity."""
     unique_id = get_hyperion_unique_id(TEST_SYSINFO_ID, TEST_INSTANCE, type_name)
     entity_id = entity_id.split(".")[1]
 
-    entity_registry = er.async_get(hass)
     entity_registry.async_get_or_create(
         domain,
         DOMAIN,

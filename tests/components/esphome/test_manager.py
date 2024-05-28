@@ -968,6 +968,7 @@ async def test_esphome_user_services_changes(
 
 async def test_esphome_device_with_suggested_area(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: Callable[
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
@@ -983,9 +984,8 @@ async def test_esphome_device_with_suggested_area(
         states=[],
     )
     await hass.async_block_till_done()
-    dev_reg = dr.async_get(hass)
     entry = device.entry
-    dev = dev_reg.async_get_device(
+    dev = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     )
     assert dev.suggested_area == "kitchen"
@@ -993,6 +993,7 @@ async def test_esphome_device_with_suggested_area(
 
 async def test_esphome_device_with_project(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: Callable[
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
@@ -1008,9 +1009,8 @@ async def test_esphome_device_with_project(
         states=[],
     )
     await hass.async_block_till_done()
-    dev_reg = dr.async_get(hass)
     entry = device.entry
-    dev = dev_reg.async_get_device(
+    dev = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     )
     assert dev.manufacturer == "mfr"
@@ -1020,6 +1020,7 @@ async def test_esphome_device_with_project(
 
 async def test_esphome_device_with_manufacturer(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: Callable[
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
@@ -1035,9 +1036,8 @@ async def test_esphome_device_with_manufacturer(
         states=[],
     )
     await hass.async_block_till_done()
-    dev_reg = dr.async_get(hass)
     entry = device.entry
-    dev = dev_reg.async_get_device(
+    dev = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     )
     assert dev.manufacturer == "acme"
@@ -1045,6 +1045,7 @@ async def test_esphome_device_with_manufacturer(
 
 async def test_esphome_device_with_web_server(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: Callable[
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
@@ -1060,9 +1061,8 @@ async def test_esphome_device_with_web_server(
         states=[],
     )
     await hass.async_block_till_done()
-    dev_reg = dr.async_get(hass)
     entry = device.entry
-    dev = dev_reg.async_get_device(
+    dev = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     )
     assert dev.configuration_url == "http://test.local:80"
@@ -1070,6 +1070,7 @@ async def test_esphome_device_with_web_server(
 
 async def test_esphome_device_with_compilation_time(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: Callable[
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
@@ -1085,9 +1086,8 @@ async def test_esphome_device_with_compilation_time(
         states=[],
     )
     await hass.async_block_till_done()
-    dev_reg = dr.async_get(hass)
     entry = device.entry
-    dev = dev_reg.async_get_device(
+    dev = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     )
     assert "comp_time" in dev.sw_version
