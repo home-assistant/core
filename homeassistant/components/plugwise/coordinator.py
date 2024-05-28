@@ -18,10 +18,9 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_USERNAME, DOMAIN, LOGGER
+from .const import DEFAULT_PORT, DEFAULT_USERNAME, DOMAIN, LOGGER
 
 
 class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
@@ -56,7 +55,7 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
             timeout=30,
             websession=async_get_clientsession(hass, verify_ssl=False),
         )
-        self.device_list: list[DeviceEntry] = []
+        self.device_list: list[dr.DeviceEntry] = []
         self.hass = hass
         self.new_devices: bool = False
 
@@ -64,9 +63,6 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
         """Connect to the Plugwise Smile."""
         self._connected = await self.api.connect()
         self.api.get_all_devices()
-        self.update_interval = DEFAULT_SCAN_INTERVAL.get(
-            str(self.api.smile_type), timedelta(seconds=60)
-        )
 
     async def _async_update_data(self) -> PlugwiseData:
         """Fetch data from Plugwise."""
