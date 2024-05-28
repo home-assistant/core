@@ -21,6 +21,7 @@ from requests.exceptions import ConnectionError as RequestConnectionError
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
@@ -118,6 +119,13 @@ class ViCareFan(ViCareEntity, FanEntity):
             _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
         except PyViCareInvalidDataError as invalid_data_exception:
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="fan_must_be_on",
+        )
 
     @property
     def is_on(self) -> bool | None:
