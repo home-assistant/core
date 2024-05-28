@@ -688,14 +688,14 @@ async def test_ws_sign_path(
     assert expires.total_seconds() == 20
 
 
-async def test_ws_set_expiry_date_refresh_token(
+async def test_ws_refresh_token_set_expiry(
     hass: HomeAssistant,
     hass_admin_user: MockUser,
     hass_admin_credential: Credentials,
     hass_ws_client: WebSocketGenerator,
     hass_access_token: str,
 ) -> None:
-    """Test setting expiry date from a refresh token."""
+    """Test setting expiry of a refresh token."""
     assert await async_setup_component(hass, "auth", {"http": {}})
 
     refresh_token = await hass.auth.async_create_refresh_token(
@@ -706,9 +706,9 @@ async def test_ws_set_expiry_date_refresh_token(
 
     await ws_client.send_json_auto_id(
         {
-            "type": "auth/refresh_token_set_expiry_date",
+            "type": "auth/refresh_token_set_expiry",
             "refresh_token_id": refresh_token.id,
-            "disable_expiry_date": True,
+            "enable_expiry": False,
         }
     )
 
@@ -719,9 +719,9 @@ async def test_ws_set_expiry_date_refresh_token(
 
     await ws_client.send_json_auto_id(
         {
-            "type": "auth/refresh_token_set_expiry_date",
+            "type": "auth/refresh_token_set_expiry",
             "refresh_token_id": refresh_token.id,
-            "disable_expiry_date": False,
+            "enable_expiry": True,
         }
     )
 
@@ -731,21 +731,21 @@ async def test_ws_set_expiry_date_refresh_token(
     assert refresh_token.expire_at is not None
 
 
-async def test_ws_remove_expiry_date_refresh_token_error(
+async def test_ws_refresh_token_set_expiry_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_access_token: str,
 ) -> None:
-    """Test removing expiry date from a invalid refresh token returns error."""
+    """Test setting expiry of a invalid refresh token returns error."""
     assert await async_setup_component(hass, "auth", {"http": {}})
 
     ws_client = await hass_ws_client(hass, hass_access_token)
 
     await ws_client.send_json_auto_id(
         {
-            "type": "auth/refresh_token_set_expiry_date",
+            "type": "auth/refresh_token_set_expiry",
             "refresh_token_id": "invalid",
-            "disable_expiry_date": False,
+            "enable_expiry": False,
         }
     )
 

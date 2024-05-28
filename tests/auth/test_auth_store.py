@@ -362,7 +362,7 @@ async def test_set_expiry_date(
     (token,) = users[0].refresh_tokens.values()
     assert token.expire_at == 1724133771.079745
 
-    store.async_set_expiry_date(token, disable_expiry_date=True)
+    store.async_set_expiry(token, enable_expiry=False)
     assert token.expire_at is None
 
     freezer.tick(auth_store.DEFAULT_SAVE_DELAY * 2)
@@ -377,5 +377,5 @@ async def test_set_expiry_date(
         is None
     )
 
-    store.async_set_expiry_date(token, disable_expiry_date=False)
+    store.async_set_expiry(token, enable_expiry=True)
     assert token.expire_at is not None

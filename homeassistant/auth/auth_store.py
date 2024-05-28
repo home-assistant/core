@@ -283,16 +283,18 @@ class AuthStore:
 
     @callback
     def async_set_expiry(
-        self, refresh_token: models.RefreshToken, *, disable_expiry: bool
+        self, refresh_token: models.RefreshToken, *, enable_expiry: bool
     ) -> None:
         """Enable or disable expiry of a refresh token."""
-        if disable_expiry_date:
+        if enable_expiry:
+            if refresh_token.expire_at is None:
+                refresh_token.expire_at = (
+                    refresh_token.last_used_at or dt_util.utcnow()
+                ).timestamp() + REFRESH_TOKEN_EXPIRATION
+                self._async_schedule_save()
+        else:
             refresh_token.expire_at = None
-        elif not refresh_token.expire_at:
-            refresh_token.expire_at = (
-                refresh_token.last_used_at or dt_util.utcnow()
-            ).timestamp() + REFRESH_TOKEN_EXPIRATION
-        self._async_schedule_save()
+            self._async_schedule_save()
 
     async def async_load(self) -> None:  # noqa: C901
         """Load the users."""

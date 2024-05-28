@@ -196,7 +196,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_delete_refresh_token)
     websocket_api.async_register_command(hass, websocket_delete_all_refresh_tokens)
     websocket_api.async_register_command(hass, websocket_sign_path)
-    websocket_api.async_register_command(hass, websocket_refresh_token_set_expiry_date)
+    websocket_api.async_register_command(hass, websocket_refresh_token_set_expiry)
 
     login_flow.async_setup(hass, store_result)
     mfa_setup_flow.async_setup(hass)
@@ -707,21 +707,19 @@ def websocket_sign_path(
     {
         vol.Required("type"): "auth/refresh_token_set_expiry",
         vol.Required("refresh_token_id"): str,
-        vol.Required("disable_expiry"): bool,
+        vol.Required("enable_expiry"): bool,
     }
 )
 @websocket_api.ws_require_user()
 def websocket_refresh_token_set_expiry(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Handle a set expiry date from refresh token request."""
+    """Handle a set expiry of a refresh token request."""
     refresh_token = connection.user.refresh_tokens.get(msg["refresh_token_id"])
 
     if refresh_token is None:
         connection.send_error(msg["id"], "invalid_token_id", "Received invalid token")
         return
 
-    hass.auth.async_set_expiry_date(
-        refresh_token, disable_expiry_date=msg["disable_expiry_date"]
-    )
+    hass.auth.async_set_expiry(refresh_token, enable_expiry=msg["enable_expiry"])
     connection.send_result(msg["id"], {})
