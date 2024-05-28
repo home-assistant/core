@@ -628,20 +628,20 @@ def _validate_item(
     """Validate entity registry item."""
     if unique_id is not UNDEFINED and not isinstance(unique_id, Hashable):
         raise TypeError(f"unique_id must be a string, got {unique_id}")
-    if unique_id is not UNDEFINED and not isinstance(unique_id, str):
-        if report_non_string_unique_id:
-            # In HA Core 2025.10, we should fail if unique_id is not a string
-            report_issue = async_suggest_report_issue(hass, integration_domain=platform)
-            _LOGGER.error(
-                (
-                    "'%s' from integration %s has a non string unique_id"
-                    " '%s', please %s"
-                ),
-                domain,
-                platform,
-                unique_id,
-                report_issue,
-            )
+    if (
+        report_non_string_unique_id
+        and unique_id is not UNDEFINED
+        and not isinstance(unique_id, str)
+    ):
+        # In HA Core 2025.10, we should fail if unique_id is not a string
+        report_issue = async_suggest_report_issue(hass, integration_domain=platform)
+        _LOGGER.error(
+            ("'%s' from integration %s has a non string unique_id" " '%s', please %s"),
+            domain,
+            platform,
+            unique_id,
+            report_issue,
+        )
     if (
         disabled_by
         and disabled_by is not UNDEFINED
