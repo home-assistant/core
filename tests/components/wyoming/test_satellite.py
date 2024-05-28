@@ -324,9 +324,6 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
         assert mock_client.detection is not None
         assert mock_client.detection.name == "test_wake_word"
 
-        # "Assist in progress" sensor should be active now
-        assert device.is_active
-
         # Speech-to-text started
         pipeline_event_callback(
             assist_pipeline.PipelineEvent(
@@ -339,6 +336,9 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
 
         assert mock_client.transcribe is not None
         assert mock_client.transcribe.language == "en"
+
+        # "Assist in progress" sensor should be active now
+        assert device.is_active
 
         # Push in some audio
         mock_client.inject_event(
