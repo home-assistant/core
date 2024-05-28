@@ -279,6 +279,13 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle logic when on Supervisor host."""
+        addon_info = await self._async_get_addon_info()
+
+        if not addon_info.available:
+            return self.async_show_form(
+                step_id="manual", data_schema=get_manual_schema({})
+            )
+
         if user_input is None:
             return self.async_show_form(
                 step_id="on_supervisor", data_schema=ON_SUPERVISOR_SCHEMA
@@ -287,8 +294,6 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_manual()
 
         self.use_addon = True
-
-        addon_info = await self._async_get_addon_info()
 
         if addon_info.state == AddonState.RUNNING:
             return await self.async_step_finish_addon_setup()
