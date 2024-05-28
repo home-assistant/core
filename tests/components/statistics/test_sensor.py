@@ -42,7 +42,9 @@ VALUES_BINARY = ["on", "off", "on", "off", "on", "off", "on", "off", "on"]
 VALUES_NUMERIC = [17, 20, 15.2, 5, 3.8, 9.2, 6.7, 14, 6]
 
 
-async def test_unique_id(hass: HomeAssistant) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test configuration defined unique_id."""
     assert await async_setup_component(
         hass,
@@ -62,8 +64,7 @@ async def test_unique_id(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    entity_reg = er.async_get(hass)
-    entity_id = entity_reg.async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         "sensor", STATISTICS_DOMAIN, "uniqueid_sensor_test"
     )
     assert entity_id == "sensor.test"

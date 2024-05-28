@@ -289,11 +289,13 @@ async def test_core_config_update(hass: HomeAssistant) -> None:
 
 
 async def test_reload(
-    hass: HomeAssistant, hass_admin_user: MockUser, hass_read_only_user: MockUser
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
 ) -> None:
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
-    ent_reg = er.async_get(hass)
 
     assert await setup.async_setup_component(
         hass,
@@ -319,7 +321,7 @@ async def test_reload(
     assert state_2.attributes["latitude"] == 3
     assert state_2.attributes["longitude"] == 4
     assert state_3 is None
-    assert len(ent_reg.entities) == 0
+    assert len(entity_registry.entities) == 0
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
@@ -411,18 +413,20 @@ async def test_ws_list(
 
 
 async def test_ws_delete(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    storage_setup,
 ) -> None:
     """Test WS delete cleans up entity registry."""
     assert await storage_setup()
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is not None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
 
     client = await hass_ws_client(hass)
 
@@ -434,11 +438,14 @@ async def test_ws_delete(
 
     state = hass.states.get(input_entity_id)
     assert state is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
 
 async def test_update(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    storage_setup,
 ) -> None:
     """Test updating min/max updates the state."""
 
@@ -456,12 +463,11 @@ async def test_update(
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state.attributes["latitude"] == 1
     assert state.attributes["longitude"] == 2
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
 
     client = await hass_ws_client(hass)
 
@@ -485,18 +491,20 @@ async def test_update(
 
 
 async def test_ws_create(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    storage_setup,
 ) -> None:
     """Test create WS."""
     assert await storage_setup(items=[])
 
     input_id = "new_input"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
     client = await hass_ws_client(hass)
 
