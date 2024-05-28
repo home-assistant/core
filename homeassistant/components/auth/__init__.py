@@ -705,13 +705,13 @@ def websocket_sign_path(
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "auth/refresh_token_set_expiry_date",
+        vol.Required("type"): "auth/refresh_token_set_expiry",
         vol.Required("refresh_token_id"): str,
-        vol.Required("disable_expiry_date"): bool,
+        vol.Required("disable_expiry"): bool,
     }
 )
 @websocket_api.ws_require_user()
-def websocket_refresh_token_set_expiry_date(
+def websocket_refresh_token_set_expiry(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle a set expiry date from refresh token request."""
