@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["pypoint"],
   "quality_scale": "silver",
-  "requirements": ["pypoint==2.3.2"]
+  "requirements": ["pypoint==3.0.0"]
 }
