@@ -202,10 +202,11 @@ class WebSocketHandler:
             # max pending messages.
             return
 
-        if isinstance(message, dict):
-            message = message_to_json_bytes(message)
-        elif isinstance(message, str):
-            message = message.encode("utf-8")
+        if type(message) is not bytes:  # noqa: E721
+            if isinstance(message, dict):
+                message = message_to_json_bytes(message)
+            elif isinstance(message, str):
+                message = message.encode("utf-8")
 
         message_queue = self._message_queue
         message_queue.append(message)
