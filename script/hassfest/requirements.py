@@ -85,9 +85,9 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
     return format_python_namespace(
         {
             "REQUIREMENTS": {
-                k: tuple(v) for k, v in requirements_for_integrations.items()
+                k: (requirements_by_version[k], tuple(v))
+                for k, v in requirements_for_integrations.items()
             },
-            "VERSIONS": requirements_by_version,
         }
     )
 

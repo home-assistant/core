@@ -12,7 +12,7 @@ from packaging.requirements import Requirement
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
-from .generated.requirements import REQUIREMENTS, VERSIONS
+from .generated.requirements import REQUIREMENTS
 from .helpers import singleton
 from .helpers.typing import UNDEFINED, UndefinedType
 from .loader import Integration, IntegrationNotFound, async_get_integration
@@ -284,18 +284,21 @@ class RequirementsManager:
                     requirement_name = requirement_name.partition("[")[0]
                 if requirement_name not in REQUIREMENTS:
                     continue
-                version = VERSIONS[requirement_name]
+                version, core_integrations_using_req = REQUIREMENTS[requirement_name]
                 if parsed_req.specifier.contains(version):
                     continue
-                core_integrations_using_req = set(REQUIREMENTS[requirement_name])
-                core_integrations_using_req.discard(name)
-                if not core_integrations_using_req:
+                core_integrations_using_req_set = set(core_integrations_using_req)
+                # Allow the custom component to override the core integration
+                # but only if the core integration and not any other core
+                # integrations that require the version.
+                core_integrations_using_req_set.discard(name)
+                if not core_integrations_using_req_set:
                     continue
                 _LOGGER.error(
                     "Requirement %s cannot be satisfied "
                     "because core integrations %s require version %s. ",
                     specifier,
-                    core_integrations_using_req,
+                    core_integrations_using_req_set,
                     version,
                 )
                 raise RequirementsNotFound(name, [specifier])
