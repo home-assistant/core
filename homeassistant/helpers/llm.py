@@ -231,23 +231,34 @@ class AssistAPI(API):
         prompt = [
             (
                 "Call the intent tools to control Home Assistant. "
-                "Just pass the name to the intent. "
                 "When controlling an area, prefer passing area name."
             )
         ]
+        area: ar.AreaEntry | None = None
+        floor: fr.FloorEntry | None = None
         if tool_input.device_id:
             device_reg = dr.async_get(self.hass)
             device = device_reg.async_get(tool_input.device_id)
+
             if device:
                 area_reg = ar.async_get(self.hass)
                 if device.area_id and (area := area_reg.async_get_area(device.area_id)):
                     floor_reg = fr.async_get(self.hass)
-                    if area.floor_id and (
-                        floor := floor_reg.async_get_floor(area.floor_id)
-                    ):
-                        prompt.append(f"You are in {area.name} ({floor.name}).")
-                    else:
-                        prompt.append(f"You are in {area.name}.")
+                    if area.floor_id:
+                        floor = floor_reg.async_get_floor(area.floor_id)
+
+            extra = "and all generic commands like 'turn on the lights' should target this area."
+
+        if floor and area:
+            prompt.append(f"You are in area {area.name} (floor {floor.name}) {extra}")
+        elif area:
+            prompt.append(f"You are in area {area.name} {extra}")
+        else:
+            prompt.append(
+                "Reject all generic commands like 'turn on the lights' because we "
+                "don't know in what area this conversation is happening."
+            )
+
         if tool_input.context and tool_input.context.user_id:
             user = await self.hass.auth.async_get_user(tool_input.context.user_id)
             if user:
