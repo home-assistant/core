@@ -106,12 +106,15 @@ async def test_import_with_options(hass: HomeAssistant) -> None:
         diaspora=DEFAULT_DIASPORA,
     )
     old_prefix = get_unique_prefix(location, DEFAULT_LANGUAGE, 20, 50)
-    old_entity = ent_reg.async_get_or_create(
-        BINARY_SENSORS, DOMAIN, unique_id=f"{old_prefix}_erev_shabbat_hag"
+    sample_entity = ent_reg.async_get_or_create(
+        BINARY_SENSORS,
+        DOMAIN,
+        unique_id=f"{old_prefix}_erev_shabbat_hag",
+        suggested_object_id=f"{DOMAIN}_erev_shabbat_hag",
     )
 
     # Save the existing unique_id, DEFAULT_LANGUAGE should be part of it
-    old_unique_id = old_entity.unique_id
+    old_unique_id = sample_entity.unique_id
     assert DEFAULT_LANGUAGE in old_unique_id
 
     # Simulate HomeAssistant setting up the component
@@ -123,8 +126,13 @@ async def test_import_with_options(hass: HomeAssistant) -> None:
     assert entries[0].data == conf[DOMAIN]
 
     # Assert that the unique_id was updated
-    assert ent_reg.async_get(old_entity.entity_id).unique_id != old_unique_id
-    assert DEFAULT_LANGUAGE not in ent_reg.async_get(old_entity.entity_id).unique_id
+    new_unique_id = ent_reg.async_get(sample_entity.entity_id).unique_id
+    assert new_unique_id != old_unique_id
+    assert DEFAULT_LANGUAGE not in new_unique_id
+
+    # Confirm that when the component is reloaded, the unique_id is not changed
+    await hass.config_entries.async_reload(entries[0].entry_id)
+    assert ent_reg.async_get(sample_entity.entity_id).unique_id == new_unique_id
 
 
 async def test_single_instance_allowed(
