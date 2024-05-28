@@ -144,7 +144,9 @@ async def test_load_and_unload(
 
 
 async def test_stale_device_removal(
-    hass: HomeAssistant, mock_aladdinconnect_api: MagicMock
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_aladdinconnect_api: MagicMock,
 ) -> None:
     """Test component setup missing door device is removed."""
     DEVICE_CONFIG_DOOR_2 = {
@@ -172,7 +174,6 @@ async def test_stale_device_removal(
     )
     config_entry_other.add_to_hass(hass)
 
-    device_registry = dr.async_get(hass)
     device_entry_other = device_registry.async_get_or_create(
         config_entry_id=config_entry_other.entry_id,
         identifiers={("OtherDomain", "533255-2")},
@@ -192,8 +193,6 @@ async def test_stale_device_removal(
 
     assert config_entry.state is ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-    device_registry = dr.async_get(hass)
 
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
