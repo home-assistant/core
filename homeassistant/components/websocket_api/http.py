@@ -135,6 +135,7 @@ class WebSocketHandler:
         is_debug_log_enabled = partial(logger.isEnabledFor, logging.DEBUG)
         debug = logger.debug
         can_coalesce = self._connection and self._connection.can_coalesce
+        ready_message_count = len(message_queue)
         # Exceptions if Socket disconnected or cancelled by connection handler
         try:
             while not wsock.closed:
@@ -146,6 +147,7 @@ class WebSocketHandler:
                     return
 
                 if not can_coalesce:
+                    # coalesce may be enabled later in the connection
                     can_coalesce = self._connection and self._connection.can_coalesce
 
                 if not can_coalesce or ready_message_count == 1:
