@@ -74,6 +74,7 @@ from .const import (
     EVENT_STATE_CHANGED,
     EVENT_STATE_REPORTED,
     MATCH_ALL,
+    MAX_EXPECTED_ENTITY_IDS,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_STATE_STATE,
     UnitOfLength,
@@ -177,7 +178,6 @@ _DEPRECATED_SOURCE_YAML = DeprecatedConstantEnum(ConfigSource.YAML, "2025.1")
 # How long to wait until things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
 
-MAX_EXPECTED_ENTITY_IDS = 16384
 
 EVENTS_EXCLUDED_FROM_MATCH_ALL = {
     EVENT_HOMEASSISTANT_CLOSE,
