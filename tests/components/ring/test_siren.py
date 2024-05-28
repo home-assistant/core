@@ -16,11 +16,12 @@ from .common import setup_platform
 
 
 async def test_entity_registry(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    requests_mock: requests_mock.Mocker,
 ) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, Platform.SIREN)
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get("siren.downstairs_siren")
     assert entry.unique_id == "123456-siren"
