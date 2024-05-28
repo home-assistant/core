@@ -394,21 +394,36 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
     ],
 }
 
+
 # Blacklist of imports that should be using the namespace
-_FORCE_NAMESPACE_IMPORT: dict[tuple[str, str], set[str]] = {
-    ("homeassistant.helpers.area_registry", "ar"): {"async_get"},
-    ("homeassistant.helpers.category_registry", "cr"): {"async_get"},
-    ("homeassistant.helpers.device_registry", "dr"): {
-        "async_get",
-        "async_entries_for_config_entry",
-    },
-    ("homeassistant.helpers.entity_registry", "er"): {
-        "async_get",
-        "async_entries_for_config_entry",
-    },
-    ("homeassistant.helpers.floor_registry", "fr"): {"async_get"},
-    ("homeassistant.helpers.issue_registry", "ir"): {"async_get"},
-    ("homeassistant.helpers.label_registry", "lr"): {"async_get"},
+@dataclass
+class NamespaceAlias:
+    """Class for namespace imports."""
+
+    alias: str
+    names: set[str]  # function names
+
+
+_FORCE_NAMESPACE_IMPORT: dict[str, NamespaceAlias] = {
+    "homeassistant.helpers.area_registry": NamespaceAlias("ar", {"async_get"}),
+    "homeassistant.helpers.category_registry": NamespaceAlias("cr", {"async_get"}),
+    "homeassistant.helpers.device_registry": NamespaceAlias(
+        "dr",
+        {
+            "async_get",
+            "async_entries_for_config_entry",
+        },
+    ),
+    "homeassistant.helpers.entity_registry": NamespaceAlias(
+        "er",
+        {
+            "async_get",
+            "async_entries_for_config_entry",
+        },
+    ),
+    "homeassistant.helpers.floor_registry": NamespaceAlias("fr", {"async_get"}),
+    "homeassistant.helpers.issue_registry": NamespaceAlias("ir", {"async_get"}),
+    "homeassistant.helpers.label_registry": NamespaceAlias("lr", {"async_get"}),
 }
 
 
@@ -546,19 +561,14 @@ class HassImportsFormatChecker(BaseChecker):
                             node=node,
                             args=(import_match.string, obsolete_import.reason),
                         )
-        for name in node.names:
-            self._has_invalid_namespace_import(node, node.modname, name[0])
-
-    def _has_invalid_namespace_import(
-        self, node: nodes.ImportFrom, module: str, name: str
-    ) -> None:
-        for key, value in _FORCE_NAMESPACE_IMPORT.items():
-            if module == key[0] and name in value:
-                self.add_message(
-                    "hass-helper-namespace-import",
-                    node=node,
-                    args=(name, f"{key[1]}.{name}"),
-                )
+        if namespace_alias := _FORCE_NAMESPACE_IMPORT.get(node.modname):
+            for name in node.names:
+                if name[0] in namespace_alias.names:
+                    self.add_message(
+                        "hass-helper-namespace-import",
+                        node=node,
+                        args=(name[0], f"{namespace_alias.alias}.{name[0]}"),
+                    )
 
 
 def register(linter: PyLinter) -> None:
