@@ -904,7 +904,7 @@ class MqttDiscoveryUpdateMixin(Entity):
                 self._async_process_discovery_update_and_remove()
             )
         elif self._discovery_update:
-            if old_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]:
+            if old_payload != payload:
                 # Non-empty, changed payload: Notify component
                 _LOGGER.info("Updating component: %s", self.entity_id)
                 self.hass.async_create_task(
