@@ -36,6 +36,7 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import EcobeeData
@@ -46,7 +47,6 @@ from .const import (
     ECOBEE_MODEL_TO_NAME,
     MANUFACTURER,
 )
-from .repairs import migrate_aux_heat_issue
 from .util import ecobee_date, ecobee_time, is_indefinite_hold
 
 ATTR_COOL_TEMP = "cool_temp"
@@ -580,7 +580,16 @@ class Thermostat(ClimateEntity):
 
     async def async_turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
-        migrate_aux_heat_issue(self.hass)
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "migrate_aux_heat",
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=True,
+            is_persistent=True,
+            translation_key="migrate_aux_heat",
+            severity=IssueSeverity.WARNING,
+        )
         _LOGGER.debug("Setting HVAC mode to auxHeatOnly to turn on aux heat")
         self._last_hvac_mode_before_aux_heat = self.hvac_mode
         await self.hass.async_add_executor_job(
@@ -590,7 +599,16 @@ class Thermostat(ClimateEntity):
 
     async def async_turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
-        migrate_aux_heat_issue(self.hass)
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "migrate_aux_heat",
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=True,
+            is_persistent=True,
+            translation_key="migrate_aux_heat",
+            severity=IssueSeverity.WARNING,
+        )
         _LOGGER.debug("Setting HVAC mode to last mode to disable aux heat")
         await self.async_set_hvac_mode(self._last_hvac_mode_before_aux_heat)
         self.update_without_throttle = True
