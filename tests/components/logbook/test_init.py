@@ -68,9 +68,9 @@ async def hass_(recorder_mock, hass):
 
 
 @pytest.fixture
-def set_utc(hass):
+async def set_utc(hass):
     """Set timezone to UTC."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
 
 
 async def test_service_call_create_logbook_entry(hass_) -> None:
@@ -294,14 +294,25 @@ def create_state_changed_event(
     state,
     attributes=None,
     last_changed=None,
+    last_reported=None,
     last_updated=None,
 ):
     """Create state changed event."""
     old_state = ha.State(
-        entity_id, "old", attributes, last_changed, last_updated
+        entity_id,
+        "old",
+        attributes,
+        last_changed=last_changed,
+        last_reported=last_reported,
+        last_updated=last_updated,
     ).as_dict()
     new_state = ha.State(
-        entity_id, state, attributes, last_changed, last_updated
+        entity_id,
+        state,
+        attributes,
+        last_changed=last_changed,
+        last_reported=last_reported,
+        last_updated=last_updated,
     ).as_dict()
 
     return create_state_changed_event_from_old_new(

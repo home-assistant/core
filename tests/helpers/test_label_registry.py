@@ -1,5 +1,6 @@
 """Tests for the Label Registry."""
 
+from functools import partial
 import re
 from typing import Any
 
@@ -454,3 +455,45 @@ async def test_labels_removed_from_entities(
     assert len(entries) == 0
     entries = er.async_entries_for_label(entity_registry, label2.label_id)
     assert len(entries) == 0
+
+
+async def test_async_create_thread_safety(
+    hass: HomeAssistant,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test async_create raises when called from wrong thread."""
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls label_registry.async_create from a thread.",
+    ):
+        await hass.async_add_executor_job(label_registry.async_create, "any")
+
+
+async def test_async_delete_thread_safety(
+    hass: HomeAssistant,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test async_delete raises when called from wrong thread."""
+    any_label = label_registry.async_create("any")
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls label_registry.async_delete from a thread.",
+    ):
+        await hass.async_add_executor_job(label_registry.async_delete, any_label)
+
+
+async def test_async_update_thread_safety(
+    hass: HomeAssistant,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test async_update raises when called from wrong thread."""
+    any_label = label_registry.async_create("any")
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls label_registry.async_update from a thread.",
+    ):
+        await hass.async_add_executor_job(
+            partial(label_registry.async_update, any_label.label_id, name="new name")
+        )

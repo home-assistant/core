@@ -63,7 +63,9 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         native_step=PRECISION_TENTHS,
         native_min_value=85,
         native_max_value=104,
-        set_value_fn=lambda coordinator, temp: coordinator.lm.set_coffee_temp(temp),
+        set_value_fn=lambda coordinator, temp: coordinator.lm.set_coffee_temp(
+            temp, coordinator.async_get_ble_device()
+        ),
         native_value_fn=lambda lm: lm.current_status["coffee_set_temp"],
     ),
     LaMarzoccoNumberEntityDescription(
@@ -74,7 +76,9 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         native_step=PRECISION_WHOLE,
         native_min_value=126,
         native_max_value=131,
-        set_value_fn=lambda coordinator, temp: coordinator.lm.set_steam_temp(int(temp)),
+        set_value_fn=lambda coordinator, temp: coordinator.lm.set_steam_temp(
+            int(temp), coordinator.async_get_ble_device()
+        ),
         native_value_fn=lambda lm: lm.current_status["steam_set_temp"],
         supported_fn=lambda coordinator: coordinator.lm.model_name
         in (

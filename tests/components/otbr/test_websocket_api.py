@@ -35,16 +35,22 @@ async def test_get_info(
 ) -> None:
     """Test async_get_info."""
 
-    with patch(
-        "python_otbr_api.OTBR.get_active_dataset",
-        return_value=python_otbr_api.ActiveDataSet(channel=16),
-    ), patch(
-        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
-    ), patch(
-        "python_otbr_api.OTBR.get_border_agent_id", return_value=TEST_BORDER_AGENT_ID
-    ), patch(
-        "python_otbr_api.OTBR.get_extended_address",
-        return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset",
+            return_value=python_otbr_api.ActiveDataSet(channel=16),
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_border_agent_id",
+            return_value=TEST_BORDER_AGENT_ID,
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
     ):
         await websocket_client.send_json_auto_id({"type": "otbr/info"})
         msg = await websocket_client.receive_json()
@@ -81,11 +87,15 @@ async def test_get_info_fetch_fails(
     websocket_client,
 ) -> None:
     """Test async_get_info."""
-    with patch(
-        "python_otbr_api.OTBR.get_active_dataset",
-        side_effect=python_otbr_api.OTBRError,
-    ), patch(
-        "python_otbr_api.OTBR.get_border_agent_id", return_value=TEST_BORDER_AGENT_ID
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset",
+            side_effect=python_otbr_api.OTBRError,
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_border_agent_id",
+            return_value=TEST_BORDER_AGENT_ID,
+        ),
     ):
         await websocket_client.send_json_auto_id({"type": "otbr/info"})
         msg = await websocket_client.receive_json()
@@ -102,19 +112,20 @@ async def test_create_network(
 ) -> None:
     """Test create network."""
 
-    with patch(
-        "python_otbr_api.OTBR.create_active_dataset"
-    ) as create_dataset_mock, patch(
-        "python_otbr_api.OTBR.factory_reset"
-    ) as factory_reset_mock, patch(
-        "python_otbr_api.OTBR.set_enabled"
-    ) as set_enabled_mock, patch(
-        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
-    ) as get_active_dataset_tlvs_mock, patch(
-        "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
-    ) as mock_add, patch(
-        "homeassistant.components.otbr.util.random.randint",
-        return_value=0x1234,
+    with (
+        patch("python_otbr_api.OTBR.create_active_dataset") as create_dataset_mock,
+        patch("python_otbr_api.OTBR.factory_reset") as factory_reset_mock,
+        patch("python_otbr_api.OTBR.set_enabled") as set_enabled_mock,
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
+        ) as get_active_dataset_tlvs_mock,
+        patch(
+            "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
+        ) as mock_add,
+        patch(
+            "homeassistant.components.otbr.util.random.randint",
+            return_value=0x1234,
+        ),
     ):
         await websocket_client.send_json_auto_id({"type": "otbr/create_network"})
 
@@ -175,12 +186,16 @@ async def test_create_network_fails_2(
     websocket_client,
 ) -> None:
     """Test create network."""
-    with patch(
-        "python_otbr_api.OTBR.set_enabled",
-    ), patch(
-        "python_otbr_api.OTBR.create_active_dataset",
-        side_effect=python_otbr_api.OTBRError,
-    ), patch("python_otbr_api.OTBR.factory_reset"):
+    with (
+        patch(
+            "python_otbr_api.OTBR.set_enabled",
+        ),
+        patch(
+            "python_otbr_api.OTBR.create_active_dataset",
+            side_effect=python_otbr_api.OTBRError,
+        ),
+        patch("python_otbr_api.OTBR.factory_reset"),
+    ):
         await websocket_client.send_json_auto_id({"type": "otbr/create_network"})
         msg = await websocket_client.receive_json()
 
@@ -195,13 +210,17 @@ async def test_create_network_fails_3(
     websocket_client,
 ) -> None:
     """Test create network."""
-    with patch(
-        "python_otbr_api.OTBR.set_enabled",
-        side_effect=[None, python_otbr_api.OTBRError],
-    ), patch(
-        "python_otbr_api.OTBR.create_active_dataset",
-    ), patch(
-        "python_otbr_api.OTBR.factory_reset",
+    with (
+        patch(
+            "python_otbr_api.OTBR.set_enabled",
+            side_effect=[None, python_otbr_api.OTBRError],
+        ),
+        patch(
+            "python_otbr_api.OTBR.create_active_dataset",
+        ),
+        patch(
+            "python_otbr_api.OTBR.factory_reset",
+        ),
     ):
         await websocket_client.send_json_auto_id({"type": "otbr/create_network"})
         msg = await websocket_client.receive_json()
@@ -217,13 +236,16 @@ async def test_create_network_fails_4(
     websocket_client,
 ) -> None:
     """Test create network."""
-    with patch("python_otbr_api.OTBR.set_enabled"), patch(
-        "python_otbr_api.OTBR.create_active_dataset"
-    ), patch(
-        "python_otbr_api.OTBR.get_active_dataset_tlvs",
-        side_effect=python_otbr_api.OTBRError,
-    ), patch(
-        "python_otbr_api.OTBR.factory_reset",
+    with (
+        patch("python_otbr_api.OTBR.set_enabled"),
+        patch("python_otbr_api.OTBR.create_active_dataset"),
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset_tlvs",
+            side_effect=python_otbr_api.OTBRError,
+        ),
+        patch(
+            "python_otbr_api.OTBR.factory_reset",
+        ),
     ):
         await websocket_client.send_json_auto_id({"type": "otbr/create_network"})
         msg = await websocket_client.receive_json()
@@ -239,10 +261,11 @@ async def test_create_network_fails_5(
     websocket_client,
 ) -> None:
     """Test create network."""
-    with patch("python_otbr_api.OTBR.set_enabled"), patch(
-        "python_otbr_api.OTBR.create_active_dataset"
-    ), patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=None), patch(
-        "python_otbr_api.OTBR.factory_reset"
+    with (
+        patch("python_otbr_api.OTBR.set_enabled"),
+        patch("python_otbr_api.OTBR.create_active_dataset"),
+        patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=None),
+        patch("python_otbr_api.OTBR.factory_reset"),
     ):
         await websocket_client.send_json_auto_id({"type": "otbr/create_network"})
         msg = await websocket_client.receive_json()
@@ -258,11 +281,14 @@ async def test_create_network_fails_6(
     websocket_client,
 ) -> None:
     """Test create network."""
-    with patch("python_otbr_api.OTBR.set_enabled"), patch(
-        "python_otbr_api.OTBR.create_active_dataset"
-    ), patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=None), patch(
-        "python_otbr_api.OTBR.factory_reset",
-        side_effect=python_otbr_api.OTBRError,
+    with (
+        patch("python_otbr_api.OTBR.set_enabled"),
+        patch("python_otbr_api.OTBR.create_active_dataset"),
+        patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=None),
+        patch(
+            "python_otbr_api.OTBR.factory_reset",
+            side_effect=python_otbr_api.OTBRError,
+        ),
     ):
         await websocket_client.send_json_auto_id({"type": "otbr/create_network"})
         msg = await websocket_client.receive_json()
@@ -283,11 +309,12 @@ async def test_set_network(
     dataset_store = await thread.dataset_store.async_get_store(hass)
     dataset_id = list(dataset_store.datasets)[1]
 
-    with patch(
-        "python_otbr_api.OTBR.set_active_dataset_tlvs"
-    ) as set_active_dataset_tlvs_mock, patch(
-        "python_otbr_api.OTBR.set_enabled"
-    ) as set_enabled_mock:
+    with (
+        patch(
+            "python_otbr_api.OTBR.set_active_dataset_tlvs"
+        ) as set_active_dataset_tlvs_mock,
+        patch("python_otbr_api.OTBR.set_enabled") as set_enabled_mock,
+    ):
         await websocket_client.send_json_auto_id(
             {
                 "type": "otbr/set_network",
@@ -411,11 +438,14 @@ async def test_set_network_fails_2(
     dataset_store = await thread.dataset_store.async_get_store(hass)
     dataset_id = list(dataset_store.datasets)[1]
 
-    with patch(
-        "python_otbr_api.OTBR.set_enabled",
-    ), patch(
-        "python_otbr_api.OTBR.set_active_dataset_tlvs",
-        side_effect=python_otbr_api.OTBRError,
+    with (
+        patch(
+            "python_otbr_api.OTBR.set_enabled",
+        ),
+        patch(
+            "python_otbr_api.OTBR.set_active_dataset_tlvs",
+            side_effect=python_otbr_api.OTBRError,
+        ),
     ):
         await websocket_client.send_json_auto_id(
             {
@@ -440,11 +470,14 @@ async def test_set_network_fails_3(
     dataset_store = await thread.dataset_store.async_get_store(hass)
     dataset_id = list(dataset_store.datasets)[1]
 
-    with patch(
-        "python_otbr_api.OTBR.set_enabled",
-        side_effect=[None, python_otbr_api.OTBRError],
-    ), patch(
-        "python_otbr_api.OTBR.set_active_dataset_tlvs",
+    with (
+        patch(
+            "python_otbr_api.OTBR.set_enabled",
+            side_effect=[None, python_otbr_api.OTBRError],
+        ),
+        patch(
+            "python_otbr_api.OTBR.set_active_dataset_tlvs",
+        ),
     ):
         await websocket_client.send_json_auto_id(
             {

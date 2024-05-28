@@ -347,7 +347,8 @@ AQARA_SINGLE_WALL_SWITCH = {
     (CONF_DOUBLE_PRESS, CONF_TURN_ON): {CONF_EVENT: 1004},
 }
 
-AQARA_MINI_SWITCH_MODEL = "lumi.remote.b1acn01"
+AQARA_MINI_SWITCH_WXKG11LM_MODEL = "lumi.remote.b1acn01"
+AQARA_MINI_SWITCH_WBR02D_MODEL = "lumi.remote.b1acn02"
 AQARA_MINI_SWITCH = {
     (CONF_SHORT_PRESS, CONF_TURN_ON): {CONF_EVENT: 1002},
     (CONF_DOUBLE_PRESS, CONF_TURN_ON): {CONF_EVENT: 1004},
@@ -615,7 +616,8 @@ REMOTES = {
     AQARA_SINGLE_WALL_SWITCH_QBKG11LM_MODEL: AQARA_SINGLE_WALL_SWITCH_QBKG11LM,
     AQARA_SINGLE_WALL_SWITCH_WXKG03LM_MODEL: AQARA_SINGLE_WALL_SWITCH,
     AQARA_SINGLE_WALL_SWITCH_WXKG06LM_MODEL: AQARA_SINGLE_WALL_SWITCH,
-    AQARA_MINI_SWITCH_MODEL: AQARA_MINI_SWITCH,
+    AQARA_MINI_SWITCH_WXKG11LM_MODEL: AQARA_MINI_SWITCH,
+    AQARA_MINI_SWITCH_WBR02D_MODEL: AQARA_MINI_SWITCH,
     AQARA_ROUND_SWITCH_MODEL: AQARA_ROUND_SWITCH,
     AQARA_SQUARE_SWITCH_MODEL: AQARA_SQUARE_SWITCH,
     AQARA_SQUARE_SWITCH_WXKG11LM_2016_MODEL: AQARA_SQUARE_SWITCH_WXKG11LM_2016,
@@ -656,9 +658,9 @@ def _get_deconz_event_from_device(
     device: dr.DeviceEntry,
 ) -> DeconzAlarmEvent | DeconzEvent | DeconzPresenceEvent | DeconzRelativeRotaryEvent:
     """Resolve deconz event from device."""
-    gateways: dict[str, DeconzHub] = hass.data.get(DOMAIN, {})
-    for gateway in gateways.values():
-        for deconz_event in gateway.events:
+    hubs: dict[str, DeconzHub] = hass.data.get(DOMAIN, {})
+    for hub in hubs.values():
+        for deconz_event in hub.events:
             if device.id == deconz_event.device_id:
                 return deconz_event
 

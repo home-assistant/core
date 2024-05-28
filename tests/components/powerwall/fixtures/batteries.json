@@ -12,7 +12,8 @@
     "v_out": 245.70000000000002,
     "f_out": 50.037,
     "i_out": 0.30000000000000004,
-    "pinv_grid_state": "Grid_Compliant"
+    "pinv_grid_state": "Grid_Compliant",
+    "disabled_reasons": []
   },
   {
     "PackagePartNumber": "3012170-05-C",
@@ -27,6 +28,7 @@
     "v_out": 245.60000000000002,
     "f_out": 50.037,
     "i_out": 0.1,
-    "pinv_grid_state": "Grid_Compliant"
+    "pinv_grid_state": "Grid_Compliant",
+    "disabled_reasons": []
   }
 ]

@@ -5,7 +5,7 @@ from datetime import timedelta
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.light import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
@@ -21,6 +21,14 @@ from tests.common import (
     async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
+)
+
+DATA_TEMPLATE_ATTRIBUTES = (
+    "{{ trigger.platform }}"
+    " - {{ trigger.entity_id }}"
+    " - {{ trigger.from_state.state }}"
+    " - {{ trigger.to_state.state }}"
+    " - {{ trigger.for }}"
 )
 
 
@@ -69,12 +77,12 @@ async def test_get_triggers(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_triggers_hidden_auxiliary(
     hass: HomeAssistant,
@@ -212,16 +220,7 @@ async def test_if_fires_on_state_change(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_on {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
-                            )
+                            "some": "turn_on " + DATA_TEMPLATE_ATTRIBUTES
                         },
                     },
                 },
@@ -236,16 +235,7 @@ async def test_if_fires_on_state_change(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_off {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
-                            )
+                            "some": "turn_off " + DATA_TEMPLATE_ATTRIBUTES
                         },
                     },
                 },
@@ -260,16 +250,7 @@ async def test_if_fires_on_state_change(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_on_or_off {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
-                            )
+                            "some": "turn_on_or_off " + DATA_TEMPLATE_ATTRIBUTES
                         },
                     },
                 },
@@ -332,16 +313,7 @@ async def test_if_fires_on_state_change_legacy(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_on {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
-                            )
+                            "some": "turn_on " + DATA_TEMPLATE_ATTRIBUTES
                         },
                     },
                 },
@@ -396,16 +368,7 @@ async def test_if_fires_on_state_change_with_for(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_off {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
-                            )
+                            "some": "turn_off " + DATA_TEMPLATE_ATTRIBUTES
                         },
                     },
                 }

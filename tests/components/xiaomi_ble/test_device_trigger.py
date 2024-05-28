@@ -522,7 +522,7 @@ async def test_if_fires_on_motion_detected(hass: HomeAssistant, calls) -> None:
     # Creates the device in the registry
     inject_bluetooth_service_info_bleak(
         hass,
-        make_advertisement(mac, b"@0\xdd\x03$\x0A\x10\x01\x64"),
+        make_advertisement(mac, b"@0\xdd\x03$\x0a\x10\x01\x64"),
     )
 
     # wait for the device being created

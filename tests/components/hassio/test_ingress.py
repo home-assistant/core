@@ -310,7 +310,7 @@ async def test_ingress_missing_peername(
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test hadnling of missing peername."""
+    """Test handling of missing peername."""
     aioclient_mock.get(
         "http://127.0.0.1/ingress/lorem/ipsum",
         text="test",
@@ -379,8 +379,8 @@ async def test_ingress_request_get_compressed(
 
     # Check we got right response
     assert resp.status == HTTPStatus.OK
-    body = await resp.text()
-    assert body == body
+    resp_body = await resp.text()
+    assert resp_body == body
     assert resp.headers["Content-Encoding"] == "deflate"
 
     # Check we forwarded command

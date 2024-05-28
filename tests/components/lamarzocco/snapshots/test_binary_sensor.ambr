@@ -8,6 +8,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.gs01234_brewing_active',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -54,6 +55,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.gs01234_water_tank_empty',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })

@@ -150,7 +150,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     DOMAIN,
                     {meter: {CONF_METER: meter}},
                     config,
-                )
+                ),
+                eager_start=True,
             )
         else:
             # create tariff selection
@@ -161,12 +162,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     DOMAIN,
                     {CONF_METER: meter, CONF_TARIFFS: conf[CONF_TARIFFS]},
                     config,
-                )
+                ),
+                eager_start=True,
             )
 
-            hass.data[DATA_UTILITY][meter][
-                CONF_TARIFF_ENTITY
-            ] = f"{SELECT_DOMAIN}.{meter}"
+            hass.data[DATA_UTILITY][meter][CONF_TARIFF_ENTITY] = (
+                f"{SELECT_DOMAIN}.{meter}"
+            )
 
             # add one meter for each tariff
             tariff_confs = {}
@@ -180,7 +182,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass, SENSOR_DOMAIN, DOMAIN, tariff_confs, config
-                )
+                ),
+                eager_start=True,
             )
 
     return True
@@ -213,9 +216,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entity_entry = entity_registry.async_get_or_create(
             Platform.SELECT, DOMAIN, entry.entry_id, suggested_object_id=entry.title
         )
-        hass.data[DATA_UTILITY][entry.entry_id][
-            CONF_TARIFF_ENTITY
-        ] = entity_entry.entity_id
+        hass.data[DATA_UTILITY][entry.entry_id][CONF_TARIFF_ENTITY] = (
+            entity_entry.entity_id
+        )
         await hass.config_entries.async_forward_entry_setups(
             entry, (Platform.SELECT, Platform.SENSOR)
         )

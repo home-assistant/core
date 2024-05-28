@@ -84,7 +84,7 @@ class InstallationTypeOnboardingView(HomeAssistantView):
     async def get(self, request: web.Request) -> web.Response:
         """Return the onboarding status."""
         if self._data["done"]:
-            raise HTTPUnauthorized()
+            raise HTTPUnauthorized
 
         hass = request.app[KEY_HASS]
         info = await async_get_system_info(hass)

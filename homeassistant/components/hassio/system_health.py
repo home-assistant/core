@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
-from .data import get_host_info, get_info, get_os_info, get_supervisor_info
+from .coordinator import get_host_info, get_info, get_os_info, get_supervisor_info
 
 SUPERVISOR_PING = "http://{ip_address}/supervisor/ping"
 OBSERVER_URL = "http://{ip_address}:4357"

@@ -6,6 +6,7 @@ from unittest.mock import ANY
 import pytest
 
 from homeassistant.components import mqtt
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -108,6 +109,7 @@ async def test_entry_diagnostics(
                     "attributes": {"friendly_name": "MQTT Sensor"},
                     "entity_id": "sensor.none_mqtt_sensor",
                     "last_changed": ANY,
+                    "last_reported": ANY,
                     "last_updated": ANY,
                     "state": "unknown",
                 },
@@ -142,8 +144,8 @@ async def test_entry_diagnostics(
         {
             mqtt.CONF_BROKER: "mock-broker",
             mqtt.CONF_BIRTH_MESSAGE: {},
-            mqtt.CONF_PASSWORD: "hunter2",
-            mqtt.CONF_USERNAME: "my_user",
+            CONF_PASSWORD: "hunter2",
+            CONF_USERNAME: "my_user",
         }
     ],
 )
@@ -234,6 +236,7 @@ async def test_redact_diagnostics(
                     },
                     "entity_id": "device_tracker.mqtt_unique",
                     "last_changed": ANY,
+                    "last_reported": ANY,
                     "last_updated": ANY,
                     "state": "home",
                 },

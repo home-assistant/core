@@ -28,11 +28,14 @@ async def test_async_setup_entry_sets_up_light(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData"
-    ) as mock_loadCloudData, patch(
-        "homeassistant.components.plum_lightpad.light.async_setup_entry"
-    ) as mock_light_async_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData"
+        ) as mock_loadCloudData,
+        patch(
+            "homeassistant.components.plum_lightpad.light.async_setup_entry"
+        ) as mock_light_async_setup_entry,
+    ):
         result = await hass.config_entries.async_setup(config_entry.entry_id)
         assert result is True
 
@@ -50,12 +53,15 @@ async def test_async_setup_entry_handles_auth_error(hass: HomeAssistant) -> None
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData",
-        side_effect=ContentTypeError(Mock(), None),
-    ), patch(
-        "homeassistant.components.plum_lightpad.light.async_setup_entry"
-    ) as mock_light_async_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData",
+            side_effect=ContentTypeError(Mock(), None),
+        ),
+        patch(
+            "homeassistant.components.plum_lightpad.light.async_setup_entry"
+        ) as mock_light_async_setup_entry,
+    ):
         result = await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert result is False
@@ -70,12 +76,15 @@ async def test_async_setup_entry_handles_http_error(hass: HomeAssistant) -> None
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData",
-        side_effect=HTTPError,
-    ), patch(
-        "homeassistant.components.plum_lightpad.light.async_setup_entry"
-    ) as mock_light_async_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.plum_lightpad.utils.Plum.loadCloudData",
+            side_effect=HTTPError,
+        ),
+        patch(
+            "homeassistant.components.plum_lightpad.light.async_setup_entry"
+        ) as mock_light_async_setup_entry,
+    ):
         result = await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert result is False

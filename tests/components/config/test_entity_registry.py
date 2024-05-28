@@ -532,6 +532,7 @@ async def test_update_entity(
             "device_class": "custom_device_class",
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
+            "labels": ["label1", "label2"],
             "name": "after update",
         }
     )
@@ -554,7 +555,7 @@ async def test_update_entity(
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "id": ANY,
-            "labels": [],
+            "labels": unordered(["label1", "label2"]),
             "name": "after update",
             "options": {},
             "original_device_class": None,
@@ -628,7 +629,7 @@ async def test_update_entity(
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "id": ANY,
-            "labels": [],
+            "labels": unordered(["label1", "label2"]),
             "name": "after update",
             "options": {},
             "original_device_class": None,
@@ -669,7 +670,7 @@ async def test_update_entity(
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "id": ANY,
-            "labels": [],
+            "labels": unordered(["label1", "label2"]),
             "name": "after update",
             "options": {"sensor": {"unit_of_measurement": "beard_second"}},
             "original_device_class": None,
@@ -709,7 +710,7 @@ async def test_update_entity(
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "id": ANY,
-            "labels": [],
+            "labels": unordered(["label1", "label2"]),
             "name": "after update",
             "options": {"sensor": {"unit_of_measurement": "beard_second"}},
             "original_device_class": None,
@@ -749,7 +750,7 @@ async def test_update_entity(
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "id": ANY,
-            "labels": [],
+            "labels": unordered(["label1", "label2"]),
             "name": "after update",
             "options": {"sensor": {"unit_of_measurement": "beard_second"}},
             "original_device_class": None,
@@ -789,7 +790,7 @@ async def test_update_entity(
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
             "id": ANY,
-            "labels": [],
+            "labels": unordered(["label1", "label2"]),
             "name": "after update",
             "options": {"sensor": {"unit_of_measurement": "beard_second"}},
             "original_device_class": None,

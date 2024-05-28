@@ -149,7 +149,7 @@ def merge_hsbk(
 
     Hue, Saturation, Brightness, Kelvin
     """
-    return [b if c is None else c for b, c in zip(base, change)]
+    return [b if c is None else c for b, c in zip(base, change, strict=False)]
 
 
 def _get_mac_offset(mac_addr: str, offset: int) -> str:

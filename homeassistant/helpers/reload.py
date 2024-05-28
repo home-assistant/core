@@ -139,8 +139,7 @@ async def _async_reconfig_platform(
 @overload
 async def async_integration_yaml_config(
     hass: HomeAssistant, integration_name: str
-) -> ConfigType | None:
-    ...
+) -> ConfigType | None: ...
 
 
 @overload
@@ -149,8 +148,7 @@ async def async_integration_yaml_config(
     integration_name: str,
     *,
     raise_on_failure: Literal[True],
-) -> ConfigType:
-    ...
+) -> ConfigType: ...
 
 
 @overload
@@ -158,9 +156,8 @@ async def async_integration_yaml_config(
     hass: HomeAssistant,
     integration_name: str,
     *,
-    raise_on_failure: Literal[False] | bool,
-) -> ConfigType | None:
-    ...
+    raise_on_failure: Literal[False],
+) -> ConfigType | None: ...
 
 
 async def async_integration_yaml_config(

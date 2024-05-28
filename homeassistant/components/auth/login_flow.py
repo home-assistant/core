@@ -91,7 +91,7 @@ from homeassistant.components.http.ban import (
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.network import is_cloud_connection
 from homeassistant.util.network import is_local
 
@@ -105,7 +105,8 @@ if TYPE_CHECKING:
     from . import StoreResultType
 
 
-async def async_setup(
+@callback
+def async_setup(
     hass: HomeAssistant, store_result: Callable[[str, Credentials], str]
 ) -> None:
     """Component to allow users to login."""

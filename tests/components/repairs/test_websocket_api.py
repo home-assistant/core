@@ -270,10 +270,10 @@ async def test_fix_non_existing_issue(
 
 @pytest.mark.parametrize(
     ("domain", "step", "description_placeholders"),
-    (
+    [
         ("fake_integration", "custom_step", None),
         ("fake_integration_default_handler", "confirm", {"abc": "123"}),
-    ),
+    ],
 )
 async def test_fix_issue(
     hass: HomeAssistant,

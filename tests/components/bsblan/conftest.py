@@ -43,10 +43,9 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 def mock_bsblan(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None]:
     """Return a mocked BSBLAN client."""
 
-    with patch(
-        "homeassistant.components.bsblan.BSBLAN", autospec=True
-    ) as bsblan_mock, patch(
-        "homeassistant.components.bsblan.config_flow.BSBLAN", new=bsblan_mock
+    with (
+        patch("homeassistant.components.bsblan.BSBLAN", autospec=True) as bsblan_mock,
+        patch("homeassistant.components.bsblan.config_flow.BSBLAN", new=bsblan_mock),
     ):
         bsblan = bsblan_mock.return_value
         bsblan.info.return_value = Info.parse_raw(load_fixture("info.json", DOMAIN))

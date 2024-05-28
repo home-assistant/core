@@ -19,7 +19,11 @@ async def test_manual_watering_switch_metadata(hass: HomeAssistant) -> None:
 
     entry = mock_config_entry(hass)
 
-    with patch_async_ble_device_from_address(), patch_melnor_device(), patch_async_register_callback():
+    with (
+        patch_async_ble_device_from_address(),
+        patch_melnor_device(),
+        patch_async_register_callback(),
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -34,7 +38,11 @@ async def test_manual_watering_switch_on_off(hass: HomeAssistant) -> None:
 
     entry = mock_config_entry(hass)
 
-    with patch_async_ble_device_from_address(), patch_melnor_device() as device_patch, patch_async_register_callback():
+    with (
+        patch_async_ble_device_from_address(),
+        patch_melnor_device() as device_patch,
+        patch_async_register_callback(),
+    ):
         device = device_patch.return_value
 
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -77,7 +85,11 @@ async def test_schedule_enabled_switch_on_off(hass: HomeAssistant) -> None:
 
     entry = mock_config_entry(hass)
 
-    with patch_async_ble_device_from_address(), patch_melnor_device() as device_patch, patch_async_register_callback():
+    with (
+        patch_async_ble_device_from_address(),
+        patch_melnor_device() as device_patch,
+        patch_async_register_callback(),
+    ):
         device = device_patch.return_value
 
         assert await hass.config_entries.async_setup(entry.entry_id)

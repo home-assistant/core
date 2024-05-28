@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, TypeVar
 
 from pydeconz.interfaces.sensors import SensorResources
 from pydeconz.models.event import EventType
@@ -31,9 +30,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_DARK, ATTR_ON
 from .deconz_device import DeconzDevice
-from .hub import DeconzHub, get_gateway_from_config_entry
-
-_SensorDeviceT = TypeVar("_SensorDeviceT", bound=PydeconzSensorBase)
+from .hub import DeconzHub
 
 ATTR_ORIENTATION = "orientation"
 ATTR_TILTANGLE = "tiltangle"
@@ -50,29 +47,28 @@ PROVIDES_EXTRA_ATTRIBUTES = (
     "water",
 )
 
-T = TypeVar(
-    "T",
-    Alarm,
-    CarbonMonoxide,
-    Fire,
-    GenericFlag,
-    OpenClose,
-    Presence,
-    Vibration,
-    Water,
-    PydeconzSensorBase,
-)
-
 
 @dataclass(frozen=True, kw_only=True)
-class DeconzBinarySensorDescription(Generic[T], BinarySensorEntityDescription):
+class DeconzBinarySensorDescription[
+    _T: (
+        Alarm,
+        CarbonMonoxide,
+        Fire,
+        GenericFlag,
+        OpenClose,
+        Presence,
+        Vibration,
+        Water,
+        PydeconzSensorBase,
+    )
+](BinarySensorEntityDescription):
     """Class describing deCONZ binary sensor entities."""
 
-    instance_check: type[T] | None = None
+    instance_check: type[_T] | None = None
     name_suffix: str = ""
     old_unique_id_suffix: str = ""
     update_key: str
-    value_fn: Callable[[T], bool | None]
+    value_fn: Callable[[_T], bool | None]
 
 
 ENTITY_DESCRIPTIONS: tuple[DeconzBinarySensorDescription, ...] = (
@@ -168,13 +164,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the deCONZ binary sensor."""
-    gateway = get_gateway_from_config_entry(hass, config_entry)
-    gateway.entities[DOMAIN] = set()
+    hub = DeconzHub.get_hub(hass, config_entry)
+    hub.entities[DOMAIN] = set()
 
     @callback
     def async_add_sensor(_: EventType, sensor_id: str) -> None:
         """Add sensor from deCONZ."""
-        sensor = gateway.api.sensors[sensor_id]
+        sensor = hub.api.sensors[sensor_id]
 
         for description in ENTITY_DESCRIPTIONS:
             if (
@@ -182,11 +178,11 @@ async def async_setup_entry(
                 and not isinstance(sensor, description.instance_check)
             ) or description.value_fn(sensor) is None:
                 continue
-            async_add_entities([DeconzBinarySensor(sensor, gateway, description)])
+            async_add_entities([DeconzBinarySensor(sensor, hub, description)])
 
-    gateway.register_platform_add_device_callback(
+    hub.register_platform_add_device_callback(
         async_add_sensor,
-        gateway.api.sensors,
+        hub.api.sensors,
     )
 
 
@@ -199,7 +195,7 @@ class DeconzBinarySensor(DeconzDevice[SensorResources], BinarySensorEntity):
     def __init__(
         self,
         device: SensorResources,
-        gateway: DeconzHub,
+        hub: DeconzHub,
         description: DeconzBinarySensorDescription,
     ) -> None:
         """Initialize deCONZ binary sensor."""
@@ -208,7 +204,7 @@ class DeconzBinarySensor(DeconzDevice[SensorResources], BinarySensorEntity):
         self._update_key = description.update_key
         if description.name_suffix:
             self._name_suffix = description.name_suffix
-        super().__init__(device, gateway)
+        super().__init__(device, hub)
 
         if (
             self.entity_description.key in PROVIDES_EXTRA_ATTRIBUTES

@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 
-import homeassistant.components.plant as plant
+from homeassistant.components import plant
 from homeassistant.components.recorder import Recorder
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,

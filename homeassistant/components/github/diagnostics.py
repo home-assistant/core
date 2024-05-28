@@ -27,7 +27,7 @@ async def async_get_config_entry_diagnostics(
     client = GitHubAPI(
         token=config_entry.data[CONF_ACCESS_TOKEN],
         session=async_get_clientsession(hass),
-        **{"client_name": SERVER_SOFTWARE},
+        client_name=SERVER_SOFTWARE,
     )
 
     try:

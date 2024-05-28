@@ -32,7 +32,7 @@ def setup_owproxy_mock_devices(
         )
 
     # Ensure enough read side effect
-    dir_side_effect = [main_dir_return_value] + sub_dir_side_effect
+    dir_side_effect = [main_dir_return_value, *sub_dir_side_effect]
     read_side_effect = (
         main_read_side_effect
         + sub_read_side_effect

@@ -41,6 +41,7 @@
     'context': <ANY>,
     'entity_id': 'switch.device_name_electric_heater',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -54,6 +55,7 @@
     'context': <ANY>,
     'entity_id': 'switch.device_name_electric_heater',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })

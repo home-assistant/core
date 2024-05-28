@@ -12,6 +12,7 @@
     'context': <ANY>,
     'entity_id': 'number.tailwind_iq3_status_led_brightness',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })

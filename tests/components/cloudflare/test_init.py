@@ -39,7 +39,7 @@ async def test_unload_entry(hass: HomeAssistant, cfupdate) -> None:
 
 @pytest.mark.parametrize(
     "side_effect",
-    (pycfdns.ComunicationException(),),
+    [pycfdns.ComunicationException()],
 )
 async def test_async_setup_raises_entry_not_ready(
     hass: HomeAssistant, cfupdate, side_effect
@@ -125,10 +125,13 @@ async def test_integration_services_with_issue(hass: HomeAssistant, cfupdate) ->
     entry = await init_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    with patch(
-        "homeassistant.components.cloudflare.async_detect_location_info",
-        return_value=None,
-    ), pytest.raises(HomeAssistantError, match="Could not get external IPv4 address"):
+    with (
+        patch(
+            "homeassistant.components.cloudflare.async_detect_location_info",
+            return_value=None,
+        ),
+        pytest.raises(HomeAssistantError, match="Could not get external IPv4 address"),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_UPDATE_RECORDS,

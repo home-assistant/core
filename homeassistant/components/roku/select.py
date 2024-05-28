@@ -30,7 +30,7 @@ def _get_application_name(device: RokuDevice) -> str | None:
 
 
 def _get_applications(device: RokuDevice) -> list[str]:
-    return ["Home"] + sorted(app.name for app in device.apps if app.name is not None)
+    return ["Home", *sorted(app.name for app in device.apps if app.name is not None)]
 
 
 def _get_channel_name(device: RokuDevice) -> str | None:

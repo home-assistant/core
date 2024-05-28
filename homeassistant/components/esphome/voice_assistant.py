@@ -11,9 +11,11 @@ from typing import cast
 import wave
 
 from aioesphomeapi import (
+    APIClient,
     VoiceAssistantAudioSettings,
     VoiceAssistantCommandFlag,
     VoiceAssistantEventType,
+    VoiceAssistantFeature,
 )
 
 from homeassistant.components import stt, tts
@@ -64,13 +66,11 @@ _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
 )
 
 
-class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
-    """Receive UDP packets and forward them to the voice assistant."""
+class VoiceAssistantPipeline:
+    """Base abstract pipeline class."""
 
     started = False
     stop_requested = False
-    transport: asyncio.DatagramTransport | None = None
-    remote_addr: tuple[str, int] | None = None
 
     def __init__(
         self,
@@ -79,12 +79,11 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         handle_event: Callable[[VoiceAssistantEventType, dict[str, str] | None], None],
         handle_finished: Callable[[], None],
     ) -> None:
-        """Initialize UDP receiver."""
+        """Initialize the pipeline."""
         self.context = Context()
         self.hass = hass
-
-        assert entry_data.device_info is not None
         self.entry_data = entry_data
+        assert entry_data.device_info is not None
         self.device_info = entry_data.device_info
 
         self.queue: asyncio.Queue[bytes] = asyncio.Queue()
@@ -95,68 +94,8 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
     @property
     def is_running(self) -> bool:
-        """True if the UDP server is started and hasn't been asked to stop."""
+        """True if the pipeline is started and hasn't been asked to stop."""
         return self.started and (not self.stop_requested)
-
-    async def start_server(self) -> int:
-        """Start accepting connections."""
-
-        def accept_connection() -> VoiceAssistantUDPServer:
-            """Accept connection."""
-            if self.started:
-                raise RuntimeError("Can only start once")
-            if self.stop_requested:
-                raise RuntimeError("No longer accepting connections")
-
-            self.started = True
-            return self
-
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.setblocking(False)
-
-        sock.bind(("", UDP_PORT))
-
-        await asyncio.get_running_loop().create_datagram_endpoint(
-            accept_connection, sock=sock
-        )
-
-        return cast(int, sock.getsockname()[1])
-
-    @callback
-    def connection_made(self, transport: asyncio.BaseTransport) -> None:
-        """Store transport for later use."""
-        self.transport = cast(asyncio.DatagramTransport, transport)
-
-    @callback
-    def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
-        """Handle incoming UDP packet."""
-        if not self.is_running:
-            return
-        if self.remote_addr is None:
-            self.remote_addr = addr
-        self.queue.put_nowait(data)
-
-    def error_received(self, exc: Exception) -> None:
-        """Handle when a send or receive operation raises an OSError.
-
-        (Other than BlockingIOError or InterruptedError.)
-        """
-        _LOGGER.error("ESPHome Voice Assistant UDP server error received: %s", exc)
-        self.handle_finished()
-
-    @callback
-    def stop(self) -> None:
-        """Stop the receiver."""
-        self.queue.put_nowait(b"")
-        self.close()
-
-    def close(self) -> None:
-        """Close the receiver."""
-        self.started = False
-        self.stop_requested = True
-
-        if self.transport is not None:
-            self.transport.close()
 
     async def _iterate_packets(self) -> AsyncIterable[bytes]:
         """Iterate over incoming packets."""
@@ -198,7 +137,12 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                 url = async_process_play_media_url(self.hass, path)
                 data_to_send = {"url": url}
 
-                if self.device_info.voice_assistant_version >= 2:
+                if (
+                    self.device_info.voice_assistant_feature_flags_compat(
+                        self.entry_data.api_version
+                    )
+                    & VoiceAssistantFeature.SPEAKER
+                ):
                     media_id = tts_output["media_id"]
                     self._tts_task = self.hass.async_create_background_task(
                         self._send_tts(media_id), "esphome_voice_assistant_tts"
@@ -243,9 +187,15 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         if audio_settings is None or audio_settings.volume_multiplier == 0:
             audio_settings = VoiceAssistantAudioSettings()
 
-        tts_audio_output = (
-            "wav" if self.device_info.voice_assistant_version >= 2 else "mp3"
-        )
+        if (
+            self.device_info.voice_assistant_feature_flags_compat(
+                self.entry_data.api_version
+            )
+            & VoiceAssistantFeature.SPEAKER
+        ):
+            tts_audio_output = "wav"
+        else:
+            tts_audio_output = "mp3"
 
         _LOGGER.debug("Starting pipeline")
         if flags & VoiceAssistantCommandFlag.USE_WAKE_WORD:
@@ -315,7 +265,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         self.handle_event(VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START, {})
 
         try:
-            if (not self.is_running) or (self.transport is None):
+            if not self.is_running:
                 return
 
             extension, data = await tts.async_get_media_source_audio(
@@ -358,16 +308,133 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                 samples_in_chunk = len(chunk) // bytes_per_sample
                 samples_left -= samples_in_chunk
 
-                self.transport.sendto(chunk, self.remote_addr)
+                self.send_audio_bytes(chunk)
                 await asyncio.sleep(
                     samples_in_chunk / stt.AudioSampleRates.SAMPLERATE_16000 * 0.9
                 )
 
                 sample_offset += samples_in_chunk
-
         finally:
             self.handle_event(
                 VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END, {}
             )
             self._tts_task = None
             self._tts_done.set()
+
+    def send_audio_bytes(self, data: bytes) -> None:
+        """Send bytes to the device."""
+        raise NotImplementedError
+
+    def stop(self) -> None:
+        """Stop the pipeline."""
+        self.queue.put_nowait(b"")
+
+
+class VoiceAssistantUDPPipeline(asyncio.DatagramProtocol, VoiceAssistantPipeline):
+    """Receive UDP packets and forward them to the voice assistant."""
+
+    transport: asyncio.DatagramTransport | None = None
+    remote_addr: tuple[str, int] | None = None
+
+    async def start_server(self) -> int:
+        """Start accepting connections."""
+
+        def accept_connection() -> VoiceAssistantUDPPipeline:
+            """Accept connection."""
+            if self.started:
+                raise RuntimeError("Can only start once")
+            if self.stop_requested:
+                raise RuntimeError("No longer accepting connections")
+
+            self.started = True
+            return self
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setblocking(False)
+
+        sock.bind(("", UDP_PORT))
+
+        await asyncio.get_running_loop().create_datagram_endpoint(
+            accept_connection, sock=sock
+        )
+
+        return cast(int, sock.getsockname()[1])
+
+    @callback
+    def connection_made(self, transport: asyncio.BaseTransport) -> None:
+        """Store transport for later use."""
+        self.transport = cast(asyncio.DatagramTransport, transport)
+
+    @callback
+    def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
+        """Handle incoming UDP packet."""
+        if not self.is_running:
+            return
+        if self.remote_addr is None:
+            self.remote_addr = addr
+        self.queue.put_nowait(data)
+
+    def error_received(self, exc: Exception) -> None:
+        """Handle when a send or receive operation raises an OSError.
+
+        (Other than BlockingIOError or InterruptedError.)
+        """
+        _LOGGER.error("ESPHome Voice Assistant UDP server error received: %s", exc)
+        self.handle_finished()
+
+    @callback
+    def stop(self) -> None:
+        """Stop the receiver."""
+        super().stop()
+        self.close()
+
+    def close(self) -> None:
+        """Close the receiver."""
+        self.started = False
+        self.stop_requested = True
+
+        if self.transport is not None:
+            self.transport.close()
+
+    def send_audio_bytes(self, data: bytes) -> None:
+        """Send bytes to the device via UDP."""
+        if self.transport is None:
+            _LOGGER.error("No transport to send audio to")
+            return
+        self.transport.sendto(data, self.remote_addr)
+
+
+class VoiceAssistantAPIPipeline(VoiceAssistantPipeline):
+    """Send audio to the voice assistant via the API."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry_data: RuntimeEntryData,
+        handle_event: Callable[[VoiceAssistantEventType, dict[str, str] | None], None],
+        handle_finished: Callable[[], None],
+        api_client: APIClient,
+    ) -> None:
+        """Initialize the pipeline."""
+        super().__init__(hass, entry_data, handle_event, handle_finished)
+        self.api_client = api_client
+        self.started = True
+
+    def send_audio_bytes(self, data: bytes) -> None:
+        """Send bytes to the device via the API."""
+        self.api_client.send_voice_assistant_audio(data)
+
+    @callback
+    def receive_audio_bytes(self, data: bytes) -> None:
+        """Receive audio bytes from the device."""
+        if not self.is_running:
+            return
+        self.queue.put_nowait(data)
+
+    @callback
+    def stop(self) -> None:
+        """Stop the pipeline."""
+        super().stop()
+
+        self.started = False
+        self.stop_requested = True

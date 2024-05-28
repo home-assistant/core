@@ -42,7 +42,6 @@ pytestmark = [
             [
                 "switch.device",
                 "switch.device_switch_lock",
-                "switch.device_cloud_connection",
             ],
         ),
         (
@@ -87,9 +86,13 @@ async def test_entities_not_created_for_device(
 @pytest.mark.parametrize(
     ("device_fixture", "entity_id", "method", "parameter"),
     [
-        ("HWE-SKT", "switch.device", "state_set", "power_on"),
-        ("HWE-SKT", "switch.device_switch_lock", "state_set", "switch_lock"),
-        ("HWE-SKT", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
+        ("HWE-SKT-11", "switch.device", "state_set", "power_on"),
+        ("HWE-SKT-11", "switch.device_switch_lock", "state_set", "switch_lock"),
+        ("HWE-SKT-11", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
+        ("HWE-SKT-21", "switch.device", "state_set", "power_on"),
+        ("HWE-SKT-21", "switch.device_switch_lock", "state_set", "switch_lock"),
+        ("HWE-SKT-21", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
+        ("HWE-WTR", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
         ("SDM230", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
         ("SDM630", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
         ("HWE-KWH1", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
@@ -192,7 +195,7 @@ async def test_switch_entities(
         )
 
 
-@pytest.mark.parametrize("device_fixture", ["HWE-SKT"])
+@pytest.mark.parametrize("device_fixture", ["HWE-SKT-11", "HWE-SKT-21"])
 @pytest.mark.parametrize("exception", [RequestError, UnsupportedError])
 @pytest.mark.parametrize(
     ("entity_id", "method"),

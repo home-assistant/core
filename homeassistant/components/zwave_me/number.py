@@ -50,5 +50,5 @@ class ZWaveMeNumber(ZWaveMeEntity, NumberEntity):
     def set_native_value(self, value: float) -> None:
         """Update the current value."""
         self.controller.zwave_api.send_command(
-            self.device.id, f"exact?level={str(round(value))}"
+            self.device.id, f"exact?level={round(value)!s}"
         )

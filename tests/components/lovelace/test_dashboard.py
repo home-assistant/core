@@ -1,6 +1,7 @@
 """Test the Lovelace initialization."""
 
 from collections.abc import Generator
+import time
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -180,8 +181,46 @@ async def test_lovelace_from_yaml(
 
     assert len(events) == 1
 
+    # Make sure when the mtime changes, we reload the config
+    with (
+        patch(
+            "homeassistant.components.lovelace.dashboard.load_yaml_dict",
+            return_value={"hello": "yo3"},
+        ),
+        patch(
+            "homeassistant.components.lovelace.dashboard.os.path.getmtime",
+            return_value=time.time(),
+        ),
+    ):
+        await client.send_json({"id": 9, "type": "lovelace/config", "force": False})
+        response = await client.receive_json()
 
-@pytest.mark.parametrize("url_path", ("test-panel", "test-panel-no-sidebar"))
+    assert response["success"]
+    assert response["result"] == {"hello": "yo3"}
+
+    assert len(events) == 2
+
+    # If the mtime is lower, preserve the cache
+    with (
+        patch(
+            "homeassistant.components.lovelace.dashboard.load_yaml_dict",
+            return_value={"hello": "yo4"},
+        ),
+        patch(
+            "homeassistant.components.lovelace.dashboard.os.path.getmtime",
+            return_value=0,
+        ),
+    ):
+        await client.send_json({"id": 10, "type": "lovelace/config", "force": False})
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"hello": "yo3"}
+
+    assert len(events) == 2
+
+
+@pytest.mark.parametrize("url_path", ["test-panel", "test-panel-no-sidebar"])
 async def test_dashboard_from_yaml(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, url_path
 ) -> None:

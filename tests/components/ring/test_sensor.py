@@ -87,7 +87,7 @@ async def test_history(
     assert front_door_last_activity_state.state == "2017-03-05T15:03:40+00:00"
 
     ingress_last_activity_state = hass.states.get("sensor.ingress_last_activity")
-    assert ingress_last_activity_state.state == "unknown"
+    assert ingress_last_activity_state.state == "2024-02-02T11:21:24+00:00"
 
 
 async def test_only_chime_devices(
@@ -97,7 +97,7 @@ async def test_only_chime_devices(
     caplog,
 ) -> None:
     """Tests the update service works correctly if only chimes are returned."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
     requests_mock.get(
         "https://api.ring.com/clients_api/ring_devices",

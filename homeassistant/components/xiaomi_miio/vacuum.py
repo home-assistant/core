@@ -281,10 +281,10 @@ class MiroboVacuum(
         try:
             await self.hass.async_add_executor_job(partial(func, *args, **kwargs))
             await self.coordinator.async_refresh()
-            return True
         except DeviceException as exc:
             _LOGGER.error(mask_error, exc)
             return False
+        return True
 
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""

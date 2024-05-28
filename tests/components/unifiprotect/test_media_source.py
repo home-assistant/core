@@ -362,7 +362,8 @@ async def test_browse_media_camera(
 
     entity_registry = er.async_get(hass)
     entity_registry.async_update_entity(
-        "camera.test_camera_high", disabled_by=er.RegistryEntryDisabler("user")
+        "camera.test_camera_high_resolution_channel",
+        disabled_by=er.RegistryEntryDisabler("user"),
     )
     await hass.async_block_till_done()
 

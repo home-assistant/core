@@ -43,6 +43,7 @@ FIXTURE_CONFIG_ENTRY = {
 async def setup_mocked_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Mock a fully setup config entry and all components based on fixtures."""
 
+    # Mock config entry and add to HA
     mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
     mock_config_entry.add_to_hass(hass)
 
@@ -54,9 +55,9 @@ async def setup_mocked_integration(hass: HomeAssistant) -> MockConfigEntry:
 
 def check_remote_service_call(
     router: respx.MockRouter,
-    remote_service: str = None,
-    remote_service_params: dict = None,
-    remote_service_payload: dict = None,
+    remote_service: str | None = None,
+    remote_service_params: dict | None = None,
+    remote_service_payload: dict | None = None,
 ):
     """Check if the last call was a successful remote service call."""
 

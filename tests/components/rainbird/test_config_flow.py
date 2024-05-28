@@ -61,7 +61,7 @@ async def complete_flow(hass: HomeAssistant) -> FlowResult:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert not result.get("errors")
     assert "flow_id" in result
@@ -102,7 +102,7 @@ async def test_controller_flow(
     """Test the controller is setup correctly."""
 
     result = await complete_flow(hass)
-    assert result.get("type") == "create_entry"
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == HOST
     assert "result" in result
     assert dict(result["result"].data) == expected_config_entry
@@ -159,13 +159,13 @@ async def test_multiple_config_entries(
 ) -> None:
     """Test setting up multiple config entries that refer to different devices."""
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     responses.clear()
     responses.extend(config_flow_responses)
 
     result = await complete_flow(hass)
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert dict(result.get("result").data) == expected_config_entry
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -234,14 +234,14 @@ async def test_duplicate_config_entries(
 ) -> None:
     """Test that a device can not be registered twice."""
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     responses.clear()
     responses.extend(config_flow_responses)
 
     result = await complete_flow(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
     assert dict(config_entry.data) == expected_config_entry_data
 
@@ -261,7 +261,7 @@ async def test_controller_cannot_connect(
     )
 
     result = await complete_flow(hass)
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"base": "cannot_connect"}
 
@@ -279,7 +279,7 @@ async def test_controller_timeout(
         side_effect=TimeoutError,
     ):
         result = await complete_flow(hass)
-        assert result.get("type") == FlowResultType.FORM
+        assert result.get("type") is FlowResultType.FORM
         assert result.get("step_id") == "user"
         assert result.get("errors") == {"base": "timeout_connect"}
 
@@ -291,7 +291,7 @@ async def test_options_flow(hass: HomeAssistant, mock_setup: Mock) -> None:
 
     # Setup config flow
     result = await complete_flow(hass)
-    assert result.get("type") == "create_entry"
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == HOST
     assert "result" in result
     assert result["result"].data == CONFIG_ENTRY_DATA
@@ -299,18 +299,18 @@ async def test_options_flow(hass: HomeAssistant, mock_setup: Mock) -> None:
 
     # Assert single config entry is loaded
     config_entry = next(iter(hass.config_entries.async_entries(DOMAIN)))
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     # Initiate the options flow
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "init"
 
     # Change the default duration
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={ATTR_DURATION: 5}
     )
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         ATTR_DURATION: 5,
     }

@@ -8,12 +8,13 @@ from typing import TYPE_CHECKING, cast
 
 from sqlalchemy.orm.session import Session
 
-from homeassistant.core import Event
+from homeassistant.core import Event, EventStateChangedData
+from homeassistant.util.collection import chunked
 from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS
 
 from ..db_schema import StateAttributes
 from ..queries import get_shared_attributes
-from ..util import chunked, execute_stmt_lambda_element
+from ..util import execute_stmt_lambda_element
 from . import BaseLRUTableManager
 
 if TYPE_CHECKING:
@@ -38,7 +39,7 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
         super().__init__(recorder, CACHE_SIZE)
         self.active = True  # always active
 
-    def serialize_from_event(self, event: Event) -> bytes | None:
+    def serialize_from_event(self, event: Event[EventStateChangedData]) -> bytes | None:
         """Serialize event data."""
         try:
             return StateAttributes.shared_attrs_bytes_from_event(
@@ -47,12 +48,14 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
         except JSON_ENCODE_EXCEPTIONS as ex:
             _LOGGER.warning(
                 "State is not JSON serializable: %s: %s",
-                event.data.get("new_state"),
+                event.data["new_state"],
                 ex,
             )
             return None
 
-    def load(self, events: list[Event], session: Session) -> None:
+    def load(
+        self, events: list[Event[EventStateChangedData]], session: Session
+    ) -> None:
         """Load the shared_attrs to attributes_ids mapping into memory from events.
 
         This call is not thread-safe and must be called from the
