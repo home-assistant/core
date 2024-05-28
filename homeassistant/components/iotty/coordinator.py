@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for iotty."""
 
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 
 from iottycloud.device import Device
@@ -14,9 +15,11 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import api
-from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
+from .const import DOMAIN, LOGGER
 
 _LOGGER = logging.getLogger(__name__)
+
+UPDATE_INTERVAL = timedelta(seconds=30)
 
 
 @dataclass
@@ -69,6 +72,24 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
     async def _async_update_data(self) -> IottyData:
         """Fetch data from iottyCloud device."""
         _LOGGER.debug("Fetching devices status from iottyCloud")
+
+        all_devices = await self.iotty.get_devices()
+        new_devices = [
+            d
+            for d in all_devices
+            if not any(x.device_id == d.device_id for x in self._devices)
+        ]
+        removed_devices = [
+            d
+            for d in self._devices
+            if not any(x.device_id == d.device_id for x in all_devices)
+        ]
+
+        for new_device in new_devices:
+            self._devices.append(new_device)
+
+        for removed_device in removed_devices:
+            self._devices.remove(removed_device)
 
         for device in self._devices:
             res = await self.iotty.get_status(device.device_id)

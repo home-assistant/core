@@ -1,11 +1,9 @@
 """API for iotty bound to Home Assistant OAuth."""
 
 import logging
-from typing import Any
 
 from aiohttp import ClientSession
 from iottycloud.cloudapi import CloudApi
-from iottycloud.device import Device
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -20,11 +18,6 @@ PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 class IottyProxy(CloudApi):
     """Provide iotty authentication tied to an OAuth2 based config entry."""
-
-    # We shall remove these
-    _devices: list[Device]
-    _entities: dict
-    _coroutine: Any
 
     def __init__(
         self,

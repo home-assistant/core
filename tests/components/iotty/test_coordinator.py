@@ -135,7 +135,7 @@ async def test_first_refresh_twodevices_ok(
     await sut_coordinator.async_config_entry_first_refresh()
     await hass.async_block_till_done()
 
-    assert len(mock_get_devices_twodevices.mock_calls) == 1
+    assert len(mock_get_devices_twodevices.mock_calls) == 2
 
     assert len(sut_coordinator._devices) == 2
 
