@@ -279,9 +279,7 @@ class RequirementsManager:
         if is_custom_component:
             for specifier in requirements:
                 parsed_req = Requirement(specifier)
-                requirement_name = parsed_req.name
-                if "[" in requirement_name:
-                    requirement_name = requirement_name.partition("[")[0]
+                requirement_name = parsed_req.name.partition("[")[0]
                 if requirement_name not in REQUIREMENTS:
                     continue
                 version, core_integrations_using_req = REQUIREMENTS[requirement_name]
