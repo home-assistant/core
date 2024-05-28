@@ -103,8 +103,8 @@ def test_component_platform_not_found(
     mock_is_file: None,
     event_loop: AbstractEventLoop,
     mock_hass_config_yaml: None,
-    platforms,
-    error,
+    platforms: set[str],
+    error: str,
 ) -> None:
     """Test errors if component or platform not found."""
     # Make sure they don't exist
