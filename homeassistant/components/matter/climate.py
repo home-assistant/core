@@ -154,22 +154,23 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
         if target_temperature is not None:
             # single setpoint control
-            if current_mode == HVACMode.COOL:
-                matter_attribute = (
-                    clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
+            if self.target_temperature != target_temperature:
+                if current_mode == HVACMode.COOL:
+                    matter_attribute = (
+                        clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
+                    )
+                else:
+                    matter_attribute = (
+                        clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
+                    )
+                await self.matter_client.write_attribute(
+                    node_id=self._endpoint.node.node_id,
+                    attribute_path=create_attribute_path_from_attribute(
+                        self._endpoint.endpoint_id,
+                        matter_attribute,
+                    ),
+                    value=int(target_temperature * TEMPERATURE_SCALING_FACTOR),
                 )
-            else:
-                matter_attribute = (
-                    clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
-                )
-            await self.matter_client.write_attribute(
-                node_id=self._endpoint.node.node_id,
-                attribute_path=create_attribute_path_from_attribute(
-                    self._endpoint.endpoint_id,
-                    matter_attribute,
-                ),
-                value=int(target_temperature * TEMPERATURE_SCALING_FACTOR),
-            )
             return
 
         if target_temperature_low is not None:
