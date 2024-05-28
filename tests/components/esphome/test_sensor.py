@@ -97,6 +97,7 @@ async def test_generic_numeric_sensor(
 
 async def test_generic_numeric_sensor_with_entity_category_and_icon(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_client: APIClient,
     mock_generic_device_entry,
 ) -> None:
@@ -123,8 +124,7 @@ async def test_generic_numeric_sensor_with_entity_category_and_icon(
     assert state is not None
     assert state.state == "50"
     assert state.attributes[ATTR_ICON] == "mdi:leaf"
-    entity_reg = er.async_get(hass)
-    entry = entity_reg.async_get("sensor.test_mysensor")
+    entry = entity_registry.async_get("sensor.test_mysensor")
     assert entry is not None
     # Note that ESPHome includes the EntityInfo type in the unique id
     # as this is not a 1:1 mapping to the entity platform (ie. text_sensor)
@@ -134,6 +134,7 @@ async def test_generic_numeric_sensor_with_entity_category_and_icon(
 
 async def test_generic_numeric_sensor_state_class_measurement(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_client: APIClient,
     mock_generic_device_entry,
 ) -> None:
@@ -161,8 +162,7 @@ async def test_generic_numeric_sensor_state_class_measurement(
     assert state is not None
     assert state.state == "50"
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
-    entity_reg = er.async_get(hass)
-    entry = entity_reg.async_get("sensor.test_mysensor")
+    entry = entity_registry.async_get("sensor.test_mysensor")
     assert entry is not None
     # Note that ESPHome includes the EntityInfo type in the unique id
     # as this is not a 1:1 mapping to the entity platform (ie. text_sensor)

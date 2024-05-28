@@ -1004,7 +1004,9 @@ async def test_simple_before_after_does_not_loop_berlin_in_range(
     assert state.attributes["next_update"] == "2019-01-11T06:00:00+01:00"
 
 
-async def test_unique_id(hass: HomeAssistant) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test unique id."""
     config = {
         "binary_sensor": [
@@ -1020,7 +1022,6 @@ async def test_unique_id(hass: HomeAssistant) -> None:
     await async_setup_component(hass, "binary_sensor", config)
     await hass.async_block_till_done()
 
-    entity_reg = er.async_get(hass)
-    entity = entity_reg.async_get("binary_sensor.evening")
+    entity = entity_registry.async_get("binary_sensor.evening")
 
     assert entity.unique_id == "very_unique_id"
