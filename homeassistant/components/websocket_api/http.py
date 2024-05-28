@@ -102,7 +102,7 @@ class WebSocketHandler:
         # to use a deque and an asyncio.Future to avoid the overhead of
         # an asyncio.Queue.
         self._message_queue: deque[bytes] = deque()
-        self._ready_future: asyncio.Future[None] | None = None
+        self._ready_future: asyncio.Future[int] | None = None
         self._release_ready_queue_size: int = 0
 
     def __repr__(self) -> str:
@@ -140,7 +140,7 @@ class WebSocketHandler:
             while not wsock.closed:
                 if not message_queue:
                     self._ready_future = loop.create_future()
-                    await self._ready_future
+                    ready_message_count = await self._ready_future
 
                 if self._closing:
                     return
@@ -148,7 +148,7 @@ class WebSocketHandler:
                 if not can_coalesce:
                     can_coalesce = self._connection and self._connection.can_coalesce
 
-                if not can_coalesce or len(message_queue) == 1:
+                if not can_coalesce or ready_message_count == 1:
                     message = message_queue.popleft()
                     if is_debug_log_enabled():
                         debug("%s: Sending %s", self.description, message)
@@ -253,7 +253,7 @@ class WebSocketHandler:
             return
         self._release_ready_queue_size = 0
         if not ready_future.done():
-            ready_future.set_result(None)
+            ready_future.set_result(queue_size)
 
     @callback
     def _check_write_peak(self, _utc_time: dt.datetime) -> None:
@@ -461,7 +461,7 @@ class WebSocketHandler:
 
             self._closing = True
             if self._ready_future and not self._ready_future.done():
-                self._ready_future.set_result(None)
+                self._ready_future.set_result(len(self._message_queue))
 
             # If the writer gets canceled we still need to close the websocket
             # so we have another finally block to make sure we close the websocket
