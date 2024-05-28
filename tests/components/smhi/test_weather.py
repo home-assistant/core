@@ -349,7 +349,10 @@ def test_condition_class() -> None:
 
 
 async def test_custom_speed_unit(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, api_response: str
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    api_response: str,
 ) -> None:
     """Test Wind Gust speed with custom unit."""
     uri = APIURL_TEMPLATE.format(
@@ -369,8 +372,7 @@ async def test_custom_speed_unit(
     assert state.name == "test"
     assert state.attributes[ATTR_WEATHER_WIND_GUST_SPEED] == 22.32
 
-    entity_reg = er.async_get(hass)
-    entity_reg.async_update_entity_options(
+    entity_registry.async_update_entity_options(
         state.entity_id,
         WEATHER_DOMAIN,
         {ATTR_WEATHER_WIND_SPEED_UNIT: UnitOfSpeed.METERS_PER_SECOND},
