@@ -27,7 +27,7 @@ class ConversationInput:
     conversation_id: str | None
     device_id: str | None
     language: str
-    agent_id: str | None
+    agent_id: str | None = None
 
 
 @dataclass(slots=True)

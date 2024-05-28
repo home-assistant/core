@@ -744,10 +744,7 @@ class StartTimerIntentHandler(intent.IntentHandler):
     slot_schema = {
         vol.Required(vol.Any("hours", "minutes", "seconds")): cv.positive_int,
         vol.Optional("name"): cv.string,
-        vol.Optional(
-            "conversation_command",
-            description="Text of command to execute with conversation agent when the timer is finished",
-        ): cv.string,
+        vol.Optional("conversation_command"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
