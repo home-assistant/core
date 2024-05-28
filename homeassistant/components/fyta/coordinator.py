@@ -54,8 +54,6 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
         except (FytaConnectionError, FytaPlantError) as err:
             raise UpdateFailed(err) from err
 
-        _LOGGER.debug("Data successfully updated")
-
         return data
 
     async def renew_authentication(self) -> bool:
