@@ -260,12 +260,24 @@ def test_bad_root_import(
         (
             "from homeassistant.helpers.issue_registry import async_get",
             "tests.components.pylint_test.climate",
-            ("async_get", "ir.async_get"),
+            (
+                "async_get",
+                "homeassistant.helpers.issue_registry",
+                "ir",
+                "ir",
+                "async_get",
+            ),
         ),
         (
             "from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry",
             "tests.components.pylint_test.climate",
-            ("async_get", "ir.async_get"),
+            (
+                "async_get",
+                "homeassistant.helpers.issue_registry",
+                "ir",
+                "ir",
+                "async_get",
+            ),
         ),
     ],
 )

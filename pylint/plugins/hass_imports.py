@@ -455,7 +455,8 @@ class HassImportsFormatChecker(BaseChecker):
             "from the component root",
         ),
         "W7425": (
-            "%s should be used via the namespace: %s",
+            "`%s` should not be imported directly. Please import `%s` as `%s` "
+            "and use `%s.%s`",
             "hass-helper-namespace-import",
             "Used when a helper should be used via the namespace",
         ),
@@ -567,7 +568,13 @@ class HassImportsFormatChecker(BaseChecker):
                     self.add_message(
                         "hass-helper-namespace-import",
                         node=node,
-                        args=(name[0], f"{namespace_alias.alias}.{name[0]}"),
+                        args=(
+                            name[0],
+                            node.modname,
+                            namespace_alias.alias,
+                            namespace_alias.alias,
+                            name[0],
+                        ),
                     )
 
 
