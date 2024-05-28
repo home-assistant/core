@@ -250,9 +250,9 @@ class AssistAPI(API):
             extra = "and all generic commands like 'turn on the lights' should target this area."
 
         if floor and area:
-            prompt.append(f"You are in {area.name} (floor {floor.name}) {extra}")
+            prompt.append(f"You are in area {area.name} (floor {floor.name}) {extra}")
         elif area:
-            prompt.append(f"You are in {area.name} {extra}")
+            prompt.append(f"You are in area {area.name} {extra}")
         else:
             prompt.append(
                 "Reject all generic commands like 'turn on the lights' because we "

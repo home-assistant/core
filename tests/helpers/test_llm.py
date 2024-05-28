@@ -389,7 +389,7 @@ async def test_assist_api_prompt(
     tool_input.device_id = device.id
     prompt = await api.async_get_api_prompt(tool_input)
     area_prompt = (
-        "You are in Test Area and all generic commands like 'turn on the lights' "
+        "You are in area Test Area and all generic commands like 'turn on the lights' "
         "should target this area."
     )
     assert prompt == (
@@ -403,7 +403,7 @@ async def test_assist_api_prompt(
     area_registry.async_update(area.id, floor_id=floor.floor_id)
     prompt = await api.async_get_api_prompt(tool_input)
     area_prompt = (
-        "You are in Test Area (floor 2) and all generic commands like 'turn on the lights' "
+        "You are in area Test Area (floor 2) and all generic commands like 'turn on the lights' "
         "should target this area."
     )
     assert prompt == (
