@@ -37,7 +37,6 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 TAG_DATA: HassKey[TagStorageCollection] = HassKey(DOMAIN)
-TAGS_ENTITIES = "tags_entities"
 SIGNAL_TAG_CHANGED = "signal_tag_changed"
 
 CREATE_FIELDS = {
