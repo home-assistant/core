@@ -60,12 +60,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
     except ClientError as e:
         raise ConfigEntryNotReady from e
 
-    fleet_api = Tessie(session, api_key)
-    try:
-        products = (await fleet_api.products)["response"]
-    except TeslaFleetError as e:
-        raise ConfigEntryNotReady from e
-
     vehicles = [
         TessieStateUpdateCoordinator(
             hass,
@@ -76,6 +70,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
         for vehicle in vehicles["results"]
         if vehicle["last_state"] is not None
     ]
+
+    # Energy Sites
+    fleet_api = Tessie(session, api_key)
+    try:
+        products = (await fleet_api.products)["response"]
+    except TeslaFleetError as e:
+        raise ConfigEntryNotReady from e
+
+    for product in products:
+        if product["type"] == "energy_site":
+            energy_site = EnergySpecific(session, api_key, product
 
     entry.runtime_data = TessieData(vehicles=vehicles)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
