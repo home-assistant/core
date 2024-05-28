@@ -216,7 +216,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         if available_rooms is None:
             valid_rooms: list[str] = []
         else:
-            valid_rooms = [room.lower() for room in available_rooms]
+            valid_rooms = [room.lower().replace(" ", "_") for room in available_rooms]
 
         for room in rooms:
             if room in valid_rooms:
