@@ -371,32 +371,44 @@ async def test_assist_api_prompt(
     )
     first_part_prompt = (
         "Call the intent tools to control Home Assistant. "
-        "Just pass the name to the intent. "
         "When controlling an area, prefer passing area name."
     )
 
     prompt = await api.async_get_api_prompt(tool_input)
+    area_prompt = (
+        "Reject all generic commands like 'turn on the lights' because we don't know in what area "
+        "this conversation is happening."
+    )
     assert prompt == (
         f"""{first_part_prompt}
+{area_prompt}
 {exposed_entities_prompt}"""
     )
 
     # Fake that request is made from a specific device ID
     tool_input.device_id = device.id
     prompt = await api.async_get_api_prompt(tool_input)
+    area_prompt = (
+        "You are in area Test Area and all generic commands like 'turn on the lights' "
+        "should target this area."
+    )
     assert prompt == (
         f"""{first_part_prompt}
-You are in Test Area.
+{area_prompt}
 {exposed_entities_prompt}"""
     )
 
     # Add floor
-    floor = floor_registry.async_create("second floor")
+    floor = floor_registry.async_create("2")
     area_registry.async_update(area.id, floor_id=floor.floor_id)
     prompt = await api.async_get_api_prompt(tool_input)
+    area_prompt = (
+        "You are in area Test Area (floor 2) and all generic commands like 'turn on the lights' "
+        "should target this area."
+    )
     assert prompt == (
         f"""{first_part_prompt}
-You are in Test Area (second floor).
+{area_prompt}
 {exposed_entities_prompt}"""
     )
 
@@ -409,7 +421,7 @@ You are in Test Area (second floor).
         prompt = await api.async_get_api_prompt(tool_input)
     assert prompt == (
         f"""{first_part_prompt}
-You are in Test Area (second floor).
+{area_prompt}
 The user name is Test User.
 {exposed_entities_prompt}"""
     )
