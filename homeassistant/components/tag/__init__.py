@@ -101,8 +101,9 @@ class TagStorageCollection(collection.DictStorageCollection):
         # make last_scanned JSON serializeable
         if LAST_SCANNED in data:
             data[LAST_SCANNED] = data[LAST_SCANNED].isoformat()
+
         # Create entity in entity_registry when creating the tag
-        # This is done early to store name in a single place (ER)
+        # This is done early to store name only once in entity registry
         self.entity_registry.async_get_or_create(
             DOMAIN,
             DOMAIN,
@@ -185,7 +186,10 @@ class TagDictStorageCollectionWebsocket(
     async def ws_create_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
-        """Create a item."""
+        """Create a tag item.
+
+        Provides name from entity registry.
+        """
         try:
             data = dict(msg)
             data.pop("id")
@@ -212,7 +216,10 @@ class TagDictStorageCollectionWebsocket(
     async def ws_update_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
-        """Update a item."""
+        """Update a tag item.
+
+        Provides the name from entity registry.
+        """
         data = dict(msg)
         msg_id = data.pop("id")
         item_id = data.pop(self.item_id_key)
@@ -326,7 +333,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         name = DEFAULT_NAME
         if entity:
-            name = entity.name or entity.original_name or DEFAULT_NAME
+            name = entity.name or entity.original_name or name
 
         entities.append(
             TagEntity(
