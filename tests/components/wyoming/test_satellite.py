@@ -1124,7 +1124,6 @@ async def test_timers(hass: HomeAssistant) -> None:
             "homeassistant.components.wyoming.satellite.AsyncTcpClient",
             SatelliteAsyncTcpClient([]),
         ) as mock_client,
-        patch("homeassistant.components.conversation.async_converse") as mock_converse,
     ):
         entry = await setup_config_entry(hass)
         device: SatelliteDevice = hass.data[wyoming.DOMAIN][
@@ -1257,7 +1256,7 @@ async def test_timers(hass: HomeAssistant) -> None:
             assert timer_cancelled is not None
             assert timer_cancelled.id == timer_started.id
 
-        # Start a new timer with an Assist command
+        # Start a new timer
         mock_client.timer_started_event.clear()
         result = await intent_helper.async_handle(
             hass,
@@ -1266,7 +1265,6 @@ async def test_timers(hass: HomeAssistant) -> None:
             {
                 "name": {"value": "test timer"},
                 "minutes": {"value": 1},
-                "command": {"value": "turn on the lights"},
             },
             device_id=device.device_id,
         )
@@ -1294,7 +1292,3 @@ async def test_timers(hass: HomeAssistant) -> None:
             timer_finished = mock_client.timer_finished
             assert timer_finished is not None
             assert timer_finished.id == timer_started.id
-
-            # Assist command should have been executed
-            mock_converse.assert_called_once()
-            assert mock_converse.call_args.args[1] == "turn on the lights"

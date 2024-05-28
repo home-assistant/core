@@ -21,7 +21,7 @@ from wyoming.tts import Synthesize, SynthesizeVoice
 from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
-from homeassistant.components import assist_pipeline, conversation, intent, stt, tts
+from homeassistant.components import assist_pipeline, intent, stt, tts
 from homeassistant.components.assist_pipeline import select as pipeline_select
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
@@ -596,19 +596,4 @@ class WyomingSatellite:
             # Send timer event to satellite
             self.config_entry.async_create_background_task(
                 self.hass, self._client.write_event(event), "wyoming timer event"
-            )
-
-        if (event_type == intent.TimerEventType.FINISHED) and timer.assist_command:
-            self.config_entry.async_create_background_task(
-                self.hass,
-                conversation.async_converse(
-                    self.hass,
-                    timer.assist_command,
-                    conversation_id=None,
-                    context=Context(),
-                    language=timer.language,
-                    agent_id=timer.agent_id,
-                    device_id=timer.device_id,
-                ),
-                "wyoming timer assist command",
             )
