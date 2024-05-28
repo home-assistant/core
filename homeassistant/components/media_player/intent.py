@@ -66,6 +66,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             required_features=MediaPlayerEntityFeature.NEXT_TRACK,
             required_states={MediaPlayerState.PLAYING},
             description="Skips a media player to the next item",
+            platforms={DOMAIN},
         ),
     )
     intent.async_register(
@@ -83,12 +84,15 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
                 )
             },
             description="Sets the volume of a media player",
+            platforms={DOMAIN},
         ),
     )
 
 
 class MediaPauseHandler(intent.ServiceIntentHandler):
     """Handler for pause intent. Records last paused media players."""
+
+    platforms = {DOMAIN}
 
     def __init__(self, last_paused: LastPaused) -> None:
         """Initialize handler."""
@@ -124,6 +128,8 @@ class MediaPauseHandler(intent.ServiceIntentHandler):
 
 class MediaUnpauseHandler(intent.ServiceIntentHandler):
     """Handler for unpause/resume intent. Uses last paused media players."""
+
+    platforms = {DOMAIN}
 
     def __init__(self, last_paused: LastPaused) -> None:
         """Initialize handler."""

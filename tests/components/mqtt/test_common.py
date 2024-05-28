@@ -16,7 +16,7 @@ import yaml
 from homeassistant import config as module_hass_config
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
-from homeassistant.components.mqtt.const import MQTT_DISCONNECTED
+from homeassistant.components.mqtt.const import MQTT_CONNECTION_STATE
 from homeassistant.components.mqtt.mixins import MQTT_ATTRIBUTES_BLOCKED
 from homeassistant.components.mqtt.models import PublishPayloadType
 from homeassistant.config_entries import ConfigEntryState
@@ -27,7 +27,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     EntityCategory,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HassJobType, HomeAssistant
 from homeassistant.generated.mqtt import MQTT
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -115,7 +115,7 @@ async def help_test_availability_when_connection_lost(
     assert state and state.state != STATE_UNAVAILABLE
 
     mqtt_mock.connected = False
-    async_dispatcher_send(hass, MQTT_DISCONNECTED)
+    async_dispatcher_send(hass, MQTT_CONNECTION_STATE, False)
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
@@ -1189,7 +1189,9 @@ async def help_test_entity_id_update_subscriptions(
     assert state is not None
     assert mqtt_mock.async_subscribe.call_count == len(topics) + 2 + DISCOVERY_COUNT
     for topic in topics:
-        mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
+        mqtt_mock.async_subscribe.assert_any_call(
+            topic, ANY, ANY, ANY, HassJobType.Callback
+        )
     mqtt_mock.async_subscribe.reset_mock()
 
     entity_registry.async_update_entity(
@@ -1203,7 +1205,9 @@ async def help_test_entity_id_update_subscriptions(
     state = hass.states.get(f"{domain}.milk")
     assert state is not None
     for topic in topics:
-        mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
+        mqtt_mock.async_subscribe.assert_any_call(
+            topic, ANY, ANY, ANY, HassJobType.Callback
+        )
 
 
 async def help_test_entity_id_update_discovery_update(

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from contextlib import suppress
 from enum import Enum
 import functools
 import inspect
@@ -167,8 +166,7 @@ def _print_deprecation_warning_internal(
     log_when_no_integration_is_found: bool,
 ) -> None:
     # pylint: disable=import-outside-toplevel
-    from homeassistant.core import HomeAssistant, async_get_hass
-    from homeassistant.exceptions import HomeAssistantError
+    from homeassistant.core import async_get_hass_or_none
     from homeassistant.loader import async_suggest_report_issue
 
     from .frame import MissingIntegrationFrame, get_integration_frame
@@ -191,11 +189,8 @@ def _print_deprecation_warning_internal(
             )
     else:
         if integration_frame.custom_integration:
-            hass: HomeAssistant | None = None
-            with suppress(HomeAssistantError):
-                hass = async_get_hass()
             report_issue = async_suggest_report_issue(
-                hass,
+                async_get_hass_or_none(),
                 integration_domain=integration_frame.integration,
                 module=integration_frame.module,
             )

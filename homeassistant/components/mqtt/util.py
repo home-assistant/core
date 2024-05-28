@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from functools import lru_cache
+import logging
 import os
 from pathlib import Path
 import tempfile
@@ -12,7 +13,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import MAX_LENGTH_STATE_STATE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType
@@ -31,7 +32,7 @@ from .const import (
     DEFAULT_RETAIN,
     DOMAIN,
 )
-from .models import DATA_MQTT, DATA_MQTT_AVAILABLE
+from .models import DATA_MQTT, DATA_MQTT_AVAILABLE, ReceiveMessage
 
 AVAILABILITY_TIMEOUT = 30.0
 
@@ -113,8 +114,6 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
         hass.data[DATA_MQTT_AVAILABLE] = state_reached_future
     else:
         state_reached_future = hass.data[DATA_MQTT_AVAILABLE]
-        if state_reached_future.done():
-            return state_reached_future.result()
 
     try:
         async with asyncio.timeout(AVAILABILITY_TIMEOUT):
@@ -259,6 +258,28 @@ async def async_create_certificate_temp_files(
         _create_temp_file(temp_dir / CONF_CLIENT_KEY, config.get(CONF_CLIENT_KEY))
 
     await hass.async_add_executor_job(_create_temp_dir_and_files)
+
+
+def check_state_too_long(
+    logger: logging.Logger, proposed_state: str, entity_id: str, msg: ReceiveMessage
+) -> bool:
+    """Check if the processed state is too long and log warning."""
+    if (state_length := len(proposed_state)) > MAX_LENGTH_STATE_STATE:
+        logger.warning(
+            "Cannot update state for entity %s after processing "
+            "payload on topic %s. The requested state (%s) exceeds "
+            "the maximum allowed length (%s). Fall back to "
+            "%s, failed state: %s",
+            entity_id,
+            msg.topic,
+            state_length,
+            MAX_LENGTH_STATE_STATE,
+            STATE_UNKNOWN,
+            proposed_state[:8192],
+        )
+        return True
+
+    return False
 
 
 def get_file_path(option: str, default: str | None = None) -> str | None:

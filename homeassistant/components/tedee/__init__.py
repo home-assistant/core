@@ -33,8 +33,10 @@ PLATFORMS = [
 
 _LOGGER = logging.getLogger(__name__)
 
+type TedeeConfigEntry = ConfigEntry[TedeeApiCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> bool:
     """Integration setup."""
 
     coordinator = TedeeApiCoordinator(hass)
@@ -51,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         serial_number=coordinator.bridge.serial,
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     async def unregister_webhook(_: Any) -> None:
         await coordinator.async_unregister_webhook()
@@ -100,11 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 def get_webhook_handler(
