@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from functools import partial
 import mimetypes
 from pathlib import Path
 
-from google.api_core.exceptions import ClientError
+from google.ai import generativelanguage_v1beta
+from google.api_core.client_options import ClientOptions
+from google.api_core.exceptions import ClientError, DeadlineExceeded, GoogleAPICallError
 import google.generativeai as genai
 import google.generativeai.types as genai_types
 import voluptuous as vol
@@ -19,11 +20,16 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_PROMPT, DOMAIN, LOGGER
+from .const import CONF_CHAT_MODEL, CONF_PROMPT, DOMAIN, RECOMMENDED_CHAT_MODEL
 
 SERVICE_GENERATE_CONTENT = "generate_content"
 CONF_IMAGE_FILENAME = "image_filename"
@@ -100,12 +106,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     genai.configure(api_key=entry.data[CONF_API_KEY])
 
     try:
-        await hass.async_add_executor_job(partial(genai.list_models))
-    except ClientError as err:
-        if err.reason == "API_KEY_INVALID":
-            LOGGER.error("Invalid API key: %s", err)
-            return False
-        raise ConfigEntryNotReady(err) from err
+        client = generativelanguage_v1beta.ModelServiceAsyncClient(
+            client_options=ClientOptions(api_key=entry.data[CONF_API_KEY])
+        )
+        await client.get_model(
+            name=entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL), timeout=5.0
+        )
+    except (GoogleAPICallError, ValueError) as err:
+        if isinstance(err, ClientError) and err.reason == "API_KEY_INVALID":
+            raise ConfigEntryAuthFailed(err) from err
+        if isinstance(err, DeadlineExceeded):
+            raise ConfigEntryNotReady(err) from err
+        raise ConfigEntryError(err) from err
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -60,14 +60,12 @@ from .. import subscription
 from ..config import DEFAULT_QOS, DEFAULT_RETAIN, MQTT_RW_SCHEMA
 from ..const import (
     CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
     DOMAIN as MQTT_DOMAIN,
 )
-from ..debug_info import log_messages
-from ..mixins import MqttEntity, write_state_on_attr_change
+from ..mixins import MqttEntity
 from ..models import ReceiveMessage
 from ..schemas import MQTT_ENTITY_COMMON_SCHEMA
 from ..util import valid_subscribe_topic
@@ -414,13 +412,88 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                     self.entity_id,
                 )
 
+    @callback
+    def _state_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT messages."""
+        values = json_loads_object(msg.payload)
+
+        if values["state"] == "ON":
+            self._attr_is_on = True
+        elif values["state"] == "OFF":
+            self._attr_is_on = False
+        elif values["state"] is None:
+            self._attr_is_on = None
+
+        if (
+            self._deprecated_color_handling
+            and color_supported(self.supported_color_modes)
+            and "color" in values
+        ):
+            # Deprecated color handling
+            if values["color"] is None:
+                self._attr_hs_color = None
+            else:
+                self._update_color(values)
+
+        if not self._deprecated_color_handling and "color_mode" in values:
+            self._update_color(values)
+
+        if brightness_supported(self.supported_color_modes):
+            try:
+                if brightness := values["brightness"]:
+                    if TYPE_CHECKING:
+                        assert isinstance(brightness, float)
+                    self._attr_brightness = color_util.value_to_brightness(
+                        (1, self._config[CONF_BRIGHTNESS_SCALE]), brightness
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Ignoring zero brightness value for entity %s",
+                        self.entity_id,
+                    )
+
+            except KeyError:
+                pass
+            except (TypeError, ValueError):
+                _LOGGER.warning(
+                    "Invalid brightness value '%s' received for entity %s",
+                    values["brightness"],
+                    self.entity_id,
+                )
+
+        if (
+            self._deprecated_color_handling
+            and self.supported_color_modes
+            and ColorMode.COLOR_TEMP in self.supported_color_modes
+        ):
+            # Deprecated color handling
+            try:
+                if values["color_temp"] is None:
+                    self._attr_color_temp = None
+                else:
+                    self._attr_color_temp = int(values["color_temp"])  # type: ignore[arg-type]
+            except KeyError:
+                pass
+            except ValueError:
+                _LOGGER.warning(
+                    "Invalid color temp value '%s' received for entity %s",
+                    values["color_temp"],
+                    self.entity_id,
+                )
+            # Allow to switch back to color_temp
+            if "color" not in values:
+                self._attr_hs_color = None
+
+        if self.supported_features and LightEntityFeature.EFFECT:
+            with suppress(KeyError):
+                self._attr_effect = cast(str, values["effect"])
+
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(
-            self,
+        self.add_subscription(
+            CONF_STATE_TOPIC,
+            self._state_received,
             {
                 "_attr_brightness",
                 "_attr_color_temp",
@@ -434,98 +507,10 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 "color_mode",
             },
         )
-        def state_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages."""
-            values = json_loads_object(msg.payload)
-
-            if values["state"] == "ON":
-                self._attr_is_on = True
-            elif values["state"] == "OFF":
-                self._attr_is_on = False
-            elif values["state"] is None:
-                self._attr_is_on = None
-
-            if (
-                self._deprecated_color_handling
-                and color_supported(self.supported_color_modes)
-                and "color" in values
-            ):
-                # Deprecated color handling
-                if values["color"] is None:
-                    self._attr_hs_color = None
-                else:
-                    self._update_color(values)
-
-            if not self._deprecated_color_handling and "color_mode" in values:
-                self._update_color(values)
-
-            if brightness_supported(self.supported_color_modes):
-                try:
-                    if brightness := values["brightness"]:
-                        if TYPE_CHECKING:
-                            assert isinstance(brightness, float)
-                        self._attr_brightness = color_util.value_to_brightness(
-                            (1, self._config[CONF_BRIGHTNESS_SCALE]), brightness
-                        )
-                    else:
-                        _LOGGER.debug(
-                            "Ignoring zero brightness value for entity %s",
-                            self.entity_id,
-                        )
-
-                except KeyError:
-                    pass
-                except (TypeError, ValueError):
-                    _LOGGER.warning(
-                        "Invalid brightness value '%s' received for entity %s",
-                        values["brightness"],
-                        self.entity_id,
-                    )
-
-            if (
-                self._deprecated_color_handling
-                and self.supported_color_modes
-                and ColorMode.COLOR_TEMP in self.supported_color_modes
-            ):
-                # Deprecated color handling
-                try:
-                    if values["color_temp"] is None:
-                        self._attr_color_temp = None
-                    else:
-                        self._attr_color_temp = int(values["color_temp"])  # type: ignore[arg-type]
-                except KeyError:
-                    pass
-                except ValueError:
-                    _LOGGER.warning(
-                        "Invalid color temp value '%s' received for entity %s",
-                        values["color_temp"],
-                        self.entity_id,
-                    )
-                # Allow to switch back to color_temp
-                if "color" not in values:
-                    self._attr_hs_color = None
-
-            if self.supported_features and LightEntityFeature.EFFECT:
-                with suppress(KeyError):
-                    self._attr_effect = cast(str, values["effect"])
-
-        if self._topic[CONF_STATE_TOPIC] is not None:
-            self._sub_state = subscription.async_prepare_subscribe_topics(
-                self.hass,
-                self._sub_state,
-                {
-                    "state_topic": {
-                        "topic": self._topic[CONF_STATE_TOPIC],
-                        "msg_callback": state_received,
-                        "qos": self._config[CONF_QOS],
-                        "encoding": self._config[CONF_ENCODING] or None,
-                    }
-                },
-            )
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
         last_state = await self.async_get_last_state()
         if self._optimistic and last_state:
@@ -734,12 +719,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._attr_brightness = kwargs[ATTR_WHITE]
                 should_update = True
 
-        await self.async_publish(
-            str(self._topic[CONF_COMMAND_TOPIC]),
-            json_dumps(message),
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            str(self._topic[CONF_COMMAND_TOPIC]), json_dumps(message)
         )
 
         if self._optimistic:
@@ -759,12 +740,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
         self._set_flash_and_transition(message, **kwargs)
 
-        await self.async_publish(
-            str(self._topic[CONF_COMMAND_TOPIC]),
-            json_dumps(message),
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            str(self._topic[CONF_COMMAND_TOPIC]), json_dumps(message)
         )
 
         if self._optimistic:

@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from functools import partial
 import logging
 from types import MappingProxyType
 from typing import Any
 
-from google.api_core.exceptions import ClientError
+from google.ai import generativelanguage_v1beta
+from google.api_core.client_options import ClientOptions
+from google.api_core.exceptions import ClientError, GoogleAPICallError
 import google.generativeai as genai
 import voluptuous as vol
 
@@ -17,7 +20,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
@@ -32,16 +35,19 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_CHAT_MODEL,
+    CONF_DANGEROUS_BLOCK_THRESHOLD,
+    CONF_HARASSMENT_BLOCK_THRESHOLD,
+    CONF_HATE_BLOCK_THRESHOLD,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_RECOMMENDED,
+    CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
-    CONF_TONE_PROMPT,
     CONF_TOP_K,
     CONF_TOP_P,
-    DEFAULT_PROMPT,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_HARM_BLOCK_THRESHOLD,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_K,
@@ -50,7 +56,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_API_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
     }
@@ -59,7 +65,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 RECOMMENDED_OPTIONS = {
     CONF_RECOMMENDED: True,
     CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-    CONF_TONE_PROMPT: "",
+    CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
 }
 
 
@@ -68,8 +74,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    genai.configure(api_key=data[CONF_API_KEY])
-    await hass.async_add_executor_job(partial(genai.list_models))
+    client = generativelanguage_v1beta.ModelServiceAsyncClient(
+        client_options=ClientOptions(api_key=data[CONF_API_KEY])
+    )
+    await client.list_models(timeout=5.0)
 
 
 class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -77,36 +85,74 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize a new GoogleGenerativeAIConfigFlow."""
+        self.reauth_entry: ConfigEntry | None = None
+
+    async def async_step_api(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                await validate_input(self.hass, user_input)
+            except GoogleAPICallError as err:
+                if isinstance(err, ClientError) and err.reason == "API_KEY_INVALID":
+                    errors["base"] = "invalid_auth"
+                else:
+                    errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                if self.reauth_entry:
+                    return self.async_update_reload_and_abort(
+                        self.reauth_entry,
+                        data=user_input,
+                    )
+                return self.async_create_entry(
+                    title="Google Generative AI",
+                    data=user_input,
+                    options=RECOMMENDED_OPTIONS,
+                )
+        return self.async_show_form(
+            step_id="api",
+            data_schema=STEP_API_DATA_SCHEMA,
+            description_placeholders={
+                "api_key_url": "https://aistudio.google.com/app/apikey"
+            },
+            errors=errors,
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
+        return await self.async_step_api()
 
-        errors = {}
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle configuration by re-auth."""
+        self.reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_confirm()
 
-        try:
-            await validate_input(self.hass, user_input)
-        except ClientError as err:
-            if err.reason == "API_KEY_INVALID":
-                errors["base"] = "invalid_auth"
-            else:
-                errors["base"] = "cannot_connect"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            return self.async_create_entry(
-                title="Google Generative AI",
-                data=user_input,
-                options=RECOMMENDED_OPTIONS,
-            )
-
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is not None:
+            return await self.async_step_api()
+        assert self.reauth_entry
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="reauth_confirm",
+            description_placeholders={
+                CONF_NAME: self.reauth_entry.title,
+                CONF_API_KEY: self.reauth_entry.data.get(CONF_API_KEY, ""),
+            },
         )
 
     @staticmethod
@@ -142,16 +188,11 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
             # Re-render the options again, now with the recommended options shown/hidden
             self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
 
-            # If we switch to not recommended, generate used prompt.
-            if user_input[CONF_RECOMMENDED]:
-                options = RECOMMENDED_OPTIONS
-            else:
-                options = {
-                    CONF_RECOMMENDED: False,
-                    CONF_PROMPT: DEFAULT_PROMPT
-                    + "\n"
-                    + user_input.get(CONF_TONE_PROMPT, ""),
-                }
+            options = {
+                CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
+                CONF_PROMPT: user_input[CONF_PROMPT],
+                CONF_LLM_HASS_API: user_input[CONF_LLM_HASS_API],
+            }
 
         schema = await google_generative_ai_config_option_schema(self.hass, options)
         return self.async_show_form(
@@ -179,22 +220,27 @@ async def google_generative_ai_config_option_schema(
         for api in llm.async_get_apis(hass)
     )
 
+    schema = {
+        vol.Optional(
+            CONF_PROMPT,
+            description={
+                "suggested_value": options.get(
+                    CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                )
+            },
+        ): TemplateSelector(),
+        vol.Optional(
+            CONF_LLM_HASS_API,
+            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+            default="none",
+        ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
+        vol.Required(
+            CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
+        ): bool,
+    }
+
     if options.get(CONF_RECOMMENDED):
-        return {
-            vol.Required(
-                CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
-            ): bool,
-            vol.Optional(
-                CONF_TONE_PROMPT,
-                description={"suggested_value": options.get(CONF_TONE_PROMPT)},
-                default="",
-            ): TemplateSelector(),
-            vol.Optional(
-                CONF_LLM_HASS_API,
-                description={"suggested_value": options.get(CONF_LLM_HASS_API)},
-                default="none",
-            ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
-        }
+        return schema
 
     api_models = await hass.async_add_executor_job(partial(genai.list_models))
 
@@ -211,45 +257,85 @@ async def google_generative_ai_config_option_schema(
         )
     ]
 
-    return {
-        vol.Required(
-            CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
-        ): bool,
-        vol.Optional(
-            CONF_CHAT_MODEL,
-            description={"suggested_value": options.get(CONF_CHAT_MODEL)},
-            default=RECOMMENDED_CHAT_MODEL,
-        ): SelectSelector(
-            SelectSelectorConfig(mode=SelectSelectorMode.DROPDOWN, options=models)
+    harm_block_thresholds: list[SelectOptionDict] = [
+        SelectOptionDict(
+            label="Block none",
+            value="BLOCK_NONE",
         ),
-        vol.Optional(
-            CONF_PROMPT,
-            description={"suggested_value": options.get(CONF_PROMPT)},
-            default=DEFAULT_PROMPT,
-        ): TemplateSelector(),
-        vol.Optional(
-            CONF_LLM_HASS_API,
-            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
-            default="none",
-        ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
-        vol.Optional(
-            CONF_TEMPERATURE,
-            description={"suggested_value": options.get(CONF_TEMPERATURE)},
-            default=RECOMMENDED_TEMPERATURE,
-        ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-        vol.Optional(
-            CONF_TOP_P,
-            description={"suggested_value": options.get(CONF_TOP_P)},
-            default=RECOMMENDED_TOP_P,
-        ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-        vol.Optional(
-            CONF_TOP_K,
-            description={"suggested_value": options.get(CONF_TOP_K)},
-            default=RECOMMENDED_TOP_K,
-        ): int,
-        vol.Optional(
-            CONF_MAX_TOKENS,
-            description={"suggested_value": options.get(CONF_MAX_TOKENS)},
-            default=RECOMMENDED_MAX_TOKENS,
-        ): int,
-    }
+        SelectOptionDict(
+            label="Block few",
+            value="BLOCK_ONLY_HIGH",
+        ),
+        SelectOptionDict(
+            label="Block some",
+            value="BLOCK_MEDIUM_AND_ABOVE",
+        ),
+        SelectOptionDict(
+            label="Block most",
+            value="BLOCK_LOW_AND_ABOVE",
+        ),
+    ]
+    harm_block_thresholds_selector = SelectSelector(
+        SelectSelectorConfig(
+            mode=SelectSelectorMode.DROPDOWN, options=harm_block_thresholds
+        )
+    )
+
+    schema.update(
+        {
+            vol.Optional(
+                CONF_CHAT_MODEL,
+                description={"suggested_value": options.get(CONF_CHAT_MODEL)},
+                default=RECOMMENDED_CHAT_MODEL,
+            ): SelectSelector(
+                SelectSelectorConfig(mode=SelectSelectorMode.DROPDOWN, options=models)
+            ),
+            vol.Optional(
+                CONF_TEMPERATURE,
+                description={"suggested_value": options.get(CONF_TEMPERATURE)},
+                default=RECOMMENDED_TEMPERATURE,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Optional(
+                CONF_TOP_P,
+                description={"suggested_value": options.get(CONF_TOP_P)},
+                default=RECOMMENDED_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Optional(
+                CONF_TOP_K,
+                description={"suggested_value": options.get(CONF_TOP_K)},
+                default=RECOMMENDED_TOP_K,
+            ): int,
+            vol.Optional(
+                CONF_MAX_TOKENS,
+                description={"suggested_value": options.get(CONF_MAX_TOKENS)},
+                default=RECOMMENDED_MAX_TOKENS,
+            ): int,
+            vol.Optional(
+                CONF_HARASSMENT_BLOCK_THRESHOLD,
+                description={
+                    "suggested_value": options.get(CONF_HARASSMENT_BLOCK_THRESHOLD)
+                },
+                default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+            ): harm_block_thresholds_selector,
+            vol.Optional(
+                CONF_HATE_BLOCK_THRESHOLD,
+                description={"suggested_value": options.get(CONF_HATE_BLOCK_THRESHOLD)},
+                default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+            ): harm_block_thresholds_selector,
+            vol.Optional(
+                CONF_SEXUAL_BLOCK_THRESHOLD,
+                description={
+                    "suggested_value": options.get(CONF_SEXUAL_BLOCK_THRESHOLD)
+                },
+                default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+            ): harm_block_thresholds_selector,
+            vol.Optional(
+                CONF_DANGEROUS_BLOCK_THRESHOLD,
+                description={
+                    "suggested_value": options.get(CONF_DANGEROUS_BLOCK_THRESHOLD)
+                },
+                default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+            ): harm_block_thresholds_selector,
+        }
+    )
+    return schema

@@ -17,12 +17,16 @@
     "step": {
       "init": {
         "data": {
-          "prompt": "Prompt Template",
+          "prompt": "Instructions",
           "chat_model": "[%key:common::generic::model%]",
           "max_tokens": "Maximum tokens to return in response",
           "temperature": "Temperature",
           "top_p": "Top P",
-          "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]"
+          "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+          "recommended": "Recommended model settings"
+        },
+        "data_description": {
+          "prompt": "Instruct how the LLM should respond. This can be a template."
         }
       }
     }

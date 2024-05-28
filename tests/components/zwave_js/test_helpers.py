@@ -25,10 +25,11 @@ async def test_async_get_node_status_sensor_entity_id(hass: HomeAssistant) -> No
     assert async_get_node_status_sensor_entity_id(hass, device.id) is None
 
 
-async def test_async_get_nodes_from_area_id(hass: HomeAssistant) -> None:
+async def test_async_get_nodes_from_area_id(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry
+) -> None:
     """Test async_get_nodes_from_area_id."""
-    area_reg = ar.async_get(hass)
-    area = area_reg.async_create("test")
+    area = area_registry.async_create("test")
     assert not async_get_nodes_from_area_id(hass, area.id)
 
 

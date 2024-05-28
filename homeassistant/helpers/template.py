@@ -7,7 +7,7 @@ import asyncio
 import base64
 import collections.abc
 from collections.abc import Callable, Generator, Iterable
-from contextlib import AbstractContextManager, suppress
+from contextlib import AbstractContextManager
 from contextvars import ContextVar
 from datetime import date, datetime, time, timedelta
 from functools import cache, lru_cache, partial, wraps
@@ -99,7 +99,6 @@ _ENVIRONMENT_STRICT: HassKey[TemplateEnvironment] = HassKey(
 )
 _HASS_LOADER = "template.hass_loader"
 
-_RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
 _IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
 
@@ -109,9 +108,6 @@ _RESERVED_NAMES = {
     "environmentfunction",
     "jinja_pass_arg",
 }
-
-_GROUP_DOMAIN_PREFIX = "group."
-_ZONE_DOMAIN_PREFIX = "zone."
 
 _COLLECTABLE_STATE_ATTRIBUTES = {
     "state",
@@ -261,7 +257,9 @@ def is_complex(value: Any) -> bool:
 
 def is_template_string(maybe_template: str) -> bool:
     """Check if the input is a Jinja2 template."""
-    return _RE_JINJA_DELIMITERS.search(maybe_template) is not None
+    return "{" in maybe_template and (
+        "{%" in maybe_template or "{{" in maybe_template or "{#" in maybe_template
+    )
 
 
 class ResultWrapper:
@@ -329,7 +327,33 @@ def _false(arg: str) -> bool:
     return False
 
 
-_cached_literal_eval = lru_cache(maxsize=EVAL_CACHE_SIZE)(literal_eval)
+@lru_cache(maxsize=EVAL_CACHE_SIZE)
+def _cached_parse_result(render_result: str) -> Any:
+    """Parse a result and cache the result."""
+    result = literal_eval(render_result)
+    if type(result) in RESULT_WRAPPERS:
+        result = RESULT_WRAPPERS[type(result)](result, render_result=render_result)
+
+    # If the literal_eval result is a string, use the original
+    # render, by not returning right here. The evaluation of strings
+    # resulting in strings impacts quotes, to avoid unexpected
+    # output; use the original render instead of the evaluated one.
+    # Complex and scientific values are also unexpected. Filter them out.
+    if (
+        # Filter out string and complex numbers
+        not isinstance(result, (str, complex))
+        and (
+            # Pass if not numeric and not a boolean
+            not isinstance(result, (int, float))
+            # Or it's a boolean (inherit from int)
+            or isinstance(result, bool)
+            # Or if it's a digit
+            or _IS_NUMERIC.match(render_result) is not None
+        )
+    ):
+        return result
+
+    return render_result
 
 
 class RenderInfo:
@@ -510,11 +534,15 @@ class Template:
 
     def ensure_valid(self) -> None:
         """Return if template is valid."""
+        if self.is_static or self._compiled_code is not None:
+            return
+
+        if compiled := self._env.template_cache.get(self.template):
+            self._compiled_code = compiled
+            return
+
         with _template_context_manager as cm:
             cm.set_template(self.template, "compiling")
-            if self.is_static or self._compiled_code is not None:
-                return
-
             try:
                 self._compiled_code = self._env.compile(self.template)
             except jinja2.TemplateError as err:
@@ -586,31 +614,7 @@ class Template:
     def _parse_result(self, render_result: str) -> Any:
         """Parse the result."""
         try:
-            result = _cached_literal_eval(render_result)
-
-            if type(result) in RESULT_WRAPPERS:
-                result = RESULT_WRAPPERS[type(result)](
-                    result, render_result=render_result
-                )
-
-            # If the literal_eval result is a string, use the original
-            # render, by not returning right here. The evaluation of strings
-            # resulting in strings impacts quotes, to avoid unexpected
-            # output; use the original render instead of the evaluated one.
-            # Complex and scientific values are also unexpected. Filter them out.
-            if (
-                # Filter out string and complex numbers
-                not isinstance(result, (str, complex))
-                and (
-                    # Pass if not numeric and not a boolean
-                    not isinstance(result, (int, float))
-                    # Or it's a boolean (inherit from int)
-                    or isinstance(result, bool)
-                    # Or if it's a digit
-                    or _IS_NUMERIC.match(render_result) is not None
-                )
-            ):
-                return result
+            return _cached_parse_result(render_result)
         except (ValueError, TypeError, SyntaxError, MemoryError):
             pass
 
@@ -758,8 +762,10 @@ class Template:
         variables = dict(variables or {})
         variables["value"] = value
 
-        with suppress(*JSON_DECODE_EXCEPTIONS):
+        try:  # noqa: SIM105 - suppress is much slower
             variables["value_json"] = json_loads(value)
+        except JSON_DECODE_EXCEPTIONS:
+            pass
 
         try:
             render_result = _render_with_context(
@@ -2730,7 +2736,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         super().__init__(undefined=make_logging_undefined(strict, log_fn))
         self.hass = hass
         self.template_cache: weakref.WeakValueDictionary[
-            str | jinja2.nodes.Template, CodeType | str | None
+            str | jinja2.nodes.Template, CodeType | None
         ] = weakref.WeakValueDictionary()
         self.add_extension("jinja2.ext.loopcontrols")
         self.filters["round"] = forgiving_round
@@ -3079,10 +3085,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 defer_init,
             )
 
-        if (cached := self.template_cache.get(source)) is None:
-            cached = self.template_cache[source] = super().compile(source)
-
-        return cached
+        compiled = super().compile(source)
+        self.template_cache[source] = compiled
+        return compiled
 
 
 _NO_HASS_ENV = TemplateEnvironment(None)

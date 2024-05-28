@@ -30,12 +30,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.device_registry import (
-    DeviceInfo,
-    async_get as async_get_dev_reg,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_get as async_get_entity_reg
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -269,8 +266,8 @@ async def async_setup_entry(
 
     tibber_connection = hass.data[TIBBER_DOMAIN]
 
-    entity_registry = async_get_entity_reg(hass)
-    device_registry = async_get_dev_reg(hass)
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
 
     coordinator: TibberDataCoordinator | None = None
     entities: list[TibberSensor] = []
@@ -342,8 +339,8 @@ class TibberSensor(SensorEntity):
             self._home_name = tibber_home.info["viewer"]["home"]["address"].get(
                 "address1", ""
             )
-        self._device_name: None | str = None
-        self._model: None | str = None
+        self._device_name: str | None = None
+        self._model: str | None = None
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -548,7 +545,7 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-en
         self._async_remove_device_updates_handler = self.async_add_listener(
             self._add_sensors
         )
-        self.entity_registry = async_get_entity_reg(hass)
+        self.entity_registry = er.async_get(hass)
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
 
     @callback

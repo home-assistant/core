@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from contextlib import suppress
 import functools
 import linecache
 import logging
 import threading
 from typing import Any
 
-from homeassistant.core import HomeAssistant, async_get_hass
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import async_get_hass_or_none
 from homeassistant.helpers.frame import (
     MissingIntegrationFrame,
     get_current_frame,
@@ -74,11 +72,8 @@ def raise_for_blocking_call(
                 f"https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
             )
 
-    hass: HomeAssistant | None = None
-    with suppress(HomeAssistantError):
-        hass = async_get_hass()
     report_issue = async_suggest_report_issue(
-        hass,
+        async_get_hass_or_none(),
         integration_domain=integration_frame.integration,
         module=integration_frame.module,
     )
