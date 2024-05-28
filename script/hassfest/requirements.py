@@ -50,7 +50,6 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
         return
 
     # check for incompatible requirements
-
     disable_tqdm = bool(config.specific_integrations or os.environ.get("CI"))
 
     for integration in tqdm(integrations.values(), disable=disable_tqdm):
@@ -59,6 +58,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         return
 
+    config.cache["requirements"] = content = generate_and_validate(integrations)
     with open(str(requirements_path)) as fp:
         current = fp.read()
         if current != content:
