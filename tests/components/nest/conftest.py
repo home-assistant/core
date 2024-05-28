@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from asyncio import AbstractEventLoop
 from collections.abc import Generator
 import copy
 import shutil
@@ -37,6 +38,7 @@ from .common import (
 )
 
 from tests.common import MockConfigEntry
+from tests.typing import ClientSessionGenerator
 
 FAKE_TOKEN = "some-token"
 FAKE_REFRESH_TOKEN = "some-refresh-token"
@@ -86,7 +88,11 @@ class FakeAuth(AbstractAuth):
 
 
 @pytest.fixture
-def aiohttp_client(event_loop, aiohttp_client, socket_enabled):
+def aiohttp_client(
+    event_loop: AbstractEventLoop,
+    aiohttp_client: ClientSessionGenerator,
+    socket_enabled: None,
+) -> ClientSessionGenerator:
     """Return aiohttp_client and allow opening sockets."""
     return aiohttp_client
 
