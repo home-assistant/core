@@ -278,17 +278,6 @@ def _get_exposed_entities(
     area_registry = ar.async_get(hass)
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
-    interesting_domains = {
-        "binary_sensor",
-        "climate",
-        "cover",
-        "fan",
-        "light",
-        "lock",
-        "sensor",
-        "switch",
-        "weather",
-    }
     interesting_attributes = {
         "temperature",
         "current_temperature",
@@ -304,9 +293,6 @@ def _get_exposed_entities(
     entities = {}
 
     for state in hass.states.async_all():
-        if state.domain not in interesting_domains:
-            continue
-
         if not async_should_expose(hass, assistant, state.entity_id):
             continue
 
