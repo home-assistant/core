@@ -22,6 +22,7 @@ import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
+from .binary_sensor import BINARY_SENSORS
 from .const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
@@ -33,8 +34,13 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
+from .sensor import INFO_SENSORS, TIME_SENSORS
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORM_DESCRIPTIONS = {
+    Platform.BINARY_SENSOR: BINARY_SENSORS,
+    Platform.SENSOR: (*INFO_SENSORS, *TIME_SENSORS),
+}
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -132,17 +138,23 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         timezone=config_entry.data.get(CONF_TIME_ZONE, hass.config.time_zone),
     )
 
-    old_prefix = get_unique_prefix(
-        location, language, candle_lighting_offset, havdalah_offset
-    )
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
         CONF_LANGUAGE: language,
         CONF_DIASPORA: diaspora,
         CONF_LOCATION: location,
         CONF_CANDLE_LIGHT_MINUTES: candle_lighting_offset,
         CONF_HAVDALAH_OFFSET_MINUTES: havdalah_offset,
-        "old_prefix": old_prefix,
     }
+
+    # Update unique ID to be unrelated to user defined options
+    old_prefix = get_unique_prefix(
+        location, language, candle_lighting_offset, havdalah_offset
+    )
+    for platform, descriptions in PLATFORM_DESCRIPTIONS.items():
+        for description in descriptions:
+            async_update_unique_id(
+                hass, config_entry.entry_id, old_prefix, platform, description.key
+            )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True

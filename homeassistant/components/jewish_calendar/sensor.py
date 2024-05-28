@@ -10,7 +10,6 @@ from hdate import HDate
 from hdate.zmanim import Zmanim
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -22,7 +21,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
-from . import async_update_unique_id
 from .const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
@@ -157,15 +155,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Jewish calendar sensors ."""
     entry = hass.data[DOMAIN][config.entry_id]
-    for sensor in (*INFO_SENSORS, *TIME_SENSORS):
-        async_update_unique_id(
-            hass,
-            config.entry_id,
-            entry["old_prefix"],
-            SENSOR_DOMAIN,
-            sensor.key,
-        )
-
     sensors = [
         JewishCalendarSensor(config.entry_id, entry, description)
         for description in INFO_SENSORS
