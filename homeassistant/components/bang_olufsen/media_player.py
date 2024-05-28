@@ -172,7 +172,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     """Representation of a media player."""
 
     _attr_icon = "mdi:speaker-wireless"
-    _attr_name: None | str = None
+    _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_supported_features = BANG_OLUFSEN_FEATURES
 
@@ -602,7 +602,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
         if self._volume.muted and self._volume.muted.muted:
-            return self._volume.muted.muted
+            return self._volume.muted.muted  # type: ignore[no-any-return]
         return None
 
     @property
@@ -936,7 +936,9 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         else:
             response = await self._client.join_beolink_peer(jid=beolink_jid)
 
-        return response.dict()
+        if response:
+            return cast(dict, response.to_dict())
+        return None
 
     async def async_beolink_expand(
         self, beolink_jids: list[str] | None = None, all_discovered: bool = False
