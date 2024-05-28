@@ -280,23 +280,22 @@ class RequirementsManager:
             for specifier in requirements:
                 parsed_req = Requirement(specifier)
                 requirement_name = parsed_req.name.partition("[")[0]
-                if requirement_name not in REQUIREMENTS:
+                if not (version_integrations := REQUIREMENTS.get(requirement_name)):
                     continue
-                version, core_integrations_using_req = REQUIREMENTS[requirement_name]
+                version, core_integrations = version_integrations
                 if parsed_req.specifier.contains(version):
                     continue
-                core_integrations_using_req_set = set(core_integrations_using_req)
+                core_integrations_set = set(core_integrations)
                 # Allow the custom component to override the core integration
-                # but only if the core integration and not any other core
-                # integrations that require the version.
-                core_integrations_using_req_set.discard(name)
-                if not core_integrations_using_req_set:
+                # requirements but not any other core integrations.
+                core_integrations_set.discard(name)
+                if not core_integrations_set:
                     continue
                 _LOGGER.error(
                     "Requirement %s cannot be satisfied "
                     "because core integrations %s require version: %s",
                     specifier,
-                    core_integrations_using_req_set,
+                    core_integrations_set,
                     version,
                 )
                 raise RequirementsNotFound(name, [specifier])
