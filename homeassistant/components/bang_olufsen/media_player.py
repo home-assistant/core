@@ -300,7 +300,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         if self.hass.is_running:
             self.async_write_ha_state()
 
-    async def _update_playback_metadata(self, data: PlaybackContentMetadata) -> None:
+    def _update_playback_metadata(self, data: PlaybackContentMetadata) -> None:
         """Update _playback_metadata and related."""
         self._playback_metadata = data
 
@@ -309,18 +309,18 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         self.async_write_ha_state()
 
-    async def _update_playback_error(self, data: PlaybackError) -> None:
+    def _update_playback_error(self, data: PlaybackError) -> None:
         """Show playback error."""
         _LOGGER.error(data.error)
 
-    async def _update_playback_progress(self, data: PlaybackProgress) -> None:
+    def _update_playback_progress(self, data: PlaybackProgress) -> None:
         """Update _playback_progress and last update."""
         self._playback_progress = data
         self._attr_media_position_updated_at = utcnow()
 
         self.async_write_ha_state()
 
-    async def _update_playback_state(self, data: RenderingState) -> None:
+    def _update_playback_state(self, data: RenderingState) -> None:
         """Update _playback_state and related."""
         self._playback_state = data
 
@@ -330,7 +330,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
             self.async_write_ha_state()
 
-    async def _update_source_change(self, data: Source) -> None:
+    def _update_source_change(self, data: Source) -> None:
         """Update _source_change and related."""
         self._source_change = data
 
@@ -341,7 +341,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         ):
             self._playback_progress = PlaybackProgress(progress=0)
 
-    async def _update_volume(self, data: VolumeState) -> None:
+    def _update_volume(self, data: VolumeState) -> None:
         """Update _volume."""
         self._volume = data
 
