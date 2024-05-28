@@ -57,7 +57,7 @@ def normalize_yaml_files(check_dict):
 
 @pytest.mark.parametrize("hass_config_yaml", [BAD_CORE_CONFIG])
 def test_bad_core_config(
-    mock_is_file, event_loop: AbstractEventLoop, mock_hass_config_yaml: None
+    mock_is_file: None, event_loop: AbstractEventLoop, mock_hass_config_yaml: None
 ) -> None:
     """Test a bad core config setup."""
     res = check_config.check(get_test_config_dir())
@@ -68,7 +68,7 @@ def test_bad_core_config(
 
 @pytest.mark.parametrize("hass_config_yaml", [BASE_CONFIG + "light:\n  platform: demo"])
 def test_config_platform_valid(
-    mock_is_file, event_loop: AbstractEventLoop, mock_hass_config_yaml: None
+    mock_is_file: None, event_loop: AbstractEventLoop, mock_hass_config_yaml: None
 ) -> None:
     """Test a valid platform setup."""
     res = check_config.check(get_test_config_dir())
@@ -100,7 +100,7 @@ def test_config_platform_valid(
     ],
 )
 def test_component_platform_not_found(
-    mock_is_file,
+    mock_is_file: None,
     event_loop: AbstractEventLoop,
     mock_hass_config_yaml: None,
     platforms,
@@ -130,7 +130,7 @@ def test_component_platform_not_found(
     ],
 )
 def test_secrets(
-    mock_is_file, event_loop: AbstractEventLoop, mock_hass_config_yaml: None
+    mock_is_file: None, event_loop: AbstractEventLoop, mock_hass_config_yaml: None
 ) -> None:
     """Test secrets config checking method."""
     res = check_config.check(get_test_config_dir(), True)
@@ -161,7 +161,7 @@ def test_secrets(
     "hass_config_yaml", [BASE_CONFIG + '  packages:\n    p1:\n      group: ["a"]']
 )
 def test_package_invalid(
-    mock_is_file, event_loop: AbstractEventLoop, mock_hass_config_yaml: None
+    mock_is_file: None, event_loop: AbstractEventLoop, mock_hass_config_yaml: None
 ) -> None:
     """Test an invalid package."""
     res = check_config.check(get_test_config_dir())
