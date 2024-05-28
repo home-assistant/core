@@ -23,6 +23,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES),
     }
 )
+RECONFIGURE_SCHEMA = vol.Schema({vol.Required(CONF_HOST, default=""): str})
 
 
 async def validate_input(
@@ -184,10 +185,9 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=self.host): str,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=RECONFIGURE_SCHEMA,
+                suggested_values=self.entry.data,
             ),
             description_placeholders={"printer_name": self.entry.title},
             errors=errors,
