@@ -1114,7 +1114,6 @@ async def test_tasks_logged_that_block_stage_2(
                 wait_task.cancel()
 
             hass.async_create_task(_not_marked_background_task())
-            await asyncio.sleep(0)
             return True
 
         return async_setup
