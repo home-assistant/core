@@ -28,10 +28,10 @@ class HeatingProgram(enum.StrEnum):
 class VentilationMode(enum.StrEnum):
     """ViCare ventilation modes."""
 
-    PERMANENT = "permanent"
-    VENTILATION = "ventilation"
-    SENSOR_OVERRIDE = "sensorOverride"
-    SENSOR_DRIVEN = "sensorDriven"
+    VENTILATION = "ventilation"  # activated by schedule
+    SENSOR_OVERRIDE = "sensorOverride"  # activated by sensor
+    SENSOR_DRIVEN = "sensorDriven"  # activated by schedule and sensor
+    PERMANENT = "permanent"  # on, speed controlled by program (levelOne-levelFour)
 
 
 class VentilationProgram(enum.StrEnum):
@@ -40,19 +40,10 @@ class VentilationProgram(enum.StrEnum):
     As listed in https://github.com/somm15/PyViCare/blob/6c5b023ca6c8bb2d38141dd1746dc1705ec84ce8/PyViCare/PyViCareVentilationDevice.py#L37
     """
 
-    # BASIC = "basic"
-    # COMFORT = "comfort"
-    # INTENSIVE = "intensive"
-    # ECO = "eco"
-    # STANDARD = "standard"
-    # REDUCED = "reduced"
-    # STANDBY = "standby"
     LEVEL_ONE = "levelOne"
     LEVEL_TWO = "levelTwo"
     LEVEL_THREE = "levelThree"
     LEVEL_FOUR = "levelFour"
-    # PERMANENT = "permanent"
-    # SILENT = "silent"
 
 
 @dataclass(frozen=True)
