@@ -42,6 +42,8 @@ HVAC_SYSTEM_MODE_MAP = {
     HVACMode.HEAT_COOL: 1,
     HVACMode.COOL: 3,
     HVACMode.HEAT: 4,
+    HVACMode.DRY: 8,
+    HVACMode.FAN_ONLY: 7,
 }
 SystemModeEnum = clusters.Thermostat.Enums.ThermostatSystemMode
 ControlSequenceEnum = clusters.Thermostat.Enums.ThermostatControlSequence
