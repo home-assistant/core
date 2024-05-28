@@ -43,6 +43,7 @@ FIXTURE_CONFIG_ENTRY = {
 async def setup_mocked_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Mock a fully setup config entry and all components based on fixtures."""
 
+    # Mock config entry and add to HA
     mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
     mock_config_entry.add_to_hass(hass)
 

@@ -700,8 +700,8 @@ async def test_event_start_trigger_dst(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a calendar event trigger happening at the start of daylight savings time."""
+    await hass.config.async_set_time_zone("America/Los_Angeles")
     tzinfo = zoneinfo.ZoneInfo("America/Los_Angeles")
-    hass.config.set_time_zone("America/Los_Angeles")
     freezer.move_to("2023-03-12 01:00:00-08:00")
 
     # Before DST transition starts

@@ -248,7 +248,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     def _entity_lkp(self, entity_id, state_attr=None):
         """Look up an entity state."""
         if (state_obj := self.hass.states.get(entity_id)) is None:
-            return
+            return None
 
         if state_attr:
             return state_obj.attributes.get(state_attr)

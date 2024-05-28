@@ -353,6 +353,7 @@ async def test_existing_node_not_replaced_when_not_ready(
     zp3111_state,
     client,
     integration,
+    area_registry: ar.AreaRegistry,
 ) -> None:
     """Test when a node added event with a non-ready node is received.
 
@@ -360,7 +361,7 @@ async def test_existing_node_not_replaced_when_not_ready(
     """
     dev_reg = dr.async_get(hass)
     er_reg = er.async_get(hass)
-    kitchen_area = ar.async_get(hass).async_create("Kitchen")
+    kitchen_area = area_registry.async_create("Kitchen")
 
     device_id = f"{client.driver.controller.home_id}-{zp3111.node_id}"
     device_id_ext = (
@@ -748,7 +749,9 @@ async def test_update_addon(
     assert update_addon.call_count == update_calls
 
 
-async def test_issue_registry(hass: HomeAssistant, client, version_state) -> None:
+async def test_issue_registry(
+    hass: HomeAssistant, client, version_state, issue_registry: ir.IssueRegistry
+) -> None:
     """Test issue registry."""
     device = "/test"
     network_key = "abc123"
@@ -774,8 +777,7 @@ async def test_issue_registry(hass: HomeAssistant, client, version_state) -> Non
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
-    issue_reg = ir.async_get(hass)
-    assert issue_reg.async_get_issue(DOMAIN, "invalid_server_version")
+    assert issue_registry.async_get_issue(DOMAIN, "invalid_server_version")
 
     async def connect():
         await asyncio.sleep(0)
@@ -786,7 +788,7 @@ async def test_issue_registry(hass: HomeAssistant, client, version_state) -> Non
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
-    assert not issue_reg.async_get_issue(DOMAIN, "invalid_server_version")
+    assert not issue_registry.async_get_issue(DOMAIN, "invalid_server_version")
 
 
 @pytest.mark.parametrize(

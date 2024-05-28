@@ -12,8 +12,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LocalData, RiscoDataUpdateCoordinator, is_local
+from . import LocalData, is_local
 from .const import DATA_COORDINATOR, DOMAIN
+from .coordinator import RiscoDataUpdateCoordinator
 from .entity import RiscoCloudZoneEntity, RiscoLocalZoneEntity
 
 

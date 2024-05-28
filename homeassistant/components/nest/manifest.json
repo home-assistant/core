@@ -20,5 +20,5 @@
   "iot_class": "cloud_push",
   "loggers": ["google_nest_sdm"],
   "quality_scale": "platinum",
-  "requirements": ["google-nest-sdm==3.0.4"]
+  "requirements": ["google-nest-sdm==4.0.4"]
 }
