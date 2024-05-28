@@ -156,8 +156,6 @@ async def init_integration(
 
 
 @pytest.fixture
-def controller(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> EcovacsController:
+def controller(init_integration: MockConfigEntry) -> EcovacsController:
     """Get the controller for the config entry."""
-    return hass.data[DOMAIN][init_integration.entry_id]
+    return init_integration.runtime_data

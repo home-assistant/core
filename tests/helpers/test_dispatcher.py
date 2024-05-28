@@ -6,11 +6,10 @@ import pytest
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
-    SignalType,
-    SignalTypeFormat,
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.util.signal_type import SignalType, SignalTypeFormat
 
 
 async def test_simple_function(hass: HomeAssistant) -> None:
@@ -240,3 +239,23 @@ async def test_dispatcher_add_dispatcher(hass: HomeAssistant) -> None:
     async_dispatcher_send(hass, "test", 5)
 
     assert calls == [3, 4, 4, 5, 5]
+
+
+async def test_thread_safety_checks(hass: HomeAssistant) -> None:
+    """Test dispatcher thread safety checks."""
+    calls = []
+
+    @callback
+    def _dispatcher(data):
+        calls.append(data)
+
+    async_dispatcher_connect(hass, "test", _dispatcher)
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls async_dispatcher_send from a thread.",
+    ):
+        await hass.async_add_executor_job(async_dispatcher_send, hass, "test", 3)
+
+    async_dispatcher_send(hass, "test", 4)
+    assert calls == [4]

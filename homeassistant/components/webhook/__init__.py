@@ -178,10 +178,10 @@ async def async_handle_webhook(
         response: Response | None = await webhook["handler"](hass, webhook_id, request)
         if response is None:
             response = Response(status=HTTPStatus.OK)
-        return response
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Error processing webhook %s", webhook_id)
         return Response(status=HTTPStatus.OK)
+    return response
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

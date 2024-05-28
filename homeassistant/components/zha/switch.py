@@ -7,7 +7,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Self
 
 from zhaquirks.quirk_ids import TUYA_PLUG_ONOFF
-from zigpy.quirks.v2 import EntityMetadata, SwitchMetadata
+from zigpy.quirks.v2 import SwitchMetadata
 from zigpy.zcl.clusters.closures import ConfigStatus, WindowCovering, WindowCoveringMode
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
@@ -25,7 +25,7 @@ from .core.const import (
     CLUSTER_HANDLER_COVER,
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_ON_OFF,
-    QUIRK_METADATA,
+    ENTITY_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -192,7 +192,7 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if QUIRK_METADATA not in kwargs and (
+        if ENTITY_METADATA not in kwargs and (
             cls._attribute_name in cluster_handler.cluster.unsupported_attributes
             or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._attribute_name) is None
@@ -215,21 +215,20 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
     ) -> None:
         """Init this number configuration entity."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
-        if QUIRK_METADATA in kwargs:
-            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
+        if ENTITY_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[ENTITY_METADATA])
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
-    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
+    def _init_from_quirks_metadata(self, entity_metadata: SwitchMetadata) -> None:
         """Init this entity from the quirks metadata."""
         super()._init_from_quirks_metadata(entity_metadata)
-        switch_metadata: SwitchMetadata = entity_metadata.entity_metadata
-        self._attribute_name = switch_metadata.attribute_name
-        if switch_metadata.invert_attribute_name:
-            self._inverter_attribute_name = switch_metadata.invert_attribute_name
-        if switch_metadata.force_inverted:
-            self._force_inverted = switch_metadata.force_inverted
-        self._off_value = switch_metadata.off_value
-        self._on_value = switch_metadata.on_value
+        self._attribute_name = entity_metadata.attribute_name
+        if entity_metadata.invert_attribute_name:
+            self._inverter_attribute_name = entity_metadata.invert_attribute_name
+        if entity_metadata.force_inverted:
+            self._force_inverted = entity_metadata.force_inverted
+        self._off_value = entity_metadata.off_value
+        self._on_value = entity_metadata.on_value
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""

@@ -18,6 +18,7 @@ from aioesphomeapi import (
     HomeassistantServiceCall,
     ReconnectLogic,
     UserService,
+    VoiceAssistantFeature,
 )
 import pytest
 from zeroconf import Zeroconf
@@ -180,7 +181,9 @@ async def mock_dashboard(hass):
 class MockESPHomeDevice:
     """Mock an esphome device."""
 
-    def __init__(self, entry: MockConfigEntry, client: APIClient) -> None:
+    def __init__(
+        self, entry: MockConfigEntry, client: APIClient, device_info: DeviceInfo
+    ) -> None:
         """Init the mock."""
         self.entry = entry
         self.client = client
@@ -188,9 +191,11 @@ class MockESPHomeDevice:
         self.service_call_callback: Callable[[HomeassistantServiceCall], None]
         self.on_disconnect: Callable[[bool], None]
         self.on_connect: Callable[[bool], None]
+        self.on_connect_error: Callable[[Exception], None]
         self.home_assistant_state_subscription_callback: Callable[
             [str, str | None], None
         ]
+        self.device_info = device_info
 
     def set_state_callback(self, state_callback: Callable[[EntityState], None]) -> None:
         """Set the state callback."""
@@ -222,9 +227,19 @@ class MockESPHomeDevice:
         """Set the connect callback."""
         self.on_connect = on_connect
 
+    def set_on_connect_error(
+        self, on_connect_error: Callable[[Exception], None]
+    ) -> None:
+        """Set the connect error callback."""
+        self.on_connect_error = on_connect_error
+
     async def mock_connect(self) -> None:
         """Mock connecting."""
         await self.on_connect()
+
+    async def mock_connect_error(self, exc: Exception) -> None:
+        """Mock connect error."""
+        await self.on_connect_error(exc)
 
     def set_home_assistant_state_subscription_callback(
         self,
@@ -262,8 +277,6 @@ async def _mock_generic_device_entry(
         )
         entry.add_to_hass(hass)
 
-    mock_device = MockESPHomeDevice(entry, mock_client)
-
     default_device_info = {
         "name": "test",
         "friendly_name": "Test",
@@ -271,6 +284,8 @@ async def _mock_generic_device_entry(
         "mac_address": "11:22:33:44:55:AA",
     }
     device_info = DeviceInfo(**(default_device_info | mock_device_info))
+
+    mock_device = MockESPHomeDevice(entry, mock_client, device_info)
 
     def _subscribe_states(callback: Callable[[EntityState], None]) -> None:
         """Subscribe to state."""
@@ -290,7 +305,7 @@ async def _mock_generic_device_entry(
         """Subscribe to home assistant states."""
         mock_device.set_home_assistant_state_subscription_callback(on_state_sub)
 
-    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.device_info = AsyncMock(return_value=mock_device.device_info)
     mock_client.subscribe_voice_assistant = Mock()
     mock_client.list_entities_services = AsyncMock(
         return_value=mock_list_entities_services
@@ -309,6 +324,7 @@ async def _mock_generic_device_entry(
             super().__init__(*args, **kwargs)
             mock_device.set_on_disconnect(kwargs["on_disconnect"])
             mock_device.set_on_connect(kwargs["on_connect"])
+            mock_device.set_on_connect_error(kwargs["on_connect_error"])
             self._try_connect = self.mock_try_connect
 
         async def mock_try_connect(self):
@@ -342,10 +358,16 @@ async def mock_voice_assistant_entry(
 ):
     """Set up an ESPHome entry with voice assistant."""
 
-    async def _mock_voice_assistant_entry(version: int) -> MockConfigEntry:
+    async def _mock_voice_assistant_entry(
+        voice_assistant_feature_flags: VoiceAssistantFeature,
+    ) -> MockConfigEntry:
         return (
             await _mock_generic_device_entry(
-                hass, mock_client, {"voice_assistant_version": version}, ([], []), []
+                hass,
+                mock_client,
+                {"voice_assistant_feature_flags": voice_assistant_feature_flags},
+                ([], []),
+                [],
             )
         ).entry
 
@@ -355,13 +377,28 @@ async def mock_voice_assistant_entry(
 @pytest.fixture
 async def mock_voice_assistant_v1_entry(mock_voice_assistant_entry) -> MockConfigEntry:
     """Set up an ESPHome entry with voice assistant."""
-    return await mock_voice_assistant_entry(version=1)
+    return await mock_voice_assistant_entry(
+        voice_assistant_feature_flags=VoiceAssistantFeature.VOICE_ASSISTANT
+    )
 
 
 @pytest.fixture
 async def mock_voice_assistant_v2_entry(mock_voice_assistant_entry) -> MockConfigEntry:
     """Set up an ESPHome entry with voice assistant."""
-    return await mock_voice_assistant_entry(version=2)
+    return await mock_voice_assistant_entry(
+        voice_assistant_feature_flags=VoiceAssistantFeature.VOICE_ASSISTANT
+        | VoiceAssistantFeature.SPEAKER
+    )
+
+
+@pytest.fixture
+async def mock_voice_assistant_api_entry(mock_voice_assistant_entry) -> MockConfigEntry:
+    """Set up an ESPHome entry with voice assistant."""
+    return await mock_voice_assistant_entry(
+        voice_assistant_feature_flags=VoiceAssistantFeature.VOICE_ASSISTANT
+        | VoiceAssistantFeature.SPEAKER
+        | VoiceAssistantFeature.API_AUDIO
+    )
 
 
 @pytest.fixture

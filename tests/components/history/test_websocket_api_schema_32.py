@@ -24,7 +24,7 @@ def db_schema_32():
 
 
 async def test_history_during_period(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history_during_period."""
     now = dt_util.utcnow()

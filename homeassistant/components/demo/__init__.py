@@ -38,6 +38,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.LIGHT,
     Platform.LOCK,
     Platform.MEDIA_PLAYER,
+    Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
@@ -55,7 +56,6 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
 COMPONENTS_WITH_DEMO_PLATFORM = [
     Platform.TTS,
     Platform.MAILBOX,
-    Platform.NOTIFY,
     Platform.IMAGE_PROCESSING,
     Platform.DEVICE_TRACKER,
 ]

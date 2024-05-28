@@ -10,6 +10,7 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.deprecation import (
+    DeprecatedAlias,
     DeprecatedConstant,
     DeprecatedConstantEnum,
     check_if_deprecated_constant,
@@ -283,38 +284,59 @@ class TestDeprecatedConstantEnum(StrEnum):
     TEST = "value"
 
 
-def _get_value(obj: DeprecatedConstant | DeprecatedConstantEnum | tuple) -> Any:
-    if isinstance(obj, tuple):
-        if len(obj) == 2:
-            return obj[0].value
-
-        return obj[0]
-
+def _get_value(
+    obj: DeprecatedConstant
+    | DeprecatedConstantEnum
+    | DeprecatedAlias
+    | tuple[Any, ...],
+) -> Any:
     if isinstance(obj, DeprecatedConstant):
         return obj.value
 
     if isinstance(obj, DeprecatedConstantEnum):
         return obj.enum.value
 
+    if isinstance(obj, DeprecatedAlias):
+        return obj.value
+
+    if len(obj) == 2:
+        return obj[0].value
+
+    return obj[0]
+
 
 @pytest.mark.parametrize(
-    ("deprecated_constant", "extra_msg"),
+    ("deprecated_constant", "extra_msg", "description"),
     [
         (
             DeprecatedConstant("value", "NEW_CONSTANT", None),
             ". Use NEW_CONSTANT instead",
+            "constant",
         ),
         (
             DeprecatedConstant(1, "NEW_CONSTANT", "2099.1"),
             " which will be removed in HA Core 2099.1. Use NEW_CONSTANT instead",
+            "constant",
         ),
         (
             DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, None),
             ". Use TestDeprecatedConstantEnum.TEST instead",
+            "constant",
         ),
         (
             DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, "2099.1"),
             " which will be removed in HA Core 2099.1. Use TestDeprecatedConstantEnum.TEST instead",
+            "constant",
+        ),
+        (
+            DeprecatedAlias(1, "new_alias", None),
+            ". Use new_alias instead",
+            "alias",
+        ),
+        (
+            DeprecatedAlias(1, "new_alias", "2099.1"),
+            " which will be removed in HA Core 2099.1. Use new_alias instead",
+            "alias",
         ),
     ],
 )
@@ -330,10 +352,14 @@ def _get_value(obj: DeprecatedConstant | DeprecatedConstantEnum | tuple) -> Any:
 )
 def test_check_if_deprecated_constant(
     caplog: pytest.LogCaptureFixture,
-    deprecated_constant: DeprecatedConstant | DeprecatedConstantEnum | tuple,
+    deprecated_constant: DeprecatedConstant
+    | DeprecatedConstantEnum
+    | DeprecatedAlias
+    | tuple,
     extra_msg: str,
     module_name: str,
     extra_extra_msg: str,
+    description: str,
 ) -> None:
     """Test check_if_deprecated_constant."""
     module_globals = {
@@ -378,28 +404,42 @@ def test_check_if_deprecated_constant(
     assert (
         module_name,
         logging.WARNING,
-        f"TEST_CONSTANT was used from hue, this is a deprecated constant{extra_msg}{extra_extra_msg}",
+        f"TEST_CONSTANT was used from hue, this is a deprecated {description}{extra_msg}{extra_extra_msg}",
     ) in caplog.record_tuples
 
 
 @pytest.mark.parametrize(
-    ("deprecated_constant", "extra_msg"),
+    ("deprecated_constant", "extra_msg", "description"),
     [
         (
             DeprecatedConstant("value", "NEW_CONSTANT", None),
             ". Use NEW_CONSTANT instead",
+            "constant",
         ),
         (
             DeprecatedConstant(1, "NEW_CONSTANT", "2099.1"),
             " which will be removed in HA Core 2099.1. Use NEW_CONSTANT instead",
+            "constant",
         ),
         (
             DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, None),
             ". Use TestDeprecatedConstantEnum.TEST instead",
+            "constant",
         ),
         (
             DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, "2099.1"),
             " which will be removed in HA Core 2099.1. Use TestDeprecatedConstantEnum.TEST instead",
+            "constant",
+        ),
+        (
+            DeprecatedAlias(1, "new_alias", None),
+            ". Use new_alias instead",
+            "alias",
+        ),
+        (
+            DeprecatedAlias(1, "new_alias", "2099.1"),
+            " which will be removed in HA Core 2099.1. Use new_alias instead",
+            "alias",
         ),
     ],
 )
@@ -412,9 +452,13 @@ def test_check_if_deprecated_constant(
 )
 def test_check_if_deprecated_constant_integration_not_found(
     caplog: pytest.LogCaptureFixture,
-    deprecated_constant: DeprecatedConstant | DeprecatedConstantEnum | tuple,
+    deprecated_constant: DeprecatedConstant
+    | DeprecatedConstantEnum
+    | DeprecatedAlias
+    | tuple,
     extra_msg: str,
     module_name: str,
+    description: str,
 ) -> None:
     """Test check_if_deprecated_constant."""
     module_globals = {
@@ -432,7 +476,7 @@ def test_check_if_deprecated_constant_integration_not_found(
     assert (
         module_name,
         logging.WARNING,
-        f"TEST_CONSTANT is a deprecated constant{extra_msg}",
+        f"TEST_CONSTANT is a deprecated {description}{extra_msg}",
     ) not in caplog.record_tuples
 
 

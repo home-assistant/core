@@ -1,5 +1,6 @@
 """Support for Alexa skill service end point."""
 
+from collections.abc import Callable, Coroutine
 import enum
 import logging
 from typing import Any
@@ -16,7 +17,9 @@ from .const import DOMAIN, SYN_RESOLUTION_MATCH
 
 _LOGGER = logging.getLogger(__name__)
 
-HANDLERS = Registry()  # type: ignore[var-annotated]
+HANDLERS: Registry[
+    str, Callable[[HomeAssistant, dict[str, Any]], Coroutine[Any, Any, dict[str, Any]]]
+] = Registry()
 
 INTENTS_API_ENDPOINT = "/api/alexa"
 
@@ -94,8 +97,8 @@ class AlexaIntentsView(http.HomeAssistantView):
                 )
             )
 
-        except intent.IntentError as err:
-            _LOGGER.exception(str(err))
+        except intent.IntentError:
+            _LOGGER.exception("Error handling intent")
             return self.json(
                 intent_error_response(hass, message, "Error handling intent.")
             )
@@ -129,8 +132,7 @@ async def async_handle_message(
     if not (handler := HANDLERS.get(req_type)):
         raise UnknownRequest(f"Received unknown request {req_type}")
 
-    response: dict[str, Any] = await handler(hass, message)
-    return response
+    return await handler(hass, message)
 
 
 @HANDLERS.register("SessionEndedRequest")

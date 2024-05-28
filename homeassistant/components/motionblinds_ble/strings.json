@@ -33,5 +33,28 @@
         "vertical": "Vertical blind"
       }
     }
+  },
+  "entity": {
+    "button": {
+      "connect": {
+        "name": "[%key:common::action::connect%]"
+      },
+      "disconnect": {
+        "name": "[%key:common::action::disconnect%]"
+      },
+      "favorite": {
+        "name": "Favorite"
+      }
+    },
+    "select": {
+      "speed": {
+        "name": "Speed",
+        "state": {
+          "1": "Low",
+          "2": "Medium",
+          "3": "High"
+        }
+      }
+    }
   }
 }

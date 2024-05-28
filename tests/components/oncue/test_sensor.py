@@ -40,7 +40,7 @@ async def test_sensors(hass: HomeAssistant, patcher, connections) -> None:
     with patcher():
         await async_setup_component(hass, oncue.DOMAIN, {oncue.DOMAIN: {}})
         await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     entity_registry = er.async_get(hass)
     ent = entity_registry.async_get("sensor.my_generator_latest_firmware")
@@ -167,7 +167,7 @@ async def test_sensors_unavailable(hass: HomeAssistant, patcher, connections) ->
     with patcher():
         await async_setup_component(hass, oncue.DOMAIN, {oncue.DOMAIN: {}})
         await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert len(hass.states.async_all("sensor")) == 25
     assert (

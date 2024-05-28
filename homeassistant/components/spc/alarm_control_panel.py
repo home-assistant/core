@@ -6,8 +6,10 @@ from pyspcwebgw import SpcWebGateway
 from pyspcwebgw.area import Area
 from pyspcwebgw.const import AreaMode
 
-import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
+)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -51,7 +53,7 @@ async def async_setup_platform(
     async_add_entities([SpcAlarm(area=area, api=api) for area in api.areas.values()])
 
 
-class SpcAlarm(alarm.AlarmControlPanelEntity):
+class SpcAlarm(AlarmControlPanelEntity):
     """Representation of the SPC alarm panel."""
 
     _attr_should_poll = False

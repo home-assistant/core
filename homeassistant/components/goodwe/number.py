@@ -63,7 +63,7 @@ NUMBERS = (
         native_unit_of_measurement=PERCENTAGE,
         native_step=1,
         native_min_value=0,
-        native_max_value=100,
+        native_max_value=200,
         getter=lambda inv: inv.get_grid_export_limit(),
         setter=lambda inv, val: inv.set_grid_export_limit(val),
         filter=lambda inv: _get_setting_unit(inv, "grid_export_limit") == "%",

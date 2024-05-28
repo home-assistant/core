@@ -64,16 +64,13 @@ async def test_if_fires_on_zone_enter(hass: HomeAssistant, calls) -> None:
                 "action": {
                     "service": "test.automation",
                     "data_template": {
-                        "some": "{{ trigger.%s }}"
-                        % "}} - {{ trigger.".join(
-                            (
-                                "platform",
-                                "entity_id",
-                                "from_state.state",
-                                "to_state.state",
-                                "zone.name",
-                                "id",
-                            )
+                        "some": (
+                            "{{ trigger.platform }}"
+                            " - {{ trigger.entity_id }}"
+                            " - {{ trigger.from_state.state }}"
+                            " - {{ trigger.to_state.state }}"
+                            " - {{ trigger.zone.name }}"
+                            " - {{ trigger.id }}"
                         )
                     },
                 },
@@ -143,16 +140,13 @@ async def test_if_fires_on_zone_enter_uuid(hass: HomeAssistant, calls) -> None:
                 "action": {
                     "service": "test.automation",
                     "data_template": {
-                        "some": "{{ trigger.%s }}"
-                        % "}} - {{ trigger.".join(
-                            (
-                                "platform",
-                                "entity_id",
-                                "from_state.state",
-                                "to_state.state",
-                                "zone.name",
-                                "id",
-                            )
+                        "some": (
+                            "{{ trigger.platform }}"
+                            " - {{ trigger.entity_id }}"
+                            " - {{ trigger.from_state.state }}"
+                            " - {{ trigger.to_state.state }}"
+                            " - {{ trigger.zone.name }}"
+                            " - {{ trigger.id }}"
                         )
                     },
                 },

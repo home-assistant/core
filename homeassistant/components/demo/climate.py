@@ -57,8 +57,8 @@ async def async_setup_entry(
                 preset=None,
                 current_temperature=22,
                 fan_mode="on_high",
-                target_humidity=67,
-                current_humidity=54,
+                target_humidity=67.4,
+                current_humidity=54.2,
                 swing_mode="off",
                 hvac_mode=HVACMode.COOL,
                 hvac_action=HVACAction.COOLING,
@@ -106,8 +106,8 @@ class DemoClimate(ClimateEntity):
         preset: str | None,
         current_temperature: float,
         fan_mode: str | None,
-        target_humidity: int | None,
-        current_humidity: int | None,
+        target_humidity: float | None,
+        current_humidity: float | None,
         swing_mode: str | None,
         hvac_mode: HVACMode,
         hvac_action: HVACAction | None,
@@ -188,12 +188,12 @@ class DemoClimate(ClimateEntity):
         return self._target_temperature_low
 
     @property
-    def current_humidity(self) -> int | None:
+    def current_humidity(self) -> float | None:
         """Return the current humidity."""
         return self._current_humidity
 
     @property
-    def target_humidity(self) -> int | None:
+    def target_humidity(self) -> float | None:
         """Return the humidity we try to reach."""
         return self._target_humidity
 

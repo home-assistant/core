@@ -12,7 +12,12 @@ from requests.exceptions import HTTPError
 from homeassistant.components import ssdp
 from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_UDN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    SOURCE_SSDP,
+    SOURCE_USER,
+)
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -68,13 +73,13 @@ async def test_user(hass: HomeAssistant, fritz: Mock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_USER_DATA
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.0.0.1"
     assert result["data"][CONF_HOST] == "10.0.0.1"
     assert result["data"][CONF_PASSWORD] == "fake_pass"
@@ -89,7 +94,7 @@ async def test_user_auth_failed(hass: HomeAssistant, fritz: Mock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_DATA
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "invalid_auth"
 
@@ -101,7 +106,7 @@ async def test_user_not_successful(hass: HomeAssistant, fritz: Mock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_DATA
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
@@ -110,13 +115,13 @@ async def test_user_already_configured(hass: HomeAssistant, fritz: Mock) -> None
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_DATA
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert not result["result"].unique_id
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_DATA
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -130,7 +135,7 @@ async def test_reauth_success(hass: HomeAssistant, fritz: Mock) -> None:
         context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
         data=mock_config.data,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -141,7 +146,7 @@ async def test_reauth_success(hass: HomeAssistant, fritz: Mock) -> None:
         },
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config.data[CONF_USERNAME] == "other_fake_user"
     assert mock_config.data[CONF_PASSWORD] == "other_fake_password"
@@ -159,7 +164,7 @@ async def test_reauth_auth_failed(hass: HomeAssistant, fritz: Mock) -> None:
         context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
         data=mock_config.data,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -170,7 +175,7 @@ async def test_reauth_auth_failed(hass: HomeAssistant, fritz: Mock) -> None:
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"]["base"] == "invalid_auth"
 
@@ -187,7 +192,7 @@ async def test_reauth_not_successful(hass: HomeAssistant, fritz: Mock) -> None:
         context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
         data=mock_config.data,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -198,8 +203,82 @@ async def test_reauth_not_successful(hass: HomeAssistant, fritz: Mock) -> None:
         },
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
+
+
+async def test_reconfigure_success(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test starting a reconfigure flow."""
+    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config.add_to_hass(hass)
+
+    assert mock_config.data[CONF_HOST] == "10.0.0.1"
+    assert mock_config.data[CONF_USERNAME] == "fake_user"
+    assert mock_config.data[CONF_PASSWORD] == "fake_pass"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config.entry_id},
+        data=mock_config.data,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "new_host",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config.data[CONF_HOST] == "new_host"
+    assert mock_config.data[CONF_USERNAME] == "fake_user"
+    assert mock_config.data[CONF_PASSWORD] == "fake_pass"
+
+
+async def test_reconfigure_failed(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test starting a reconfigure flow with failure."""
+    fritz().login.side_effect = [OSError("Boom"), None]
+
+    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config.add_to_hass(hass)
+
+    assert mock_config.data[CONF_HOST] == "10.0.0.1"
+    assert mock_config.data[CONF_USERNAME] == "fake_user"
+    assert mock_config.data[CONF_PASSWORD] == "fake_pass"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config.entry_id},
+        data=mock_config.data,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "new_host",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+    assert result["errors"]["base"] == "no_devices_found"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "new_host",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config.data[CONF_HOST] == "new_host"
+    assert mock_config.data[CONF_USERNAME] == "fake_user"
+    assert mock_config.data[CONF_PASSWORD] == "fake_pass"
 
 
 @pytest.mark.parametrize(
@@ -222,7 +301,7 @@ async def test_ssdp(
     )
     assert result["type"] == expected_result
 
-    if expected_result == FlowResultType.ABORT:
+    if expected_result is FlowResultType.ABORT:
         return
 
     assert result["step_id"] == "confirm"
@@ -231,7 +310,7 @@ async def test_ssdp(
         result["flow_id"],
         user_input={CONF_PASSWORD: "fake_pass", CONF_USERNAME: "fake_user"},
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == CONF_FAKE_NAME
     assert result["data"][CONF_HOST] == urlparse(test_data.ssdp_location).hostname
     assert result["data"][CONF_PASSWORD] == "fake_pass"
@@ -247,14 +326,14 @@ async def test_ssdp_no_friendly_name(hass: HomeAssistant, fritz: Mock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_NO_NAME
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_PASSWORD: "fake_pass", CONF_USERNAME: "fake_user"},
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.0.0.1"
     assert result["data"][CONF_HOST] == "10.0.0.1"
     assert result["data"][CONF_PASSWORD] == "fake_pass"
@@ -269,7 +348,7 @@ async def test_ssdp_auth_failed(hass: HomeAssistant, fritz: Mock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA["ip4_valid"]
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] == {}
 
@@ -277,7 +356,7 @@ async def test_ssdp_auth_failed(hass: HomeAssistant, fritz: Mock) -> None:
         result["flow_id"],
         user_input={CONF_PASSWORD: "whatever", CONF_USERNAME: "whatever"},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"]["base"] == "invalid_auth"
 
@@ -289,14 +368,14 @@ async def test_ssdp_not_successful(hass: HomeAssistant, fritz: Mock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA["ip4_valid"]
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_PASSWORD: "whatever", CONF_USERNAME: "whatever"},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
@@ -307,14 +386,14 @@ async def test_ssdp_not_supported(hass: HomeAssistant, fritz: Mock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA["ip4_valid"]
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_PASSWORD: "whatever", CONF_USERNAME: "whatever"},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_supported"
 
 
@@ -325,13 +404,13 @@ async def test_ssdp_already_in_progress_unique_id(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA["ip4_valid"]
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA["ip4_valid"]
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
 
 
@@ -340,7 +419,7 @@ async def test_ssdp_already_in_progress_host(hass: HomeAssistant, fritz: Mock) -
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA["ip4_valid"]
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     MOCK_NO_UNIQUE_ID = dataclasses.replace(MOCK_SSDP_DATA["ip4_valid"])
@@ -349,7 +428,7 @@ async def test_ssdp_already_in_progress_host(hass: HomeAssistant, fritz: Mock) -
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_NO_UNIQUE_ID
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
 
 
@@ -358,12 +437,12 @@ async def test_ssdp_already_configured(hass: HomeAssistant, fritz: Mock) -> None
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_DATA
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert not result["result"].unique_id
 
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA["ip4_valid"]
     )
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
     assert result["result"].unique_id == "only-a-test"

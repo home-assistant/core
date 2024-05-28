@@ -292,10 +292,10 @@ class WebSocketHandler:
         self._handle_task = asyncio.current_task()
 
         unsub_stop = hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STOP, self._async_handle_hass_stop, run_immediately=True
+            EVENT_HOMEASSISTANT_STOP, self._async_handle_hass_stop
         )
 
-        writer = wsock._writer  # pylint: disable=protected-access
+        writer = wsock._writer  # noqa: SLF001
         if TYPE_CHECKING:
             assert writer is not None
 
@@ -378,7 +378,7 @@ class WebSocketHandler:
             # added a way to set the limit, but there is no way to actually
             # reach the code to set the limit, so we have to set it directly.
             #
-            writer._limit = 2**20  # pylint: disable=protected-access
+            writer._limit = 2**20  # noqa: SLF001
             async_handle_str = connection.async_handle
             async_handle_binary = connection.async_handle_binary
 
@@ -426,7 +426,7 @@ class WebSocketHandler:
         except Disconnect as ex:
             debug("%s: Connection closed by client: %s", self.description, ex)
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             self._logger.exception(
                 "%s: Unexpected error inside websocket API", self.description
             )

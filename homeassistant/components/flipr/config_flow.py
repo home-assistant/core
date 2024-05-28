@@ -44,9 +44,9 @@ class FliprConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except (Timeout, ConnectionError):
                 errors["base"] = "cannot_connect"
-            except Exception as exception:  # pylint: disable=broad-except
+            except Exception:
                 errors["base"] = "unknown"
-                _LOGGER.exception(exception)
+                _LOGGER.exception("Unexpected exception")
 
             if not errors and not flipr_ids:
                 # No flipr_id found. Tell the user with an error message.
@@ -91,9 +91,7 @@ class FliprConfigFlow(ConfigFlow, domain=DOMAIN):
         # Instantiates the flipr API that does not require async since it is has no network access.
         client = FliprAPIRestClient(self._username, self._password)
 
-        flipr_ids = await self.hass.async_add_executor_job(client.search_flipr_ids)
-
-        return flipr_ids
+        return await self.hass.async_add_executor_job(client.search_flipr_ids)
 
     async def async_step_flipr_id(
         self, user_input: dict[str, str] | None = None

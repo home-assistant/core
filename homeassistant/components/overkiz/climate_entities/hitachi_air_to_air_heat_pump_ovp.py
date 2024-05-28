@@ -298,6 +298,11 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
             OverkizState.OVP_FAN_SPEED,
             OverkizCommandParam.AUTO,
         )
+        # Sanitize fan mode: Overkiz is sometimes providing a state that
+        # cannot be used as a command. Convert it to HA space and back to Overkiz
+        if fan_mode not in FAN_MODES_TO_OVERKIZ.values():
+            fan_mode = FAN_MODES_TO_OVERKIZ[OVERKIZ_TO_FAN_MODES[fan_mode]]
+
         hvac_mode = self._control_backfill(
             hvac_mode,
             OverkizState.OVP_MODE_CHANGE,
@@ -357,5 +362,5 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
         ]
 
         await self.executor.async_execute_command(
-            OverkizCommand.GLOBAL_CONTROL, command_data
+            OverkizCommand.GLOBAL_CONTROL, *command_data
         )

@@ -3,6 +3,7 @@
 from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_network
+import logging
 from unittest.mock import Mock, patch
 
 from aiohttp import BasicAuth, web
@@ -43,6 +44,7 @@ from tests.common import MockUser
 from tests.test_util import mock_real_ip
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
+_LOGGER = logging.getLogger(__name__)
 API_PASSWORD = "test-password"
 
 # Don't add 127.0.0.1/::1 as trusted, as it may interfere with other test cases
@@ -54,7 +56,13 @@ TRUSTED_NETWORKS = [
 ]
 TRUSTED_ADDRESSES = ["100.64.0.1", "192.0.2.100", "FD01:DB8::1", "2001:DB8:ABCD::1"]
 EXTERNAL_ADDRESSES = ["198.51.100.1", "2001:DB8:FA1::1"]
-UNTRUSTED_ADDRESSES = [*EXTERNAL_ADDRESSES, "127.0.0.1", "::1"]
+LOCALHOST_ADDRESSES = ["127.0.0.1", "::1"]
+UNTRUSTED_ADDRESSES = [*EXTERNAL_ADDRESSES, *LOCALHOST_ADDRESSES]
+PRIVATE_ADDRESSES = [
+    "192.168.10.10",
+    "172.16.4.20",
+    "10.100.50.5",
+]
 
 
 async def mock_handler(request):

@@ -172,6 +172,20 @@ async def test_node_added_subscription(
     assert entity_state
 
 
+async def test_device_registry_single_node_composed_device(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test that a composed device within a standalone node only creates one HA device entry."""
+    await setup_integration_with_node_fixture(
+        hass,
+        "air-purifier",
+        matter_client,
+    )
+    dev_reg = dr.async_get(hass)
+    assert len(dev_reg.devices) == 1
+
+
 async def test_get_clean_name_() -> None:
     """Test get_clean_name helper.
 

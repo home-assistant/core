@@ -133,12 +133,12 @@ async def test_get_trace(
 ) -> None:
     """Test tracing a script or automation."""
     await async_setup_component(hass, "homeassistant", {})
-    id = 1
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     sun_config = {
         "id": "sun",
@@ -429,12 +429,12 @@ async def test_restore_traces(
 ) -> None:
     """Test restored traces."""
     hass.set_state(CoreState.not_running)
-    id = 1
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     saved_traces = json.loads(load_fixture(f"trace/{domain}_saved_traces.json"))
     hass_storage["trace.saved_traces"] = saved_traces
@@ -522,7 +522,7 @@ async def test_trace_overflow(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, domain, stored_traces
 ) -> None:
     """Test the number of stored traces per script or automation is limited."""
-    id = 1
+    msg_id = 1
 
     trace_uuids = []
 
@@ -532,9 +532,9 @@ async def test_trace_overflow(
         return trace_uuids[-1]
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     sun_config = {
         "id": "sun",
@@ -601,7 +601,7 @@ async def test_restore_traces_overflow(
 ) -> None:
     """Test restored traces are evicted first."""
     hass.set_state(CoreState.not_running)
-    id = 1
+    msg_id = 1
 
     trace_uuids = []
 
@@ -611,9 +611,9 @@ async def test_restore_traces_overflow(
         return trace_uuids[-1]
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     saved_traces = json.loads(load_fixture(f"trace/{domain}_saved_traces.json"))
     hass_storage["trace.saved_traces"] = saved_traces
@@ -682,7 +682,7 @@ async def test_restore_traces_late_overflow(
 ) -> None:
     """Test restored traces are evicted first."""
     hass.set_state(CoreState.not_running)
-    id = 1
+    msg_id = 1
 
     trace_uuids = []
 
@@ -692,9 +692,9 @@ async def test_restore_traces_late_overflow(
         return trace_uuids[-1]
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     saved_traces = json.loads(load_fixture(f"trace/{domain}_saved_traces.json"))
     hass_storage["trace.saved_traces"] = saved_traces
@@ -743,12 +743,12 @@ async def test_trace_no_traces(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, domain
 ) -> None:
     """Test the storing traces for a script or automation can be disabled."""
-    id = 1
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     sun_config = {
         "id": "sun",
@@ -810,12 +810,12 @@ async def test_list_traces(
 ) -> None:
     """Test listing script and automation traces."""
     await async_setup_component(hass, "homeassistant", {})
-    id = 1
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     sun_config = {
         "id": "sun",
@@ -943,12 +943,12 @@ async def test_nested_traces(
     extra_trace_keys,
 ) -> None:
     """Test nested automation and script traces."""
-    id = 1
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     sun_config = {
         "id": "sun",
@@ -1003,12 +1003,12 @@ async def test_breakpoints(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, domain, prefix
 ) -> None:
     """Test script and automation breakpoints."""
-    id = 1
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     async def assert_last_step(item_id, expected_action, expected_state):
         await client.send_json(
@@ -1173,12 +1173,12 @@ async def test_breakpoints_2(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, domain, prefix
 ) -> None:
     """Test execution resumes and breakpoints are removed after subscription removed."""
-    id = 1
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     async def assert_last_step(item_id, expected_action, expected_state):
         await client.send_json(
@@ -1278,12 +1278,12 @@ async def test_breakpoints_3(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, domain, prefix
 ) -> None:
     """Test breakpoints can be cleared."""
-    id = 1
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     async def assert_last_step(item_id, expected_action, expected_state):
         await client.send_json(
@@ -1434,12 +1434,12 @@ async def test_script_mode(
     script_execution,
 ) -> None:
     """Test overlapping runs with max_runs > 1."""
-    id = 1
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     flag = asyncio.Event()
 
@@ -1502,12 +1502,12 @@ async def test_script_mode_2(
     script_execution,
 ) -> None:
     """Test overlapping runs with max_runs > 1."""
-    id = 1
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     flag = asyncio.Event()
 
@@ -1577,12 +1577,12 @@ async def test_trace_blueprint_automation(
 ) -> None:
     """Test trace of blueprint automation."""
     await async_setup_component(hass, "homeassistant", {})
-    id = 1
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     domain = "automation"
     sun_config = {

@@ -8,9 +8,8 @@ from pytrafikverket.exceptions import InvalidAuthentication, NoTrainStationFound
 from pytrafikverket.trafikverket_train import TrainStop
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant import config_entries
 from homeassistant.components.trafikverket_train.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -43,12 +42,12 @@ async def test_unload_entry(hass: HomeAssistant, get_trains: list[TrainStop]) ->
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert len(mock_tv_train.mock_calls) == 1
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_auth_failed(
@@ -74,7 +73,7 @@ async def test_auth_failed(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
     active_flows = entry.async_get_active_flows(hass, (SOURCE_REAUTH))
     for flow in active_flows:
@@ -104,7 +103,7 @@ async def test_no_stations(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_migrate_entity_unique_id(
@@ -144,7 +143,7 @@ async def test_migrate_entity_unique_id(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     entity = entity_registry.async_get(entity.entity_id)
     assert entity.unique_id == f"{entry.entry_id}-departure_time"

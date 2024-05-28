@@ -70,6 +70,7 @@
       "tracker_state": {
         "name": "Tracker state",
         "state": {
+          "inaccurate_position": "Inaccurate position",
           "not_reporting": "Not reporting",
           "operational": "Operational",
           "system_shutdown_user": "System shutdown user",

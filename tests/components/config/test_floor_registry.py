@@ -44,7 +44,7 @@ async def test_list_floors(
         "icon": None,
         "floor_id": "first_floor",
         "name": "First floor",
-        "level": 0,
+        "level": None,
     }
     assert msg["result"][1] == {
         "aliases": unordered(["top floor", "attic"]),
@@ -72,7 +72,7 @@ async def test_create_floor(
         "icon": None,
         "floor_id": "first_floor",
         "name": "First floor",
-        "level": 0,
+        "level": None,
     }
 
     await client.send_json_auto_id(
@@ -196,7 +196,7 @@ async def test_update_floor(
             "name": "First floor",
             "aliases": [],
             "icon": None,
-            "level": 1,
+            "level": None,
             "type": "config/floor_registry/update",
         }
     )
@@ -209,7 +209,7 @@ async def test_update_floor(
         "icon": None,
         "floor_id": floor.floor_id,
         "name": "First floor",
-        "level": 1,
+        "level": None,
     }
 
 

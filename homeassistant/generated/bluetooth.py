@@ -5,7 +5,9 @@ To update, run python3 -m script.hassfest
 
 from __future__ import annotations
 
-BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
+from typing import Final
+
+BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "domain": "airthings_ble",
         "manufacturer_id": 820,
@@ -65,6 +67,21 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "dormakaba_dkey",
         "service_uuid": "e7a60001-6639-429f-94fd-86de8ea26897",
+    },
+    {
+        "connectable": True,
+        "domain": "eq3btsmart",
+        "local_name": "CC-RT-BLE",
+    },
+    {
+        "connectable": True,
+        "domain": "eq3btsmart",
+        "local_name": "CC-RT-M-BLE",
+    },
+    {
+        "connectable": True,
+        "domain": "eq3btsmart",
+        "local_name": "CC-RT-BLE-EQ",
     },
     {
         "domain": "eufylife_ble",

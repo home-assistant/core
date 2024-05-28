@@ -44,13 +44,13 @@ async def get_form(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": GATEWAY_TYPE_TO_STEP[gateway_type]}
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == expected_step_id
 
     return result
@@ -78,7 +78,7 @@ async def test_config_mqtt(hass: HomeAssistant, mqtt: None) -> None:
 
     if "errors" in result:
         assert not result["errors"]
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "mqtt"
     assert result["data"] == {
         CONF_DEVICE: "mqtt",
@@ -96,7 +96,7 @@ async def test_missing_mqtt(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -104,7 +104,7 @@ async def test_missing_mqtt(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "mqtt_required"
 
 
@@ -139,7 +139,7 @@ async def test_config_serial(hass: HomeAssistant) -> None:
 
     if "errors" in result:
         assert not result["errors"]
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "/dev/ttyACM0"
     assert result["data"] == {
         CONF_DEVICE: "/dev/ttyACM0",
@@ -177,7 +177,7 @@ async def test_config_tcp(hass: HomeAssistant) -> None:
 
     if "errors" in result:
         assert not result["errors"]
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "127.0.0.1"
     assert result["data"] == {
         CONF_DEVICE: "127.0.0.1",
@@ -213,7 +213,7 @@ async def test_fail_to_connect(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert "errors" in result
     errors = result["errors"]
     assert errors
@@ -374,7 +374,7 @@ async def test_config_invalid(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert "errors" in result
     errors = result["errors"]
     assert errors

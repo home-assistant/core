@@ -949,7 +949,7 @@ async def test_migrate(
     await hass.async_block_till_done()
 
     # Check migration was successful and added invert option
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.options == {
         CONF_ENTITY_ID: "switch.test",
         CONF_INVERT: False,
@@ -988,7 +988,7 @@ async def test_migrate_from_future(
     await hass.async_block_till_done()
 
     # Check migration was not successful and did not add invert option
-    assert config_entry.state == ConfigEntryState.MIGRATION_ERROR
+    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
     assert config_entry.options == {
         CONF_ENTITY_ID: "switch.test",
         CONF_TARGET_DOMAIN: target_domain,

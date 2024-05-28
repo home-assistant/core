@@ -1,7 +1,7 @@
 """Test the Cloud Google Config."""
 
 from http import HTTPStatus
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, PropertyMock, patch
 
 from freezegun import freeze_time
 import pytest
@@ -865,3 +865,43 @@ async def test_google_config_get_agent_user_id(
         == config.agent_user_id
     )
     assert config.get_agent_user_id_from_webhook("other_id") != config.agent_user_id
+
+
+async def test_google_config_get_agent_users(
+    hass: HomeAssistant, mock_cloud_login, cloud_prefs
+) -> None:
+    """Test overridden async_get_agent_users method."""
+    username_mock = PropertyMock(return_value="blah")
+
+    # We should not call Cloud.username when not logged in
+    cloud_prefs._prefs["google_connected"] = True
+    assert cloud_prefs.google_connected
+    mock_cloud = Mock(is_logged_in=False)
+    type(mock_cloud).username = username_mock
+    config = CloudGoogleConfig(
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, mock_cloud
+    )
+    assert config.async_get_agent_users() == ()
+    username_mock.assert_not_called()
+
+    # We should not call Cloud.username when not connected
+    cloud_prefs._prefs["google_connected"] = False
+    assert not cloud_prefs.google_connected
+    mock_cloud = Mock(is_logged_in=True)
+    type(mock_cloud).username = username_mock
+    config = CloudGoogleConfig(
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, mock_cloud
+    )
+    assert config.async_get_agent_users() == ()
+    username_mock.assert_not_called()
+
+    # Logged in and connected
+    cloud_prefs._prefs["google_connected"] = True
+    assert cloud_prefs.google_connected
+    mock_cloud = Mock(is_logged_in=True)
+    type(mock_cloud).username = username_mock
+    config = CloudGoogleConfig(
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, mock_cloud
+    )
+    assert config.async_get_agent_users() == ("blah",)
+    username_mock.assert_called()

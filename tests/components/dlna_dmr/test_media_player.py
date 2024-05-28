@@ -85,9 +85,7 @@ async def setup_mock_component(hass: HomeAssistant, mock_entry: MockConfigEntry)
 
     entries = async_entries_for_config_entry(async_get_er(hass), mock_entry.entry_id)
     assert len(entries) == 1
-    entity_id = entries[0].entity_id
-
-    return entity_id
+    return entries[0].entity_id
 
 
 async def get_attrs(hass: HomeAssistant, entity_id: str) -> Mapping[str, Any]:
@@ -1107,7 +1105,7 @@ async def test_browse_media(
     assert expected_child_audio in response["result"]["children"]
 
     # Device specifies extra parameters in MIME type, uses non-standard "x-"
-    # prefix, and capitilizes things, all of which should be ignored
+    # prefix, and capitalizes things, all of which should be ignored
     dmr_device_mock.sink_protocol_info = [
         "http-get:*:audio/X-MPEG;codecs=mp3:*",
     ]
