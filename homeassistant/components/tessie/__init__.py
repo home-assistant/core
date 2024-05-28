@@ -4,6 +4,12 @@ from http import HTTPStatus
 import logging
 
 from aiohttp import ClientError, ClientResponseError
+from tesla_fleet_api import EnergySpecific, Tessie
+from tesla_fleet_api.exceptions import (
+    InvalidToken,
+    SubscriptionRequired,
+    TeslaFleetError,
+)
 from tessie_api import get_state_of_all_vehicles
 
 from homeassistant.config_entries import ConfigEntry
@@ -38,10 +44,11 @@ type TessieConfigEntry = ConfigEntry[TessieData]
 async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bool:
     """Set up Tessie config."""
     api_key = entry.data[CONF_ACCESS_TOKEN]
+    session = async_get_clientsession(hass)
 
     try:
         vehicles = await get_state_of_all_vehicles(
-            session=async_get_clientsession(hass),
+            session=session,
             api_key=api_key,
             only_active=True,
         )
@@ -51,6 +58,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
         _LOGGER.error("Setup failed, unable to connect to Tessie: %s", e)
         return False
     except ClientError as e:
+        raise ConfigEntryNotReady from e
+
+    fleet_api = Tessie(session, api_key)
+    try:
+        products = (await fleet_api.products)["response"]
+    except TeslaFleetError as e:
         raise ConfigEntryNotReady from e
 
     vehicles = [

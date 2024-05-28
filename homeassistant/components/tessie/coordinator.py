@@ -6,6 +6,13 @@ import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
+from tesla_fleet_api import EnergySpecific
+from tesla_fleet_api.exceptions import (
+    Forbidden,
+    InvalidToken,
+    SubscriptionRequired,
+    TeslaFleetError,
+)
 from tessie_api import get_state, get_status
 
 from homeassistant.core import HomeAssistant
@@ -19,6 +26,19 @@ from .const import TessieStatus
 TESSIE_SYNC_INTERVAL = 10
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def flatten(self, data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
+    """Flatten the data structure."""
+    result = {}
+    for key, value in data.items():
+        if parent:
+            key = f"{parent}_{key}"
+        if isinstance(value, dict):
+            result.update(self._flatten(value, key))
+        else:
+            result[key] = value
+    return result
 
 
 class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -41,7 +61,7 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api_key = api_key
         self.vin = vin
         self.session = async_get_clientsession(hass)
-        self.data = self._flatten(data)
+        self.data = flatten(data)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Tessie API."""
@@ -68,18 +88,66 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 raise ConfigEntryAuthFailed from e
             raise
 
-        return self._flatten(vehicle)
+        return flatten(vehicle)
 
-    def _flatten(
-        self, data: dict[str, Any], parent: str | None = None
-    ) -> dict[str, Any]:
-        """Flatten the data structure."""
-        result = {}
-        for key, value in data.items():
-            if parent:
-                key = f"{parent}_{key}"
-            if isinstance(value, dict):
-                result.update(self._flatten(value, key))
-            else:
-                result[key] = value
-        return result
+
+class TessieEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Class to manage fetching energy site live status from the Tessie API."""
+
+    updated_once: bool
+
+    def __init__(self, hass: HomeAssistant, api: EnergySpecific) -> None:
+        """Initialize Tessie Energy Site Live coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            name="Tessie Energy Site Live",
+            update_interval=TESSIE_SYNC_INTERVAL,
+        )
+        self.api = api
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Update energy site data using Tessie API."""
+
+        try:
+            data = (await self.api.live_status())["response"]
+        except (InvalidToken, Forbidden, SubscriptionRequired) as e:
+            raise ConfigEntryAuthFailed from e
+        except TeslaFleetError as e:
+            raise UpdateFailed(e.message) from e
+
+        # Convert Wall Connectors from array to dict
+        data["wall_connectors"] = {
+            wc["din"]: wc for wc in (data.get("wall_connectors") or [])
+        }
+
+        return data
+
+
+class TessieEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Class to manage fetching energy site info from the Tessie API."""
+
+    updated_once: bool
+
+    def __init__(self, hass: HomeAssistant, api: EnergySpecific, product: dict) -> None:
+        """Initialize Tessie Energy Info coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            name="Tessie Energy Site Info",
+            update_interval=TESSIE_SYNC_INTERVAL,
+        )
+        self.api = api
+        self.data = product
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Update energy site data using Tessie API."""
+
+        try:
+            data = (await self.api.site_info())["response"]
+        except (InvalidToken, Forbidden, SubscriptionRequired) as e:
+            raise ConfigEntryAuthFailed from e
+        except TeslaFleetError as e:
+            raise UpdateFailed(e.message) from e
+
+        return flatten(data)
