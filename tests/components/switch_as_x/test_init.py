@@ -80,11 +80,14 @@ async def test_config_entry_unregistered_uuid(
     ],
 )
 async def test_entity_registry_events(
-    hass: HomeAssistant, target_domain: str, state_on: str, state_off: str
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    target_domain: str,
+    state_on: str,
+    state_off: str,
 ) -> None:
     """Test entity registry events are tracked."""
-    registry = er.async_get(hass)
-    registry_entry = registry.async_get_or_create(
+    registry_entry = entity_registry.async_get_or_create(
         "switch", "test", "unique", original_name="ABC"
     )
     switch_entity_id = registry_entry.entity_id
@@ -112,7 +115,9 @@ async def test_entity_registry_events(
 
     # Change entity_id
     new_switch_entity_id = f"{switch_entity_id}_new"
-    registry.async_update_entity(switch_entity_id, new_entity_id=new_switch_entity_id)
+    entity_registry.async_update_entity(
+        switch_entity_id, new_entity_id=new_switch_entity_id
+    )
     hass.states.async_set(new_switch_entity_id, STATE_OFF)
     await hass.async_block_till_done()
 
@@ -129,27 +134,27 @@ async def test_entity_registry_events(
     with patch(
         "homeassistant.components.switch_as_x.async_unload_entry",
     ) as mock_setup_entry:
-        registry.async_update_entity(new_switch_entity_id, name="New name")
+        entity_registry.async_update_entity(new_switch_entity_id, name="New name")
         await hass.async_block_till_done()
     mock_setup_entry.assert_not_called()
 
     # Check removing the entity removes the config entry
-    registry.async_remove(new_switch_entity_id)
+    entity_registry.async_remove(new_switch_entity_id)
     await hass.async_block_till_done()
 
     assert hass.states.get(f"{target_domain}.abc") is None
-    assert registry.async_get(f"{target_domain}.abc") is None
+    assert entity_registry.async_get(f"{target_domain}.abc") is None
     assert len(hass.config_entries.async_entries("switch_as_x")) == 0
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_device_registry_config_entry_1(
-    hass: HomeAssistant, target_domain: str
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    target_domain: str,
 ) -> None:
     """Test we add our config entry to the tracked switch's device."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     switch_config_entry = MockConfigEntry()
     switch_config_entry.add_to_hass(hass)
 
@@ -206,12 +211,12 @@ async def test_device_registry_config_entry_1(
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_device_registry_config_entry_2(
-    hass: HomeAssistant, target_domain: str
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    target_domain: str,
 ) -> None:
     """Test we add our config entry to the tracked switch's device."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     switch_config_entry = MockConfigEntry()
     switch_config_entry.add_to_hass(hass)
 
@@ -262,7 +267,7 @@ async def test_device_registry_config_entry_2(
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_config_entry_entity_id(
-    hass: HomeAssistant, target_domain: Platform
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, target_domain: Platform
 ) -> None:
     """Test light switch setup from config entry with entity id."""
     config_entry = MockConfigEntry(
@@ -292,17 +297,17 @@ async def test_config_entry_entity_id(
     assert state.name == "ABC"
 
     # Check the light is added to the entity registry
-    registry = er.async_get(hass)
-    entity_entry = registry.async_get(f"{target_domain}.abc")
+    entity_entry = entity_registry.async_get(f"{target_domain}.abc")
     assert entity_entry
     assert entity_entry.unique_id == config_entry.entry_id
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
-async def test_config_entry_uuid(hass: HomeAssistant, target_domain: Platform) -> None:
+async def test_config_entry_uuid(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, target_domain: Platform
+) -> None:
     """Test light switch setup from config entry with entity registry id."""
-    registry = er.async_get(hass)
-    registry_entry = registry.async_get_or_create(
+    registry_entry = entity_registry.async_get_or_create(
         "switch", "test", "unique", original_name="ABC"
     )
 
@@ -328,11 +333,13 @@ async def test_config_entry_uuid(hass: HomeAssistant, target_domain: Platform) -
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
-async def test_device(hass: HomeAssistant, target_domain: Platform) -> None:
+async def test_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    target_domain: Platform,
+) -> None:
     """Test the entity is added to the wrapped entity's device."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     test_config_entry = MockConfigEntry()
     test_config_entry.add_to_hass(hass)
 
@@ -370,11 +377,10 @@ async def test_device(hass: HomeAssistant, target_domain: Platform) -> None:
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_setup_and_remove_config_entry(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     target_domain: Platform,
 ) -> None:
     """Test removing a config entry."""
-    registry = er.async_get(hass)
-
     # Setup the config entry
     switch_as_x_config_entry = MockConfigEntry(
         data={},
@@ -394,7 +400,7 @@ async def test_setup_and_remove_config_entry(
 
     # Check the state and entity registry entry are present
     assert hass.states.get(f"{target_domain}.abc") is not None
-    assert registry.async_get(f"{target_domain}.abc") is not None
+    assert entity_registry.async_get(f"{target_domain}.abc") is not None
 
     # Remove the config entry
     assert await hass.config_entries.async_remove(switch_as_x_config_entry.entry_id)
@@ -402,7 +408,7 @@ async def test_setup_and_remove_config_entry(
 
     # Check the state and entity registry entry are removed
     assert hass.states.get(f"{target_domain}.abc") is None
-    assert registry.async_get(f"{target_domain}.abc") is None
+    assert entity_registry.async_get(f"{target_domain}.abc") is None
 
 
 @pytest.mark.parametrize(
@@ -415,15 +421,16 @@ async def test_setup_and_remove_config_entry(
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_reset_hidden_by(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     target_domain: Platform,
     hidden_by_before: er.RegistryEntryHider | None,
     hidden_by_after: er.RegistryEntryHider,
 ) -> None:
     """Test removing a config entry resets hidden by."""
-    registry = er.async_get(hass)
-
-    switch_entity_entry = registry.async_get_or_create("switch", "test", "unique")
-    registry.async_update_entity(
+    switch_entity_entry = entity_registry.async_get_or_create(
+        "switch", "test", "unique"
+    )
+    entity_registry.async_update_entity(
         switch_entity_entry.entity_id, hidden_by=hidden_by_before
     )
 
@@ -447,22 +454,21 @@ async def test_reset_hidden_by(
     await hass.async_block_till_done()
 
     # Check hidden by is reset
-    switch_entity_entry = registry.async_get(switch_entity_entry.entity_id)
+    switch_entity_entry = entity_registry.async_get(switch_entity_entry.entity_id)
     assert switch_entity_entry.hidden_by == hidden_by_after
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_entity_category_inheritance(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     target_domain: Platform,
 ) -> None:
     """Test the entity category is inherited from source device."""
-    registry = er.async_get(hass)
-
-    switch_entity_entry = registry.async_get_or_create(
+    switch_entity_entry = entity_registry.async_get_or_create(
         "switch", "test", "unique", original_name="ABC"
     )
-    registry.async_update_entity(
+    entity_registry.async_update_entity(
         switch_entity_entry.entity_id, entity_category=EntityCategory.CONFIG
     )
 
@@ -484,7 +490,7 @@ async def test_entity_category_inheritance(
     assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = registry.async_get(f"{target_domain}.abc")
+    entity_entry = entity_registry.async_get(f"{target_domain}.abc")
     assert entity_entry
     assert entity_entry.device_id == switch_entity_entry.device_id
     assert entity_entry.entity_category is EntityCategory.CONFIG
@@ -493,15 +499,14 @@ async def test_entity_category_inheritance(
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_entity_options(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     target_domain: Platform,
 ) -> None:
     """Test the source entity is stored as an entity option."""
-    registry = er.async_get(hass)
-
-    switch_entity_entry = registry.async_get_or_create(
+    switch_entity_entry = entity_registry.async_get_or_create(
         "switch", "test", "unique", original_name="ABC"
     )
-    registry.async_update_entity(
+    entity_registry.async_update_entity(
         switch_entity_entry.entity_id, entity_category=EntityCategory.CONFIG
     )
 
@@ -523,7 +528,7 @@ async def test_entity_options(
     assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = registry.async_get(f"{target_domain}.abc")
+    entity_entry = entity_registry.async_get(f"{target_domain}.abc")
     assert entity_entry
     assert entity_entry.device_id == switch_entity_entry.device_id
     assert entity_entry.options == {
@@ -534,12 +539,11 @@ async def test_entity_options(
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_entity_name(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     target_domain: Platform,
 ) -> None:
     """Test the source entity has entity_name set to True."""
-    registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     switch_config_entry = MockConfigEntry()
     switch_config_entry.add_to_hass(hass)
 
@@ -549,14 +553,14 @@ async def test_entity_name(
         name="Device name",
     )
 
-    switch_entity_entry = registry.async_get_or_create(
+    switch_entity_entry = entity_registry.async_get_or_create(
         "switch",
         "test",
         "unique",
         device_id=device_entry.id,
         has_entity_name=True,
     )
-    switch_entity_entry = registry.async_update_entity(
+    switch_entity_entry = entity_registry.async_update_entity(
         switch_entity_entry.entity_id,
         config_entry_id=switch_config_entry.entry_id,
     )
@@ -579,7 +583,7 @@ async def test_entity_name(
     assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = registry.async_get(f"{target_domain}.device_name")
+    entity_entry = entity_registry.async_get(f"{target_domain}.device_name")
     assert entity_entry
     assert entity_entry.device_id == switch_entity_entry.device_id
     assert entity_entry.has_entity_name is True
@@ -593,12 +597,11 @@ async def test_entity_name(
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_custom_name_1(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     target_domain: Platform,
 ) -> None:
     """Test the source entity has a custom name."""
-    registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     switch_config_entry = MockConfigEntry()
     switch_config_entry.add_to_hass(hass)
 
@@ -608,7 +611,7 @@ async def test_custom_name_1(
         name="Device name",
     )
 
-    switch_entity_entry = registry.async_get_or_create(
+    switch_entity_entry = entity_registry.async_get_or_create(
         "switch",
         "test",
         "unique",
@@ -616,7 +619,7 @@ async def test_custom_name_1(
         has_entity_name=True,
         original_name="Original entity name",
     )
-    switch_entity_entry = registry.async_update_entity(
+    switch_entity_entry = entity_registry.async_update_entity(
         switch_entity_entry.entity_id,
         config_entry_id=switch_config_entry.entry_id,
         name="Custom entity name",
@@ -640,7 +643,7 @@ async def test_custom_name_1(
     assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = registry.async_get(
+    entity_entry = entity_registry.async_get(
         f"{target_domain}.device_name_original_entity_name"
     )
     assert entity_entry
@@ -656,6 +659,8 @@ async def test_custom_name_1(
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_custom_name_2(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     target_domain: Platform,
 ) -> None:
     """Test the source entity has a custom name.
@@ -663,9 +668,6 @@ async def test_custom_name_2(
     This tests the custom name is only copied from the source device when the
     switch_as_x config entry is setup the first time.
     """
-    registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     switch_config_entry = MockConfigEntry()
     switch_config_entry.add_to_hass(hass)
 
@@ -675,7 +677,7 @@ async def test_custom_name_2(
         name="Device name",
     )
 
-    switch_entity_entry = registry.async_get_or_create(
+    switch_entity_entry = entity_registry.async_get_or_create(
         "switch",
         "test",
         "unique",
@@ -683,7 +685,7 @@ async def test_custom_name_2(
         has_entity_name=True,
         original_name="Original entity name",
     )
-    switch_entity_entry = registry.async_update_entity(
+    switch_entity_entry = entity_registry.async_update_entity(
         switch_entity_entry.entity_id,
         config_entry_id=switch_config_entry.entry_id,
         name="New custom entity name",
@@ -706,13 +708,13 @@ async def test_custom_name_2(
 
     # Register the switch as x entity in the entity registry, this means
     # the entity has been setup before
-    switch_as_x_entity_entry = registry.async_get_or_create(
+    switch_as_x_entity_entry = entity_registry.async_get_or_create(
         target_domain,
         "switch_as_x",
         switch_as_x_config_entry.entry_id,
         suggested_object_id="device_name_original_entity_name",
     )
-    switch_as_x_entity_entry = registry.async_update_entity(
+    switch_as_x_entity_entry = entity_registry.async_update_entity(
         switch_as_x_entity_entry.entity_id,
         config_entry_id=switch_config_entry.entry_id,
         name="Old custom entity name",
@@ -721,7 +723,7 @@ async def test_custom_name_2(
     assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = registry.async_get(
+    entity_entry = entity_registry.async_get(
         f"{target_domain}.device_name_original_entity_name"
     )
     assert entity_entry
@@ -738,13 +740,13 @@ async def test_custom_name_2(
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_import_expose_settings_1(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     target_domain: Platform,
 ) -> None:
     """Test importing assistant expose settings."""
     await async_setup_component(hass, "homeassistant", {})
-    registry = er.async_get(hass)
 
-    switch_entity_entry = registry.async_get_or_create(
+    switch_entity_entry = entity_registry.async_get_or_create(
         "switch",
         "test",
         "unique",
@@ -773,7 +775,7 @@ async def test_import_expose_settings_1(
     assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = registry.async_get(f"{target_domain}.abc")
+    entity_entry = entity_registry.async_get(f"{target_domain}.abc")
     assert entity_entry
 
     # Check switch_as_x expose settings were copied from the switch
@@ -794,6 +796,7 @@ async def test_import_expose_settings_1(
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_import_expose_settings_2(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     target_domain: Platform,
 ) -> None:
     """Test importing assistant expose settings.
@@ -803,9 +806,8 @@ async def test_import_expose_settings_2(
     """
 
     await async_setup_component(hass, "homeassistant", {})
-    registry = er.async_get(hass)
 
-    switch_entity_entry = registry.async_get_or_create(
+    switch_entity_entry = entity_registry.async_get_or_create(
         "switch",
         "test",
         "unique",
@@ -833,7 +835,7 @@ async def test_import_expose_settings_2(
 
     # Register the switch as x entity in the entity registry, this means
     # the entity has been setup before
-    switch_as_x_entity_entry = registry.async_get_or_create(
+    switch_as_x_entity_entry = entity_registry.async_get_or_create(
         target_domain,
         "switch_as_x",
         switch_as_x_config_entry.entry_id,
@@ -847,7 +849,7 @@ async def test_import_expose_settings_2(
     assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = registry.async_get(f"{target_domain}.abc")
+    entity_entry = entity_registry.async_get(f"{target_domain}.abc")
     assert entity_entry
 
     # Check switch_as_x expose settings were not copied from the switch
@@ -871,13 +873,13 @@ async def test_import_expose_settings_2(
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_restore_expose_settings(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     target_domain: Platform,
 ) -> None:
     """Test removing a config entry restores assistant expose settings."""
     await async_setup_component(hass, "homeassistant", {})
-    registry = er.async_get(hass)
 
-    switch_entity_entry = registry.async_get_or_create(
+    switch_entity_entry = entity_registry.async_get_or_create(
         "switch",
         "test",
         "unique",
@@ -900,7 +902,7 @@ async def test_restore_expose_settings(
     switch_as_x_config_entry.add_to_hass(hass)
 
     # Register the switch as x entity
-    switch_as_x_entity_entry = registry.async_get_or_create(
+    switch_as_x_entity_entry = entity_registry.async_get_or_create(
         target_domain,
         "switch_as_x",
         switch_as_x_config_entry.entry_id,
@@ -927,11 +929,10 @@ async def test_restore_expose_settings(
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_migrate(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     target_domain: Platform,
 ) -> None:
     """Test migration."""
-    registry = er.async_get(hass)
-
     # Setup the config entry
     config_entry = MockConfigEntry(
         data={},
@@ -960,17 +961,16 @@ async def test_migrate(
 
     # Check the state and entity registry entry are present
     assert hass.states.get(f"{target_domain}.abc") is not None
-    assert registry.async_get(f"{target_domain}.abc") is not None
+    assert entity_registry.async_get(f"{target_domain}.abc") is not None
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_migrate_from_future(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     target_domain: Platform,
 ) -> None:
     """Test migration."""
-    registry = er.async_get(hass)
-
     # Setup the config entry
     config_entry = MockConfigEntry(
         data={},
@@ -998,4 +998,4 @@ async def test_migrate_from_future(
 
     # Check the state and entity registry entry are not present
     assert hass.states.get(f"{target_domain}.abc") is None
-    assert registry.async_get(f"{target_domain}.abc") is None
+    assert entity_registry.async_get(f"{target_domain}.abc") is None

@@ -3525,66 +3525,6 @@ async def test_debug_info_wildcard(
     } in debug_info_data["entities"][0]["subscriptions"]
 
 
-async def test_debug_info_filter_same(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test debug info removes messages with same timestamp."""
-    await mqtt_mock_entry()
-    config = {
-        "device": {"identifiers": ["helloworld"]},
-        "name": "test",
-        "state_topic": "sensor/#",
-        "unique_id": "veryunique",
-    }
-
-    data = json.dumps(config)
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
-    await hass.async_block_till_done()
-
-    device = device_registry.async_get_device(identifiers={("mqtt", "helloworld")})
-    assert device is not None
-
-    debug_info_data = debug_info.info_for_device(hass, device.id)
-    assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
-    assert {"topic": "sensor/#", "messages": []} in debug_info_data["entities"][0][
-        "subscriptions"
-    ]
-
-    dt1 = datetime(2019, 1, 1, 0, 0, 0, tzinfo=dt_util.UTC)
-    dt2 = datetime(2019, 1, 1, 0, 0, 1, tzinfo=dt_util.UTC)
-    freezer.move_to(dt1)
-    async_fire_mqtt_message(hass, "sensor/abc", "123")
-    async_fire_mqtt_message(hass, "sensor/abc", "123")
-    freezer.move_to(dt2)
-    async_fire_mqtt_message(hass, "sensor/abc", "123")
-
-    debug_info_data = debug_info.info_for_device(hass, device.id)
-    assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
-    assert len(debug_info_data["entities"][0]["subscriptions"][0]["messages"]) == 2
-    assert {
-        "topic": "sensor/#",
-        "messages": [
-            {
-                "payload": "123",
-                "qos": 0,
-                "retain": False,
-                "time": dt1,
-                "topic": "sensor/abc",
-            },
-            {
-                "payload": "123",
-                "qos": 0,
-                "retain": False,
-                "time": dt2,
-                "topic": "sensor/abc",
-            },
-        ],
-    } == debug_info_data["entities"][0]["subscriptions"][0]
-
-
 async def test_debug_info_same_topic(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

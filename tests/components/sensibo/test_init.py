@@ -154,15 +154,15 @@ async def test_unload_entry(hass: HomeAssistant, get_data: SensiboData) -> None:
 
 async def test_device_remove_devices(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     load_int: ConfigEntry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test we can only remove a device that no longer exists."""
     assert await async_setup_component(hass, "config", {})
-    registry: er.EntityRegistry = er.async_get(hass)
-    entity = registry.entities["climate.hallway"]
+    entity = entity_registry.entities["climate.hallway"]
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get(entity.device_id)
     client = await hass_ws_client(hass)
     response = await client.remove_device(device_entry.id, load_int.entry_id)
