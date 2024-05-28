@@ -1,0 +1,249 @@
+{
+  "entity": {
+    "sensor": {
+      "dsmr_reading_electricity_delivered_1": {
+        "default": "mdi:flash"
+      },
+      "dsmr_reading_electricity_returned_1": {
+        "default": "mdi:flash"
+      },
+      "dsmr_reading_electricity_delivered_2": {
+        "default": "mdi:flash"
+      },
+      "dsmr_reading_electricity_returned_2": {
+        "default": "mdi:flash"
+      },
+      "dsmr_reading_electricity_currently_delivered": {
+        "default": "mdi:flash"
+      },
+      "dsmr_reading_electricity_currently_returned": {
+        "default": "mdi:flash"
+      },
+      "dsmr_reading_phase_currently_delivered_l1": {
+        "default": "mdi:flash"
+      },
+      "dsmr_reading_phase_currently_delivered_l2": {
+        "default": "mdi:flash"
+      },
+      "dsmr_reading_phase_currently_delivered_l3": {
+        "default": "mdi:flash"
+      },
+      "dsmr_reading_phase_currently_returned_l1": {
+        "default": "mdi:flash"
+      },
+      "dsmr_reading_phase_currently_returned_l2": {
+        "default": "mdi:flash"
+      },
+      "dsmr_reading_phase_currently_returned_l3": {
+        "default": "mdi:flash"
+      },
+      "dsmr_reading_extra_device_delivered": {
+        "default": "mdi:fire"
+      },
+      "dsmr_reading_phase_voltage_l1": {
+        "default": "mdi:flash"
+      },
+      "dsmr_reading_phase_voltage_l2": {
+        "default": "mdi:flash"
+      },
+      "dsmr_reading_phase_voltage_l3": {
+        "default": "mdi:flash"
+      },
+      "dsmr_reading_phase_power_current_l1": {
+        "default": "mdi:flash"
+      },
+      "dsmr_reading_phase_power_current_l2": {
+        "default": "mdi:flash"
+      },
+      "dsmr_reading_phase_power_current_l3": {
+        "default": "mdi:flash"
+      },
+      "dsmr_reading_timestamp": {
+        "default": "mdi:clock"
+      },
+      "dsmr_consumption_gas_delivered": {
+        "default": "mdi:counter"
+      },
+      "dsmr_consumption_gas_currently_delivered": {
+        "default": "mdi:counter"
+      },
+      "dsmr_consumption_gas_read_at": {
+        "default": "mdi:clock"
+      },
+      "dsmr_day_consumption_electricity1": {
+        "default": "mdi:flash"
+      },
+      "dsmr_day_consumption_electricity2": {
+        "default": "mdi:flash"
+      },
+      "dsmr_day_consumption_electricity1_returned": {
+        "default": "mdi:flash"
+      },
+      "dsmr_day_consumption_electricity2_returned": {
+        "default": "mdi:flash"
+      },
+      "dsmr_day_consumption_electricity_merged": {
+        "default": "mdi:flash"
+      },
+      "dsmr_day_consumption_electricity_returned_merged": {
+        "default": "mdi:flash"
+      },
+      "dsmr_day_consumption_electricity1_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_day_consumption_electricity2_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_day_consumption_electricity_cost_merged": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_day_consumption_gas": {
+        "default": "mdi:counter"
+      },
+      "dsmr_day_consumption_gas_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_day_consumption_total_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_day_consumption_energy_supplier_price_electricity_delivered_1": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_day_consumption_energy_supplier_price_electricity_delivered_2": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_day_consumption_energy_supplier_price_electricity_returned_1": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_day_consumption_energy_supplier_price_electricity_returned_2": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_day_consumption_energy_supplier_price_gas": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_day_consumption_fixed_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_meter_stats_dsmr_version": {
+        "default": "mdi:alert-circle"
+      },
+      "dsmr_meter_stats_electricity_tariff": {
+        "default": "mdi:flash"
+      },
+      "dsmr_meter_stats_power_failure_count": {
+        "default": "mdi:flash"
+      },
+      "dsmr_meter_stats_long_power_failure_count": {
+        "default": "mdi:flash"
+      },
+      "dsmr_meter_stats_voltage_sag_count_l1": {
+        "default": "mdi:flash"
+      },
+      "dsmr_meter_stats_voltage_sag_count_l2": {
+        "default": "mdi:flash"
+      },
+      "dsmr_meter_stats_voltage_sag_count_l3": {
+        "default": "mdi:flash"
+      },
+      "dsmr_meter_stats_voltage_swell_count_l1": {
+        "default": "mdi:flash"
+      },
+      "dsmr_meter_stats_voltage_swell_count_l2": {
+        "default": "mdi:flash"
+      },
+      "dsmr_meter_stats_voltage_swell_count_l3": {
+        "default": "mdi:flash"
+      },
+      "dsmr_meter_stats_rejected_telegrams": {
+        "default": "mdi:flash"
+      },
+      "dsmr_current_month_electricity1": {
+        "default": "mdi:flash"
+      },
+      "dsmr_current_month_electricity2": {
+        "default": "mdi:flash"
+      },
+      "dsmr_current_month_electricity1_returned": {
+        "default": "mdi:flash"
+      },
+      "dsmr_current_month_electricity2_returned": {
+        "default": "mdi:flash"
+      },
+      "dsmr_current_month_electricity_merged": {
+        "default": "mdi:flash"
+      },
+      "dsmr_current_month_electricity_returned_merged": {
+        "default": "mdi:flash"
+      },
+      "dsmr_current_month_electricity1_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_current_month_electricity2_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_current_month_electricity_cost_merged": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_current_month_gas": {
+        "default": "mdi:counter"
+      },
+      "dsmr_current_month_gas_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_current_month_fixed_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_current_month_total_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_current_year_electricity1": {
+        "default": "mdi:flash"
+      },
+      "dsmr_current_year_electricity2": {
+        "default": "mdi:flash"
+      },
+      "dsmr_current_year_electricity1_returned": {
+        "default": "mdi:flash"
+      },
+      "dsmr_current_year_electricity2_returned": {
+        "default": "mdi:flash"
+      },
+      "dsmr_current_year_electricity_merged": {
+        "default": "mdi:flash"
+      },
+      "dsmr_current_year_electricity_returned_merged": {
+        "default": "mdi:flash"
+      },
+      "dsmr_current_year_electricity1_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_current_year_electricity2_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_current_year_electricity_cost_merged": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_current_year_gas": {
+        "default": "mdi:counter"
+      },
+      "dsmr_current_year_gas_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_current_year_fixed_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_current_year_total_cost": {
+        "default": "mdi:currency-eur"
+      },
+      "dsmr_consumption_quarter_hour_peak_electricity_average_delivered": {
+        "default": "mdi:flash"
+      },
+      "dsmr_consumption_quarter_hour_peak_electricity_read_at_start": {
+        "default": "mdi:clock"
+      },
+      "dsmr_consumption_quarter_hour_peak_electricity_read_at_end": {
+        "default": "mdi:clock"
+      }
+    }
+  }
+}
