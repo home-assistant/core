@@ -27,7 +27,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.rainforest_eagle.data.async_get_type",
+            "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
             return_value=(TYPE_EAGLE_200, "mock-hw"),
         ),
         patch(

@@ -145,7 +145,6 @@ async def test_user(
             == DEFAULT_CONSIDER_HOME.total_seconds()
         )
         assert not result["result"].unique_id
-        await hass.async_block_till_done()
 
     assert mock_setup_entry.called
 
@@ -764,14 +763,12 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     mock_config.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(mock_config.entry_id)
-    await hass.async_block_till_done()
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
             CONF_CONSIDER_HOME: 37,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {

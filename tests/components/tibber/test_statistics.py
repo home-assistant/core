@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.statistics import statistics_during_period
-from homeassistant.components.tibber.sensor import TibberDataCoordinator
+from homeassistant.components.tibber.coordinator import TibberDataCoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 

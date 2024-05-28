@@ -400,6 +400,17 @@
       "ptz_pan_position": {
         "name": "PTZ pan position"
       },
+      "battery_temperature": {
+        "name": "Battery temperature"
+      },
+      "battery_state": {
+        "name": "Battery state",
+        "state": {
+          "discharging": "Discharging",
+          "charging": "Charging",
+          "chargecomplete": "Charge complete"
+        }
+      },
       "hdd_storage": {
         "name": "HDD {hdd_index} storage"
       },

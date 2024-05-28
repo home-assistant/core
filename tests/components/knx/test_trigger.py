@@ -25,7 +25,7 @@ async def test_telegram_trigger(
     calls: list[ServiceCall],
     knx: KNXTestKit,
 ) -> None:
-    """Test telegram telegram triggers firing."""
+    """Test telegram triggers firing."""
     await knx.setup_integration({})
 
     # "id" field added to action to test if `trigger_data` passed correctly in `async_attach_trigger`
@@ -96,6 +96,64 @@ async def test_telegram_trigger(
 
 
 @pytest.mark.parametrize(
+    ("payload", "type_option", "expected_value", "expected_unit"),
+    [
+        ((0x4C,), {"type": "percent"}, 30, "%"),
+        ((0x03,), {}, None, None),  # "dpt" omitted defaults to None
+        ((0x0C, 0x1A), {"type": "temperature"}, 21.00, "°C"),
+    ],
+)
+async def test_telegram_trigger_dpt_option(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    knx: KNXTestKit,
+    payload: tuple[int, ...],
+    type_option: dict[str, bool],
+    expected_value: int | None,
+    expected_unit: str | None,
+) -> None:
+    """Test telegram trigger type option."""
+    await knx.setup_integration({})
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                # "catch_all" trigger
+                {
+                    "trigger": {
+                        "platform": "knx.telegram",
+                        **type_option,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "catch_all": ("telegram - {{ trigger.destination }}"),
+                            "trigger": (" {{ trigger }}"),
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    await knx.receive_write("0/0/1", payload)
+
+    assert len(calls) == 1
+    test_call = calls.pop()
+    assert test_call.data["catch_all"] == "telegram - 0/0/1"
+    assert test_call.data["trigger"]["value"] == expected_value
+    assert test_call.data["trigger"]["unit"] == expected_unit
+
+    await knx.receive_read("0/0/1")
+
+    assert len(calls) == 1
+    test_call = calls.pop()
+    assert test_call.data["catch_all"] == "telegram - 0/0/1"
+    assert test_call.data["trigger"]["value"] is None
+    assert test_call.data["trigger"]["unit"] is None
+
+
+@pytest.mark.parametrize(
     "group_value_options",
     [
         {
@@ -139,7 +197,7 @@ async def test_telegram_trigger_options(
     group_value_options: dict[str, bool],
     direction_options: dict[str, bool],
 ) -> None:
-    """Test telegram telegram trigger options."""
+    """Test telegram trigger options."""
     await knx.setup_integration({})
     assert await async_setup_component(
         hass,
@@ -157,7 +215,6 @@ async def test_telegram_trigger_options(
                         "service": "test.automation",
                         "data_template": {
                             "catch_all": ("telegram - {{ trigger.destination }}"),
-                            "id": (" {{ trigger.id }}"),
                         },
                     },
                 },
@@ -275,7 +332,6 @@ async def test_invalid_trigger(
                             "service": "test.automation",
                             "data_template": {
                                 "catch_all": ("telegram - {{ trigger.destination }}"),
-                                "id": (" {{ trigger.id }}"),
                             },
                         },
                     },

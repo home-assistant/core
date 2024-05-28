@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from regenmaschine.errors import RainMachineError
 import voluptuous as vol
@@ -35,11 +35,11 @@ from .const import (
 from .model import RainMachineEntityDescription
 from .util import RUN_STATE_MAP, key_exists
 
+ATTR_ACTIVITY_TYPE = "activity_type"
 ATTR_AREA = "area"
 ATTR_CS_ON = "cs_on"
 ATTR_CURRENT_CYCLE = "current_cycle"
 ATTR_CYCLES = "cycles"
-ATTR_ZONE_RUN_TIME = "zone_run_time_from_app"
 ATTR_DELAY = "delay"
 ATTR_DELAY_ON = "delay_on"
 ATTR_FIELD_CAPACITY = "field_capacity"
@@ -55,6 +55,7 @@ ATTR_STATUS = "status"
 ATTR_SUN_EXPOSURE = "sun_exposure"
 ATTR_VEGETATION_TYPE = "vegetation_type"
 ATTR_ZONES = "zones"
+ATTR_ZONE_RUN_TIME = "zone_run_time_from_app"
 
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
@@ -110,11 +111,7 @@ VEGETATION_MAP = {
 }
 
 
-_T = TypeVar("_T", bound="RainMachineBaseSwitch")
-_P = ParamSpec("_P")
-
-
-def raise_on_request_error(
+def raise_on_request_error[_T: RainMachineBaseSwitch, **_P](
     func: Callable[Concatenate[_T, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
     """Define a decorator to raise on a request error."""
@@ -142,6 +139,7 @@ class RainMachineSwitchDescription(
 class RainMachineActivitySwitchDescription(RainMachineSwitchDescription):
     """Describe a RainMachine activity (program/zone) switch."""
 
+    kind: str
     uid: int
 
 
@@ -215,6 +213,7 @@ async def async_setup_entry(
                         key=f"{kind}_{uid}",
                         name=name,
                         api_category=api_category,
+                        kind=kind,
                         uid=uid,
                     ),
                 )
@@ -229,6 +228,7 @@ async def async_setup_entry(
                         key=f"{kind}_{uid}_enabled",
                         name=f"{name} enabled",
                         api_category=api_category,
+                        kind=kind,
                         uid=uid,
                     ),
                 )
@@ -291,6 +291,19 @@ class RainMachineActivitySwitch(RainMachineBaseSwitch):
     _attr_icon = "mdi:water"
     entity_description: RainMachineActivitySwitchDescription
 
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        data: RainMachineData,
+        description: RainMachineSwitchDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(entry, data, description)
+
+        self._attr_extra_state_attributes[ATTR_ACTIVITY_TYPE] = (
+            self.entity_description.kind
+        )
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off.
 
@@ -338,6 +351,19 @@ class RainMachineEnabledSwitch(RainMachineBaseSwitch):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:cog"
     entity_description: RainMachineActivitySwitchDescription
+
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        data: RainMachineData,
+        description: RainMachineSwitchDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(entry, data, description)
+
+        self._attr_extra_state_attributes[ATTR_ACTIVITY_TYPE] = (
+            self.entity_description.kind
+        )
 
     @callback
     def update_from_latest_data(self) -> None:

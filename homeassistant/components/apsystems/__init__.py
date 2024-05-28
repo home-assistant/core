@@ -12,7 +12,7 @@ from .coordinator import ApSystemsDataCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-ApsystemsConfigEntry = ConfigEntry[ApSystemsDataCoordinator]
+type ApsystemsConfigEntry = ConfigEntry[ApSystemsDataCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ApsystemsConfigEntry) -> bool:

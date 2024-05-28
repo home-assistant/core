@@ -834,7 +834,8 @@ async def async_setup_entry(
             elif model in MODELS_VACUUM or model.startswith(
                 (ROBOROCK_GENERIC, ROCKROBO_GENERIC)
             ):
-                return _setup_vacuum_sensors(hass, config_entry, async_add_entities)
+                _setup_vacuum_sensors(hass, config_entry, async_add_entities)
+                return
 
             for sensor, description in SENSOR_TYPES.items():
                 if sensor not in sensors:
