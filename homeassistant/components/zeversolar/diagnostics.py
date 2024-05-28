@@ -4,15 +4,12 @@ from typing import Any
 
 from zeversolar import ZeverSolarData
 
-from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN
 from .coordinator import ZeversolarCoordinator
-
-TO_REDACT = {"serial_or_registry_id", "registry_key", "serial_number"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -38,7 +35,7 @@ async def async_get_config_entry_diagnostics(
         "meter_status": data.meter_status.value,
     }
 
-    return async_redact_data(payload, TO_REDACT)
+    return payload
 
 
 async def async_get_device_diagnostics(
