@@ -189,4 +189,5 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         notification["device_id"] = self._device.id
         notification["serial_number"] = int(self._unique_id)
 
+        _LOGGER.debug("%s", notification)
         self.hass.bus.async_fire(BANG_OLUFSEN_WEBSOCKET_EVENT, notification)
