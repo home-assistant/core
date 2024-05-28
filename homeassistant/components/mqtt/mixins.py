@@ -726,10 +726,11 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
             self._discovery_data[ATTR_DISCOVERY_TOPIC] = self._migrate_discovery
             self._migrate_discovery = None
             _LOGGER.info("Component successfully migrated: %s", discovery_hash)
+            send_discovery_done(self.hass, self._discovery_data)
             return
 
         if discovery_payload and (
-            discovery_topic := discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC]
+            (discovery_topic := discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC])
             != self._discovery_data[ATTR_DISCOVERY_TOPIC]
         ):
             # Make sure the old discovery topic is removed
@@ -922,6 +923,7 @@ class MqttDiscoveryUpdateMixin(Entity):
                 self._discovery_data[ATTR_DISCOVERY_TOPIC] = self._migrate_discovery
                 self._migrate_discovery = None
                 _LOGGER.info("Component successfully migrated: %s", self.entity_id)
+                send_discovery_done(self.hass, self._discovery_data)
                 return
             # Empty payload: Remove component
             _LOGGER.info("Removing component: %s", self.entity_id)
