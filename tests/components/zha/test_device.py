@@ -247,12 +247,13 @@ async def test_check_available_no_basic_cluster_handler(
     assert "does not have a mandatory basic cluster" in caplog.text
 
 
-async def test_ota_sw_version(hass: HomeAssistant, ota_zha_device) -> None:
+async def test_ota_sw_version(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, ota_zha_device
+) -> None:
     """Test device entry gets sw_version updated via OTA cluster handler."""
 
     ota_ch = ota_zha_device._endpoints[1].client_cluster_handlers["1:0x0019"]
-    dev_registry = dr.async_get(hass)
-    entry = dev_registry.async_get(ota_zha_device.device_id)
+    entry = device_registry.async_get(ota_zha_device.device_id)
     assert entry.sw_version is None
 
     cluster = ota_ch.cluster
@@ -260,7 +261,7 @@ async def test_ota_sw_version(hass: HomeAssistant, ota_zha_device) -> None:
     sw_version = 0x2345
     cluster.handle_message(hdr, [1, 2, 3, sw_version, None])
     await hass.async_block_till_done()
-    entry = dev_registry.async_get(ota_zha_device.device_id)
+    entry = device_registry.async_get(ota_zha_device.device_id)
     assert int(entry.sw_version, base=16) == sw_version
 
 
