@@ -3,7 +3,12 @@
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.tag import DOMAIN, EVENT_TAG_SCANNED, async_scan_tag
+from homeassistant.components.tag import (
+    DEFAULT_NAME,
+    DOMAIN,
+    EVENT_TAG_SCANNED,
+    async_scan_tag,
+)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -113,6 +118,6 @@ async def test_unnamed_tag_scanned_event(
     event = events[0]
     event_data = event.data
 
-    assert event_data["name"] is None
+    assert event_data["name"] is DEFAULT_NAME
     assert event_data["device_id"] == TEST_DEVICE_ID
     assert event_data["tag_id"] == TEST_TAG_ID

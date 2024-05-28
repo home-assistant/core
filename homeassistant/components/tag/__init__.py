@@ -110,7 +110,8 @@ class TagStorageCollection(collection.DictStorageCollection):
             original_name=data.get(CONF_NAME, DEFAULT_NAME),
             suggested_object_id=slugify(data.get(CONF_NAME, DEFAULT_NAME)),
         )
-        data.pop(CONF_NAME)
+        if CONF_NAME in data:
+            data.pop(CONF_NAME)
         return data
 
     @callback
