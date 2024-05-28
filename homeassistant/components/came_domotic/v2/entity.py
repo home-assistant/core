@@ -14,7 +14,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from ..bridge import HueBridge
+from ..came_domotic_server import CameDomoticServer
 from ..const import CONF_IGNORE_AVAILABILITY, DOMAIN
 
 if TYPE_CHECKING:
@@ -41,7 +41,7 @@ class HueBaseEntity(Entity):
 
     def __init__(
         self,
-        bridge: HueBridge,
+        bridge: CameDomoticServer,
         controller: BaseResourcesController,
         resource: HueResource,
     ) -> None:

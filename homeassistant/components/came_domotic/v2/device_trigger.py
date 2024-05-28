@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 
     from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 
-    from ..bridge import HueBridge
+    from ..came_domotic_server import CameDomoticServer
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
@@ -47,7 +47,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 
 async def async_validate_trigger_config(
-    bridge: HueBridge,
+    bridge: CameDomoticServer,
     device_entry: DeviceEntry,
     config: ConfigType,
 ) -> ConfigType:
@@ -56,7 +56,7 @@ async def async_validate_trigger_config(
 
 
 async def async_attach_trigger(
-    bridge: HueBridge,
+    bridge: CameDomoticServer,
     device_entry: DeviceEntry,
     config: ConfigType,
     action: TriggerActionType,
@@ -82,7 +82,7 @@ async def async_attach_trigger(
 
 @callback
 def async_get_triggers(
-    bridge: HueBridge, device_entry: DeviceEntry
+    bridge: CameDomoticServer, device_entry: DeviceEntry
 ) -> list[dict[str, Any]]:
     """Return device triggers for device on `v2` bridge."""
     api: HueBridgeV2 = bridge.api

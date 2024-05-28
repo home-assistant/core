@@ -22,12 +22,12 @@ CONF_DURATION = "duration"
 CONF_STEPS = "steps"
 
 if TYPE_CHECKING:
-    from ..bridge import HueBridge
+    from ..came_domotic_server import CameDomoticServer
 
 LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_hue_events(bridge: HueBridge):
+async def async_setup_hue_events(bridge: CameDomoticServer):
     """Manage listeners for stateless Hue sensors that emit events."""
     hass = bridge.hass
     api: HueBridgeV2 = bridge.api  # to satisfy typing

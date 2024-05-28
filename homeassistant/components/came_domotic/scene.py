@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 
-from .bridge import HueBridge
+from .came_domotic_server import CameDomoticServer
 from .const import DOMAIN
 from .v2.entity import HueBaseEntity
 from .v2.helpers import normalize_hue_brightness, normalize_hue_transition
@@ -37,7 +37,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up scene platform from Hue group scenes."""
-    bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
+    bridge: CameDomoticServer = hass.data[DOMAIN][config_entry.entry_id]
     api: HueBridgeV2 = bridge.api
 
     if bridge.api_version == 1:
@@ -91,7 +91,7 @@ class HueSceneEntityBase(HueBaseEntity, SceneEntity):
 
     def __init__(
         self,
-        bridge: HueBridge,
+        bridge: CameDomoticServer,
         controller: ScenesController,
         resource: HueScene | HueSmartScene,
     ) -> None:

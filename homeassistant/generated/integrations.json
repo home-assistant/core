@@ -856,6 +856,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "came_domotic": {
+      "name": "CAME Domotic",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "canary": {
       "name": "Canary",
       "integration_type": "hub",
@@ -4521,12 +4527,6 @@
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Philips Dynalite"
-        },
-        "hue": {
-          "integration_type": "hub",
-          "config_flow": true,
-          "iot_class": "local_push",
-          "name": "Philips Hue"
         },
         "philips_js": {
           "integration_type": "hub",

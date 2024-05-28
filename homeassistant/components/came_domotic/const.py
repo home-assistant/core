@@ -6,7 +6,7 @@ from aiohue.v2.models.relative_rotary import (
     RelativeRotaryDirection,
 )
 
-DOMAIN = "hue"
+DOMAIN = "came_domotic"
 
 CONF_IGNORE_AVAILABILITY = "ignore_availability"
 

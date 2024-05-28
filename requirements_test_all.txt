@@ -236,9 +236,6 @@ aioharmony==0.2.10
 # homeassistant.components.homekit_controller
 aiohomekit==3.1.5
 
-# homeassistant.components.hue
-aiohue==4.7.1
-
 # homeassistant.components.imap
 aioimaplib==1.0.1
 

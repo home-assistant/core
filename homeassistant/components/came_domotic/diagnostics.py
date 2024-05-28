@@ -7,7 +7,7 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .bridge import HueBridge
+from .came_domotic_server import CameDomoticServer
 from .const import DOMAIN
 
 
@@ -15,7 +15,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    bridge: HueBridge = hass.data[DOMAIN][entry.entry_id]
+    bridge: CameDomoticServer = hass.data[DOMAIN][entry.entry_id]
     if bridge.api_version == 1:
         # diagnostics is only implemented for V2 bridges.
         return {}

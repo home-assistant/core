@@ -32,7 +32,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from ..bridge import HueBridge
+from ..came_domotic_server import CameDomoticServer
 from ..const import DOMAIN
 from .entity import HueBaseEntity
 
@@ -52,7 +52,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Hue Sensors from Config Entry."""
-    bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
+    bridge: CameDomoticServer = hass.data[DOMAIN][config_entry.entry_id]
     api: HueBridgeV2 = bridge.api
 
     @callback

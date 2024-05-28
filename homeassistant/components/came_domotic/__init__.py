@@ -1,26 +1,31 @@
+# pylint: disable=fixme
+
+
 """Support for the Philips Hue system."""
 
-from aiohue.util import normalize_bridge_id
+# from came_domotic_unofficial import Auth, CameDomoticAPI
 
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .bridge import HueBridge
+from .came_domotic_server import CameDomoticServer
 from .const import DOMAIN, SERVICE_HUE_ACTIVATE_SCENE
 from .migration import check_migration
 from .services import async_register_services
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up a bridge from a config entry."""
+    """Set up a CAME Domotic server instance from a config entry."""
     # check (and run) migrations if needed
+    # TODO check this method
     await check_migration(hass, entry)
 
     # setup the bridge instance
-    bridge = HueBridge(hass, entry)
-    if not await bridge.async_initialize_bridge():
+    # TODO bookmark
+    bridge = CameDomoticServer(hass, entry)
+    if not await bridge.async_initialize_api():
         return False
 
     # register Hue domain services
@@ -29,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api = bridge.api
 
     # For backwards compat
-    unique_id = normalize_bridge_id(api.config.bridge_id)
+    unique_id = ""  # normalize_bridge_id(api.config.bridge_id)
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=unique_id)
 

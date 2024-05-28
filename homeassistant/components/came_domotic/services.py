@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import verify_domain_control
 
-from .bridge import HueBridge
+from .came_domotic_server import CameDomoticServer
 from .const import (
     ATTR_DYNAMIC,
     ATTR_GROUP_NAME,
@@ -44,7 +44,7 @@ def async_register_services(hass: HomeAssistant) -> None:
                 bridge, group_name, scene_name, transition, dynamic
             )
             for bridge in hass.data[DOMAIN].values()
-            if isinstance(bridge, HueBridge)
+            if isinstance(bridge, CameDomoticServer)
         ]
         results = await asyncio.gather(*tasks)
 
@@ -75,7 +75,7 @@ def async_register_services(hass: HomeAssistant) -> None:
 
 
 async def hue_activate_scene_v1(
-    bridge: HueBridge,
+    bridge: CameDomoticServer,
     group_name: str,
     scene_name: str,
     transition: int | None = None,
@@ -112,10 +112,9 @@ async def hue_activate_scene_v1(
 
     if group is None or scene is None:
         LOGGER.debug(
-            "Unable to find scene %s for group %s on bridge %s",
+            "Unable to find scene %s for group %s",
             scene_name,
             group_name,
-            bridge.host,
         )
         return False
 
@@ -126,7 +125,7 @@ async def hue_activate_scene_v1(
 
 
 async def hue_activate_scene_v2(
-    bridge: HueBridge,
+    bridge: CameDomoticServer,
     group_name: str,
     scene_name: str,
     transition: int | None = None,
@@ -155,9 +154,8 @@ async def hue_activate_scene_v2(
         )
         return True
     LOGGER.debug(
-        "Unable to find scene %s for group %s on bridge %s",
+        "Unable to find scene %s for group %s",
         scene_name,
         group_name,
-        bridge.host,
     )
     return False

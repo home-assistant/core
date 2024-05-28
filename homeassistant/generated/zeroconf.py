@@ -20,6 +20,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "roku",
     },
+    "??????": {
+        "always_discover": True,
+        "domain": "came_domotic",
+    },
     "AC02": {
         "always_discover": True,
         "domain": "tado",
@@ -27,10 +31,6 @@ HOMEKIT = {
     "Abode": {
         "always_discover": True,
         "domain": "abode",
-    },
-    "BSB002": {
-        "always_discover": False,
-        "domain": "hue",
     },
     "C105X": {
         "always_discover": True,
@@ -267,6 +267,11 @@ HOMEKIT = {
 }
 
 ZEROCONF = {
+    "????????": [
+        {
+            "domain": "came_domotic",
+        },
+    ],
     "_Volumio._tcp.local.": [
         {
             "domain": "volumio",
@@ -549,11 +554,6 @@ ZEROCONF = {
             "properties": {
                 "vendor": "tailwind",
             },
-        },
-    ],
-    "_hue._tcp.local.": [
-        {
-            "domain": "hue",
         },
     ],
     "_hwenergy._tcp.local.": [

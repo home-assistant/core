@@ -1,0 +1,16 @@
+{
+  "domain": "came_domotic",
+  "name": "CAME Domotic",
+  "codeowners": ["@camedomotic-unofficial", "@fredericks1982"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/hue",
+  "homekit": {
+    "models": ["??????"]
+  },
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": ["came_domotic"],
+  "quality_scale": "platinum",
+  "requirements": ["came_domotic_unofficial==1.0.0rc17"],
+  "zeroconf": ["????????"]
+}

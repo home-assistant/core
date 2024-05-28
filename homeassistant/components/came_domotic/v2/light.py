@@ -29,7 +29,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from ..bridge import HueBridge
+from ..came_domotic_server import CameDomoticServer
 from ..const import DOMAIN
 from .entity import HueBaseEntity
 from .helpers import (
@@ -50,7 +50,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Hue Light from Config Entry."""
-    bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
+    bridge: CameDomoticServer = hass.data[DOMAIN][config_entry.entry_id]
     api: HueBridgeV2 = bridge.api
     controller: LightsController = api.lights
     make_light_entity = partial(HueLight, bridge, controller)
@@ -77,7 +77,7 @@ class HueLight(HueBaseEntity, LightEntity):
     )
 
     def __init__(
-        self, bridge: HueBridge, controller: LightsController, resource: Light
+        self, bridge: CameDomoticServer, controller: LightsController, resource: Light
     ) -> None:
         """Initialize the light."""
         super().__init__(bridge, controller, resource)

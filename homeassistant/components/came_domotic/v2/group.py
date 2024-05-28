@@ -27,7 +27,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from ..bridge import HueBridge
+from ..came_domotic_server import CameDomoticServer
 from ..const import DOMAIN
 from .entity import HueBaseEntity
 from .helpers import (
@@ -43,7 +43,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Hue groups on light platform."""
-    bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
+    bridge: CameDomoticServer = hass.data[DOMAIN][config_entry.entry_id]
     api: HueBridgeV2 = bridge.api
 
     async def async_add_light(event_type: EventType, resource: GroupedLight) -> None:
@@ -86,7 +86,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
     )
 
     def __init__(
-        self, bridge: HueBridge, resource: GroupedLight, group: Room | Zone
+        self, bridge: CameDomoticServer, resource: GroupedLight, group: Room | Zone
     ) -> None:
         """Initialize the light."""
         controller = bridge.api.groups.grouped_light

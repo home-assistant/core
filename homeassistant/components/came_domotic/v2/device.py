@@ -26,10 +26,10 @@ from homeassistant.helpers import device_registry as dr
 from ..const import DOMAIN
 
 if TYPE_CHECKING:
-    from ..bridge import HueBridge
+    from ..came_domotic_server import CameDomoticServer
 
 
-async def async_setup_devices(bridge: HueBridge):
+async def async_setup_devices(bridge: CameDomoticServer):
     """Manage setup of devices from Hue devices."""
     entry = bridge.config_entry
     hass = bridge.hass

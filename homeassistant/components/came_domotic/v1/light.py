@@ -37,7 +37,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util import color
 
-from ..bridge import HueBridge
+from ..came_domotic_server import CameDomoticServer
 from ..const import (
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
@@ -139,7 +139,7 @@ def create_light(item_class, coordinator, bridge, is_group, rooms, api, item_id)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Hue lights from a config entry."""
-    bridge: HueBridge = hass.data[HUE_DOMAIN][config_entry.entry_id]
+    bridge: CameDomoticServer = hass.data[HUE_DOMAIN][config_entry.entry_id]
     api_version = tuple(int(v) for v in bridge.api.config.apiversion.split("."))
     rooms = {}
 

@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 
-    from .bridge import HueBridge
+    from .came_domotic_server import CameDomoticServer
 
 
 async def async_validate_trigger_config(
@@ -47,7 +47,7 @@ async def async_validate_trigger_config(
     for conf_entry_id in device_entry.config_entries:
         if conf_entry_id not in hass.data[DOMAIN]:
             continue
-        bridge: HueBridge = hass.data[DOMAIN][conf_entry_id]
+        bridge: CameDomoticServer = hass.data[DOMAIN][conf_entry_id]
         if bridge.api_version == 1:
             return await async_validate_trigger_config_v1(bridge, device_entry, config)
         return await async_validate_trigger_config_v2(bridge, device_entry, config)
@@ -70,7 +70,7 @@ async def async_attach_trigger(
     for conf_entry_id in device_entry.config_entries:
         if conf_entry_id not in hass.data[DOMAIN]:
             continue
-        bridge: HueBridge = hass.data[DOMAIN][conf_entry_id]
+        bridge: CameDomoticServer = hass.data[DOMAIN][conf_entry_id]
         if bridge.api_version == 1:
             return await async_attach_trigger_v1(
                 bridge, device_entry, config, action, trigger_info
@@ -99,7 +99,7 @@ async def async_get_triggers(
     for conf_entry_id in device_entry.config_entries:
         if conf_entry_id not in hass.data[DOMAIN]:
             continue
-        bridge: HueBridge = hass.data[DOMAIN][conf_entry_id]
+        bridge: CameDomoticServer = hass.data[DOMAIN][conf_entry_id]
 
         if bridge.api_version == 1:
             return async_get_triggers_v1(bridge, device_entry)

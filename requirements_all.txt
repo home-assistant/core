@@ -260,9 +260,6 @@ aioharmony==0.2.10
 # homeassistant.components.homekit_controller
 aiohomekit==3.1.5
 
-# homeassistant.components.hue
-aiohue==4.7.1
-
 # homeassistant.components.imap
 aioimaplib==1.0.1
 
@@ -644,6 +641,9 @@ cached_ipaddress==0.3.0
 
 # homeassistant.components.caldav
 caldav==1.3.9
+
+# homeassistant.components.came_domotic
+came_domotic_unofficial==1.0.0rc17
 
 # homeassistant.components.circuit
 circuit-webhook==1.0.1

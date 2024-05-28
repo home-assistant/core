@@ -16,7 +16,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "[%key:component::hue::config::step::init::data_description::host%]"
+          "host": "[%key:component::came_domotic::config::step::init::data_description::host%]"
         }
       },
       "link": {
@@ -52,10 +52,10 @@
       "dim_up": "Dim up",
       "turn_off": "[%key:common::action::turn_off%]",
       "turn_on": "[%key:common::action::turn_on%]",
-      "1": "[%key:component::hue::device_automation::trigger_subtype::button_1%]",
-      "2": "[%key:component::hue::device_automation::trigger_subtype::button_2%]",
-      "3": "[%key:component::hue::device_automation::trigger_subtype::button_3%]",
-      "4": "[%key:component::hue::device_automation::trigger_subtype::button_4%]",
+      "1": "[%key:component::came_domotic::device_automation::trigger_subtype::button_1%]",
+      "2": "[%key:component::came_domotic::device_automation::trigger_subtype::button_2%]",
+      "3": "[%key:component::came_domotic::device_automation::trigger_subtype::button_3%]",
+      "4": "[%key:component::came_domotic::device_automation::trigger_subtype::button_4%]",
       "clock_wise": "Rotation clockwise",
       "counter_clock_wise": "Rotation counter-clockwise"
     },
@@ -68,9 +68,9 @@
       "initial_press": "\"{subtype}\" pressed initially",
       "repeat": "\"{subtype}\" held down",
       "short_release": "\"{subtype}\" released after short press",
-      "long_release": "[%key:component::hue::device_automation::trigger_type::remote_button_long_release%]",
-      "double_short_release": "[%key:component::hue::device_automation::trigger_type::remote_double_button_short_press%]",
-      "start": "[%key:component::hue::device_automation::trigger_type::initial_press%]"
+      "long_release": "[%key:component::came_domotic::device_automation::trigger_type::remote_button_long_release%]",
+      "double_short_release": "[%key:component::came_domotic::device_automation::trigger_type::remote_double_button_short_press%]",
+      "start": "[%key:component::came_domotic::device_automation::trigger_type::initial_press%]"
     }
   },
   "entity": {
@@ -162,7 +162,7 @@
           "description": "Transition duration it takes to bring devices to the state defined in the scene."
         },
         "dynamic": {
-          "name": "[%key:component::hue::services::hue_activate_scene::fields::dynamic::name%]",
+          "name": "[%key:component::came_domotic::services::hue_activate_scene::fields::dynamic::name%]",
           "description": "Enable dynamic mode of the scene."
         },
         "speed": {
