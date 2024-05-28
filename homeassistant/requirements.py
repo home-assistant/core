@@ -296,7 +296,7 @@ class RequirementsManager:
                     continue
                 _LOGGER.error(
                     "Requirement %s cannot be satisfied "
-                    "because core integrations %s require version %s. ",
+                    "because core integrations %s require version: %s",
                     specifier,
                     core_integrations_using_req_set,
                     version,
