@@ -171,7 +171,10 @@ async def test_thermostat_service_calls(
     thermostat: MatterNode,
 ) -> None:
     """Test climate platform service calls."""
-    # test single-setpoint temperature adjustment when heat mode is active
+    # test single-setpoint temperature adjustment when cool mode is active
+    state = hass.states.get("climate.longan_link_hvac")
+    assert state
+    assert state.state == HVACMode.COOL
     await hass.services.async_call(
         "climate",
         "set_temperature",
@@ -206,12 +209,12 @@ async def test_thermostat_service_calls(
     assert matter_client.write_attribute.call_count == 0
     matter_client.write_attribute.reset_mock()
 
-    # test single-setpoint temperature adjustment when cool mode is active
-    set_node_attribute(thermostat, 1, 513, 28, 3)
+    # test single-setpoint temperature adjustment when heat mode is active
+    set_node_attribute(thermostat, 1, 513, 28, 4)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.longan_link_hvac")
     assert state
-    assert state.state == HVACMode.COOL
+    assert state.state == HVACMode.HEAT
 
     await hass.services.async_call(
         "climate",
@@ -226,7 +229,7 @@ async def test_thermostat_service_calls(
     assert matter_client.write_attribute.call_count == 1
     assert matter_client.write_attribute.call_args == call(
         node_id=thermostat.node_id,
-        attribute_path="1/513/17",
+        attribute_path="1/513/18",
         value=2000,
     )
     matter_client.write_attribute.reset_mock()
