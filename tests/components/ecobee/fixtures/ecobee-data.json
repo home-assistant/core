@@ -4,6 +4,11 @@
       "identifier": 8675309,
       "name": "ecobee",
       "modelNumber": "athenaSmart",
+      "utcTime": "2022-01-01 10:00:00",
+      "thermostatTime": "2022-01-01 6:00:00",
+      "location": {
+        "timeZone": "America/Toronto"
+      },
       "program": {
         "climates": [
           { "name": "Climate1", "climateRef": "c1" },
@@ -30,6 +35,7 @@
         "ventilatorType": "hrv",
         "ventilatorMinOnTimeHome": 20,
         "ventilatorMinOnTimeAway": 10,
+        "ventilatorOffDateTime": "2022-01-01 6:00:00",
         "isVentilatorTimerOn": false,
         "hasHumidifier": true,
         "humidifierMode": "manual",

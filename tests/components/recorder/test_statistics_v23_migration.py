@@ -9,12 +9,13 @@ import importlib
 import json
 from pathlib import Path
 import sys
+import threading
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import SQLITE_URL_PREFIX
+from homeassistant.components.recorder import SQLITE_URL_PREFIX, get_instance
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import setup_component
@@ -176,6 +177,7 @@ def test_delete_duplicates(caplog: pytest.LogCaptureFixture, tmp_path: Path) -> 
     ):
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        get_instance(hass).recorder_and_worker_thread_ids.add(threading.get_ident())
         wait_recording_done(hass)
         wait_recording_done(hass)
 
@@ -358,6 +360,7 @@ def test_delete_duplicates_many(
     ):
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        get_instance(hass).recorder_and_worker_thread_ids.add(threading.get_ident())
         wait_recording_done(hass)
         wait_recording_done(hass)
 
@@ -517,6 +520,7 @@ def test_delete_duplicates_non_identical(
     ):
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        get_instance(hass).recorder_and_worker_thread_ids.add(threading.get_ident())
         wait_recording_done(hass)
         wait_recording_done(hass)
 
@@ -631,6 +635,7 @@ def test_delete_duplicates_short_term(
     ):
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        get_instance(hass).recorder_and_worker_thread_ids.add(threading.get_ident())
         wait_recording_done(hass)
         wait_recording_done(hass)
 

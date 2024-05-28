@@ -18,7 +18,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from . import debug_info, is_connected
-from .util import get_mqtt_data
+from .models import DATA_MQTT
 
 REDACT_CONFIG = {CONF_PASSWORD, CONF_USERNAME}
 REDACT_STATE_DEVICE_TRACKER = {ATTR_LATITUDE, ATTR_LONGITUDE}
@@ -45,7 +45,7 @@ def _async_get_diagnostics(
     device: DeviceEntry | None = None,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    mqtt_instance = get_mqtt_data(hass).client
+    mqtt_instance = hass.data[DATA_MQTT].client
     if TYPE_CHECKING:
         assert mqtt_instance is not None
 

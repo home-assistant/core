@@ -1,5 +1,6 @@
 """Tests for the floor registry."""
 
+from functools import partial
 import re
 from typing import Any
 
@@ -357,3 +358,45 @@ async def test_floor_removed_from_areas(
 
     entries = ar.async_entries_for_floor(area_registry, floor.floor_id)
     assert len(entries) == 0
+
+
+async def test_async_create_thread_safety(
+    hass: HomeAssistant,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test async_create raises when called from wrong thread."""
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls floor_registry.async_create from a thread.",
+    ):
+        await hass.async_add_executor_job(floor_registry.async_create, "any")
+
+
+async def test_async_delete_thread_safety(
+    hass: HomeAssistant,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test async_delete raises when called from wrong thread."""
+    any_floor = floor_registry.async_create("any")
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls floor_registry.async_delete from a thread.",
+    ):
+        await hass.async_add_executor_job(floor_registry.async_delete, any_floor)
+
+
+async def test_async_update_thread_safety(
+    hass: HomeAssistant,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test async_update raises when called from wrong thread."""
+    any_floor = floor_registry.async_create("any")
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls floor_registry.async_update from a thread.",
+    ):
+        await hass.async_add_executor_job(
+            partial(floor_registry.async_update, any_floor.floor_id, name="new name")
+        )

@@ -93,7 +93,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         except (TimeoutError, httpx.ConnectError):
             errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
 

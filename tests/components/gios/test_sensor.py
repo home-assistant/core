@@ -17,7 +17,7 @@ from homeassistant.util.dt import utcnow
 
 from . import init_integration
 
-from tests.common import async_fire_time_changed, load_fixture
+from tests.common import async_fire_time_changed, load_fixture, snapshot_platform
 
 
 async def test_sensor(
@@ -27,13 +27,7 @@ async def test_sensor(
     with patch("homeassistant.components.gios.PLATFORMS", [Platform.SENSOR]):
         entry = await init_integration(hass)
 
-    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-
-    assert entity_entries
-    for entity_entry in entity_entries:
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-        assert (state := hass.states.get(entity_entry.entity_id))
-        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 async def test_availability(hass: HomeAssistant) -> None:
@@ -57,7 +51,7 @@ async def test_availability(hass: HomeAssistant) -> None:
 
     future = utcnow() + timedelta(minutes=60)
     with patch(
-        "homeassistant.components.gios.Gios._get_all_sensors",
+        "homeassistant.components.gios.coordinator.Gios._get_all_sensors",
         side_effect=ApiError("Unexpected error"),
     ):
         async_fire_time_changed(hass, future)
@@ -80,11 +74,11 @@ async def test_availability(hass: HomeAssistant) -> None:
     future = utcnow() + timedelta(minutes=120)
     with (
         patch(
-            "homeassistant.components.gios.Gios._get_all_sensors",
+            "homeassistant.components.gios.coordinator.Gios._get_all_sensors",
             return_value=incomplete_sensors,
         ),
         patch(
-            "homeassistant.components.gios.Gios._get_indexes",
+            "homeassistant.components.gios.coordinator.Gios._get_indexes",
             return_value={},
         ),
     ):
@@ -109,10 +103,11 @@ async def test_availability(hass: HomeAssistant) -> None:
     future = utcnow() + timedelta(minutes=180)
     with (
         patch(
-            "homeassistant.components.gios.Gios._get_all_sensors", return_value=sensors
+            "homeassistant.components.gios.coordinator.Gios._get_all_sensors",
+            return_value=sensors,
         ),
         patch(
-            "homeassistant.components.gios.Gios._get_indexes",
+            "homeassistant.components.gios.coordinator.Gios._get_indexes",
             return_value=indexes,
         ),
     ):

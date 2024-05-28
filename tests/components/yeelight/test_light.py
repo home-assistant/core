@@ -824,7 +824,7 @@ async def test_device_types(
         target_properties["music_mode"] = False
         assert dict(state.attributes) == target_properties
         await hass.config_entries.async_unload(config_entry.entry_id)
-        await config_entry.async_remove(hass)
+        await hass.config_entries.async_remove(config_entry.entry_id)
         registry = er.async_get(hass)
         registry.async_clear_config_entry(config_entry.entry_id)
         mocked_bulb.last_properties["nl_br"] = original_nightlight_brightness
@@ -846,7 +846,7 @@ async def test_device_types(
             assert dict(state.attributes) == nightlight_mode_properties
 
             await hass.config_entries.async_unload(config_entry.entry_id)
-            await config_entry.async_remove(hass)
+            await hass.config_entries.async_remove(config_entry.entry_id)
             registry.async_clear_config_entry(config_entry.entry_id)
             await hass.async_block_till_done()
             mocked_bulb.last_properties.pop("active_mode")
@@ -869,7 +869,7 @@ async def test_device_types(
             assert dict(state.attributes) == nightlight_entity_properties
 
             await hass.config_entries.async_unload(config_entry.entry_id)
-            await config_entry.async_remove(hass)
+            await hass.config_entries.async_remove(config_entry.entry_id)
             registry.async_clear_config_entry(config_entry.entry_id)
             await hass.async_block_till_done()
 

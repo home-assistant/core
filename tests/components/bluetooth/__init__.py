@@ -155,6 +155,7 @@ def inject_advertisement_with_time_and_source_connectable(
             advertisement=adv,
             connectable=connectable,
             time=time,
+            tx_power=adv.tx_power,
         )
     )
 

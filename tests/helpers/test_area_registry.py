@@ -1,5 +1,6 @@
 """Tests for the Area Registry."""
 
+from functools import partial
 from typing import Any
 
 import pytest
@@ -491,3 +492,40 @@ async def test_entries_for_label(
 
     assert not ar.async_entries_for_label(area_registry, "unknown")
     assert not ar.async_entries_for_label(area_registry, "")
+
+
+async def test_async_get_or_create_thread_checks(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry
+) -> None:
+    """We raise when trying to create in the wrong thread."""
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls area_registry.async_create from a thread.",
+    ):
+        await hass.async_add_executor_job(area_registry.async_create, "Mock1")
+
+
+async def test_async_update_thread_checks(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry
+) -> None:
+    """We raise when trying to update in the wrong thread."""
+    area = area_registry.async_create("Mock1")
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls area_registry.async_update from a thread.",
+    ):
+        await hass.async_add_executor_job(
+            partial(area_registry.async_update, area.id, name="Mock2")
+        )
+
+
+async def test_async_delete_thread_checks(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry
+) -> None:
+    """We raise when trying to delete in the wrong thread."""
+    area = area_registry.async_create("Mock1")
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls area_registry.async_delete from a thread.",
+    ):
+        await hass.async_add_executor_job(area_registry.async_delete, area.id)
