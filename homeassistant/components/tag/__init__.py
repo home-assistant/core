@@ -7,7 +7,9 @@ from typing import Any, final
 import uuid
 
 import voluptuous as vol
+from voluptuous.humanize import humanize_error
 
+from homeassistant.components import websocket_api
 from homeassistant.const import CONF_NAME
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -82,6 +84,15 @@ class TagStorageCollection(collection.DictStorageCollection):
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
     UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
 
+    def __init__(
+        self,
+        store: Store,
+        id_manager: collection.IDManager | None = None,
+    ) -> None:
+        """Initialize the storage collection."""
+        super().__init__(store, id_manager)
+        self.entity_registry = er.async_get(self.hass)
+
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(data)
@@ -90,6 +101,16 @@ class TagStorageCollection(collection.DictStorageCollection):
         # make last_scanned JSON serializeable
         if LAST_SCANNED in data:
             data[LAST_SCANNED] = data[LAST_SCANNED].isoformat()
+        # Create entity in entity_registry when creating the tag
+        # This is done early to store name in a single place (ER)
+        self.entity_registry.async_get_or_create(
+            DOMAIN,
+            DOMAIN,
+            data[TAG_ID],
+            original_name=data.get(CONF_NAME, DEFAULT_NAME),
+            suggested_object_id=slugify(data.get(CONF_NAME, DEFAULT_NAME)),
+        )
+        data.pop(CONF_NAME)
         return data
 
     @callback
@@ -103,7 +124,125 @@ class TagStorageCollection(collection.DictStorageCollection):
         # make last_scanned JSON serializeable
         if LAST_SCANNED in update_data:
             data[LAST_SCANNED] = data[LAST_SCANNED].isoformat()
+        if name := data.get(CONF_NAME):
+            entity_id = self.entity_registry.async_get_entity_id(
+                DOMAIN, DOMAIN, data[TAG_ID]
+            )
+            if entity_id := self.entity_registry.async_get_entity_id(
+                DOMAIN, DOMAIN, data[TAG_ID]
+            ):
+                self.entity_registry.async_update_entity(entity_id, name=name)
+            else:
+                self.entity_registry.async_get_or_create(
+                    DOMAIN,
+                    DOMAIN,
+                    data[TAG_ID],
+                    original_name=data.get(CONF_NAME, DEFAULT_NAME),
+                    suggested_object_id=slugify(data.get(CONF_NAME, DEFAULT_NAME)),
+                )
+            data.pop(CONF_NAME)
+
         return data
+
+
+class TagDictStorageCollectionWebsocket(
+    collection.StorageCollectionWebsocket[collection.DictStorageCollection]
+):
+    """Class to expose tag storage collection management over websocket."""
+
+    def __init__(
+        self,
+        storage_collection: collection.DictStorageCollection,
+        api_prefix: str,
+        model_name: str,
+        create_schema: ConfigType,
+        update_schema: ConfigType,
+    ) -> None:
+        """Initialize a websocket for tag."""
+        super().__init__(
+            storage_collection, api_prefix, model_name, create_schema, update_schema
+        )
+        self.entity_registry = er.async_get(storage_collection.hass)
+
+    @callback
+    def ws_list_item(
+        self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        """List items specifically for tag.
+
+        Provides name from entity_registry instead of storage collection.
+        """
+        tag_items = self.storage_collection.async_items()
+        for item in tag_items:
+            if (
+                entity_id := self.entity_registry.async_get_entity_id(
+                    DOMAIN, DOMAIN, item[TAG_ID]
+                )
+            ) and (entity := self.entity_registry.async_get(entity_id)):
+                item[CONF_NAME] = entity.name or entity.original_name
+        connection.send_result(msg["id"], tag_items)
+
+    async def ws_create_item(
+        self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        """Create a item."""
+        try:
+            data = dict(msg)
+            data.pop("id")
+            data.pop("type")
+            item = await self.storage_collection.async_create_item(data)
+            if (
+                entity_id := self.entity_registry.async_get_entity_id(
+                    DOMAIN, DOMAIN, item[TAG_ID]
+                )
+            ) and (entity := self.entity_registry.async_get(entity_id)):
+                item[CONF_NAME] = entity.name or entity.original_name
+            connection.send_result(msg["id"], item)
+        except vol.Invalid as err:
+            connection.send_error(
+                msg["id"],
+                websocket_api.const.ERR_INVALID_FORMAT,
+                humanize_error(data, err),
+            )
+        except ValueError as err:
+            connection.send_error(
+                msg["id"], websocket_api.const.ERR_INVALID_FORMAT, str(err)
+            )
+
+    async def ws_update_item(
+        self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        """Update a item."""
+        data = dict(msg)
+        msg_id = data.pop("id")
+        item_id = data.pop(self.item_id_key)
+        data.pop("type")
+
+        try:
+            item = await self.storage_collection.async_update_item(item_id, data)
+            if (
+                entity_id := self.entity_registry.async_get_entity_id(
+                    DOMAIN, DOMAIN, item[TAG_ID]
+                )
+            ) and (entity := self.entity_registry.async_get(entity_id)):
+                item[CONF_NAME] = entity.name or entity.original_name
+            connection.send_result(msg_id, item)
+        except collection.ItemNotFound:
+            connection.send_error(
+                msg["id"],
+                websocket_api.const.ERR_NOT_FOUND,
+                f"Unable to find {self.item_id_key} {item_id}",
+            )
+        except vol.Invalid as err:
+            connection.send_error(
+                msg["id"],
+                websocket_api.const.ERR_INVALID_FORMAT,
+                humanize_error(data, err),
+            )
+        except ValueError as err:
+            connection.send_error(
+                msg_id, websocket_api.const.ERR_INVALID_FORMAT, str(err)
+            )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -116,11 +255,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         id_manager,
     )
     await storage_collection.async_load()
-    collection.DictStorageCollectionWebsocket(
+    TagDictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
     entities: list[TagEntity] = []
+
+    entity_registry = er.async_get(hass)
 
     async def tag_change_listener(
         change_type: str, item_id: str, updated_config: dict
@@ -133,11 +274,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         if change_type == collection.CHANGE_ADDED:
             # When tags are added to storage
+            entity = entity_registry.async_get_or_create(
+                DOMAIN, DOMAIN, updated_config[TAG_ID]
+            )
             await component.async_add_entities(
                 [
                     TagEntity(
                         hass,
-                        updated_config.get(CONF_NAME, DEFAULT_NAME),
+                        entity.name or entity.original_name or DEFAULT_NAME,
                         updated_config[TAG_ID],
                         updated_config.get(LAST_SCANNED),
                         updated_config.get(DEVICE_ID),
@@ -157,21 +301,37 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # Deleted tags
         elif change_type == collection.CHANGE_REMOVED:
             # When tags are removed from storage
-            entity_reg = er.async_get(hass)
-            entity_id = entity_reg.async_get_entity_id(
+            entity_id = entity_registry.async_get_entity_id(
                 DOMAIN, DOMAIN, updated_config[TAG_ID]
             )
             if entity_id:
-                entity_reg.async_remove(entity_id)
+                entity_registry.async_remove(entity_id)
 
     storage_collection.async_add_listener(tag_change_listener)
 
     for tag in storage_collection.async_items():
         _LOGGER.debug("Adding tag: %s", tag)
+        entity_id = entity_registry.async_get_entity_id(DOMAIN, DOMAIN, tag[TAG_ID])
+        if entity_id := entity_registry.async_get_entity_id(
+            DOMAIN, DOMAIN, tag[TAG_ID]
+        ):
+            entity = entity_registry.async_get(entity_id)
+        else:
+            entity = entity_registry.async_get_or_create(
+                DOMAIN,
+                DOMAIN,
+                tag[TAG_ID],
+                original_name=tag.get(CONF_NAME, DEFAULT_NAME),
+                suggested_object_id=slugify(tag.get(CONF_NAME, DEFAULT_NAME)),
+            )
+        name = DEFAULT_NAME
+        if entity:
+            name = entity.name or entity.original_name or DEFAULT_NAME
+
         entities.append(
             TagEntity(
                 hass,
-                tag.get(CONF_NAME, DEFAULT_NAME),
+                name,
                 tag[TAG_ID],
                 tag.get(LAST_SCANNED),
                 tag.get(DEVICE_ID),
@@ -194,11 +354,13 @@ async def async_scan_tag(
         raise HomeAssistantError("tag component has not been set up.")
 
     storage_collection = hass.data[TAG_DATA]
+    entity_registry = er.async_get(hass)
+    entity_id = entity_registry.async_get_entity_id(DOMAIN, DOMAIN, tag_id)
 
-    # Get name from helper, default value None if not present in data
+    # Get name from entity registry, default value None if not present
     tag_name = None
-    if tag_data := storage_collection.data.get(tag_id):
-        tag_name = tag_data.get(CONF_NAME)
+    if entity_id and (entity := entity_registry.async_get(entity_id)):
+        tag_name = entity.name or entity.original_name
 
     hass.bus.async_fire(
         EVENT_TAG_SCANNED,
@@ -236,7 +398,6 @@ class TagEntity(Entity):
         device_id: str | None,
     ) -> None:
         """Initialize the Tag event."""
-        self.entity_id = f"tag.{slugify(name)}"
         self.hass = hass
         self._attr_name = name
         self._tag_id = tag_id
