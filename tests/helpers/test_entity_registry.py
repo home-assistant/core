@@ -536,7 +536,7 @@ async def test_load_bad_data(
 
     assert (
         "'test' from integration super_platform has a non string unique_id '123', "
-        "please create a bug report" in caplog.text
+        "please create a bug report" not in caplog.text
     )
     assert (
         "'test' from integration super_platform has a non string unique_id '234', "
