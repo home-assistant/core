@@ -49,7 +49,6 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
         ):
             await self.renew_authentication()
 
-        data: dict[int, dict[str, Any]] = {}
         try:
             data = await self.fyta.update_all_plants()
         except (FytaConnectionError, FytaPlantError) as err:
