@@ -7,10 +7,10 @@ from typing import Any, cast
 from tesla_fleet_api.const import Scope
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import TeslemetryConfigEntry
 from .entity import TeslemetryVehicleEntity
 from .models import TeslemetryVehicleData
 
@@ -22,7 +22,9 @@ SCHEDULED = "scheduled"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Teslemetry update platform from a config entry."""
 

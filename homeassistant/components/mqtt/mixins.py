@@ -647,7 +647,7 @@ async def async_remove_discovery_payload(
     after a restart of Home Assistant.
     """
     discovery_topic = discovery_data[ATTR_DISCOVERY_TOPIC]
-    await async_publish(hass, discovery_topic, "", retain=True)
+    await async_publish(hass, discovery_topic, None, retain=True)
 
 
 async def async_clear_discovery_topic_if_entity_removed(

@@ -5,23 +5,22 @@ from typing import Any
 from pytedee_async import TedeeClientException, TedeeLock, TedeeLockState
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import TedeeConfigEntry
 from .coordinator import TedeeApiCoordinator
 from .entity import TedeeEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TedeeConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Tedee lock entity."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     entities: list[TedeeLockEntity] = []
     for lock in coordinator.data.values():
@@ -64,6 +63,16 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
     def is_unlocking(self) -> bool:
         """Return true if lock is unlocking."""
         return self._lock.state == TedeeLockState.UNLOCKING
+
+    @property
+    def is_open(self) -> bool:
+        """Return true if lock is open."""
+        return self._lock.state == TedeeLockState.PULLED
+
+    @property
+    def is_opening(self) -> bool:
+        """Return true if lock is opening."""
+        return self._lock.state == TedeeLockState.PULLING
 
     @property
     def is_locking(self) -> bool:

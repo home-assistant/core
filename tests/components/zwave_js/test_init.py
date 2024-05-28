@@ -353,6 +353,7 @@ async def test_existing_node_not_replaced_when_not_ready(
     zp3111_state,
     client,
     integration,
+    area_registry: ar.AreaRegistry,
 ) -> None:
     """Test when a node added event with a non-ready node is received.
 
@@ -360,7 +361,7 @@ async def test_existing_node_not_replaced_when_not_ready(
     """
     dev_reg = dr.async_get(hass)
     er_reg = er.async_get(hass)
-    kitchen_area = ar.async_get(hass).async_create("Kitchen")
+    kitchen_area = area_registry.async_create("Kitchen")
 
     device_id = f"{client.driver.controller.home_id}-{zp3111.node_id}"
     device_id_ext = (
