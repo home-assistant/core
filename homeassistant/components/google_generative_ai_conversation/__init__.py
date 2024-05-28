@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from functools import partial
 import mimetypes
 from pathlib import Path
 
+from google.ai import generativelanguage_v1beta
+from google.api_core.client_options import ClientOptions
 from google.api_core.exceptions import ClientError, DeadlineExceeded, GoogleAPICallError
 import google.generativeai as genai
 import google.generativeai.types as genai_types
@@ -105,12 +106,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     genai.configure(api_key=entry.data[CONF_API_KEY])
 
     try:
-        await hass.async_add_executor_job(
-            partial(
-                genai.get_model,
-                entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
-                request_options={"timeout": 5.0},
-            )
+        client = generativelanguage_v1beta.ModelServiceAsyncClient(
+            client_options=ClientOptions(api_key=entry.data[CONF_API_KEY])
+        )
+        await client.get_model(
+            name=entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL), timeout=5.0
         )
     except (GoogleAPICallError, ValueError) as err:
         if isinstance(err, ClientError) and err.reason == "API_KEY_INVALID":

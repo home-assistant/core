@@ -187,8 +187,8 @@ async def test_pipeline_events(
 
 async def test_udp_server(
     hass: HomeAssistant,
-    socket_enabled,
-    unused_udp_port_factory,
+    socket_enabled: None,
+    unused_udp_port_factory: Callable[[], int],
     voice_assistant_udp_pipeline_v1: VoiceAssistantUDPPipeline,
 ) -> None:
     """Test the UDP server runs and queues incoming data."""
@@ -314,8 +314,8 @@ async def test_error_calls_handle_finished(
 
 async def test_udp_server_multiple(
     hass: HomeAssistant,
-    socket_enabled,
-    unused_udp_port_factory,
+    socket_enabled: None,
+    unused_udp_port_factory: Callable[[], int],
     voice_assistant_udp_pipeline_v1: VoiceAssistantUDPPipeline,
 ) -> None:
     """Test that the UDP server raises an error if started twice."""
@@ -337,8 +337,8 @@ async def test_udp_server_multiple(
 
 async def test_udp_server_after_stopped(
     hass: HomeAssistant,
-    socket_enabled,
-    unused_udp_port_factory,
+    socket_enabled: None,
+    unused_udp_port_factory: Callable[[], int],
     voice_assistant_udp_pipeline_v1: VoiceAssistantUDPPipeline,
 ) -> None:
     """Test that the UDP server raises an error if started after stopped."""
