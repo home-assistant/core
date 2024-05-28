@@ -241,10 +241,8 @@ class WebSocketHandler:
         If we reach PENDING_MSG_MAX_FORCE_READY, we will release the ready future
         immediately so avoid the coalesced messages from growing too large.
         """
-        if (
-            not (ready_future := self._ready_future)
-            or ready_future.done()
-            or not (queue_size := len(self._message_queue))
+        if not (ready_future := self._ready_future) or not (
+            queue_size := len(self._message_queue)
         ):
             self._release_ready_queue_size = 0
             return
@@ -256,7 +254,8 @@ class WebSocketHandler:
             self._loop.call_soon(self._release_ready_future_or_reschedule)
             return
         self._release_ready_queue_size = 0
-        ready_future.set_result(None)
+        if not ready_future.done():
+            ready_future.set_result(None)
 
     @callback
     def _check_write_peak(self, _utc_time: dt.datetime) -> None:
