@@ -15,12 +15,20 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
     intent.async_register(
         hass,
         intent.ServiceIntentHandler(
-            INTENT_OPEN_COVER, DOMAIN, SERVICE_OPEN_COVER, "Opened {}"
+            INTENT_OPEN_COVER,
+            DOMAIN,
+            SERVICE_OPEN_COVER,
+            "Opened {}",
+            platforms={DOMAIN},
         ),
     )
     intent.async_register(
         hass,
         intent.ServiceIntentHandler(
-            INTENT_CLOSE_COVER, DOMAIN, SERVICE_CLOSE_COVER, "Closed {}"
+            INTENT_CLOSE_COVER,
+            DOMAIN,
+            SERVICE_CLOSE_COVER,
+            "Closed {}",
+            platforms={DOMAIN},
         ),
     )
