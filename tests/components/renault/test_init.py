@@ -118,13 +118,13 @@ async def test_setup_entry_missing_vehicle_details(
 @pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_registry_cleanup(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     config_entry: ConfigEntry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test being able to remove a disconnected device."""
     assert await async_setup_component(hass, "config", {})
     entry_id = config_entry.entry_id
-    device_registry = dr.async_get(hass)
     live_id = "VF1AAAAA555777999"
     dead_id = "VF1AAAAA555777888"
 
