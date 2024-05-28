@@ -132,9 +132,9 @@ class WebSocketHandler:
         logger = self._logger
         wsock = self._wsock
         loop = self._loop
+        is_debug_log_enabled = partial(logger.isEnabledFor, logging.DEBUG)
         debug = logger.debug
-        is_enabled_for = logger.isEnabledFor
-        logging_debug = logging.DEBUG
+        can_coalesce = self._connection and self._connection.can_coalesce
         # Exceptions if Socket disconnected or cancelled by connection handler
         try:
             while not wsock.closed:
@@ -145,21 +145,19 @@ class WebSocketHandler:
                 if self._closing:
                     return
 
-                debug_enabled = is_enabled_for(logging_debug)
-                if (
-                    not (connection := self._connection)
-                    or not connection.can_coalesce
-                    or len(message_queue) == 1
-                ):
+                if not can_coalesce:
+                    can_coalesce = self._connection and self._connection.can_coalesce
+
+                if not can_coalesce or len(message_queue) == 1:
                     message = message_queue.popleft()
-                    if debug_enabled:
+                    if is_debug_log_enabled():
                         debug("%s: Sending %s", self.description, message)
                     await send_bytes_text(message)
                     continue
 
                 coalesced_messages = b"".join((b"[", b",".join(message_queue), b"]"))
                 message_queue.clear()
-                if debug_enabled:
+                if is_debug_log_enabled():
                     debug("%s: Sending %s", self.description, coalesced_messages)
                 await send_bytes_text(coalesced_messages)
         except asyncio.CancelledError:
