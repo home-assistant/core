@@ -66,14 +66,14 @@ BINARY_SENSORS: tuple[JewishCalendarBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Jewish Calendar binary sensors."""
-    entry = hass.data[DOMAIN][config.entry_id]
+    entry = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        JewishCalendarBinarySensor(config.entry_id, entry, description)
+        JewishCalendarBinarySensor(config_entry.entry_id, entry, description)
         for description in BINARY_SENSORS
     )
 

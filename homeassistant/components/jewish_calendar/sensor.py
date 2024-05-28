@@ -150,17 +150,17 @@ TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Jewish calendar sensors ."""
-    entry = hass.data[DOMAIN][config.entry_id]
+    entry = hass.data[DOMAIN][config_entry.entry_id]
     sensors = [
-        JewishCalendarSensor(config.entry_id, entry, description)
+        JewishCalendarSensor(config_entry.entry_id, entry, description)
         for description in INFO_SENSORS
     ]
     sensors.extend(
-        JewishCalendarTimeSensor(config.entry_id, entry, description)
+        JewishCalendarTimeSensor(config_entry.entry_id, entry, description)
         for description in TIME_SENSORS
     )
 
