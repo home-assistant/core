@@ -21,7 +21,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.trigger import PluggableAction
 
-from . import LOGGER as _LOGGER, PhilipsTVConfigEntry, PhilipsTVDataUpdateCoordinator
+from . import LOGGER as _LOGGER, PhilipsTVConfigEntry
+from .coordinator import PhilipsTVDataUpdateCoordinator
 from .entity import PhilipsJsEntity
 from .helpers import async_get_turn_on_trigger
 

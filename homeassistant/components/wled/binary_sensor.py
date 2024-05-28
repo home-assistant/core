@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import WLEDConfigEntry
 from .coordinator import WLEDDataUpdateCoordinator
-from .models import WLEDEntity
+from .entity import WLEDEntity
 
 
 async def async_setup_entry(
@@ -21,10 +21,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a WLED binary sensor based on a config entry."""
-    coordinator = entry.runtime_data
     async_add_entities(
         [
-            WLEDUpdateBinarySensor(coordinator),
+            WLEDUpdateBinarySensor(entry.runtime_data),
         ]
     )
 

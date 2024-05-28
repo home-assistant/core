@@ -23,6 +23,7 @@ async def test_config_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     bmw_fixture,
+    entity_registry_enabled_by_default: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
@@ -42,6 +43,7 @@ async def test_device_diagnostics(
     hass_client: ClientSessionGenerator,
     device_registry: dr.DeviceRegistry,
     bmw_fixture,
+    entity_registry_enabled_by_default: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device diagnostics."""
@@ -66,6 +68,7 @@ async def test_device_diagnostics_vehicle_not_found(
     hass_client: ClientSessionGenerator,
     device_registry: dr.DeviceRegistry,
     bmw_fixture,
+    entity_registry_enabled_by_default: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device diagnostics when the vehicle cannot be found."""

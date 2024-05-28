@@ -18,7 +18,6 @@ from homeassistant.components.mqtt.abbreviations import (
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_DONE,
     MQTT_DISCOVERY_NEW,
-    MQTT_DISCOVERY_NEW_COMPONENT,
     MQTT_DISCOVERY_UPDATED,
     MQTTDiscoveryPayload,
     async_start,
@@ -830,7 +829,7 @@ async def test_cleanup_device(
     entity_registry: er.EntityRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
-    """Test discvered device is cleaned up when entry removed from device."""
+    """Test discovered device is cleaned up when entry removed from device."""
     mqtt_mock = await mqtt_mock_entry()
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
@@ -875,7 +874,7 @@ async def test_cleanup_device(
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/sensor/bla/config", "", 0, True
+        "homeassistant/sensor/bla/config", None, 0, True
     )
 
 
@@ -1016,9 +1015,9 @@ async def test_cleanup_device_multiple_config_entries(
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("homeassistant/sensor/bla/config", "", 0, True),
-            call("homeassistant/tag/bla/config", "", 0, True),
-            call("homeassistant/device_automation/bla/config", "", 0, True),
+            call("homeassistant/sensor/bla/config", None, 0, True),
+            call("homeassistant/tag/bla/config", None, 0, True),
+            call("homeassistant/device_automation/bla/config", None, 0, True),
         ],
         any_order=True,
     )
@@ -1617,11 +1616,11 @@ async def test_clear_config_topic_disabled_entity(
     # Assert all valid discovery topics are cleared
     assert mqtt_mock.async_publish.call_count == 2
     assert (
-        call("homeassistant/sensor/sbfspot_0/sbfspot_12345/config", "", 0, True)
+        call("homeassistant/sensor/sbfspot_0/sbfspot_12345/config", None, 0, True)
         in mqtt_mock.async_publish.mock_calls
     )
     assert (
-        call("homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config", "", 0, True)
+        call("homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config", None, 0, True)
         in mqtt_mock.async_publish.mock_calls
     )
 
@@ -1783,7 +1782,6 @@ async def test_update_with_bad_config_not_breaks_discovery(
     "signal_message",
     [
         MQTT_DISCOVERY_NEW,
-        MQTT_DISCOVERY_NEW_COMPONENT,
         MQTT_DISCOVERY_UPDATED,
         MQTT_DISCOVERY_DONE,
     ],

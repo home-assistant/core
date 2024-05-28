@@ -19,6 +19,7 @@ from .entity import Entity
 from .event import async_track_time_interval
 from .frame import report
 from .json import JSONEncoder
+from .singleton import singleton
 from .storage import Store
 
 DATA_RESTORE_STATE: HassKey[RestoreStateData] = HassKey("restore_state")
@@ -97,15 +98,14 @@ class StoredState:
 
 async def async_load(hass: HomeAssistant) -> None:
     """Load the restore state task."""
-    restore_state = RestoreStateData(hass)
-    await restore_state.async_setup()
-    hass.data[DATA_RESTORE_STATE] = restore_state
+    await async_get(hass).async_setup()
 
 
 @callback
+@singleton(DATA_RESTORE_STATE)
 def async_get(hass: HomeAssistant) -> RestoreStateData:
     """Get the restore state data helper."""
-    return hass.data[DATA_RESTORE_STATE]
+    return RestoreStateData(hass)
 
 
 class RestoreStateData:

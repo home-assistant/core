@@ -17,7 +17,6 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
 )
 from homeassistant.components.bluetooth.active_update_coordinator import (
-    _T,
     ActiveBluetoothDataUpdateCoordinator,
 )
 from homeassistant.core import CoreState, HomeAssistant
@@ -68,7 +67,7 @@ class MyCoordinator(ActiveBluetoothDataUpdateCoordinator[dict[str, Any]]):
         needs_poll_method: Callable[[BluetoothServiceInfoBleak, float | None], bool],
         poll_method: Callable[
             [BluetoothServiceInfoBleak],
-            Coroutine[Any, Any, _T],
+            Coroutine[Any, Any, dict[str, Any]],
         ]
         | None = None,
         poll_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
