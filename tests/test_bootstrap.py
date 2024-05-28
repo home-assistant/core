@@ -1107,11 +1107,7 @@ async def test_tasks_logged_that_block_stage_2(
     def gen_domain_setup(domain):
         async def async_setup(hass, config):
             async def _not_marked_background_task():
-                wait_task = asyncio.create_task(asyncio.sleep(1))
-                await asyncio.wait(
-                    [wait_task, done_future], return_when=asyncio.FIRST_COMPLETED
-                )
-                wait_task.cancel()
+                await done_future
 
             hass.async_create_task(_not_marked_background_task())
             return True
