@@ -27,7 +27,7 @@ RECONFIGURE_SCHEMA = vol.Schema({vol.Required(CONF_HOST, default=""): str})
 
 
 async def validate_input(
-    hass: HomeAssistant, user_input: dict[str, Any]
+    hass: HomeAssistant, user_input: dict[str, Any], expected_mac: str | None = None
 ) -> tuple[str, str]:
     """Validate the user input."""
     if not is_host_valid(user_input[CONF_HOST]):
@@ -37,6 +37,9 @@ async def validate_input(
 
     brother = await Brother.create(user_input[CONF_HOST], snmp_engine=snmp_engine)
     await brother.async_update()
+
+    if expected_mac is not None and brother.serial.lower() != expected_mac:
+        raise AnotherDevice
 
     return (brother.model, brother.serial)
 
@@ -162,17 +165,16 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                _, serial = await validate_input(self.hass, user_input)
+                await validate_input(self.hass, user_input, self.entry.unique_id)
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
             except (ConnectionError, TimeoutError):
                 errors["base"] = "cannot_connect"
             except SnmpError:
                 errors["base"] = "snmp_error"
+            except AnotherDevice:
+                errors["base"] = "another_device"
             else:
-                if serial.lower() != self.entry.unique_id:
-                    return self.async_abort(reason="another_device")
-
                 self.hass.config_entries.async_update_entry(
                     self.entry,
                     data={
@@ -196,3 +198,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class InvalidHost(HomeAssistantError):
     """Error to indicate that hostname/IP address is invalid."""
+
+
+class AnotherDevice(HomeAssistantError):
+    """Error to indicate that hostname/IP address belongs to another device."""

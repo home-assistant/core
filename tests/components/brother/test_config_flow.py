@@ -400,5 +400,6 @@ async def test_reconfigure_not_the_same_device(
         user_input={CONF_HOST: "10.10.10.10"},
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "another_device"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+    assert result["errors"] == {"base": "another_device"}
