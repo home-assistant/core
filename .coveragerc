@@ -752,6 +752,7 @@ omit =
     homeassistant/components/matrix/__init__.py
     homeassistant/components/matrix/notify.py
     homeassistant/components/matter/__init__.py
+    homeassistant/components/matter/fan.py
     homeassistant/components/meater/__init__.py
     homeassistant/components/meater/sensor.py
     homeassistant/components/medcom_ble/__init__.py

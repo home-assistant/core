@@ -308,3 +308,13 @@ def all_setup_requests(
             },
         },
     )
+    aioclient_mock.get(
+        "http://127.0.0.1/network/info",
+        json={
+            "result": "ok",
+            "data": {
+                "host_internet": True,
+                "supervisor_internet": True,
+            },
+        },
+    )

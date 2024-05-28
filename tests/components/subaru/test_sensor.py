@@ -57,10 +57,14 @@ async def test_sensors_missing_vin_data(hass: HomeAssistant, ev_entry) -> None:
     ],
 )
 async def test_sensor_migrate_unique_ids(
-    hass: HomeAssistant, entitydata, old_unique_id, new_unique_id, subaru_config_entry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entitydata,
+    old_unique_id,
+    new_unique_id,
+    subaru_config_entry,
 ) -> None:
     """Test successful migration of entity unique_ids."""
-    entity_registry = er.async_get(hass)
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
         **entitydata,
         config_entry=subaru_config_entry,
@@ -89,10 +93,14 @@ async def test_sensor_migrate_unique_ids(
     ],
 )
 async def test_sensor_migrate_unique_ids_duplicate(
-    hass: HomeAssistant, entitydata, old_unique_id, new_unique_id, subaru_config_entry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entitydata,
+    old_unique_id,
+    new_unique_id,
+    subaru_config_entry,
 ) -> None:
     """Test unsuccessful migration of entity unique_ids due to duplicate."""
-    entity_registry = er.async_get(hass)
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
         **entitydata,
         config_entry=subaru_config_entry,
