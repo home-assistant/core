@@ -212,6 +212,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         """Clean specific rooms."""
         rooms_to_clean = []
         valid_rooms = self.available_rooms or []
+        rooms = [room.replace("_", " ").title() for room in rooms]
         for room in rooms:
             if room in valid_rooms:
                 rooms_to_clean.append(room)
