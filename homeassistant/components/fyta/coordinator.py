@@ -50,11 +50,9 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
             await self.renew_authentication()
 
         try:
-            data = await self.fyta.update_all_plants()
+            return await self.fyta.update_all_plants()
         except (FytaConnectionError, FytaPlantError) as err:
             raise UpdateFailed(err) from err
-
-        return data
 
     async def renew_authentication(self) -> bool:
         """Renew access token for FYTA API."""
