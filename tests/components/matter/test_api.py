@@ -202,6 +202,7 @@ async def test_set_wifi_credentials(
 async def test_node_diagnostics(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
 ) -> None:
     """Test the node diagnostics command."""
@@ -212,8 +213,7 @@ async def test_node_diagnostics(
         matter_client,
     )
     # get the device registry entry for the mocked node
-    dev_reg = dr.async_get(hass)
-    entry = dev_reg.async_get_device(
+    entry = device_registry.async_get_device(
         identifiers={
             (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
         }
@@ -254,7 +254,7 @@ async def test_node_diagnostics(
     assert msg["result"] == diag_res
 
     # repeat test with a device id that does not have a node attached
-    new_entry = dev_reg.async_get_or_create(
+    new_entry = device_registry.async_get_or_create(
         config_entry_id=list(entry.config_entries)[0],
         identifiers={(DOMAIN, "MatterNodeDevice")},
     )
@@ -276,6 +276,7 @@ async def test_node_diagnostics(
 async def test_ping_node(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
 ) -> None:
     """Test the ping_node command."""
@@ -286,8 +287,7 @@ async def test_ping_node(
         matter_client,
     )
     # get the device registry entry for the mocked node
-    dev_reg = dr.async_get(hass)
-    entry = dev_reg.async_get_device(
+    entry = device_registry.async_get_device(
         identifiers={
             (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
         }
@@ -314,7 +314,7 @@ async def test_ping_node(
     assert msg["result"] == ping_result
 
     # repeat test with a device id that does not have a node attached
-    new_entry = dev_reg.async_get_or_create(
+    new_entry = device_registry.async_get_or_create(
         config_entry_id=list(entry.config_entries)[0],
         identifiers={(DOMAIN, "MatterNodeDevice")},
     )
@@ -336,6 +336,7 @@ async def test_ping_node(
 async def test_open_commissioning_window(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
 ) -> None:
     """Test the open_commissioning_window command."""
@@ -346,8 +347,7 @@ async def test_open_commissioning_window(
         matter_client,
     )
     # get the device registry entry for the mocked node
-    dev_reg = dr.async_get(hass)
-    entry = dev_reg.async_get_device(
+    entry = device_registry.async_get_device(
         identifiers={
             (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
         }
@@ -380,7 +380,7 @@ async def test_open_commissioning_window(
     assert msg["result"] == dataclass_to_dict(commissioning_parameters)
 
     # repeat test with a device id that does not have a node attached
-    new_entry = dev_reg.async_get_or_create(
+    new_entry = device_registry.async_get_or_create(
         config_entry_id=list(entry.config_entries)[0],
         identifiers={(DOMAIN, "MatterNodeDevice")},
     )
@@ -402,6 +402,7 @@ async def test_open_commissioning_window(
 async def test_remove_matter_fabric(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
 ) -> None:
     """Test the remove_matter_fabric command."""
@@ -412,8 +413,7 @@ async def test_remove_matter_fabric(
         matter_client,
     )
     # get the device registry entry for the mocked node
-    dev_reg = dr.async_get(hass)
-    entry = dev_reg.async_get_device(
+    entry = device_registry.async_get_device(
         identifiers={
             (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
         }
@@ -435,7 +435,7 @@ async def test_remove_matter_fabric(
     matter_client.remove_matter_fabric.assert_called_once_with(1, 3)
 
     # repeat test with a device id that does not have a node attached
-    new_entry = dev_reg.async_get_or_create(
+    new_entry = device_registry.async_get_or_create(
         config_entry_id=list(entry.config_entries)[0],
         identifiers={(DOMAIN, "MatterNodeDevice")},
     )
@@ -458,6 +458,7 @@ async def test_remove_matter_fabric(
 async def test_interview_node(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
 ) -> None:
     """Test the interview_node command."""
@@ -468,8 +469,7 @@ async def test_interview_node(
         matter_client,
     )
     # get the device registry entry for the mocked node
-    dev_reg = dr.async_get(hass)
-    entry = dev_reg.async_get_device(
+    entry = device_registry.async_get_device(
         identifiers={
             (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
         }
@@ -485,7 +485,7 @@ async def test_interview_node(
     matter_client.interview_node.assert_called_once_with(1)
 
     # repeat test with a device id that does not have a node attached
-    new_entry = dev_reg.async_get_or_create(
+    new_entry = device_registry.async_get_or_create(
         config_entry_id=list(entry.config_entries)[0],
         identifiers={(DOMAIN, "MatterNodeDevice")},
     )
