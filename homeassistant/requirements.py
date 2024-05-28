@@ -277,33 +277,46 @@ class RequirementsManager:
         self._raise_for_failed_requirements(name, missing)
 
         if is_custom_component:
-            for specifier in requirements:
-                parsed_req = Requirement(specifier)
-                requirement_name = parsed_req.name.partition("[")[0]
-                if not (version_integrations := REQUIREMENTS.get(requirement_name)):
-                    continue
-                version, core_integrations = version_integrations
-                if parsed_req.specifier.contains(version):
-                    continue
-                core_integrations_set = set(core_integrations)
-                # Allow the custom component to override the core integration
-                # requirements but not any other core integrations.
-                core_integrations_set.discard(name)
-                if not core_integrations_set:
-                    continue
-                _LOGGER.error(
-                    "Requirement %s cannot be satisfied "
-                    "because core integrations %s require version: %s",
-                    specifier,
-                    core_integrations_set,
-                    version,
-                )
-                raise RequirementsNotFound(name, [specifier])
+            self._raise_for_custom_component_overriding_core_requirements(
+                name, requirements
+            )
 
         async with self.pip_lock:
             # Recalculate missing again now that we have the lock
             if missing := self._find_missing_requirements(requirements):
                 await self._async_process_requirements(name, missing)
+
+    def _raise_for_custom_component_overriding_core_requirements(
+        self, name: str, requirements: list[str]
+    ) -> None:
+        """Raise if a custom component tries to override core requirements.
+
+        We allow custom components to override core requirements for
+        a same named integration that it has already overridden,
+        but not any other core integrations.
+        """
+        for specifier in requirements:
+            parsed_req = Requirement(specifier)
+            requirement_name = parsed_req.name.partition("[")[0]
+            if not (version_integrations := REQUIREMENTS.get(requirement_name)):
+                continue
+            version, core_integrations = version_integrations
+            if parsed_req.specifier.contains(version):
+                continue
+            core_integrations_set = set(core_integrations)
+            # Allow the custom component to override the core integration
+            # requirements but not any other core integrations.
+            core_integrations_set.discard(name)
+            if not core_integrations_set:
+                continue
+            _LOGGER.error(
+                "Requirement %s cannot be satisfied "
+                "because core integrations %s require version: %s",
+                specifier,
+                core_integrations_set,
+                version,
+            )
+            raise RequirementsNotFound(name, [specifier])
 
     def _find_missing_requirements(self, requirements: list[str]) -> list[str]:
         """Find requirements that are missing in the cache."""
