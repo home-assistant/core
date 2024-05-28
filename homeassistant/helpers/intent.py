@@ -104,6 +104,7 @@ async def async_handle(
     language: str | None = None,
     assistant: str | None = None,
     device_id: str | None = None,
+    agent_id: str | None = None,
 ) -> IntentResponse:
     """Handle an intent."""
     handler = hass.data.get(DATA_KEY, {}).get(intent_type)
@@ -127,6 +128,7 @@ async def async_handle(
         language=language,
         assistant=assistant,
         device_id=device_id,
+        agent_id=agent_id,
     )
 
     try:
@@ -1152,6 +1154,7 @@ class Intent:
         "category",
         "assistant",
         "device_id",
+        "agent_id",
     ]
 
     def __init__(
@@ -1166,6 +1169,7 @@ class Intent:
         category: IntentCategory | None = None,
         assistant: str | None = None,
         device_id: str | None = None,
+        agent_id: str | None = None,
     ) -> None:
         """Initialize an intent."""
         self.hass = hass
@@ -1178,6 +1182,7 @@ class Intent:
         self.category = category
         self.assistant = assistant
         self.device_id = device_id
+        self.agent_id = agent_id
 
     @callback
     def create_response(self) -> IntentResponse:

@@ -78,6 +78,18 @@ class TimerInfo:
     floor_id: str | None = None
     """Id of floor that the device's area belongs to."""
 
+    assist_command: str | None = None
+    """Text of Assist command to execute when timer is finished.
+
+    This command must be in the language used to set the timer.
+    """
+
+    agent_id: str | None = None
+    """Id of the conversation agent used to set the timer.
+
+    This agent will be used to execute the Assist command.
+    """
+
     @property
     def seconds_left(self) -> int:
         """Return number of seconds left on the timer."""
@@ -207,6 +219,8 @@ class TimerManager:
         seconds: int | None,
         language: str,
         name: str | None = None,
+        assist_command: str | None = None,
+        agent_id: str | None = None,
     ) -> str:
         """Start a timer."""
         if not self.is_timer_device(device_id):
@@ -235,6 +249,8 @@ class TimerManager:
             device_id=device_id,
             created_at=created_at,
             updated_at=created_at,
+            assist_command=assist_command,
+            agent_id=agent_id,
         )
 
         # Fill in area/floor info
@@ -711,6 +727,7 @@ class StartTimerIntentHandler(intent.IntentHandler):
     slot_schema = {
         vol.Required(vol.Any("hours", "minutes", "seconds")): cv.positive_int,
         vol.Optional("name"): cv.string,
+        vol.Optional("command"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -741,6 +758,10 @@ class StartTimerIntentHandler(intent.IntentHandler):
         if "seconds" in slots:
             seconds = int(slots["seconds"]["value"])
 
+        command: str | None = None
+        if "command" in slots:
+            command = slots["command"]["value"]
+
         timer_manager.start_timer(
             intent_obj.device_id,
             hours,
@@ -748,6 +769,8 @@ class StartTimerIntentHandler(intent.IntentHandler):
             seconds,
             language=intent_obj.language,
             name=name,
+            assist_command=command,
+            agent_id=intent_obj.agent_id,
         )
 
         return intent_obj.create_response()

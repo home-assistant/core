@@ -555,6 +555,7 @@ async def test_trigger_with_device_id(hass: HomeAssistant) -> None:
             conversation_id=None,
             device_id="my_device",
             language=hass.config.language,
+            agent_id=None,
         )
     )
     assert result.response.speech["plain"]["speech"] == "my_device"
