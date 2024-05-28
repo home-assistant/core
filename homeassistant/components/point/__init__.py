@@ -118,10 +118,10 @@ async def async_setup_webhook(
 async def async_unload_entry(hass: HomeAssistant, entry: PointConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-        session: PointSession = hass.data[DOMAIN].pop(entry)
-        await session.remove_webhook()
-
+        session: PointSession = hass.data[DOMAIN].pop(entry.entry_id)
+        if CONF_WEBHOOK_ID in entry.data:
+            webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+            await session.remove_webhook()
     return unload_ok
 
 
