@@ -77,7 +77,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     client = generativelanguage_v1beta.ModelServiceAsyncClient(
         client_options=ClientOptions(api_key=data[CONF_API_KEY])
     )
-    await client.list_models()
+    await client.list_models(timeout=5.0)
 
 
 class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
