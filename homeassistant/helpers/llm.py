@@ -15,6 +15,7 @@ from homeassistant.components.conversation.trace import (
     async_conversation_trace_append,
 )
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
+from homeassistant.components.intent import async_device_supports_timers
 from homeassistant.components.weather.intent import INTENT_GET_WEATHER
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -133,7 +134,7 @@ class API(ABC):
 
     @abstractmethod
     @callback
-    def async_get_tools(self) -> list[Tool]:
+    def async_get_tools(self, tool_input: ToolInput) -> list[Tool]:
         """Return a list of tools."""
         raise NotImplementedError
 
@@ -143,7 +144,7 @@ class API(ABC):
             ConversationTraceEventType.LLM_TOOL_CALL, asdict(tool_input)
         )
 
-        for tool in self.async_get_tools():
+        for tool in self.async_get_tools(tool_input):
             if tool.name == tool_input.tool_name:
                 break
         else:
@@ -264,6 +265,11 @@ class AssistAPI(API):
             if user:
                 prompt.append(f"The user name is {user.name}.")
 
+        if not tool_input.device_id or not async_device_supports_timers(
+            self.hass, tool_input.device_id
+        ):
+            prompt.append("This device does not support timers.")
+
         if exposed_entities:
             prompt.append(
                 "An overview of the areas and the devices in this smart home:"
@@ -273,12 +279,26 @@ class AssistAPI(API):
         return "\n".join(prompt)
 
     @callback
-    def async_get_tools(self) -> list[Tool]:
+    def async_get_tools(self, tool_input: ToolInput) -> list[Tool]:
         """Return a list of LLM tools."""
+        ignore_intents = self.IGNORE_INTENTS
+        if not tool_input.device_id or not async_device_supports_timers(
+            self.hass, tool_input.device_id
+        ):
+            ignore_intents = ignore_intents | {
+                intent.INTENT_START_TIMER,
+                intent.INTENT_CANCEL_TIMER,
+                intent.INTENT_INCREASE_TIMER,
+                intent.INTENT_DECREASE_TIMER,
+                intent.INTENT_PAUSE_TIMER,
+                intent.INTENT_UNPAUSE_TIMER,
+                intent.INTENT_TIMER_STATUS,
+            }
+
         return [
             IntentTool(intent_handler)
             for intent_handler in intent.async_get(self.hass)
-            if intent_handler.intent_type not in self.IGNORE_INTENTS
+            if intent_handler.intent_type not in ignore_intents
         ]
 
 

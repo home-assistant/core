@@ -166,7 +166,19 @@ class GoogleGenerativeAIConversationEntity(
                 return conversation.ConversationResult(
                     response=intent_response, conversation_id=user_input.conversation_id
                 )
-            tools = [_format_tool(tool) for tool in llm_api.async_get_tools()]
+            empty_tool_input = llm.ToolInput(
+                tool_name="",
+                tool_args={},
+                platform=DOMAIN,
+                context=user_input.context,
+                user_prompt=user_input.text,
+                language=user_input.language,
+                assistant=conversation.DOMAIN,
+                device_id=user_input.device_id,
+            )
+            tools = [
+                _format_tool(tool) for tool in llm_api.async_get_tools(empty_tool_input)
+            ]
 
         model = genai.GenerativeModel(
             model_name=self.entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
@@ -206,17 +218,6 @@ class GoogleGenerativeAIConversationEntity(
 
         try:
             if llm_api:
-                empty_tool_input = llm.ToolInput(
-                    tool_name="",
-                    tool_args={},
-                    platform=DOMAIN,
-                    context=user_input.context,
-                    user_prompt=user_input.text,
-                    language=user_input.language,
-                    assistant=conversation.DOMAIN,
-                    device_id=user_input.device_id,
-                )
-
                 api_prompt = await llm_api.async_get_api_prompt(empty_tool_input)
 
             else:

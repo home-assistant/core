@@ -416,6 +416,15 @@ class TimerManager:
 
 
 @callback
+def async_device_supports_timers(hass: HomeAssistant, device_id: str) -> bool:
+    """Return True if device has been registered to handle timer events."""
+    timer_manager: TimerManager | None = hass.data.get(TIMER_DATA)
+    if timer_manager is None:
+        return False
+    return timer_manager.is_timer_device(device_id)
+
+
+@callback
 def async_register_timer_handler(
     hass: HomeAssistant, device_id: str, handler: TimerHandler
 ) -> Callable[[], None]:

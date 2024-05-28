@@ -114,7 +114,19 @@ class OpenAIConversationEntity(
                 return conversation.ConversationResult(
                     response=intent_response, conversation_id=user_input.conversation_id
                 )
-            tools = [_format_tool(tool) for tool in llm_api.async_get_tools()]
+            empty_tool_input = llm.ToolInput(
+                tool_name="",
+                tool_args={},
+                platform=DOMAIN,
+                context=user_input.context,
+                user_prompt=user_input.text,
+                language=user_input.language,
+                assistant=conversation.DOMAIN,
+                device_id=user_input.device_id,
+            )
+            tools = [
+                _format_tool(tool) for tool in llm_api.async_get_tools(empty_tool_input)
+            ]
 
         if user_input.conversation_id in self.history:
             conversation_id = user_input.conversation_id
@@ -123,17 +135,6 @@ class OpenAIConversationEntity(
             conversation_id = ulid.ulid_now()
             try:
                 if llm_api:
-                    empty_tool_input = llm.ToolInput(
-                        tool_name="",
-                        tool_args={},
-                        platform=DOMAIN,
-                        context=user_input.context,
-                        user_prompt=user_input.text,
-                        language=user_input.language,
-                        assistant=conversation.DOMAIN,
-                        device_id=user_input.device_id,
-                    )
-
                     api_prompt = await llm_api.async_get_api_prompt(empty_tool_input)
 
                 else:
