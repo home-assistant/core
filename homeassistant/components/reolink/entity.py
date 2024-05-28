@@ -110,9 +110,14 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
         super().__init__(reolink_data)
 
         self._channel = channel
-        self._attr_unique_id = (
-            f"{self._host.unique_id}_{channel}_{self.entity_description.key}"
-        )
+        if self._host.api.supported(channel, "UID"):
+            self._attr_unique_id = (
+                f"{self._host.unique_id}_{self._host.api.camera_uid(channel)}_{self.entity_description.key}"
+            )
+        else:
+            self._attr_unique_id = (
+                f"{self._host.unique_id}_{channel}_{self.entity_description.key}"
+            )
 
         dev_ch = channel
         if self._host.api.model in DUAL_LENS_MODELS:
@@ -126,5 +131,6 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
                 model=self._host.api.camera_model(dev_ch),
                 manufacturer=self._host.api.manufacturer,
                 sw_version=self._host.api.camera_sw_version(dev_ch),
+                serial_number=self._host.api.camera_uid(dev_ch),
                 configuration_url=self._conf_url,
             )
