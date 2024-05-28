@@ -149,7 +149,6 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             assert entry is not None
 
-        self.host = entry.data[CONF_HOST]
         self.entry = entry
 
         return await self.async_step_reconfigure_confirm()
