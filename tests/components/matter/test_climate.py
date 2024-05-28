@@ -85,18 +85,6 @@ async def test_thermostat_base(
     assert state
     assert state.state == HVACMode.OFF
 
-    set_node_attribute(thermostat, 1, 513, 28, 7)
-    await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get("climate.longan_link_hvac")
-    assert state
-    assert state.state == HVACMode.FAN_ONLY
-
-    set_node_attribute(thermostat, 1, 513, 28, 8)
-    await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get("climate.longan_link_hvac")
-    assert state
-    assert state.state == HVACMode.DRY
-
     # test running state update from device
     set_node_attribute(thermostat, 1, 513, 41, 1)
     await trigger_subscription_callback(hass, matter_client)
@@ -335,6 +323,7 @@ async def test_room_airconditioner(
     # WITHOUT temperature_range support
     mask = ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_OFF
     assert state.attributes["supported_features"] & mask == mask
+
     # test supported HVAC modes include fan and dry modes
     assert state.attributes["hvac_modes"] == [
         HVACMode.OFF,
@@ -344,3 +333,16 @@ async def test_room_airconditioner(
         HVACMode.FAN_ONLY,
         HVACMode.HEAT_COOL,
     ]
+    # test fan-only hvac mode
+    set_node_attribute(room_airconditioner, 1, 513, 28, 7)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("climate.room_airconditioner")
+    assert state
+    assert state.state == HVACMode.FAN_ONLY
+
+    # test dry hvac mode
+    set_node_attribute(room_airconditioner, 1, 513, 28, 8)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("climate.room_airconditioner")
+    assert state
+    assert state.state == HVACMode.DRY
