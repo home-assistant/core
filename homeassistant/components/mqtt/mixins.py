@@ -728,27 +728,30 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
             _LOGGER.info("Component successfully migrated: %s", discovery_hash)
             return
 
-        if discovery_payload:
-            discovery_topic = discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC]
-            if discovery_topic != self._discovery_data[ATTR_DISCOVERY_TOPIC]:
-                # Make sure the old discovery topic is removed
-                self._migrate_discovery = discovery_topic
-                _LOGGER.debug("Migrating component: %s", discovery_hash)
-                self.hass.async_create_task(
-                    async_remove_discovery_payload(self.hass, self._discovery_data)
-                )
-
-            if discovery_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]:
-                _LOGGER.debug(
-                    "Updating %s with hash %s",
-                    self.log_name,
-                    discovery_hash,
-                )
-                try:
-                    await self.async_update(discovery_payload)
-                finally:
-                    send_discovery_done(self.hass, self._discovery_data)
-                self._discovery_data[ATTR_DISCOVERY_PAYLOAD] = discovery_payload
+        if discovery_payload and (
+            discovery_topic := discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC]
+            != self._discovery_data[ATTR_DISCOVERY_TOPIC]
+        ):
+            # Make sure the old discovery topic is removed
+            self._migrate_discovery = discovery_topic
+            _LOGGER.debug("Migrating component: %s", discovery_hash)
+            self.hass.async_create_task(
+                async_remove_discovery_payload(self.hass, self._discovery_data)
+            )
+        if (
+            discovery_payload
+            and discovery_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
+        ):
+            _LOGGER.debug(
+                "Updating %s with hash %s",
+                self.log_name,
+                discovery_hash,
+            )
+            try:
+                await self.async_update(discovery_payload)
+            finally:
+                send_discovery_done(self.hass, self._discovery_data)
+            self._discovery_data[ATTR_DISCOVERY_PAYLOAD] = discovery_payload
         elif not discovery_payload:
             # Unregister and clean up the current discovery instance
             stop_discovery_updates(
