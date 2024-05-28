@@ -722,7 +722,7 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
             discovery_payload,
         )
         if not discovery_payload and self._migrate_discovery is not None:
-            # Ignore empty update of migrated and removed discovery config
+            # Ignore empty update from migrated and removed discovery config.
             self._discovery_data[ATTR_DISCOVERY_TOPIC] = self._migrate_discovery
             self._migrate_discovery = None
             _LOGGER.info("Component successfully migrated: %s", discovery_hash)
@@ -733,7 +733,7 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
             (discovery_topic := discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC])
             != self._discovery_data[ATTR_DISCOVERY_TOPIC]
         ):
-            # Make sure the old discovery topic is removed
+            # Make sure the migrated discovery topic is removed.
             self._migrate_discovery = discovery_topic
             _LOGGER.debug("Migrating component: %s", discovery_hash)
             self.hass.async_create_task(
@@ -919,7 +919,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
         if not payload:
             if self._migrate_discovery is not None:
-                # Ignore empty update of migrated and removed discovery config
+                # Ignore empty update of the migrated and removed discovery config.
                 self._discovery_data[ATTR_DISCOVERY_TOPIC] = self._migrate_discovery
                 self._migrate_discovery = None
                 _LOGGER.info("Component successfully migrated: %s", self.entity_id)
@@ -933,7 +933,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         elif self._discovery_update:
             discovery_topic = payload.discovery_data[ATTR_DISCOVERY_TOPIC]
             if discovery_topic != self._discovery_data[ATTR_DISCOVERY_TOPIC]:
-                # Make sure the old discovery topic is removed
+                # Make sure the migrated discovery topic is removed.
                 self._migrate_discovery = discovery_topic
                 _LOGGER.debug("Migrating component: %s", self.entity_id)
                 self.hass.async_create_task(
@@ -947,7 +947,6 @@ class MqttDiscoveryUpdateMixin(Entity):
                         payload, self._discovery_update, self._discovery_data
                     )
                 )
-
             else:
                 # Non-empty, unchanged payload: Ignore to avoid changing states
                 _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)
