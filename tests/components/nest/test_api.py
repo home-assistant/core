@@ -8,6 +8,7 @@ for token refresh and for testing:
 The tests below exercise both cases during integration setup.
 """
 
+from asyncio import AbstractEventLoop
 import time
 from unittest.mock import patch
 
@@ -55,7 +56,7 @@ async def test_auth(
     captured_creds = None
 
     async def async_new_subscriber(
-        creds, subscription_name, event_loop, async_callback
+        creds, subscription_name, event_loop: AbstractEventLoop, async_callback
     ) -> GoogleNestSubscriber | None:
         """Capture credentials for tests."""
         nonlocal captured_creds
@@ -123,7 +124,7 @@ async def test_auth_expired_token(
     captured_creds = None
 
     async def async_new_subscriber(
-        creds, subscription_name, event_loop, async_callback
+        creds, subscription_name, event_loop: AbstractEventLoop, async_callback
     ) -> GoogleNestSubscriber | None:
         """Capture credentials for tests."""
         nonlocal captured_creds

@@ -111,6 +111,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "enable_schema_validation": "bool",
     "entity_registry": "EntityRegistry",
     "entity_registry_enabled_by_default": "None",
+    "event_loop": "AbstractEventLoop",
     "freezer": "FrozenDateTimeFactory",
     "hass_access_token": "str",
     "hass_admin_credential": "Credentials",
