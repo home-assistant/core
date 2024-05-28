@@ -152,6 +152,8 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "stub_blueprint_populate": "None",
     "tmp_path": "Path",
     "tmpdir": "py.path.local",
+    "unused_tcp_port_factory": "Callable[[], int]",
+    "unused_udp_port_factory": "Callable[[], int]",
 }
 _TEST_FUNCTION_MATCH = TypeHintMatch(
     function_name="test_*",
