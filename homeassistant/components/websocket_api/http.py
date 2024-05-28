@@ -101,7 +101,7 @@ class WebSocketHandler:
         # to where messages are queued. This allows the implementation
         # to use a deque and an asyncio.Future to avoid the overhead of
         # an asyncio.Queue.
-        self._message_queue: deque[bytes | None] = deque()
+        self._message_queue: deque[bytes] = deque()
         self._ready_future: asyncio.Future[None] | None = None
         self._release_ready_queue_size: int = 0
 
@@ -138,37 +138,27 @@ class WebSocketHandler:
         # Exceptions if Socket disconnected or cancelled by connection handler
         try:
             while not wsock.closed:
-                if (messages_remaining := len(message_queue)) == 0:
+                if not message_queue:
                     self._ready_future = loop.create_future()
                     await self._ready_future
-                    messages_remaining = len(message_queue)
 
-                # A None message is used to signal the end of the connection
-                if (message := message_queue.popleft()) is None:
+                if self._closing:
                     return
 
                 debug_enabled = is_enabled_for(logging_debug)
-                messages_remaining -= 1
-
                 if (
-                    not messages_remaining
-                    or not (connection := self._connection)
+                    not (connection := self._connection)
                     or not connection.can_coalesce
+                    or len(message_queue) == 1
                 ):
+                    message = message_queue.popleft()
                     if debug_enabled:
                         debug("%s: Sending %s", self.description, message)
                     await send_bytes_text(message)
                     continue
 
-                messages: list[bytes] = [message]
-                while messages_remaining:
-                    # A None message is used to signal the end of the connection
-                    if (message := message_queue.popleft()) is None:
-                        return
-                    messages.append(message)
-                    messages_remaining -= 1
-
-                coalesced_messages = b"".join((b"[", b",".join(messages), b"]"))
+                coalesced_messages = b"".join((b"[", b",".join(message_queue), b"]"))
+                message_queue.clear()
                 if debug_enabled:
                     debug("%s: Sending %s", self.description, coalesced_messages)
                 await send_bytes_text(coalesced_messages)
@@ -473,8 +463,6 @@ class WebSocketHandler:
                 connection.async_handle_close()
 
             self._closing = True
-
-            self._message_queue.append(None)
             if self._ready_future and not self._ready_future.done():
                 self._ready_future.set_result(None)
 
