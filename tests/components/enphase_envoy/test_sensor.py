@@ -42,7 +42,6 @@ async def test_sensor(
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     mock_envoy: AsyncMock,
-    entity_registry: AsyncMock,
     entity_count: int,
     enabled_entity_count: int,
 ) -> None:

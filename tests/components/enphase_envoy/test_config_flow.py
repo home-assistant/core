@@ -799,6 +799,13 @@ async def test_reauth(
     assert result2["reason"] == "reauth_successful"
 
 
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        pytest.param("envoy", id="envoy"),
+    ],
+    indirect=["mock_envoy"],
+)
 async def test_reconfigure(
     hass: HomeAssistant, config_entry, setup_enphase_envoy
 ) -> None:
@@ -837,6 +844,13 @@ async def test_reconfigure(
     assert config_entry.data["password"] == "test-password2"
 
 
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        pytest.param("envoy", id="envoy"),
+    ],
+    indirect=["mock_envoy"],
+)
 async def test_reconfigure_nochange(
     hass: HomeAssistant, config_entry, setup_enphase_envoy
 ) -> None:
@@ -875,6 +889,13 @@ async def test_reconfigure_nochange(
     assert config_entry.data["password"] == "test-password"
 
 
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        pytest.param("envoy", id="envoy"),
+    ],
+    indirect=["mock_envoy"],
+)
 async def test_reconfigure_otherenvoy(
     hass: HomeAssistant, config_entry, setup_enphase_envoy, mock_envoy
 ) -> None:
@@ -932,6 +953,13 @@ async def test_reconfigure_otherenvoy(
     assert config_entry.data["password"] == "new-password"
 
 
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        pytest.param("envoy", id="envoy"),
+    ],
+    indirect=["mock_envoy"],
+)
 @pytest.mark.parametrize(
     "mock_authenticate",
     [
@@ -1035,6 +1063,13 @@ async def test_reconfigure_auth_failure(
     assert config_entry.data["password"] == "changed-password"
 
 
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        pytest.param("envoy", id="envoy"),
+    ],
+    indirect=["mock_envoy"],
+)
 async def test_reconfigure_change_ip_to_existing(
     hass: HomeAssistant, config_entry, setup_enphase_envoy
 ) -> None:
