@@ -139,7 +139,9 @@ async def test_scrape_uom_and_classes(hass: HomeAssistant) -> None:
     assert state.attributes[CONF_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
 
-async def test_scrape_unique_id(hass: HomeAssistant) -> None:
+async def test_scrape_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test Scrape sensor for unique id."""
     config = {
         DOMAIN: return_integration_config(
@@ -165,8 +167,7 @@ async def test_scrape_unique_id(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.current_temp")
     assert state.state == "22.1"
 
-    registry = er.async_get(hass)
-    entry = registry.async_get("sensor.current_temp")
+    entry = entity_registry.async_get("sensor.current_temp")
     assert entry
     assert entry.unique_id == "very_unique_id"
 
@@ -449,7 +450,9 @@ async def test_scrape_sensor_errors(hass: HomeAssistant) -> None:
     assert state2.state == STATE_UNKNOWN
 
 
-async def test_scrape_sensor_unique_id(hass: HomeAssistant) -> None:
+async def test_scrape_sensor_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test Scrape sensor with unique_id."""
     config = {
         DOMAIN: [
@@ -476,22 +479,22 @@ async def test_scrape_sensor_unique_id(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.ha_version")
     assert state.state == "Current Version: 2021.12.10"
 
-    entity_reg = er.async_get(hass)
-    entity = entity_reg.async_get("sensor.ha_version")
+    entity = entity_registry.async_get("sensor.ha_version")
 
     assert entity.unique_id == "ha_version_unique_id"
 
 
 async def test_setup_config_entry(
-    hass: HomeAssistant, loaded_entry: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    loaded_entry: MockConfigEntry,
 ) -> None:
     """Test setup from config entry."""
 
     state = hass.states.get("sensor.current_version")
     assert state.state == "Current Version: 2021.12.10"
 
-    entity_reg = er.async_get(hass)
-    entity = entity_reg.async_get("sensor.current_version")
+    entity = entity_registry.async_get("sensor.current_version")
 
     assert entity.unique_id == "3699ef88-69e6-11ed-a1eb-0242ac120002"
 
