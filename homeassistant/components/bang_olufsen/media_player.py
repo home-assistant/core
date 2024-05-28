@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 from typing import Any, cast
@@ -568,6 +569,8 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
     def _get_beolink_jid(self, entity_id: str) -> str | None:
         """Get beolink JID from entity_id."""
+        jid = None
+
         entity_registry = er.async_get(self.hass)
 
         entity_entry = entity_registry.async_get(entity_id)
@@ -579,10 +582,8 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                 ),
             )
 
-            try:
+            with contextlib.suppress(KeyError):
                 jid = cast(str, config_entry.data[CONF_BEOLINK_JID])
-            except KeyError:
-                jid = None
 
         return jid
 
@@ -602,7 +603,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
         if self._volume.muted and self._volume.muted.muted:
-            return self._volume.muted.muted  # type: ignore[no-any-return]
+            return self._volume.muted.muted
         return None
 
     @property
@@ -937,7 +938,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             response = await self._client.join_beolink_peer(jid=beolink_jid)
 
         if response:
-            return cast(dict, response.to_dict())
+            return response.dict(by_alias=True, exclude={}, exclude_none=True)
         return None
 
     async def async_beolink_expand(
