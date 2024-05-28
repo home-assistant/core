@@ -1,10 +1,13 @@
 """Test the motionEye camera."""
 
+from asyncio import AbstractEventLoop
+from collections.abc import Callable
 import copy
 from typing import Any, cast
 from unittest.mock import AsyncMock, Mock, call
 
 from aiohttp import web
+from aiohttp.test_utils import TestServer
 from aiohttp.web_exceptions import HTTPBadGateway
 from motioneye_client.client import (
     MotionEyeClientError,
@@ -63,7 +66,11 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.fixture
-def aiohttp_server(event_loop, aiohttp_server, socket_enabled):
+def aiohttp_server(
+    event_loop: AbstractEventLoop,
+    aiohttp_server: Callable[[], TestServer],
+    socket_enabled: None,
+) -> Callable[[], TestServer]:
     """Return aiohttp_server and allow opening sockets."""
     return aiohttp_server
 

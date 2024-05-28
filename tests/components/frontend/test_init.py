@@ -1,5 +1,6 @@
 """The tests for Home Assistant frontend."""
 
+from asyncio import AbstractEventLoop
 from http import HTTPStatus
 import re
 from typing import Any
@@ -25,7 +26,11 @@ from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockUser, async_capture_events, async_fire_time_changed
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
+from tests.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 MOCK_THEMES = {
     "happy": {"primary-color": "red", "app-header-background-color": "blue"},
@@ -84,7 +89,11 @@ async def frontend_themes(hass):
 
 
 @pytest.fixture
-def aiohttp_client(event_loop, aiohttp_client, socket_enabled):
+def aiohttp_client(
+    event_loop: AbstractEventLoop,
+    aiohttp_client: ClientSessionGenerator,
+    socket_enabled: None,
+) -> ClientSessionGenerator:
     """Return aiohttp_client and allow opening sockets."""
     return aiohttp_client
 

@@ -174,7 +174,7 @@ async def test_pipeline_events(
 
 async def test_udp_server(
     hass: HomeAssistant,
-    socket_enabled,
+    socket_enabled: None,
     unused_udp_port_factory,
     voice_assistant_udp_pipeline_v1: VoiceAssistantUDPPipeline,
 ) -> None:
@@ -301,7 +301,7 @@ async def test_error_calls_handle_finished(
 
 async def test_udp_server_multiple(
     hass: HomeAssistant,
-    socket_enabled,
+    socket_enabled: None,
     unused_udp_port_factory,
     voice_assistant_udp_pipeline_v1: VoiceAssistantUDPPipeline,
 ) -> None:
@@ -324,7 +324,7 @@ async def test_udp_server_multiple(
 
 async def test_udp_server_after_stopped(
     hass: HomeAssistant,
-    socket_enabled,
+    socket_enabled: None,
     unused_udp_port_factory,
     voice_assistant_udp_pipeline_v1: VoiceAssistantUDPPipeline,
 ) -> None:
