@@ -12,6 +12,7 @@ from packaging.requirements import Requirement
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
+from .generated.requirements import REQUIREMENTS, VERSIONS
 from .helpers import singleton
 from .helpers.typing import UNDEFINED, UndefinedType
 from .loader import Integration, IntegrationNotFound, async_get_integration
@@ -190,7 +191,9 @@ class RequirementsManager:
         """Process an integration and requirements."""
         if integration.requirements:
             await self.async_process_requirements(
-                integration.domain, integration.requirements
+                integration.domain,
+                integration.requirements,
+                not integration.is_built_in,
             )
 
         cache = self.integrations_with_reqs
@@ -250,7 +253,7 @@ class RequirementsManager:
             raise exceptions[0]
 
     async def async_process_requirements(
-        self, name: str, requirements: list[str]
+        self, name: str, requirements: list[str], is_custom_component: bool = False
     ) -> None:
         """Install the requirements for a component or platform.
 
@@ -272,6 +275,30 @@ class RequirementsManager:
         if not (missing := self._find_missing_requirements(requirements)):
             return
         self._raise_for_failed_requirements(name, missing)
+
+        if is_custom_component:
+            for specifier in requirements:
+                parsed_req = Requirement(specifier)
+                requirement_name = parsed_req.name
+                if "[" in requirement_name:
+                    requirement_name = requirement_name.partition("[")[0]
+                if requirement_name not in REQUIREMENTS:
+                    continue
+                version = VERSIONS[requirement_name]
+                if parsed_req.specifier.contains(version):
+                    continue
+                core_integrations_using_req = set(REQUIREMENTS[requirement_name])
+                core_integrations_using_req.discard(name)
+                if not core_integrations_using_req:
+                    continue
+                _LOGGER.error(
+                    "Requirement %s cannot be satisfied "
+                    "because core integrations %s require version %s. ",
+                    specifier,
+                    core_integrations_using_req,
+                    version,
+                )
+                raise RequirementsNotFound(name, [specifier])
 
         async with self.pip_lock:
             # Recalculate missing again now that we have the lock

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections import deque
+from collections import defaultdict, deque
 from functools import cache
 import json
 import os
@@ -12,6 +12,7 @@ import sys
 from typing import Any
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
+from packaging.utils import canonicalize_name
 from tqdm import tqdm
 
 import homeassistant.util.package as pkg_util
@@ -21,6 +22,7 @@ from script.gen_requirements_all import (
 )
 
 from .model import Config, Integration
+from .serializer import format_python_namespace
 
 PACKAGE_REGEX = re.compile(
     r"^(?:--.+\s)?([-_,\.\w\d\[\]]+)(==|>=|<=|~=|!=|<|>|===)*(.*)$"
@@ -39,9 +41,12 @@ IGNORE_STANDARD_LIBRARY_VIOLATIONS = {
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle requirements for integrations."""
     # Check if we are doing format-only validation.
+    requirements_path = config.root / "homeassistant/generated/requirements.py"
+
     if not config.requirements:
         for integration in integrations.values():
             validate_requirements_format(integration)
+        config.cache["requirements"] = content = generate_and_validate(integrations)
         return
 
     # check for incompatible requirements
@@ -50,6 +55,48 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
 
     for integration in tqdm(integrations.values(), disable=disable_tqdm):
         validate_requirements(integration)
+
+    if config.specific_integrations:
+        return
+
+    with open(str(requirements_path)) as fp:
+        current = fp.read()
+        if current != content:
+            config.add_error(
+                "requirements",
+                "File requirements.py is not up to date. Run python3 -m script.hassfest",
+                fixable=True,
+            )
+        return
+
+
+def generate_and_validate(integrations: dict[str, Integration]) -> str:
+    """Validate and generate requirements data."""
+    requirements_for_integrations = defaultdict(list)
+    requirements_by_version = {}
+    for domain in sorted(integrations):
+        for requirement in integrations[domain].requirements:
+            pkg, _, version = PACKAGE_REGEX.match(requirement).groups()
+            if "[" in pkg:
+                pkg = pkg.partition("[")[0]
+            pkg = canonicalize_name(pkg)
+            requirements_for_integrations[pkg].append(domain)
+            requirements_by_version[pkg] = version
+    return format_python_namespace(
+        {
+            "REQUIREMENTS": {
+                k: tuple(v) for k, v in requirements_for_integrations.items()
+            },
+            "VERSIONS": requirements_by_version,
+        }
+    )
+
+
+def generate(integrations: dict[str, Integration], config: Config) -> None:
+    """Generate requirements file."""
+    requirements_path = config.root / "homeassistant/generated/requirements.py"
+    with open(str(requirements_path), "w") as fp:
+        fp.write(f"{config.cache['requirements']}")
 
 
 def validate_requirements_format(integration: Integration) -> bool:
