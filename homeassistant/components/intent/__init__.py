@@ -352,6 +352,7 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
                 ATTR_POSITION: vol.All(vol.Coerce(int), vol.Range(min=0, max=100))
             },
             description="Sets the position of a device or entity",
+            platforms={COVER_DOMAIN, VALVE_DOMAIN},
         )
 
     def get_domain_and_service(
