@@ -37,8 +37,8 @@ SENSOR_TYPES: dict[str, OSOEnergyBinarySensorEntityDescription] = {
         value_fn=lambda entity_data: entity_data.state,
     ),
     "heater_state": OSOEnergyBinarySensorEntityDescription(
-        key="heater_state",
-        translation_key="heater_state",
+        key="heating",
+        translation_key="heating",
         value_fn=lambda entity_data: entity_data.state,
     ),
 }
@@ -49,15 +49,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up OSO Energy binary sensor."""
     osoenergy: OSOEnergy = hass.data[DOMAIN][entry.entry_id]
-    devices = osoenergy.session.device_list.get("binary_sensor")
-    entities = []
-    if devices:
-        for dev in devices:
-            sensor_type = dev.osoEnergyType.lower()
-            if sensor_type in SENSOR_TYPES:
-                entities.append(
-                    OSOEnergyBinarySensor(osoenergy, SENSOR_TYPES[sensor_type], dev)
-                )
+    entities = [
+        OSOEnergyBinarySensor(osoenergy, sensor_type, dev)
+        for dev in osoenergy.session.device_list.get("binary_sensor", [])
+        if (sensor_type := SENSOR_TYPES.get(dev.osoEnergyType.lower()))
+    ]
 
     async_add_entities(entities, True)
 

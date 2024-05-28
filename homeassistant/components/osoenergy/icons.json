@@ -7,7 +7,7 @@
       "extra_energy": {
         "default": "mdi:white-balance-sunny"
       },
-      "heater_state": {
+      "heating": {
         "default": "mdi:water-boiler"
       }
     }
