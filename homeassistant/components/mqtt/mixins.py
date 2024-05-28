@@ -834,6 +834,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         mqtt_data = hass.data[DATA_MQTT]
         self._registry_hooks = mqtt_data.discovery_registry_hooks
         discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
+        self._migrate_discovery: str | None = None
         if discovery_hash in self._registry_hooks:
             self._registry_hooks.pop(discovery_hash)()
 
@@ -855,7 +856,6 @@ class MqttDiscoveryUpdateMixin(Entity):
             MQTT_DISCOVERY_UPDATED.format(*discovery_hash),
             self._async_discovery_callback,
         )
-        migrate_discovery: str | None = None
 
     async def _async_remove_state_and_registry_entry(
         self: MqttDiscoveryUpdateMixin,
@@ -917,10 +917,10 @@ class MqttDiscoveryUpdateMixin(Entity):
         old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
         debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
         if not payload:
-            if migrate_discovery is not None:
+            if self._migrate_discovery is not None:
                 # Ignore empty update of migrated and removed discovery config
-                self._discovery_data[ATTR_DISCOVERY_TOPIC] = migrate_discovery
-                migrate_discovery = None
+                self._discovery_data[ATTR_DISCOVERY_TOPIC] = self._migrate_discovery
+                self._migrate_discovery = None
                 _LOGGER.info("Component successfully migrated: %s", self.entity_id)
                 return
             # Empty payload: Remove component
@@ -932,11 +932,12 @@ class MqttDiscoveryUpdateMixin(Entity):
             discovery_topic = payload.discovery_data[ATTR_DISCOVERY_TOPIC]
             if discovery_topic != self._discovery_data[ATTR_DISCOVERY_TOPIC]:
                 # Make sure the old discovery topic is removed
-                migrate_discovery = discovery_topic
+                self._migrate_discovery = discovery_topic
                 _LOGGER.debug("Migrating component: %s", self.entity_id)
                 self.hass.async_create_task(
                     async_remove_discovery_payload(self.hass, self._discovery_data)
-                )            if old_payload != payload:
+                )
+            if old_payload != payload:
                 # Non-empty, changed payload: Notify component
                 _LOGGER.info("Updating component: %s", self.entity_id)
                 self.hass.async_create_task(
@@ -950,7 +951,6 @@ class MqttDiscoveryUpdateMixin(Entity):
                 _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)
                 send_discovery_done(self.hass, self._discovery_data)
 
-                
     async def async_removed_from_registry(self) -> None:
         """Clear retained discovery topic in broker."""
         if not self._removed_from_hass and self._discovery_data is not None:
