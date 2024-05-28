@@ -77,9 +77,7 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
     for domain in sorted(integrations):
         for requirement in integrations[domain].requirements:
             pkg, _, version = PACKAGE_REGEX.match(requirement).groups()
-            if "[" in pkg:
-                pkg = pkg.partition("[")[0]
-            pkg = canonicalize_name(pkg)
+            pkg = canonicalize_name(pkg.partition("[")[0])
             requirements_for_integrations[pkg].append(domain)
             requirements_by_version[pkg] = version
     return format_python_namespace(
