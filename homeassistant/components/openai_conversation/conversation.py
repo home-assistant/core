@@ -99,12 +99,25 @@ class OpenAIConversationEntity(
         """Process a sentence."""
         options = self.entry.options
         intent_response = intent.IntentResponse(language=user_input.language)
-        llm_api: llm.API | None = None
+        llm_api: llm.APIInstance | None = None
         tools: list[dict[str, Any]] | None = None
 
         if options.get(CONF_LLM_HASS_API):
             try:
-                llm_api = llm.async_get_api(self.hass, options[CONF_LLM_HASS_API])
+                llm_api = await llm.async_get_api(
+                    self.hass,
+                    options[CONF_LLM_HASS_API],
+                    llm.ToolInput(
+                        tool_name="",
+                        tool_args={},
+                        platform=DOMAIN,
+                        context=user_input.context,
+                        user_prompt=user_input.text,
+                        language=user_input.language,
+                        assistant=conversation.DOMAIN,
+                        device_id=user_input.device_id,
+                    ),
+                )
             except HomeAssistantError as err:
                 LOGGER.error("Error getting LLM API: %s", err)
                 intent_response.async_set_error(
@@ -114,19 +127,7 @@ class OpenAIConversationEntity(
                 return conversation.ConversationResult(
                     response=intent_response, conversation_id=user_input.conversation_id
                 )
-            empty_tool_input = llm.ToolInput(
-                tool_name="",
-                tool_args={},
-                platform=DOMAIN,
-                context=user_input.context,
-                user_prompt=user_input.text,
-                language=user_input.language,
-                assistant=conversation.DOMAIN,
-                device_id=user_input.device_id,
-            )
-            tools = [
-                _format_tool(tool) for tool in llm_api.async_get_tools(empty_tool_input)
-            ]
+            tools = [_format_tool(tool) for tool in llm_api.tools]
 
         if user_input.conversation_id in self.history:
             conversation_id = user_input.conversation_id
@@ -135,8 +136,7 @@ class OpenAIConversationEntity(
             conversation_id = ulid.ulid_now()
             try:
                 if llm_api:
-                    api_prompt = await llm_api.async_get_api_prompt(empty_tool_input)
-
+                    api_prompt = llm_api.api_prompt
                 else:
                     api_prompt = llm.async_render_no_api_prompt(self.hass)
 
@@ -183,7 +183,7 @@ class OpenAIConversationEntity(
                 result = await client.chat.completions.create(
                     model=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
                     messages=messages,
-                    tools=tools,
+                    tools=tools or None,
                     max_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
                     top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
                     temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),

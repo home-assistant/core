@@ -86,7 +86,7 @@ async def test_conversation_agent(
 
 
 @patch(
-    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI.async_get_tools"
+    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI._async_get_tools"
 )
 async def test_function_call(
     mock_get_tools,
@@ -217,7 +217,7 @@ async def test_function_call(
 
 
 @patch(
-    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI.async_get_tools"
+    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI._async_get_tools"
 )
 async def test_function_exception(
     mock_get_tools,

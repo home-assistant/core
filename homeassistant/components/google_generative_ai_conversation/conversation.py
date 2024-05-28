@@ -149,13 +149,24 @@ class GoogleGenerativeAIConversationEntity(
     ) -> conversation.ConversationResult:
         """Process a sentence."""
         intent_response = intent.IntentResponse(language=user_input.language)
-        llm_api: llm.API | None = None
+        llm_api: llm.APIInstance | None = None
         tools: list[dict[str, Any]] | None = None
 
         if self.entry.options.get(CONF_LLM_HASS_API):
             try:
-                llm_api = llm.async_get_api(
-                    self.hass, self.entry.options[CONF_LLM_HASS_API]
+                llm_api = await llm.async_get_api(
+                    self.hass,
+                    self.entry.options[CONF_LLM_HASS_API],
+                    llm.ToolInput(
+                        tool_name="",
+                        tool_args={},
+                        platform=DOMAIN,
+                        context=user_input.context,
+                        user_prompt=user_input.text,
+                        language=user_input.language,
+                        assistant=conversation.DOMAIN,
+                        device_id=user_input.device_id,
+                    ),
                 )
             except HomeAssistantError as err:
                 LOGGER.error("Error getting LLM API: %s", err)
@@ -166,19 +177,7 @@ class GoogleGenerativeAIConversationEntity(
                 return conversation.ConversationResult(
                     response=intent_response, conversation_id=user_input.conversation_id
                 )
-            empty_tool_input = llm.ToolInput(
-                tool_name="",
-                tool_args={},
-                platform=DOMAIN,
-                context=user_input.context,
-                user_prompt=user_input.text,
-                language=user_input.language,
-                assistant=conversation.DOMAIN,
-                device_id=user_input.device_id,
-            )
-            tools = [
-                _format_tool(tool) for tool in llm_api.async_get_tools(empty_tool_input)
-            ]
+            tools = [_format_tool(tool) for tool in llm_api.tools]
 
         model = genai.GenerativeModel(
             model_name=self.entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
@@ -218,8 +217,7 @@ class GoogleGenerativeAIConversationEntity(
 
         try:
             if llm_api:
-                api_prompt = await llm_api.async_get_api_prompt(empty_tool_input)
-
+                api_prompt = llm_api.api_prompt
             else:
                 api_prompt = llm.async_render_no_api_prompt(self.hass)
 

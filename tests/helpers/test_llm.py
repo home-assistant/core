@@ -38,38 +38,44 @@ def empty_tool_input() -> llm.ToolInput:
     )
 
 
-async def test_get_api_no_existing(hass: HomeAssistant) -> None:
+async def test_get_api_no_existing(
+    hass: HomeAssistant, empty_tool_input: llm.ToolInput
+) -> None:
     """Test getting an llm api where no config exists."""
     with pytest.raises(HomeAssistantError):
-        llm.async_get_api(hass, "non-existing")
+        await llm.async_get_api(hass, "non-existing", empty_tool_input)
 
 
-async def test_register_api(hass: HomeAssistant) -> None:
+async def test_register_api(
+    hass: HomeAssistant, empty_tool_input: llm.ToolInput
+) -> None:
     """Test registering an llm api."""
 
     class MyAPI(llm.API):
-        async def async_get_api_prompt(self, tool_input: llm.ToolInput) -> str:
-            """Return a prompt for the tool."""
-            return ""
-
-        def async_get_tools(self, tool_input: llm.ToolInput) -> list[llm.Tool]:
+        async def async_get_api_instance(
+            self, tool_input: llm.ToolInput
+        ) -> llm.APIInstance:
             """Return a list of tools."""
-            return []
+            return llm.APIInstance(self, "", [])
 
     api = MyAPI(hass=hass, id="test", name="Test")
     llm.async_register_api(hass, api)
 
-    assert llm.async_get_api(hass, "test") is api
+    instance = await llm.async_get_api(hass, "test", empty_tool_input)
+    assert instance.api is api
     assert api in llm.async_get_apis(hass)
 
     with pytest.raises(HomeAssistantError):
         llm.async_register_api(hass, api)
 
 
-async def test_call_tool_no_existing(hass: HomeAssistant) -> None:
+async def test_call_tool_no_existing(
+    hass: HomeAssistant, empty_tool_input: llm.ToolInput
+) -> None:
     """Test calling an llm tool where no config exists."""
+    instance = await llm.async_get_api(hass, "assist", empty_tool_input)
     with pytest.raises(HomeAssistantError):
-        await llm.async_get_api(hass, "intent").async_call_tool(
+        await instance.async_call_tool(
             llm.ToolInput(
                 "test_tool",
                 {},
@@ -99,10 +105,9 @@ async def test_assist_api(hass: HomeAssistant, empty_tool_input: llm.ToolInput) 
     intent.async_register(hass, intent_handler)
 
     assert len(llm.async_get_apis(hass)) == 1
-    api = llm.async_get_api(hass, "assist")
-    tools = api.async_get_tools(empty_tool_input)
-    assert len(tools) == 1
-    tool = tools[0]
+    api = await llm.async_get_api(hass, "assist", empty_tool_input)
+    assert len(api.tools) == 1
+    tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
     assert tool.parameters == vol.Schema(intent_handler.slot_schema)
@@ -162,17 +167,16 @@ async def test_assist_api_get_timer_tools(
     """Test getting timer tools with Assist API."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
-    api = llm.async_get_api(hass, "assist")
+    api = await llm.async_get_api(hass, "assist", empty_tool_input)
 
-    tools = api.async_get_tools(empty_tool_input)
-    assert "HassStartTimer" not in [tool.name for tool in tools]
+    assert "HassStartTimer" not in [tool.name for tool in api.tools]
 
     empty_tool_input.device_id = "test_device"
 
     async_register_timer_handler(hass, "test_device", lambda *args: None)
 
-    tools = api.async_get_tools(empty_tool_input)
-    assert "HassStartTimer" in [tool.name for tool in tools]
+    api = await llm.async_get_api(hass, "assist", empty_tool_input)
+    assert "HassStartTimer" in [tool.name for tool in api.tools]
 
 
 async def test_assist_api_description(
@@ -187,10 +191,9 @@ async def test_assist_api_description(
     intent.async_register(hass, MyIntentHandler())
 
     assert len(llm.async_get_apis(hass)) == 1
-    api = llm.async_get_api(hass, "assist")
-    tools = api.async_get_tools(empty_tool_input)
-    assert len(tools) == 1
-    tool = tools[0]
+    api = await llm.async_get_api(hass, "assist", empty_tool_input)
+    assert len(api.tools) == 1
+    tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "my intent handler"
 
@@ -216,9 +219,8 @@ async def test_assist_api_prompt(
         assistant="conversation",
         device_id=None,
     )
-    api = llm.async_get_api(hass, "assist")
-    prompt = await api.async_get_api_prompt(tool_input)
-    assert prompt == (
+    api = await llm.async_get_api(hass, "assist", tool_input)
+    assert api.api_prompt == (
         "Only if the user wants to control a device, tell them to expose entities to their "
         "voice assistant in Home Assistant."
     )
@@ -413,12 +415,12 @@ async def test_assist_api_prompt(
     )
     no_timer_prompt = "This device does not support timers."
 
-    prompt = await api.async_get_api_prompt(tool_input)
     area_prompt = (
         "Reject all generic commands like 'turn on the lights' because we don't know in what area "
         "this conversation is happening."
     )
-    assert prompt == (
+    api = await llm.async_get_api(hass, "assist", tool_input)
+    assert api.api_prompt == (
         f"""{first_part_prompt}
 {area_prompt}
 {no_timer_prompt}
@@ -427,12 +429,12 @@ async def test_assist_api_prompt(
 
     # Fake that request is made from a specific device ID with an area
     tool_input.device_id = device.id
-    prompt = await api.async_get_api_prompt(tool_input)
     area_prompt = (
         "You are in area Test Area and all generic commands like 'turn on the lights' "
         "should target this area."
     )
-    assert prompt == (
+    api = await llm.async_get_api(hass, "assist", tool_input)
+    assert api.api_prompt == (
         f"""{first_part_prompt}
 {area_prompt}
 {no_timer_prompt}
@@ -442,12 +444,12 @@ async def test_assist_api_prompt(
     # Add floor
     floor = floor_registry.async_create("2")
     area_registry.async_update(area.id, floor_id=floor.floor_id)
-    prompt = await api.async_get_api_prompt(tool_input)
     area_prompt = (
         "You are in area Test Area (floor 2) and all generic commands like 'turn on the lights' "
         "should target this area."
     )
-    assert prompt == (
+    api = await llm.async_get_api(hass, "assist", tool_input)
+    assert api.api_prompt == (
         f"""{first_part_prompt}
 {area_prompt}
 {no_timer_prompt}
@@ -457,9 +459,9 @@ async def test_assist_api_prompt(
     # Register device for timers
     async_register_timer_handler(hass, device.id, lambda *args: None)
 
-    prompt = await api.async_get_api_prompt(tool_input)
+    api = await llm.async_get_api(hass, "assist", tool_input)
     # The no_timer_prompt is gone
-    assert prompt == (
+    assert api.api_prompt == (
         f"""{first_part_prompt}
 {area_prompt}
 {exposed_entities_prompt}"""
@@ -471,8 +473,8 @@ async def test_assist_api_prompt(
     mock_user.id = "12345"
     mock_user.name = "Test User"
     with patch("homeassistant.auth.AuthManager.async_get_user", return_value=mock_user):
-        prompt = await api.async_get_api_prompt(tool_input)
-    assert prompt == (
+        api = await llm.async_get_api(hass, "assist", tool_input)
+    assert api.api_prompt == (
         f"""{first_part_prompt}
 {area_prompt}
 The user name is Test User.

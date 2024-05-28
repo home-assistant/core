@@ -69,15 +69,16 @@ def async_register_api(hass: HomeAssistant, api: API) -> None:
     apis[api.id] = api
 
 
-@callback
-def async_get_api(hass: HomeAssistant, api_id: str) -> API:
+async def async_get_api(
+    hass: HomeAssistant, api_id: str, tool_input: ToolInput
+) -> APIInstance:
     """Get an API."""
     apis = _async_get_apis(hass)
 
     if api_id not in apis:
         raise HomeAssistantError(f"API {api_id} not found")
 
-    return apis[api_id]
+    return await apis[api_id].async_get_api_instance(tool_input)
 
 
 @callback
@@ -119,6 +120,37 @@ class Tool:
         return f"<{self.__class__.__name__} - {self.name}>"
 
 
+@dataclass
+class APIInstance:
+    """Instance of an API to be used by an LLM."""
+
+    api: API
+    api_prompt: str
+    tools: list[Tool]
+
+    async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
+        """Call a LLM tool, validate args and return the response."""
+        async_conversation_trace_append(
+            ConversationTraceEventType.LLM_TOOL_CALL, asdict(tool_input)
+        )
+
+        for tool in self.tools:
+            if tool.name == tool_input.tool_name:
+                break
+        else:
+            raise HomeAssistantError(f'Tool "{tool_input.tool_name}" not found')
+
+        return await tool.async_call(
+            self.api.hass,
+            replace(
+                tool_input,
+                tool_name=tool.name,
+                tool_args=tool.parameters(tool_input.tool_args),
+                context=tool_input.context or Context(),
+            ),
+        )
+
+
 @dataclass(slots=True, kw_only=True)
 class API(ABC):
     """An API to expose to LLMs."""
@@ -128,37 +160,9 @@ class API(ABC):
     name: str
 
     @abstractmethod
-    async def async_get_api_prompt(self, tool_input: ToolInput) -> str:
-        """Return the prompt for the API."""
+    async def async_get_api_instance(self, tool_input: ToolInput) -> APIInstance:
+        """Return the instance of the API."""
         raise NotImplementedError
-
-    @abstractmethod
-    @callback
-    def async_get_tools(self, tool_input: ToolInput) -> list[Tool]:
-        """Return a list of tools."""
-        raise NotImplementedError
-
-    async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
-        """Call a LLM tool, validate args and return the response."""
-        async_conversation_trace_append(
-            ConversationTraceEventType.LLM_TOOL_CALL, asdict(tool_input)
-        )
-
-        for tool in self.async_get_tools(tool_input):
-            if tool.name == tool_input.tool_name:
-                break
-        else:
-            raise HomeAssistantError(f'Tool "{tool_input.tool_name}" not found')
-
-        return await tool.async_call(
-            self.hass,
-            replace(
-                tool_input,
-                tool_name=tool.name,
-                tool_args=tool.parameters(tool_input.tool_args),
-                context=tool_input.context or Context(),
-            ),
-        )
 
 
 class IntentTool(Tool):
@@ -214,8 +218,8 @@ class AssistAPI(API):
             name="Assist",
         )
 
-    async def async_get_api_prompt(self, tool_input: ToolInput) -> str:
-        """Return the prompt for the API."""
+    async def async_get_api_instance(self, tool_input: ToolInput) -> APIInstance:
+        """Return the instance of the API."""
         if tool_input.assistant:
             exposed_entities: dict | None = _get_exposed_entities(
                 self.hass, tool_input.assistant
@@ -223,6 +227,16 @@ class AssistAPI(API):
         else:
             exposed_entities = None
 
+        return APIInstance(
+            api=self,
+            api_prompt=await self._async_get_api_prompt(tool_input, exposed_entities),
+            tools=self._async_get_tools(tool_input, exposed_entities),
+        )
+
+    async def _async_get_api_prompt(
+        self, tool_input: ToolInput, exposed_entities: dict | None
+    ) -> str:
+        """Return the prompt for the API."""
         if not exposed_entities:
             return (
                 "Only if the user wants to control a device, tell them to expose entities "
@@ -279,7 +293,9 @@ class AssistAPI(API):
         return "\n".join(prompt)
 
     @callback
-    def async_get_tools(self, tool_input: ToolInput) -> list[Tool]:
+    def _async_get_tools(
+        self, tool_input: ToolInput, exposed_entities: dict | None
+    ) -> list[Tool]:
         """Return a list of LLM tools."""
         ignore_intents = self.IGNORE_INTENTS
         if not tool_input.device_id or not async_device_supports_timers(

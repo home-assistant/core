@@ -61,11 +61,11 @@ async def test_default_prompt(
     with (
         patch("google.generativeai.GenerativeModel") as mock_model,
         patch(
-            "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI.async_get_tools",
+            "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI._async_get_tools",
             return_value=[],
         ) as mock_get_tools,
         patch(
-            "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI.async_get_api_prompt",
+            "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI._async_get_api_prompt",
             return_value="<api_prompt>",
         ),
         patch(
@@ -148,7 +148,7 @@ async def test_chat_history(
 
 
 @patch(
-    "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI.async_get_tools"
+    "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI._async_get_tools"
 )
 async def test_function_call(
     mock_get_tools,
@@ -246,7 +246,7 @@ async def test_function_call(
 
 
 @patch(
-    "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI.async_get_tools"
+    "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI._async_get_tools"
 )
 async def test_function_exception(
     mock_get_tools,
