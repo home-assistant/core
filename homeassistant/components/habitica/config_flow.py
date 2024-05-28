@@ -43,30 +43,6 @@ STEP_LOGIN_DATA_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str, str]:
-    """Validate the user input allows us to connect."""
-
-    websession = async_get_clientsession(hass)
-    api = await hass.async_add_executor_job(
-        HabitipyAsync,
-        {
-            "login": data[CONF_API_USER],
-            "password": data[CONF_API_KEY],
-            "url": data[CONF_URL] or DEFAULT_URL,
-        },
-    )
-    try:
-        await api.user.get(session=websession)
-        return {
-            "title": f"{data.get('name', 'Default username')}",
-            CONF_API_USER: data[CONF_API_USER],
-        }
-    except ClientResponseError as ex:
-        if ex.status == HTTPStatus.UNAUTHORIZED:
-            raise InvalidAuth from ex
-        raise CannotConnect from ex
-
-
 class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for habitica."""
 
@@ -94,18 +70,19 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 session = async_get_clientsession(self.hass)
-                api = HabitipyAsync(
-                    conf={
+                api = await self.hass.async_add_executor_job(
+                    HabitipyAsync,
+                    {
                         "login": "",
                         "password": "",
                         "url": DEFAULT_URL,
-                    }
+                    },
                 )
                 login_response = await api.user.auth.local.login.post(
                     session=session,
                     username=user_input[CONF_USERNAME],
                     password=user_input[CONF_PASSWORD],
-                )
+                )  # pyright: ignore[reportGeneralTypeIssues]
 
             except ClientResponseError as ex:
                 if ex.status == HTTPStatus.UNAUTHORIZED:
@@ -151,17 +128,18 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                 session = async_get_clientsession(
                     self.hass, verify_ssl=user_input.get(CONF_VERIFY_SSL, True)
                 )
-                api = HabitipyAsync(
-                    conf={
+                api = await self.hass.async_add_executor_job(
+                    HabitipyAsync,
+                    {
                         "login": user_input[CONF_API_USER],
                         "password": user_input[CONF_API_KEY],
                         "url": user_input.get(CONF_URL, DEFAULT_URL),
-                    }
+                    },
                 )
                 api_response = await api.user.get(
                     session=session,
                     userFields="auth",
-                )
+                )  # pyright: ignore[reportGeneralTypeIssues]
             except ClientResponseError as ex:
                 if ex.status == HTTPStatus.UNAUTHORIZED:
                     errors["base"] = "invalid_auth"
