@@ -332,10 +332,12 @@ async def async_start(  # noqa: C901
             ]
             for component_id, config in component_configs.items():
                 component = config.pop(CONF_PLATFORM)
-                # The object_id of the device discovery is the unique identifier
-                # It is used as node_id for the components it contains
+                # The object_id in the device discovery topic is the unique identifier.
+                # It is used as node_id for the components it contains.
                 component_node_id = object_id
-                # If we have an additional node_id, we expend the component_id with it
+                # The component_id in the discovery playload is used as object_id
+                # If we have an additional node_id in the discovery topic,
+                # we extend the component_id with it.
                 component_object_id = (
                     f"{node_id} {component_id}" if node_id else component_id
                 )
@@ -393,7 +395,7 @@ async def async_start(  # noqa: C901
             if TOPIC_BASE in discovery_payload:
                 _replace_topic_base(discovery_payload)
 
-            # If present, the node_id will be included in the discovered object id
+            # If present, the node_id will be included in the discovery_id.
             discovery_id = f"{node_id} {object_id}" if node_id else object_id
             discovery_hash = (component, discovery_id)
 
