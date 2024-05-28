@@ -98,6 +98,7 @@ _METHOD_MATCH: list[TypeHintMatch] = [
 _TEST_FIXTURES: dict[str, list[str] | str] = {
     "aioclient_mock": "AiohttpClientMocker",
     "aiohttp_client": "ClientSessionGenerator",
+    "aiohttp_server": "Callable[[], TestServer]",
     "area_registry": "AreaRegistry",
     "async_setup_recorder_instance": "RecorderInstanceGenerator",
     "caplog": "pytest.LogCaptureFixture",

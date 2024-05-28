@@ -3,7 +3,7 @@
 from asyncio import AbstractEventLoop
 from collections.abc import Callable
 import copy
-from typing import Any, cast
+from typing import cast
 from unittest.mock import AsyncMock, Mock, call
 
 from aiohttp import web
@@ -227,7 +227,7 @@ async def test_unload_camera(hass: HomeAssistant) -> None:
 
 
 async def test_get_still_image_from_camera(
-    aiohttp_server: Any, hass: HomeAssistant
+    aiohttp_server: Callable[[], TestServer], hass: HomeAssistant
 ) -> None:
     """Test getting a still image."""
 
@@ -268,7 +268,9 @@ async def test_get_still_image_from_camera(
     assert image_handler.called
 
 
-async def test_get_stream_from_camera(aiohttp_server: Any, hass: HomeAssistant) -> None:
+async def test_get_stream_from_camera(
+    aiohttp_server: Callable[[], TestServer], hass: HomeAssistant
+) -> None:
     """Test getting a stream."""
 
     stream_handler = AsyncMock(return_value="")
@@ -351,7 +353,7 @@ async def test_device_info(
 
 
 async def test_camera_option_stream_url_template(
-    aiohttp_server: Any, hass: HomeAssistant
+    aiohttp_server: Callable[[], TestServer], hass: HomeAssistant
 ) -> None:
     """Verify camera with a stream URL template option."""
     client = create_mock_motioneye_client()
@@ -391,7 +393,7 @@ async def test_camera_option_stream_url_template(
 
 
 async def test_get_stream_from_camera_with_broken_host(
-    aiohttp_server: Any, hass: HomeAssistant
+    aiohttp_server: Callable[[], TestServer], hass: HomeAssistant
 ) -> None:
     """Test getting a stream with a broken URL (no host)."""
 
