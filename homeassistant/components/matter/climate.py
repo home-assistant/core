@@ -255,8 +255,6 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     self._attr_hvac_action = HVACAction.HEATING
                 case ThermostatRunningState.Cool | ThermostatRunningState.CoolStage2:
                     self._attr_hvac_action = HVACAction.COOLING
-                case ThermostatRunningState.Cool | ThermostatRunningState.CoolStage2:
-                    self._attr_hvac_action = HVACAction.COOLING
                 case (
                     ThermostatRunningState.Fan
                     | ThermostatRunningState.FanStage2
