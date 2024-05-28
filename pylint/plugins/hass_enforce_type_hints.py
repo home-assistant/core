@@ -146,6 +146,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "recorder_mock": "Recorder",
     "requests_mock": "requests_mock.Mocker",
     "snapshot": "SnapshotAssertion",
+    "socket_enabled": "None",
     "stub_blueprint_populate": "None",
     "tmp_path": "Path",
     "tmpdir": "py.path.local",
