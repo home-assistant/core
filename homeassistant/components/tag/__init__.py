@@ -180,6 +180,8 @@ class TagDictStorageCollectionWebsocket(
                 )
             ) and (entity := self.entity_registry.async_get(entity_id)):
                 item[CONF_NAME] = entity.name or entity.original_name
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Listing tags %s", tag_items)
         connection.send_result(msg["id"], tag_items)
 
     async def ws_create_item(
@@ -200,6 +202,8 @@ class TagDictStorageCollectionWebsocket(
                 )
             ) and (entity := self.entity_registry.async_get(entity_id)):
                 item[CONF_NAME] = entity.name or entity.original_name
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                _LOGGER.debug("Creating tag %s", item)
             connection.send_result(msg["id"], item)
         except vol.Invalid as err:
             connection.send_error(
@@ -232,6 +236,8 @@ class TagDictStorageCollectionWebsocket(
                 )
             ) and (entity := self.entity_registry.async_get(entity_id)):
                 item[CONF_NAME] = entity.name or entity.original_name
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                _LOGGER.debug("Sending updated tag %s", item)
             connection.send_result(msg_id, item)
         except collection.ItemNotFound:
             connection.send_error(
@@ -254,7 +260,6 @@ class TagDictStorageCollectionWebsocket(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Tag component."""
     component = EntityComponent[TagEntity](LOGGER, DOMAIN, hass)
-    hass.data[DOMAIN] = {}
     id_manager = TagIDManager()
     hass.data[TAG_DATA] = storage_collection = TagStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
@@ -264,8 +269,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     TagDictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
-
-    entities: list[TagEntity] = []
 
     entity_registry = er.async_get(hass)
 
@@ -315,8 +318,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     storage_collection.async_add_listener(tag_change_listener)
 
+    entities: list[TagEntity] = []
     for tag in storage_collection.async_items():
-        _LOGGER.debug("Adding tag: %s", tag)
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Adding tag: %s", tag)
         entity_id = entity_registry.async_get_entity_id(DOMAIN, DOMAIN, tag[TAG_ID])
         if entity_id := entity_registry.async_get_entity_id(
             DOMAIN, DOMAIN, tag[TAG_ID]
@@ -333,7 +338,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         name = DEFAULT_NAME
         if entity:
             name = entity.name or entity.original_name or name
-
         entities.append(
             TagEntity(
                 hass,
@@ -343,7 +347,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 tag.get(DEVICE_ID),
             )
         )
-
     await component.async_add_entities(entities)
 
     return True
@@ -378,10 +381,14 @@ async def async_scan_tag(
     if device_id:
         extra_kwargs[DEVICE_ID] = device_id
     if tag_id in storage_collection.data:
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Updating tag %s with extra %s", tag_id, extra_kwargs)
         await storage_collection.async_update_item(
             tag_id, {LAST_SCANNED: dt_util.utcnow(), **extra_kwargs}
         )
     else:
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Creating tag %s with extra %s", tag_id, extra_kwargs)
         await storage_collection.async_create_item(
             {TAG_ID: tag_id, LAST_SCANNED: dt_util.utcnow(), **extra_kwargs}
         )
