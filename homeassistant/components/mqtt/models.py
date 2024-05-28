@@ -58,7 +58,7 @@ class PublishMessage:
     retain: bool
 
 
-@dataclass(slots=True, frozen=True)
+@dataclass(slots=True, frozen=True, eq=False)
 class ReceiveMessage:
     """MQTT Message received."""
 
