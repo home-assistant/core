@@ -9,13 +9,14 @@ from fyta_cli.fyta_exceptions import (
     FytaAuthentificationError,
     FytaConnectionError,
     FytaPasswordError,
+    FytaPlantError,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_EXPIRATION
 
@@ -48,7 +49,15 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
         ):
             await self.renew_authentication()
 
-        return await self.fyta.update_all_plants()
+        data: dict[int, dict[str, Any]] = {}
+        try:
+            data = await self.fyta.update_all_plants()
+        except (FytaConnectionError, FytaPlantError) as err:
+            raise UpdateFailed(err) from err
+
+        _LOGGER.debug("Data successfully updated")
+
+        return data
 
     async def renew_authentication(self) -> bool:
         """Renew access token for FYTA API."""
