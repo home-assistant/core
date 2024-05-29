@@ -86,7 +86,7 @@ async def test_conversation_agent(
 
 
 @patch(
-    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI.async_get_tools"
+    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI._async_get_tools"
 )
 async def test_function_call(
     mock_get_tools,
@@ -192,6 +192,8 @@ async def test_function_call(
         llm.ToolInput(
             tool_name="test_tool",
             tool_args={"param1": "test_value"},
+        ),
+        llm.ToolContext(
             platform="openai_conversation",
             context=context,
             user_prompt="Please call the test function",
@@ -217,7 +219,7 @@ async def test_function_call(
 
 
 @patch(
-    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI.async_get_tools"
+    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI._async_get_tools"
 )
 async def test_function_exception(
     mock_get_tools,
@@ -323,6 +325,8 @@ async def test_function_exception(
         llm.ToolInput(
             tool_name="test_tool",
             tool_args={"param1": "test_value"},
+        ),
+        llm.ToolContext(
             platform="openai_conversation",
             context=context,
             user_prompt="Please call the test function",
