@@ -44,8 +44,7 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         self.models = model_names
 
     def _get_user_schema_authenticated(self) -> vol.Schema:
-        if self.voices is None or self.models is None:
-            raise ValueError("Voices or models are not set")
+        assert self.voices is not None and self.models is not None
         default_voice = sorted(self.voices)[0]
         default_model = sorted(self.models)[0]
         return vol.Schema(
@@ -67,8 +66,6 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         # Validate auth, get voices
         try:
             await self._get_voices_models(user_input)
-        except KeyError:
-            errors[CONF_API_KEY] = "No API-Key provided"
         except ApiError:
             errors[CONF_API_KEY] = "ElevenLabs API responded with an Error!"
         if errors:
@@ -88,9 +85,8 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="voice", data_schema=self._get_user_schema_authenticated()
             )
         # Add api_key to user input
-        if self.user_info is None:
-            raise ValueError("User info is not set")
+        assert self.user_info is not None
         user_input[CONF_API_KEY] = self.user_info.get(CONF_API_KEY)
         return self.async_create_entry(
-            title=f"ElevenLabs {user_input[CONF_VOICE]}", data=user_input
+            title=user_input[CONF_VOICE], data=user_input
         )
