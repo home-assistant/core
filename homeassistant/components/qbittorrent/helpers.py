@@ -3,15 +3,13 @@
 from datetime import UTC, datetime
 from typing import Any
 
-import qbittorrentapi
+from qbittorrentapi import Client, TorrentDictionary, TorrentInfoList
 
 
-def setup_client(
-    url: str, username: str, password: str, verify_ssl: bool
-) -> qbittorrentapi.Client:
+def setup_client(url: str, username: str, password: str, verify_ssl: bool) -> Client:
     """Create a qBittorrent client."""
 
-    client = qbittorrentapi.Client(
+    client = Client(
         url, username=username, password=password, VERIFY_WEBUI_CERTIFICATE=verify_ssl
     )
     client.auth_log_in(username, password)
@@ -34,7 +32,7 @@ def format_unix_timestamp(timestamp) -> str:
     return dt_object.isoformat()
 
 
-def format_progress(torrent: qbittorrentapi.TorrentDictionary) -> str:
+def format_progress(torrent: TorrentDictionary) -> str:
     """Format the progress of a torrent."""
     progress: Any = torrent["progress"]
     progress = float(progress) * 100
@@ -42,7 +40,7 @@ def format_progress(torrent: qbittorrentapi.TorrentDictionary) -> str:
 
 
 def format_torrents(
-    torrents: qbittorrentapi.TorrentInfoList,
+    torrents: TorrentInfoList,
 ) -> dict[str, dict[str, Any]]:
     """Format a list of torrents."""
     value = {}
@@ -52,7 +50,7 @@ def format_torrents(
     return value
 
 
-def format_torrent(torrent: qbittorrentapi.TorrentDictionary) -> dict[str, Any]:
+def format_torrent(torrent: TorrentDictionary) -> dict[str, Any]:
     """Format a single torrent."""
     value = {}
     value["id"] = torrent["hash"]
