@@ -1,6 +1,6 @@
 """Tests for the llm helpers."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -165,13 +165,11 @@ async def test_assist_api(
         device_id="test_device",
     )
     assert response == {
-        "card": {},
         "data": {
             "failed": [],
             "success": [],
             "targets": [],
         },
-        "language": "*",
         "response_type": "action_done",
         "speech": {},
     }
@@ -430,8 +428,8 @@ async def test_assist_api_prompt(
     no_timer_prompt = "This device does not support timers."
 
     area_prompt = (
-        "Reject all generic commands like 'turn on the lights' because we don't know in what area "
-        "this conversation is happening."
+        "When a user asks to turn on all devices of a specific type, "
+        "ask user to specify an area."
     )
     api = await llm.async_get_api(hass, "assist", tool_context)
     assert api.api_prompt == (
@@ -478,19 +476,5 @@ async def test_assist_api_prompt(
     assert api.api_prompt == (
         f"""{first_part_prompt}
 {area_prompt}
-{exposed_entities_prompt}"""
-    )
-
-    # Add user
-    context.user_id = "12345"
-    mock_user = Mock()
-    mock_user.id = "12345"
-    mock_user.name = "Test User"
-    with patch("homeassistant.auth.AuthManager.async_get_user", return_value=mock_user):
-        api = await llm.async_get_api(hass, "assist", tool_context)
-    assert api.api_prompt == (
-        f"""{first_part_prompt}
-{area_prompt}
-The user name is Test User.
 {exposed_entities_prompt}"""
     )

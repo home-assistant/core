@@ -195,7 +195,10 @@ class IntentTool(Tool):
             assistant=tool_context.assistant,
             device_id=tool_context.device_id,
         )
-        return intent_response.as_dict()
+        response = intent_response.as_dict()
+        del response["language"]
+        del response["card"]
+        return response
 
 
 class AssistAPI(API):
@@ -227,12 +230,13 @@ class AssistAPI(API):
 
         return APIInstance(
             api=self,
-            api_prompt=await self._async_get_api_prompt(tool_context, exposed_entities),
+            api_prompt=self._async_get_api_prompt(tool_context, exposed_entities),
             tool_context=tool_context,
             tools=self._async_get_tools(tool_context, exposed_entities),
         )
 
-    async def _async_get_api_prompt(
+    @callback
+    def _async_get_api_prompt(
         self, tool_context: ToolContext, exposed_entities: dict | None
     ) -> str:
         """Return the prompt for the API."""
@@ -269,14 +273,9 @@ class AssistAPI(API):
             prompt.append(f"You are in area {area.name} {extra}")
         else:
             prompt.append(
-                "Reject all generic commands like 'turn on the lights' because we "
-                "don't know in what area this conversation is happening."
+                "When a user asks to turn on all devices of a specific type, "
+                "ask user to specify an area."
             )
-
-        if tool_context.context and tool_context.context.user_id:
-            user = await self.hass.auth.async_get_user(tool_context.context.user_id)
-            if user:
-                prompt.append(f"The user name is {user.name}.")
 
         if not tool_context.device_id or not async_device_supports_timers(
             self.hass, tool_context.device_id
