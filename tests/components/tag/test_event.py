@@ -3,14 +3,9 @@
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.tag import (
-    DEFAULT_NAME,
-    DOMAIN,
-    EVENT_TAG_SCANNED,
-    async_scan_tag,
-)
-from homeassistant.const import CONF_NAME
+from homeassistant.components.tag import DOMAIN, EVENT_TAG_SCANNED, async_scan_tag
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -32,18 +27,21 @@ def storage_setup_named_tag(
             hass_storage[DOMAIN] = {
                 "key": DOMAIN,
                 "version": 1,
+                "minor_version": 2,
                 "data": {
                     "items": [
                         {
                             "id": TEST_TAG_ID,
                             "tag_id": TEST_TAG_ID,
-                            CONF_NAME: TEST_TAG_NAME,
                         }
                     ]
                 },
             }
         else:
             hass_storage[DOMAIN] = items
+        entity_registry = er.async_get(hass)
+        entry = entity_registry.async_get_or_create(DOMAIN, DOMAIN, TEST_TAG_ID)
+        entity_registry.async_update_entity(entry.entity_id, name=TEST_TAG_NAME)
         config = {DOMAIN: {}}
         return await async_setup_component(hass, DOMAIN, config)
 
@@ -86,6 +84,7 @@ def storage_setup_unnamed_tag(hass: HomeAssistant, hass_storage):
             hass_storage[DOMAIN] = {
                 "key": DOMAIN,
                 "version": 1,
+                "minor_version": 2,
                 "data": {"items": [{"id": TEST_TAG_ID, "tag_id": TEST_TAG_ID}]},
             }
         else:
@@ -118,6 +117,6 @@ async def test_unnamed_tag_scanned_event(
     event = events[0]
     event_data = event.data
 
-    assert event_data["name"] is DEFAULT_NAME
+    assert event_data["name"] == "Tag test tag id"
     assert event_data["device_id"] == TEST_DEVICE_ID
     assert event_data["tag_id"] == TEST_TAG_ID

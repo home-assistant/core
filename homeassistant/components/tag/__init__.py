@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, final
 import uuid
 
 import voluptuous as vol
@@ -34,6 +34,7 @@ LAST_SCANNED = "last_scanned"
 LAST_SCANNED_BY_DEVICE_ID = "last_scanned_by_device_id"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
+STORAGE_VERSION_MINOR = 2
 
 TAG_DATA: HassKey[TagStorageCollection] = HassKey(DOMAIN)
 SIGNAL_TAG_CHANGED = "signal_tag_changed"
@@ -76,6 +77,44 @@ class TagIDManager(collection.IDManager):
         return suggestion
 
 
+def _create_entry(
+    entity_registry: er.EntityRegistry, tag_id: str, name: str | None
+) -> er.RegistryEntry:
+    """Create an entity registry entry for a tag."""
+    entry = entity_registry.async_get_or_create(
+        DOMAIN,
+        DOMAIN,
+        tag_id,
+        original_name=f"{DEFAULT_NAME} {tag_id}",
+        suggested_object_id=slugify(name) if name else tag_id,
+    )
+    return entity_registry.async_update_entity(entry.entity_id, name=name)
+
+
+class TagStore(Store[collection.SerializedStorageCollection]):
+    """Store tag data."""
+
+    async def _async_migrate_func(
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: dict[str, list[dict[str, Any]]],
+    ) -> dict:
+        """Migrate to the new version."""
+        data = old_data
+        if old_major_version == 1 and old_minor_version < 2:
+            entity_registry = er.async_get(self.hass)
+            # Version 1.2 moves name to entity registry
+            for tag in data["items"]:
+                # Copy name in tag store to the entity registry
+                _create_entry(entity_registry, tag[TAG_ID], tag.get(CONF_NAME))
+
+        if old_major_version > 1:
+            raise NotImplementedError
+
+        return data
+
+
 class TagStorageCollection(collection.DictStorageCollection):
     """Tag collection stored in storage."""
 
@@ -84,7 +123,7 @@ class TagStorageCollection(collection.DictStorageCollection):
 
     def __init__(
         self,
-        store: Store,
+        store: TagStore,
         id_manager: collection.IDManager | None = None,
     ) -> None:
         """Initialize the storage collection."""
@@ -102,13 +141,7 @@ class TagStorageCollection(collection.DictStorageCollection):
 
         # Create entity in entity_registry when creating the tag
         # This is done early to store name only once in entity registry
-        self.entity_registry.async_get_or_create(
-            DOMAIN,
-            DOMAIN,
-            data[TAG_ID],
-            original_name=data.get(CONF_NAME, DEFAULT_NAME),
-            suggested_object_id=slugify(data.get(CONF_NAME, DEFAULT_NAME)),
-        )
+        _create_entry(self.entity_registry, data[TAG_ID], data.get(CONF_NAME))
         return data
 
     @callback
@@ -119,25 +152,17 @@ class TagStorageCollection(collection.DictStorageCollection):
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         data = {**item, **self.UPDATE_SCHEMA(update_data)}
+        tag_id = data[TAG_ID]
         # make last_scanned JSON serializeable
         if LAST_SCANNED in update_data:
             data[LAST_SCANNED] = data[LAST_SCANNED].isoformat()
         if name := data.get(CONF_NAME):
-            entity_id = self.entity_registry.async_get_entity_id(
-                DOMAIN, DOMAIN, data[TAG_ID]
-            )
             if entity_id := self.entity_registry.async_get_entity_id(
-                DOMAIN, DOMAIN, data[TAG_ID]
+                DOMAIN, DOMAIN, tag_id
             ):
                 self.entity_registry.async_update_entity(entity_id, name=name)
             else:
-                self.entity_registry.async_get_or_create(
-                    DOMAIN,
-                    DOMAIN,
-                    data[TAG_ID],
-                    original_name=data.get(CONF_NAME, DEFAULT_NAME),
-                    suggested_object_id=slugify(data.get(CONF_NAME, DEFAULT_NAME)),
-                )
+                raise collection.ItemNotFound(tag_id)
 
         return data
 
@@ -150,13 +175,13 @@ class TagStorageCollection(collection.DictStorageCollection):
 
 
 class TagDictStorageCollectionWebsocket(
-    collection.StorageCollectionWebsocket[collection.DictStorageCollection]
+    collection.StorageCollectionWebsocket[TagStorageCollection]
 ):
     """Class to expose tag storage collection management over websocket."""
 
     def __init__(
         self,
-        storage_collection: collection.DictStorageCollection,
+        storage_collection: TagStorageCollection,
         api_prefix: str,
         model_name: str,
         create_schema: ConfigType,
@@ -194,7 +219,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component = EntityComponent[TagEntity](LOGGER, DOMAIN, hass)
     id_manager = TagIDManager()
     hass.data[TAG_DATA] = storage_collection = TagStorageCollection(
-        Store(hass, STORAGE_VERSION, STORAGE_KEY),
+        TagStore(
+            hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
+        ),
         id_manager,
     )
     await storage_collection.async_load()
@@ -215,14 +242,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         if change_type == collection.CHANGE_ADDED:
             # When tags are added to storage
-            entity = entity_registry.async_get_or_create(
-                DOMAIN, DOMAIN, updated_config[TAG_ID]
-            )
+            entity = _create_entry(entity_registry, updated_config[TAG_ID], None)
+            if TYPE_CHECKING:
+                assert entity.original_name
             await component.async_add_entities(
                 [
                     TagEntity(
                         hass,
-                        entity.name or entity.original_name or DEFAULT_NAME,
+                        entity.name or entity.original_name,
                         updated_config[TAG_ID],
                         updated_config.get(LAST_SCANNED),
                         updated_config.get(DEVICE_ID),
@@ -260,16 +287,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ):
             entity = entity_registry.async_get(entity_id)
         else:
-            entity = entity_registry.async_get_or_create(
-                DOMAIN,
-                DOMAIN,
-                tag[TAG_ID],
-                original_name=tag.get(CONF_NAME, DEFAULT_NAME),
-                suggested_object_id=slugify(tag.get(CONF_NAME, DEFAULT_NAME)),
-            )
-        name = DEFAULT_NAME
-        if entity:
-            name = entity.name or entity.original_name or name
+            entity = _create_entry(entity_registry, tag[TAG_ID], None)
+        if TYPE_CHECKING:
+            assert entity
+            assert entity.original_name
+        name = entity.name or entity.original_name
         entities.append(
             TagEntity(
                 hass,

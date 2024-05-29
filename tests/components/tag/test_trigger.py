@@ -26,6 +26,7 @@ def tag_setup(hass: HomeAssistant, hass_storage):
             hass_storage[DOMAIN] = {
                 "key": DOMAIN,
                 "version": 1,
+                "minor_version": 2,
                 "data": {"items": [{"id": "test tag", "tag_id": "test tag"}]},
             }
         else:

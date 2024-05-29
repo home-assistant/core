@@ -5,7 +5,7 @@ import logging
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.tag import DOMAIN, async_scan_tag
+from homeassistant.components.tag import DOMAIN, _create_entry, async_scan_tag
 from homeassistant.const import CONF_NAME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import collection, entity_registry as er
@@ -26,6 +26,36 @@ def storage_setup(hass: HomeAssistant, hass_storage):
             hass_storage[DOMAIN] = {
                 "key": DOMAIN,
                 "version": 1,
+                "minor_version": 2,
+                "data": {
+                    "items": [
+                        {
+                            "id": TEST_TAG_ID,
+                            "tag_id": TEST_TAG_ID,
+                        }
+                    ]
+                },
+            }
+        else:
+            hass_storage[DOMAIN] = items
+        entity_registry = er.async_get(hass)
+        _create_entry(entity_registry, TEST_TAG_ID, TEST_TAG_NAME)
+        config = {DOMAIN: {}}
+        return await async_setup_component(hass, DOMAIN, config)
+
+    return _storage
+
+
+@pytest.fixture
+def storage_setup_1_1(hass: HomeAssistant, hass_storage):
+    """Storage version 1.1 setup."""
+
+    async def _storage(items=None):
+        if items is None:
+            hass_storage[DOMAIN] = {
+                "key": DOMAIN,
+                "version": 1,
+                "minor_version": 1,
                 "data": {
                     "items": [
                         {
@@ -44,6 +74,22 @@ def storage_setup(hass: HomeAssistant, hass_storage):
     return _storage
 
 
+async def test_migration(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup_1_1
+) -> None:
+    """Test migrating tag store."""
+    assert await storage_setup_1_1()
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": f"{DOMAIN}/list"})
+    resp = await client.receive_json()
+    assert resp["success"]
+    assert resp["result"] == [
+        {"id": TEST_TAG_ID, "name": "test tag name", "tag_id": TEST_TAG_ID}
+    ]
+
+
 async def test_ws_list(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
 ) -> None:
@@ -52,14 +98,12 @@ async def test_ws_list(
 
     client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 6, "type": f"{DOMAIN}/list"})
+    await client.send_json_auto_id({"type": f"{DOMAIN}/list"})
     resp = await client.receive_json()
     assert resp["success"]
-
-    result = {item["id"]: item for item in resp["result"]}
-
-    assert len(result) == 1
-    assert TEST_TAG_ID in result
+    assert resp["result"] == [
+        {"id": TEST_TAG_ID, "name": "test tag name", "tag_id": TEST_TAG_ID}
+    ]
 
 
 async def test_ws_update(
@@ -71,9 +115,8 @@ async def test_ws_update(
 
     client = await hass_ws_client(hass)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": f"{DOMAIN}/update",
             f"{DOMAIN}_id": TEST_TAG_ID,
             "name": "New name",
@@ -81,11 +124,8 @@ async def test_ws_update(
     )
     resp = await client.receive_json()
     assert resp["success"]
-
     item = resp["result"]
-
-    assert item["id"] == TEST_TAG_ID
-    assert item["name"] == "New name"
+    assert item == {"id": TEST_TAG_ID, "name": "New name", "tag_id": TEST_TAG_ID}
 
 
 async def test_tag_scanned(
@@ -99,29 +139,37 @@ async def test_tag_scanned(
 
     client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 6, "type": f"{DOMAIN}/list"})
+    await client.send_json_auto_id({"type": f"{DOMAIN}/list"})
     resp = await client.receive_json()
     assert resp["success"]
 
     result = {item["id"]: item for item in resp["result"]}
 
-    assert len(result) == 1
-    assert TEST_TAG_ID in result
+    assert resp["result"] == [
+        {"id": TEST_TAG_ID, "name": "test tag name", "tag_id": TEST_TAG_ID}
+    ]
 
     now = dt_util.utcnow()
     freezer.move_to(now)
     await async_scan_tag(hass, "new tag", "some_scanner")
 
-    await client.send_json({"id": 7, "type": f"{DOMAIN}/list"})
+    await client.send_json_auto_id({"type": f"{DOMAIN}/list"})
     resp = await client.receive_json()
     assert resp["success"]
 
     result = {item["id"]: item for item in resp["result"]}
 
     assert len(result) == 2
-    assert TEST_TAG_ID in result
-    assert "new tag" in result
-    assert result["new tag"]["last_scanned"] == now.isoformat()
+    assert resp["result"] == [
+        {"id": TEST_TAG_ID, "name": "test tag name", "tag_id": TEST_TAG_ID},
+        {
+            "device_id": "some_scanner",
+            "id": "new tag",
+            "last_scanned": now.isoformat(),
+            "name": "Tag new tag",
+            "tag_id": "new tag",
+        },
+    ]
 
 
 def track_changes(coll: collection.ObservableCollection):
@@ -144,7 +192,7 @@ async def test_tag_id_exists(
     changes = track_changes(hass.data[DOMAIN])
     client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 2, "type": f"{DOMAIN}/create", "tag_id": TEST_TAG_ID})
+    await client.send_json_auto_id({"type": f"{DOMAIN}/create", "tag_id": TEST_TAG_ID})
     response = await client.receive_json()
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
@@ -194,9 +242,8 @@ async def test_entity_created_and_removed(
 
     client = await hass_ws_client(hass)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 1,
             "type": f"{DOMAIN}/create",
             "tag_id": "1234567890",
             "name": "Kitchen tag",
@@ -223,9 +270,8 @@ async def test_entity_created_and_removed(
     assert entity
     assert entity.state == now.isoformat(timespec="milliseconds")
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 2,
             "type": f"{DOMAIN}/delete",
             "tag_id": "1234567890",
         }
