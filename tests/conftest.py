@@ -50,7 +50,7 @@ from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
 from homeassistant.const import HASSIO_USER_NAME
-from homeassistant.core import CoreState, HassJob, HomeAssistant
+from homeassistant.core import CoreState, HassJob, HomeAssistant, ServiceCall
 from homeassistant.helpers import (
     area_registry as ar,
     category_registry as cr,
@@ -69,6 +69,7 @@ from homeassistant.util import location
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
 
+from .common import async_mock_service
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 from .syrupy import HomeAssistantSnapshotExtension
 from .typing import (
@@ -1772,6 +1773,12 @@ def issue_registry(hass: HomeAssistant) -> ir.IssueRegistry:
 def label_registry(hass: HomeAssistant) -> lr.LabelRegistry:
     """Return the label registry from the current hass instance."""
     return lr.async_get(hass)
+
+
+@pytest.fixture
+def service_calls(hass: HomeAssistant) -> list[ServiceCall]:
+    """Track calls to a mock service."""
+    return async_mock_service(hass, "test", "automation")
 
 
 @pytest.fixture
