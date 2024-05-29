@@ -385,6 +385,7 @@ async def async_start(  # noqa: C901
                 MqttComponentConfig(component, object_id, node_id, discovery_payload)
             )
 
+        discovery_pending_discovered = mqtt_data.discovery_pending_discovered
         for component_config in discovered_components:
             component = component_config.component
             node_id = component_config.node_id
@@ -410,10 +411,8 @@ async def async_start(  # noqa: C901
                 }
                 setattr(discovery_payload, "discovery_data", discovery_data)
 
-            if discovery_hash in mqtt_data.discovery_pending_discovered:
-                pending = mqtt_data.discovery_pending_discovered[discovery_hash][
-                    "pending"
-                ]
+            if discovery_hash in discovery_pending_discovered:
+                pending = discovery_pending_discovered[discovery_hash]["pending"]
                 pending.appendleft(discovery_payload)
                 _LOGGER.debug(
                     "Component has already been discovered: %s %s, queuing update",
