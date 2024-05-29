@@ -69,8 +69,8 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     (0x1209, 0x8007),
 }
 
-SystemModeEnum = clusters.Thermostat.Enums.ThermostatSystemMode
-ControlSequenceEnum = clusters.Thermostat.Enums.ThermostatControlSequence
+SystemModeEnum = clusters.Thermostat.Enums.SystemModeEnum
+ControlSequenceEnum = clusters.Thermostat.Enums.ControlSequenceOfOperationEnum
 ThermostatFeature = clusters.Thermostat.Bitmaps.Feature
 
 
