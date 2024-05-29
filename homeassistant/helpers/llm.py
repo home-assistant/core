@@ -310,11 +310,25 @@ class AssistAPI(API):
                 intent.INTENT_TIMER_STATUS,
             }
 
-        return [
-            IntentTool(intent_handler)
+        intent_handlers = [
+            intent_handler
             for intent_handler in intent.async_get(self.hass)
             if intent_handler.intent_type not in ignore_intents
         ]
+
+        exposed_domains: set[str] | None = None
+        if exposed_entities is not None:
+            exposed_domains = {
+                entity_id.split(".")[0] for entity_id in exposed_entities
+            }
+            intent_handlers = [
+                intent_handler
+                for intent_handler in intent_handlers
+                if intent_handler.platforms is None
+                or intent_handler.platforms & exposed_domains
+            ]
+
+        return [IntentTool(intent_handler) for intent_handler in intent_handlers]
 
 
 def _get_exposed_entities(

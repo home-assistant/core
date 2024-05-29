@@ -78,15 +78,27 @@ async def test_call_tool_no_existing(
         )
 
 
-async def test_assist_api(hass: HomeAssistant) -> None:
+async def test_assist_api(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test Assist API."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    entity_registry.async_get_or_create(
+        "light",
+        "kitchen",
+        "mock-id-kitchen",
+        original_name="Kitchen",
+        suggested_object_id="kitchen",
+    ).write_unavailable_state(hass)
+
     test_context = Context()
     tool_context = llm.ToolContext(
         platform="test_platform",
         context=test_context,
         user_prompt="test_text",
         language="*",
-        assistant="test_assistant",
+        assistant="conversation",
         device_id="test_device",
     )
     schema = {
@@ -97,12 +109,25 @@ async def test_assist_api(hass: HomeAssistant) -> None:
     class MyIntentHandler(intent.IntentHandler):
         intent_type = "test_intent"
         slot_schema = schema
+        platforms = set()  # Match none
 
     intent_handler = MyIntentHandler()
 
     intent.async_register(hass, intent_handler)
 
     assert len(llm.async_get_apis(hass)) == 1
+    api = await llm.async_get_api(hass, "assist", tool_context)
+    assert len(api.tools) == 0
+
+    # Match all
+    intent_handler.platforms = None
+
+    api = await llm.async_get_api(hass, "assist", tool_context)
+    assert len(api.tools) == 1
+
+    # Match specific domain
+    intent_handler.platforms = {"light"}
+
     api = await llm.async_get_api(hass, "assist", tool_context)
     assert len(api.tools) == 1
     tool = api.tools[0]
@@ -136,7 +161,7 @@ async def test_assist_api(hass: HomeAssistant) -> None:
         text_input="test_text",
         context=test_context,
         language="*",
-        assistant="test_assistant",
+        assistant="conversation",
         device_id="test_device",
     )
     assert response == {
