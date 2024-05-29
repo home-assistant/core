@@ -435,6 +435,7 @@ DISCOVERY_SCHEMAS = [
         device_type=(
             device_types.ColorTemperatureLight,
             device_types.DimmableLight,
+            device_types.DimmablePlugInUnit,
             device_types.ExtendedColorLight,
             device_types.OnOffLight,
         ),
