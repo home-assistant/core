@@ -35,7 +35,7 @@ async def async_setup_entry(
     entry: ConfigEntry[LaunchLibraryData],
 ) -> bool:
     """Set up this integration using UI."""
-    launches = PyLaunches(session=async_get_clientsession(hass), dev=True)
+    launches = PyLaunches(session=async_get_clientsession(hass))
 
     def _create_coordinator(
         name: str,
