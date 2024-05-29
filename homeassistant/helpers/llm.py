@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
@@ -138,7 +138,8 @@ class APIInstance:
     async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
         """Call a LLM tool, validate args and return the response."""
         async_conversation_trace_append(
-            ConversationTraceEventType.LLM_TOOL_CALL, asdict(tool_input)
+            ConversationTraceEventType.LLM_TOOL_CALL,
+            {"tool_name": tool_input.tool_name, "tool_args": str(tool_input.tool_args)},
         )
 
         for tool in self.tools:
@@ -249,7 +250,7 @@ class AssistAPI(API):
         prompt = [
             (
                 "Call the intent tools to control Home Assistant. "
-                "When controlling an area, prefer passing area name."
+                "When controlling an area, prefer passing area name and domain."
             )
         ]
         area: ar.AreaEntry | None = None
@@ -347,6 +348,10 @@ def _get_exposed_entities(
         "device_class",
         "current_position",
         "percentage",
+        "volume_level",
+        "media_title",
+        "media_artist",
+        "media_album_name",
     }
 
     entities = {}

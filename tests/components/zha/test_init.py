@@ -233,7 +233,7 @@ async def test_zha_retry_unique_ids(
     config_entry: MockConfigEntry,
     zigpy_device_mock,
     mock_zigpy_connect: ControllerApplication,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that ZHA retrying creates unique entity IDs."""
 
