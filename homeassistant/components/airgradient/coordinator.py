@@ -1,7 +1,6 @@
 """Define an object to manage fetching AirGradient data."""
 
 from datetime import timedelta
-from typing import Generic, TypeVar
 
 from airgradient import AirGradientClient, AirGradientError, Config, Measures
 
@@ -11,10 +10,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import LOGGER
 
-_T = TypeVar("_T")
 
-
-class AirGradientCoordinator(DataUpdateCoordinator[_T], Generic[_T]):
+class AirGradientCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Class to manage fetching AirGradient data."""
 
     _update_interval: timedelta
@@ -32,13 +29,13 @@ class AirGradientCoordinator(DataUpdateCoordinator[_T], Generic[_T]):
         assert self.config_entry.unique_id
         self.serial_number = self.config_entry.unique_id
 
-    async def _async_update_data(self) -> _T:
+    async def _async_update_data(self) -> _DataT:
         try:
             return await self._update_data()
         except AirGradientError as error:
             raise UpdateFailed(error) from error
 
-    async def _update_data(self) -> _T:
+    async def _update_data(self) -> _DataT:
         raise NotImplementedError
 
 
