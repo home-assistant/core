@@ -90,9 +90,9 @@ async def test_full_flow(
 )
 async def test_reauth(
     hass: HomeAssistant,
-    hass_client_no_auth,
+    hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host,
+    current_request_with_host: None,
     config_entry: MockConfigEntry,
     fixture: str,
     abort_reason: str,
