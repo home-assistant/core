@@ -95,7 +95,7 @@ class Blueprint:
 
     @property
     def inputs(self) -> dict[str, Any]:
-        """Return blueprint inputs."""
+        """Return flattened blueprint inputs."""
         inputs = {}
         for key, value in self.data[CONF_BLUEPRINT][CONF_INPUT].items():
             if value and CONF_INPUT in value:
