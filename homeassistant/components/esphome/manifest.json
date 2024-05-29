@@ -14,8 +14,8 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["aioesphomeapi", "noiseprotocol", "bleak_esphome"],
-  "quality_scale": "platinum",
   "mqtt": ["esphome/discover/#"],
+  "quality_scale": "platinum",
   "requirements": [
     "aioesphomeapi==24.5.0",
     "esphome-dashboard-api==1.2.3",
