@@ -18,24 +18,25 @@ from tessie_api import get_state, get_status
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import TessieStatus
 
 # This matches the update interval Tessie performs server side
 TESSIE_SYNC_INTERVAL = 10
+TESSIE_FLEET_API_SYNC_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def flatten(self, data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
+def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
     """Flatten the data structure."""
     result = {}
     for key, value in data.items():
         if parent:
             key = f"{parent}_{key}"
         if isinstance(value, dict):
-            result.update(self._flatten(value, key))
+            result.update(flatten(value, key))
         else:
             result[key] = value
     return result
@@ -94,15 +95,13 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 class TessieEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching energy site live status from the Tessie API."""
 
-    updated_once: bool
-
     def __init__(self, hass: HomeAssistant, api: EnergySpecific) -> None:
         """Initialize Tessie Energy Site Live coordinator."""
         super().__init__(
             hass,
-            LOGGER,
+            _LOGGER,
             name="Tessie Energy Site Live",
-            update_interval=TESSIE_SYNC_INTERVAL,
+            update_interval=TESSIE_FLEET_API_SYNC_INTERVAL,
         )
         self.api = api
 
@@ -127,18 +126,15 @@ class TessieEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 class TessieEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching energy site info from the Tessie API."""
 
-    updated_once: bool
-
-    def __init__(self, hass: HomeAssistant, api: EnergySpecific, product: dict) -> None:
+    def __init__(self, hass: HomeAssistant, api: EnergySpecific) -> None:
         """Initialize Tessie Energy Info coordinator."""
         super().__init__(
             hass,
-            LOGGER,
+            _LOGGER,
             name="Tessie Energy Site Info",
-            update_interval=TESSIE_SYNC_INTERVAL,
+            update_interval=TESSIE_FLEET_API_SYNC_INTERVAL,
         )
         self.api = api
-        self.data = product
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Tessie API."""

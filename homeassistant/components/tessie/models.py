@@ -4,20 +4,24 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from tesla_fleet_api import EnergySpecific
+
+from homeassistant.helpers.device_registry import DeviceInfo
+
 from .coordinator import (
     TessieEnergySiteInfoCoordinator,
     TessieEnergySiteLiveCoordinator,
     TessieStateUpdateCoordinator,
 )
-from tesla_fleet_api import EnergySpecific
-from homeassistant.helpers.device_registry import DeviceInfo
+
 
 @dataclass
 class TessieData:
     """Data for the Tessie integration."""
 
     vehicles: list[TessieStateUpdateCoordinator]
-    energy_sites: list[TessieEnergyData]
+    energysites: list[TessieEnergyData]
+
 
 @dataclass
 class TessieEnergyData:

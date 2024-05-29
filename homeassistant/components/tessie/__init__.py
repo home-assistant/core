@@ -1,15 +1,12 @@
 """Tessie integration."""
 
+import asyncio
 from http import HTTPStatus
 import logging
 
 from aiohttp import ClientError, ClientResponseError
 from tesla_fleet_api import EnergySpecific, Tessie
-from tesla_fleet_api.exceptions import (
-    InvalidToken,
-    SubscriptionRequired,
-    TeslaFleetError,
-)
+from tesla_fleet_api.exceptions import TeslaFleetError
 from tessie_api import get_state_of_all_vehicles
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,9 +14,15 @@ from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 
-from .coordinator import TessieStateUpdateCoordinator
-from .models import TessieData
+from .const import DOMAIN
+from .coordinator import (
+    TessieEnergySiteInfoCoordinator,
+    TessieEnergySiteLiveCoordinator,
+    TessieStateUpdateCoordinator,
+)
+from .models import TessieData, TessieEnergyData
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -74,15 +77,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
     # Energy Sites
     fleet_api = Tessie(session, api_key)
     try:
-        products = (await fleet_api.products)["response"]
+        products = (await fleet_api.products())["response"]
     except TeslaFleetError as e:
         raise ConfigEntryNotReady from e
 
+    energysites = []
     for product in products:
-        if product["type"] == "energy_site":
-            energy_site = EnergySpecific(session, api_key, product
+        if "energy_site_id" in product:
+            site_id = product["energy_site_id"]
+            api = EnergySpecific(fleet_api.energy, site_id)
+            energysites.append(
+                TessieEnergyData(
+                    api=api,
+                    id=site_id,
+                    live_coordinator=TessieEnergySiteLiveCoordinator(hass, api),
+                    info_coordinator=TessieEnergySiteInfoCoordinator(hass, api),
+                    device=DeviceInfo(
+                        identifiers={(DOMAIN, str(site_id))},
+                        manufacturer="Tesla",
+                        name=product.get("site_name", "Energy Site"),
+                    ),
+                )
+            )
 
-    entry.runtime_data = TessieData(vehicles=vehicles)
+    await asyncio.gather(
+        *(
+            energysite.live_coordinator.async_config_entry_first_refresh()
+            for energysite in energysites
+        ),
+        *(
+            energysite.info_coordinator.async_config_entry_first_refresh()
+            for energysite in energysites
+        ),
+    )
+
+    entry.runtime_data = TessieData(vehicles, energysites)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
