@@ -379,10 +379,6 @@ class TagEntity(Entity):
         self._last_device_id: str | None = device_id
         self._last_scanned = last_scanned
 
-        self._state_info = {
-            "unrecorded_attributes": self._Entity__combined_unrecorded_attributes  # type: ignore[attr-defined]
-        }
-
     @callback
     def async_handle_event(
         self, device_id: str | None, last_scanned: str | None
