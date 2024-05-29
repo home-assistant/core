@@ -317,18 +317,18 @@ async def async_start(  # noqa: C901
         discovered_components: list[MqttComponentConfig] = []
         if component == CONF_DEVICE:
             # Process device based discovery message
+            # and regenate cleanup config.
             device_discovery_payload = _parse_device_payload(
                 hass, payload, object_id, node_id
             )
             if not device_discovery_payload:
                 return
-            device_config: dict[str, Any] = device_discovery_payload[CONF_DEVICE]
-            origin_config: dict[str, Any] | None = device_discovery_payload.get(
-                CONF_ORIGIN
-            )
-            component_configs: dict[str, Any] = device_discovery_payload[
-                CONF_COMPONENTS
-            ]
+            device_config: dict[str, Any]
+            origin_config: dict[str, Any] | None
+            component_configs: dict[str, dict[str, Any]]
+            device_config = device_discovery_payload[CONF_DEVICE]
+            origin_config = device_discovery_payload.get(CONF_ORIGIN)
+            component_configs = device_discovery_payload[CONF_COMPONENTS]
             for component_id, config in component_configs.items():
                 component = config.pop(CONF_PLATFORM)
                 # The object_id in the device discovery topic is the unique identifier.
