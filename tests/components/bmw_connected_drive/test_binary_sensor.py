@@ -14,6 +14,7 @@ from . import setup_mocked_integration
 async def test_entity_state_attrs(
     hass: HomeAssistant,
     bmw_fixture: respx.Router,
+    entity_registry_enabled_by_default: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test binary sensor states and attributes."""
