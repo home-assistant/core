@@ -75,7 +75,7 @@ from .const import (
 from .coordinator import EvoBroker, EvoCoordinator
 from .helpers import convert_dict, convert_until, dt_aware_to_naive, handle_exception
 
-__all__ = ["CONFIG_SCHEMA", "DOMAIN", "async_setup"]
+__all__ = ["CONFIG_SCHEMA", "DOMAIN", "EvoChild", "EvoDevice", "async_setup"]
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -181,13 +181,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
         )
 
-    setup_service_functions(hass, broker)
+    _setup_service_functions(hass, broker)
 
     return True
 
 
 @callback
-def setup_service_functions(hass: HomeAssistant, broker: EvoBroker) -> None:
+def _setup_service_functions(hass: HomeAssistant, broker: EvoBroker) -> None:
     """Set up the service handlers for the system/zone operating modes.
 
     Not all Honeywell TCC-compatible systems support all operating modes. In addition,

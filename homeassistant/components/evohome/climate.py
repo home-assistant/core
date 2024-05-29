@@ -37,13 +37,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from . import CONF_LOCATION_IDX, EvoChild, EvoDevice
+from . import EvoChild, EvoDevice
 from .const import (
     ATTR_DURATION_DAYS,
     ATTR_DURATION_HOURS,
     ATTR_DURATION_UNTIL,
     ATTR_SYSTEM_MODE,
     ATTR_ZONE_TEMP,
+    CONF_LOCATION_IDX,
     DOMAIN,
     EVO_AUTO,
     EVO_AUTOECO,
