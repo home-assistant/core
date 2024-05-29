@@ -1133,6 +1133,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
     ),
     # Poolsana Pool HeatPump
+    # Pool HeatPump
     "znrb": (
         SmartLifeSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
