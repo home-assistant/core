@@ -746,7 +746,7 @@ def test_attribute_selector_schema(
             (None, {}),
         ),
         (
-            {"positive": True},
+            {"allow_negative": False},
             ({"seconds": 10}, {"days": 10}),
             (None, {}, {"seconds": -1}),
         ),
