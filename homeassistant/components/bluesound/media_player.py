@@ -234,7 +234,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._group_name = None
         self._group_list: list[str] = []
         self._bluesound_device_name = None
-        self._player = Player(host, port, async_get_clientsession(hass), default_timeout=3)
+        self._player = Player(host, port, async_get_clientsession(hass), default_timeout=10)
 
         self._init_callback = init_callback
 
