@@ -277,7 +277,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             device_class=NumberDeviceClass.TEMPERATURE,
         ),
     ),
-    # Poolsana Pool HeatPump
+    # Pool HeatPump
     "znrb": (
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
