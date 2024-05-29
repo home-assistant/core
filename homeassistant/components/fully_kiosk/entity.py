@@ -1,4 +1,5 @@
 """Base entity for the Fully Kiosk Browser integration."""
+
 from __future__ import annotations
 
 import json
@@ -74,7 +75,8 @@ class FullyKioskEntity(CoordinatorEntity[FullyKioskDataUpdateCoordinator], Entit
         @callback
         def message_callback(message: mqtt.ReceiveMessage) -> None:
             payload = json.loads(message.payload)
-            event_callback(**payload)
+            if "event" in payload and payload["event"] == event:
+                event_callback(**payload)
 
         topic_template = data["settings"]["mqttEventTopic"]
         topic = (
@@ -82,4 +84,5 @@ class FullyKioskEntity(CoordinatorEntity[FullyKioskDataUpdateCoordinator], Entit
             .replace("$event", event)
             .replace("$deviceId", data["deviceID"])
         )
+
         return await mqtt.async_subscribe(self.hass, topic, message_callback)

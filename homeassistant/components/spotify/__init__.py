@@ -1,4 +1,5 @@
 """The spotify integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -29,7 +30,6 @@ from .util import (
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
-
 __all__ = [
     "async_browse_media",
     "DOMAIN",
@@ -49,7 +49,10 @@ class HomeAssistantSpotifyData:
     session: OAuth2Session
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+type SpotifyConfigEntry = ConfigEntry[HomeAssistantSpotifyData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> bool:
     """Set up Spotify from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
@@ -88,19 +91,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return devices.get("devices", [])
 
-    device_coordinator: DataUpdateCoordinator[
-        list[dict[str, Any]]
-    ] = DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        name=f"{entry.title} Devices",
-        update_interval=timedelta(minutes=5),
-        update_method=_update_devices,
+    device_coordinator: DataUpdateCoordinator[list[dict[str, Any]]] = (
+        DataUpdateCoordinator(
+            hass,
+            LOGGER,
+            name=f"{entry.title} Devices",
+            update_interval=timedelta(minutes=5),
+            update_method=_update_devices,
+        )
     )
     await device_coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = HomeAssistantSpotifyData(
+    entry.runtime_data = HomeAssistantSpotifyData(
         client=spotify,
         current_user=current_user,
         devices=device_coordinator,
@@ -116,6 +118,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Spotify config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        del hass.data[DOMAIN][entry.entry_id]
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

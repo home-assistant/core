@@ -1,4 +1,5 @@
 """Test BMW buttons."""
+
 from unittest.mock import AsyncMock
 
 from bimmer_connected.models import MyBMWRemoteServiceError
@@ -16,6 +17,7 @@ from . import check_remote_service_call, setup_mocked_integration
 async def test_entity_state_attrs(
     hass: HomeAssistant,
     bmw_fixture: respx.Router,
+    entity_registry_enabled_by_default: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test button options and values."""

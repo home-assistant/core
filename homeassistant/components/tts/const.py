@@ -1,4 +1,5 @@
 """Text-to-speech constants."""
+
 ATTR_CACHE = "cache"
 ATTR_LANGUAGE = "language"
 ATTR_MESSAGE = "message"
@@ -17,4 +18,4 @@ DOMAIN = "tts"
 
 DATA_TTS_MANAGER = "tts_manager"
 
-TtsAudioType = tuple[str | None, bytes | None]
+type TtsAudioType = tuple[str | None, bytes | None]

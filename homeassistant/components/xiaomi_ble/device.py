@@ -1,4 +1,5 @@
 """Support for Xioami BLE devices."""
+
 from __future__ import annotations
 
 from xiaomi_ble import DeviceKey

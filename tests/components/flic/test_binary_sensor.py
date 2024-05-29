@@ -1,4 +1,5 @@
 """Tests for Flic button integration."""
+
 from unittest import mock
 
 from homeassistant.core import HomeAssistant

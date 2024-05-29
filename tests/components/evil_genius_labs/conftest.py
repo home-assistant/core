@@ -1,4 +1,5 @@
 """Test helpers for Evil Genius Labs."""
+
 import json
 from unittest.mock import patch
 
@@ -9,20 +10,20 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry, load_fixture
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def all_fixture():
     """Fixture data."""
     data = json.loads(load_fixture("data.json", "evil_genius_labs"))
     return {item["name"]: item for item in data}
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def info_fixture():
     """Fixture info."""
     return json.loads(load_fixture("info.json", "evil_genius_labs"))
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def product_fixture():
     """Fixture info."""
     return {"productName": "Fibonacci256"}
@@ -41,18 +42,23 @@ async def setup_evil_genius_labs(
     hass, config_entry, all_fixture, info_fixture, product_fixture, platforms
 ):
     """Test up Evil Genius Labs instance."""
-    with patch(
-        "pyevilgenius.EvilGeniusDevice.get_all",
-        return_value=all_fixture,
-    ), patch(
-        "pyevilgenius.EvilGeniusDevice.get_info",
-        return_value=info_fixture,
-    ), patch(
-        "pyevilgenius.EvilGeniusDevice.get_product",
-        return_value=product_fixture,
-    ), patch(
-        "homeassistant.components.evil_genius_labs.PLATFORMS",
-        platforms,
+    with (
+        patch(
+            "pyevilgenius.EvilGeniusDevice.get_all",
+            return_value=all_fixture,
+        ),
+        patch(
+            "pyevilgenius.EvilGeniusDevice.get_info",
+            return_value=info_fixture,
+        ),
+        patch(
+            "pyevilgenius.EvilGeniusDevice.get_product",
+            return_value=product_fixture,
+        ),
+        patch(
+            "homeassistant.components.evil_genius_labs.PLATFORMS",
+            platforms,
+        ),
     ):
         assert await async_setup_component(hass, "evil_genius_labs", {})
         await hass.async_block_till_done()

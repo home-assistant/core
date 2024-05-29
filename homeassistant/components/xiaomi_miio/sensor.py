@@ -1,4 +1,5 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5) and Humidifier."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -28,6 +29,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
+    CONF_DEVICE,
     CONF_HOST,
     CONF_MODEL,
     CONF_TOKEN,
@@ -48,7 +50,6 @@ from homeassistant.util import dt as dt_util
 
 from . import VacuumCoordinatorDataAttributes
 from .const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     DOMAIN,
@@ -150,7 +151,7 @@ ATTR_CONSUMABLE_STATUS_FILTER_LEFT = "filter_left"
 ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT = "sensor_dirty_left"
 
 
-@dataclass
+@dataclass(frozen=True)
 class XiaomiMiioSensorDescription(SensorEntityDescription):
     """Class that holds device specific info for a xiaomi aqara or humidifier sensor."""
 
@@ -830,12 +831,11 @@ async def async_setup_entry(
                 sensors = PURIFIER_MIIO_SENSORS
             elif model in MODELS_PURIFIER_MIOT:
                 sensors = PURIFIER_MIOT_SENSORS
-            elif (
-                model in MODELS_VACUUM
-                or model.startswith(ROBOROCK_GENERIC)
-                or model.startswith(ROCKROBO_GENERIC)
+            elif model in MODELS_VACUUM or model.startswith(
+                (ROBOROCK_GENERIC, ROCKROBO_GENERIC)
             ):
-                return _setup_vacuum_sensors(hass, config_entry, async_add_entities)
+                _setup_vacuum_sensors(hass, config_entry, async_add_entities)
+                return
 
             for sensor, description in SENSOR_TYPES.items():
                 if sensor not in sensors:

@@ -1,4 +1,5 @@
 """The Steamist integration discovery."""
+
 from __future__ import annotations
 
 import asyncio

@@ -1,4 +1,5 @@
 """Config flow for Efergy integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -7,22 +8,21 @@ from typing import Any
 from pyefergy import Efergy, exceptions
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_NAME, DOMAIN, LOGGER
 
 
-class EfergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class EfergyFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Efergy."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
@@ -53,20 +53,26 @@ class EfergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle a reauthorization flow request."""
         return await self.async_step_user()
 
     async def _async_try_connect(self, api_key: str) -> tuple[str | None, str | None]:
         """Try connecting to Efergy servers."""
-        api = Efergy(api_key, session=async_get_clientsession(self.hass))
+        api = Efergy(
+            api_key,
+            session=async_get_clientsession(self.hass),
+            utc_offset=self.hass.config.time_zone,
+        )
         try:
             await api.async_status()
         except exceptions.ConnectError:
             return None, "cannot_connect"
         except exceptions.InvalidAuth:
             return None, "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception")
             return None, "unknown"
         return api.info["hid"], None

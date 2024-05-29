@@ -7,8 +7,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import Alpha2BaseCoordinator
 from .const import DOMAIN
+from .coordinator import Alpha2BaseCoordinator
 
 
 async def async_setup_entry(
@@ -25,7 +25,7 @@ async def async_setup_entry(
         Alpha2HeatControlValveOpeningSensor(coordinator, heat_control_id)
         for heat_control_id, heat_control in coordinator.data["heat_controls"].items()
         if heat_control["INUSE"]
-        and heat_control["_HEATAREA_ID"]
+        and heat_control["_HEATAREA_ID"] in coordinator.data["heat_areas"]
         and heat_control.get("ACTOR_PERCENT") is not None
     )
 

@@ -1,4 +1,5 @@
 """Constants for Met Éireann component."""
+
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,

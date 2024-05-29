@@ -1,4 +1,5 @@
 """Test helpers for the Alexa integration."""
+
 from unittest.mock import Mock
 from uuid import uuid4
 
@@ -128,12 +129,14 @@ async def assert_request_calls_service(
 
 
 async def assert_request_fails(
-    namespace, name, endpoint, service_not_called, hass, payload=None
+    namespace, name, endpoint, service_not_called, hass, payload=None, instance=None
 ):
     """Assert an API request returns an ErrorResponse."""
     request = get_new_request(namespace, name, endpoint)
     if payload:
         request["directive"]["payload"] = payload
+    if instance:
+        request["directive"]["header"]["instance"] = instance
 
     domain, service_name = service_not_called.split(".")
     call = async_mock_service(hass, domain, service_name)
@@ -155,14 +158,14 @@ async def assert_power_controller_works(
     _, response = await assert_request_calls_service(
         "Alexa.PowerController", "TurnOn", endpoint, on_service, hass
     )
-    for property in response["context"]["properties"]:
-        assert property["timeOfSample"] == timestamp
+    for context_property in response["context"]["properties"]:
+        assert context_property["timeOfSample"] == timestamp
 
     _, response = await assert_request_calls_service(
         "Alexa.PowerController", "TurnOff", endpoint, off_service, hass
     )
-    for property in response["context"]["properties"]:
-        assert property["timeOfSample"] == timestamp
+    for context_property in response["context"]["properties"]:
+        assert context_property["timeOfSample"] == timestamp
 
 
 async def assert_scene_controller_works(
@@ -222,9 +225,20 @@ class ReportedProperties:
 
     def assert_equal(self, namespace, name, value):
         """Assert a property is equal to a given value."""
+        prop_set = None
+        prop_count = 0
         for prop in self.properties:
             if prop["namespace"] == namespace and prop["name"] == name:
                 assert prop["value"] == value
-                return prop
+                prop_set = prop
+                prop_count += 1
+
+        if prop_count > 1:
+            pytest.fail(
+                f"property {namespace}:{name} more than once in {self.properties!r}"
+            )
+
+        if prop_set:
+            return prop_set
 
         pytest.fail(f"property {namespace}:{name} not in {self.properties!r}")

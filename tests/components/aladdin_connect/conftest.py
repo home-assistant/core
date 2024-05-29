@@ -1,4 +1,5 @@
 """Fixtures for the Aladdin Connect integration tests."""
+
 from unittest import mock
 from unittest.mock import AsyncMock
 

@@ -1,4 +1,5 @@
 """The tests for reproduction of state."""
+
 import pytest
 
 from homeassistant.components.climate import (
@@ -117,6 +118,25 @@ async def test_attribute(hass: HomeAssistant, service, attribute) -> None:
 
     assert len(calls_1) == 1
     assert calls_1[0].data == {"entity_id": ENTITY_1, attribute: value}
+
+
+@pytest.mark.parametrize(
+    ("service", "attribute"),
+    [
+        (SERVICE_SET_PRESET_MODE, ATTR_PRESET_MODE),
+        (SERVICE_SET_SWING_MODE, ATTR_SWING_MODE),
+        (SERVICE_SET_FAN_MODE, ATTR_FAN_MODE),
+    ],
+)
+async def test_attribute_with_none(hass: HomeAssistant, service, attribute) -> None:
+    """Test that service call is not made for attributes with None value."""
+    calls_1 = async_mock_service(hass, DOMAIN, service)
+
+    await async_reproduce_states(hass, [State(ENTITY_1, None, {attribute: None})])
+
+    await hass.async_block_till_done()
+
+    assert len(calls_1) == 0
 
 
 async def test_attribute_partial_temperature(hass: HomeAssistant) -> None:

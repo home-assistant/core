@@ -108,6 +108,12 @@
           "celsius": "Celsius",
           "fahrenheit": "Fahrenheit"
         }
+      },
+      "air_purifier_state_target": {
+        "state": {
+          "automatic": "Automatic",
+          "manual": "Manual"
+        }
       }
     },
     "sensor": {
@@ -130,6 +136,13 @@
           "joining": "Joining",
           "leader": "Leader",
           "router": "Router"
+        }
+      },
+      "air_purifier_state_current": {
+        "state": {
+          "inactive": "Inactive",
+          "idle": "Idle",
+          "purifying": "Purifying"
         }
       }
     }

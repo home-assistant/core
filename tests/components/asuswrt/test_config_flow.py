@@ -1,11 +1,11 @@
 """Tests for the AsusWrt config flow."""
+
 from socket import gaierror
 from unittest.mock import patch
 
 from pyasuswrt import AsusWrtError
 import pytest
 
-from homeassistant import data_entry_flow
 from homeassistant.components.asuswrt.const import (
     CONF_DNSMASQ,
     CONF_INTERFACE,
@@ -31,6 +31,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .common import ASUSWRT_BASE, HOST, ROUTER_MAC_ADDR
 
@@ -89,7 +90,7 @@ async def test_user_legacy(
     flow_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
     )
-    assert flow_result["type"] == data_entry_flow.FlowResultType.FORM
+    assert flow_result["type"] is FlowResultType.FORM
     assert flow_result["step_id"] == "user"
 
     connect_legacy.return_value.async_get_nvram.return_value = unique_id
@@ -100,7 +101,7 @@ async def test_user_legacy(
     )
     await hass.async_block_till_done()
 
-    assert legacy_result["type"] == data_entry_flow.FlowResultType.FORM
+    assert legacy_result["type"] is FlowResultType.FORM
     assert legacy_result["step_id"] == "legacy"
 
     # complete configuration
@@ -109,7 +110,7 @@ async def test_user_legacy(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == HOST
     assert result["data"] == {**CONFIG_DATA_TELNET, CONF_MODE: MODE_AP}
 
@@ -124,7 +125,7 @@ async def test_user_http(
     flow_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
     )
-    assert flow_result["type"] == data_entry_flow.FlowResultType.FORM
+    assert flow_result["type"] is FlowResultType.FORM
     assert flow_result["step_id"] == "user"
 
     connect_http.return_value.mac = unique_id
@@ -135,7 +136,7 @@ async def test_user_http(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == HOST
     assert result["data"] == CONFIG_DATA_HTTP
 
@@ -152,7 +153,7 @@ async def test_error_pwd_required(hass: HomeAssistant, config) -> None:
         data=config_data,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_BASE: "pwd_required"}
 
 
@@ -165,7 +166,7 @@ async def test_error_no_password_ssh(hass: HomeAssistant) -> None:
         data=config_data,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_BASE: "pwd_or_ssh"}
 
 
@@ -181,7 +182,7 @@ async def test_error_invalid_ssh(hass: HomeAssistant, patch_is_file) -> None:
         data=config_data,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_BASE: "ssh_not_file"}
 
 
@@ -194,7 +195,7 @@ async def test_error_invalid_host(hass: HomeAssistant, patch_get_host) -> None:
         data=CONFIG_DATA_TELNET,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_BASE: "invalid_host"}
 
 
@@ -210,7 +211,7 @@ async def test_abort_if_not_unique_id_setup(hass: HomeAssistant) -> None:
         context={"source": SOURCE_USER},
         data=CONFIG_DATA_TELNET,
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_unique_id"
 
 
@@ -232,7 +233,7 @@ async def test_update_uniqueid_exist(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == HOST
     assert result["data"] == CONFIG_DATA_HTTP
     prev_entry = hass.config_entries.async_get_entry(existing_entry.entry_id)
@@ -254,7 +255,7 @@ async def test_abort_invalid_unique_id(hass: HomeAssistant, connect_legacy) -> N
         context={"source": SOURCE_USER},
         data=CONFIG_DATA_TELNET,
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_unique_id"
 
 
@@ -284,7 +285,7 @@ async def test_on_connect_legacy_failed(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_BASE: error}
 
 
@@ -313,7 +314,7 @@ async def test_on_connect_http_failed(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_BASE: error}
 
 
@@ -330,7 +331,7 @@ async def test_options_flow_ap(hass: HomeAssistant, patch_setup_entry) -> None:
     await hass.async_block_till_done()
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert CONF_REQUIRE_IP in result["data_schema"].schema
 
@@ -345,7 +346,7 @@ async def test_options_flow_ap(hass: HomeAssistant, patch_setup_entry) -> None:
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         CONF_CONSIDER_HOME: 20,
         CONF_TRACK_UNKNOWN: True,
@@ -367,7 +368,7 @@ async def test_options_flow_router(hass: HomeAssistant, patch_setup_entry) -> No
     await hass.async_block_till_done()
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert CONF_REQUIRE_IP not in result["data_schema"].schema
 
@@ -381,7 +382,7 @@ async def test_options_flow_router(hass: HomeAssistant, patch_setup_entry) -> No
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         CONF_CONSIDER_HOME: 20,
         CONF_TRACK_UNKNOWN: True,
@@ -402,7 +403,7 @@ async def test_options_flow_http(hass: HomeAssistant, patch_setup_entry) -> None
     await hass.async_block_till_done()
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert CONF_INTERFACE not in result["data_schema"].schema
     assert CONF_DNSMASQ not in result["data_schema"].schema
@@ -416,7 +417,7 @@ async def test_options_flow_http(hass: HomeAssistant, patch_setup_entry) -> None
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         CONF_CONSIDER_HOME: 20,
         CONF_TRACK_UNKNOWN: True,

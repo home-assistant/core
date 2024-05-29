@@ -1,4 +1,5 @@
 """The tests the MQTT alarm control panel component."""
+
 import copy
 import json
 from typing import Any
@@ -34,7 +35,6 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -134,15 +134,6 @@ DEFAULT_CONFIG_REMOTE_CODE_TEXT = {
 }
 
 
-@pytest.fixture(autouse=True)
-def alarm_control_panel_platform_only():
-    """Only setup the alarm_control_panel platform to speed up tests."""
-    with patch(
-        "homeassistant.components.mqtt.PLATFORMS", [Platform.ALARM_CONTROL_PANEL]
-    ):
-        yield
-
-
 @pytest.mark.parametrize(
     ("hass_config", "valid"),
     [
@@ -217,6 +208,14 @@ async def test_update_state_via_state_topic(
     ):
         async_fire_mqtt_message(hass, "alarm/state", state)
         assert hass.states.get(entity_id).state == state
+
+    # Ignore empty payload (last state is STATE_ALARM_TRIGGERED)
+    async_fire_mqtt_message(hass, "alarm/state", "")
+    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+
+    # Reset state on `None` payload
+    async_fire_mqtt_message(hass, "alarm/state", "None")
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -1291,7 +1290,7 @@ async def test_reload_after_invalid_config(
 ) -> None:
     """Test reloading yaml config fails."""
     with patch(
-        "homeassistant.components.mqtt.async_delete_issue"
+        "homeassistant.components.mqtt.ir.async_delete_issue"
     ) as mock_async_remove_issue:
         assert await mqtt_mock_entry()
         assert hass.states.get("alarm_control_panel.test") is None
@@ -1341,9 +1340,13 @@ async def test_reload_after_invalid_config(
                 },
             ]
         }
-        with patch(
-            "homeassistant.config.load_yaml_config_file", return_value=invalid_config
-        ), pytest.raises(HomeAssistantError):
+        with (
+            patch(
+                "homeassistant.config.load_yaml_config_file",
+                return_value=invalid_config,
+            ),
+            pytest.raises(HomeAssistantError),
+        ):
             await hass.services.async_call(
                 "mqtt",
                 SERVICE_RELOAD,
@@ -1354,3 +1357,32 @@ async def test_reload_after_invalid_config(
 
         # Make sure the config is loaded now
         assert hass.states.get("alarm_control_panel.test") is not None
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            alarm_control_panel.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "state_topic": "test-topic",
+                    "value_template": "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+    ],
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

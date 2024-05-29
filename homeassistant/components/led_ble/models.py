@@ -1,4 +1,5 @@
 """The led ble integration models."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -14,4 +15,4 @@ class LEDBLEData:
 
     title: str
     device: LEDBLE
-    coordinator: DataUpdateCoordinator
+    coordinator: DataUpdateCoordinator[None]

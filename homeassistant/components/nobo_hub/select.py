@@ -1,4 +1,5 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
+
 from __future__ import annotations
 
 from pynobo import nobo
@@ -59,7 +60,7 @@ class NoboGlobalSelector(SelectEntity):
         nobo.API.OVERRIDE_MODE_ECO: "eco",
     }
     _attr_options = list(_modes.values())
-    _attr_current_option: str
+    _attr_current_option: str | None = None
 
     def __init__(self, hub: nobo, override_type) -> None:
         """Initialize the global override selector."""
@@ -117,7 +118,7 @@ class NoboProfileSelector(SelectEntity):
     _attr_should_poll = False
     _profiles: dict[int, str] = {}
     _attr_options: list[str] = []
-    _attr_current_option: str
+    _attr_current_option: str | None = None
 
     def __init__(self, zone_id: str, hub: nobo) -> None:
         """Initialize the week profile selector."""

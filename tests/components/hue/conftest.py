@@ -1,4 +1,5 @@
 """Test helpers for Hue."""
+
 import asyncio
 from collections import deque
 import json
@@ -135,7 +136,7 @@ def create_mock_api_v1(hass):
     return api
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def v2_resources_test_data():
     """Load V2 resources mock data."""
     return json.loads(load_fixture("hue/v2_resources.json"))

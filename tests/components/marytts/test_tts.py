@@ -1,4 +1,5 @@
 """The tests for the MaryTTS speech platform."""
+
 from http import HTTPStatus
 import io
 from unittest.mock import patch

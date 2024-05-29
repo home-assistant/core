@@ -1,4 +1,5 @@
 """Test Subaru locks."""
+
 from unittest.mock import patch
 
 import pytest
@@ -23,9 +24,10 @@ MOCK_API_UNLOCK = f"{MOCK_API}unlock"
 DEVICE_ID = "lock.test_vehicle_2_door_locks"
 
 
-async def test_device_exists(hass: HomeAssistant, ev_entry) -> None:
+async def test_device_exists(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, ev_entry
+) -> None:
     """Test subaru lock entity exists."""
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(DEVICE_ID)
     assert entry
 
@@ -52,8 +54,9 @@ async def test_unlock_cmd(hass: HomeAssistant, ev_entry) -> None:
 
 async def test_lock_cmd_fails(hass: HomeAssistant, ev_entry) -> None:
     """Test subaru lock request that initiates but fails."""
-    with patch(MOCK_API_LOCK, return_value=False) as mock_lock, pytest.raises(
-        HomeAssistantError
+    with (
+        patch(MOCK_API_LOCK, return_value=False) as mock_lock,
+        pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(
             LOCK_DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True

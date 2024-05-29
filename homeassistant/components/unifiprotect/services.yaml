@@ -52,3 +52,16 @@ set_chime_paired_doorbells:
             integration: unifiprotect
             domain: binary_sensor
             device_class: occupancy
+remove_privacy_zone:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: unifiprotect
+          entity:
+            domain: camera
+    name:
+      required: true
+      selector:
+        text:

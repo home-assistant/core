@@ -1,11 +1,12 @@
 """The test for binary_sensor device automation."""
+
 from datetime import timedelta
 
 from freezegun import freeze_time
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDeviceClass
 from homeassistant.components.binary_sensor.device_condition import ENTITY_CONDITIONS
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -15,11 +16,14 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from .common import MockBinarySensor
+
 from tests.common import (
     MockConfigEntry,
     async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
+    setup_test_component_platform,
 )
 
 
@@ -38,11 +42,10 @@ async def test_get_conditions(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
+    mock_binary_sensor_entities: dict[str, MockBinarySensor],
 ) -> None:
     """Test we get the expected conditions from a binary_sensor."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_binary_sensor_entities.values())
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
     binary_sensor_entries = {}
@@ -57,7 +60,7 @@ async def test_get_conditions(
         binary_sensor_entries[device_class] = entity_registry.async_get_or_create(
             DOMAIN,
             "test",
-            platform.ENTITIES[device_class].unique_id,
+            mock_binary_sensor_entities[device_class].unique_id,
             device_id=device_entry.id,
         )
 
@@ -81,12 +84,12 @@ async def test_get_conditions(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (er.RegistryEntryHider.INTEGRATION, None),
         (er.RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_conditions_hidden_auxiliary(
     hass: HomeAssistant,
@@ -237,12 +240,10 @@ async def test_if_state(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
-    enable_custom_integrations: None,
+    mock_binary_sensor_entities: dict[str, MockBinarySensor],
 ) -> None:
     """Test for turn_on and turn_off conditions."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_binary_sensor_entities.values())
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -252,7 +253,7 @@ async def test_if_state(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entry = entity_registry.async_get(platform.ENTITIES["battery"].entity_id)
+    entry = entity_registry.async_get(mock_binary_sensor_entities["battery"].entity_id)
     entity_registry.async_update_entity(entry.entity_id, device_id=device_entry.id)
 
     assert await async_setup_component(
@@ -274,8 +275,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_on {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(("platform", "event.event_type"))
+                            "some": (
+                                "is_on {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -293,8 +296,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_off {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(("platform", "event.event_type"))
+                            "some": (
+                                "is_off {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -323,12 +328,10 @@ async def test_if_state_legacy(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
-    enable_custom_integrations: None,
+    mock_binary_sensor_entities: dict[str, MockBinarySensor],
 ) -> None:
     """Test for turn_on and turn_off conditions."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_binary_sensor_entities.values())
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -338,7 +341,7 @@ async def test_if_state_legacy(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entry = entity_registry.async_get(platform.ENTITIES["battery"].entity_id)
+    entry = entity_registry.async_get(mock_binary_sensor_entities["battery"].entity_id)
     entity_registry.async_update_entity(entry.entity_id, device_id=device_entry.id)
 
     assert await async_setup_component(
@@ -360,8 +363,10 @@ async def test_if_state_legacy(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_on {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(("platform", "event.event_type"))
+                            "some": (
+                                "is_on {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -383,16 +388,14 @@ async def test_if_fires_on_for_condition(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
-    enable_custom_integrations: None,
+    mock_binary_sensor_entities: dict[str, MockBinarySensor],
 ) -> None:
     """Test for firing if condition is on with delay."""
     point1 = dt_util.utcnow()
     point2 = point1 + timedelta(seconds=10)
     point3 = point2 + timedelta(seconds=10)
 
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_binary_sensor_entities.values())
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -402,7 +405,7 @@ async def test_if_fires_on_for_condition(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entry = entity_registry.async_get(platform.ENTITIES["battery"].entity_id)
+    entry = entity_registry.async_get(mock_binary_sensor_entities["battery"].entity_id)
     entity_registry.async_update_entity(entry.entity_id, device_id=device_entry.id)
 
     with freeze_time(point1) as time_freeze:
@@ -424,9 +427,9 @@ async def test_if_fires_on_for_condition(
                         "action": {
                             "service": "test.automation",
                             "data_template": {
-                                "some": "is_off {{ trigger.%s }}"
-                                % "}} - {{ trigger.".join(
-                                    ("platform", "event.event_type")
+                                "some": (
+                                    "is_off {{ trigger.platform }}"
+                                    " - {{ trigger.event.event_type }}"
                                 )
                             },
                         },

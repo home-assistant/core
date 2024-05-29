@@ -1,6 +1,5 @@
 """Tests for polling measures."""
 
-
 import time
 
 from habluetooth.advertisement_tracker import ADVERTISING_TIMES_NEEDED

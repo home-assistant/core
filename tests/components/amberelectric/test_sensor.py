@@ -1,4 +1,5 @@
 """Test the Amber Electric Sensors."""
+
 from collections.abc import AsyncGenerator
 from unittest.mock import Mock, patch
 

@@ -1,4 +1,5 @@
 """Support for Renault services."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,12 +9,15 @@ from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import DOMAIN
-from .renault_hub import RenaultHub
 from .renault_vehicle import RenaultVehicleProxy
+
+if TYPE_CHECKING:
+    from . import RenaultConfigEntry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -43,13 +47,15 @@ SERVICE_CHARGE_SET_SCHEDULE_SCHEMA = vol.Schema(
     {
         vol.Required("id"): cv.positive_int,
         vol.Optional("activated"): cv.boolean,
-        vol.Optional("monday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("tuesday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("wednesday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("thursday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("friday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("saturday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("sunday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("monday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("tuesday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("wednesday"): vol.Any(
+            None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA
+        ),
+        vol.Optional("thursday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("friday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("saturday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("sunday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
     }
 )
 SERVICE_CHARGE_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
@@ -113,9 +119,13 @@ def setup_services(hass: HomeAssistant) -> None:
         if device_entry is None:
             raise ValueError(f"Unable to find device with id: {device_id}")
 
-        proxy: RenaultHub
-        for proxy in hass.data[DOMAIN].values():
-            for vin, vehicle in proxy.vehicles.items():
+        loaded_entries: list[RenaultConfigEntry] = [
+            entry
+            for entry in hass.config_entries.async_entries(DOMAIN)
+            if entry.state == ConfigEntryState.LOADED
+        ]
+        for entry in loaded_entries:
+            for vin, vehicle in entry.runtime_data.vehicles.items():
                 if (DOMAIN, vin) in device_entry.identifiers:
                     return vehicle
         raise ValueError(f"Unable to find vehicle with VIN: {device_entry.identifiers}")
@@ -138,9 +148,3 @@ def setup_services(hass: HomeAssistant) -> None:
         charge_set_schedules,
         schema=SERVICE_CHARGE_SET_SCHEDULES_SCHEMA,
     )
-
-
-def unload_services(hass: HomeAssistant) -> None:
-    """Unload Renault services."""
-    for service in SERVICES:
-        hass.services.async_remove(DOMAIN, service)

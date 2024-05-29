@@ -1,12 +1,12 @@
 """Support for DoorBird devices."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
 
 from aiohttp import web
 
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import HomeAssistant
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 
 from .const import API_URL, DOMAIN
 from .device import async_reset_device_favorites
@@ -23,7 +23,7 @@ class DoorBirdRequestView(HomeAssistantView):
 
     async def get(self, request: web.Request, event: str) -> web.Response:
         """Respond to requests from the device."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         token: str | None = request.query.get("token")
         if (
             token is None

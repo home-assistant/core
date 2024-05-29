@@ -5,5 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/linear_garage_door",
   "iot_class": "cloud_polling",
-  "requirements": ["linear-garage-door==0.2.7"]
+  "requirements": ["linear-garage-door==0.2.9"]
 }

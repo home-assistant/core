@@ -1,0 +1,34 @@
+{
+  "config": {
+    "abort": {
+      "no_plants": "No plants have been found on this account",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
+    },
+    "step": {
+      "plant": {
+        "data": {
+          "plant_id": "Plant"
+        },
+        "title": "Select your plant"
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "title": "Enter your Sun WEG information"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  }
+}

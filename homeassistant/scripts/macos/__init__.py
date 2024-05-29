@@ -1,4 +1,5 @@
 """Script to install/uninstall HA into OS X."""
+
 import os
 import time
 

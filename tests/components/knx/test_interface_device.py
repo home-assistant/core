@@ -1,4 +1,5 @@
 """Test KNX scene."""
+
 from unittest.mock import patch
 
 from xknx.core import XknxConnectionState, XknxConnectionType

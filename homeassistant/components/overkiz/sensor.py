@@ -1,4 +1,5 @@
 """Support for Overkiz sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -44,7 +45,7 @@ from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity, OverkizEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class OverkizSensorDescription(SensorEntityDescription):
     """Class to describe an Overkiz sensor."""
 
@@ -398,6 +399,20 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    OverkizSensorDescription(
+        key=OverkizState.CORE_BOTTOM_TANK_WATER_TEMPERATURE,
+        name="Bottom tank water temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OverkizSensorDescription(
+        key=OverkizState.CORE_CONTROL_WATER_TARGET_TEMPERATURE,
+        name="Control water target temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
     # Cover
     OverkizSensorDescription(
         key=OverkizState.CORE_TARGET_CLOSURE,
@@ -458,15 +473,15 @@ async def async_setup_entry(
         ):
             continue
 
-        for state in device.definition.states:
-            if description := SUPPORTED_STATES.get(state.qualified_name):
-                entities.append(
-                    OverkizStateSensor(
-                        device.device_url,
-                        data.coordinator,
-                        description,
-                    )
-                )
+        entities.extend(
+            OverkizStateSensor(
+                device.device_url,
+                data.coordinator,
+                description,
+            )
+            for state in device.definition.states
+            if (description := SUPPORTED_STATES.get(state.qualified_name))
+        )
 
     async_add_entities(entities)
 
@@ -484,6 +499,10 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
         if (
             state is None
             or state.value is None
+            # It seems that in some cases we return `None` if state.value is falsy.
+            # This is probably incorrect and should be fixed in a follow up PR.
+            # To ensure measurement sensors do not get an `unknown` state on
+            # a falsy value (e.g. 0 or 0.0) we also check the state_class.
             or self.state_class != SensorStateClass.MEASUREMENT
             and not state.value
         ):

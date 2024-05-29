@@ -1,4 +1,5 @@
 """The tests for the location automation."""
+
 import pytest
 
 from homeassistant.components import automation, zone
@@ -63,16 +64,13 @@ async def test_if_fires_on_zone_enter(hass: HomeAssistant, calls) -> None:
                 "action": {
                     "service": "test.automation",
                     "data_template": {
-                        "some": "{{ trigger.%s }}"
-                        % "}} - {{ trigger.".join(
-                            (
-                                "platform",
-                                "entity_id",
-                                "from_state.state",
-                                "to_state.state",
-                                "zone.name",
-                                "id",
-                            )
+                        "some": (
+                            "{{ trigger.platform }}"
+                            " - {{ trigger.entity_id }}"
+                            " - {{ trigger.from_state.state }}"
+                            " - {{ trigger.to_state.state }}"
+                            " - {{ trigger.zone.name }}"
+                            " - {{ trigger.id }}"
                         )
                     },
                 },
@@ -113,12 +111,13 @@ async def test_if_fires_on_zone_enter(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 1
 
 
-async def test_if_fires_on_zone_enter_uuid(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_zone_enter_uuid(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
+) -> None:
     """Test for firing on zone enter when device is specified by entity registry id."""
     context = Context()
 
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "test", "hue", "1234", suggested_object_id="entity"
     )
     assert entry.entity_id == "test.entity"
@@ -142,16 +141,13 @@ async def test_if_fires_on_zone_enter_uuid(hass: HomeAssistant, calls) -> None:
                 "action": {
                     "service": "test.automation",
                     "data_template": {
-                        "some": "{{ trigger.%s }}"
-                        % "}} - {{ trigger.".join(
-                            (
-                                "platform",
-                                "entity_id",
-                                "from_state.state",
-                                "to_state.state",
-                                "zone.name",
-                                "id",
-                            )
+                        "some": (
+                            "{{ trigger.platform }}"
+                            " - {{ trigger.entity_id }}"
+                            " - {{ trigger.from_state.state }}"
+                            " - {{ trigger.to_state.state }}"
+                            " - {{ trigger.zone.name }}"
+                            " - {{ trigger.id }}"
                         )
                     },
                 },

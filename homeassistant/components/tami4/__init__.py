@@ -1,4 +1,5 @@
 """The Tami4Edge integration."""
+
 from __future__ import annotations
 
 from Tami4EdgeAPI import Tami4EdgeAPI, exceptions
@@ -11,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from .const import API, CONF_REFRESH_TOKEN, COORDINATOR, DOMAIN
 from .coordinator import Tami4EdgeWaterQualityCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

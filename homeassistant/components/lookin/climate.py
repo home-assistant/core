@@ -1,4 +1,5 @@
 """The lookin integration climate platform."""
+
 from __future__ import annotations
 
 import logging
@@ -97,6 +98,8 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_fan_modes: list[str] = LOOKIN_FAN_MODE_IDX_TO_HASS
     _attr_swing_modes: list[str] = LOOKIN_SWING_MODE_IDX_TO_HASS
@@ -104,6 +107,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
     _attr_min_temp = MIN_TEMP
     _attr_max_temp = MAX_TEMP
     _attr_target_temperature_step = PRECISION_WHOLE
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

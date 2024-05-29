@@ -1,4 +1,5 @@
 """Support for the Hive climate devices."""
+
 from datetime import timedelta
 import logging
 from typing import Any
@@ -58,11 +59,8 @@ async def async_setup_entry(
 
     hive = hass.data[DOMAIN][entry.entry_id]
     devices = hive.session.deviceList.get("climate")
-    entities = []
     if devices:
-        for dev in devices:
-            entities.append(HiveClimateEntity(hive, dev))
-    async_add_entities(entities, True)
+        async_add_entities((HiveClimateEntity(hive, dev) for dev in devices), True)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -92,8 +90,12 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
     _attr_preset_modes = [PRESET_BOOST, PRESET_NONE]
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, hive_session, hive_device):
         """Initialize the Climate device."""

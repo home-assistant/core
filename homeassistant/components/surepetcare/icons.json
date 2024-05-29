@@ -1,0 +1,6 @@
+{
+  "services": {
+    "set_lock_state": "mdi:lock",
+    "set_pet_location": "mdi:dog"
+  }
+}

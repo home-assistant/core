@@ -1,4 +1,5 @@
 """Tests for the sensors provided by the Whois integration."""
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -21,7 +22,7 @@ pytestmark = [
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     "entity_id",
-    (
+    [
         "sensor.home_assistant_io_admin",
         "sensor.home_assistant_io_created",
         "sensor.home_assistant_io_days_until_expiration",
@@ -31,7 +32,7 @@ pytestmark = [
         "sensor.home_assistant_io_registrant",
         "sensor.home_assistant_io_registrar",
         "sensor.home_assistant_io_reseller",
-    ),
+    ],
 )
 async def test_whois_sensors(
     hass: HomeAssistant,
@@ -66,13 +67,13 @@ async def test_whois_sensors_missing_some_attrs(
 
 @pytest.mark.parametrize(
     "entity_id",
-    (
+    [
         "sensor.home_assistant_io_admin",
         "sensor.home_assistant_io_owner",
         "sensor.home_assistant_io_registrant",
         "sensor.home_assistant_io_registrar",
         "sensor.home_assistant_io_reseller",
-    ),
+    ],
 )
 async def test_disabled_by_default_sensors(
     hass: HomeAssistant, entity_id: str, entity_registry: er.EntityRegistry
@@ -87,7 +88,7 @@ async def test_disabled_by_default_sensors(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     "entity_id",
-    (
+    [
         "sensor.home_assistant_io_admin",
         "sensor.home_assistant_io_created",
         "sensor.home_assistant_io_days_until_expiration",
@@ -97,7 +98,7 @@ async def test_disabled_by_default_sensors(
         "sensor.home_assistant_io_registrant",
         "sensor.home_assistant_io_registrar",
         "sensor.home_assistant_io_reseller",
-    ),
+    ],
 )
 async def test_no_data(
     hass: HomeAssistant, mock_whois: MagicMock, entity_id: str

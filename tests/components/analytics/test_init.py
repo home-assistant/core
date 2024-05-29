@@ -1,4 +1,5 @@
 """The tests for the analytics ."""
+
 from unittest.mock import patch
 
 from homeassistant.components.analytics.const import ANALYTICS_ENDPOINT_URL, DOMAIN

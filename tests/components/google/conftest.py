@@ -1,10 +1,12 @@
 """Test configuration and mocks for the google integration."""
+
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
 import datetime
 import http
-from typing import Any, TypeVar
+import time
+from typing import Any
 from unittest.mock import Mock, mock_open, patch
 
 from aiohttp.client_exceptions import ClientError
@@ -25,10 +27,9 @@ from homeassistant.util import dt as dt_util
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-ApiResult = Callable[[dict[str, Any]], None]
-ComponentSetup = Callable[[], Awaitable[bool]]
-_T = TypeVar("_T")
-YieldFixture = Generator[_T, None, None]
+type ApiResult = Callable[[dict[str, Any]], None]
+type ComponentSetup = Callable[[], Awaitable[bool]]
+type AsyncYieldFixture[_T] = AsyncGenerator[_T, None]
 
 
 CALENDAR_ID = "qwertyuiopasdfghjklzxcvbnm@import.calendar.google.com"
@@ -189,9 +190,9 @@ def creds(
 
 
 @pytest.fixture
-def config_entry_token_expiry(token_expiry: datetime.datetime) -> float:
+def config_entry_token_expiry() -> float:
     """Fixture for token expiration value stored in the config entry."""
-    return token_expiry.timestamp()
+    return time.time() + 86400
 
 
 @pytest.fixture
@@ -239,7 +240,7 @@ def mock_events_list(
 
     def _put_result(
         response: dict[str, Any],
-        calendar_id: str = None,
+        calendar_id: str | None = None,
         exc: ClientError | None = None,
     ) -> None:
         if calendar_id is None:
@@ -253,20 +254,18 @@ def mock_events_list(
             json=resp,
             exc=exc,
         )
-        return
 
     return _put_result
 
 
 @pytest.fixture
 def mock_events_list_items(
-    mock_events_list: Callable[[dict[str, Any]], None]
+    mock_events_list: Callable[[dict[str, Any]], None],
 ) -> Callable[[list[dict[str, Any]]], None]:
     """Fixture to construct an API response containing event items."""
 
     def _put_items(items: list[dict[str, Any]]) -> None:
         mock_events_list({"items": items})
-        return
 
     return _put_items
 
@@ -287,7 +286,6 @@ def mock_calendars_list(
             json=resp,
             exc=exc,
         )
-        return
 
     return _result
 
@@ -310,7 +308,6 @@ def mock_calendar_get(
             exc=exc,
             status=status,
         )
-        return
 
     return _result
 
@@ -328,17 +325,16 @@ def mock_insert_event(
             f"{API_BASE_URL}/calendars/{calendar_id}/events",
             exc=exc,
         )
-        return
 
     return _expect_result
 
 
 @pytest.fixture(autouse=True)
-def set_time_zone(hass):
+async def set_time_zone(hass):
     """Set the time zone for the tests."""
     # Set our timezone to CST/Regina so we can check calculations
     # This keeps UTC-6 all year round
-    hass.config.set_time_zone("America/Regina")
+    await hass.config.async_set_time_zone("America/Regina")
 
 
 @pytest.fixture

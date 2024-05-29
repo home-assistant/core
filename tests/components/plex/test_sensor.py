@@ -1,4 +1,5 @@
 """Tests for Plex sensors."""
+
 from datetime import datetime, timedelta
 from http import HTTPStatus
 from unittest.mock import patch
@@ -73,6 +74,7 @@ class MockPlexTVEpisode(MockPlexMedia):
 
 async def test_library_sensor_values(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
     setup_plex_server,
     mock_websocket,
@@ -110,14 +112,13 @@ async def test_library_sensor_values(
     mock_plex_server = await setup_plex_server()
     await wait_for_debouncer(hass)
 
-    activity_sensor = hass.states.get("sensor.plex_plex_server_1")
+    activity_sensor = hass.states.get("sensor.plex_server_1")
     assert activity_sensor.state == "1"
 
     # Ensure sensor is created as disabled
     assert hass.states.get("sensor.plex_server_1_library_tv_shows") is None
 
     # Enable sensor and validate values
-    entity_registry = er.async_get(hass)
     entity_registry.async_update_entity(
         entity_id="sensor.plex_server_1_library_tv_shows", disabled_by=None
     )

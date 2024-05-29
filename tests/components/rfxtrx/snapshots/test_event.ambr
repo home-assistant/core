@@ -1,0 +1,124 @@
+# serializer version: 1
+# name: test_control_event.2
+          ...
+# ---
+# name: test_control_event.3
+      ...
+  +     'Command': 'On',
+  +     'Rssi numeric': 5,
+        ...
+  -     'event_type': None,
+  +     'event_type': 'on',
+          ...
+  -   'state': 'unknown',
+  +   'state': '2021-01-09T12:00:00.000+00:00',
+    ...
+# ---
+# name: test_control_event[1]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'event_type': None,
+      'event_types': list([
+        'off',
+        'on',
+        'dim',
+        'bright',
+        'all_group_off',
+        'all_group_on',
+        'chime',
+        'illegal_command',
+      ]),
+      'friendly_name': 'ARC C1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.arc_c1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_control_event[2]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'event_type': None,
+      'event_types': list([
+        'off',
+        'on',
+        'dim',
+        'bright',
+        'all_group_off',
+        'all_group_on',
+        'chime',
+        'illegal_command',
+      ]),
+      'friendly_name': 'ARC D1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.arc_d1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_status_event.1
+      ...
+  +     'Battery numeric': 9,
+  +     'Rssi numeric': 8,
+  +     'Sensor Status': 'Normal',
+        ...
+  -     'event_type': None,
+  +     'event_type': 'normal',
+          ...
+  -   'state': 'unknown',
+  +   'state': '2021-01-09T12:00:00.000+00:00',
+    ...
+# ---
+# name: test_status_event[1]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'event_type': None,
+      'event_types': list([
+        'normal',
+        'normal_delayed',
+        'alarm',
+        'alarm_delayed',
+        'motion',
+        'no_motion',
+        'panic',
+        'end_panic',
+        'ir',
+        'arm_away',
+        'arm_away_delayed',
+        'arm_home',
+        'arm_home_delayed',
+        'disarm',
+        'light_1_off',
+        'light_1_on',
+        'light_2_off',
+        'light_2_on',
+        'dark_detected',
+        'light_detected',
+        'battery_low',
+        'pairing_kd101',
+        'normal_tamper',
+        'normal_delayed_tamper',
+        'alarm_tamper',
+        'alarm_delayed_tamper',
+        'motion_tamper',
+        'no_motion_tamper',
+      ]),
+      'friendly_name': 'X10 Security d3dc54:32',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.x10_security_d3dc54_32',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

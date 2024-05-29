@@ -1,4 +1,5 @@
 """Tests for the Reolink media_source platform."""
+
 from datetime import datetime, timedelta
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -21,6 +22,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_PROTOCOL,
     CONF_USERNAME,
     Platform,
 )
@@ -63,6 +65,17 @@ async def setup_component(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, MEDIA_STREAM_DOMAIN, {})
 
 
+async def test_platform_loads_before_config_entry(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test that the platform can be loaded before the config entry."""
+    # Fake that the config entry is not loaded before the media_source platform
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert mock_setup_entry.call_count == 0
+
+
 async def test_resolve(
     hass: HomeAssistant,
     reolink_connect: MagicMock,
@@ -80,7 +93,9 @@ async def test_resolve(
         f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
     )
 
-    play_media = await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/{file_id}")
+    play_media = await async_resolve_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
+    )
 
     assert play_media.mime_type == TEST_MIME_TYPE
 
@@ -244,7 +259,7 @@ async def test_browsing_errors(
     with pytest.raises(Unresolvable):
         await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/UNKNOWN")
     with pytest.raises(Unresolvable):
-        await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/UNKNOWN")
+        await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/UNKNOWN", None)
 
 
 async def test_browsing_not_loaded(
@@ -271,7 +286,7 @@ async def test_browsing_not_loaded(
             const.CONF_USE_HTTPS: TEST_USE_HTTPS,
         },
         options={
-            const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
         },
         title=TEST_NVR_NAME2,
     )

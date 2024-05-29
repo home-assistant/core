@@ -1,4 +1,5 @@
 """Tests for AVM Fritz!Box switch component."""
+
 from datetime import timedelta
 from unittest.mock import Mock, call
 
@@ -107,7 +108,7 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(f"{DOMAIN}.new_climate")
     assert state

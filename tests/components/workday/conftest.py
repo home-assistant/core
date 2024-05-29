@@ -1,4 +1,5 @@
 """Fixtures for Workday integration tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 

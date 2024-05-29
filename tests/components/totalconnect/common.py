@@ -1,4 +1,5 @@
 """Common methods used across tests for TotalConnect."""
+
 from unittest.mock import patch
 
 from total_connect_client import ArmingState, ResultCode, ZoneStatus, ZoneType
@@ -205,6 +206,17 @@ ZONE_7 = {
     "CanBeBypassed": 0,
 }
 
+# ZoneType security that cannot be bypassed is a Button on the alarm panel
+ZONE_8 = {
+    "ZoneID": 8,
+    "ZoneDescription": "Button",
+    "ZoneStatus": ZoneStatus.FAULT,
+    "ZoneTypeId": ZoneType.SECURITY,
+    "PartitionId": "1",
+    "CanBeBypassed": 0,
+}
+
+
 ZONE_INFO = [ZONE_NORMAL, ZONE_2, ZONE_3, ZONE_4, ZONE_5, ZONE_6, ZONE_7]
 ZONES = {"ZoneInfo": ZONE_INFO}
 
@@ -317,6 +329,14 @@ RESPONSE_USER_CODE_INVALID = {
     "ResultData": "testing user code invalid",
 }
 RESPONSE_SUCCESS = {"ResultCode": ResultCode.SUCCESS.value}
+RESPONSE_ZONE_BYPASS_SUCCESS = {
+    "ResultCode": ResultCode.SUCCESS.value,
+    "ResultData": "None",
+}
+RESPONSE_ZONE_BYPASS_FAILURE = {
+    "ResultCode": ResultCode.FAILED_TO_BYPASS_ZONE.value,
+    "ResultData": "None",
+}
 
 USERNAME = "username@me.com"
 PASSWORD = "password"
@@ -388,10 +408,13 @@ async def setup_platform(hass, platform):
         RESPONSE_DISARMED,
     ]
 
-    with patch("homeassistant.components.totalconnect.PLATFORMS", [platform]), patch(
-        TOTALCONNECT_REQUEST,
-        side_effect=responses,
-    ) as mock_request:
+    with (
+        patch("homeassistant.components.totalconnect.PLATFORMS", [platform]),
+        patch(
+            TOTALCONNECT_REQUEST,
+            side_effect=responses,
+        ) as mock_request,
+    ):
         assert await async_setup_component(hass, DOMAIN, {})
         assert mock_request.call_count == 5
     await hass.async_block_till_done()

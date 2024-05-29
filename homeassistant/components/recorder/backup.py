@@ -1,4 +1,5 @@
 """Backup platform for the Recorder integration."""
+
 from logging import getLogger
 
 from homeassistant.core import HomeAssistant

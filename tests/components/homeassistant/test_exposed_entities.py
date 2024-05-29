@@ -1,4 +1,5 @@
 """Test Home Assistant exposed entities helper."""
+
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -31,10 +32,9 @@ def entities_fixture(
     """Set up the test environment."""
     if request.param == "entities_unique_id":
         return entities_unique_id(entity_registry)
-    elif request.param == "entities_no_unique_id":
+    if request.param == "entities_no_unique_id":
         return entities_no_unique_id(hass)
-    else:
-        raise RuntimeError("Invalid setup fixture")
+    raise RuntimeError("Invalid setup fixture")
 
 
 def entities_unique_id(entity_registry: er.EntityRegistry) -> dict[str, str]:

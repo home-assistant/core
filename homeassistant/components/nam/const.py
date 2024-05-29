@@ -1,4 +1,5 @@
 """Constants for Nettigo Air Monitor integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -45,7 +46,7 @@ ATTR_SPS30_P2: Final = f"{ATTR_SPS30}{SUFFIX_P2}"
 ATTR_SPS30_P4: Final = f"{ATTR_SPS30}{SUFFIX_P4}"
 ATTR_UPTIME: Final = "uptime"
 
-DEFAULT_UPDATE_INTERVAL: Final = timedelta(minutes=6)
+DEFAULT_UPDATE_INTERVAL: Final = timedelta(minutes=4)
 DOMAIN: Final = "nam"
 MANUFACTURER: Final = "Nettigo"
 

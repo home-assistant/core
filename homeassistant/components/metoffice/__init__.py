@@ -1,11 +1,13 @@
 """The Met Office integration."""
+
 from __future__ import annotations
 
 import asyncio
 import logging
 import re
-import sys
 from typing import Any
+
+import datapoint
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -16,7 +18,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
@@ -34,9 +36,6 @@ from .const import (
 from .data import MetOfficeData
 from .helpers import fetch_data, fetch_site
 
-if sys.version_info < (3, 12):
-    import datapoint
-
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
@@ -44,10 +43,6 @@ PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Met Office entry."""
-    if sys.version_info >= (3, 12):
-        raise HomeAssistantError(
-            "Met Office is not supported on Python 3.12. Please use Python 3.11."
-        )
 
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
@@ -99,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         fetch_site, connection, latitude, longitude
     )
     if site is None:
-        raise ConfigEntryNotReady()
+        raise ConfigEntryNotReady
 
     async def async_update_3hourly() -> MetOfficeData:
         return await hass.async_add_executor_job(

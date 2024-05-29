@@ -1,4 +1,5 @@
 """The tests for the Binary sensor component."""
+
 from collections.abc import Generator
 from unittest import mock
 
@@ -10,15 +11,18 @@ from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .common import MockBinarySensor
+
 from tests.common import (
     MockConfigEntry,
     MockModule,
     MockPlatform,
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
     mock_config_flow,
     mock_integration,
     mock_platform,
 )
-from tests.testing_config.custom_components.test.binary_sensor import MockBinarySensor
 
 TEST_DOMAIN = "test"
 
@@ -102,7 +106,7 @@ async def test_name(hass: HomeAssistant) -> None:
         config_entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
-        """Set up test stt platform via config entry."""
+        """Set up test binary_sensor platform via config entry."""
         async_add_entities([entity1, entity2, entity3, entity4])
 
     mock_platform(
@@ -172,7 +176,7 @@ async def test_entity_category_config_raises_error(
         config_entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
-        """Set up test stt platform via config entry."""
+        """Set up test binary_sensor platform via config entry."""
         async_add_entities([entity1, entity2])
 
     mock_platform(
@@ -193,4 +197,23 @@ async def test_entity_category_config_raises_error(
     assert (
         "Entity binary_sensor.test2 cannot be added as the entity category is set to config"
         in caplog.text
+    )
+
+
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(binary_sensor)
+
+
+@pytest.mark.parametrize(
+    "device_class",
+    list(binary_sensor.BinarySensorDeviceClass),
+)
+def test_deprecated_constant_device_class(
+    caplog: pytest.LogCaptureFixture,
+    device_class: binary_sensor.BinarySensorDeviceClass,
+) -> None:
+    """Test deprecated binary sensor device classes."""
+    import_and_test_deprecated_constant_enum(
+        caplog, binary_sensor, device_class, "DEVICE_CLASS_", "2025.1"
     )

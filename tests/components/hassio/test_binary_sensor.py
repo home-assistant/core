@@ -1,4 +1,5 @@
 """The tests for the hassio binary sensors."""
+
 import os
 from unittest.mock import patch
 
@@ -176,6 +177,16 @@ def mock_all(aioclient_mock, request):
                 "suggestions": [],
                 "issues": [],
                 "checks": [],
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/network/info",
+        json={
+            "result": "ok",
+            "data": {
+                "host_internet": True,
+                "supervisor_internet": True,
             },
         },
     )

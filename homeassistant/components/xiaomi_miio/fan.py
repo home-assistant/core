@@ -1,4 +1,5 @@
 """Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -30,7 +31,7 @@ import voluptuous as vol
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_MODEL
+from homeassistant.const import ATTR_ENTITY_ID, CONF_DEVICE, CONF_MODEL
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -40,7 +41,6 @@ from homeassistant.util.percentage import (
 )
 
 from .const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     DOMAIN,
     FEATURE_FLAGS_AIRFRESH,

@@ -1,11 +1,10 @@
 """Test ZHA binary sensor."""
+
 from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.measurement as measurement
-import zigpy.zcl.clusters.security as security
+from zigpy.zcl.clusters import general, measurement, security
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -15,7 +14,6 @@ from .common import (
     async_test_rejoin,
     find_entity_id,
     send_attributes_report,
-    update_attribute_cache,
 )
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
@@ -148,66 +146,6 @@ async def test_binary_sensor(
     # test rejoin
     await async_test_rejoin(hass, zigpy_device, [cluster], reporting)
     assert hass.states.get(entity_id).state == STATE_OFF
-
-
-@pytest.mark.parametrize(
-    "restored_state",
-    [
-        STATE_ON,
-        STATE_OFF,
-    ],
-)
-async def test_binary_sensor_migration_not_migrated(
-    hass: HomeAssistant,
-    zigpy_device_mock,
-    core_rs,
-    zha_device_restored,
-    restored_state,
-) -> None:
-    """Test temporary ZHA IasZone binary_sensor migration to zigpy cache."""
-
-    entity_id = "binary_sensor.fakemanufacturer_fakemodel_ias_zone"
-    core_rs(entity_id, state=restored_state, attributes={})  # migration sensor state
-    await async_mock_load_restore_state_from_storage(hass)
-
-    zigpy_device = zigpy_device_mock(DEVICE_IAS)
-
-    zha_device = await zha_device_restored(zigpy_device)
-    entity_id = find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
-
-    assert entity_id is not None
-    assert hass.states.get(entity_id).state == restored_state
-
-    # confirm migration extra state attribute was set to True
-    assert hass.states.get(entity_id).attributes["migrated_to_cache"]
-
-
-async def test_binary_sensor_migration_already_migrated(
-    hass: HomeAssistant,
-    zigpy_device_mock,
-    core_rs,
-    zha_device_restored,
-) -> None:
-    """Test temporary ZHA IasZone binary_sensor migration doesn't migrate multiple times."""
-
-    entity_id = "binary_sensor.fakemanufacturer_fakemodel_ias_zone"
-    core_rs(entity_id, state=STATE_OFF, attributes={"migrated_to_cache": True})
-    await async_mock_load_restore_state_from_storage(hass)
-
-    zigpy_device = zigpy_device_mock(DEVICE_IAS)
-
-    cluster = zigpy_device.endpoints.get(1).ias_zone
-    cluster.PLUGGED_ATTR_READS = {
-        "zone_status": security.IasZone.ZoneStatus.Alarm_1,
-    }
-    update_attribute_cache(cluster)
-
-    zha_device = await zha_device_restored(zigpy_device)
-    entity_id = find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
-
-    assert entity_id is not None
-    assert hass.states.get(entity_id).state == STATE_ON  # matches attribute cache
-    assert hass.states.get(entity_id).attributes["migrated_to_cache"]
 
 
 @pytest.mark.parametrize(

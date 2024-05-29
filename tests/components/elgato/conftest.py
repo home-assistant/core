@@ -1,4 +1,5 @@
 """Fixtures for Elgato integration tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -64,10 +65,11 @@ def mock_elgato(
     device_fixtures: str, state_variant: str
 ) -> Generator[None, MagicMock, None]:
     """Return a mocked Elgato client."""
-    with patch(
-        "homeassistant.components.elgato.coordinator.Elgato", autospec=True
-    ) as elgato_mock, patch(
-        "homeassistant.components.elgato.config_flow.Elgato", new=elgato_mock
+    with (
+        patch(
+            "homeassistant.components.elgato.coordinator.Elgato", autospec=True
+        ) as elgato_mock,
+        patch("homeassistant.components.elgato.config_flow.Elgato", new=elgato_mock),
     ):
         elgato = elgato_mock.return_value
         elgato.info.return_value = Info.from_json(

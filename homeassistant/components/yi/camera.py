@@ -1,4 +1,5 @@
 """Support for Xiaomi Cameras (HiSilicon Hi3518e V200)."""
+
 from __future__ import annotations
 
 import logging
@@ -148,7 +149,7 @@ class YiCamera(Camera):
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
         if not self._is_on:
-            return
+            return None
 
         stream = CameraMjpeg(self._manager.binary)
         await stream.open_camera(self._last_url, extra_cmd=self._extra_arguments)

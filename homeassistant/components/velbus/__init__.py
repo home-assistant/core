@@ -1,4 +1,5 @@
 """Support for Velbus devices."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -53,7 +54,7 @@ async def velbus_connect_task(
 
 
 def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
-    """Migrate old device indentifiers."""
+    """Migrate old device identifiers."""
     dev_reg = dr.async_get(hass)
     devices: list[dr.DeviceEntry] = dr.async_entries_for_config_entry(dev_reg, entry_id)
     for device in devices:
@@ -144,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Handle a clear cache service call."""
         # clear the cache
         with suppress(FileNotFoundError):
-            if CONF_ADDRESS in call.data and call.data[CONF_ADDRESS]:
+            if call.data.get(CONF_ADDRESS):
                 await hass.async_add_executor_job(
                     os.unlink,
                     hass.config.path(
@@ -211,7 +212,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if os.path.isdir(cache_path):
             await hass.async_add_executor_job(shutil.rmtree, cache_path)
         # set the new version
-        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, version=2)
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
     return True

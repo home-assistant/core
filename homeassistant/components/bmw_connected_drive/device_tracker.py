@@ -1,4 +1,5 @@
 """Device tracker for MyBMW vehicles."""
+
 from __future__ import annotations
 
 import logging
@@ -45,6 +46,7 @@ class BMWDeviceTracker(BMWBaseEntity, TrackerEntity):
     """MyBMW device tracker."""
 
     _attr_force_update = False
+    _attr_translation_key = "car"
     _attr_icon = "mdi:car"
 
     def __init__(

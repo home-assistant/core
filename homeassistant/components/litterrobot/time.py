@@ -1,4 +1,5 @@
 """Support for Litter-Robot time."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -20,7 +21,7 @@ from .entity import LitterRobotEntity, _RobotT
 from .hub import LitterRobotHub
 
 
-@dataclass
+@dataclass(frozen=True)
 class RequiredKeysMixin(Generic[_RobotT]):
     """A class that describes robot time entity required keys."""
 
@@ -28,7 +29,7 @@ class RequiredKeysMixin(Generic[_RobotT]):
     set_fn: Callable[[_RobotT, time], Coroutine[Any, Any, bool]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RobotTimeEntityDescription(TimeEntityDescription, RequiredKeysMixin[_RobotT]):
     """A class that describes robot time entities."""
 
@@ -44,7 +45,7 @@ LITTER_ROBOT_3_SLEEP_START = RobotTimeEntityDescription[LitterRobot3](
     entity_category=EntityCategory.CONFIG,
     value_fn=lambda robot: _as_local_time(robot.sleep_mode_start_time),
     set_fn=lambda robot, value: robot.set_sleep_mode(
-        robot.sleep_mode_enabled, value.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
+        robot.sleep_mode_enabled, value.replace(tzinfo=dt_util.get_default_time_zone())
     ),
 )
 

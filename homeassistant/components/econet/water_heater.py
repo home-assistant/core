@@ -1,4 +1,5 @@
 """Support for Rheem EcoNet water heaters."""
+
 from datetime import timedelta
 import logging
 from typing import Any

@@ -1,7 +1,9 @@
 """Support for Geolocation."""
+
 from __future__ import annotations
 
 from datetime import timedelta
+from functools import cached_property
 import logging
 from typing import Any, final
 
@@ -51,7 +53,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class GeolocationEvent(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "source",
+    "distance",
+    "latitude",
+    "longitude",
+}
+
+
+class GeolocationEvent(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for an external event with an associated geolocation."""
 
     # Entity Properties
@@ -68,22 +78,22 @@ class GeolocationEvent(Entity):
             return round(self.distance, 1)
         return None
 
-    @property
+    @cached_property
     def source(self) -> str:
         """Return source value of this external event."""
         return self._attr_source
 
-    @property
+    @cached_property
     def distance(self) -> float | None:
         """Return distance value of this external event."""
         return self._attr_distance
 
-    @property
+    @cached_property
     def latitude(self) -> float | None:
         """Return latitude value of this external event."""
         return self._attr_latitude
 
-    @property
+    @cached_property
     def longitude(self) -> float | None:
         """Return longitude value of this external event."""
         return self._attr_longitude

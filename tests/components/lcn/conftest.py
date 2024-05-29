@@ -1,4 +1,5 @@
 """Test configuration and mocks for LCN component."""
+
 import json
 from unittest.mock import AsyncMock, patch
 
@@ -67,14 +68,13 @@ def create_config_entry(name):
 
     title = entry_data[CONF_HOST]
     unique_id = fixture_filename
-    entry = MockConfigEntry(
+    return MockConfigEntry(
         domain=DOMAIN,
         title=title,
         unique_id=unique_id,
         data=entry_data,
         options=options,
     )
-    return entry
 
 
 @pytest.fixture

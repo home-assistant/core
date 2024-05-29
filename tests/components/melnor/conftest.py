@@ -1,4 +1,5 @@
 """Tests for the melnor integration."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -34,6 +35,7 @@ FAKE_SERVICE_INFO_1 = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(local_name=""),
     time=0,
     connectable=True,
+    tx_power=-127,
 )
 
 FAKE_SERVICE_INFO_2 = BluetoothServiceInfoBleak(
@@ -50,6 +52,7 @@ FAKE_SERVICE_INFO_2 = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(local_name=""),
     time=0,
     connectable=True,
+    tx_power=-127,
 )
 
 

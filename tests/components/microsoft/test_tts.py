@@ -1,4 +1,5 @@
 """Tests for Microsoft text-to-speech."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -60,6 +61,7 @@ async def test_service_say(
     await async_setup_component(
         hass, tts.DOMAIN, {tts.DOMAIN: {"platform": "microsoft", "api_key": ""}}
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -109,6 +111,7 @@ async def test_service_say_en_gb_config(
             }
         },
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -150,6 +153,7 @@ async def test_service_say_en_gb_service(
         tts.DOMAIN,
         {tts.DOMAIN: {"platform": "microsoft", "api_key": ""}},
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -200,6 +204,7 @@ async def test_service_say_fa_ir_config(
             }
         },
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -245,6 +250,7 @@ async def test_service_say_fa_ir_service(
     }
 
     await async_setup_component(hass, tts.DOMAIN, config)
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -302,6 +308,7 @@ async def test_invalid_language(hass: HomeAssistant, mock_tts, calls) -> None:
         tts.DOMAIN,
         {tts.DOMAIN: {"platform": "microsoft", "api_key": "", "language": "en"}},
     )
+    await hass.async_block_till_done()
 
     with pytest.raises(ServiceNotFound):
         await hass.services.async_call(
@@ -326,6 +333,7 @@ async def test_service_say_error(
     await async_setup_component(
         hass, tts.DOMAIN, {tts.DOMAIN: {"platform": "microsoft", "api_key": ""}}
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,

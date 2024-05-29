@@ -1,4 +1,5 @@
 """Definitions for DSMR Reader sensors added to MQTT."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -38,7 +39,7 @@ def tariff_transform(value):
     return "high"
 
 
-@dataclass
+@dataclass(frozen=True)
 class DSMRReaderSensorEntityDescription(SensorEntityDescription):
     """Sensor entity description for DSMR Reader."""
 

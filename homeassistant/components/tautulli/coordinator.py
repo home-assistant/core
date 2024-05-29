@@ -1,4 +1,5 @@
 """Data update coordinator for the Tautulli integration."""
+
 from __future__ import annotations
 
 import asyncio

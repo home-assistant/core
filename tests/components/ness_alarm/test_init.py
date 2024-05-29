@@ -1,4 +1,5 @@
 """Tests for the ness_alarm component."""
+
 from unittest.mock import MagicMock, patch
 
 from nessclient import ArmingMode, ArmingState

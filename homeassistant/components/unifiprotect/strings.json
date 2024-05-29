@@ -37,7 +37,8 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "protect_version": "Minimum required version is v1.20.0. Please upgrade UniFi Protect and then retry."
+      "protect_version": "Minimum required version is v1.20.0. Please upgrade UniFi Protect and then retry.",
+      "cloud_user": "Ubiquiti Cloud users are not Supported. Please use a Local only user."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -60,16 +61,16 @@
     }
   },
   "issues": {
-    "ea_warning": {
-      "title": "UniFi Protect v{version} is an Early Access version",
+    "ea_channel_warning": {
+      "title": "UniFi Protect Early Access enabled",
       "fix_flow": {
         "step": {
           "start": {
-            "title": "v{version} is an Early Access version",
-            "description": "You are using v{version} of UniFi Protect which is an Early Access version. [Early Access versions are not supported by Home Assistant](https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access) and it is recommended to go back to a stable release as soon as possible.\n\nBy submitting this form you have either [downgraded UniFi Protect](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) or you agree to run an unsupported version of UniFi Protect."
+            "title": "UniFi Protect Early Access enabled",
+            "description": "You are either running an Early Access version of UniFi Protect (v{version}) or opt-ed into a release channel that is not the Official Release Channel. [Home Assistant does not support Early Access versions](https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access), so you should immediately switch to the Official Release Channel. Accidentally upgrading to an Early Access version can break your UniFi Protect integration.\n\nBy submitting this form, you have switched back to the Official Release Channel or agree to run an unsupported version of UniFi Protect, which may break your Home Assistant integration at any time."
           },
           "confirm": {
-            "title": "[%key:component::unifiprotect::issues::ea_warning::fix_flow::step::start::title%]",
+            "title": "[%key:component::unifiprotect::issues::ea_channel_warning::fix_flow::step::start::title%]",
             "description": "Are you sure you want to run unsupported versions of UniFi Protect? This may cause your Home Assistant integration to break."
           }
         }
@@ -77,7 +78,56 @@
     },
     "ea_setup_failed": {
       "title": "Setup error using Early Access version",
-      "description": "You are using v{version} of UniFi Protect which is an Early Access version. An unrecoverable error occurred while trying to load the integration. Please [downgrade to a stable version](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) of UniFi Protect to continue using the integration.\n\nError: {error}"
+      "description": "You are using v{version} of UniFi Protect which is an Early Access version. An unrecoverable error occurred while trying to load the integration. Please restore a backup of a stable release of UniFi Protect to continue using the integration.\n\nError: {error}"
+    },
+    "cloud_user": {
+      "title": "Ubiquiti Cloud Users are not Supported",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Ubiquiti Cloud Users are not Supported",
+            "description": "Starting on July 22nd, 2024, Ubiquiti will require all cloud users to enroll in multi-factor authentication (MFA), which is incompatible with Home Assistant.\n\nIt would be best to migrate to using a [local user]({learn_more}) as soon as possible to keep the integration working.\n\nConfirming this repair will trigger a re-authentication flow to enter the needed authentication credentials."
+          }
+        }
+      }
+    },
+    "rtsp_disabled_readonly": {
+      "title": "RTSPS is disabled on camera {camera}",
+      "fix_flow": {
+        "step": {
+          "start": {
+            "title": "RTSPS is disabled on camera {camera}",
+            "description": "RTSPS is disabled on the camera {camera}. RTSPS is required to be able to live stream your camera within Home Assistant. If you do not enable RTSPS, it may create an additional load on your UniFi Protect NVR, as any live video players will default to rapidly pulling snapshots from the camera.\n\nPlease [enable RTSPS]({learn_more}) on the camera and then come back and confirm this repair."
+          },
+          "confirm": {
+            "title": "[%key:component::unifiprotect::issues::rtsp_disabled_readonly::fix_flow::step::start::title%]",
+            "description": "Are you sure you want to leave RTSPS disabled for {camera}?"
+          }
+        }
+      }
+    },
+    "rtsp_disabled_writable": {
+      "title": "RTSPS is disabled on camera {camera}",
+      "fix_flow": {
+        "step": {
+          "start": {
+            "title": "[%key:component::unifiprotect::issues::rtsp_disabled_readonly::fix_flow::step::start::title%]",
+            "description": "RTSPS is disabled on the camera {camera}. RTSPS is required to live stream your camera within Home Assistant. If you do not enable RTSPS, it may create an additional load on your UniFi Protect NVR as any live video players will default to rapidly pulling snapshots from the camera.\n\nYou may manually [enable RTSPS]({learn_more}) on your selected camera quality channel or Home Assistant can automatically enable the highest quality channel for you. Confirm this repair once you have enabled the RTSPS channel or if you want Home Assistant to enable the highest quality automatically."
+          },
+          "confirm": {
+            "title": "[%key:component::unifiprotect::issues::rtsp_disabled_readonly::fix_flow::step::start::title%]",
+            "description": "[%key:component::unifiprotect::issues::rtsp_disabled_readonly::fix_flow::step::confirm::description%]"
+          }
+        }
+      }
+    },
+    "deprecate_hdr_switch": {
+      "title": "HDR Mode Switch Deprecated",
+      "description": "UniFi Protect v3 added a new state for HDR (auto). As a result, the HDR Mode Switch has been replaced with an HDR Mode Select, and it is deprecated.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly."
+    },
+    "deprecate_package_sensor": {
+      "title": "Package Event Sensor Deprecated",
+      "description": "The package event sensor never tripped because of the way events are reported in UniFi Protect. As a result, the sensor is deprecated and will be removed.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly."
     }
   },
   "entity": {
@@ -143,6 +193,20 @@
         "doorbells": {
           "name": "Doorbells",
           "description": "The doorbells to link to the chime."
+        }
+      }
+    },
+    "remove_privacy_zone": {
+      "name": "Remove camera privacy zone",
+      "description": "Use to remove a privacy zone from a camera.",
+      "fields": {
+        "device_id": {
+          "name": "Camera",
+          "description": "Camera you want to remove privacy zone from."
+        },
+        "name": {
+          "name": "Privacy Zone Name",
+          "description": "The name of the zone to remove."
         }
       }
     }

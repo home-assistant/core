@@ -1,4 +1,5 @@
 """Diagnostics support for Withings."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,16 +7,14 @@ from typing import Any
 from yarl import URL
 
 from homeassistant.components.webhook import async_generate_url as webhook_generate_url
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 
-from . import CONF_CLOUDHOOK_URL, WithingsData
-from .const import DOMAIN
+from . import CONF_CLOUDHOOK_URL, WithingsConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: WithingsConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
@@ -25,7 +24,7 @@ async def async_get_config_entry_diagnostics(
 
     has_cloudhooks = CONF_CLOUDHOOK_URL in entry.data
 
-    withings_data: WithingsData = hass.data[DOMAIN][entry.entry_id]
+    withings_data = entry.runtime_data
 
     return {
         "has_valid_external_webhook_url": has_valid_external_webhook_url,

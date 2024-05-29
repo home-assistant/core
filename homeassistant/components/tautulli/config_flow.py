@@ -1,4 +1,5 @@
 """Config flow for Tautulli."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -7,9 +8,8 @@ from typing import Any
 from pytautulli import PyTautulli, PyTautulliException, exceptions
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_NAME, DOMAIN
@@ -22,7 +22,7 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
@@ -49,13 +49,15 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle a reauthorization flow request."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         errors = {}
         if user_input is not None and (

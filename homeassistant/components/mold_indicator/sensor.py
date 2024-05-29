@@ -1,4 +1,5 @@
 """Calculates mold growth indication from temperature and humidity."""
+
 from __future__ import annotations
 
 import logging
@@ -16,14 +17,17 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
+from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -121,7 +125,7 @@ class MoldIndicator(SensorEntity):
 
         @callback
         def mold_indicator_sensors_state_listener(
-            event: EventType[EventStateChangedData],
+            event: Event[EventStateChangedData],
         ) -> None:
             """Handle for state changes for dependent sensors."""
             new_state = event.data["new_state"]

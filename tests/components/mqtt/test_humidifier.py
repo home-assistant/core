@@ -1,4 +1,5 @@
 """Test MQTT humidifiers."""
+
 import copy
 from typing import Any
 from unittest.mock import patch
@@ -33,7 +34,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 
@@ -83,13 +83,6 @@ DEFAULT_CONFIG = {
 }
 
 
-@pytest.fixture(autouse=True)
-def humidifer_platform_only():
-    """Only setup the humidifer platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.HUMIDIFIER]):
-        yield
-
-
 async def async_turn_on(
     hass: HomeAssistant,
     entity_id=ENTITY_MATCH_ALL,
@@ -108,7 +101,7 @@ async def async_turn_off(hass: HomeAssistant, entity_id=ENTITY_MATCH_ALL) -> Non
 
 
 async def async_set_mode(
-    hass: HomeAssistant, entity_id=ENTITY_MATCH_ALL, mode: str = None
+    hass: HomeAssistant, entity_id=ENTITY_MATCH_ALL, mode: str | None = None
 ) -> None:
     """Set mode for all or specified humidifier."""
     data = {
@@ -121,7 +114,7 @@ async def async_set_mode(
 
 
 async def async_set_humidity(
-    hass: HomeAssistant, entity_id=ENTITY_MATCH_ALL, humidity: int = None
+    hass: HomeAssistant, entity_id=ENTITY_MATCH_ALL, humidity: int | None = None
 ) -> None:
     """Set target humidity for all or specified humidifier."""
     data = {
@@ -1613,3 +1606,47 @@ async def test_skipped_async_ha_write_state(
     """Test a write state command is only called when there is change."""
     await mqtt_mock_entry()
     await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+VALUE_TEMPLATES = {
+    "state_value_template": "state_topic",
+    "action_template": "action_topic",
+    "mode_state_template": "mode_state_topic",
+    "current_humidity_template": "current_humidity_topic",
+    "target_humidity_state_template": "target_humidity_state_topic",
+}
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            humidifier.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "mode_command_topic": "preset-mode-command-topic",
+                    "modes": [
+                        "auto",
+                    ],
+                    topic: "test-topic",
+                    value_template: "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+        for value_template, topic in VALUE_TEMPLATES.items()
+    ],
+    ids=VALUE_TEMPLATES,
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

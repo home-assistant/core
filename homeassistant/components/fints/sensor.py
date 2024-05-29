@@ -1,8 +1,10 @@
 """Read the balance of your bank accounts via FinTS."""
+
 from __future__ import annotations
 
 from collections import namedtuple
 from datetime import timedelta
+from functools import cached_property
 import logging
 from typing import Any
 
@@ -10,7 +12,6 @@ from fints.client import FinTS3PinTanClient
 from fints.models import SEPAAccount
 import voluptuous as vol
 
-from homeassistant.backports.functools import cached_property
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_PIN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -168,8 +169,8 @@ class FinTsClient:
         if not account_information:
             return False
 
-        if 1 <= account_information["type"] <= 9:
-            return True
+        if account_type := account_information.get("type"):
+            return 1 <= account_type <= 9
 
         if (
             account_information["iban"] in self.account_config
@@ -188,8 +189,8 @@ class FinTsClient:
         if not account_information:
             return False
 
-        if 30 <= account_information["type"] <= 39:
-            return True
+        if account_type := account_information.get("type"):
+            return 30 <= account_type <= 39
 
         if (
             account_information["iban"] in self.holdings_config

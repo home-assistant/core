@@ -36,6 +36,9 @@
       "treble": {
         "name": "Treble"
       },
+      "sub_crossover": {
+        "name": "Sub crossover frequency"
+      },
       "sub_gain": {
         "name": "Sub gain"
       },
@@ -169,6 +172,11 @@
           "description": "Enable or disable including grouped rooms."
         }
       }
+    }
+  },
+  "exceptions": {
+    "invalid_favorite": {
+      "message": "Could not find a Sonos favorite: {name}"
     }
   }
 }

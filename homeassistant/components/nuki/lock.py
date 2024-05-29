@@ -1,8 +1,9 @@
 """Nuki.io lock platform."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, TypeVar
+from typing import Any
 
 from pynuki import NukiLock, NukiOpener
 from pynuki.constants import MODE_OPENER_CONTINUOUS
@@ -26,8 +27,6 @@ from .const import (
     ERROR_STATES,
 )
 from .helpers import CannotConnect
-
-_NukiDeviceT = TypeVar("_NukiDeviceT", bound=NukiDevice)
 
 
 async def async_setup_entry(
@@ -63,7 +62,7 @@ async def async_setup_entry(
     )
 
 
-class NukiDeviceEntity(NukiEntity[_NukiDeviceT], LockEntity):
+class NukiDeviceEntity[_NukiDeviceT: NukiDevice](NukiEntity[_NukiDeviceT], LockEntity):
     """Representation of a Nuki device."""
 
     _attr_has_entity_name = True
@@ -76,6 +75,7 @@ class NukiDeviceEntity(NukiEntity[_NukiDeviceT], LockEntity):
         """Return a unique ID."""
         return self._nuki_device.nuki_id
 
+    # Deprecated, can be removed in 2024.10
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""

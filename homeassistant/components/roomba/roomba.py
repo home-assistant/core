@@ -1,4 +1,5 @@
 """Class for Roomba devices."""
+
 import logging
 
 from homeassistant.components.vacuum import VacuumEntityFeature

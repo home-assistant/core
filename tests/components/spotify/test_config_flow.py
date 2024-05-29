@@ -1,4 +1,5 @@
 """Tests for the Spotify config flow."""
+
 from http import HTTPStatus
 from ipaddress import ip_address
 from unittest.mock import patch
@@ -6,7 +7,6 @@ from unittest.mock import patch
 import pytest
 from spotipy import SpotifyException
 
-from homeassistant import data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -15,6 +15,7 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.spotify.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
@@ -52,14 +53,14 @@ async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_credentials"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=BLANK_ZEROCONF_INFO
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_credentials"
 
 
@@ -71,7 +72,7 @@ async def test_zeroconf_abort_if_existing_entry(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=BLANK_ZEROCONF_INFO
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -95,7 +96,7 @@ async def test_full_flow(
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         "https://accounts.spotify.com/authorize"
         "?response_type=code&client_id=client"
@@ -121,9 +122,10 @@ async def test_full_flow(
         },
     )
 
-    with patch(
-        "homeassistant.components.spotify.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.spotify.config_flow.Spotify") as spotify_mock:
+    with (
+        patch("homeassistant.components.spotify.async_setup_entry", return_value=True),
+        patch("homeassistant.components.spotify.config_flow.Spotify") as spotify_mock,
+    ):
         spotify_mock.return_value.current_user.return_value = {
             "id": "fake_id",
             "display_name": "frenck",
@@ -179,7 +181,7 @@ async def test_abort_if_spotify_error(
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "connection_error"
 
 
@@ -234,9 +236,10 @@ async def test_reauthentication(
         },
     )
 
-    with patch(
-        "homeassistant.components.spotify.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.spotify.config_flow.Spotify") as spotify_mock:
+    with (
+        patch("homeassistant.components.spotify.async_setup_entry", return_value=True),
+        patch("homeassistant.components.spotify.config_flow.Spotify") as spotify_mock,
+    ):
         spotify_mock.return_value.current_user.return_value = {"id": "frenck"}
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -303,7 +306,7 @@ async def test_reauth_account_mismatch(
         spotify_mock.return_value.current_user.return_value = {"id": "fake_id"}
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_account_mismatch"
 
 
@@ -313,5 +316,5 @@ async def test_abort_if_no_reauth_entry(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": "reauth_confirm"}
     )
 
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "reauth_account_mismatch"

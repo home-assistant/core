@@ -1,4 +1,5 @@
 """Test Matter covers."""
+
 from math import floor
 from unittest.mock import MagicMock, call
 

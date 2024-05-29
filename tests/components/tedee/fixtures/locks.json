@@ -1,0 +1,26 @@
+[
+  {
+    "lock_name": "Lock-1A2B",
+    "lock_id": 12345,
+    "lock_type": 2,
+    "state": 2,
+    "battery_level": 70,
+    "is_connected": true,
+    "is_charging": false,
+    "state_change_result": 0,
+    "is_enabled_pullspring": 1,
+    "duration_pullspring": 2
+  },
+  {
+    "lock_name": "Lock-2C3D",
+    "lock_id": 98765,
+    "lock_type": 4,
+    "state": 2,
+    "battery_level": 70,
+    "is_connected": true,
+    "is_charging": false,
+    "state_change_result": 0,
+    "is_enabled_pullspring": 0,
+    "duration_pullspring": 0
+  }
+]

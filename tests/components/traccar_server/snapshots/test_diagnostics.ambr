@@ -1,0 +1,443 @@
+# serializer version: 1
+# name: test_device_diagnostics[X-Wing]
+  dict({
+    'config_entry_options': dict({
+      'custom_attributes': list([
+        'custom_attr_1',
+      ]),
+      'events': list([
+        'device_moving',
+      ]),
+      'max_accuracy': 5.0,
+      'skip_accuracy_filter_for': list([
+      ]),
+    }),
+    'coordinator_data': dict({
+      '0': dict({
+        'attributes': dict({
+          'custom_attr_1': 'custom_attr_1_value',
+        }),
+        'device': dict({
+          'attributes': dict({
+          }),
+          'category': 'starfighter',
+          'contact': None,
+          'disabled': False,
+          'groupId': 0,
+          'id': 0,
+          'lastUpdate': '1970-01-01T00:00:00Z',
+          'model': '1337',
+          'name': 'X-Wing',
+          'phone': None,
+          'positionId': 0,
+          'status': 'online',
+          'uniqueId': 'abc123',
+        }),
+        'geofence': dict({
+          'area': '**REDACTED**',
+          'attributes': dict({
+          }),
+          'calendarId': 0,
+          'description': "A harsh desert world orbiting twin suns in the galaxy's Outer Rim",
+          'id': 0,
+          'name': 'Tatooine',
+        }),
+        'position': dict({
+          'accuracy': 3.5,
+          'address': '**REDACTED**',
+          'altitude': 546841384638,
+          'attributes': dict({
+            'batteryLevel': 15.00000867601,
+            'custom_attr_1': 'custom_attr_1_value',
+          }),
+          'course': 360,
+          'deviceId': 0,
+          'deviceTime': '1970-01-01T00:00:00Z',
+          'fixTime': '1970-01-01T00:00:00Z',
+          'geofenceIds': list([
+            0,
+          ]),
+          'id': 0,
+          'latitude': '**REDACTED**',
+          'longitude': '**REDACTED**',
+          'network': dict({
+          }),
+          'outdated': True,
+          'protocol': 'C-3PO',
+          'serverTime': '1970-01-01T00:00:00Z',
+          'speed': 4568795,
+          'valid': True,
+        }),
+      }),
+    }),
+    'entities': list([
+      dict({
+        'disabled': False,
+        'entity_id': 'binary_sensor.x_wing_motion',
+        'state': dict({
+          'attributes': dict({
+            'device_class': 'motion',
+            'friendly_name': 'X-Wing Motion',
+          }),
+          'state': 'off',
+        }),
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': False,
+        'entity_id': 'binary_sensor.x_wing_status',
+        'state': dict({
+          'attributes': dict({
+            'friendly_name': 'X-Wing Status',
+          }),
+          'state': 'on',
+        }),
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': False,
+        'entity_id': 'device_tracker.x_wing',
+        'state': dict({
+          'attributes': dict({
+            'category': 'starfighter',
+            'custom_attr_1': 'custom_attr_1_value',
+            'friendly_name': 'X-Wing',
+            'gps_accuracy': 3.5,
+            'latitude': '**REDACTED**',
+            'longitude': '**REDACTED**',
+            'source_type': 'gps',
+            'traccar_id': 0,
+            'tracker': 'traccar_server',
+          }),
+          'state': 'not_home',
+        }),
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': False,
+        'entity_id': 'sensor.x_wing_address',
+        'state': dict({
+          'attributes': dict({
+            'friendly_name': 'X-Wing Address',
+          }),
+          'state': '**REDACTED**',
+        }),
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': False,
+        'entity_id': 'sensor.x_wing_altitude',
+        'state': dict({
+          'attributes': dict({
+            'friendly_name': 'X-Wing Altitude',
+            'state_class': 'measurement',
+            'unit_of_measurement': 'm',
+          }),
+          'state': '546841384638',
+        }),
+        'unit_of_measurement': 'm',
+      }),
+      dict({
+        'disabled': False,
+        'entity_id': 'sensor.x_wing_battery',
+        'state': dict({
+          'attributes': dict({
+            'device_class': 'battery',
+            'friendly_name': 'X-Wing Battery',
+            'state_class': 'measurement',
+            'unit_of_measurement': '%',
+          }),
+          'state': '15.00000867601',
+        }),
+        'unit_of_measurement': '%',
+      }),
+      dict({
+        'disabled': False,
+        'entity_id': 'sensor.x_wing_geofence',
+        'state': dict({
+          'attributes': dict({
+            'friendly_name': 'X-Wing Geofence',
+          }),
+          'state': 'Tatooine',
+        }),
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': False,
+        'entity_id': 'sensor.x_wing_speed',
+        'state': dict({
+          'attributes': dict({
+            'device_class': 'speed',
+            'friendly_name': 'X-Wing Speed',
+            'state_class': 'measurement',
+            'unit_of_measurement': 'kn',
+          }),
+          'state': '4568795',
+        }),
+        'unit_of_measurement': 'kn',
+      }),
+    ]),
+    'subscription_status': 'disconnected',
+  })
+# ---
+# name: test_device_diagnostics_with_disabled_entity[X-Wing]
+  dict({
+    'config_entry_options': dict({
+      'custom_attributes': list([
+        'custom_attr_1',
+      ]),
+      'events': list([
+        'device_moving',
+      ]),
+      'max_accuracy': 5.0,
+      'skip_accuracy_filter_for': list([
+      ]),
+    }),
+    'coordinator_data': dict({
+      '0': dict({
+        'attributes': dict({
+          'custom_attr_1': 'custom_attr_1_value',
+        }),
+        'device': dict({
+          'attributes': dict({
+          }),
+          'category': 'starfighter',
+          'contact': None,
+          'disabled': False,
+          'groupId': 0,
+          'id': 0,
+          'lastUpdate': '1970-01-01T00:00:00Z',
+          'model': '1337',
+          'name': 'X-Wing',
+          'phone': None,
+          'positionId': 0,
+          'status': 'online',
+          'uniqueId': 'abc123',
+        }),
+        'geofence': dict({
+          'area': '**REDACTED**',
+          'attributes': dict({
+          }),
+          'calendarId': 0,
+          'description': "A harsh desert world orbiting twin suns in the galaxy's Outer Rim",
+          'id': 0,
+          'name': 'Tatooine',
+        }),
+        'position': dict({
+          'accuracy': 3.5,
+          'address': '**REDACTED**',
+          'altitude': 546841384638,
+          'attributes': dict({
+            'batteryLevel': 15.00000867601,
+            'custom_attr_1': 'custom_attr_1_value',
+          }),
+          'course': 360,
+          'deviceId': 0,
+          'deviceTime': '1970-01-01T00:00:00Z',
+          'fixTime': '1970-01-01T00:00:00Z',
+          'geofenceIds': list([
+            0,
+          ]),
+          'id': 0,
+          'latitude': '**REDACTED**',
+          'longitude': '**REDACTED**',
+          'network': dict({
+          }),
+          'outdated': True,
+          'protocol': 'C-3PO',
+          'serverTime': '1970-01-01T00:00:00Z',
+          'speed': 4568795,
+          'valid': True,
+        }),
+      }),
+    }),
+    'entities': list([
+      dict({
+        'disabled': True,
+        'entity_id': 'binary_sensor.x_wing_motion',
+        'state': None,
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': True,
+        'entity_id': 'binary_sensor.x_wing_status',
+        'state': None,
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': True,
+        'entity_id': 'device_tracker.x_wing',
+        'state': None,
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': True,
+        'entity_id': 'sensor.x_wing_address',
+        'state': None,
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': True,
+        'entity_id': 'sensor.x_wing_altitude',
+        'state': None,
+        'unit_of_measurement': 'm',
+      }),
+      dict({
+        'disabled': True,
+        'entity_id': 'sensor.x_wing_battery',
+        'state': None,
+        'unit_of_measurement': '%',
+      }),
+      dict({
+        'disabled': True,
+        'entity_id': 'sensor.x_wing_geofence',
+        'state': None,
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': True,
+        'entity_id': 'sensor.x_wing_speed',
+        'state': None,
+        'unit_of_measurement': 'kn',
+      }),
+    ]),
+    'subscription_status': 'disconnected',
+  })
+# ---
+# name: test_entry_diagnostics[entry]
+  dict({
+    'config_entry_options': dict({
+      'custom_attributes': list([
+        'custom_attr_1',
+      ]),
+      'events': list([
+        'device_moving',
+      ]),
+      'max_accuracy': 5.0,
+      'skip_accuracy_filter_for': list([
+      ]),
+    }),
+    'coordinator_data': dict({
+      '0': dict({
+        'attributes': dict({
+          'custom_attr_1': 'custom_attr_1_value',
+        }),
+        'device': dict({
+          'attributes': dict({
+          }),
+          'category': 'starfighter',
+          'contact': None,
+          'disabled': False,
+          'groupId': 0,
+          'id': 0,
+          'lastUpdate': '1970-01-01T00:00:00Z',
+          'model': '1337',
+          'name': 'X-Wing',
+          'phone': None,
+          'positionId': 0,
+          'status': 'online',
+          'uniqueId': 'abc123',
+        }),
+        'geofence': dict({
+          'area': '**REDACTED**',
+          'attributes': dict({
+          }),
+          'calendarId': 0,
+          'description': "A harsh desert world orbiting twin suns in the galaxy's Outer Rim",
+          'id': 0,
+          'name': 'Tatooine',
+        }),
+        'position': dict({
+          'accuracy': 3.5,
+          'address': '**REDACTED**',
+          'altitude': 546841384638,
+          'attributes': dict({
+            'batteryLevel': 15.00000867601,
+            'custom_attr_1': 'custom_attr_1_value',
+          }),
+          'course': 360,
+          'deviceId': 0,
+          'deviceTime': '1970-01-01T00:00:00Z',
+          'fixTime': '1970-01-01T00:00:00Z',
+          'geofenceIds': list([
+            0,
+          ]),
+          'id': 0,
+          'latitude': '**REDACTED**',
+          'longitude': '**REDACTED**',
+          'network': dict({
+          }),
+          'outdated': True,
+          'protocol': 'C-3PO',
+          'serverTime': '1970-01-01T00:00:00Z',
+          'speed': 4568795,
+          'valid': True,
+        }),
+      }),
+    }),
+    'entities': list([
+      dict({
+        'disabled': True,
+        'entity_id': 'binary_sensor.x_wing_motion',
+        'state': None,
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': True,
+        'entity_id': 'binary_sensor.x_wing_status',
+        'state': None,
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': False,
+        'entity_id': 'device_tracker.x_wing',
+        'state': dict({
+          'attributes': dict({
+            'category': 'starfighter',
+            'custom_attr_1': 'custom_attr_1_value',
+            'friendly_name': 'X-Wing',
+            'gps_accuracy': 3.5,
+            'latitude': '**REDACTED**',
+            'longitude': '**REDACTED**',
+            'source_type': 'gps',
+            'traccar_id': 0,
+            'tracker': 'traccar_server',
+          }),
+          'state': 'not_home',
+        }),
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': True,
+        'entity_id': 'sensor.x_wing_address',
+        'state': None,
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': True,
+        'entity_id': 'sensor.x_wing_altitude',
+        'state': None,
+        'unit_of_measurement': 'm',
+      }),
+      dict({
+        'disabled': True,
+        'entity_id': 'sensor.x_wing_battery',
+        'state': None,
+        'unit_of_measurement': '%',
+      }),
+      dict({
+        'disabled': True,
+        'entity_id': 'sensor.x_wing_geofence',
+        'state': None,
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': True,
+        'entity_id': 'sensor.x_wing_speed',
+        'state': None,
+        'unit_of_measurement': 'kn',
+      }),
+    ]),
+    'subscription_status': 'disconnected',
+  })
+# ---

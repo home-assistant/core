@@ -1,4 +1,5 @@
 """Test the Litter-Robot update entity."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 from pylitterbot import LitterRobot4

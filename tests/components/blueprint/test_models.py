@@ -1,4 +1,5 @@
 """Test blueprint models."""
+
 import logging
 from unittest.mock import AsyncMock, patch
 
@@ -206,14 +207,18 @@ async def test_domain_blueprints_get_blueprint_errors(
     """Test domain blueprints."""
     assert hass.data["blueprint"]["automation"] is domain_bps
 
-    with pytest.raises(errors.FailedToLoad), patch(
-        "homeassistant.util.yaml.load_yaml", side_effect=FileNotFoundError
+    with (
+        pytest.raises(errors.FailedToLoad),
+        patch("homeassistant.util.yaml.load_yaml", side_effect=FileNotFoundError),
     ):
         await domain_bps.async_get_blueprint("non-existing-path")
 
-    with patch(
-        "homeassistant.util.yaml.load_yaml", return_value={"blueprint": "invalid"}
-    ), pytest.raises(errors.FailedToLoad):
+    with (
+        patch(
+            "homeassistant.util.yaml.load_yaml", return_value={"blueprint": "invalid"}
+        ),
+        pytest.raises(errors.FailedToLoad),
+    ):
         await domain_bps.async_get_blueprint("non-existing-path")
 
 
@@ -239,8 +244,9 @@ async def test_domain_blueprints_inputs_from_config(domain_bps, blueprint_1) -> 
     with pytest.raises(errors.InvalidBlueprintInputs):
         await domain_bps.async_inputs_from_config({"not-referencing": "use_blueprint"})
 
-    with pytest.raises(errors.MissingInput), patch.object(
-        domain_bps, "async_get_blueprint", return_value=blueprint_1
+    with (
+        pytest.raises(errors.MissingInput),
+        patch.object(domain_bps, "async_get_blueprint", return_value=blueprint_1),
     ):
         await domain_bps.async_inputs_from_config(
             {"use_blueprint": {"path": "bla.yaml", "input": {}}}

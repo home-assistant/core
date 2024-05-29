@@ -1,4 +1,5 @@
 """The Compensation integration."""
+
 import logging
 from operator import itemgetter
 
@@ -89,7 +90,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         sorted_coefficients = sorted(initial_coefficients, key=itemgetter(0))
 
         # get x values and y values from the x,y point pairs
-        x_values, y_values = zip(*initial_coefficients)
+        x_values, y_values = zip(*initial_coefficients, strict=False)
 
         # try to get valid coefficients for a polynomial
         coefficients = None

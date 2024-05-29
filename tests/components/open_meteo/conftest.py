@@ -1,4 +1,5 @@
 """Fixtures for the Open-Meteo integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator

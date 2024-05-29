@@ -1,19 +1,26 @@
 """Config flow for Comelit integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
 from typing import Any
 
-from aiocomelit import ComeliteSerialBridgeApi, exceptions as aiocomelit_exceptions
+from aiocomelit import (
+    ComeliteSerialBridgeApi,
+    ComelitVedoApi,
+    exceptions as aiocomelit_exceptions,
+)
+from aiocomelit.api import ComelitCommonApi
+from aiocomelit.const import BRIDGE
 import voluptuous as vol
 
-from homeassistant import core, exceptions
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
-from .const import _LOGGER, DEFAULT_PORT, DOMAIN
+from .const import _LOGGER, DEFAULT_PORT, DEVICE_TYPE_LIST, DOMAIN
 
 DEFAULT_HOST = "192.168.1.252"
 DEFAULT_PIN = 111111
@@ -27,6 +34,7 @@ def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
             vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
             vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
             vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.positive_int,
+            vol.Required(CONF_TYPE, default=BRIDGE): vol.In(DEVICE_TYPE_LIST),
         }
     )
 
@@ -34,12 +42,14 @@ def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
 STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PIN): cv.positive_int})
 
 
-async def validate_input(
-    hass: core.HomeAssistant, data: dict[str, Any]
-) -> dict[str, str]:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
-    api = ComeliteSerialBridgeApi(data[CONF_HOST], data[CONF_PORT], data[CONF_PIN])
+    api: ComelitCommonApi
+    if data.get(CONF_TYPE, BRIDGE) == BRIDGE:
+        api = ComeliteSerialBridgeApi(data[CONF_HOST], data[CONF_PORT], data[CONF_PIN])
+    else:
+        api = ComelitVedoApi(data[CONF_HOST], data[CONF_PORT], data[CONF_PIN])
 
     try:
         await api.login()
@@ -61,10 +71,11 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
     _reauth_entry: ConfigEntry | None
     _reauth_host: str
     _reauth_port: int
+    _reauth_type: str
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -81,7 +92,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -91,20 +102,23 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=user_form_schema(user_input), errors=errors
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauth flow."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
         self._reauth_host = entry_data[CONF_HOST]
         self._reauth_port = entry_data.get(CONF_PORT, DEFAULT_PORT)
+        self._reauth_type = entry_data.get(CONF_TYPE, BRIDGE)
 
         self.context["title_placeholders"] = {"host": self._reauth_host}
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle reauth confirm."""
         assert self._reauth_entry
         errors = {}
@@ -116,6 +130,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                     {
                         CONF_HOST: self._reauth_host,
                         CONF_PORT: self._reauth_port,
+                        CONF_TYPE: self._reauth_type,
                     }
                     | user_input,
                 )
@@ -123,7 +138,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -133,6 +148,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_HOST: self._reauth_host,
                         CONF_PORT: self._reauth_port,
                         CONF_PIN: user_input[CONF_PIN],
+                        CONF_TYPE: self._reauth_type,
                     },
                 )
                 self.hass.async_create_task(
@@ -148,9 +164,9 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""

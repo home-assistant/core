@@ -1,4 +1,5 @@
 """Support for BMW car locks with BMW ConnectedDrive."""
+
 from __future__ import annotations
 
 import logging
@@ -30,17 +31,10 @@ async def async_setup_entry(
     """Set up the MyBMW lock from config entry."""
     coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[BMWLock] = []
-
-    for vehicle in coordinator.account.vehicles:
-        if not coordinator.read_only:
-            entities.append(
-                BMWLock(
-                    coordinator,
-                    vehicle,
-                )
-            )
-    async_add_entities(entities)
+    if not coordinator.read_only:
+        async_add_entities(
+            BMWLock(coordinator, vehicle) for vehicle in coordinator.account.vehicles
+        )
 
 
 class BMWLock(BMWBaseEntity, LockEntity):
@@ -57,7 +51,7 @@ class BMWLock(BMWBaseEntity, LockEntity):
         super().__init__(coordinator, vehicle)
 
         self._attr_unique_id = f"{vehicle.vin}-lock"
-        self.door_lock_state_available = DOOR_LOCK_STATE in vehicle.available_attributes
+        self.door_lock_state_available = vehicle.is_lsc_enabled
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the car."""
@@ -108,8 +102,8 @@ class BMWLock(BMWBaseEntity, LockEntity):
                 LockState.LOCKED,
                 LockState.SECURED,
             }
-            self._attr_extra_state_attributes[
-                "door_lock_state"
-            ] = self.vehicle.doors_and_windows.door_lock_state.value
+            self._attr_extra_state_attributes["door_lock_state"] = (
+                self.vehicle.doors_and_windows.door_lock_state.value
+            )
 
         super()._handle_coordinator_update()

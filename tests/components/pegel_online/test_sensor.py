@@ -1,4 +1,5 @@
 """Test pegel_online component."""
+
 from unittest.mock import patch
 
 from aiopegelonline.models import Station, StationMeasurements

@@ -1,4 +1,5 @@
 """Test Home Assistant location util methods."""
+
 from unittest.mock import Mock, patch
 
 import aiohttp
@@ -33,7 +34,7 @@ async def session(hass):
 
 
 @pytest.fixture
-async def raising_session(event_loop):
+async def raising_session():
     """Return an aioclient session that only fails."""
     return Mock(get=Mock(side_effect=aiohttp.ClientError))
 

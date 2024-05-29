@@ -1,4 +1,5 @@
 """Signal Messenger for notify component."""
+
 from __future__ import annotations
 
 import logging
@@ -93,7 +94,7 @@ class SignalNotificationService(BaseNotificationService):
             data = DATA_SCHEMA(data)
         except vol.Invalid as ex:
             _LOGGER.error("Invalid message data: %s", ex)
-            raise ex
+            raise
 
         filenames = self.get_filenames(data)
         attachments_as_bytes = self.get_attachments_as_bytes(
@@ -106,7 +107,7 @@ class SignalNotificationService(BaseNotificationService):
             )
         except SignalCliRestApiError as ex:
             _LOGGER.error("%s", ex)
-            raise ex
+            raise
 
     @staticmethod
     def get_filenames(data: Any) -> list[str] | None:
@@ -164,8 +165,8 @@ class SignalNotificationService(BaseNotificationService):
                     size += len(chunk)
                     if size > attachment_size_limit:
                         raise ValueError(
-                            "Attachment too large (Stream reports {}). Max size: {}"
-                            " bytes".format(size, CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES)
+                            f"Attachment too large (Stream reports {size}). "
+                            f"Max size: {CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES} bytes"
                         )
 
                     chunks.extend(chunk)
@@ -173,7 +174,7 @@ class SignalNotificationService(BaseNotificationService):
                 attachments_as_bytes.append(chunks)
             except Exception as ex:
                 _LOGGER.error("%s", ex)
-                raise ex
+                raise
 
         if not attachments_as_bytes:
             return None

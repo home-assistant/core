@@ -1,4 +1,5 @@
 """Support for an Intergas boiler via an InComfort/InTouch Lan2RF gateway."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -42,6 +43,7 @@ class InComfortClimate(IncomfortChild, ClimateEntity):
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, client, heater, room) -> None:
         """Initialize the climate device."""

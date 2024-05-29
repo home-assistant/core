@@ -1,12 +1,14 @@
 """Recorder entity registry helper."""
+
 import logging
+from typing import TYPE_CHECKING
 
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.start import async_at_start
 
 from .core import Recorder
-from .util import get_instance, session_scope
+from .util import filter_unique_constraint_integrity_error, get_instance, session_scope
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,10 +18,14 @@ def async_setup(hass: HomeAssistant) -> None:
     """Set up the entity hooks."""
 
     @callback
-    def _async_entity_id_changed(event: Event) -> None:
+    def _async_entity_id_changed(
+        event: Event[er.EventEntityRegistryUpdatedData],
+    ) -> None:
         instance = get_instance(hass)
-        old_entity_id: str = event.data["old_entity_id"]
-        new_entity_id: str = event.data["entity_id"]
+        if TYPE_CHECKING:
+            assert event.data["action"] == "update" and "old_entity_id" in event.data
+        old_entity_id = event.data["old_entity_id"]
+        new_entity_id = event.data["entity_id"]
         instance.async_update_statistics_metadata(
             old_entity_id, new_statistic_id=new_entity_id
         )
@@ -28,9 +34,11 @@ def async_setup(hass: HomeAssistant) -> None:
         )
 
     @callback
-    def entity_registry_changed_filter(event: Event) -> bool:
+    def entity_registry_changed_filter(
+        event_data: er.EventEntityRegistryUpdatedData,
+    ) -> bool:
         """Handle entity_id changed filter."""
-        return event.data["action"] == "update" and "old_entity_id" in event.data
+        return event_data["action"] == "update" and "old_entity_id" in event_data
 
     @callback
     def _setup_entity_registry_event_handler(hass: HomeAssistant) -> None:
@@ -39,7 +47,6 @@ def async_setup(hass: HomeAssistant) -> None:
             er.EVENT_ENTITY_REGISTRY_UPDATED,
             _async_entity_id_changed,
             event_filter=entity_registry_changed_filter,
-            run_immediately=True,
         )
 
     async_at_start(hass, _setup_entity_registry_event_handler)
@@ -61,7 +68,10 @@ def update_states_metadata(
         )
         return
 
-    with session_scope(session=instance.get_session()) as session:
+    with session_scope(
+        session=instance.get_session(),
+        exception_filter=filter_unique_constraint_integrity_error(instance, "state"),
+    ) as session:
         if not states_meta_manager.update_metadata(session, entity_id, new_entity_id):
             _LOGGER.warning(
                 "Cannot migrate history for entity_id `%s` to `%s` "

@@ -1,4 +1,5 @@
 """Select sensor entities for LIFX integration."""
+
 from __future__ import annotations
 
 from aiolifx_themes.themes import ThemeLibrary

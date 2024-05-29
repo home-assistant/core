@@ -1,0 +1,8 @@
+{
+  "token": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiIxYjExYmIxMWJiYjExMTExYjFiMTFiMWIiLCJlbWFpbCI6InRoaXMuaXNAdGVzdC5jb20iLCJyb2xlIjoidXNlciIsImlhdCI6MTYzNjE5OTk5OCwiZXhwIjoxNjM2MjM1OTk4fQ.1C7lXuKyX1HEGOfMxNwxJ2n-CjoW4rwvNRITQxLICv0",
+  "user": {
+    "_id": "1b11bb11bbb11111b1b11b1b",
+    "email": "this.is@test.com",
+    "role": "user"
+  }
+}

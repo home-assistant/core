@@ -1,4 +1,5 @@
 """The tests for Lutron Caséta device triggers."""
+
 from unittest.mock import patch
 
 import pytest

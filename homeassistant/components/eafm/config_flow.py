@@ -1,14 +1,15 @@
 """Config flow to configure flood monitoring gauges."""
+
 from aioeafm import get_stations
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
 
-class UKFloodsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class UKFloodsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a UK Environment Agency flood monitoring config flow."""
 
     VERSION = 1

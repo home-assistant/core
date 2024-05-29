@@ -1,4 +1,5 @@
 """Tests the Home Assistant workday binary sensor."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -179,6 +180,16 @@ TEST_CONFIG_REMOVE_NAMED = {
     "workdays": DEFAULT_WORKDAYS,
     "add_holidays": [],
     "remove_holidays": ["Not a Holiday", "Christmas", "Thanksgiving"],
+    "language": "en_US",
+}
+TEST_CONFIG_REMOVE_DATE = {
+    "name": DEFAULT_NAME,
+    "country": "US",
+    "excludes": DEFAULT_EXCLUDES,
+    "days_offset": DEFAULT_OFFSET,
+    "workdays": DEFAULT_WORKDAYS,
+    "add_holidays": [],
+    "remove_holidays": ["2024-02-05", "2024-02-06"],
     "language": "en_US",
 }
 TEST_CONFIG_TOMORROW = {

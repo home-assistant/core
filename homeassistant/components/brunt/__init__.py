@@ -1,4 +1,5 @@
 """The brunt component."""
+
 from __future__ import annotations
 
 from asyncio import timeout
@@ -50,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         except ClientResponseError as err:
             if err.status == 403:
-                raise ConfigEntryAuthFailed() from err
+                raise ConfigEntryAuthFailed from err
             if err.status == 401:
                 _LOGGER.warning("Device not found, will reload Brunt integration")
                 await hass.config_entries.async_reload(entry.entry_id)

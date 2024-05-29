@@ -1,4 +1,5 @@
 """The tests for the Template alarm control panel platform."""
+
 import pytest
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN

@@ -1,4 +1,5 @@
 """Support the UPB PIM."""
+
 import upb_lib
 
 from homeassistant.config_entries import ConfigEntry

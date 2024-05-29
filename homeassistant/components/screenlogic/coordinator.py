@@ -1,4 +1,5 @@
 """ScreenlogicDataUpdateCoordinator definition."""
+
 from datetime import timedelta
 import logging
 

@@ -1,4 +1,5 @@
 """Support for the Roku media player."""
+
 from __future__ import annotations
 
 import datetime as dt
@@ -254,9 +255,12 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def source_list(self) -> list[str]:
         """List of available input sources."""
-        return ["Home"] + sorted(
-            app.name for app in self.coordinator.data.apps if app.name is not None
-        )
+        return [
+            "Home",
+            *sorted(
+                app.name for app in self.coordinator.data.apps if app.name is not None
+            ),
+        ]
 
     @roku_exception_handler()
     async def search(self, keyword: str) -> None:

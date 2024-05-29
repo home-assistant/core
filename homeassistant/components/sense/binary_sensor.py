@@ -1,4 +1,5 @@
 """Support for monitoring a Sense energy sensor device."""
+
 import logging
 
 from homeassistant.components.binary_sensor import (

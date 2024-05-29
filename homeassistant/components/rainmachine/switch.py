@@ -1,11 +1,12 @@
 """Component providing support for RainMachine programs and zones."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from regenmaschine.errors import RainMachineError
 import voluptuous as vol
@@ -20,6 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RainMachineData, RainMachineEntity, async_update_programs_and_zones
 from .const import (
+    CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
     CONF_DEFAULT_ZONE_RUN_TIME,
     CONF_DURATION,
     CONF_USE_APP_RUN_TIMES,
@@ -30,18 +32,14 @@ from .const import (
     DEFAULT_ZONE_RUN,
     DOMAIN,
 )
-from .model import (
-    RainMachineEntityDescription,
-    RainMachineEntityDescriptionMixinDataKey,
-    RainMachineEntityDescriptionMixinUid,
-)
+from .model import RainMachineEntityDescription
 from .util import RUN_STATE_MAP, key_exists
 
+ATTR_ACTIVITY_TYPE = "activity_type"
 ATTR_AREA = "area"
 ATTR_CS_ON = "cs_on"
 ATTR_CURRENT_CYCLE = "current_cycle"
 ATTR_CYCLES = "cycles"
-ATTR_ZONE_RUN_TIME = "zone_run_time_from_app"
 ATTR_DELAY = "delay"
 ATTR_DELAY_ON = "delay_on"
 ATTR_FIELD_CAPACITY = "field_capacity"
@@ -57,6 +55,7 @@ ATTR_STATUS = "status"
 ATTR_SUN_EXPOSURE = "sun_exposure"
 ATTR_VEGETATION_TYPE = "vegetation_type"
 ATTR_ZONES = "zones"
+ATTR_ZONE_RUN_TIME = "zone_run_time_from_app"
 
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
@@ -112,12 +111,8 @@ VEGETATION_MAP = {
 }
 
 
-_T = TypeVar("_T", bound="RainMachineBaseSwitch")
-_P = ParamSpec("_P")
-
-
-def raise_on_request_error(
-    func: Callable[Concatenate[_T, _P], Awaitable[None]]
+def raise_on_request_error[_T: RainMachineBaseSwitch, **_P](
+    func: Callable[Concatenate[_T, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
     """Define a decorator to raise on a request error."""
 
@@ -133,26 +128,26 @@ def raise_on_request_error(
     return decorator
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class RainMachineSwitchDescription(
-    SwitchEntityDescription,
-    RainMachineEntityDescription,
+    SwitchEntityDescription, RainMachineEntityDescription
 ):
     """Describe a RainMachine switch."""
 
 
-@dataclass
-class RainMachineActivitySwitchDescription(
-    RainMachineSwitchDescription, RainMachineEntityDescriptionMixinUid
-):
+@dataclass(frozen=True, kw_only=True)
+class RainMachineActivitySwitchDescription(RainMachineSwitchDescription):
     """Describe a RainMachine activity (program/zone) switch."""
 
+    kind: str
+    uid: int
 
-@dataclass
-class RainMachineRestrictionSwitchDescription(
-    RainMachineSwitchDescription, RainMachineEntityDescriptionMixinDataKey
-):
+
+@dataclass(frozen=True, kw_only=True)
+class RainMachineRestrictionSwitchDescription(RainMachineSwitchDescription):
     """Describe a RainMachine restriction switch."""
+
+    data_key: str
 
 
 TYPE_RESTRICTIONS_FREEZE_PROTECT_ENABLED = "freeze_protect_enabled"
@@ -218,6 +213,7 @@ async def async_setup_entry(
                         key=f"{kind}_{uid}",
                         name=name,
                         api_category=api_category,
+                        kind=kind,
                         uid=uid,
                     ),
                 )
@@ -232,6 +228,7 @@ async def async_setup_entry(
                         key=f"{kind}_{uid}_enabled",
                         name=f"{name} enabled",
                         api_category=api_category,
+                        kind=kind,
                         uid=uid,
                     ),
                 )
@@ -294,13 +291,29 @@ class RainMachineActivitySwitch(RainMachineBaseSwitch):
     _attr_icon = "mdi:water"
     entity_description: RainMachineActivitySwitchDescription
 
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        data: RainMachineData,
+        description: RainMachineSwitchDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(entry, data, description)
+
+        self._attr_extra_state_attributes[ATTR_ACTIVITY_TYPE] = (
+            self.entity_description.kind
+        )
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off.
 
         The only way this could occur is if someone rapidly turns a disabled activity
         off right after turning it on.
         """
-        if not self.coordinator.data[self.entity_description.uid]["active"]:
+        if (
+            not self._entry.options[CONF_ALLOW_INACTIVE_ZONES_TO_RUN]
+            and not self.coordinator.data[self.entity_description.uid]["active"]
+        ):
             raise HomeAssistantError(
                 f"Cannot turn off an inactive program/zone: {self.name}"
             )
@@ -314,7 +327,10 @@ class RainMachineActivitySwitch(RainMachineBaseSwitch):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        if not self.coordinator.data[self.entity_description.uid]["active"]:
+        if (
+            not self._entry.options[CONF_ALLOW_INACTIVE_ZONES_TO_RUN]
+            and not self.coordinator.data[self.entity_description.uid]["active"]
+        ):
             self._attr_is_on = False
             self.async_write_ha_state()
             raise HomeAssistantError(
@@ -335,6 +351,19 @@ class RainMachineEnabledSwitch(RainMachineBaseSwitch):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:cog"
     entity_description: RainMachineActivitySwitchDescription
+
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        data: RainMachineData,
+        description: RainMachineSwitchDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(entry, data, description)
+
+        self._attr_extra_state_attributes[ATTR_ACTIVITY_TYPE] = (
+            self.entity_description.kind
+        )
 
     @callback
     def update_from_latest_data(self) -> None:

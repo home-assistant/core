@@ -1,4 +1,5 @@
 """The tests for Z-Wave JS device conditions."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -626,12 +627,15 @@ async def test_failure_scenarios(
             hass, {"type": "failed.test", "device_id": device.id}
         )
 
-    with patch(
-        "homeassistant.components.zwave_js.device_condition.async_get_node_from_device_id",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.zwave_js.device_condition.get_zwave_value_from_config",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.zwave_js.device_condition.async_get_node_from_device_id",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.zwave_js.device_condition.get_zwave_value_from_config",
+            return_value=None,
+        ),
     ):
         assert (
             await device_condition.async_get_condition_capabilities(

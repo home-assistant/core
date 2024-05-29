@@ -6,6 +6,8 @@
     "error": {
       "db_url_invalid": "Database URL invalid",
       "query_invalid": "SQL Query invalid",
+      "query_no_read_only": "SQL query must be read-only",
+      "multiple_queries": "Multiple SQL queries are not supported",
       "column_invalid": "The column `{column}` is not returned by the query"
     },
     "step": {
@@ -61,6 +63,8 @@
     "error": {
       "db_url_invalid": "[%key:component::sql::config::error::db_url_invalid%]",
       "query_invalid": "[%key:component::sql::config::error::query_invalid%]",
+      "query_no_read_only": "[%key:component::sql::config::error::query_no_read_only%]",
+      "multiple_queries": "[%key:component::sql::config::error::multiple_queries%]",
       "column_invalid": "[%key:component::sql::config::error::column_invalid%]"
     }
   },

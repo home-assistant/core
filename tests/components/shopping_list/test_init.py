@@ -1,4 +1,5 @@
 """Test shopping list component."""
+
 from http import HTTPStatus
 
 import pytest

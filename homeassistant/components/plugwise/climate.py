@@ -1,4 +1,5 @@
 """Plugwise Climate component for Home Assistant."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -12,12 +13,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import PlugwiseConfigEntry
 from .const import DOMAIN, MASTER_THERMOSTATS
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
@@ -26,11 +27,12 @@ from .util import plugwise_command
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: PlugwiseConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Smile Thermostats from a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = entry.runtime_data
+
     async_add_entities(
         PlugwiseClimateEntity(coordinator, device_id)
         for device_id, device in coordinator.data.devices.items()
@@ -45,6 +47,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
+    _enable_turn_on_off_backwards_compatibility = False
 
     _previous_mode: str = "heating"
 
@@ -68,6 +71,10 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         ):
             self._attr_supported_features = (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            )
+        if HVACMode.OFF in self.hvac_modes:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
         if presets := self.device.get("preset_modes"):
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
@@ -159,6 +166,16 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         """Return the current running hvac operation if supported."""
         # Keep track of the previous action-mode
         self._previous_action_mode(self.coordinator)
+
+        # Adam provides the hvac_action for each thermostat
+        if (control_state := self.device.get("control_state")) == "cooling":
+            return HVACAction.COOLING
+        if control_state == "heating":
+            return HVACAction.HEATING
+        if control_state == "preheating":
+            return HVACAction.PREHEATING
+        if control_state == "off":
+            return HVACAction.IDLE
 
         heater: str = self.coordinator.data.gateway["heater_id"]
         heater_data = self.coordinator.data.devices[heater]

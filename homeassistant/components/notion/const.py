@@ -1,8 +1,12 @@
 """Define constants for the Notion integration."""
+
 import logging
 
 DOMAIN = "notion"
 LOGGER = logging.getLogger(__package__)
+
+CONF_REFRESH_TOKEN = "refresh_token"
+CONF_USER_UUID = "user_uuid"
 
 SENSOR_BATTERY = "low_battery"
 SENSOR_DOOR = "door"

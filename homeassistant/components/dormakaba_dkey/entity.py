@@ -1,4 +1,5 @@
 """Dormakaba dKey integration base entity."""
+
 from __future__ import annotations
 
 import abc

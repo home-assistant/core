@@ -1,4 +1,5 @@
 """Test built-in blueprints."""
+
 import asyncio
 import contextlib
 from datetime import timedelta
@@ -7,9 +8,9 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components import automation
 from homeassistant.components.blueprint import models
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -47,7 +48,7 @@ async def test_notify_leaving_zone(
 ) -> None:
     """Test notifying leaving a zone blueprint."""
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
 
     device = device_registry.async_get_or_create(

@@ -1,4 +1,5 @@
 """Support for HitachiAirToAirHeatPump."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -90,6 +91,7 @@ class HitachiAirToAirHeatPumpHLRRWIFI(OverkizEntity, ClimateEntity):
     _attr_target_temperature_step = 1.0
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -101,6 +103,8 @@ class HitachiAirToAirHeatPumpHLRRWIFI(OverkizEntity, ClimateEntity):
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
 
         if self.device.states.get(SWING_STATE):

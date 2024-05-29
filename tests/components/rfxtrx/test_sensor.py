@@ -1,4 +1,5 @@
 """The tests for the Rfxtrx sensor platform."""
+
 import pytest
 
 from homeassistant.components.rfxtrx import DOMAIN
@@ -51,7 +52,7 @@ async def test_one_sensor(hass: HomeAssistant, rfxtrx) -> None:
 
 @pytest.mark.parametrize(
     ("state", "event"),
-    [["18.4", "0a520801070100b81b0279"], ["17.9", "0a52085e070100b31b0279"]],
+    [("18.4", "0a520801070100b81b0279"), ("17.9", "0a52085e070100b31b0279")],
 )
 async def test_state_restore(hass: HomeAssistant, rfxtrx, state, event) -> None:
     """State restoration."""

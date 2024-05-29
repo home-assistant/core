@@ -1,4 +1,5 @@
 """Support for Freebox cameras."""
+
 from __future__ import annotations
 
 import logging
@@ -29,11 +30,11 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up cameras."""
-    router = hass.data[DOMAIN][entry.unique_id]
-    tracked: set = set()
+    router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
+    tracked: set[str] = set()
 
     @callback
-    def update_callback():
+    def update_callback() -> None:
         add_entities(hass, router, async_add_entities, tracked)
 
     router.listeners.append(
@@ -45,9 +46,14 @@ async def async_setup_entry(
 
 
 @callback
-def add_entities(hass: HomeAssistant, router, async_add_entities, tracked):
+def add_entities(
+    hass: HomeAssistant,
+    router: FreeboxRouter,
+    async_add_entities: AddEntitiesCallback,
+    tracked: set[str],
+) -> None:
     """Add new cameras from the router."""
-    new_tracked = []
+    new_tracked: list[FreeboxCamera] = []
 
     for nodeid, node in router.home_devices.items():
         if (node["category"] != FreeboxHomeCategory.CAMERA) or (nodeid in tracked):

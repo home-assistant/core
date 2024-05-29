@@ -1,4 +1,5 @@
 """Group for Zigbee Home Automation."""
+
 from __future__ import annotations
 
 import asyncio
@@ -87,6 +88,9 @@ class ZHAGroupMember(LogMixin):
         entity_info = []
 
         for entity_ref in zha_device_registry.get(self.device.ieee):
+            # We have device entities now that don't leverage cluster handlers
+            if not entity_ref.cluster_handlers:
+                continue
             entity = entity_registry.async_get(entity_ref.reference_id)
             handler = list(entity_ref.cluster_handlers.values())[0]
 
@@ -112,7 +116,7 @@ class ZHAGroupMember(LogMixin):
             await self._zha_device.device.endpoints[
                 self._endpoint_id
             ].remove_from_group(self._zha_group.group_id)
-        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+        except (zigpy.exceptions.ZigbeeException, TimeoutError) as ex:
             self.debug(
                 (
                     "Failed to remove endpoint: %s for device '%s' from group: 0x%04x"
@@ -127,7 +131,7 @@ class ZHAGroupMember(LogMixin):
     def log(self, level: int, msg: str, *args: Any, **kwargs) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
-        args = (f"0x{self._zha_group.group_id:04x}", self.endpoint_id) + args
+        args = (f"0x{self._zha_group.group_id:04x}", self.endpoint_id, *args)
         _LOGGER.log(level, msg, *args, **kwargs)
 
 
@@ -172,13 +176,12 @@ class ZHAGroup(LogMixin):
     async def async_add_members(self, members: list[GroupMember]) -> None:
         """Add members to this group."""
         if len(members) > 1:
-            tasks = []
-            for member in members:
-                tasks.append(
-                    self._zha_gateway.devices[member.ieee].async_add_endpoint_to_group(
-                        member.endpoint_id, self.group_id
-                    )
+            tasks = [
+                self._zha_gateway.devices[member.ieee].async_add_endpoint_to_group(
+                    member.endpoint_id, self.group_id
                 )
+                for member in members
+            ]
             await asyncio.gather(*tasks)
         else:
             await self._zha_gateway.devices[
@@ -188,15 +191,12 @@ class ZHAGroup(LogMixin):
     async def async_remove_members(self, members: list[GroupMember]) -> None:
         """Remove members from this group."""
         if len(members) > 1:
-            tasks = []
-            for member in members:
-                tasks.append(
-                    self._zha_gateway.devices[
-                        member.ieee
-                    ].async_remove_endpoint_from_group(
-                        member.endpoint_id, self.group_id
-                    )
+            tasks = [
+                self._zha_gateway.devices[member.ieee].async_remove_endpoint_from_group(
+                    member.endpoint_id, self.group_id
                 )
+                for member in members
+            ]
             await asyncio.gather(*tasks)
         else:
             await self._zha_gateway.devices[
@@ -206,12 +206,11 @@ class ZHAGroup(LogMixin):
     @property
     def member_entity_ids(self) -> list[str]:
         """Return the ZHA entity ids for all entities for the members of this group."""
-        all_entity_ids: list[str] = []
-        for member in self.members:
-            entity_references = member.associated_entities
-            for entity_reference in entity_references:
-                all_entity_ids.append(entity_reference["entity_id"])
-        return all_entity_ids
+        return [
+            entity_reference["entity_id"]
+            for member in self.members
+            for entity_reference in member.associated_entities
+        ]
 
     def get_domain_entity_ids(self, domain: str) -> list[str]:
         """Return entity ids from the entity domain for this group."""
@@ -243,5 +242,5 @@ class ZHAGroup(LogMixin):
     def log(self, level: int, msg: str, *args: Any, **kwargs) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
-        args = (self.name, self.group_id) + args
+        args = (self.name, self.group_id, *args)
         _LOGGER.log(level, msg, *args, **kwargs)

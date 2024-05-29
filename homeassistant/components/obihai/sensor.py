@@ -1,4 +1,5 @@
 """Support for Obihai Sensors."""
+
 from __future__ import annotations
 
 import datetime
@@ -23,16 +24,16 @@ async def async_setup_entry(
 
     requester: ObihaiConnection = hass.data[DOMAIN][entry.entry_id]
 
-    sensors = []
-    for key in requester.services:
-        sensors.append(ObihaiServiceSensors(requester, key))
+    sensors = [ObihaiServiceSensors(requester, key) for key in requester.services]
+
+    sensors.extend(
+        ObihaiServiceSensors(requester, key) for key in requester.call_direction
+    )
 
     if requester.line_services is not None:
-        for key in requester.line_services:
-            sensors.append(ObihaiServiceSensors(requester, key))
-
-    for key in requester.call_direction:
-        sensors.append(ObihaiServiceSensors(requester, key))
+        sensors.extend(
+            ObihaiServiceSensors(requester, key) for key in requester.line_services
+        )
 
     async_add_entities(sensors, update_before_add=True)
 
@@ -108,15 +109,15 @@ class ObihaiServiceSensors(SensorEntity):
                 LOGGER.info("Connection restored")
             self._attr_available = True
 
-            return
-
         except RequestException as exc:
             if self.requester.available:
                 LOGGER.warning("Connection failed, Obihai offline? %s", exc)
+            self._attr_native_value = None
+            self._attr_available = False
+            self.requester.available = False
         except IndexError as exc:
             if self.requester.available:
                 LOGGER.warning("Connection failed, bad response: %s", exc)
-
-        self._attr_native_value = None
-        self._attr_available = False
-        self.requester.available = False
+            self._attr_native_value = None
+            self._attr_available = False
+            self.requester.available = False

@@ -1,8 +1,9 @@
 """The tests for Arcam FMJ Receiver control device triggers."""
+
 import pytest
 
+from homeassistant.components import automation
 from homeassistant.components.arcam_fmj.const import DOMAIN
-import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er

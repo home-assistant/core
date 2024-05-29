@@ -1,7 +1,10 @@
 """Test the Emulated Hue component."""
+
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
+
+from aiohttp import web
 
 from homeassistant.components.emulated_hue.config import (
     DATA_KEY,
@@ -10,7 +13,7 @@ from homeassistant.components.emulated_hue.config import (
     Config,
 )
 from homeassistant.components.emulated_hue.upnp import UPNPResponderProtocol
-from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
@@ -130,17 +133,22 @@ def test_config_alexa_entity_id_to_number() -> None:
 async def test_setup_works(hass: HomeAssistant) -> None:
     """Test setup works."""
     hass.config.components.add("network")
-    with patch(
-        "homeassistant.components.emulated_hue.async_create_upnp_datagram_endpoint",
-        AsyncMock(),
-    ) as mock_create_upnp_datagram_endpoint, patch(
-        "homeassistant.components.emulated_hue.async_get_source_ip"
+    with (
+        patch(
+            "homeassistant.components.emulated_hue.async_create_upnp_datagram_endpoint",
+            AsyncMock(),
+        ) as mock_create_upnp_datagram_endpoint,
+        patch("homeassistant.components.emulated_hue.async_get_source_ip"),
+        patch(
+            "homeassistant.components.emulated_hue.web.TCPSite",
+            return_value=Mock(spec_set=web.TCPSite),
+        ),
     ):
         mock_create_upnp_datagram_endpoint.return_value = AsyncMock(
             spec=UPNPResponderProtocol
         )
         assert await async_setup_component(hass, "emulated_hue", {})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(mock_create_upnp_datagram_endpoint.mock_calls) == 1

@@ -75,7 +75,8 @@
         "state": {
           "always": "Instant",
           "always_charging": "[%key:component::renault::entity::select::charge_mode::state::always%]",
-          "schedule_mode": "Planner"
+          "schedule_mode": "Planner",
+          "scheduled": "Scheduled"
         }
       }
     },

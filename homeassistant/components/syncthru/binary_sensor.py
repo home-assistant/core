@@ -1,4 +1,5 @@
 """Support for Samsung Printers with SyncThru web interface."""
+
 from __future__ import annotations
 
 from pysyncthru import SyncThru, SyncthruState

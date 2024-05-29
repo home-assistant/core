@@ -1,4 +1,5 @@
 """Common fixtures and objects for the LG webOS integration tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 

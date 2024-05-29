@@ -1,4 +1,5 @@
 """Base Sensor for the Xbox Integration."""
+
 from __future__ import annotations
 
 from yarl import URL
@@ -6,8 +7,8 @@ from yarl import URL
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import PresenceData, XboxUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import PresenceData, XboxUpdateCoordinator
 
 
 class XboxBaseSensorEntity(CoordinatorEntity[XboxUpdateCoordinator]):

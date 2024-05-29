@@ -1,4 +1,5 @@
 """Define fixtures available for all tests."""
+
 from http import HTTPStatus
 import json
 import time

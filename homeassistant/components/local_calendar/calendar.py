@@ -73,7 +73,7 @@ class LocalCalendarEntity(CalendarEntity):
         self._store = store
         self._calendar = calendar
         self._event: CalendarEvent | None = None
-        self._attr_name = name.capitalize()
+        self._attr_name = name
         self._attr_unique_id = unique_id
 
     @property

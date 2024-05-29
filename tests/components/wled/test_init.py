@@ -1,4 +1,5 @@
 """Tests for the WLED integration."""
+
 import asyncio
 from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -66,7 +67,7 @@ async def test_setting_unique_id(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test we set unique ID if not set yet."""
-    assert hass.data[DOMAIN]
+    assert init_integration.runtime_data
     assert init_integration.unique_id == "aabbccddeeff"
 
 

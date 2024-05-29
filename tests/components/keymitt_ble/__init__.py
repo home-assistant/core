@@ -1,4 +1,5 @@
 """Tests for the MicroBot integration."""
+
 from unittest.mock import patch
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -45,6 +46,7 @@ SERVICE_INFO = BluetoothServiceInfoBleak(
     device=generate_ble_device("aa:bb:cc:dd:ee:ff", "mibp"),
     time=0,
     connectable=True,
+    tx_power=-127,
 )
 
 

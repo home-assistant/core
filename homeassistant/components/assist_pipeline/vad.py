@@ -1,4 +1,5 @@
 """Voice activity detection."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

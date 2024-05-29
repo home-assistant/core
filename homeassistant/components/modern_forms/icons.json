@@ -1,0 +1,34 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "light_sleep_timer_active": {
+        "default": "mdi:av-timer"
+      },
+      "fan_sleep_timer_active": {
+        "default": "mdi:av-timer"
+      }
+    },
+    "sensor": {
+      "light_timer_remaining_time": {
+        "default": "mdi:timer-outline"
+      },
+      "fan_timer_remaining_time": {
+        "default": "mdi:timer-outline"
+      }
+    },
+    "switch": {
+      "away_mode": {
+        "default": "mdi:airplane-takeoff"
+      },
+      "adaptive_learning": {
+        "default": "mdi:school-outline"
+      }
+    }
+  },
+  "services": {
+    "set_light_sleep_timer": "mdi:timer",
+    "clear_light_sleep_timer": "mdi:timer-cancel",
+    "set_fan_sleep_timer": "mdi:timer",
+    "clear_fan_sleep_timer": "mdi:timer-cancel"
+  }
+}

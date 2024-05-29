@@ -1,4 +1,5 @@
 """Support for AVM FRITZ!SmartHome temperature sensor only devices."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -15,7 +16,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -31,18 +31,18 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utc_from_timestamp
 
 from . import FritzBoxDeviceEntity
-from .common import get_coordinator
+from .coordinator import FritzboxConfigEntry
 from .model import FritzEntityDescriptionMixinBase
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzEntityDescriptionMixinSensor(FritzEntityDescriptionMixinBase):
     """Sensor description mixin for Fritz!Smarthome entities."""
 
     native_value: Callable[[FritzhomeDevice], StateType | datetime]
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzSensorEntityDescription(
     SensorEntityDescription, FritzEntityDescriptionMixinSensor
 ):
@@ -209,26 +209,30 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FritzboxConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the FRITZ!SmartHome sensor from ConfigEntry."""
-    coordinator = get_coordinator(hass, entry.entry_id)
+    coordinator = entry.runtime_data
 
     @callback
-    def _add_entities() -> None:
+    def _add_entities(devices: set[str] | None = None) -> None:
         """Add devices."""
-        if not coordinator.new_devices:
+        if devices is None:
+            devices = coordinator.new_devices
+        if not devices:
             return
         async_add_entities(
             FritzBoxSensor(coordinator, ain, description)
-            for ain in coordinator.new_devices
+            for ain in devices
             for description in SENSOR_TYPES
             if description.suitable(coordinator.data.devices[ain])
         )
 
     entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
-    _add_entities()
+    _add_entities(set(coordinator.data.devices))
 
 
 class FritzBoxSensor(FritzBoxDeviceEntity, SensorEntity):

@@ -1,4 +1,5 @@
 """Intents for the weather integration."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -22,7 +23,9 @@ class GetWeatherIntent(intent.IntentHandler):
     """Handle GetWeather intents."""
 
     intent_type = INTENT_GET_WEATHER
+    description = "Gets the current weather"
     slot_schema = {vol.Optional("name"): cv.string}
+    platforms = {DOMAIN}
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""

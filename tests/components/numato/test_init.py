@@ -1,4 +1,5 @@
 """Tests for the numato integration."""
+
 from numato_gpio import NumatoGpioError
 import pytest
 

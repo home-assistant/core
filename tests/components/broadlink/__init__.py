@@ -1,4 +1,5 @@
 """Tests for the Broadlink integration."""
+
 from dataclasses import dataclass
 from unittest.mock import MagicMock, patch
 

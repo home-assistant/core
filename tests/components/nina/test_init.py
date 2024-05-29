@@ -1,4 +1,5 @@
 """Test the Nina init file."""
+
 from typing import Any
 from unittest.mock import patch
 
@@ -63,7 +64,7 @@ async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
     """Test the configuration entry."""
     entry: MockConfigEntry = await init_integration(hass)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_sensors_connection_error(hass: HomeAssistant) -> None:
@@ -81,4 +82,4 @@ async def test_sensors_connection_error(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(conf_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert conf_entry.state == ConfigEntryState.SETUP_RETRY
+        assert conf_entry.state is ConfigEntryState.SETUP_RETRY

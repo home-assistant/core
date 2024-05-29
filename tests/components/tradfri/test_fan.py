@@ -1,8 +1,8 @@
 """Tradfri fan (recognised as air purifiers in the IKEA ecosystem) platform tests."""
+
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import MagicMock, Mock
 
 import pytest
 from pytradfri.const import (
@@ -11,7 +11,7 @@ from pytradfri.const import (
     ATTR_REACHABLE_STATE,
     ROOT_AIR_PURIFIER,
 )
-from pytradfri.device.air_purifier import AirPurifier
+from pytradfri.device import Device
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
@@ -32,19 +32,17 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .common import setup_integration, trigger_observe_callback
+from .common import CommandStore, setup_integration
 
 
+@pytest.mark.parametrize("device", ["air_purifier"], indirect=True)
 async def test_fan_available(
     hass: HomeAssistant,
-    mock_gateway: Mock,
-    mock_api_factory: MagicMock,
-    air_purifier: AirPurifier,
+    command_store: CommandStore,
+    device: Device,
 ) -> None:
     """Test fan available property."""
     entity_id = "fan.test"
-    device = air_purifier.device
-    mock_gateway.mock_devices.append(device)
     await setup_integration(hass)
 
     state = hass.states.get(entity_id)
@@ -56,8 +54,8 @@ async def test_fan_available(
     assert state.attributes[ATTR_PRESET_MODE] is None
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 9
 
-    await trigger_observe_callback(
-        hass, mock_gateway, device, {ATTR_REACHABLE_STATE: 0}
+    await command_store.trigger_observe_callback(
+        hass, device, {ATTR_REACHABLE_STATE: 0}
     )
 
     state = hass.states.get(entity_id)
@@ -65,6 +63,7 @@ async def test_fan_available(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize("device", ["air_purifier"], indirect=True)
 @pytest.mark.parametrize(
     (
         "service",
@@ -153,9 +152,8 @@ async def test_fan_available(
 )
 async def test_services(
     hass: HomeAssistant,
-    mock_gateway: Mock,
-    mock_api_factory: MagicMock,
-    air_purifier: AirPurifier,
+    command_store: CommandStore,
+    device: Device,
     service: str,
     service_data: dict[str, Any],
     device_state: dict[str, Any],
@@ -165,8 +163,6 @@ async def test_services(
 ) -> None:
     """Test fan services."""
     entity_id = "fan.test"
-    device = air_purifier.device
-    mock_gateway.mock_devices.append(device)
     await setup_integration(hass)
 
     state = hass.states.get(entity_id)
@@ -186,9 +182,8 @@ async def test_services(
     )
     await hass.async_block_till_done()
 
-    await trigger_observe_callback(
+    await command_store.trigger_observe_callback(
         hass,
-        mock_gateway,
         device,
         {ROOT_AIR_PURIFIER: [device_state]},
     )

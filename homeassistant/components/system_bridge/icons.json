@@ -1,0 +1,11 @@
+{
+  "services": {
+    "get_process_by_id": "mdi:console",
+    "get_processes_by_name": "mdi:console",
+    "open_path": "mdi:folder-open",
+    "open_url": "mdi:web",
+    "send_keypress": "mdi:keyboard",
+    "send_text": "mdi:keyboard",
+    "power_command": "mdi:power"
+  }
+}

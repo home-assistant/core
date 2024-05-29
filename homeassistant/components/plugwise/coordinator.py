@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for Plugwise."""
+
 from datetime import timedelta
 
 from plugwise import PlugwiseData, Smile
@@ -26,7 +27,9 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
 
     _connected: bool = False
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -44,10 +47,10 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
         )
 
         self.api = Smile(
-            host=entry.data[CONF_HOST],
-            username=entry.data.get(CONF_USERNAME, DEFAULT_USERNAME),
-            password=entry.data[CONF_PASSWORD],
-            port=entry.data.get(CONF_PORT, DEFAULT_PORT),
+            host=self.config_entry.data[CONF_HOST],
+            username=self.config_entry.data.get(CONF_USERNAME, DEFAULT_USERNAME),
+            password=self.config_entry.data[CONF_PASSWORD],
+            port=self.config_entry.data.get(CONF_PORT, DEFAULT_PORT),
             timeout=30,
             websession=async_get_clientsession(hass, verify_ssl=False),
         )

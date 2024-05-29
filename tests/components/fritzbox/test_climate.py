@@ -1,4 +1,5 @@
 """Tests for AVM Fritz!Box climate component."""
+
 from datetime import timedelta
 from unittest.mock import Mock, call
 
@@ -144,7 +145,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_next_scheduled_preset")
     assert state
@@ -202,7 +203,7 @@ async def test_update(hass: HomeAssistant, fritz: Mock) -> None:
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get(ENTITY_ID)
 
     assert fritz().update_devices.call_count == 2
@@ -242,7 +243,7 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock) -> None:
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert fritz().update_devices.call_count == 4
     assert fritz().login.call_count == 4
@@ -287,6 +288,7 @@ async def test_set_temperature_mode_off(hass: HomeAssistant, fritz: Mock) -> Non
 async def test_set_temperature_mode_heat(hass: HomeAssistant, fritz: Mock) -> None:
     """Test setting temperature by mode."""
     device = FritzDeviceClimateMock()
+    device.target_temperature = 0.0
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
@@ -320,9 +322,26 @@ async def test_set_hvac_mode_off(hass: HomeAssistant, fritz: Mock) -> None:
     assert device.set_target_temperature.call_args_list == [call(0)]
 
 
+async def test_no_reset_hvac_mode_heat(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test setting hvac mode."""
+    device = FritzDeviceClimateMock()
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        True,
+    )
+    assert device.set_target_temperature.call_count == 0
+
+
 async def test_set_hvac_mode_heat(hass: HomeAssistant, fritz: Mock) -> None:
     """Test setting hvac mode."""
     device = FritzDeviceClimateMock()
+    device.target_temperature = 0.0
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
@@ -385,7 +404,7 @@ async def test_preset_mode_update(hass: HomeAssistant, fritz: Mock) -> None:
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get(ENTITY_ID)
 
     assert fritz().update_devices.call_count == 2
@@ -396,7 +415,7 @@ async def test_preset_mode_update(hass: HomeAssistant, fritz: Mock) -> None:
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get(ENTITY_ID)
 
     assert fritz().update_devices.call_count == 3
@@ -421,7 +440,7 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(f"{DOMAIN}.new_climate")
     assert state

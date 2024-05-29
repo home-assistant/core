@@ -1,14 +1,16 @@
 """The tests for the Dialogflow component."""
+
 import copy
 from http import HTTPStatus
 import json
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import dialogflow, intent_script
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 SESSION_ID = "a9b84cec-46b6-484e-8f31-f65dba03ae6d"
@@ -87,10 +89,10 @@ async def fixture(hass, hass_client_no_auth):
     result = await hass.config_entries.flow.async_init(
         "dialogflow", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM, result
+    assert result["type"] is FlowResultType.FORM, result
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     webhook_id = result["result"].data["webhook_id"]
 
     return await hass_client_no_auth(), webhook_id

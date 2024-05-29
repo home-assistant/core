@@ -1,5 +1,5 @@
 """Component for the Somfy MyLink device supporting the Synergy API."""
-import asyncio
+
 import logging
 
 from somfy_mylink_synergy import SomfyMyLinkSynergy
@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         mylink_status = await somfy_mylink.status_info()
-    except asyncio.TimeoutError as ex:
+    except TimeoutError as ex:
         raise ConfigEntryNotReady(
             "Unable to connect to the Somfy MyLink device, please check your settings"
         ) from ex

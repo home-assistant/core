@@ -1,4 +1,5 @@
 """Constants for the blueprint integration."""
+
 BLUEPRINT_FOLDER = "blueprints"
 
 CONF_BLUEPRINT = "blueprint"

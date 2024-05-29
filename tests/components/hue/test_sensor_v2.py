@@ -1,4 +1,5 @@
 """Philips Hue sensor platform tests for V2 bridge/api."""
+
 from homeassistant.components import hue
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -85,7 +86,7 @@ async def test_enable_sensor(
 
     # enable the entity
     updated_entry = entity_registry.async_update_entity(
-        entity_entry.entity_id, **{"disabled_by": None}
+        entity_entry.entity_id, disabled_by=None
     )
     assert updated_entry != entity_entry
     assert updated_entry.disabled is False

@@ -1,4 +1,5 @@
 """Test fixtures for Wake on Lan."""
+
 from __future__ import annotations
 
 from collections.abc import Generator

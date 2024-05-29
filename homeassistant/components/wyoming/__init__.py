@@ -1,4 +1,5 @@
 """The Wyoming integration."""
+
 from __future__ import annotations
 
 import logging
@@ -17,7 +18,12 @@ from .satellite import WyomingSatellite
 
 _LOGGER = logging.getLogger(__name__)
 
-SATELLITE_PLATFORMS = [Platform.BINARY_SENSOR, Platform.SELECT, Platform.SWITCH]
+SATELLITE_PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.SELECT,
+    Platform.SWITCH,
+    Platform.NUMBER,
+]
 
 __all__ = [
     "ATTR_SPEAKER",
@@ -83,7 +89,7 @@ def _make_satellite(
         device_id=device.id,
     )
 
-    return WyomingSatellite(hass, service, satellite_device)
+    return WyomingSatellite(hass, config_entry, service, satellite_device)
 
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry):

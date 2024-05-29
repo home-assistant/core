@@ -1,9 +1,10 @@
 """The test for device automation toggle entity helpers."""
+
 from datetime import timedelta
 
 import pytest
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -63,15 +64,12 @@ async def test_if_fires_on_state_change(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_on {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "turn_on {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -87,15 +85,12 @@ async def test_if_fires_on_state_change(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_off {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "turn_off {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -111,15 +106,12 @@ async def test_if_fires_on_state_change(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_on_or_off {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "turn_on_or_off {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -186,15 +178,12 @@ async def test_if_fires_on_state_change_with_for(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_off {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "turn_off {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -213,6 +202,7 @@ async def test_if_fires_on_state_change_with_for(
     await hass.async_block_till_done()
     assert len(calls) == 1
     await hass.async_block_till_done()
-    assert calls[0].data["some"] == "turn_off device - {} - on - off - 0:00:05".format(
-        entry.entity_id
+    assert (
+        calls[0].data["some"]
+        == f"turn_off device - {entry.entity_id} - on - off - 0:00:05"
     )

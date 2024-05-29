@@ -1,4 +1,5 @@
 """Test BMW sensors."""
+
 from freezegun import freeze_time
 import pytest
 import respx
@@ -18,6 +19,7 @@ from . import setup_mocked_integration
 async def test_entity_state_attrs(
     hass: HomeAssistant,
     bmw_fixture: respx.Router,
+    entity_registry_enabled_by_default: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test sensor options and values.."""

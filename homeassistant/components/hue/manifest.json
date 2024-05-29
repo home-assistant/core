@@ -11,6 +11,6 @@
   "iot_class": "local_push",
   "loggers": ["aiohue"],
   "quality_scale": "platinum",
-  "requirements": ["aiohue==4.7.0"],
+  "requirements": ["aiohue==4.7.1"],
   "zeroconf": ["_hue._tcp.local."]
 }

@@ -32,6 +32,7 @@
     'context': <ANY>,
     'entity_id': 'light.frenck',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -61,6 +62,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -97,6 +100,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Elgato',
     'model': 'Elgato Key Light',
     'name': 'Frenck',
@@ -141,6 +146,7 @@
     'context': <ANY>,
     'entity_id': 'light.frenck',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -171,6 +177,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -207,6 +215,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Elgato',
     'model': 'Elgato Key Light',
     'name': 'Frenck',
@@ -251,6 +261,7 @@
     'context': <ANY>,
     'entity_id': 'light.frenck',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -281,6 +292,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -317,6 +330,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Elgato',
     'model': 'Elgato Key Light',
     'name': 'Frenck',

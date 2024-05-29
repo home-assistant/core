@@ -1,4 +1,5 @@
 """Support for Oncue binary sensors."""
+
 from __future__ import annotations
 
 from aiooncue import OncueDevice

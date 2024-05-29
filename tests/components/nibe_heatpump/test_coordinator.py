@@ -1,4 +1,5 @@
 """Test the Nibe Heat Pump config flow."""
+
 import asyncio
 from typing import Any
 from unittest.mock import patch

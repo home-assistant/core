@@ -1,4 +1,5 @@
 """Test that validation works."""
+
 from unittest.mock import patch
 
 import pytest
@@ -689,7 +690,7 @@ async def test_validation_grid_auto_cost_entity_errors(
 
 @pytest.mark.parametrize(
     ("state", "unit", "expected"),
-    (
+    [
         (
             "123,123.12",
             "$/kWh",
@@ -710,7 +711,7 @@ async def test_validation_grid_auto_cost_entity_errors(
                 },
             },
         ),
-    ),
+    ],
 )
 async def test_validation_grid_price_errors(
     hass: HomeAssistant, mock_energy_manager, mock_get_metadata, state, unit, expected

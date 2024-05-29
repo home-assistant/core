@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "sensor": {
+      "ping": {
+        "default": "mdi:speedometer"
+      },
+      "azimuth": {
+        "default": "mdi:compass"
+      },
+      "elevation": {
+        "default": "mdi:compass"
+      },
+      "uplink_throughput": {
+        "default": "mdi:upload"
+      },
+      "downlink_throughput": {
+        "default": "mdi:download"
+      },
+      "last_boot_time": {
+        "default": "mdi:clock"
+      }
+    }
+  }
+}

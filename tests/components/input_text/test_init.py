@@ -1,4 +1,5 @@
 """The tests for the Input text component."""
+
 from unittest.mock import patch
 
 import pytest
@@ -165,7 +166,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
         (State("input_text.b1", "test"), State("input_text.b2", "testing too long")),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"b1": None, "b2": {"min": 0, "max": 10}}}
@@ -187,7 +188,7 @@ async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> Non
         (State("input_text.b1", "testing"), State("input_text.b2", "testing too long")),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -211,7 +212,7 @@ async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> Non
 
 async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> None:
     """Ensure that entity is create without initial and restore feature."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"b1": {"min": 0, "max": 100}}})
 

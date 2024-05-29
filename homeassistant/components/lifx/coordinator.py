@@ -1,4 +1,5 @@
 """Coordinator for lifx."""
+
 from __future__ import annotations
 
 import asyncio
@@ -315,7 +316,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
         """Get updated color information for all zones."""
         try:
             await async_execute_lifx(self.device.get_extended_color_zones)
-        except asyncio.TimeoutError as ex:
+        except TimeoutError as ex:
             raise HomeAssistantError(
                 f"Timeout getting color zones from {self.name}"
             ) from ex
@@ -380,8 +381,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
 
         # pad the color list with blanks if necessary
         if len(colors) < 82:
-            for _ in range(82 - len(colors)):
-                colors.append((0, 0, 0, 0))
+            colors.extend([(0, 0, 0, 0) for _ in range(82 - len(colors))])
 
         await async_execute_lifx(
             partial(

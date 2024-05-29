@@ -1,4 +1,5 @@
 """KNX Websocket Tests."""
+
 from typing import Any
 from unittest.mock import patch
 
@@ -72,11 +73,12 @@ async def test_knx_project_file_process(
             "password": _password,
         }
     )
-    with patch(
-        "homeassistant.components.knx.project.process_uploaded_file",
-    ) as file_upload_mock, patch(
-        "xknxproject.XKNXProj.parse", return_value=_parse_result
-    ) as parse_mock:
+    with (
+        patch(
+            "homeassistant.components.knx.project.process_uploaded_file",
+        ) as file_upload_mock,
+        patch("xknxproject.XKNXProj.parse", return_value=_parse_result) as parse_mock,
+    ):
         file_upload_mock.return_value.__enter__.return_value = ""
         res = await client.receive_json()
 
@@ -105,11 +107,12 @@ async def test_knx_project_file_process_error(
             "password": "",
         }
     )
-    with patch(
-        "homeassistant.components.knx.project.process_uploaded_file",
-    ) as file_upload_mock, patch(
-        "xknxproject.XKNXProj.parse", side_effect=ValueError
-    ) as parse_mock:
+    with (
+        patch(
+            "homeassistant.components.knx.project.process_uploaded_file",
+        ) as file_upload_mock,
+        patch("xknxproject.XKNXProj.parse", side_effect=ValueError) as parse_mock,
+    ):
         file_upload_mock.return_value.__enter__.return_value = ""
         res = await client.receive_json()
         parse_mock.assert_called_once_with()

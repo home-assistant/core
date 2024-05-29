@@ -1,0 +1,41 @@
+{
+  "repeaterIds": [36882, 46633, 56803],
+  "repeaterData": [
+    {
+      "id": 36882,
+      "blinkEnabled": true,
+      "roomId": 57323,
+      "groupId": 44797,
+      "name": "UmVwZWF0ZXIgSGFsbHdheQ==",
+      "name_unicode": "Repeater Hallway",
+      "color": {
+        "brightness": 100,
+        "red": 0,
+        "green": 0,
+        "blue": 0
+      }
+    },
+    {
+      "id": 46633,
+      "blinkEnabled": true,
+      "roomId": 57323,
+      "groupId": 44797,
+      "name": "UmVwZWF0ZXIgTWFzdGVyIEJlZHJvb20=",
+      "name_unicode": "Repeater Master Bedroom"
+    },
+    {
+      "id": 56803,
+      "blinkEnabled": true,
+      "roomId": 57323,
+      "groupId": 44797,
+      "name": "UmVwZWF0ZXIgS2l0Y2hlbg==",
+      "name_unicode": "Repeater Kitchen",
+      "color": {
+        "green": 0,
+        "red": 255,
+        "blue": 0,
+        "brightness": 100
+      }
+    }
+  ]
+}

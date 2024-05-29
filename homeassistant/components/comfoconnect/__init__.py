@@ -1,4 +1,5 @@
 """Support to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
+
 import logging
 
 from pycomfoconnect import Bridge, ComfoConnect

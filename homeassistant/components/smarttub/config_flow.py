@@ -1,4 +1,5 @@
 """Config flow to configure the SmartTub integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -7,9 +8,8 @@ from typing import Any
 from smarttub import LoginFailed
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 from .controller import SmartTubController
@@ -19,7 +19,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SmartTubConfigFlow(ConfigFlow, domain=DOMAIN):
     """SmartTub configuration flow."""
 
     VERSION = 1
@@ -28,7 +28,7 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Instantiate config flow."""
         super().__init__()
         self._reauth_input: Mapping[str, Any] | None = None
-        self._reauth_entry: config_entries.ConfigEntry | None = None
+        self._reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
@@ -67,7 +67,9 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Get new credentials if the current ones don't work anymore."""
         self._reauth_input = entry_data
         self._reauth_entry = self.hass.config_entries.async_get_entry(

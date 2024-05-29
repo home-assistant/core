@@ -1,4 +1,5 @@
 """Tests for the Cloudflare integration."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
@@ -57,7 +58,7 @@ async def init_integration(
     *,
     data: dict = ENTRY_CONFIG,
     options: dict = ENTRY_OPTIONS,
-    unique_id: str = MOCK_ZONE,
+    unique_id: str = MOCK_ZONE["name"],
     skip_setup: bool = False,
 ) -> MockConfigEntry:
     """Set up the Cloudflare integration in Home Assistant."""

@@ -1,4 +1,5 @@
 """Component with embedded platforms."""
+
 DOMAIN = "test_embedded"
 
 

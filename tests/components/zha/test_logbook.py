@@ -1,9 +1,10 @@
 """ZHA logbook describe events tests."""
+
 from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import general
 
 from homeassistant.components.zha.core.const import ZHA_EVENT
 from homeassistant.const import CONF_DEVICE_ID, CONF_UNIQUE_ID, Platform
@@ -60,7 +61,7 @@ async def mock_devices(hass, zigpy_device_mock, zha_device_joined):
 
 
 async def test_zha_logbook_event_device_with_triggers(
-    hass: HomeAssistant, mock_devices
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, mock_devices
 ) -> None:
     """Test ZHA logbook events with device and triggers."""
 
@@ -77,13 +78,11 @@ async def test_zha_logbook_event_device_with_triggers(
 
     ieee_address = str(zha_device.ieee)
 
-    ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device(
-        identifiers={("zha", ieee_address)}
-    )
+    reg_device = device_registry.async_get_device(identifiers={("zha", ieee_address)})
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     events = mock_humanify(
         hass,
@@ -94,7 +93,7 @@ async def test_zha_logbook_event_device_with_triggers(
                     CONF_DEVICE_ID: reg_device.id,
                     COMMAND: COMMAND_SHAKE,
                     "device_ieee": str(ieee_address),
-                    CONF_UNIQUE_ID: f"{str(ieee_address)}:1:0x0006",
+                    CONF_UNIQUE_ID: f"{ieee_address!s}:1:0x0006",
                     "endpoint_id": 1,
                     "cluster_id": 6,
                     "params": {
@@ -108,7 +107,7 @@ async def test_zha_logbook_event_device_with_triggers(
                     CONF_DEVICE_ID: reg_device.id,
                     COMMAND: COMMAND_DOUBLE,
                     "device_ieee": str(ieee_address),
-                    CONF_UNIQUE_ID: f"{str(ieee_address)}:1:0x0006",
+                    CONF_UNIQUE_ID: f"{ieee_address!s}:1:0x0006",
                     "endpoint_id": 1,
                     "cluster_id": 6,
                     "params": {
@@ -122,7 +121,7 @@ async def test_zha_logbook_event_device_with_triggers(
                     CONF_DEVICE_ID: reg_device.id,
                     COMMAND: COMMAND_DOUBLE,
                     "device_ieee": str(ieee_address),
-                    CONF_UNIQUE_ID: f"{str(ieee_address)}:1:0x0006",
+                    CONF_UNIQUE_ID: f"{ieee_address!s}:1:0x0006",
                     "endpoint_id": 2,
                     "cluster_id": 6,
                     "params": {
@@ -149,19 +148,17 @@ async def test_zha_logbook_event_device_with_triggers(
 
 
 async def test_zha_logbook_event_device_no_triggers(
-    hass: HomeAssistant, mock_devices
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, mock_devices
 ) -> None:
     """Test ZHA logbook events with device and without triggers."""
 
     zigpy_device, zha_device = mock_devices
     ieee_address = str(zha_device.ieee)
-    ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device(
-        identifiers={("zha", ieee_address)}
-    )
+    reg_device = device_registry.async_get_device(identifiers={("zha", ieee_address)})
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     events = mock_humanify(
         hass,
@@ -172,7 +169,7 @@ async def test_zha_logbook_event_device_no_triggers(
                     CONF_DEVICE_ID: reg_device.id,
                     COMMAND: COMMAND_SHAKE,
                     "device_ieee": str(ieee_address),
-                    CONF_UNIQUE_ID: f"{str(ieee_address)}:1:0x0006",
+                    CONF_UNIQUE_ID: f"{ieee_address!s}:1:0x0006",
                     "endpoint_id": 1,
                     "cluster_id": 6,
                     "params": {
@@ -185,7 +182,7 @@ async def test_zha_logbook_event_device_no_triggers(
                 {
                     CONF_DEVICE_ID: reg_device.id,
                     "device_ieee": str(ieee_address),
-                    CONF_UNIQUE_ID: f"{str(ieee_address)}:1:0x0006",
+                    CONF_UNIQUE_ID: f"{ieee_address!s}:1:0x0006",
                     "endpoint_id": 1,
                     "cluster_id": 6,
                     "params": {
@@ -198,7 +195,7 @@ async def test_zha_logbook_event_device_no_triggers(
                 {
                     CONF_DEVICE_ID: reg_device.id,
                     "device_ieee": str(ieee_address),
-                    CONF_UNIQUE_ID: f"{str(ieee_address)}:1:0x0006",
+                    CONF_UNIQUE_ID: f"{ieee_address!s}:1:0x0006",
                     "endpoint_id": 1,
                     "cluster_id": 6,
                     "params": {},
@@ -209,7 +206,7 @@ async def test_zha_logbook_event_device_no_triggers(
                 {
                     CONF_DEVICE_ID: reg_device.id,
                     "device_ieee": str(ieee_address),
-                    CONF_UNIQUE_ID: f"{str(ieee_address)}:1:0x0006",
+                    CONF_UNIQUE_ID: f"{ieee_address!s}:1:0x0006",
                     "endpoint_id": 1,
                     "cluster_id": 6,
                 },
@@ -246,6 +243,7 @@ async def test_zha_logbook_event_device_no_device(
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     events = mock_humanify(
         hass,

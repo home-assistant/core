@@ -1,8 +1,9 @@
 """The test for light device automation."""
+
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
@@ -82,12 +83,12 @@ async def test_get_actions(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_actions_hidden_auxiliary(
     hass: HomeAssistant,
@@ -167,7 +168,7 @@ async def test_get_action_capabilities(
         capabilities = await async_get_device_automation_capabilities(
             hass, DeviceAutomationType.ACTION, action
         )
-        assert capabilities == {"extra_fields": []} or capabilities == {}
+        assert capabilities in ({"extra_fields": []}, {})
 
 
 @pytest.mark.parametrize(

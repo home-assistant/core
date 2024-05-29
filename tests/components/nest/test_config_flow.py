@@ -1,4 +1,5 @@
 """Test the Google Nest Device Access config flow."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -18,7 +19,7 @@ from homeassistant.components import dhcp
 from homeassistant.components.nest.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .common import (
@@ -40,7 +41,7 @@ APP_REDIRECT_URL = "urn:ietf:wg:oauth:2.0:oob"
 
 
 FAKE_DHCP_DATA = dhcp.DhcpServiceInfo(
-    ip="127.0.0.2", macaddress="00:11:22:33:44:55", hostname="fake_hostname"
+    ip="127.0.0.2", macaddress="001122334455", hostname="fake_hostname"
 )
 
 
@@ -66,13 +67,13 @@ class OAuthFixture:
         project_id: str = PROJECT_ID,
     ) -> None:
         """Invoke multiple steps in the app credentials based flow."""
-        assert result.get("type") == "form"
+        assert result.get("type") is FlowResultType.FORM
         assert result.get("step_id") == "cloud_project"
 
         result = await self.async_configure(
             result, {"cloud_project_id": CLOUD_PROJECT_ID}
         )
-        assert result.get("type") == "form"
+        assert result.get("type") is FlowResultType.FORM
         assert result.get("step_id") == "device_project"
 
         result = await self.async_configure(result, {"project_id": project_id})
@@ -81,7 +82,7 @@ class OAuthFixture:
     async def async_oauth_web_flow(self, result: dict, project_id=PROJECT_ID) -> None:
         """Invoke the oauth flow for Web Auth with fake responses."""
         state = self.create_state(result, WEB_REDIRECT_URL)
-        assert result["type"] == "external"
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
         assert result["url"] == self.authorize_url(
             state,
             WEB_REDIRECT_URL,
@@ -151,7 +152,7 @@ class OAuthFixture:
         )
 
     async def async_finish_setup(
-        self, result: dict, user_input: dict = None
+        self, result: dict, user_input: dict | None = None
     ) -> ConfigEntry:
         """Finish the OAuth flow exchanging auth token for refresh token."""
         with patch(
@@ -174,7 +175,7 @@ class OAuthFixture:
     async def async_pubsub_flow(self, result: dict, cloud_project_id="") -> None:
         """Verify the pubsub creation step."""
         # Render form with a link to get an auth token
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "pubsub"
         assert "description_placeholders" in result
         assert "url" in result["description_placeholders"]
@@ -245,14 +246,14 @@ async def test_config_flow_restart(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == "form"
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "cloud_project"
 
     # Change the values to show they are reflected below
     result = await oauth.async_configure(
         result, {"cloud_project_id": "new-cloud-project-id"}
     )
-    assert result.get("type") == "form"
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "device_project"
 
     result = await oauth.async_configure(result, {"project_id": "new-project-id"})
@@ -290,17 +291,17 @@ async def test_config_flow_wrong_project_id(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == "form"
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "cloud_project"
 
     result = await oauth.async_configure(result, {"cloud_project_id": CLOUD_PROJECT_ID})
-    assert result.get("type") == "form"
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "device_project"
 
     # Enter the cloud project id instead of device access project id (really we just check
     # they are the same value which is never correct)
     result = await oauth.async_configure(result, {"project_id": CLOUD_PROJECT_ID})
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert "errors" in result
     assert "project_id" in result["errors"]
     assert result["errors"]["project_id"] == "wrong_project_id"
@@ -350,7 +351,7 @@ async def test_config_flow_pubsub_configuration_error(
 
     mock_subscriber.create_subscription.side_effect = ConfigurationException
     result = await oauth.async_configure(result, {"code": "1234"})
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert "errors" in result
     assert "cloud_project_id" in result["errors"]
     assert result["errors"]["cloud_project_id"] == "bad_project_id"
@@ -371,7 +372,7 @@ async def test_config_flow_pubsub_subscriber_error(
     mock_subscriber.create_subscription.side_effect = SubscriberException()
     result = await oauth.async_configure(result, {"code": "1234"})
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert "errors" in result
     assert "cloud_project_id" in result["errors"]
     assert result["errors"]["cloud_project_id"] == "subscriber_error"
@@ -413,15 +414,15 @@ async def test_duplicate_config_entries(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == "form"
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "cloud_project"
 
     result = await oauth.async_configure(result, {"cloud_project_id": CLOUD_PROJECT_ID})
-    assert result.get("type") == "form"
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "device_project"
 
     result = await oauth.async_configure(result, {"project_id": PROJECT_ID})
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -521,7 +522,7 @@ async def test_pubsub_subscription_auth_failure(
     oauth.async_mock_refresh()
     result = await oauth.async_configure(result, {"code": "1234"})
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_access_token"
 
 
@@ -692,11 +693,11 @@ async def test_dhcp_discovery(
         data=FAKE_DHCP_DATA,
     )
     await hass.async_block_till_done()
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "create_cloud_project"
 
     result = await oauth.async_configure(result, {})
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "missing_credentials"
 
 
@@ -712,11 +713,11 @@ async def test_dhcp_discovery_with_creds(
         data=FAKE_DHCP_DATA,
     )
     await hass.async_block_till_done()
-    assert result.get("type") == "form"
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "cloud_project"
 
     result = await oauth.async_configure(result, {"cloud_project_id": CLOUD_PROJECT_ID})
-    assert result.get("type") == "form"
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "device_project"
 
     result = await oauth.async_configure(result, {"project_id": PROJECT_ID})
@@ -774,5 +775,5 @@ async def test_token_error(
     )
 
     result = await oauth.async_configure(result, user_input=None)
-    assert result.get("type") == "abort"
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == error_reason

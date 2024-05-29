@@ -1,4 +1,5 @@
 """Support for showing random numbers."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -64,6 +65,8 @@ async def async_setup_entry(
 
 class RandomSensor(SensorEntity):
     """Representation of a Random number sensor."""
+
+    _attr_translation_key = "random"
 
     def __init__(self, config: Mapping[str, Any], entry_id: str | None = None) -> None:
         """Initialize the Random sensor."""

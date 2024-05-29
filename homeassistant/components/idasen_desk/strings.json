@@ -21,6 +21,14 @@
     }
   },
   "entity": {
+    "button": {
+      "connect": {
+        "name": "Connect"
+      },
+      "disconnect": {
+        "name": "Disconnect"
+      }
+    },
     "sensor": {
       "height": {
         "name": "Height"
