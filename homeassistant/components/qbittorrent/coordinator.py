@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 from qbittorrentapi import (
     APIConnectionError,
@@ -14,6 +13,7 @@ from qbittorrentapi import (
     SyncMainDataDictionary,
     TorrentInfoList,
 )
+from qbittorrentapi.torrents import TorrentStatusesT
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -57,7 +57,7 @@ class QBittorrentDataCoordinator(DataUpdateCoordinator[SyncMainDataDictionary]):
                 translation_domain=DOMAIN, translation_key="cannot_connect"
             ) from exc
 
-    async def get_torrents(self, torrent_filter: Any) -> TorrentInfoList:
+    async def get_torrents(self, torrent_filter: TorrentStatusesT) -> TorrentInfoList:
         """Async method to get QBittorrent torrents."""
         try:
             torrents = await self.hass.async_add_executor_job(
