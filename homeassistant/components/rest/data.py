@@ -15,7 +15,7 @@ from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.ssl import SSLCipherList
 
-from .const import XML_MIME_TYPES
+from .const import XML_CONTENT_INDICATORS, XML_FILENAME_EXTENSIONS, XML_MIME_TYPES
 
 DEFAULT_TIMEOUT = 10
 
@@ -71,22 +71,26 @@ class RestData:
 
     def data_without_xml(self) -> str | None:
         """If the data is an XML string, convert it to a JSON string."""
-        _LOGGER.debug("Data fetched from resource: %s", self.data)
-        if (
-            (value := self.data) is not None
-            # If the http request failed, headers will be None
-            and (headers := self.headers) is not None
-            and (content_type := headers.get("content-type"))
-            and content_type.startswith(XML_MIME_TYPES)
-        ):
-            try:
-                value = json_dumps(xmltodict.parse(value))
-            except ExpatError:
-                _LOGGER.warning(
-                    "REST xml result could not be parsed and converted to JSON"
-                )
-            else:
-                _LOGGER.debug("JSON converted from XML: %s", value)
+        _LOGGER.debug("Data fetched from resource (%s): %s", self._resource, self.data)
+
+        if (value := self.data) is not None:
+            xmlContentIndicator = value.lower().startswith(XML_CONTENT_INDICATORS)
+            xmlFileExtension = self._resource.lower().endswith(XML_FILENAME_EXTENSIONS)
+            xmlContentType = (
+                (headers := self.headers) is not None
+                and (content_type := headers.get("content-type"))
+                and content_type.lower().startswith(XML_MIME_TYPES)
+            )
+
+            if xmlContentIndicator or xmlFileExtension or xmlContentType:
+                try:
+                    value = json_dumps(xmltodict.parse(value))
+                except ExpatError:
+                    _LOGGER.warning(
+                        "REST xml result could not be parsed and converted to JSON"
+                    )
+                else:
+                    _LOGGER.debug("JSON converted from XML: %s", value)
         return value
 
     async def async_update(self, log_errors: bool = True) -> None:
