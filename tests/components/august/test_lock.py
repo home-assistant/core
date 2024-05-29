@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_UNLOCKED,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.util.dt as dt_util
 
@@ -35,6 +36,7 @@ from .mocks import (
     _mock_doorsense_enabled_august_lock_detail,
     _mock_lock_from_fixture,
     _mock_lock_with_unlatch,
+    _mock_operative_august_lock_detail,
 )
 
 from tests.common import async_fire_time_changed
@@ -467,3 +469,25 @@ async def test_lock_update_via_pubnub(hass: HomeAssistant) -> None:
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_open_throws_hass_service_not_supported_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test open throws correct error on entity does not support this service error."""
+    mocked_lock_detail = await _mock_operative_august_lock_detail(hass)
+    await _create_august_with_devices(hass, [mocked_lock_detail])
+    data = {ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name"}
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(LOCK_DOMAIN, SERVICE_OPEN, data, blocking=True)
+
+
+async def test_open_on_supported_lock(
+    hass: HomeAssistant,
+) -> None:
+    """Test open throws correct error on entity does not support this service error."""
+    mocked_lock_detail = await _mock_operative_august_lock_detail(hass)
+    await _create_august_with_devices(hass, [mocked_lock_detail])
+    data = {ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name"}
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(LOCK_DOMAIN, SERVICE_OPEN, data, blocking=True)
