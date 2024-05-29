@@ -690,3 +690,72 @@ async def test_ws_sign_path(
     hass, path, expires = mock_sign.mock_calls[0][1]
     assert path == "/api/hello"
     assert expires.total_seconds() == 20
+
+
+async def test_ws_refresh_token_set_expiry(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    hass_admin_credential: Credentials,
+    hass_ws_client: WebSocketGenerator,
+    hass_access_token: str,
+) -> None:
+    """Test setting expiry of a refresh token."""
+    assert await async_setup_component(hass, "auth", {"http": {}})
+
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID, credential=hass_admin_credential
+    )
+    assert refresh_token.expire_at is not None
+    ws_client = await hass_ws_client(hass, hass_access_token)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "auth/refresh_token_set_expiry",
+            "refresh_token_id": refresh_token.id,
+            "enable_expiry": False,
+        }
+    )
+
+    result = await ws_client.receive_json()
+    assert result["success"], result
+    refresh_token = hass.auth.async_get_refresh_token(refresh_token.id)
+    assert refresh_token.expire_at is None
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "auth/refresh_token_set_expiry",
+            "refresh_token_id": refresh_token.id,
+            "enable_expiry": True,
+        }
+    )
+
+    result = await ws_client.receive_json()
+    assert result["success"], result
+    refresh_token = hass.auth.async_get_refresh_token(refresh_token.id)
+    assert refresh_token.expire_at is not None
+
+
+async def test_ws_refresh_token_set_expiry_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_access_token: str,
+) -> None:
+    """Test setting expiry of a invalid refresh token returns error."""
+    assert await async_setup_component(hass, "auth", {"http": {}})
+
+    ws_client = await hass_ws_client(hass, hass_access_token)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "auth/refresh_token_set_expiry",
+            "refresh_token_id": "invalid",
+            "enable_expiry": False,
+        }
+    )
+
+    result = await ws_client.receive_json()
+    assert result, result["success"] is False
+    assert result["error"] == {
+        "code": "invalid_token_id",
+        "message": "Received invalid token",
+    }

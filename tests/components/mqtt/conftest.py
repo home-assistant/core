@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from random import getrandbits
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -29,3 +29,10 @@ def mock_temp_dir(temp_dir_prefix: str) -> Generator[None, None, str]:
         f"home-assistant-mqtt-{temp_dir_prefix}-{getrandbits(10):03x}",
     ) as mocked_temp_dir:
         yield mocked_temp_dir
+
+
+@pytest.fixture
+def tag_mock() -> Generator[AsyncMock, None, None]:
+    """Fixture to mock tag."""
+    with patch("homeassistant.components.tag.async_scan_tag") as mock_tag:
+        yield mock_tag

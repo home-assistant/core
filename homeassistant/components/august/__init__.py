@@ -381,6 +381,25 @@ class AugustData(AugustSubscriberMixin):
             hyper_bridge,
         )
 
+    async def async_unlatch(self, device_id: str) -> list[ActivityTypes]:
+        """Open/unlatch the device."""
+        return await self._async_call_api_op_requires_bridge(
+            device_id,
+            self._api.async_unlatch_return_activities,
+            self._august_gateway.access_token,
+            device_id,
+        )
+
+    async def async_unlatch_async(self, device_id: str, hyper_bridge: bool) -> str:
+        """Open/unlatch the device but do not wait for a response since it will come via pubnub."""
+        return await self._async_call_api_op_requires_bridge(
+            device_id,
+            self._api.async_unlatch_async,
+            self._august_gateway.access_token,
+            device_id,
+            hyper_bridge,
+        )
+
     async def async_unlock(self, device_id: str) -> list[ActivityTypes]:
         """Unlock the device."""
         return await self._async_call_api_op_requires_bridge(
