@@ -67,8 +67,10 @@ async def async_setup_entry(
     entities.extend(
         AirGradientProtectedSelect(config_coordinator, description)
         for description in PROTECTED_SELECT_TYPES
-        if description.requires_display
-        and measurement_coordinator.data.model.startswith("I")
+        if (
+            description.requires_display
+            and measurement_coordinator.data.model.startswith("I")
+        )
     )
 
     async_add_entities(entities)
