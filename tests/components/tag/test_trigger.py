@@ -37,7 +37,7 @@ def tag_setup(hass: HomeAssistant, hass_storage):
 
 
 @pytest.fixture
-def calls(hass: HomeAssistant):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
