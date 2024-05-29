@@ -347,6 +347,10 @@ def _get_exposed_entities(
         "device_class",
         "current_position",
         "percentage",
+        "volume_level",
+        "media_title",
+        "media_artist",
+        "media_album_name",
     }
 
     entities = {}
