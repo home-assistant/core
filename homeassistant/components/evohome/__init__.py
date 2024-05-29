@@ -57,66 +57,28 @@ import homeassistant.util.dt as dt_util
 
 from .const import (
     ACCESS_TOKEN_EXPIRES,
+    ATTR_DURATION_DAYS,
+    ATTR_DURATION_HOURS,
+    ATTR_SYSTEM_MODE,
     CONF_LOCATION_IDX,
+    CONFIG_SCHEMA,
     DOMAIN,
     GWS,
+    RESET_ZONE_OVERRIDE_SCHEMA,
+    SET_ZONE_OVERRIDE_SCHEMA,
     STORAGE_KEY,
     STORAGE_VER,
     TCS,
     USER_DATA,
+    EvoService,
 )
 from .coordinator import EvoBroker, EvoCoordinator
 from .helpers import convert_dict, convert_until, dt_aware_to_naive, handle_exception
 
+__all__ = ["CONFIG_SCHEMA", "DOMAIN", "async_setup"]
+
+
 _LOGGER = logging.getLogger(__name__)
-
-
-SCAN_INTERVAL_DEFAULT = timedelta(seconds=300)
-SCAN_INTERVAL_MINIMUM = timedelta(seconds=60)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_LOCATION_IDX, default=0): cv.positive_int,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=SCAN_INTERVAL_DEFAULT
-                ): vol.All(cv.time_period, vol.Range(min=SCAN_INTERVAL_MINIMUM)),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-ATTR_SYSTEM_MODE = "mode"
-ATTR_DURATION_DAYS = "period"
-ATTR_DURATION_HOURS = "duration"
-
-ATTR_ZONE_TEMP = "setpoint"
-ATTR_DURATION_UNTIL = "duration"
-
-SVC_REFRESH_SYSTEM = "refresh_system"
-SVC_SET_SYSTEM_MODE = "set_system_mode"
-SVC_RESET_SYSTEM = "reset_system"
-SVC_SET_ZONE_OVERRIDE = "set_zone_override"
-SVC_RESET_ZONE_OVERRIDE = "clear_zone_override"
-
-
-RESET_ZONE_OVERRIDE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_id})
-SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_ZONE_TEMP): vol.All(
-            vol.Coerce(float), vol.Range(min=4.0, max=35.0)
-        ),
-        vol.Optional(ATTR_DURATION_UNTIL): vol.All(
-            cv.time_period, vol.Range(min=timedelta(days=0), max=timedelta(days=1))
-        ),
-    }
-)
-# system mode schemas are built dynamically, below
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -272,14 +234,14 @@ def setup_service_functions(hass: HomeAssistant, broker: EvoBroker) -> None:
 
         async_dispatcher_send(hass, DOMAIN, payload)
 
-    hass.services.async_register(DOMAIN, SVC_REFRESH_SYSTEM, force_refresh)
+    hass.services.async_register(DOMAIN, EvoService.REFRESH_SYSTEM, force_refresh)
 
     # Enumerate which operating modes are supported by this system
     modes = broker.config[SZ_ALLOWED_SYSTEM_MODES]
 
     # Not all systems support "AutoWithReset": register this handler only if required
     if [m[SZ_SYSTEM_MODE] for m in modes if m[SZ_SYSTEM_MODE] == SZ_AUTO_WITH_RESET]:
-        hass.services.async_register(DOMAIN, SVC_RESET_SYSTEM, set_system_mode)
+        hass.services.async_register(DOMAIN, EvoService.RESET_SYSTEM, set_system_mode)
 
     system_mode_schemas = []
     modes = [m for m in modes if m[SZ_SYSTEM_MODE] != SZ_AUTO_WITH_RESET]
@@ -323,7 +285,7 @@ def setup_service_functions(hass: HomeAssistant, broker: EvoBroker) -> None:
     if system_mode_schemas:
         hass.services.async_register(
             DOMAIN,
-            SVC_SET_SYSTEM_MODE,
+            EvoService.SET_SYSTEM_MODE,
             set_system_mode,
             schema=vol.Schema(vol.Any(*system_mode_schemas)),
         )
@@ -331,13 +293,13 @@ def setup_service_functions(hass: HomeAssistant, broker: EvoBroker) -> None:
     # The zone modes are consistent across all systems and use the same schema
     hass.services.async_register(
         DOMAIN,
-        SVC_RESET_ZONE_OVERRIDE,
+        EvoService.RESET_ZONE_OVERRIDE,
         set_zone_override,
         schema=RESET_ZONE_OVERRIDE_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        SVC_SET_ZONE_OVERRIDE,
+        EvoService.SET_ZONE_OVERRIDE,
         set_zone_override,
         schema=SET_ZONE_OVERRIDE_SCHEMA,
     )
@@ -371,7 +333,10 @@ class EvoDevice(Entity):
             return
         if payload["unique_id"] != self._attr_unique_id:
             return
-        if payload["service"] in (SVC_SET_ZONE_OVERRIDE, SVC_RESET_ZONE_OVERRIDE):
+        if payload["service"] in (
+            EvoService.SET_ZONE_OVERRIDE,
+            EvoService.RESET_ZONE_OVERRIDE,
+        ):
             await self.async_zone_svc_request(payload["service"], payload["data"])
             return
         await self.async_tcs_svc_request(payload["service"], payload["data"])
