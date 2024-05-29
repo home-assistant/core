@@ -76,7 +76,7 @@ async def test_sensors_disappearing(
     open_api: OpenAPI,
     aioambient,
     config_entry,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that we log errors properly."""
 

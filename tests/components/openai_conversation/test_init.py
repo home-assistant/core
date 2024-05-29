@@ -179,7 +179,11 @@ async def test_generate_image_service_error(
     ],
 )
 async def test_init_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, caplog, side_effect, error
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    side_effect,
+    error,
 ) -> None:
     """Test initialization errors."""
     with patch(

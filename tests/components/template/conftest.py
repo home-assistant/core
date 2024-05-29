@@ -15,7 +15,9 @@ def calls(hass: HomeAssistant) -> list[ServiceCall]:
 
 
 @pytest.fixture
-async def start_ha(hass, count, domain, config, caplog):
+async def start_ha(
+    hass: HomeAssistant, count, domain, config, caplog: pytest.LogCaptureFixture
+):
     """Do setup of integration."""
     with assert_setup_component(count, domain):
         assert await async_setup_component(
@@ -30,6 +32,6 @@ async def start_ha(hass, count, domain, config, caplog):
 
 
 @pytest.fixture
-async def caplog_setup_text(caplog):
+async def caplog_setup_text(caplog: pytest.LogCaptureFixture) -> str:
     """Return setup log of integration."""
     return caplog.text
