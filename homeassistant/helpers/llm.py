@@ -250,7 +250,8 @@ class AssistAPI(API):
         prompt = [
             (
                 "Call the intent tools to control Home Assistant. "
-                "When controlling an area, prefer passing area name and domain."
+                "None of their parameters take a list. "
+                "When controlling an area, prefer passing just area name and domain."
             )
         ]
         area: ar.AreaEntry | None = None
