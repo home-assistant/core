@@ -9,7 +9,7 @@ from homeassistant.components import notify
 from homeassistant.components.demo import DOMAIN
 import homeassistant.components.demo.notify as demo
 from homeassistant.const import Platform
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_capture_events
@@ -40,24 +40,6 @@ async def setup_notify(hass: HomeAssistant, notify_only: None) -> None:
 def events(hass: HomeAssistant) -> list[Event]:
     """Fixture that catches notify events."""
     return async_capture_events(hass, demo.EVENT_NOTIFY)
-
-
-@pytest.fixture
-def calls():
-    """Fixture to calls."""
-    return []
-
-
-@pytest.fixture
-def record_calls(calls):
-    """Fixture to record calls."""
-
-    @callback
-    def record_calls(*args):
-        """Record calls."""
-        calls.append(args)
-
-    return record_calls
 
 
 async def test_sending_message(hass: HomeAssistant, events: list[Event]) -> None:

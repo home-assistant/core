@@ -9,7 +9,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components import dialogflow, intent_script
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
@@ -22,12 +22,12 @@ CONTEXT_NAME = "78a5db95-b7d6-4d50-9c9b-2fc73a5e34c3_id_dialog_context"
 
 
 @pytest.fixture
-async def calls(hass, fixture):
+async def calls(hass: HomeAssistant, fixture) -> list[ServiceCall]:
     """Return a list of Dialogflow calls triggered."""
-    calls = []
+    calls: list[ServiceCall] = []
 
     @callback
-    def mock_service(call):
+    def mock_service(call: ServiceCall) -> None:
         """Mock action call."""
         calls.append(call)
 
@@ -343,7 +343,9 @@ async def test_intent_request_without_slots_v2(hass: HomeAssistant, fixture) -> 
     assert text == "You are both home, you silly"
 
 
-async def test_intent_request_calling_service_v1(fixture, calls) -> None:
+async def test_intent_request_calling_service_v1(
+    fixture, calls: list[ServiceCall]
+) -> None:
     """Test a request for calling a service.
 
     If this request is done async the test could finish before the action
@@ -365,7 +367,9 @@ async def test_intent_request_calling_service_v1(fixture, calls) -> None:
     assert call.data.get("hello") == "virgo"
 
 
-async def test_intent_request_calling_service_v2(fixture, calls) -> None:
+async def test_intent_request_calling_service_v2(
+    fixture, calls: list[ServiceCall]
+) -> None:
     """Test a request for calling a service.
 
     If this request is done async the test could finish before the action

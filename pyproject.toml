@@ -26,9 +26,9 @@ dependencies    = [
     "aiodns==3.2.0",
     "aiohttp==3.9.5",
     "aiohttp_cors==0.7.0",
-    "aiohttp_session==2.12.0",
     "aiohttp-fast-url-dispatcher==0.3.0",
     "aiohttp-fast-zlib==0.1.0",
+    "aiozoneinfo==0.1.0",
     "astral==2.2",
     "async-interrupt==1.1.1",
     "attrs==23.2.0",
@@ -61,7 +61,7 @@ dependencies    = [
     "PyYAML==6.0.1",
     "requests==2.31.0",
     "SQLAlchemy==2.0.30",
-    "typing-extensions>=4.11.0,<5.0",
+    "typing-extensions>=4.12.0,<5.0",
     "ulid-transform==0.9.0",
     # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
@@ -152,6 +152,7 @@ class-const-naming-style = "any"
 # too-many-ancestors - it's too strict.
 # wrong-import-order - isort guards this
 # consider-using-f-string - str.format sometimes more readable
+# possibly-used-before-assignment - too many errors / not necessarily issues
 # ---
 # Pylint CodeStyle plugin
 # consider-using-namedtuple-or-dataclass - too opinionated
@@ -176,6 +177,7 @@ disable = [
     "consider-using-f-string",
     "consider-using-namedtuple-or-dataclass",
     "consider-using-assignment-expr",
+    "possibly-used-before-assignment",
 
     # Handled by ruff
     # Ref: <https://github.com/astral-sh/ruff/issues/970>
@@ -561,7 +563,7 @@ filterwarnings = [
     # https://github.com/tomaszsluszniak/sanix_py/blob/v1.0.6/sanix/__init__.py#L42
     "ignore:invalid escape sequence:SyntaxWarning:.*sanix",
     # https://pypi.org/project/sleekxmppfs/ - v1.4.1 - 2022-08-18
-    "ignore:invalid escape sequence:SyntaxWarning:.*sleekxmppfs.thirdparty.mini_dateutil",
+    "ignore:invalid escape sequence:SyntaxWarning:.*sleekxmppfs.thirdparty.mini_dateutil",  # codespell:ignore thirdparty
     # https://pypi.org/project/vobject/ - v0.9.7 - 2024-03-25
     # https://github.com/py-vobject/vobject
     "ignore:invalid escape sequence:SyntaxWarning:.*vobject.base",
@@ -777,8 +779,6 @@ ignore = [
     "TRY400", # Use `logging.exception` instead of `logging.error`
     # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
     "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
-    # Ignored due to incompatible with mypy: https://github.com/python/mypy/issues/15238
-    "UP040", # Checks for use of TypeAlias annotation for declaring type aliases.
 
     # May conflict with the formatter, https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
     "W191",
@@ -799,7 +799,6 @@ ignore = [
     "PT019",
     "PYI024", # Use typing.NamedTuple instead of collections.namedtuple
     "RET503",
-    "RET502",
     "RET501",
     "TRY002",
     "TRY301"

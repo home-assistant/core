@@ -20,11 +20,11 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="setup_hass_config", autouse=True)
-def fixture_setup_hass_config(hass: HomeAssistant) -> None:
+async def fixture_setup_hass_config(hass: HomeAssistant) -> None:
     """Set up things to be run when tests are started."""
     hass.config.latitude = 33.27
     hass.config.longitude = 112
-    hass.config.set_time_zone(PHOENIX_TIME_ZONE)
+    await hass.config.async_set_time_zone(PHOENIX_TIME_ZONE)
 
 
 @pytest.fixture(name="hass_tz_info")

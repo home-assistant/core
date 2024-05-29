@@ -511,7 +511,7 @@ async def test_load_bad_data(
                     "id": "00003",
                     "orphaned_timestamp": None,
                     "platform": "super_platform",
-                    "unique_id": 234,  # Should trigger warning
+                    "unique_id": 234,  # Should not load
                 },
                 {
                     "config_entry_id": None,
@@ -536,7 +536,11 @@ async def test_load_bad_data(
 
     assert (
         "'test' from integration super_platform has a non string unique_id '123', "
-        "please create a bug report" in caplog.text
+        "please create a bug report" not in caplog.text
+    )
+    assert (
+        "'test' from integration super_platform has a non string unique_id '234', "
+        "please create a bug report" not in caplog.text
     )
     assert (
         "Entity registry entry 'test.test2' from integration super_platform could not "

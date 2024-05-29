@@ -483,6 +483,7 @@ TEMPERATURE_SENSOR_CONFIG = {
 )
 async def test_controlling_state_via_mqtt(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mqtt_mock: MqttMockHAClient,
     setup_tasmota,
     sensor_config,
@@ -491,7 +492,6 @@ async def test_controlling_state_via_mqtt(
     states,
 ) -> None:
     """Test state update via MQTT."""
-    entity_reg = er.async_get(hass)
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config = copy.deepcopy(sensor_config)
     mac = config["mac"]
@@ -514,7 +514,7 @@ async def test_controlling_state_via_mqtt(
         assert state.state == "unavailable"
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
-        entry = entity_reg.async_get(entity_id)
+        entry = entity_registry.async_get(entity_id)
         assert entry.disabled is False
         assert entry.disabled_by is None
         assert entry.entity_category is None
@@ -588,6 +588,7 @@ async def test_controlling_state_via_mqtt(
 )
 async def test_quantity_override(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mqtt_mock: MqttMockHAClient,
     setup_tasmota,
     sensor_config,
@@ -595,7 +596,6 @@ async def test_quantity_override(
     states,
 ) -> None:
     """Test quantity override for certain sensors."""
-    entity_reg = er.async_get(hass)
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config = copy.deepcopy(sensor_config)
     mac = config["mac"]
@@ -620,7 +620,7 @@ async def test_quantity_override(
         for attribute, expected in expected_state.get("attributes", {}).items():
             assert state.attributes.get(attribute) == expected
 
-        entry = entity_reg.async_get(entity_id)
+        entry = entity_registry.async_get(entity_id)
         assert entry.disabled is False
         assert entry.disabled_by is None
         assert entry.entity_category is None
@@ -742,13 +742,14 @@ async def test_bad_indexed_sensor_state_via_mqtt(
 
 @pytest.mark.parametrize("status_sensor_disabled", [False])
 async def test_status_sensor_state_via_mqtt(
-    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
 ) -> None:
     """Test state update via MQTT."""
-    entity_reg = er.async_get(hass)
-
     # Pre-enable the status sensor
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         Platform.SENSOR,
         "tasmota",
         "00000049A3BC_status_sensor_status_sensor_status_signal",
@@ -856,13 +857,14 @@ async def test_battery_sensor_state_via_mqtt(
 
 @pytest.mark.parametrize("status_sensor_disabled", [False])
 async def test_single_shot_status_sensor_state_via_mqtt(
-    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
 ) -> None:
     """Test state update via MQTT."""
-    entity_reg = er.async_get(hass)
-
     # Pre-enable the status sensor
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         Platform.SENSOR,
         "tasmota",
         "00000049A3BC_status_sensor_status_sensor_status_restart_reason",
@@ -941,13 +943,15 @@ async def test_single_shot_status_sensor_state_via_mqtt(
 @pytest.mark.parametrize("status_sensor_disabled", [False])
 @patch.object(hatasmota.status_sensor, "datetime", Mock(wraps=datetime.datetime))
 async def test_restart_time_status_sensor_state_via_mqtt(
-    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
 ) -> None:
     """Test state update via MQTT."""
-    entity_reg = er.async_get(hass)
 
     # Pre-enable the status sensor
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         Platform.SENSOR,
         "tasmota",
         "00000049A3BC_status_sensor_status_sensor_last_restart_time",
@@ -1119,6 +1123,7 @@ async def test_indexed_sensor_attributes(
 )
 async def test_diagnostic_sensors(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mqtt_mock: MqttMockHAClient,
     setup_tasmota,
     sensor_name,
@@ -1126,8 +1131,6 @@ async def test_diagnostic_sensors(
     disabled_by,
 ) -> None:
     """Test properties of diagnostic sensors."""
-    entity_reg = er.async_get(hass)
-
     config = copy.deepcopy(DEFAULT_CONFIG)
     mac = config["mac"]
 
@@ -1141,7 +1144,7 @@ async def test_diagnostic_sensors(
 
     state = hass.states.get(f"sensor.{sensor_name}")
     assert bool(state) != disabled
-    entry = entity_reg.async_get(f"sensor.{sensor_name}")
+    entry = entity_registry.async_get(f"sensor.{sensor_name}")
     assert entry.disabled == disabled
     assert entry.disabled_by is disabled_by
     assert entry.entity_category == "diagnostic"
@@ -1149,11 +1152,12 @@ async def test_diagnostic_sensors(
 
 @pytest.mark.parametrize("status_sensor_disabled", [False])
 async def test_enable_status_sensor(
-    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
 ) -> None:
     """Test enabling status sensor."""
-    entity_reg = er.async_get(hass)
-
     config = copy.deepcopy(DEFAULT_CONFIG)
     mac = config["mac"]
 
@@ -1167,12 +1171,12 @@ async def test_enable_status_sensor(
 
     state = hass.states.get("sensor.tasmota_signal")
     assert state is None
-    entry = entity_reg.async_get("sensor.tasmota_signal")
+    entry = entity_registry.async_get("sensor.tasmota_signal")
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Enable the signal level status sensor
-    updated_entry = entity_reg.async_update_entity(
+    updated_entry = entity_registry.async_update_entity(
         "sensor.tasmota_signal", disabled_by=None
     )
     assert updated_entry != entry

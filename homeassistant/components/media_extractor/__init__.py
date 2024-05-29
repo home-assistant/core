@@ -16,8 +16,10 @@ from homeassistant.components.media_player import (
     MEDIA_PLAYER_PLAY_MEDIA_SCHEMA,
     SERVICE_PLAY_MEDIA,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -25,6 +27,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -55,16 +58,49 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Media Extractor from a config entry."""
+
+    return True
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the media extractor service."""
 
-    async def extract_media_url(call: ServiceCall) -> ServiceResponse:
-        """Extract media url."""
-        youtube_dl = YoutubeDL(
-            {"quiet": True, "logger": _LOGGER, "format": call.data[ATTR_FORMAT_QUERY]}
+    if DOMAIN in config:
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.11.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Media extractor",
+            },
         )
 
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+            )
+        )
+
+    async def extract_media_url(call: ServiceCall) -> ServiceResponse:
+        """Extract media url."""
+
         def extract_info() -> dict[str, Any]:
+            youtube_dl = YoutubeDL(
+                {
+                    "quiet": True,
+                    "logger": _LOGGER,
+                    "format": call.data[ATTR_FORMAT_QUERY],
+                }
+            )
             return cast(
                 dict[str, Any],
                 youtube_dl.extract_info(
@@ -93,7 +129,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def play_media(call: ServiceCall) -> None:
         """Get stream URL and send it to the play_media service."""
-        MediaExtractor(hass, config[DOMAIN], call.data).extract_and_send()
+        MediaExtractor(hass, config.get(DOMAIN, {}), call.data).extract_and_send()
 
     default_format_query = config.get(DOMAIN, {}).get(
         CONF_DEFAULT_STREAM_QUERY, DEFAULT_STREAM_QUERY

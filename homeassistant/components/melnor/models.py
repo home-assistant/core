@@ -1,7 +1,6 @@
 """Melnor integration models."""
 
 from collections.abc import Callable
-from typing import TypeVar
 
 from melnor_bluetooth.device import Device, Valve
 
@@ -77,14 +76,11 @@ class MelnorZoneEntity(MelnorBluetoothEntity):
         )
 
 
-T = TypeVar("T", bound=EntityDescription)
-
-
-def get_entities_for_valves(
+def get_entities_for_valves[_T: EntityDescription](
     coordinator: MelnorDataUpdateCoordinator,
-    descriptions: list[T],
+    descriptions: list[_T],
     function: Callable[
-        [Valve, T],
+        [Valve, _T],
         CoordinatorEntity[MelnorDataUpdateCoordinator],
     ],
 ) -> list[CoordinatorEntity[MelnorDataUpdateCoordinator]]:
