@@ -322,6 +322,12 @@ class ElectraClimateEntity(ClimateEntity):
         """Send HVAC parameters to API."""
 
         try:
+            _LOGGER.debug(
+                "%s (%s) state sent: %s",
+                self._electra_ac_device.mac,
+                self.name,
+                self._electra_ac_device.__dict__,
+            )
             resp = await self._api.set_state(self._electra_ac_device)
         except ElectraApiError as exp:
             raise HomeAssistantError(
