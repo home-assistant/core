@@ -5,7 +5,8 @@ from genie_partner_sdk.auth import Auth
 
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import API_KEY, API_URL
+API_URL = "https://twdvzuefzh.execute-api.us-east-2.amazonaws.com/v1"
+API_KEY = "k6QaiQmcTm2zfaNns5L1Z8duBtJmhDOW8JawlCC3"
 
 
 class AsyncConfigEntryAuth(Auth):  # type: ignore[misc]
