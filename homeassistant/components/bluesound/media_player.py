@@ -211,8 +211,6 @@ class BluesoundPlayer(MediaPlayerEntity):
 
     _attr_media_content_type = MediaType.MUSIC
 
-    COMMAND_TIMEOUT = 10
-
     def __init__(
         self, hass: HomeAssistant, host, port=None, name=None, init_callback=None
     ) -> None:
@@ -236,7 +234,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._group_name = None
         self._group_list: list[str] = []
         self._bluesound_device_name = None
-        self._player = Player(host, port, async_get_clientsession(hass))
+        self._player = Player(host, port, async_get_clientsession(hass), default_timeout=3)
 
         self._init_callback = init_callback
 
@@ -253,8 +251,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
     async def force_update_sync_status(self, on_updated_cb=None) -> bool:
         """Update the internal status."""
-        async with timeout(BluesoundPlayer.COMMAND_TIMEOUT):
-            sync_status = await self._player.sync_status()
+        sync_status = await self._player.sync_status()
 
         self._sync_status = sync_status
 
@@ -350,8 +347,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             etag = self._status.etag
 
         try:
-            async with timeout(125):
-                status = await self._player.status(etag=etag, timeout=120.0)
+            status = await self._player.status(etag=etag, poll_timeout=120, timeout=125)
 
             self._is_online = True
             self._last_status_update = dt_util.utcnow()
@@ -411,8 +407,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     @Throttle(UPDATE_CAPTURE_INTERVAL)
     async def async_update_captures(self) -> list[Input] | None:
         """Update Capture sources."""
-        async with timeout(BluesoundPlayer.COMMAND_TIMEOUT):
-            inputs = await self._player.inputs()
+        inputs = await self._player.inputs()
         self._inputs = inputs
 
         return inputs
@@ -420,8 +415,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     @Throttle(UPDATE_PRESETS_INTERVAL)
     async def async_update_presets(self) -> list[Preset] | None:
         """Update Presets."""
-        async with timeout(BluesoundPlayer.COMMAND_TIMEOUT):
-            presets = await self._player.presets()
+        presets = await self._player.presets()
         self._presets = presets
 
         return presets
@@ -715,30 +709,25 @@ class BluesoundPlayer(MediaPlayerEntity):
 
     async def async_add_slave(self, slave_device: BluesoundPlayer):
         """Add slave to master."""
-        async with timeout(BluesoundPlayer.COMMAND_TIMEOUT):
-            await self._player.add_slave(slave_device.host, slave_device.port)
+        await self._player.add_slave(slave_device.host, slave_device.port)
 
     async def async_remove_slave(self, slave_device: BluesoundPlayer):
         """Remove slave to master."""
-        async with timeout(BluesoundPlayer.COMMAND_TIMEOUT):
-            await self._player.remove_slave(slave_device.host, slave_device.port)
+        await self._player.remove_slave(slave_device.host, slave_device.port)
 
     async def async_increase_timer(self) -> int:
         """Increase sleep time on player."""
-        async with timeout(BluesoundPlayer.COMMAND_TIMEOUT):
-            return await self._player.sleep_timer()
+        return await self._player.sleep_timer()
 
     async def async_clear_timer(self):
         """Clear sleep timer on player."""
-        async with timeout(BluesoundPlayer.COMMAND_TIMEOUT):
-            sleep = 1
-            while sleep > 0:
-                sleep = await self._player.sleep_timer()
+        sleep = 1
+        while sleep > 0:
+            sleep = await self._player.sleep_timer()
 
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable or disable shuffle mode."""
-        async with timeout(BluesoundPlayer.COMMAND_TIMEOUT):
-            await self._player.shuffle(shuffle)
+        await self._player.shuffle(shuffle)
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
@@ -754,64 +743,56 @@ class BluesoundPlayer(MediaPlayerEntity):
             if preset.name == source:
                 url = preset.url
 
-        async with timeout(BluesoundPlayer.COMMAND_TIMEOUT):
-            await self._player.play_url(url)
+        await self._player.play_url(url)
 
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         if self.is_grouped and not self.is_master:
             return
 
-        async with timeout(BluesoundPlayer.COMMAND_TIMEOUT):
-            await self._player.clear()
+        await self._player.clear()
 
     async def async_media_next_track(self) -> None:
         """Send media_next command to media player."""
         if self.is_grouped and not self.is_master:
             return
 
-        async with timeout(BluesoundPlayer.COMMAND_TIMEOUT):
-            await self._player.skip()
+        await self._player.skip()
 
     async def async_media_previous_track(self) -> None:
         """Send media_previous command to media player."""
         if self.is_grouped and not self.is_master:
             return
 
-        async with timeout(BluesoundPlayer.COMMAND_TIMEOUT):
-            await self._player.back()
+        await self._player.back()
 
     async def async_media_play(self) -> None:
         """Send media_play command to media player."""
         if self.is_grouped and not self.is_master:
             return
 
-        async with timeout(BluesoundPlayer.COMMAND_TIMEOUT):
-            await self._player.play()
+        await self._player.play()
 
     async def async_media_pause(self) -> None:
         """Send media_pause command to media player."""
         if self.is_grouped and not self.is_master:
             return
 
-        async with timeout(BluesoundPlayer.COMMAND_TIMEOUT):
-            await self._player.pause()
+        await self._player.pause()
 
     async def async_media_stop(self) -> None:
         """Send stop command."""
         if self.is_grouped and not self.is_master:
             return
 
-        async with timeout(BluesoundPlayer.COMMAND_TIMEOUT):
-            await self._player.stop()
+        await self._player.stop()
 
     async def async_media_seek(self, position: float) -> None:
         """Send media_seek command to media player."""
         if self.is_grouped and not self.is_master:
             return
 
-        async with timeout(BluesoundPlayer.COMMAND_TIMEOUT):
-            await self._player.play(seek=int(position))
+        await self._player.play(seek=int(position))
 
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
@@ -828,8 +809,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         url = async_process_play_media_url(self.hass, media_id)
 
-        async with timeout(BluesoundPlayer.COMMAND_TIMEOUT):
-            await self._player.play_url(url)
+        await self._player.play_url(url)
 
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
@@ -855,13 +835,11 @@ class BluesoundPlayer(MediaPlayerEntity):
         volume = min(100, volume)
         volume = max(0, volume)
 
-        async with timeout(BluesoundPlayer.COMMAND_TIMEOUT):
-            await self._player.volume(level=volume)
+        await self._player.volume(level=volume)
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command to media player."""
-        async with timeout(BluesoundPlayer.COMMAND_TIMEOUT):
-            await self._player.volume(mute=mute)
+        await self._player.volume(mute=mute)
 
     async def async_browse_media(
         self,
