@@ -125,6 +125,7 @@ as part of a config flow.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
@@ -167,6 +168,8 @@ type StoreResultType = Callable[[str, Credentials], str]
 type RetrieveResultType = Callable[[str, str], Credentials | None]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+DELETE_CURRENT_TOKEN_DELAY = 2
 
 
 @bind_hass
@@ -644,11 +647,34 @@ def websocket_delete_all_refresh_tokens(
     else:
         connection.send_result(msg["id"], {})
 
+    async def _delete_current_token_soon() -> None:
+        """Delete the current token after a delay.
+
+        We do not want to delete the current token immediately as it will
+        close the connection.
+
+        This is implemented as a tracked task to ensure the token
+        is still deleted if Home Assistant is shut down during
+        the delay.
+
+        It should not be refactored to use a call_later as that
+        would not be tracked and the token would not be deleted
+        if Home Assistant was shut down during the delay.
+        """
+        try:
+            await asyncio.sleep(DELETE_CURRENT_TOKEN_DELAY)
+        finally:
+            # If the task is cancelled because we are shutting down, delete
+            # the token right away.
+            hass.auth.async_remove_refresh_token(current_refresh_token)
+
     if delete_current_token and (
         not limit_token_types or current_refresh_token.token_type == token_type
     ):
-        # This will close the connection so we need to send the result first.
-        hass.loop.call_soon(hass.auth.async_remove_refresh_token, current_refresh_token)
+        # Deleting the token will close the connection so we need
+        # to do it with a delay in a tracked task to ensure it still
+        # happens if Home Assistant is shutting down.
+        hass.async_create_task(_delete_current_token_soon())
 
 
 @websocket_api.websocket_command(
