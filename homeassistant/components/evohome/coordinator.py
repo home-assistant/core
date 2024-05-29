@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Awaitable
 from datetime import timedelta
 import logging
 from typing import Any
@@ -10,11 +10,9 @@ from typing import Any
 import evohomeasync as ev1
 from evohomeasync.schema import SZ_ID, SZ_SESSION_ID, SZ_TEMP
 import evohomeasync2 as evo
-from typing_extensions import TypeVar
 
 from homeassistant.const import CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.debounce import Debouncer
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
@@ -33,9 +31,6 @@ from .const import (
     UTC_OFFSET,
 )
 from .helpers import dt_local_to_aware, handle_exception
-
-_DataT = TypeVar("_DataT", default=dict[str, Any])
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -198,52 +193,9 @@ class EvoBroker:
 class EvoCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the TCC API."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        logger: logging.Logger,
-        *,
-        name: str,
-        update_interval: timedelta | None = None,
-        update_method: Callable[[], Awaitable[_DataT]] | None = None,
-        request_refresh_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
-        always_update: bool = True,
-    ) -> None:
-        """Initialize."""
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the coordinator."""
+        super().__init__(*args, **kwargs)
 
-        assert update_interval is not None
-        assert update_method is not None
-
-        super().__init__(
-            hass,
-            logger,
-            name=name,
-            update_interval=update_interval,
-            update_method=update_method,  # type: ignore[arg-type]
-            request_refresh_debouncer=request_refresh_debouncer,
-            always_update=always_update,
-        )
-
-    @property
-    def update_interval(self) -> timedelta | None:
-        """Interval between updates."""
-        return self._update_interval
-
-    @update_interval.setter
-    def update_interval(self, value: timedelta | None) -> None:
-        """Set interval between updates."""
-        self._update_interval = value
-        self._update_interval_seconds = value.total_seconds() if value else None
-
-    @callback
-    def _schedule_refresh(self) -> None:
-        """Schedule a refresh."""
-        super()._schedule_refresh()
-
-    async def _async_refresh(self, *args: Any, **kwargs: Any) -> None:
-        """Refresh data."""
-        return await super()._async_refresh(*args, **kwargs)
-
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Async update wrapper."""
-        return await super()._async_update_data()
+        # without a listener, _schedule_refresh() won't be invoked by _async_refresh()
+        self.async_add_listener(lambda: None)
