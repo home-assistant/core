@@ -219,11 +219,12 @@ def _parse_device_payload(
         return device_payload
     try:
         device_payload = MQTTDiscoveryPayload(json_loads_object(payload))
-        _replace_all_abbreviations(device_payload)
-        DEVICE_DISCOVERY_SCHEMA(device_payload)
     except ValueError:
         _LOGGER.warning("Unable to parse JSON %s: '%s'", object_id, payload)
         return {}
+    _replace_all_abbreviations(device_payload)
+    try:
+        DEVICE_DISCOVERY_SCHEMA(device_payload)
     except vol.Invalid as exc:
         _LOGGER.warning(
             "Invalid MQTT device discovery payload for %s, %s: '%s'",
