@@ -1788,7 +1788,7 @@ def service_calls(
     """Track calls to a mocked service.
 
     Defaults to `test.automation`. To override, tests can be marked with:
-    @pytest.mark.parametrize("mocked_service", [(DOMAIN, SERVICE_NAME])
+    @pytest.mark.parametrize("mocked_service", [(DOMAIN, SERVICE_NAME)])
     """
     return async_mock_service(hass, mocked_service[0], mocked_service[1])
 
