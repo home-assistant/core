@@ -15,6 +15,7 @@ import pytest
 from homeassistant.components import hue
 from homeassistant.components.hue.v1 import sensor_base as hue_sensor_base
 from homeassistant.components.hue.v2.device import async_setup_devices
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -288,6 +289,6 @@ def get_device_reg(hass):
 
 
 @pytest.fixture(name="calls")
-def track_calls(hass):
+def track_calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")

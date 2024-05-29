@@ -1038,7 +1038,7 @@ ha-ffmpeg==3.2.0
 ha-iotawattpy==0.1.2
 
 # homeassistant.components.philips_js
-ha-philipsjs==3.2.1
+ha-philipsjs==3.2.2
 
 # homeassistant.components.habitica
 habitipy==0.3.1
@@ -1090,7 +1090,7 @@ holidays==0.49
 home-assistant-frontend==20240501.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.4.24
+home-assistant-intents==2024.5.28
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
