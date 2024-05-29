@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from asyncio import CancelledError, timeout
+from asyncio import CancelledError
 from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
@@ -234,7 +234,9 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._group_name = None
         self._group_list: list[str] = []
         self._bluesound_device_name = None
-        self._player = Player(host, port, async_get_clientsession(hass), default_timeout=10)
+        self._player = Player(
+            host, port, async_get_clientsession(hass), default_timeout=10
+        )
 
         self._init_callback = init_callback
 
@@ -814,7 +816,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
         if self.volume_level is None:
-            return
+            return None
 
         new_volume = self.volume_level + 0.01
         new_volume = min(1, new_volume)
@@ -823,7 +825,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     async def async_volume_down(self) -> None:
         """Volume down the media player."""
         if self.volume_level is None:
-            return
+            return None
 
         new_volume = self.volume_level - 0.01
         new_volume = max(0, new_volume)
