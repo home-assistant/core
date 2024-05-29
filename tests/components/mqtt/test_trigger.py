@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components import automation
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HassJobType, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_fire_mqtt_message, async_mock_service, mock_component
@@ -239,7 +239,9 @@ async def test_encoding_default(hass: HomeAssistant, calls, setup_comp) -> None:
         },
     )
 
-    setup_comp.async_subscribe.assert_called_with("test-topic", ANY, 0, "utf-8")
+    setup_comp.async_subscribe.assert_called_with(
+        "test-topic", ANY, 0, "utf-8", HassJobType.Callback
+    )
 
 
 async def test_encoding_custom(hass: HomeAssistant, calls, setup_comp) -> None:
@@ -255,4 +257,6 @@ async def test_encoding_custom(hass: HomeAssistant, calls, setup_comp) -> None:
         },
     )
 
-    setup_comp.async_subscribe.assert_called_with("test-topic", ANY, 0, None)
+    setup_comp.async_subscribe.assert_called_with(
+        "test-topic", ANY, 0, None, HassJobType.Callback
+    )

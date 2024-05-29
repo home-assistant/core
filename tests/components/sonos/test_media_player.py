@@ -1,6 +1,7 @@
 """Tests for the Sonos Media Player platform."""
 
 import logging
+from typing import Any
 
 import pytest
 
@@ -9,10 +10,15 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     MediaPlayerEnqueue,
 )
-from homeassistant.components.media_player.const import ATTR_MEDIA_ENQUEUE
+from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_ENQUEUE,
+    SERVICE_SELECT_SOURCE,
+)
+from homeassistant.components.sonos.const import SOURCE_LINEIN, SOURCE_TV
 from homeassistant.components.sonos.media_player import LONG_SERVICE_TIMEOUT
 from homeassistant.const import STATE_IDLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_UPNP,
@@ -272,3 +278,154 @@ async def test_play_media_music_library_playlist_dne(
     assert soco_mock.play_uri.call_count == 0
     assert media_content_id in caplog.text
     assert "playlist" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("source", "result"),
+    [
+        (
+            SOURCE_LINEIN,
+            {
+                "switch_to_line_in": 1,
+            },
+        ),
+        (
+            SOURCE_TV,
+            {
+                "switch_to_tv": 1,
+            },
+        ),
+    ],
+)
+async def test_select_source_line_in_tv(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    source: str,
+    result: dict[str, Any],
+) -> None:
+    """Test the select_source method with a variety of inputs."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {
+            "entity_id": "media_player.zone_a",
+            "source": source,
+        },
+        blocking=True,
+    )
+    assert soco_mock.switch_to_line_in.call_count == result.get("switch_to_line_in", 0)
+    assert soco_mock.switch_to_tv.call_count == result.get("switch_to_tv", 0)
+
+
+@pytest.mark.parametrize(
+    ("source", "result"),
+    [
+        (
+            "James Taylor Radio",
+            {
+                "play_uri": 1,
+                "play_uri_uri": "x-sonosapi-radio:ST%3aetc",
+                "play_uri_title": "James Taylor Radio",
+            },
+        ),
+        (
+            "66 - Watercolors",
+            {
+                "play_uri": 1,
+                "play_uri_uri": "x-sonosapi-hls:Api%3atune%3aliveAudio%3ajazzcafe%3aetc",
+                "play_uri_title": "66 - Watercolors",
+            },
+        ),
+    ],
+)
+async def test_select_source_play_uri(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    source: str,
+    result: dict[str, Any],
+) -> None:
+    """Test the select_source method with a variety of inputs."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {
+            "entity_id": "media_player.zone_a",
+            "source": source,
+        },
+        blocking=True,
+    )
+    assert soco_mock.play_uri.call_count == result.get("play_uri")
+    soco_mock.play_uri.assert_called_with(
+        result.get("play_uri_uri"),
+        title=result.get("play_uri_title"),
+        timeout=LONG_SERVICE_TIMEOUT,
+    )
+
+
+@pytest.mark.parametrize(
+    ("source", "result"),
+    [
+        (
+            "1984",
+            {
+                "add_to_queue": 1,
+                "add_to_queue_item_id": "A:ALBUMARTIST/Aerosmith/1984",
+                "clear_queue": 1,
+                "play_from_queue": 1,
+            },
+        ),
+    ],
+)
+async def test_select_source_play_queue(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    source: str,
+    result: dict[str, Any],
+) -> None:
+    """Test the select_source method with a variety of inputs."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {
+            "entity_id": "media_player.zone_a",
+            "source": source,
+        },
+        blocking=True,
+    )
+    assert soco_mock.clear_queue.call_count == result.get("clear_queue")
+    assert soco_mock.add_to_queue.call_count == result.get("add_to_queue")
+    assert soco_mock.add_to_queue.call_args_list[0].args[0].item_id == result.get(
+        "add_to_queue_item_id"
+    )
+    assert (
+        soco_mock.add_to_queue.call_args_list[0].kwargs["timeout"]
+        == LONG_SERVICE_TIMEOUT
+    )
+    assert soco_mock.play_from_queue.call_count == result.get("play_from_queue")
+    soco_mock.play_from_queue.assert_called_with(0)
+
+
+async def test_select_source_error(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+) -> None:
+    """Test the select_source method with a variety of inputs."""
+    with pytest.raises(ServiceValidationError) as sve:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_SELECT_SOURCE,
+            {
+                "entity_id": "media_player.zone_a",
+                "source": "invalid_source",
+            },
+            blocking=True,
+        )
+    assert "invalid_source" in str(sve.value)
+    assert "Could not find a Sonos favorite" in str(sve.value)

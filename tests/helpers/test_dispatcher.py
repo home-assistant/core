@@ -243,7 +243,6 @@ async def test_dispatcher_add_dispatcher(hass: HomeAssistant) -> None:
 
 async def test_thread_safety_checks(hass: HomeAssistant) -> None:
     """Test dispatcher thread safety checks."""
-    hass.config.debug = True
     calls = []
 
     @callback

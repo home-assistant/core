@@ -176,7 +176,10 @@ class DnsIPOptionsFlowHandler(OptionsFlowWithConfigEntry):
             else:
                 return self.async_create_entry(
                     title=self.config_entry.title,
-                    data={CONF_RESOLVER: resolver, CONF_RESOLVER_IPV6: resolver_ipv6},
+                    data={
+                        CONF_RESOLVER: resolver,
+                        CONF_RESOLVER_IPV6: resolver_ipv6,
+                    },
                 )
 
         schema = self.add_suggested_values_to_schema(

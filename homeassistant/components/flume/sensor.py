@@ -1,6 +1,9 @@
 """Sensor for displaying the number of result from Flume."""
 
-from pyflume import FlumeData
+from typing import Any
+
+from pyflume import FlumeAuth, FlumeData
+from requests import Session
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -87,6 +90,26 @@ FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
 )
 
 
+def make_flume_datas(
+    http_session: Session, flume_auth: FlumeAuth, flume_devices: list[dict[str, Any]]
+) -> dict[str, FlumeData]:
+    """Create FlumeData objects for each device."""
+    flume_datas: dict[str, FlumeData] = {}
+    for device in flume_devices:
+        device_id = device[KEY_DEVICE_ID]
+        device_timezone = device[KEY_DEVICE_LOCATION][KEY_DEVICE_LOCATION_TIMEZONE]
+        flume_data = FlumeData(
+            flume_auth,
+            device_id,
+            device_timezone,
+            scan_interval=DEVICE_SCAN_INTERVAL,
+            update_on_init=False,
+            http_session=http_session,
+        )
+        flume_datas[device_id] = flume_data
+    return flume_datas
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -96,27 +119,22 @@ async def async_setup_entry(
 
     flume_domain_data = hass.data[DOMAIN][config_entry.entry_id]
     flume_devices = flume_domain_data[FLUME_DEVICES]
-    flume_auth = flume_domain_data[FLUME_AUTH]
-    http_session = flume_domain_data[FLUME_HTTP_SESSION]
+    flume_auth: FlumeAuth = flume_domain_data[FLUME_AUTH]
+    http_session: Session = flume_domain_data[FLUME_HTTP_SESSION]
     flume_devices = [
         device
         for device in get_valid_flume_devices(flume_devices)
         if device[KEY_DEVICE_TYPE] == FLUME_TYPE_SENSOR
     ]
-    flume_entity_list = []
-    for device in flume_devices:
-        device_id = device[KEY_DEVICE_ID]
-        device_timezone = device[KEY_DEVICE_LOCATION][KEY_DEVICE_LOCATION_TIMEZONE]
-        device_location_name = device[KEY_DEVICE_LOCATION][KEY_DEVICE_LOCATION_NAME]
+    flume_entity_list: list[FlumeSensor] = []
+    flume_datas = await hass.async_add_executor_job(
+        make_flume_datas, http_session, flume_auth, flume_devices
+    )
 
-        flume_device = FlumeData(
-            flume_auth,
-            device_id,
-            device_timezone,
-            scan_interval=DEVICE_SCAN_INTERVAL,
-            update_on_init=False,
-            http_session=http_session,
-        )
+    for device in flume_devices:
+        device_id: str = device[KEY_DEVICE_ID]
+        device_location_name = device[KEY_DEVICE_LOCATION][KEY_DEVICE_LOCATION_NAME]
+        flume_device = flume_datas[device_id]
 
         coordinator = FlumeDeviceDataUpdateCoordinator(
             hass=hass, flume_device=flume_device

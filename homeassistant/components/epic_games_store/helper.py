@@ -60,7 +60,7 @@ def get_game_url(raw_game_data: dict[str, Any], language: str) -> str:
     url_slug: str | None = None
     try:
         url_slug = raw_game_data["offerMappings"][0]["pageSlug"]
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         with contextlib.suppress(Exception):
             url_slug = raw_game_data["catalogNs"]["mappings"][0]["pageSlug"]
 

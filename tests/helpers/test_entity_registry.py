@@ -1984,7 +1984,7 @@ async def test_get_or_create_thread_safety(
     """Test call async_get_or_create_from a thread."""
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls async_get_or_create from a thread. Please report this issue.",
+        match="Detected code that calls entity_registry.async_get_or_create from a thread.",
     ):
         await hass.async_add_executor_job(
             entity_registry.async_get_or_create, "light", "hue", "1234"
@@ -1998,7 +1998,7 @@ async def test_async_update_entity_thread_safety(
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls _async_update_entity from a thread. Please report this issue.",
+        match="Detected code that calls entity_registry.async_update_entity from a thread.",
     ):
         await hass.async_add_executor_job(
             partial(
@@ -2016,6 +2016,6 @@ async def test_async_remove_thread_safety(
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls async_remove from a thread. Please report this issue.",
+        match="Detected code that calls entity_registry.async_remove from a thread.",
     ):
         await hass.async_add_executor_job(entity_registry.async_remove, entry.entity_id)

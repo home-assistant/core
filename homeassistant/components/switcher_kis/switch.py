@@ -23,7 +23,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SwitcherDataUpdateCoordinator
 from .const import (
     CONF_AUTO_OFF,
     CONF_TIMER_MINUTES,
@@ -31,6 +30,7 @@ from .const import (
     SERVICE_TURN_ON_WITH_TIMER_NAME,
     SIGNAL_DEVICE_ADD,
 )
+from .coordinator import SwitcherDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,7 +111,7 @@ class SwitcherBaseSwitchEntity(
         _LOGGER.debug(
             "Calling api for %s, api: '%s', args: %s", self.coordinator.name, api, args
         )
-        response: SwitcherBaseResponse = None
+        response: SwitcherBaseResponse | None = None
         error = None
 
         try:

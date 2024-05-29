@@ -70,8 +70,6 @@ async def test_swing_button(
     await init_integration(hass)
     assert mock_bridge
 
-    assert hass.states.get(ASSUME_ON_EID) is None
-    assert hass.states.get(ASSUME_OFF_EID) is None
     assert hass.states.get(SWING_ON_EID) is not None
     assert hass.states.get(SWING_OFF_EID) is not None
 

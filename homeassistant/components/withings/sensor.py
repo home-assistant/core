@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Generic, TypeVar
+from typing import Any
 
 from aiowithings import (
     Activity,
@@ -767,11 +767,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-_T = TypeVar("_T", bound=WithingsDataUpdateCoordinator)
-_ED = TypeVar("_ED", bound=SensorEntityDescription)
-
-
-class WithingsSensor(WithingsEntity[_T], SensorEntity, Generic[_T, _ED]):
+class WithingsSensor[
+    _T: WithingsDataUpdateCoordinator[Any],
+    _ED: SensorEntityDescription,
+](WithingsEntity[_T], SensorEntity):
     """Implementation of a Withings sensor."""
 
     entity_description: _ED

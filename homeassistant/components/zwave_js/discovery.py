@@ -41,7 +41,6 @@ from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_SETPOINT_PROPERTY,
 )
 from zwave_js_server.exceptions import UnknownValueData
-from zwave_js_server.model.device_class import DeviceClassItem
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
     ConfigurationValue,
@@ -1235,14 +1234,22 @@ def async_discover_single_value(
             continue
 
         # check device_class_generic
-        if value.node.device_class and not check_device_class(
-            value.node.device_class.generic, schema.device_class_generic
+        if schema.device_class_generic and (
+            not value.node.device_class
+            or not any(
+                value.node.device_class.generic.label == val
+                for val in schema.device_class_generic
+            )
         ):
             continue
 
         # check device_class_specific
-        if value.node.device_class and not check_device_class(
-            value.node.device_class.specific, schema.device_class_specific
+        if schema.device_class_specific and (
+            not value.node.device_class
+            or not any(
+                value.node.device_class.specific.label == val
+                for val in schema.device_class_specific
+            )
         ):
             continue
 
@@ -1434,15 +1441,3 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
     if schema.stateful is not None and value.metadata.stateful != schema.stateful:
         return False
     return True
-
-
-@callback
-def check_device_class(
-    device_class: DeviceClassItem, required_value: set[str] | None
-) -> bool:
-    """Check if device class id or label matches."""
-    if required_value is None:
-        return True
-    if any(device_class.label == val for val in required_value):
-        return True
-    return False

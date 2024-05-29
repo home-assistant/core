@@ -15,7 +15,6 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -23,6 +22,7 @@ from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import BringConfigEntry
 from .const import (
     ATTR_ITEM_NAME,
     ATTR_NOTIFICATION_TYPE,
@@ -34,11 +34,11 @@ from .coordinator import BringData, BringDataUpdateCoordinator
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BringConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     unique_id = config_entry.unique_id
 
@@ -107,7 +107,7 @@ class BringTodoListEntity(
                     description=item["specification"] or "",
                     status=TodoItemStatus.NEEDS_ACTION,
                 )
-                for item in self.bring_list["purchase_items"]
+                for item in self.bring_list["purchase"]
             ),
             *(
                 TodoItem(
@@ -116,7 +116,7 @@ class BringTodoListEntity(
                     description=item["specification"] or "",
                     status=TodoItemStatus.COMPLETED,
                 )
-                for item in self.bring_list["recently_items"]
+                for item in self.bring_list["recently"]
             ),
         ]
 
@@ -130,7 +130,7 @@ class BringTodoListEntity(
         try:
             await self.coordinator.bring.save_item(
                 self.bring_list["listUuid"],
-                item.summary,
+                item.summary or "",
                 item.description or "",
                 str(uuid.uuid4()),
             )
@@ -165,12 +165,12 @@ class BringTodoListEntity(
         bring_list = self.bring_list
 
         bring_purchase_item = next(
-            (i for i in bring_list["purchase_items"] if i["uuid"] == item.uid),
+            (i for i in bring_list["purchase"] if i["uuid"] == item.uid),
             None,
         )
 
         bring_recently_item = next(
-            (i for i in bring_list["recently_items"] if i["uuid"] == item.uid),
+            (i for i in bring_list["recently"] if i["uuid"] == item.uid),
             None,
         )
 
@@ -185,8 +185,8 @@ class BringTodoListEntity(
                 await self.coordinator.bring.batch_update_list(
                     bring_list["listUuid"],
                     BringItem(
-                        itemId=item.summary,
-                        spec=item.description,
+                        itemId=item.summary or "",
+                        spec=item.description or "",
                         uuid=item.uid,
                     ),
                     BringItemOperation.ADD
@@ -206,13 +206,13 @@ class BringTodoListEntity(
                     [
                         BringItem(
                             itemId=current_item["itemId"],
-                            spec=item.description,
+                            spec=item.description or "",
                             uuid=item.uid,
                             operation=BringItemOperation.REMOVE,
                         ),
                         BringItem(
-                            itemId=item.summary,
-                            spec=item.description,
+                            itemId=item.summary or "",
+                            spec=item.description or "",
                             uuid=str(uuid.uuid4()),
                             operation=BringItemOperation.ADD
                             if item.status == TodoItemStatus.NEEDS_ACTION

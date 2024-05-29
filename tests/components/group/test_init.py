@@ -19,17 +19,20 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_CLOSED,
     STATE_HOME,
+    STATE_JAMMED,
     STATE_LOCKED,
+    STATE_LOCKING,
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
+    STATE_OPENING,
     STATE_UNKNOWN,
     STATE_UNLOCKED,
+    STATE_UNLOCKING,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
 from homeassistant.setup import async_setup_component
 
 from . import common
@@ -769,6 +772,48 @@ async def test_is_on(hass: HomeAssistant) -> None:
             (STATE_ON, True),
             (STATE_OFF, False),
         ),
+        (
+            ("lock", "lock"),
+            (STATE_OPEN, STATE_LOCKED),
+            (STATE_LOCKED, STATE_LOCKED),
+            (STATE_UNLOCKED, True),
+            (STATE_LOCKED, False),
+        ),
+        (
+            ("lock", "lock"),
+            (STATE_OPENING, STATE_LOCKED),
+            (STATE_LOCKED, STATE_LOCKED),
+            (STATE_UNLOCKED, True),
+            (STATE_LOCKED, False),
+        ),
+        (
+            ("lock", "lock"),
+            (STATE_UNLOCKING, STATE_LOCKED),
+            (STATE_LOCKED, STATE_LOCKED),
+            (STATE_UNLOCKED, True),
+            (STATE_LOCKED, False),
+        ),
+        (
+            ("lock", "lock"),
+            (STATE_LOCKING, STATE_LOCKED),
+            (STATE_LOCKED, STATE_LOCKED),
+            (STATE_UNLOCKED, True),
+            (STATE_LOCKED, False),
+        ),
+        (
+            ("lock", "lock"),
+            (STATE_JAMMED, STATE_LOCKED),
+            (STATE_LOCKED, STATE_LOCKED),
+            (STATE_LOCKED, False),
+            (STATE_LOCKED, False),
+        ),
+        (
+            ("cover", "lock"),
+            (STATE_OPEN, STATE_OPEN),
+            (STATE_CLOSED, STATE_LOCKED),
+            (STATE_ON, True),
+            (STATE_OFF, False),
+        ),
     ],
 )
 async def test_is_on_and_state_mixed_domains(
@@ -855,10 +900,6 @@ async def test_reloading_groups(hass: HomeAssistant) -> None:
         "group.test_group",
     ]
     assert hass.bus.async_listeners()["state_changed"] == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["hello.world"]) == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["light.bowl"]) == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.one"]) == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.two"]) == 1
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
@@ -874,9 +915,6 @@ async def test_reloading_groups(hass: HomeAssistant) -> None:
         "group.hello",
     ]
     assert hass.bus.async_listeners()["state_changed"] == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["light.bowl"]) == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.one"]) == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.two"]) == 1
 
 
 async def test_modify_group(hass: HomeAssistant) -> None:
@@ -1247,6 +1285,8 @@ async def test_group_mixed_domains_off(hass: HomeAssistant) -> None:
     [
         (("locked", "locked", "unlocked"), "unlocked"),
         (("locked", "locked", "locked"), "locked"),
+        (("locked", "locked", "open"), "unlocked"),
+        (("locked", "unlocked", "open"), "unlocked"),
     ],
 )
 async def test_group_locks(hass: HomeAssistant, states, group_state) -> None:

@@ -28,9 +28,9 @@ from tests.components.light.common import MockLight
 
 
 @pytest.fixture(autouse=True)
-def set_utc(hass):
+async def set_utc(hass):
     """Set timezone to UTC."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
 
 
 async def test_valid_config(hass: HomeAssistant) -> None:

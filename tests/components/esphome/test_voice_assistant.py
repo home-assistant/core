@@ -1,12 +1,21 @@
 """Test ESPHome voice assistant server."""
 
 import asyncio
+from collections.abc import Awaitable, Callable
 import io
 import socket
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 import wave
 
-from aioesphomeapi import APIClient, VoiceAssistantEventType
+from aioesphomeapi import (
+    APIClient,
+    EntityInfo,
+    EntityState,
+    UserService,
+    VoiceAssistantEventType,
+    VoiceAssistantFeature,
+    VoiceAssistantTimerEventType,
+)
 import pytest
 
 from homeassistant.components.assist_pipeline import (
@@ -15,6 +24,7 @@ from homeassistant.components.assist_pipeline import (
     PipelineStage,
 )
 from homeassistant.components.assist_pipeline.error import (
+    PipelineNotFound,
     WakeWordDetectionAborted,
     WakeWordDetectionError,
 )
@@ -24,6 +34,10 @@ from homeassistant.components.esphome.voice_assistant import (
     VoiceAssistantUDPPipeline,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import intent as intent_helper
+import homeassistant.helpers.device_registry as dr
+
+from .conftest import MockESPHomeDevice
 
 _TEST_INPUT_TEXT = "This is an input test"
 _TEST_OUTPUT_TEXT = "This is an output test"
@@ -174,8 +188,8 @@ async def test_pipeline_events(
 
 async def test_udp_server(
     hass: HomeAssistant,
-    socket_enabled,
-    unused_udp_port_factory,
+    socket_enabled: None,
+    unused_udp_port_factory: Callable[[], int],
     voice_assistant_udp_pipeline_v1: VoiceAssistantUDPPipeline,
 ) -> None:
     """Test the UDP server runs and queues incoming data."""
@@ -301,8 +315,8 @@ async def test_error_calls_handle_finished(
 
 async def test_udp_server_multiple(
     hass: HomeAssistant,
-    socket_enabled,
-    unused_udp_port_factory,
+    socket_enabled: None,
+    unused_udp_port_factory: Callable[[], int],
     voice_assistant_udp_pipeline_v1: VoiceAssistantUDPPipeline,
 ) -> None:
     """Test that the UDP server raises an error if started twice."""
@@ -324,8 +338,8 @@ async def test_udp_server_multiple(
 
 async def test_udp_server_after_stopped(
     hass: HomeAssistant,
-    socket_enabled,
-    unused_udp_port_factory,
+    socket_enabled: None,
+    unused_udp_port_factory: Callable[[], int],
     voice_assistant_udp_pipeline_v1: VoiceAssistantUDPPipeline,
 ) -> None:
     """Test that the UDP server raises an error if started after stopped."""
@@ -338,6 +352,87 @@ async def test_udp_server_after_stopped(
         pytest.raises(RuntimeError),
     ):
         await voice_assistant_udp_pipeline_v1.start_server()
+
+
+async def test_events_converted_correctly(
+    hass: HomeAssistant,
+    voice_assistant_api_pipeline: VoiceAssistantAPIPipeline,
+) -> None:
+    """Test the pipeline events produce the correct data to send to the device."""
+
+    with patch(
+        "homeassistant.components.esphome.voice_assistant.VoiceAssistantPipeline._send_tts",
+    ):
+        voice_assistant_api_pipeline._event_callback(
+            PipelineEvent(
+                type=PipelineEventType.STT_START,
+                data={},
+            )
+        )
+
+        voice_assistant_api_pipeline.handle_event.assert_called_with(
+            VoiceAssistantEventType.VOICE_ASSISTANT_STT_START, None
+        )
+
+        voice_assistant_api_pipeline._event_callback(
+            PipelineEvent(
+                type=PipelineEventType.STT_END,
+                data={"stt_output": {"text": "text"}},
+            )
+        )
+
+        voice_assistant_api_pipeline.handle_event.assert_called_with(
+            VoiceAssistantEventType.VOICE_ASSISTANT_STT_END, {"text": "text"}
+        )
+
+        voice_assistant_api_pipeline._event_callback(
+            PipelineEvent(
+                type=PipelineEventType.INTENT_START,
+                data={},
+            )
+        )
+
+        voice_assistant_api_pipeline.handle_event.assert_called_with(
+            VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_START, None
+        )
+
+        voice_assistant_api_pipeline._event_callback(
+            PipelineEvent(
+                type=PipelineEventType.INTENT_END,
+                data={
+                    "intent_output": {
+                        "conversation_id": "conversation-id",
+                    }
+                },
+            )
+        )
+
+        voice_assistant_api_pipeline.handle_event.assert_called_with(
+            VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END,
+            {"conversation_id": "conversation-id"},
+        )
+
+        voice_assistant_api_pipeline._event_callback(
+            PipelineEvent(
+                type=PipelineEventType.TTS_START,
+                data={"tts_input": "text"},
+            )
+        )
+
+        voice_assistant_api_pipeline.handle_event.assert_called_with(
+            VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START, {"text": "text"}
+        )
+
+        voice_assistant_api_pipeline._event_callback(
+            PipelineEvent(
+                type=PipelineEventType.TTS_END,
+                data={"tts_output": {"url": "url", "media_id": "media-id"}},
+            )
+        )
+
+        voice_assistant_api_pipeline.handle_event.assert_called_with(
+            VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END, {"url": "url"}
+        )
 
 
 async def test_unknown_event_type(
@@ -719,3 +814,131 @@ async def test_wake_word_abort_exception(
         )
 
         mock_handle_event.assert_not_called()
+
+
+async def test_timer_events(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test that injecting timer events results in the correct api client calls."""
+
+    mock_device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.TIMERS
+        },
+    )
+    dev_reg = dr.async_get(hass)
+    dev = dev_reg.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
+    )
+
+    await intent_helper.async_handle(
+        hass,
+        "test",
+        intent_helper.INTENT_START_TIMER,
+        {
+            "name": {"value": "test timer"},
+            "hours": {"value": 1},
+            "minutes": {"value": 2},
+            "seconds": {"value": 3},
+        },
+        device_id=dev.id,
+    )
+
+    mock_client.send_voice_assistant_timer_event.assert_called_with(
+        VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_STARTED,
+        ANY,
+        "test timer",
+        3723,
+        3723,
+        True,
+    )
+
+
+async def test_unknown_timer_event(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test that unknown (new) timer event types do not result in api calls."""
+
+    mock_device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.TIMERS
+        },
+    )
+    dev_reg = dr.async_get(hass)
+    dev = dev_reg.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
+    )
+
+    with patch(
+        "homeassistant.components.esphome.voice_assistant._TIMER_EVENT_TYPES.from_hass",
+        side_effect=KeyError,
+    ):
+        await intent_helper.async_handle(
+            hass,
+            "test",
+            intent_helper.INTENT_START_TIMER,
+            {
+                "name": {"value": "test timer"},
+                "hours": {"value": 1},
+                "minutes": {"value": 2},
+                "seconds": {"value": 3},
+            },
+            device_id=dev.id,
+        )
+
+        mock_client.send_voice_assistant_timer_event.assert_not_called()
+
+
+async def test_invalid_pipeline_id(
+    hass: HomeAssistant,
+    voice_assistant_api_pipeline: VoiceAssistantAPIPipeline,
+) -> None:
+    """Test that the pipeline is set to start with Wake word."""
+
+    invalid_pipeline_id = "invalid-pipeline-id"
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        raise PipelineNotFound(
+            "pipeline_not_found", f"Pipeline {invalid_pipeline_id} not found"
+        )
+
+    with patch(
+        "homeassistant.components.esphome.voice_assistant.async_pipeline_from_audio_stream",
+        new=async_pipeline_from_audio_stream,
+    ):
+
+        def handle_event(
+            event_type: VoiceAssistantEventType, data: dict[str, str] | None
+        ) -> None:
+            if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_ERROR:
+                assert data is not None
+                assert data["code"] == "pipeline_not_found"
+                assert data["message"] == f"Pipeline {invalid_pipeline_id} not found"
+
+        voice_assistant_api_pipeline.handle_event = handle_event
+
+        await voice_assistant_api_pipeline.run_pipeline(
+            device_id="mock-device-id",
+            conversation_id=None,
+            flags=2,
+        )

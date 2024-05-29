@@ -32,7 +32,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     UnitOfTemperature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfDataRate, UnitOfPower
 from homeassistant.core import Event as core_Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -40,6 +39,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 import homeassistant.util.dt as dt_util
 
+from . import UnifiConfigEntry
 from .const import DEVICE_STATES
 from .entity import (
     HandlerT,
@@ -420,11 +420,11 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: UnifiConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for UniFi Network integration."""
-    UnifiHub.get_hub(hass, config_entry).entity_loader.register_platform(
+    config_entry.runtime_data.entity_loader.register_platform(
         async_add_entities, UnifiSensorEntity, ENTITY_DESCRIPTIONS
     )
 

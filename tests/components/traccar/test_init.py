@@ -100,7 +100,13 @@ async def test_missing_data(hass: HomeAssistant, client, webhook_id) -> None:
     assert req.status == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-async def test_enter_and_exit(hass: HomeAssistant, client, webhook_id) -> None:
+async def test_enter_and_exit(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client,
+    webhook_id,
+) -> None:
     """Test when there is a known zone."""
     url = f"/api/webhook/{webhook_id}"
     data = {"lat": str(HOME_LATITUDE), "lon": str(HOME_LONGITUDE), "id": "123"}
@@ -135,11 +141,9 @@ async def test_enter_and_exit(hass: HomeAssistant, client, webhook_id) -> None:
     ).state
     assert state_name == STATE_NOT_HOME
 
-    dev_reg = dr.async_get(hass)
-    assert len(dev_reg.devices) == 1
+    assert len(device_registry.devices) == 1
 
-    ent_reg = er.async_get(hass)
-    assert len(ent_reg.entities) == 1
+    assert len(entity_registry.entities) == 1
 
 
 async def test_enter_with_attrs(hass: HomeAssistant, client, webhook_id) -> None:

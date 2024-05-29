@@ -404,7 +404,7 @@ def print_aldb_to_log(aldb):
         hwm = "Y" if rec.is_high_water_mark else "N"
         log_msg = (
             f" {rec.mem_addr:04x}    {in_use:s}     {mode:s}   {hwm:s}    "
-            f"{rec.group:3d} {str(rec.target):s}   {rec.data1:3d}   "
+            f"{rec.group:3d} {rec.target!s:s}   {rec.data1:3d}   "
             f"{rec.data2:3d}   {rec.data3:3d}"
         )
         logger.info(log_msg)

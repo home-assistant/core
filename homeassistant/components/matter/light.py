@@ -52,7 +52,10 @@ DEFAULT_TRANSITION = 0.2
 # sw version (attributeKey 0/40/10)
 TRANSITION_BLOCKLIST = (
     (4488, 514, "1.0", "1.0.0"),
+    (4488, 260, "1.0", "1.0.0"),
     (5010, 769, "3.0", "1.0.0"),
+    (4999, 25057, "1.0", "27.0"),
+    (4448, 36866, "V1", "V1.0.0.5"),
 )
 
 
@@ -398,6 +401,8 @@ class MatterLight(MatterEntity, LightEntity):
     def _check_transition_blocklist(self) -> None:
         """Check if this device is reported to have non working transitions."""
         device_info = self._endpoint.device_info
+        if isinstance(device_info, clusters.BridgedDeviceBasicInformation):
+            return
         if (
             device_info.vendorID,
             device_info.productID,
