@@ -69,7 +69,6 @@ from homeassistant.util import location
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
 
-from .common import async_mock_service
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 from .syrupy import HomeAssistantSnapshotExtension
 from .typing import (
@@ -1776,21 +1775,15 @@ def label_registry(hass: HomeAssistant) -> lr.LabelRegistry:
 
 
 @pytest.fixture
-def mocked_service() -> tuple[str, str]:
-    """Fixture to allow overriding mocked service."""
-    return ("test", "automation")
+def service_calls() -> Generator[None, None, list[ServiceCall]]:
+    """Track all service calls."""
+    calls = []
 
+    async def _async_call(self, domain, service, service_data, **kwargs):
+        calls.append(ServiceCall(domain, service, service_data))
 
-@pytest.fixture
-def service_calls(
-    hass: HomeAssistant, mocked_service: tuple[str, str]
-) -> list[ServiceCall]:
-    """Track calls to a mocked service.
-
-    Defaults to `test.automation`. To override, tests can be marked with:
-    @pytest.mark.parametrize("mocked_service", [(DOMAIN, SERVICE_NAME)])
-    """
-    return async_mock_service(hass, mocked_service[0], mocked_service[1])
+    with patch("homeassistant.core.ServiceRegistry.async_call", _async_call):
+        yield calls
 
 
 @pytest.fixture
