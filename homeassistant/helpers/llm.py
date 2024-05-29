@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass, replace
+from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Any
 
@@ -15,6 +15,7 @@ from homeassistant.components.conversation.trace import (
     async_conversation_trace_append,
 )
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
+from homeassistant.components.intent import async_device_supports_timers
 from homeassistant.components.weather.intent import INTENT_GET_WEATHER
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -68,15 +69,16 @@ def async_register_api(hass: HomeAssistant, api: API) -> None:
     apis[api.id] = api
 
 
-@callback
-def async_get_api(hass: HomeAssistant, api_id: str) -> API:
+async def async_get_api(
+    hass: HomeAssistant, api_id: str, tool_context: ToolContext
+) -> APIInstance:
     """Get an API."""
     apis = _async_get_apis(hass)
 
     if api_id not in apis:
         raise HomeAssistantError(f"API {api_id} not found")
 
-    return apis[api_id]
+    return await apis[api_id].async_get_api_instance(tool_context)
 
 
 @callback
@@ -86,17 +88,23 @@ def async_get_apis(hass: HomeAssistant) -> list[API]:
 
 
 @dataclass(slots=True)
-class ToolInput(ABC):
+class ToolContext:
     """Tool input to be processed."""
 
-    tool_name: str
-    tool_args: dict[str, Any]
     platform: str
     context: Context | None
     user_prompt: str | None
     language: str | None
     assistant: str | None
     device_id: str | None
+
+
+@dataclass(slots=True)
+class ToolInput:
+    """Tool input to be processed."""
+
+    tool_name: str
+    tool_args: dict[str, Any]
 
 
 class Tool:
@@ -108,7 +116,7 @@ class Tool:
 
     @abstractmethod
     async def async_call(
-        self, hass: HomeAssistant, tool_input: ToolInput
+        self, hass: HomeAssistant, tool_input: ToolInput, tool_context: ToolContext
     ) -> JsonObjectType:
         """Call the tool."""
         raise NotImplementedError
@@ -116,6 +124,30 @@ class Tool:
     def __repr__(self) -> str:
         """Represent a string of a Tool."""
         return f"<{self.__class__.__name__} - {self.name}>"
+
+
+@dataclass
+class APIInstance:
+    """Instance of an API to be used by an LLM."""
+
+    api: API
+    api_prompt: str
+    tool_context: ToolContext
+    tools: list[Tool]
+
+    async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
+        """Call a LLM tool, validate args and return the response."""
+        async_conversation_trace_append(
+            ConversationTraceEventType.LLM_TOOL_CALL, asdict(tool_input)
+        )
+
+        for tool in self.tools:
+            if tool.name == tool_input.tool_name:
+                break
+        else:
+            raise HomeAssistantError(f'Tool "{tool_input.tool_name}" not found')
+
+        return await tool.async_call(self.api.hass, tool_input, self.tool_context)
 
 
 @dataclass(slots=True, kw_only=True)
@@ -127,37 +159,9 @@ class API(ABC):
     name: str
 
     @abstractmethod
-    async def async_get_api_prompt(self, tool_input: ToolInput) -> str:
-        """Return the prompt for the API."""
+    async def async_get_api_instance(self, tool_context: ToolContext) -> APIInstance:
+        """Return the instance of the API."""
         raise NotImplementedError
-
-    @abstractmethod
-    @callback
-    def async_get_tools(self) -> list[Tool]:
-        """Return a list of tools."""
-        raise NotImplementedError
-
-    async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
-        """Call a LLM tool, validate args and return the response."""
-        async_conversation_trace_append(
-            ConversationTraceEventType.LLM_TOOL_CALL, asdict(tool_input)
-        )
-
-        for tool in self.async_get_tools():
-            if tool.name == tool_input.tool_name:
-                break
-        else:
-            raise HomeAssistantError(f'Tool "{tool_input.tool_name}" not found')
-
-        return await tool.async_call(
-            self.hass,
-            replace(
-                tool_input,
-                tool_name=tool.name,
-                tool_args=tool.parameters(tool_input.tool_args),
-                context=tool_input.context or Context(),
-            ),
-        )
 
 
 class IntentTool(Tool):
@@ -176,21 +180,20 @@ class IntentTool(Tool):
             self.parameters = vol.Schema(slot_schema)
 
     async def async_call(
-        self, hass: HomeAssistant, tool_input: ToolInput
+        self, hass: HomeAssistant, tool_input: ToolInput, tool_context: ToolContext
     ) -> JsonObjectType:
         """Handle the intent."""
         slots = {key: {"value": val} for key, val in tool_input.tool_args.items()}
-
         intent_response = await intent.async_handle(
-            hass,
-            tool_input.platform,
-            self.name,
-            slots,
-            tool_input.user_prompt,
-            tool_input.context,
-            tool_input.language,
-            tool_input.assistant,
-            tool_input.device_id,
+            hass=hass,
+            platform=tool_context.platform,
+            intent_type=self.name,
+            slots=slots,
+            text_input=tool_context.user_prompt,
+            context=tool_context.context,
+            language=tool_context.language,
+            assistant=tool_context.assistant,
+            device_id=tool_context.device_id,
         )
         return intent_response.as_dict()
 
@@ -213,15 +216,26 @@ class AssistAPI(API):
             name="Assist",
         )
 
-    async def async_get_api_prompt(self, tool_input: ToolInput) -> str:
-        """Return the prompt for the API."""
-        if tool_input.assistant:
+    async def async_get_api_instance(self, tool_context: ToolContext) -> APIInstance:
+        """Return the instance of the API."""
+        if tool_context.assistant:
             exposed_entities: dict | None = _get_exposed_entities(
-                self.hass, tool_input.assistant
+                self.hass, tool_context.assistant
             )
         else:
             exposed_entities = None
 
+        return APIInstance(
+            api=self,
+            api_prompt=await self._async_get_api_prompt(tool_context, exposed_entities),
+            tool_context=tool_context,
+            tools=self._async_get_tools(tool_context, exposed_entities),
+        )
+
+    async def _async_get_api_prompt(
+        self, tool_context: ToolContext, exposed_entities: dict | None
+    ) -> str:
+        """Return the prompt for the API."""
         if not exposed_entities:
             return (
                 "Only if the user wants to control a device, tell them to expose entities "
@@ -236,9 +250,9 @@ class AssistAPI(API):
         ]
         area: ar.AreaEntry | None = None
         floor: fr.FloorEntry | None = None
-        if tool_input.device_id:
+        if tool_context.device_id:
             device_reg = dr.async_get(self.hass)
-            device = device_reg.async_get(tool_input.device_id)
+            device = device_reg.async_get(tool_context.device_id)
 
             if device:
                 area_reg = ar.async_get(self.hass)
@@ -259,10 +273,15 @@ class AssistAPI(API):
                 "don't know in what area this conversation is happening."
             )
 
-        if tool_input.context and tool_input.context.user_id:
-            user = await self.hass.auth.async_get_user(tool_input.context.user_id)
+        if tool_context.context and tool_context.context.user_id:
+            user = await self.hass.auth.async_get_user(tool_context.context.user_id)
             if user:
                 prompt.append(f"The user name is {user.name}.")
+
+        if not tool_context.device_id or not async_device_supports_timers(
+            self.hass, tool_context.device_id
+        ):
+            prompt.append("This device does not support timers.")
 
         if exposed_entities:
             prompt.append(
@@ -273,13 +292,43 @@ class AssistAPI(API):
         return "\n".join(prompt)
 
     @callback
-    def async_get_tools(self) -> list[Tool]:
+    def _async_get_tools(
+        self, tool_context: ToolContext, exposed_entities: dict | None
+    ) -> list[Tool]:
         """Return a list of LLM tools."""
-        return [
-            IntentTool(intent_handler)
+        ignore_intents = self.IGNORE_INTENTS
+        if not tool_context.device_id or not async_device_supports_timers(
+            self.hass, tool_context.device_id
+        ):
+            ignore_intents = ignore_intents | {
+                intent.INTENT_START_TIMER,
+                intent.INTENT_CANCEL_TIMER,
+                intent.INTENT_INCREASE_TIMER,
+                intent.INTENT_DECREASE_TIMER,
+                intent.INTENT_PAUSE_TIMER,
+                intent.INTENT_UNPAUSE_TIMER,
+                intent.INTENT_TIMER_STATUS,
+            }
+
+        intent_handlers = [
+            intent_handler
             for intent_handler in intent.async_get(self.hass)
-            if intent_handler.intent_type not in self.IGNORE_INTENTS
+            if intent_handler.intent_type not in ignore_intents
         ]
+
+        exposed_domains: set[str] | None = None
+        if exposed_entities is not None:
+            exposed_domains = {
+                entity_id.split(".")[0] for entity_id in exposed_entities
+            }
+            intent_handlers = [
+                intent_handler
+                for intent_handler in intent_handlers
+                if intent_handler.platforms is None
+                or intent_handler.platforms & exposed_domains
+            ]
+
+        return [IntentTool(intent_handler) for intent_handler in intent_handlers]
 
 
 def _get_exposed_entities(
