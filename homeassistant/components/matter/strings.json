@@ -62,6 +62,22 @@
         }
       }
     },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "low": "Low",
+              "medium": "Medium",
+              "high": "High",
+              "auto": "Auto",
+              "natural_wind": "Natural wind",
+              "sleep_wind": "Sleep wind"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "flow": {
         "name": "Flow"
