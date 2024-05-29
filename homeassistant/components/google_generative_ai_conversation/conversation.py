@@ -157,9 +157,7 @@ class GoogleGenerativeAIConversationEntity(
                 llm_api = await llm.async_get_api(
                     self.hass,
                     self.entry.options[CONF_LLM_HASS_API],
-                    llm.ToolInput(
-                        tool_name="",
-                        tool_args={},
+                    llm.ToolContext(
                         platform=DOMAIN,
                         context=user_input.context,
                         user_prompt=user_input.text,
@@ -308,12 +306,6 @@ class GoogleGenerativeAIConversationEntity(
                 tool_input = llm.ToolInput(
                     tool_name=tool_call.name,
                     tool_args=dict(tool_call.args),
-                    platform=DOMAIN,
-                    context=user_input.context,
-                    user_prompt=user_input.text,
-                    language=user_input.language,
-                    assistant=conversation.DOMAIN,
-                    device_id=user_input.device_id,
                 )
                 LOGGER.debug(
                     "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args

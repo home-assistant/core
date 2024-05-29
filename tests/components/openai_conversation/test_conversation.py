@@ -192,6 +192,8 @@ async def test_function_call(
         llm.ToolInput(
             tool_name="test_tool",
             tool_args={"param1": "test_value"},
+        ),
+        llm.ToolContext(
             platform="openai_conversation",
             context=context,
             user_prompt="Please call the test function",
@@ -323,6 +325,8 @@ async def test_function_exception(
         llm.ToolInput(
             tool_name="test_tool",
             tool_args={"param1": "test_value"},
+        ),
+        llm.ToolContext(
             platform="openai_conversation",
             context=context,
             user_prompt="Please call the test function",
