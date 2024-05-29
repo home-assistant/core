@@ -16,7 +16,6 @@ from homeassistant.components.conversation.trace import (
 )
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
-from homeassistant.components.weather.intent import INTENT_GET_WEATHER
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import yaml
@@ -207,7 +206,6 @@ class AssistAPI(API):
     IGNORE_INTENTS = {
         intent.INTENT_NEVERMIND,
         intent.INTENT_GET_STATE,
-        INTENT_GET_WEATHER,
         INTENT_GET_TEMPERATURE,
     }
 
