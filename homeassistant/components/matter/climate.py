@@ -42,7 +42,33 @@ HVAC_SYSTEM_MODE_MAP = {
     HVACMode.HEAT_COOL: 1,
     HVACMode.COOL: 3,
     HVACMode.HEAT: 4,
+    HVACMode.DRY: 8,
+    HVACMode.FAN_ONLY: 7,
 }
+
+SINGLE_SETPOINT_DEVICES: set[tuple[int, int]] = {
+    # Some devices only have a single setpoint while the matter spec
+    # assumes that you need separate setpoints for heating and cooling.
+    # We were told this is just some legacy inheritance from zigbee specs.
+    # In the list below specify tuples of (vendorid, productid) of devices for
+    # which we just need a single setpoint to control both heating and cooling.
+    (0x1209, 0x8007),
+}
+
+SUPPORT_DRY_MODE_DEVICES: set[tuple[int, int]] = {
+    # The Matter spec is missing a feature flag if the device supports a dry mode.
+    # In the list below specify tuples of (vendorid, productid) of devices that
+    # support dry mode.
+    (0x1209, 0x8007),
+}
+
+SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
+    # The Matter spec is missing a feature flag if the device supports a fan-only mode.
+    # In the list below specify tuples of (vendorid, productid) of devices that
+    # support fan-only mode.
+    (0x1209, 0x8007),
+}
+
 SystemModeEnum = clusters.Thermostat.Enums.ThermostatSystemMode
 ControlSequenceEnum = clusters.Thermostat.Enums.ThermostatControlSequence
 ThermostatFeature = clusters.Thermostat.Bitmaps.Feature
@@ -85,80 +111,91 @@ class MatterClimate(MatterEntity, ClimateEntity):
     ) -> None:
         """Initialize the Matter climate entity."""
         super().__init__(matter_client, endpoint, entity_info)
+        product_id = self._endpoint.node.device_info.productID
+        vendor_id = self._endpoint.node.device_info.vendorID
 
         # set hvac_modes based on feature map
         self._attr_hvac_modes: list[HVACMode] = [HVACMode.OFF]
         feature_map = int(
             self.get_matter_attribute_value(clusters.Thermostat.Attributes.FeatureMap)
         )
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_OFF
+        )
         if feature_map & ThermostatFeature.kHeating:
             self._attr_hvac_modes.append(HVACMode.HEAT)
         if feature_map & ThermostatFeature.kCooling:
             self._attr_hvac_modes.append(HVACMode.COOL)
+        if (vendor_id, product_id) in SUPPORT_DRY_MODE_DEVICES:
+            self._attr_hvac_modes.append(HVACMode.DRY)
+        if (vendor_id, product_id) in SUPPORT_FAN_MODE_DEVICES:
+            self._attr_hvac_modes.append(HVACMode.FAN_ONLY)
         if feature_map & ThermostatFeature.kAutoMode:
             self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
-        self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            | ClimateEntityFeature.TURN_OFF
-        )
+            # only enable temperature_range feature if the device actually supports that
+
+            if (vendor_id, product_id) not in SINGLE_SETPOINT_DEVICES:
+                self._attr_supported_features |= (
+                    ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+                )
         if any(mode for mode in self.hvac_modes if mode != HVACMode.OFF):
             self._attr_supported_features |= ClimateEntityFeature.TURN_ON
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
+        target_temperature: float | None = kwargs.get(ATTR_TEMPERATURE)
+        target_temperature_low: float | None = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        target_temperature_high: float | None = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+
         if target_hvac_mode is not None:
             await self.async_set_hvac_mode(target_hvac_mode)
-
         current_mode = target_hvac_mode or self.hvac_mode
-        command = None
-        if current_mode in (HVACMode.HEAT, HVACMode.COOL):
-            # when current mode is either heat or cool, the temperature arg must be provided.
-            temperature: float | None = kwargs.get(ATTR_TEMPERATURE)
-            if temperature is None:
-                raise ValueError("Temperature must be provided")
-            if self.target_temperature is None:
-                raise ValueError("Current target_temperature should not be None")
-            command = self._create_optional_setpoint_command(
-                clusters.Thermostat.Enums.SetpointAdjustMode.kCool
-                if current_mode == HVACMode.COOL
-                else clusters.Thermostat.Enums.SetpointAdjustMode.kHeat,
-                temperature,
-                self.target_temperature,
-            )
-        elif current_mode == HVACMode.HEAT_COOL:
-            temperature_low: float | None = kwargs.get(ATTR_TARGET_TEMP_LOW)
-            temperature_high: float | None = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-            if temperature_low is None or temperature_high is None:
-                raise ValueError(
-                    "temperature_low and temperature_high must be provided"
+
+        if target_temperature is not None:
+            # single setpoint control
+            if self.target_temperature != target_temperature:
+                if current_mode == HVACMode.COOL:
+                    matter_attribute = (
+                        clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
+                    )
+                else:
+                    matter_attribute = (
+                        clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
+                    )
+                await self.matter_client.write_attribute(
+                    node_id=self._endpoint.node.node_id,
+                    attribute_path=create_attribute_path_from_attribute(
+                        self._endpoint.endpoint_id,
+                        matter_attribute,
+                    ),
+                    value=int(target_temperature * TEMPERATURE_SCALING_FACTOR),
                 )
-            if (
-                self.target_temperature_low is None
-                or self.target_temperature_high is None
-            ):
-                raise ValueError(
-                    "current target_temperature_low and target_temperature_high should not be None"
+            return
+
+        if target_temperature_low is not None:
+            # multi setpoint control - low setpoint (heat)
+            if self.target_temperature_low != target_temperature_low:
+                await self.matter_client.write_attribute(
+                    node_id=self._endpoint.node.node_id,
+                    attribute_path=create_attribute_path_from_attribute(
+                        self._endpoint.endpoint_id,
+                        clusters.Thermostat.Attributes.OccupiedHeatingSetpoint,
+                    ),
+                    value=int(target_temperature_low * TEMPERATURE_SCALING_FACTOR),
                 )
-            # due to ha send both high and low temperature, we need to check which one is changed
-            command = self._create_optional_setpoint_command(
-                clusters.Thermostat.Enums.SetpointAdjustMode.kHeat,
-                temperature_low,
-                self.target_temperature_low,
-            )
-            if command is None:
-                command = self._create_optional_setpoint_command(
-                    clusters.Thermostat.Enums.SetpointAdjustMode.kCool,
-                    temperature_high,
-                    self.target_temperature_high,
+
+        if target_temperature_high is not None:
+            # multi setpoint control - high setpoint (cool)
+            if self.target_temperature_high != target_temperature_high:
+                await self.matter_client.write_attribute(
+                    node_id=self._endpoint.node.node_id,
+                    attribute_path=create_attribute_path_from_attribute(
+                        self._endpoint.endpoint_id,
+                        clusters.Thermostat.Attributes.OccupiedCoolingSetpoint,
+                    ),
+                    value=int(target_temperature_high * TEMPERATURE_SCALING_FACTOR),
                 )
-        if command:
-            await self.matter_client.send_device_command(
-                node_id=self._endpoint.node.node_id,
-                endpoint_id=self._endpoint.endpoint_id,
-                command=command,
-            )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -201,6 +238,10 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 self._attr_hvac_mode = HVACMode.COOL
             case SystemModeEnum.kHeat | SystemModeEnum.kEmergencyHeat:
                 self._attr_hvac_mode = HVACMode.HEAT
+            case SystemModeEnum.kFanOnly:
+                self._attr_hvac_mode = HVACMode.FAN_ONLY
+            case SystemModeEnum.kDry:
+                self._attr_hvac_mode = HVACMode.DRY
             case _:
                 self._attr_hvac_mode = HVACMode.OFF
         # running state is an optional attribute
@@ -270,24 +311,6 @@ class MatterClimate(MatterEntity, ClimateEntity):
         if value := self.get_matter_attribute_value(attribute):
             return float(value) / TEMPERATURE_SCALING_FACTOR
         return None
-
-    @staticmethod
-    def _create_optional_setpoint_command(
-        mode: clusters.Thermostat.Enums.SetpointAdjustMode | int,
-        target_temp: float,
-        current_target_temp: float,
-    ) -> clusters.Thermostat.Commands.SetpointRaiseLower | None:
-        """Create a setpoint command if the target temperature is different from the current one."""
-
-        temp_diff = int((target_temp - current_target_temp) * 10)
-
-        if temp_diff == 0:
-            return None
-
-        return clusters.Thermostat.Commands.SetpointRaiseLower(
-            mode,
-            temp_diff,
-        )
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
