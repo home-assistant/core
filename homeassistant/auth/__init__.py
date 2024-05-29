@@ -28,15 +28,14 @@ from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN, REFRESH_TOKEN_EXPIRA
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
 from .models import AuthFlowResult
 from .providers import AuthProvider, LoginFlow, auth_provider_from_config
-from .session import SessionManager
 
 EVENT_USER_ADDED = "user_added"
 EVENT_USER_UPDATED = "user_updated"
 EVENT_USER_REMOVED = "user_removed"
 
-_MfaModuleDict = dict[str, MultiFactorAuthModule]
-_ProviderKey = tuple[str, str | None]
-_ProviderDict = dict[_ProviderKey, AuthProvider]
+type _MfaModuleDict = dict[str, MultiFactorAuthModule]
+type _ProviderKey = tuple[str, str | None]
+type _ProviderDict = dict[_ProviderKey, AuthProvider]
 
 
 class InvalidAuthError(Exception):
@@ -181,7 +180,6 @@ class AuthManager:
         self._remove_expired_job = HassJob(
             self._async_remove_expired_refresh_tokens, job_type=HassJobType.Callback
         )
-        self.session = SessionManager(hass, self)
 
     async def async_setup(self) -> None:
         """Set up the auth manager."""
@@ -192,7 +190,6 @@ class AuthManager:
             )
         )
         self._async_track_next_refresh_token_expiration()
-        await self.session.async_setup()
 
     @property
     def auth_providers(self) -> list[AuthProvider]:
@@ -518,6 +515,13 @@ class AuthManager:
         callbacks = self._revoke_callbacks.pop(refresh_token.id, ())
         for revoke_callback in callbacks:
             revoke_callback()
+
+    @callback
+    def async_set_expiry(
+        self, refresh_token: models.RefreshToken, *, enable_expiry: bool
+    ) -> None:
+        """Enable or disable expiry of a refresh token."""
+        self._store.async_set_expiry(refresh_token, enable_expiry=enable_expiry)
 
     @callback
     def _async_remove_expired_refresh_tokens(self, _: datetime | None = None) -> None:

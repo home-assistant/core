@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from logging import Logger
-from typing import Any, TypeVar
+from typing import Any
 
 from xiaomi_ble import SensorUpdate, XiaomiBluetoothDeviceData
 
@@ -21,8 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 
 from .const import CONF_SLEEPY_DEVICE
-
-_T = TypeVar("_T")
 
 
 class XiaomiActiveBluetoothProcessorCoordinator(
@@ -72,7 +70,7 @@ class XiaomiActiveBluetoothProcessorCoordinator(
         return self.entry.data.get(CONF_SLEEPY_DEVICE, self.device_data.sleepy_device)
 
 
-class XiaomiPassiveBluetoothDataProcessor(
+class XiaomiPassiveBluetoothDataProcessor[_T](
     PassiveBluetoothDataProcessor[_T, SensorUpdate]
 ):
     """Define a Xiaomi Bluetooth Passive Update Data Processor."""

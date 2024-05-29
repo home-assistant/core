@@ -44,12 +44,14 @@ async def test_deprecated_entity(
 
 
 async def test_deprecated_entity_no_automations(
-    hass: HomeAssistant, ufp: MockUFPFixture, hass_ws_client, doorbell: Camera
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    hass_ws_client,
+    doorbell: Camera,
 ):
     """Test Deprecate entity repair exists for existing installs."""
-
-    registry = er.async_get(hass)
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         Platform.SWITCH,
         DOMAIN,
         f"{doorbell.mac}_hdr_mode",
@@ -107,14 +109,13 @@ async def _load_automation(hass: HomeAssistant, entity_id: str):
 
 async def test_deprecate_entity_automation(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     hass_ws_client: WebSocketGenerator,
     doorbell: Camera,
 ) -> None:
     """Test Deprecate entity repair exists for existing installs."""
-
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         Platform.SWITCH,
         DOMAIN,
         f"{doorbell.mac}_hdr_mode",
@@ -176,14 +177,13 @@ async def _load_script(hass: HomeAssistant, entity_id: str):
 
 async def test_deprecate_entity_script(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     hass_ws_client: WebSocketGenerator,
     doorbell: Camera,
 ) -> None:
     """Test Deprecate entity repair exists for existing installs."""
-
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         Platform.SWITCH,
         DOMAIN,
         f"{doorbell.mac}_hdr_mode",

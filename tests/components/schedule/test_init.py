@@ -569,16 +569,17 @@ async def test_ws_list(
 async def test_ws_delete(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
 ) -> None:
     """Test WS delete cleans up entity registry."""
-    ent_reg = er.async_get(hass)
-
     assert await schedule_setup()
 
     state = hass.states.get("schedule.from_storage")
     assert state is not None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "from_storage") is not None
+    assert (
+        entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "from_storage") is not None
+    )
 
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -589,7 +590,7 @@ async def test_ws_delete(
 
     state = hass.states.get("schedule.from_storage")
     assert state is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "from_storage") is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "from_storage") is None
 
 
 @pytest.mark.freeze_time("2022-08-10 20:10:00-07:00")
@@ -604,14 +605,13 @@ async def test_ws_delete(
 async def test_update(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
     to: str,
     next_event: str,
     saved_to: str,
 ) -> None:
     """Test updating the schedule."""
-    ent_reg = er.async_get(hass)
-
     assert await schedule_setup()
 
     state = hass.states.get("schedule.from_storage")
@@ -620,7 +620,9 @@ async def test_update(
     assert state.attributes[ATTR_FRIENDLY_NAME] == "from storage"
     assert state.attributes[ATTR_ICON] == "mdi:party-popper"
     assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-08-12T17:00:00-07:00"
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "from_storage") is not None
+    assert (
+        entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "from_storage") is not None
+    )
 
     client = await hass_ws_client(hass)
 
@@ -674,6 +676,7 @@ async def test_update(
 async def test_ws_create(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
     freezer,
     to: str,
@@ -683,13 +686,11 @@ async def test_ws_create(
     """Test create WS."""
     freezer.move_to("2022-08-11 8:52:00-07:00")
 
-    ent_reg = er.async_get(hass)
-
     assert await schedule_setup(items=[])
 
     state = hass.states.get("schedule.party_mode")
     assert state is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "party_mode") is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "party_mode") is None
 
     client = await hass_ws_client(hass)
     await client.send_json(

@@ -37,7 +37,7 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.VACUUM,
 ]
-EcovacsConfigEntry = ConfigEntry[EcovacsController]
+type EcovacsConfigEntry = ConfigEntry[EcovacsController]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

@@ -134,7 +134,7 @@ class LocalTodoListEntity(TodoListEntity):
         self._attr_unique_id = unique_id
 
     def _new_todo_store(self) -> TodoStore:
-        return TodoStore(self._calendar, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+        return TodoStore(self._calendar, tzinfo=dt_util.get_default_time_zone())
 
     async def async_update(self) -> None:
         """Update entity state based on the local To-do items."""

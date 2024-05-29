@@ -8,10 +8,11 @@ from typing import TYPE_CHECKING, cast
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Event, EventStateChangedData
+from homeassistant.util.collection import chunked
 
 from ..db_schema import StatesMeta
 from ..queries import find_all_states_metadata_ids, find_states_metadata_ids
-from ..util import chunked, execute_stmt_lambda_element
+from ..util import execute_stmt_lambda_element
 from . import BaseLRUTableManager
 
 if TYPE_CHECKING:

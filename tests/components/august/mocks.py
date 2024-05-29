@@ -191,6 +191,9 @@ async def _create_august_api_with_devices(
     api_call_side_effects.setdefault(
         "unlock_return_activities", unlock_return_activities_side_effect
     )
+    api_call_side_effects.setdefault(
+        "async_unlatch_return_activities", unlock_return_activities_side_effect
+    )
 
     api_instance, entry = await _mock_setup_august_with_api_side_effects(
         hass, api_call_side_effects, pubnub, brand
@@ -244,10 +247,17 @@ async def _mock_setup_august_with_api_side_effects(
             side_effect=api_call_side_effects["unlock_return_activities"]
         )
 
+    if api_call_side_effects["async_unlatch_return_activities"]:
+        type(api_instance).async_unlatch_return_activities = AsyncMock(
+            side_effect=api_call_side_effects["async_unlatch_return_activities"]
+        )
+
     api_instance.async_unlock_async = AsyncMock()
     api_instance.async_lock_async = AsyncMock()
     api_instance.async_status_async = AsyncMock()
     api_instance.async_get_user = AsyncMock(return_value={"UserID": "abc"})
+    api_instance.async_unlatch_async = AsyncMock()
+    api_instance.async_unlatch = AsyncMock()
 
     return api_instance, await _mock_setup_august(
         hass, api_instance, pubnub, brand=brand
@@ -364,6 +374,10 @@ async def _mock_doorsense_enabled_august_lock_detail(hass):
 
 async def _mock_doorsense_missing_august_lock_detail(hass):
     return await _mock_lock_from_fixture(hass, "get_lock.online_missing_doorsense.json")
+
+
+async def _mock_lock_with_unlatch(hass):
+    return await _mock_lock_from_fixture(hass, "get_lock.online_with_unlatch.json")
 
 
 def _mock_lock_operation_activity(lock, action, offset):

@@ -338,7 +338,7 @@ async def test_user_dashboard_has_wrong_key(
     ]
 
     with patch(
-        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=WRONG_NOISE_PSK,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -393,7 +393,7 @@ async def test_user_discovers_name_and_gets_key_from_dashboard(
     await dashboard.async_get_dashboard(hass).async_refresh()
 
     with patch(
-        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -446,7 +446,7 @@ async def test_user_discovers_name_and_gets_key_from_dashboard_fails(
     await dashboard.async_get_dashboard(hass).async_refresh()
 
     with patch(
-        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         side_effect=dashboard_exception,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -859,7 +859,7 @@ async def test_reauth_fixed_via_dashboard(
     await dashboard.async_get_dashboard(hass).async_refresh()
 
     with patch(
-        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ) as mock_get_encryption_key:
         result = await hass.config_entries.flow.async_init(
@@ -902,7 +902,7 @@ async def test_reauth_fixed_via_dashboard_add_encryption_remove_password(
     await dashboard.async_get_dashboard(hass).async_refresh()
 
     with patch(
-        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ) as mock_get_encryption_key:
         result = await hass.config_entries.flow.async_init(
@@ -990,7 +990,7 @@ async def test_reauth_fixed_via_dashboard_at_confirm(
     await dashboard.async_get_dashboard(hass).async_refresh()
 
     with patch(
-        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ) as mock_get_encryption_key:
         # We just fetch the form
@@ -1211,7 +1211,7 @@ async def test_zeroconf_encryption_key_via_dashboard(
     ]
 
     with patch(
-        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ) as mock_get_encryption_key:
         result = await hass.config_entries.flow.async_configure(
@@ -1277,7 +1277,7 @@ async def test_zeroconf_encryption_key_via_dashboard_with_api_encryption_prop(
     ]
 
     with patch(
-        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ) as mock_get_encryption_key:
         result = await hass.config_entries.flow.async_configure(

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from contextlib import suppress
 from dataclasses import dataclass
 import functools
 from functools import cached_property
@@ -12,9 +11,9 @@ import linecache
 import logging
 import sys
 from types import FrameType
-from typing import Any, TypeVar, cast
+from typing import Any, cast
 
-from homeassistant.core import HomeAssistant, async_get_hass
+from homeassistant.core import async_get_hass_or_none
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_suggest_report_issue
 
@@ -22,8 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 
 # Keep track of integrations already reported to prevent flooding
 _REPORTED_INTEGRATIONS: set[str] = set()
-
-_CallableT = TypeVar("_CallableT", bound=Callable)
 
 
 @dataclass(kw_only=True)
@@ -178,11 +175,8 @@ def _report_integration(
         return
     _REPORTED_INTEGRATIONS.add(key)
 
-    hass: HomeAssistant | None = None
-    with suppress(HomeAssistantError):
-        hass = async_get_hass()
     report_issue = async_suggest_report_issue(
-        hass,
+        async_get_hass_or_none(),
         integration_domain=integration_frame.integration,
         module=integration_frame.module,
     )
@@ -209,7 +203,7 @@ def _report_integration(
     )
 
 
-def warn_use(func: _CallableT, what: str) -> _CallableT:
+def warn_use[_CallableT: Callable](func: _CallableT, what: str) -> _CallableT:
     """Mock a function to warn when it was about to be used."""
     if asyncio.iscoroutinefunction(func):
 

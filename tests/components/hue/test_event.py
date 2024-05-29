@@ -31,7 +31,12 @@ async def test_event(
     ]
     # trigger firing 'initial_press' event from the device
     btn_event = {
-        "button": {"last_event": "initial_press"},
+        "button": {
+            "button_report": {
+                "event": "initial_press",
+                "updated": "2023-09-27T10:06:41.822Z",
+            }
+        },
         "id": "f92aa267-1387-4f02-9950-210fb7ca1f5a",
         "metadata": {"control_id": 1},
         "type": "button",
@@ -42,7 +47,12 @@ async def test_event(
     assert state.attributes[ATTR_EVENT_TYPE] == "initial_press"
     # trigger firing 'long_release' event from the device
     btn_event = {
-        "button": {"last_event": "long_release"},
+        "button": {
+            "button_report": {
+                "event": "long_release",
+                "updated": "2023-09-27T10:06:41.822Z",
+            }
+        },
         "id": "f92aa267-1387-4f02-9950-210fb7ca1f5a",
         "metadata": {"control_id": 1},
         "type": "button",
@@ -79,13 +89,14 @@ async def test_sensor_add_update(hass: HomeAssistant, mock_bridge_v2) -> None:
     btn_event = {
         "id": "fake_relative_rotary",
         "relative_rotary": {
-            "last_event": {
+            "rotary_report": {
                 "action": "repeat",
                 "rotation": {
                     "direction": "counter_clock_wise",
                     "steps": 60,
                     "duration": 400,
                 },
+                "updated": "2023-09-27T10:06:41.822Z",
             }
         },
         "type": "relative_rotary",

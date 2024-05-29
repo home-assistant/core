@@ -1,7 +1,10 @@
 """HomeKit session fixtures."""
 
+from asyncio import AbstractEventLoop
+from collections.abc import Generator
 from contextlib import suppress
 import os
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -10,6 +13,7 @@ from homeassistant.components.device_tracker.legacy import YAML_DEVICES
 from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import BRIDGE_NAME, EVENT_HOMEKIT_CHANGED
 from homeassistant.components.homekit.iidmanager import AccessoryIIDStorage
+from homeassistant.core import HomeAssistant
 
 from tests.common import async_capture_events
 
@@ -22,7 +26,9 @@ def iid_storage(hass):
 
 
 @pytest.fixture
-def run_driver(hass, event_loop, iid_storage):
+def run_driver(
+    hass: HomeAssistant, event_loop: AbstractEventLoop, iid_storage: AccessoryIIDStorage
+) -> Generator[HomeDriver, Any, None]:
     """Return a custom AccessoryDriver instance for HomeKit accessory init.
 
     This mock does not mock async_stop, so the driver will not be stopped
@@ -49,7 +55,9 @@ def run_driver(hass, event_loop, iid_storage):
 
 
 @pytest.fixture
-def hk_driver(hass, event_loop, iid_storage):
+def hk_driver(
+    hass: HomeAssistant, event_loop: AbstractEventLoop, iid_storage: AccessoryIIDStorage
+) -> Generator[HomeDriver, Any, None]:
     """Return a custom AccessoryDriver instance for HomeKit accessory init."""
     with (
         patch("pyhap.accessory_driver.AsyncZeroconf"),
@@ -76,7 +84,12 @@ def hk_driver(hass, event_loop, iid_storage):
 
 
 @pytest.fixture
-def mock_hap(hass, event_loop, iid_storage, mock_zeroconf):
+def mock_hap(
+    hass: HomeAssistant,
+    event_loop: AbstractEventLoop,
+    iid_storage: AccessoryIIDStorage,
+    mock_zeroconf: None,
+) -> Generator[HomeDriver, Any, None]:
     """Return a custom AccessoryDriver instance for HomeKit accessory init."""
     with (
         patch("pyhap.accessory_driver.AsyncZeroconf"),
