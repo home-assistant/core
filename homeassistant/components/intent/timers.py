@@ -229,7 +229,9 @@ class TimerManager:
         if (not conversation_command) and (device_id is None):
             raise ValueError("Conversation command must be set if no device id")
 
-        if (device_id is not None) and (not self.is_timer_device(device_id)):
+        if (not conversation_command) and (
+            (device_id is None) or (not self.is_timer_device(device_id))
+        ):
             raise TimersNotSupportedError(device_id)
 
         total_seconds = 0
@@ -276,7 +278,7 @@ class TimerManager:
             name=f"Timer {timer_id}",
         )
 
-        if timer.device_id is not None:
+        if timer.device_id in self.handlers:
             self.handlers[timer.device_id](TimerEventType.STARTED, timer)
         _LOGGER.debug(
             "Timer started: id=%s, name=%s, hours=%s, minutes=%s, seconds=%s, device_id=%s",
