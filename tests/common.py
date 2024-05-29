@@ -370,7 +370,7 @@ def async_mock_service(
     domain: str,
     service: str,
     schema: vol.Schema | None = None,
-    response: ServiceResponse | None = None,
+    response: ServiceResponse = None,
     supports_response: SupportsResponse | None = None,
     raise_exception: Exception | None = None,
 ) -> list[ServiceCall]:
@@ -378,7 +378,7 @@ def async_mock_service(
     calls = []
 
     @callback
-    def mock_service_log(call: list[ServiceCall]) -> ServiceResponse | None:
+    def mock_service_log(call):  # pylint: disable=unnecessary-lambda
         """Mock service call."""
         calls.append(call)
         if raise_exception is not None:
