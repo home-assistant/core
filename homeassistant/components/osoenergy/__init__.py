@@ -23,10 +23,12 @@ from .const import DOMAIN
 
 MANUFACTURER = "OSO Energy"
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.SENSOR,
     Platform.WATER_HEATER,
 ]
 PLATFORM_LOOKUP = {
+    Platform.BINARY_SENSOR: "binary_sensor",
     Platform.SENSOR: "sensor",
     Platform.WATER_HEATER: "water_heater",
 }
