@@ -9,6 +9,7 @@ from aiohue.v2.models.relative_rotary import (
 DOMAIN = "came_domotic"
 MANUFACTURER = "CAME"
 DEVICE_NAME = "CAME Domotic server"
+MANUFACTURER_URL = ("https://www.came.com/", "https://www.came.com/")
 
 
 CONF_IGNORE_AVAILABILITY = "ignore_availability"

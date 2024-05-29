@@ -27,6 +27,7 @@ from homeassistant import core
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
@@ -78,7 +79,7 @@ class CameDomoticServer:
             conf_username: str = self.config_entry.data[CONF_USERNAME]
             conf_password: str = self.config_entry.data[CONF_PASSWORD]
 
-            self.websession = ClientSession()
+            self.websession = aiohttp_client.async_get_clientsession(self.hass)
             async with asyncio.timeout(20):
                 auth: Auth = await Auth.async_create(
                     self.websession, conf_host, conf_username, conf_password
