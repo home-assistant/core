@@ -27,12 +27,10 @@
         "description": "Set up a service that allows to write notification to a file.",
         "data": {
           "file_path": "[%key:component::file::config::step::sensor::data::file_path%]",
-          "name": "Name",
           "timestamp": "Timestamp"
         },
         "data_description": {
           "file_path": "A local file path to write the notification to",
-          "name": "Name of the notify service",
           "timestamp": "Add a timestamp to the notification"
         }
       }

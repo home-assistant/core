@@ -128,6 +128,7 @@ async def test_no_driver(
 
 async def test_network_status(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     multisensor_6,
     controller_state,
     client,
@@ -160,8 +161,7 @@ async def test_network_status(
     assert result["controller"]["inclusion_state"] == InclusionState.IDLE
 
     # Try API call with device ID
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device(
+    device = device_registry.async_get_device(
         identifiers={(DOMAIN, "3245146787-52")},
     )
     assert device
@@ -253,6 +253,7 @@ async def test_network_status(
 
 async def test_subscribe_node_status(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     multisensor_6_state,
     client,
     integration,
@@ -267,8 +268,7 @@ async def test_subscribe_node_status(
     driver = client.driver
     driver.controller.nodes[node.node_id] = node
 
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id, identifiers={get_device_id(driver, node)}
     )
 
@@ -463,6 +463,7 @@ async def test_node_metadata(
 
 async def test_node_alerts(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     wallmote_central_scene,
     integration,
     hass_ws_client: WebSocketGenerator,
@@ -470,8 +471,7 @@ async def test_node_alerts(
     """Test the node comments websocket command."""
     ws_client = await hass_ws_client(hass)
 
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, "3245146787-35")})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "3245146787-35")})
     assert device
 
     await ws_client.send_json(
@@ -1642,6 +1642,7 @@ async def test_cancel_inclusion_exclusion(
 
 async def test_remove_node(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     integration,
     client,
     hass_ws_client: WebSocketGenerator,
@@ -1678,10 +1679,8 @@ async def test_remove_node(
     msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "exclusion started"
 
-    dev_reg = dr.async_get(hass)
-
     # Create device registry entry for mock node
-    device = dev_reg.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "3245146787-67")},
         name="Node 67",
@@ -1693,7 +1692,7 @@ async def test_remove_node(
     assert msg["event"]["event"] == "node removed"
 
     # Verify device was removed from device registry
-    device = dev_reg.async_get_device(
+    device = device_registry.async_get_device(
         identifiers={(DOMAIN, "3245146787-67")},
     )
     assert device is None
@@ -1753,6 +1752,7 @@ async def test_remove_node(
 
 async def test_replace_failed_node(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     nortek_thermostat,
     integration,
     client,
@@ -1764,10 +1764,8 @@ async def test_replace_failed_node(
     entry = integration
     ws_client = await hass_ws_client(hass)
 
-    dev_reg = dr.async_get(hass)
-
     # Create device registry entry for mock node
-    device = dev_reg.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "3245146787-67")},
         name="Node 67",
@@ -1863,7 +1861,7 @@ async def test_replace_failed_node(
 
     # Verify device was removed from device registry
     assert (
-        dev_reg.async_get_device(
+        device_registry.async_get_device(
             identifiers={(DOMAIN, "3245146787-67")},
         )
         is None
@@ -2102,6 +2100,7 @@ async def test_replace_failed_node(
 
 async def test_remove_failed_node(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     nortek_thermostat,
     integration,
     client,
@@ -2145,10 +2144,8 @@ async def test_remove_failed_node(
     msg = await ws_client.receive_json()
     assert msg["success"]
 
-    dev_reg = dr.async_get(hass)
-
     # Create device registry entry for mock node
-    device = dev_reg.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "3245146787-67")},
         name="Node 67",
@@ -2161,7 +2158,7 @@ async def test_remove_failed_node(
 
     # Verify device was removed from device registry
     assert (
-        dev_reg.async_get_device(
+        device_registry.async_get_device(
             identifiers={(DOMAIN, "3245146787-67")},
         )
         is None
@@ -4666,6 +4663,7 @@ async def test_subscribe_node_statistics(
 
 async def test_hard_reset_controller(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     client,
     integration,
     listen_block,
@@ -4675,8 +4673,7 @@ async def test_hard_reset_controller(
     entry = integration
     ws_client = await hass_ws_client(hass)
 
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device(
+    device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
     )
 

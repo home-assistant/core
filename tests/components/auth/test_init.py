@@ -546,20 +546,21 @@ async def test_ws_delete_all_refresh_tokens_error(
 
     tokens = result["result"]
 
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "auth/delete_all_refresh_tokens",
-        }
-    )
+    with patch("homeassistant.components.auth.DELETE_CURRENT_TOKEN_DELAY", 0.001):
+        await ws_client.send_json(
+            {
+                "id": 6,
+                "type": "auth/delete_all_refresh_tokens",
+            }
+        )
 
-    caplog.clear()
-    result = await ws_client.receive_json()
-    assert result, result["success"] is False
-    assert result["error"] == {
-        "code": "token_removing_error",
-        "message": "During removal, an error was raised.",
-    }
+        caplog.clear()
+        result = await ws_client.receive_json()
+        assert result, result["success"] is False
+        assert result["error"] == {
+            "code": "token_removing_error",
+            "message": "During removal, an error was raised.",
+        }
 
     records = [
         record
@@ -571,6 +572,7 @@ async def test_ws_delete_all_refresh_tokens_error(
     assert records[0].exc_info and str(records[0].exc_info[1]) == "I'm bad"
     assert records[0].name == "homeassistant.components.auth"
 
+    await hass.async_block_till_done()
     for token in tokens:
         refresh_token = hass.auth.async_get_refresh_token(token["id"])
         assert refresh_token is None
@@ -629,18 +631,20 @@ async def test_ws_delete_all_refresh_tokens(
     result = await ws_client.receive_json()
     assert result["success"], result
 
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "auth/delete_all_refresh_tokens",
-            **delete_token_type,
-            **delete_current_token,
-        }
-    )
+    with patch("homeassistant.components.auth.DELETE_CURRENT_TOKEN_DELAY", 0.001):
+        await ws_client.send_json(
+            {
+                "id": 6,
+                "type": "auth/delete_all_refresh_tokens",
+                **delete_token_type,
+                **delete_current_token,
+            }
+        )
 
-    result = await ws_client.receive_json()
-    assert result, result["success"]
+        result = await ws_client.receive_json()
+        assert result, result["success"]
 
+    await hass.async_block_till_done()
     # We need to enumerate the user since we may remove the token
     # that is used to authenticate the user which will prevent the websocket
     # connection from working

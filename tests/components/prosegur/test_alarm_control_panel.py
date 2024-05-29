@@ -47,11 +47,13 @@ def mock_status(request):
 
 
 async def test_entity_registry(
-    hass: HomeAssistant, init_integration, mock_auth, mock_status
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration,
+    mock_auth,
+    mock_status,
 ) -> None:
     """Tests that the devices are registered in the entity registry."""
-    entity_registry = er.async_get(hass)
-
     entry = entity_registry.async_get(PROSEGUR_ALARM_ENTITY)
     # Prosegur alarm device unique_id is the contract id associated to the alarm account
     assert entry.unique_id == CONTRACT

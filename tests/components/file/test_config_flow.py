@@ -16,7 +16,6 @@ MOCK_CONFIG_NOTIFY = {
     "platform": "notify",
     "file_path": "some_file",
     "timestamp": True,
-    "name": "File",
 }
 MOCK_CONFIG_SENSOR = {
     "platform": "sensor",
