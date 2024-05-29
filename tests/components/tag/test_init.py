@@ -4,6 +4,7 @@ import logging
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.tag import DOMAIN, _create_entry, async_scan_tag
 from homeassistant.const import CONF_NAME, STATE_UNKNOWN
@@ -14,6 +15,7 @@ from homeassistant.util import dt as dt_util
 
 from . import TEST_DEVICE_ID, TEST_TAG_ID, TEST_TAG_NAME
 
+from tests.common import async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 
@@ -75,12 +77,19 @@ def storage_setup_1_1(hass: HomeAssistant, hass_storage):
 
 
 async def test_migration(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup_1_1
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup_1_1,
+    freezer: FrozenDateTimeFactory,
+    hass_storage,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test migrating tag store."""
     assert await storage_setup_1_1()
 
     client = await hass_ws_client(hass)
+
+    freezer.move_to("2024-02-29 13:00")
 
     await client.send_json_auto_id({"type": f"{DOMAIN}/list"})
     resp = await client.receive_json()
@@ -88,6 +97,26 @@ async def test_migration(
     assert resp["result"] == [
         {"id": TEST_TAG_ID, "name": "test tag name", "tag_id": TEST_TAG_ID}
     ]
+
+    # Scan a new tag
+    await async_scan_tag(hass, "new tag", "some_scanner")
+
+    # Add a new tag through WS
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/create",
+            "tag_id": "1234567890",
+            "name": "Kitchen tag",
+        }
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    # Trigger store
+    freezer.tick(11)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass_storage[DOMAIN] == snapshot
 
 
 async def test_ws_list(

@@ -108,6 +108,7 @@ class TagStore(Store[collection.SerializedStorageCollection]):
             for tag in data["items"]:
                 # Copy name in tag store to the entity registry
                 _create_entry(entity_registry, tag[TAG_ID], tag.get(CONF_NAME))
+                tag["migrated"] = True
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -171,7 +172,10 @@ class TagStorageCollection(collection.DictStorageCollection):
 
         We don't store the name, it's stored in the entity registry.
         """
-        return {k: v for k, v in item.items() if k != CONF_NAME}
+        # Preserve the name of migrated entries to allow downgrading to 2024.5
+        # without losing tag names. This can be removed in HA Core 2025.1.
+        migrated = item_id in self.data and "migrated" in self.data[item_id]
+        return {k: v for k, v in item.items() if k != CONF_NAME or migrated}
 
 
 class TagDictStorageCollectionWebsocket(
@@ -201,14 +205,17 @@ class TagDictStorageCollectionWebsocket(
 
         Provides name from entity_registry instead of storage collection.
         """
-        tag_items = self.storage_collection.async_items()
-        for item in tag_items:
+        tag_items = []
+        for item in self.storage_collection.async_items():
+            # Make a copy to avoid adding name to the stored entry
+            item = {k: v for k, v in item.items() if k != "migrated"}
             if (
                 entity_id := self.entity_registry.async_get_entity_id(
                     DOMAIN, DOMAIN, item[TAG_ID]
                 )
             ) and (entity := self.entity_registry.async_get(entity_id)):
                 item[CONF_NAME] = entity.name or entity.original_name
+            tag_items.append(item)
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug("Listing tags %s", tag_items)
         connection.send_result(msg["id"], tag_items)
