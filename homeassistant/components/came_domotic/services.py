@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from aiohue import HueBridgeV1, HueBridgeV2
+from aiohue import HueBridgeV2
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -26,10 +26,10 @@ LOGGER = logging.getLogger(__name__)
 
 
 def async_register_services(hass: HomeAssistant) -> None:
-    """Register services for Hue integration."""
+    """Register services for CAME Domotic API integration."""
 
-    async def hue_activate_scene(call: ServiceCall, skip_reload=True) -> None:
-        """Handle activation of Hue scene."""
+    async def server_activate_scene(call: ServiceCall, skip_reload=True) -> None:
+        """Handle activation of CAME Domotic API scene."""
         # Get parameters
         group_name = call.data[ATTR_GROUP_NAME]
         scene_name = call.data[ATTR_SCENE_NAME]
@@ -38,9 +38,7 @@ def async_register_services(hass: HomeAssistant) -> None:
 
         # Call the set scene function on each bridge
         tasks = [
-            hue_activate_scene_v1(bridge, group_name, scene_name, transition)
-            if bridge.api_version == 1
-            else hue_activate_scene_v2(
+            came_server_activate_scene(
                 bridge, group_name, scene_name, transition, dynamic
             )
             for bridge in hass.data[DOMAIN].values()
@@ -62,7 +60,7 @@ def async_register_services(hass: HomeAssistant) -> None:
         hass.services.async_register(
             DOMAIN,
             SERVICE_HUE_ACTIVATE_SCENE,
-            verify_domain_control(hass, DOMAIN)(hue_activate_scene),
+            verify_domain_control(hass, DOMAIN)(server_activate_scene),
             schema=vol.Schema(
                 {
                     vol.Required(ATTR_GROUP_NAME): cv.string,
@@ -74,57 +72,7 @@ def async_register_services(hass: HomeAssistant) -> None:
         )
 
 
-async def hue_activate_scene_v1(
-    bridge: CameDomoticServer,
-    group_name: str,
-    scene_name: str,
-    transition: int | None = None,
-    is_retry: bool = False,
-) -> bool:
-    """Service for V1 bridge to call directly into bridge to set scenes."""
-    api: HueBridgeV1 = bridge.api
-    if api.scenes is None:
-        LOGGER.warning("Hub %s does not support scenes", api.host)
-        return False
-
-    group = next(
-        (group for group in api.groups.values() if group.name == group_name),
-        None,
-    )
-    # Additional scene logic to handle duplicate scene names across groups
-    scene = next(
-        (
-            scene
-            for scene in api.scenes.values()
-            if scene.name == scene_name
-            and group is not None
-            and sorted(scene.lights) == sorted(group.lights)
-        ),
-        None,
-    )
-    # If we can't find it, fetch latest info and try again
-    if not is_retry and (group is None or scene is None):
-        await bridge.async_request_call(api.groups.update)
-        await bridge.async_request_call(api.scenes.update)
-        return await hue_activate_scene_v1(
-            bridge, group_name, scene_name, transition, is_retry=True
-        )
-
-    if group is None or scene is None:
-        LOGGER.debug(
-            "Unable to find scene %s for group %s",
-            scene_name,
-            group_name,
-        )
-        return False
-
-    await bridge.async_request_call(
-        group.set_action, scene=scene.id, transitiontime=transition
-    )
-    return True
-
-
-async def hue_activate_scene_v2(
+async def came_server_activate_scene(
     bridge: CameDomoticServer,
     group_name: str,
     scene_name: str,
