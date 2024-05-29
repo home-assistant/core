@@ -1421,6 +1421,48 @@ def test_round_time() -> None:
     assert _round_time(0, 0, 35) == (0, 0, 30)
 
 
+async def test_start_timer_with_conversation_command(
+    hass: HomeAssistant, init_components
+) -> None:
+    """Test starting a timer with an conversation command and having it finish."""
+    device_id = "test_device"
+    timer_name = "test timer"
+    test_command = "turn on the lights"
+    agent_id = "test_agent"
+    finished_event = asyncio.Event()
+
+    @callback
+    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+        if event_type == TimerEventType.FINISHED:
+            assert timer.conversation_command == test_command
+            assert timer.conversation_agent_id == agent_id
+            finished_event.set()
+
+    async_register_timer_handler(hass, device_id, handle_timer)
+
+    with patch("homeassistant.components.conversation.async_converse") as mock_converse:
+        result = await intent.async_handle(
+            hass,
+            "test",
+            intent.INTENT_START_TIMER,
+            {
+                "name": {"value": timer_name},
+                "seconds": {"value": 0},
+                "conversation_command": {"value": test_command},
+            },
+            device_id=device_id,
+            conversation_agent_id=agent_id,
+        )
+
+        assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+        async with asyncio.timeout(1):
+            await finished_event.wait()
+
+        mock_converse.assert_called_once()
+        assert mock_converse.call_args.args[1] == test_command
+
+
 async def test_pause_unpause_timer_disambiguate(
     hass: HomeAssistant, init_components
 ) -> None:
