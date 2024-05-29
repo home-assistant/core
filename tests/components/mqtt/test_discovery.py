@@ -275,7 +275,9 @@ async def test_correct_config_discovery(
                 '{"name":"Beer","state_topic": "test-topic",'
                 '"o":{"name":"bla2mqtt","sw":"1.0"},"dev":{"identifiers":["bla"]}}',
                 '{"name":"Milk","state_topic": "test-topic",'
-                '"o":{"name":"bla2mqtt","sw":"1.1","url":"https://bla2mqtt.example.com/support"},"dev":{"identifiers":["bla"]}}',
+                '"o":{"name":"bla2mqtt","sw":"1.1",'
+                '"url":"https://bla2mqtt.example.com/support"},'
+                '"dev":{"identifiers":["bla"]}}',
             ),
             "bla",
         ),
@@ -318,7 +320,8 @@ async def test_discovery_integration_info(
     assert state.name == "Beer"
 
     assert (
-        "Processing device discovery for 'bla' from external application bla2mqtt, version: 1.0"
+        "Processing device discovery for 'bla' from external "
+        "application bla2mqtt, version: 1.0"
         in caplog.text
         or f"Found new component: binary_sensor {discovery_id} from external application bla2mqtt, version: 1.0"
         in caplog.text
