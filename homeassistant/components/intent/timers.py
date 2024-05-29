@@ -430,13 +430,35 @@ def async_register_timer_handler(
 # -----------------------------------------------------------------------------
 
 
+class FindTimerFilter(StrEnum):
+    """Type of filter to apply when finding a timer."""
+
+    ONLY_ACTIVE = "only_active"
+    ONLY_INACTIVE = "only_inactive"
+
+
 def _find_timer(
-    hass: HomeAssistant, device_id: str, slots: dict[str, Any]
+    hass: HomeAssistant,
+    device_id: str,
+    slots: dict[str, Any],
+    find_filter: FindTimerFilter | None = None,
 ) -> TimerInfo:
     """Match a single timer with constraints or raise an error."""
     timer_manager: TimerManager = hass.data[TIMER_DATA]
     matching_timers: list[TimerInfo] = list(timer_manager.timers.values())
     has_filter = False
+
+    if find_filter:
+        # Filter by active state
+        has_filter = True
+        if find_filter == FindTimerFilter.ONLY_ACTIVE:
+            matching_timers = [t for t in matching_timers if t.is_active]
+        elif find_filter == FindTimerFilter.ONLY_INACTIVE:
+            matching_timers = [t for t in matching_timers if not t.is_active]
+
+        if len(matching_timers) == 1:
+            # Only 1 match
+            return matching_timers[0]
 
     # Search by name first
     name: str | None = None
@@ -864,7 +886,9 @@ class PauseTimerIntentHandler(intent.IntentHandler):
             # Fail early
             raise TimersNotSupportedError(intent_obj.device_id)
 
-        timer = _find_timer(hass, intent_obj.device_id, slots)
+        timer = _find_timer(
+            hass, intent_obj.device_id, slots, find_filter=FindTimerFilter.ONLY_ACTIVE
+        )
         timer_manager.pause_timer(timer.id)
         return intent_obj.create_response()
 
@@ -892,7 +916,9 @@ class UnpauseTimerIntentHandler(intent.IntentHandler):
             # Fail early
             raise TimersNotSupportedError(intent_obj.device_id)
 
-        timer = _find_timer(hass, intent_obj.device_id, slots)
+        timer = _find_timer(
+            hass, intent_obj.device_id, slots, find_filter=FindTimerFilter.ONLY_INACTIVE
+        )
         timer_manager.unpause_timer(timer.id)
         return intent_obj.create_response()
 

@@ -1,7 +1,7 @@
 """Tests for intent timers."""
 
 import asyncio
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -910,13 +910,11 @@ async def test_pause_unpause_timer(hass: HomeAssistant, init_components) -> None
     async with asyncio.timeout(1):
         await updated_event.wait()
 
-    # Pausing again will not fire the event
-    updated_event.clear()
-    result = await intent.async_handle(
-        hass, "test", intent.INTENT_PAUSE_TIMER, {}, device_id=device_id
-    )
-    assert result.response_type == intent.IntentResponseType.ACTION_DONE
-    assert not updated_event.is_set()
+    # Pausing again will fail because there are no running timers
+    with pytest.raises(TimerNotFoundError):
+        await intent.async_handle(
+            hass, "test", intent.INTENT_PAUSE_TIMER, {}, device_id=device_id
+        )
 
     # Unpause the timer
     updated_event.clear()
@@ -929,13 +927,11 @@ async def test_pause_unpause_timer(hass: HomeAssistant, init_components) -> None
     async with asyncio.timeout(1):
         await updated_event.wait()
 
-    # Unpausing again will not fire the event
-    updated_event.clear()
-    result = await intent.async_handle(
-        hass, "test", intent.INTENT_UNPAUSE_TIMER, {}, device_id=device_id
-    )
-    assert result.response_type == intent.IntentResponseType.ACTION_DONE
-    assert not updated_event.is_set()
+    # Unpausing again will fail because there are no paused timers
+    with pytest.raises(TimerNotFoundError):
+        await intent.async_handle(
+            hass, "test", intent.INTENT_UNPAUSE_TIMER, {}, device_id=device_id
+        )
 
 
 async def test_timer_not_found(hass: HomeAssistant) -> None:
@@ -956,6 +952,48 @@ async def test_timer_not_found(hass: HomeAssistant) -> None:
 
     with pytest.raises(TimerNotFoundError):
         timer_manager.unpause_timer("does-not-exist")
+
+
+async def test_timer_manager_pause_unpause(hass: HomeAssistant) -> None:
+    """Test that pausing/unpausing again will not have an affect."""
+    timer_manager = TimerManager(hass)
+
+    # Start a timer
+    handle_timer = MagicMock()
+
+    device_id = "test_device"
+    timer_manager.register_handler(device_id, handle_timer)
+
+    timer_id = timer_manager.start_timer(
+        device_id,
+        hours=None,
+        minutes=5,
+        seconds=None,
+        language=hass.config.language,
+    )
+
+    assert timer_id in timer_manager.timers
+    assert timer_manager.timers[timer_id].is_active
+
+    # Pause
+    handle_timer.reset_mock()
+    timer_manager.pause_timer(timer_id)
+    handle_timer.assert_called_once()
+
+    # Pausing again does not call handler
+    handle_timer.reset_mock()
+    timer_manager.pause_timer(timer_id)
+    handle_timer.assert_not_called()
+
+    # Unpause
+    handle_timer.reset_mock()
+    timer_manager.unpause_timer(timer_id)
+    handle_timer.assert_called_once()
+
+    # Unpausing again does not call handler
+    handle_timer.reset_mock()
+    timer_manager.unpause_timer(timer_id)
+    handle_timer.assert_not_called()
 
 
 async def test_timers_not_supported(hass: HomeAssistant) -> None:
@@ -1381,3 +1419,108 @@ def test_round_time() -> None:
     assert _round_time(0, 0, 58) == (0, 1, 0)
     assert _round_time(0, 0, 25) == (0, 0, 20)
     assert _round_time(0, 0, 35) == (0, 0, 30)
+
+
+async def test_pause_unpause_timer_disambiguate(
+    hass: HomeAssistant, init_components
+) -> None:
+    """Test disamgibuating timers by their paused state."""
+    device_id = "test_device"
+    started_timer_ids: list[str] = []
+    paused_timer_ids: list[str] = []
+    unpaused_timer_ids: list[str] = []
+
+    started_event = asyncio.Event()
+    updated_event = asyncio.Event()
+
+    @callback
+    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+        if event_type == TimerEventType.STARTED:
+            started_event.set()
+            started_timer_ids.append(timer.id)
+        elif event_type == TimerEventType.UPDATED:
+            updated_event.set()
+            if timer.is_active:
+                unpaused_timer_ids.append(timer.id)
+            else:
+                paused_timer_ids.append(timer.id)
+
+    async_register_timer_handler(hass, device_id, handle_timer)
+
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_START_TIMER,
+        {"minutes": {"value": 5}},
+        device_id=device_id,
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    async with asyncio.timeout(1):
+        await started_event.wait()
+
+    # Pause the timer
+    result = await intent.async_handle(
+        hass, "test", intent.INTENT_PAUSE_TIMER, {}, device_id=device_id
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    async with asyncio.timeout(1):
+        await updated_event.wait()
+
+    # Start another timer
+    started_event.clear()
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_START_TIMER,
+        {"minutes": {"value": 10}},
+        device_id=device_id,
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    async with asyncio.timeout(1):
+        await started_event.wait()
+        assert len(started_timer_ids) == 2
+
+    # We can pause the more recent timer without more information because the
+    # first one is paused.
+    updated_event.clear()
+    result = await intent.async_handle(
+        hass, "test", intent.INTENT_PAUSE_TIMER, {}, device_id=device_id
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    async with asyncio.timeout(1):
+        await updated_event.wait()
+        assert len(paused_timer_ids) == 2
+        assert paused_timer_ids[1] == started_timer_ids[1]
+
+    # We have to explicitly unpause now
+    updated_event.clear()
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_UNPAUSE_TIMER,
+        {"start_minutes": {"value": 10}},
+        device_id=device_id,
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    async with asyncio.timeout(1):
+        await updated_event.wait()
+        assert len(unpaused_timer_ids) == 1
+        assert unpaused_timer_ids[0] == started_timer_ids[1]
+
+    # We can resume the older timer without more information because the
+    # second one is running.
+    updated_event.clear()
+    result = await intent.async_handle(
+        hass, "test", intent.INTENT_UNPAUSE_TIMER, {}, device_id=device_id
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    async with asyncio.timeout(1):
+        await updated_event.wait()
+        assert len(unpaused_timer_ids) == 2
+        assert unpaused_timer_ids[1] == started_timer_ids[0]
