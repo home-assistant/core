@@ -36,7 +36,7 @@
   "zWaveEnabled": false,
   "isGalileo": false,
   "Bridge": {
-    "_id": "65f33445529187c78a1aa179",
+    "_id": "65f33445529187c78a100000",
     "mfgBridgeID": "LPOCH0004Y",
     "deviceModel": "august-lock",
     "firmwareVersion": "1.0.4",
