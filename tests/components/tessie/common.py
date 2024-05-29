@@ -15,6 +15,7 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
+# Tessie library
 TEST_STATE_OF_ALL_VEHICLES = load_json_object_fixture("vehicles.json", DOMAIN)
 TEST_VEHICLE_STATE_ONLINE = load_json_object_fixture("online.json", DOMAIN)
 TEST_VEHICLE_STATUS_AWAKE = {"status": TessieStatus.AWAKE}
@@ -45,6 +46,13 @@ ERROR_VIRTUAL_KEY = ClientResponseError(
     status=HTTPStatus.INTERNAL_SERVER_ERROR,
 )
 ERROR_CONNECTION = ClientConnectionError()
+
+# Fleet API library
+PRODUCTS = load_json_object_fixture("products.json", DOMAIN)
+LIVE_STATUS = load_json_object_fixture("live_status.json", DOMAIN)
+SITE_INFO = load_json_object_fixture("site_info.json", DOMAIN)
+RESPONSE_OK = {"response": {}, "error": None}
+COMMAND_OK = {"response": {"result": True, "reason": ""}}
 
 
 async def setup_platform(
