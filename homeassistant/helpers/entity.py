@@ -1475,7 +1475,7 @@ class Entity(
         # The check for self.platform guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2024.1
         if self.platform:
-            entity_sources(self.hass).pop(self.entity_id)
+            del entity_sources(self.hass)[self.entity_id]
 
     @callback
     def _async_registry_updated(
