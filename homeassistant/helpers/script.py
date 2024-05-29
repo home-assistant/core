@@ -600,6 +600,7 @@ class _ScriptRun:
 
         elif isinstance(exception, exceptions.HomeAssistantError):
             error_desc = "Error"
+            level = _LOG_EXCEPTION
 
         else:
             error_desc = "Unexpected error"
