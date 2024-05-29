@@ -199,7 +199,7 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
 def _get_calendar_event(offset: timedelta, event: RadarrCalendarItem) -> RadarrEvent:
     """Return a RadarrEvent from an API event."""
     _date, _type = event.releaseDateType()
-    _date += offset
+    _date = _date + offset
     return RadarrEvent(
         summary=event.title,
         start=_date - timedelta(days=1),
