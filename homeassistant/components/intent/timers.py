@@ -45,8 +45,11 @@ class TimerInfo:
     seconds: int
     """Total number of seconds the timer should run for."""
 
-    device_id: str
-    """Id of the device where the timer was set."""
+    device_id: str | None
+    """Id of the device where the timer was set.
+
+    May be None only if conversation_command is set.
+    """
 
     start_hours: int | None
     """Number of hours the timer should run as given by the user."""
@@ -213,7 +216,7 @@ class TimerManager:
 
     def start_timer(
         self,
-        device_id: str,
+        device_id: str | None,
         hours: int | None,
         minutes: int | None,
         seconds: int | None,
@@ -223,7 +226,10 @@ class TimerManager:
         conversation_agent_id: str | None = None,
     ) -> str:
         """Start a timer."""
-        if not self.is_timer_device(device_id):
+        if (not conversation_command) and (device_id is None):
+            raise ValueError("Conversation command must be set if no device id")
+
+        if (device_id is not None) and (not self.is_timer_device(device_id)):
             raise TimersNotSupportedError(device_id)
 
         total_seconds = 0
@@ -270,7 +276,8 @@ class TimerManager:
             name=f"Timer {timer_id}",
         )
 
-        self.handlers[timer.device_id](TimerEventType.STARTED, timer)
+        if timer.device_id is not None:
+            self.handlers[timer.device_id](TimerEventType.STARTED, timer)
         _LOGGER.debug(
             "Timer started: id=%s, name=%s, hours=%s, minutes=%s, seconds=%s, device_id=%s",
             timer_id,
@@ -487,7 +494,11 @@ def _find_timer(
 ) -> TimerInfo:
     """Match a single timer with constraints or raise an error."""
     timer_manager: TimerManager = hass.data[TIMER_DATA]
-    matching_timers: list[TimerInfo] = list(timer_manager.timers.values())
+
+    # Ignore delayed command timers
+    matching_timers: list[TimerInfo] = [
+        t for t in timer_manager.timers.values() if not t.conversation_command
+    ]
     has_filter = False
 
     if find_filter:
@@ -617,7 +628,11 @@ def _find_timers(
 ) -> list[TimerInfo]:
     """Match multiple timers with constraints or raise an error."""
     timer_manager: TimerManager = hass.data[TIMER_DATA]
-    matching_timers: list[TimerInfo] = list(timer_manager.timers.values())
+
+    # Ignore delayed command timers
+    matching_timers: list[TimerInfo] = [
+        t for t in timer_manager.timers.values() if not t.conversation_command
+    ]
 
     # Filter by name first
     name: str | None = None
@@ -784,10 +799,17 @@ class StartTimerIntentHandler(intent.IntentHandler):
         timer_manager: TimerManager = hass.data[TIMER_DATA]
         slots = self.async_validate_slots(intent_obj.slots)
 
-        if not (
-            intent_obj.device_id and timer_manager.is_timer_device(intent_obj.device_id)
+        conversation_command: str | None = None
+        if "conversation_command" in slots:
+            conversation_command = slots["conversation_command"]["value"].strip()
+
+        if (not conversation_command) and (
+            not (
+                intent_obj.device_id
+                and timer_manager.is_timer_device(intent_obj.device_id)
+            )
         ):
-            # Fail early
+            # Fail early if this is not a delayed command
             raise TimersNotSupportedError(intent_obj.device_id)
 
         name: str | None = None
@@ -805,10 +827,6 @@ class StartTimerIntentHandler(intent.IntentHandler):
         seconds: int | None = None
         if "seconds" in slots:
             seconds = int(slots["seconds"]["value"])
-
-        conversation_command: str | None = None
-        if "conversation_command" in slots:
-            conversation_command = slots["conversation_command"]["value"]
 
         timer_manager.start_timer(
             intent_obj.device_id,
