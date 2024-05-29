@@ -98,7 +98,7 @@ def aiohttp_client(
 
 
 @pytest.fixture
-async def auth(aiohttp_client):
+async def auth(aiohttp_client: ClientSessionGenerator) -> FakeAuth:
     """Fixture for an AbstractAuth."""
     auth = FakeAuth()
     app = aiohttp.web.Application()

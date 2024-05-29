@@ -4,6 +4,7 @@ import os
 import re
 from unittest.mock import Mock, patch
 
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components.hassio.handler import HassIO, HassioAPIError
@@ -84,19 +85,25 @@ def hassio_stubs(
 
 
 @pytest.fixture
-def hassio_client(hassio_stubs, hass, hass_client):
+def hassio_client(
+    hassio_stubs, hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> TestClient:
     """Return a Hass.io HTTP client."""
     return hass.loop.run_until_complete(hass_client())
 
 
 @pytest.fixture
-def hassio_noauth_client(hassio_stubs, hass, aiohttp_client):
+def hassio_noauth_client(
+    hassio_stubs, hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> TestClient:
     """Return a Hass.io HTTP client without auth."""
     return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @pytest.fixture
-async def hassio_client_supervisor(hass, aiohttp_client, hassio_stubs):
+async def hassio_client_supervisor(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, hassio_stubs
+) -> TestClient:
     """Return an authenticated HTTP client."""
     access_token = hass.auth.async_create_access_token(hassio_stubs)
     return await aiohttp_client(
