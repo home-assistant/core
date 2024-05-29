@@ -403,11 +403,6 @@ async def async_start(  # noqa: C901
 
             if discovery_payload:
                 # Attach MQTT topic to the payload, used for debug prints
-                setattr(
-                    discovery_payload,
-                    "__configuration_source__",
-                    f"MQTT (topic: '{topic}')",
-                )
                 discovery_data = {
                     ATTR_DISCOVERY_HASH: discovery_hash,
                     ATTR_DISCOVERY_PAYLOAD: discovery_payload,
