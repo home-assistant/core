@@ -1132,6 +1132,15 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             suggested_unit_of_measurement=UnitOfPower.WATT,
         ),
     ),
+    # Poolsana Pool HeatPump
+    "znrb": (
+        SmartLifeSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            name="Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)
