@@ -18,12 +18,12 @@
     "state": "Mittel",
     "icon": "https://app-resources.aaecosystem.com/images/lock_battery_state_medium.png"
   },
-  "hostHardwareID": "317d4333-7192-4445-afc9-b167752a5555",
+  "hostHardwareID": "xxx",
   "supportsEntryCodes": true,
-  "remoteOperateSecret": "6222da48eeeebb93491a8ad77cdee490",
+  "remoteOperateSecret": "xxxx",
   "skuNumber": "NONE",
-  "macAddress": "DE:AD:BE:EF:0B:BC",
-  "SerialNumber": "LPOCH0004Y",
+  "macAddress": "DE:AD:BE:00:00:00",
+  "SerialNumber": "LPOC000000",
   "LockStatus": {
     "status": "locked",
     "dateTime": "2024-04-30T18:41:25.673Z",
