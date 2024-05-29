@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -13,7 +11,6 @@ from . import api
 from .const import CONFIG_FLOW_MINOR_VERSION, CONFIG_FLOW_VERSION
 
 PLATFORMS: list[Platform] = [Platform.COVER]
-SCAN_INTERVAL = timedelta(seconds=15)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

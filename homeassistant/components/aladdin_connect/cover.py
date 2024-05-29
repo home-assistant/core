@@ -1,5 +1,6 @@
 """Cover Entity for Genie Garage Door."""
 
+from datetime import timedelta
 from typing import Any
 
 from genie_partner_sdk.client import AladdinConnectClient
@@ -15,6 +16,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import api
 from .const import DOMAIN, SUPPORTED_FEATURES
 from .model import GarageDoor
+
+SCAN_INTERVAL = timedelta(seconds=15)
 
 
 async def async_setup_entry(
