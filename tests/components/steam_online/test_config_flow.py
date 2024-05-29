@@ -166,7 +166,9 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["data"] == CONF_OPTIONS_2
 
 
-async def test_options_flow_deselect(hass: HomeAssistant) -> None:
+async def test_options_flow_deselect(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test deselecting user."""
     entry = create_entry(hass)
     with (
@@ -198,7 +200,7 @@ async def test_options_flow_deselect(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_ACCOUNTS: {}}
-    assert len(er.async_get(hass).entities) == 0
+    assert len(entity_registry.entities) == 0
 
 
 async def test_options_flow_timeout(hass: HomeAssistant) -> None:

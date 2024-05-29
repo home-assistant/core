@@ -704,6 +704,7 @@ async def test_restore_number_restore_state(
 )
 async def test_custom_unit(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_class,
     native_unit,
     custom_unit,
@@ -712,8 +713,6 @@ async def test_custom_unit(
     custom_value,
 ) -> None:
     """Test custom unit."""
-    entity_registry = er.async_get(hass)
-
     entry = entity_registry.async_get_or_create("number", "test", "very_unique")
     entity_registry.async_update_entity_options(
         entry.entity_id, "number", {"unit_of_measurement": custom_unit}
@@ -780,6 +779,7 @@ async def test_custom_unit(
 )
 async def test_custom_unit_change(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     native_unit,
     custom_unit,
     used_custom_unit,
@@ -789,7 +789,6 @@ async def test_custom_unit_change(
     default_value,
 ) -> None:
     """Test custom unit changes are picked up."""
-    entity_registry = er.async_get(hass)
     entity0 = common.MockNumberEntity(
         name="Test",
         native_value=native_value,

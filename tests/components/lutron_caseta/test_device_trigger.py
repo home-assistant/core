@@ -33,7 +33,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -103,7 +103,7 @@ MOCK_BUTTON_DEVICES = [
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -220,7 +220,7 @@ async def test_none_serial_keypad(
 
 
 async def test_if_fires_on_button_event(
-    hass: HomeAssistant, calls, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant, calls: list[ServiceCall], device_registry: dr.DeviceRegistry
 ) -> None:
     """Test for press trigger firing."""
     await _async_setup_lutron_with_picos(hass)
@@ -271,7 +271,7 @@ async def test_if_fires_on_button_event(
 
 
 async def test_if_fires_on_button_event_without_lip(
-    hass: HomeAssistant, calls, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant, calls: list[ServiceCall], device_registry: dr.DeviceRegistry
 ) -> None:
     """Test for press trigger firing on a device that does not support lip."""
     await _async_setup_lutron_with_picos(hass)
@@ -319,7 +319,9 @@ async def test_if_fires_on_button_event_without_lip(
     assert calls[0].data["some"] == "test_trigger_button_press"
 
 
-async def test_validate_trigger_config_no_device(hass: HomeAssistant, calls) -> None:
+async def test_validate_trigger_config_no_device(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test for no press with no device."""
 
     assert await async_setup_component(
@@ -358,7 +360,7 @@ async def test_validate_trigger_config_no_device(hass: HomeAssistant, calls) -> 
 
 
 async def test_validate_trigger_config_unknown_device(
-    hass: HomeAssistant, calls
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test for no press with an unknown device."""
 
@@ -442,7 +444,7 @@ async def test_validate_trigger_invalid_triggers(
 
 
 async def test_if_fires_on_button_event_late_setup(
-    hass: HomeAssistant, calls, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant, calls: list[ServiceCall], device_registry: dr.DeviceRegistry
 ) -> None:
     """Test for press trigger firing with integration getting setup late."""
     config_entry_id = await _async_setup_lutron_with_picos(hass)

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import TypeVar
-
 from devolo_plc_api.device_api import (
     ConnectedStationInfo,
     NeighborAPInfo,
@@ -21,16 +19,13 @@ from homeassistant.helpers.update_coordinator import (
 from . import DevoloHomeNetworkConfigEntry
 from .const import DOMAIN
 
-_DataT = TypeVar(
-    "_DataT",
-    bound=(
-        LogicalNetwork
-        | DataRate
-        | list[ConnectedStationInfo]
-        | list[NeighborAPInfo]
-        | WifiGuestAccessGet
-        | bool
-    ),
+type _DataType = (
+    LogicalNetwork
+    | DataRate
+    | list[ConnectedStationInfo]
+    | list[NeighborAPInfo]
+    | WifiGuestAccessGet
+    | bool
 )
 
 
@@ -62,7 +57,7 @@ class DevoloEntity(Entity):
         )
 
 
-class DevoloCoordinatorEntity(
+class DevoloCoordinatorEntity[_DataT: _DataType](
     CoordinatorEntity[DataUpdateCoordinator[_DataT]], DevoloEntity
 ):
     """Representation of a coordinated devolo home network device."""

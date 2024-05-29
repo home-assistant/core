@@ -29,6 +29,7 @@ from .common import load_and_parse_node_fixture, setup_integration_with_node_fix
 )
 async def test_device_registry_single_node_device(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
     node_fixture: str,
     name: str,
@@ -40,8 +41,7 @@ async def test_device_registry_single_node_device(
         matter_client,
     )
 
-    dev_reg = dr.async_get(hass)
-    entry = dev_reg.async_get_device(
+    entry = device_registry.async_get_device(
         identifiers={
             (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
         }
@@ -63,6 +63,7 @@ async def test_device_registry_single_node_device(
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_device_registry_single_node_device_alt(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
 ) -> None:
     """Test additional device with different attribute values."""
@@ -72,8 +73,7 @@ async def test_device_registry_single_node_device_alt(
         matter_client,
     )
 
-    dev_reg = dr.async_get(hass)
-    entry = dev_reg.async_get_device(
+    entry = device_registry.async_get_device(
         identifiers={
             (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
         }
@@ -91,6 +91,7 @@ async def test_device_registry_single_node_device_alt(
 @pytest.mark.skip("Waiting for a new test fixture")
 async def test_device_registry_bridge(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
 ) -> None:
     """Test bridge devices are set up correctly with via_device."""
@@ -100,10 +101,10 @@ async def test_device_registry_bridge(
         matter_client,
     )
 
-    dev_reg = dr.async_get(hass)
-
     # Validate bridge
-    bridge_entry = dev_reg.async_get_device(identifiers={(DOMAIN, "mock-hub-id")})
+    bridge_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "mock-hub-id")}
+    )
     assert bridge_entry is not None
 
     assert bridge_entry.name == "My Mock Bridge"
@@ -113,7 +114,7 @@ async def test_device_registry_bridge(
     assert bridge_entry.sw_version == "123.4.5"
 
     # Device 1
-    device1_entry = dev_reg.async_get_device(
+    device1_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, "mock-id-kitchen-ceiling")}
     )
     assert device1_entry is not None
@@ -126,7 +127,7 @@ async def test_device_registry_bridge(
     assert device1_entry.sw_version == "67.8.9"
 
     # Device 2
-    device2_entry = dev_reg.async_get_device(
+    device2_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, "mock-id-living-room-ceiling")}
     )
     assert device2_entry is not None
@@ -170,6 +171,20 @@ async def test_node_added_subscription(
 
     entity_state = hass.states.get("light.mock_onoff_light")
     assert entity_state
+
+
+async def test_device_registry_single_node_composed_device(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test that a composed device within a standalone node only creates one HA device entry."""
+    await setup_integration_with_node_fixture(
+        hass,
+        "air-purifier",
+        matter_client,
+    )
+    dev_reg = dr.async_get(hass)
+    assert len(dev_reg.devices) == 1
 
 
 async def test_get_clean_name_() -> None:

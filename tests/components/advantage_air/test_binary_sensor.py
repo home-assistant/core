@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from homeassistant.components.advantage_air import ADVANTAGE_AIR_SYNC_INTERVAL
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -74,10 +75,17 @@ async def test_binary_sensor_async_setup_entry(
 
     async_fire_time_changed(
         hass,
-        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow() + timedelta(seconds=ADVANTAGE_AIR_SYNC_INTERVAL + 1),
     )
     await hass.async_block_till_done(wait_background_tasks=True)
     assert len(mock_get.mock_calls) == 1
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(mock_get.mock_calls) == 2
 
     state = hass.states.get(entity_id)
     assert state
@@ -95,6 +103,13 @@ async def test_binary_sensor_async_setup_entry(
     mock_get.reset_mock()
     entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
     await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=ADVANTAGE_AIR_SYNC_INTERVAL + 1),
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(mock_get.mock_calls) == 1
 
     async_fire_time_changed(
         hass,

@@ -26,7 +26,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.common import assert_setup_component
 
@@ -445,7 +445,9 @@ async def test_template_open_or_position(
         },
     ],
 )
-async def test_open_action(hass: HomeAssistant, start_ha, calls) -> None:
+async def test_open_action(
+    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+) -> None:
     """Test the open_cover command."""
     state = hass.states.get("cover.test_template_cover")
     assert state.state == STATE_CLOSED
@@ -484,7 +486,9 @@ async def test_open_action(hass: HomeAssistant, start_ha, calls) -> None:
         },
     ],
 )
-async def test_close_stop_action(hass: HomeAssistant, start_ha, calls) -> None:
+async def test_close_stop_action(
+    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+) -> None:
     """Test the close-cover and stop_cover commands."""
     state = hass.states.get("cover.test_template_cover")
     assert state.state == STATE_OPEN
@@ -513,7 +517,9 @@ async def test_close_stop_action(hass: HomeAssistant, start_ha, calls) -> None:
         {"input_number": {"test": {"min": "0", "max": "100", "initial": "42"}}},
     ],
 )
-async def test_set_position(hass: HomeAssistant, start_ha, calls) -> None:
+async def test_set_position(
+    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+) -> None:
     """Test the set_position command."""
     with assert_setup_component(1, "cover"):
         assert await setup.async_setup_component(
@@ -643,7 +649,12 @@ async def test_set_position(hass: HomeAssistant, start_ha, calls) -> None:
     ],
 )
 async def test_set_tilt_position(
-    hass: HomeAssistant, service, attr, start_ha, calls, tilt_position
+    hass: HomeAssistant,
+    service,
+    attr,
+    start_ha,
+    calls: list[ServiceCall],
+    tilt_position,
 ) -> None:
     """Test the set_tilt_position command."""
     await hass.services.async_call(
@@ -676,7 +687,9 @@ async def test_set_tilt_position(
         },
     ],
 )
-async def test_set_position_optimistic(hass: HomeAssistant, start_ha, calls) -> None:
+async def test_set_position_optimistic(
+    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+) -> None:
     """Test optimistic position mode."""
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_position") is None
@@ -724,7 +737,7 @@ async def test_set_position_optimistic(hass: HomeAssistant, start_ha, calls) -> 
     ],
 )
 async def test_set_tilt_position_optimistic(
-    hass: HomeAssistant, start_ha, calls
+    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
 ) -> None:
     """Test the optimistic tilt_position mode."""
     state = hass.states.get("cover.test_template_cover")

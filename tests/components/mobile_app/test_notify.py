@@ -10,13 +10,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockUser
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-async def setup_push_receiver(hass, aioclient_mock, hass_admin_user):
+async def setup_push_receiver(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, hass_admin_user: MockUser
+) -> None:
     """Fixture that sets up a mocked push receiver."""
     push_url = "https://mobile-push.home-assistant.dev/push"
 

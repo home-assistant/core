@@ -3538,6 +3538,103 @@ async def test_if_condition_validation(
     )
 
 
+async def test_sequence(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """Test sequence action."""
+    events = async_capture_events(hass, "test_event")
+
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "alias": "Sequential group",
+                "sequence": [
+                    {
+                        "alias": "sequence group, action 1",
+                        "event": "test_event",
+                        "event_data": {
+                            "sequence": "group",
+                            "action": "1",
+                            "what": "{{ what }}",
+                        },
+                    },
+                    {
+                        "alias": "sequence group, action 2",
+                        "event": "test_event",
+                        "event_data": {
+                            "sequence": "group",
+                            "action": "2",
+                            "what": "{{ what }}",
+                        },
+                    },
+                ],
+            },
+            {
+                "alias": "action 2",
+                "event": "test_event",
+                "event_data": {"action": "2", "what": "{{ what }}"},
+            },
+        ]
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(MappingProxyType({"what": "world"}), Context())
+
+    assert len(events) == 3
+    assert events[0].data == {
+        "sequence": "group",
+        "action": "1",
+        "what": "world",
+    }
+    assert events[1].data == {
+        "sequence": "group",
+        "action": "2",
+        "what": "world",
+    }
+    assert events[2].data == {
+        "action": "2",
+        "what": "world",
+    }
+
+    assert (
+        "Test Name: Sequential group: Executing step sequence group, action 1"
+        in caplog.text
+    )
+    assert (
+        "Test Name: Sequential group: Executing step sequence group, action 2"
+        in caplog.text
+    )
+    assert "Test Name: Executing step action 2" in caplog.text
+
+    expected_trace = {
+        "0": [{"variables": {"what": "world"}}],
+        "0/sequence/0": [
+            {
+                "result": {
+                    "event": "test_event",
+                    "event_data": {"sequence": "group", "action": "1", "what": "world"},
+                },
+            }
+        ],
+        "0/sequence/1": [
+            {
+                "result": {
+                    "event": "test_event",
+                    "event_data": {"sequence": "group", "action": "2", "what": "world"},
+                },
+            }
+        ],
+        "1": [
+            {
+                "result": {
+                    "event": "test_event",
+                    "event_data": {"action": "2", "what": "world"},
+                },
+            }
+        ],
+    }
+    assert_action_trace(expected_trace)
+
+
 async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test parallel action."""
     events = async_capture_events(hass, "test_event")
@@ -5167,6 +5264,9 @@ async def test_validate_action_config(
         cv.SCRIPT_ACTION_PARALLEL: {
             "parallel": [templated_device_action("parallel_event")],
         },
+        cv.SCRIPT_ACTION_SEQUENCE: {
+            "sequence": [templated_device_action("sequence_event")],
+        },
         cv.SCRIPT_ACTION_SET_CONVERSATION_RESPONSE: {
             "set_conversation_response": "Hello world"
         },
@@ -5179,6 +5279,7 @@ async def test_validate_action_config(
         cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER: None,
         cv.SCRIPT_ACTION_IF: None,
         cv.SCRIPT_ACTION_PARALLEL: None,
+        cv.SCRIPT_ACTION_SEQUENCE: None,
     }
 
     for key in cv.ACTION_TYPE_SCHEMAS:
@@ -5764,8 +5865,9 @@ async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.mark.parametrize("enabled_value", [False, "{{ 1 == 9 }}"])
 async def test_disabled_actions(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, enabled_value: bool | str
 ) -> None:
     """Test disabled action steps."""
     events = async_capture_events(hass, "test_event")
@@ -5782,10 +5884,14 @@ async def test_disabled_actions(
             {"event": "test_event"},
             {
                 "alias": "Hello",
-                "enabled": False,
+                "enabled": enabled_value,
                 "service": "broken.service",
             },
-            {"alias": "World", "enabled": False, "event": "test_event"},
+            {
+                "alias": "World",
+                "enabled": enabled_value,
+                "event": "test_event",
+            },
             {"event": "test_event"},
         ]
     )
@@ -5805,6 +5911,37 @@ async def test_disabled_actions(
             "3": [{"result": {"event": "test_event", "event_data": {}}}],
         },
     )
+
+
+async def test_enabled_error_non_limited_template(hass: HomeAssistant) -> None:
+    """Test that a script aborts when an action enabled uses non-limited template."""
+    await async_setup_component(hass, "homeassistant", {})
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "event": event,
+                "enabled": "{{ states('sensor.limited') }}",
+            }
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    with pytest.raises(exceptions.TemplateError):
+        await script_obj.async_run(context=Context())
+
+    assert len(events) == 0
+    assert not script_obj.is_running
+
+    expected_trace = {
+        "0": [
+            {
+                "error": "TemplateError: Use of 'states' is not supported in limited templates"
+            }
+        ],
+    }
+    assert_action_trace(expected_trace, expected_script_execution="error")
 
 
 async def test_condition_and_shorthand(
@@ -6110,3 +6247,72 @@ async def test_stopping_run_before_starting(
     # would hang indefinitely.
     run = script._ScriptRun(hass, script_obj, {}, None, True)
     await run.async_stop()
+
+
+async def test_disallowed_recursion(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a queued mode script disallowed recursion."""
+    context = Context()
+    calls = 0
+    alias = "event step"
+    sequence1 = cv.SCRIPT_SCHEMA({"alias": alias, "service": "test.call_script_2"})
+    script1_obj = script.Script(
+        hass,
+        sequence1,
+        "Test Name1",
+        "test_domain1",
+        script_mode="queued",
+        running_description="test script1",
+    )
+
+    sequence2 = cv.SCRIPT_SCHEMA({"alias": alias, "service": "test.call_script_3"})
+    script2_obj = script.Script(
+        hass,
+        sequence2,
+        "Test Name2",
+        "test_domain2",
+        script_mode="queued",
+        running_description="test script2",
+    )
+
+    sequence3 = cv.SCRIPT_SCHEMA({"alias": alias, "service": "test.call_script_1"})
+    script3_obj = script.Script(
+        hass,
+        sequence3,
+        "Test Name3",
+        "test_domain3",
+        script_mode="queued",
+        running_description="test script3",
+    )
+
+    async def _async_service_handler_1(*args, **kwargs) -> None:
+        await script1_obj.async_run(context=context)
+
+    hass.services.async_register("test", "call_script_1", _async_service_handler_1)
+
+    async def _async_service_handler_2(*args, **kwargs) -> None:
+        await script2_obj.async_run(context=context)
+
+    hass.services.async_register("test", "call_script_2", _async_service_handler_2)
+
+    async def _async_service_handler_3(*args, **kwargs) -> None:
+        await script3_obj.async_run(context=context)
+
+    hass.services.async_register("test", "call_script_3", _async_service_handler_3)
+
+    await script1_obj.async_run(context=context)
+    await hass.async_block_till_done()
+
+    assert calls == 0
+    assert (
+        "Test Name1: Disallowed recursion detected, "
+        "test_domain3.Test Name3 tried to start test_domain1.Test Name1"
+        " which is already running in the current execution path; "
+        "Traceback (most recent call last):"
+    ) in caplog.text
+    assert (
+        "- test_domain1.Test Name1\n"
+        "- test_domain2.Test Name2\n"
+        "- test_domain3.Test Name3"
+    ) in caplog.text
