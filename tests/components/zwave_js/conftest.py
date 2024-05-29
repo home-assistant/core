@@ -687,6 +687,12 @@ def light_device_class_is_null_state_fixture():
     return json.loads(load_fixture("zwave_js/light_device_class_is_null_state.json"))
 
 
+@pytest.fixture(name="basic_cc_sensor_state", scope="package")
+def basic_cc_sensor_state_fixture():
+    """Load node with Basic CC sensor fixture data."""
+    return json.loads(load_fixture("zwave_js/basic_cc_sensor_state.json"))
+
+
 # model fixtures
 
 
@@ -1353,5 +1359,13 @@ def central_scene_node_fixture(client, central_scene_node_state):
 def light_device_class_is_null_fixture(client, light_device_class_is_null_state):
     """Mock a node when device class is null."""
     node = Node(client, copy.deepcopy(light_device_class_is_null_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="basic_cc_sensor")
+def basic_cc_sensor_fixture(client, basic_cc_sensor_state):
+    """Mock a node with a Basic CC."""
+    node = Node(client, copy.deepcopy(basic_cc_sensor_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
