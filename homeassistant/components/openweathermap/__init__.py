@@ -72,14 +72,15 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     config_entries = hass.config_entries
     data = entry.data
+    options = entry.options
     version = entry.version
 
     _LOGGER.debug("Migrating OpenWeatherMap entry from version %s", version)
 
-    if version < 3:
-        new_data = {**data, CONF_MODE: OWM_MODE_V25}
+    if version < 4:
+        new_data = {**data, **options, CONF_MODE: OWM_MODE_V25}
         config_entries.async_update_entry(
-            entry, data=new_data, version=CONFIG_FLOW_VERSION
+            entry, data=new_data, options={}, version=CONFIG_FLOW_VERSION
         )
 
     _LOGGER.info("Migration to version %s successful", CONFIG_FLOW_VERSION)
