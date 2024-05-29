@@ -672,6 +672,13 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Poolsana Pool HeatPump
+    "znrb": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Switch",
+        ),
+    ),  
 }
 
 # Socket (duplicate of `pc`)
