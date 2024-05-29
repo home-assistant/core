@@ -6,9 +6,6 @@
 # homeassistant.components.aemet
 AEMET-OpenData==0.5.1
 
-# homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.58
-
 # homeassistant.components.honeywell
 AIOSomecomfort==0.0.25
 
@@ -922,6 +919,9 @@ gassist-text==0.0.11
 
 # homeassistant.components.google
 gcal-sync==6.0.4
+
+# homeassistant.components.aladdin_connect
+genie-partner-sdk==1.0.2
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
