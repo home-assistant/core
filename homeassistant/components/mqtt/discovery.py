@@ -344,7 +344,7 @@ async def async_start(  # noqa: C901
                 _replace_all_abbreviations(config)
                 # Add wrapper with discovery data
                 discovery_payload = MQTTDiscoveryPayload(config)
-                # If the dict empty after removing the platform, the payload is
+                # If the dict is empty after removing the platform, the payload is
                 # assumed to remove the existing config and we do not want to add
                 # device or orig or shared availability attributes
                 if discovery_payload:
