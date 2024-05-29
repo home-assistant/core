@@ -250,12 +250,12 @@ class VoiceAssistantPipeline:
             await self._tts_done.wait()
 
             _LOGGER.debug("Pipeline finished")
-        except PipelineNotFound:
+        except PipelineNotFound as e:
             self.handle_event(
                 VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
                 {
-                    "code": "pipeline not found",
-                    "message": "Selected pipeline not found",
+                    "code": e.code,
+                    "message": e.message,
                 },
             )
             _LOGGER.warning("Pipeline not found")
