@@ -197,6 +197,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_delete_refresh_token)
     websocket_api.async_register_command(hass, websocket_delete_all_refresh_tokens)
     websocket_api.async_register_command(hass, websocket_sign_path)
+    websocket_api.async_register_command(hass, websocket_refresh_token_set_expiry)
 
     login_flow.async_setup(hass, store_result)
     mfa_setup_flow.async_setup(hass)
@@ -565,18 +566,23 @@ def websocket_refresh_tokens(
         else:
             auth_provider_type = None
 
+        expire_at = None
+        if refresh.expire_at:
+            expire_at = dt_util.utc_from_timestamp(refresh.expire_at)
+
         tokens.append(
             {
-                "id": refresh.id,
+                "auth_provider_type": auth_provider_type,
+                "client_icon": refresh.client_icon,
                 "client_id": refresh.client_id,
                 "client_name": refresh.client_name,
-                "client_icon": refresh.client_icon,
-                "type": refresh.token_type,
                 "created_at": refresh.created_at,
+                "expire_at": expire_at,
+                "id": refresh.id,
                 "is_current": refresh.id == current_id,
                 "last_used_at": refresh.last_used_at,
                 "last_used_ip": refresh.last_used_ip,
-                "auth_provider_type": auth_provider_type,
+                "type": refresh.token_type,
             }
         )
 
@@ -702,3 +708,26 @@ def websocket_sign_path(
             },
         )
     )
+
+
+@callback
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "auth/refresh_token_set_expiry",
+        vol.Required("refresh_token_id"): str,
+        vol.Required("enable_expiry"): bool,
+    }
+)
+@websocket_api.ws_require_user()
+def websocket_refresh_token_set_expiry(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle a set expiry of a refresh token request."""
+    refresh_token = connection.user.refresh_tokens.get(msg["refresh_token_id"])
+
+    if refresh_token is None:
+        connection.send_error(msg["id"], "invalid_token_id", "Received invalid token")
+        return
+
+    hass.auth.async_set_expiry(refresh_token, enable_expiry=msg["enable_expiry"])
+    connection.send_result(msg["id"], {})
