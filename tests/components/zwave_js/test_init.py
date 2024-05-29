@@ -647,6 +647,10 @@ async def test_addon_info_failure(
         "new_s2_authenticated_key",
         "old_s2_unauthenticated_key",
         "new_s2_unauthenticated_key",
+        "old_lr_s2_access_control_key",
+        "new_lr_s2_access_control_key",
+        "old_lr_s2_authenticated_key",
+        "new_lr_s2_authenticated_key",
     ),
     [
         (
@@ -660,6 +664,10 @@ async def test_addon_info_failure(
             "new789",
             "old987",
             "new987",
+            "old654",
+            "new654",
+            "old321",
+            "new321",
         )
     ],
 )
@@ -681,6 +689,10 @@ async def test_addon_options_changed(
     new_s2_authenticated_key,
     old_s2_unauthenticated_key,
     new_s2_unauthenticated_key,
+    old_lr_s2_access_control_key,
+    new_lr_s2_access_control_key,
+    old_lr_s2_authenticated_key,
+    new_lr_s2_authenticated_key,
 ) -> None:
     """Test update config entry data on entry setup if add-on options changed."""
     addon_options["device"] = new_device
@@ -688,6 +700,8 @@ async def test_addon_options_changed(
     addon_options["s2_access_control_key"] = new_s2_access_control_key
     addon_options["s2_authenticated_key"] = new_s2_authenticated_key
     addon_options["s2_unauthenticated_key"] = new_s2_unauthenticated_key
+    addon_options["lr_s2_access_control_key"] = new_lr_s2_access_control_key
+    addon_options["lr_s2_authenticated_key"] = new_lr_s2_authenticated_key
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
@@ -699,6 +713,8 @@ async def test_addon_options_changed(
             "s2_access_control_key": old_s2_access_control_key,
             "s2_authenticated_key": old_s2_authenticated_key,
             "s2_unauthenticated_key": old_s2_unauthenticated_key,
+            "lr_s2_access_control_key": old_lr_s2_access_control_key,
+            "lr_s2_authenticated_key": old_lr_s2_authenticated_key,
         },
     )
     entry.add_to_hass(hass)
@@ -712,6 +728,8 @@ async def test_addon_options_changed(
     assert entry.data["s2_access_control_key"] == new_s2_access_control_key
     assert entry.data["s2_authenticated_key"] == new_s2_authenticated_key
     assert entry.data["s2_unauthenticated_key"] == new_s2_unauthenticated_key
+    assert entry.data["lr_s2_access_control_key"] == new_lr_s2_access_control_key
+    assert entry.data["lr_s2_authenticated_key"] == new_lr_s2_authenticated_key
     assert install_addon.call_count == 0
     assert start_addon.call_count == 0
 

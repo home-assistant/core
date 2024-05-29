@@ -1122,6 +1122,7 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
             updates[CONF_LR_S2_ACCESS_CONTROL_KEY] = addon_lr_s2_access_control_key
         if lr_s2_authenticated_key != addon_lr_s2_authenticated_key:
             updates[CONF_LR_S2_AUTHENTICATED_KEY] = addon_lr_s2_authenticated_key
+
     if updates:
         hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
 
