@@ -1,26 +1,37 @@
-"""Support for (EMEA/EU-based) Honeywell TCC climate systems."""
+"""The constants of the Evohome integration."""
 
-DOMAIN = "evohome"
+from __future__ import annotations
 
-STORAGE_VER = 1
-STORAGE_KEY = DOMAIN
+from typing import Final
+
+DOMAIN: Final = "evohome"
+
+STORAGE_VER: Final = 1
+STORAGE_KEY: Final = DOMAIN
 
 # The Parent's (i.e. TCS, Controller's) operating mode is one of:
-EVO_RESET = "AutoWithReset"
-EVO_AUTO = "Auto"
-EVO_AUTOECO = "AutoWithEco"
-EVO_AWAY = "Away"
-EVO_DAYOFF = "DayOff"
-EVO_CUSTOM = "Custom"
-EVO_HEATOFF = "HeatingOff"
+EVO_RESET: Final = "AutoWithReset"
+EVO_AUTO: Final = "Auto"
+EVO_AUTOECO: Final = "AutoWithEco"
+EVO_AWAY: Final = "Away"
+EVO_DAYOFF: Final = "DayOff"
+EVO_CUSTOM: Final = "Custom"
+EVO_HEATOFF: Final = "HeatingOff"
 
 # The Children's operating mode is one of:
-EVO_FOLLOW = "FollowSchedule"  # the operating mode is 'inherited' from the TCS
-EVO_TEMPOVER = "TemporaryOverride"
-EVO_PERMOVER = "PermanentOverride"
+EVO_FOLLOW: Final = "FollowSchedule"  # the operating mode is 'inherited' from the TCS
+EVO_TEMPOVER: Final = "TemporaryOverride"
+EVO_PERMOVER: Final = "PermanentOverride"
 
 # These are used only to help prevent E501 (line too long) violations
-GWS = "gateways"
-TCS = "temperatureControlSystems"
+GWS: Final = "gateways"
+TCS: Final = "temperatureControlSystems"
 
-UTC_OFFSET = "currentOffsetMinutes"
+UTC_OFFSET: Final = "currentOffsetMinutes"
+
+CONF_LOCATION_IDX: Final = "location_idx"
+
+ACCESS_TOKEN: Final = "access_token"
+ACCESS_TOKEN_EXPIRES: Final = "access_token_expires"
+REFRESH_TOKEN: Final = "refresh_token"
+USER_DATA: Final = "user_data"

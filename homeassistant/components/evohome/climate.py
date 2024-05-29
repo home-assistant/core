@@ -1,4 +1,4 @@
-"""Support for Climate devices of (EMEA/EU-based) Honeywell TCC systems."""
+"""Support for Climate entities of the Evohome integration."""
 
 from __future__ import annotations
 
