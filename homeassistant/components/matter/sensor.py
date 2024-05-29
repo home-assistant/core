@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import Nullable, NullValue
-from matter_server.client.models.clusters import EveEnergyCluster
+from matter_server.common.custom_clusters import EveCluster
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -159,11 +159,10 @@ DISCOVERY_SCHEMAS = [
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
-        required_attributes=(EveEnergyCluster.Attributes.Watt,),
+        required_attributes=(EveCluster.Attributes.Watt,),
         # Add OnOff Attribute as optional attribute to poll
         # the primary value when the relay is toggled
         optional_attributes=(clusters.OnOff.Attributes.OnOff,),
-        should_poll=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -176,8 +175,7 @@ DISCOVERY_SCHEMAS = [
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
-        required_attributes=(EveEnergyCluster.Attributes.Voltage,),
-        should_poll=True,
+        required_attributes=(EveCluster.Attributes.Voltage,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -190,8 +188,7 @@ DISCOVERY_SCHEMAS = [
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         entity_class=MatterSensor,
-        required_attributes=(EveEnergyCluster.Attributes.WattAccumulated,),
-        should_poll=True,
+        required_attributes=(EveCluster.Attributes.WattAccumulated,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -204,11 +201,10 @@ DISCOVERY_SCHEMAS = [
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
-        required_attributes=(EveEnergyCluster.Attributes.Current,),
+        required_attributes=(EveCluster.Attributes.Current,),
         # Add OnOff Attribute as optional attribute to poll
         # the primary value when the relay is toggled
         optional_attributes=(clusters.OnOff.Attributes.OnOff,),
-        should_poll=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,

@@ -423,7 +423,7 @@ async def test_assist_api_prompt(
     )
     first_part_prompt = (
         "Call the intent tools to control Home Assistant. "
-        "When controlling an area, prefer passing area name."
+        "When controlling an area, prefer passing area name and domain."
     )
     no_timer_prompt = "This device does not support timers."
 
