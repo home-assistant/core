@@ -1,6 +1,6 @@
 """Button tests for the Dremel 3D Printer integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -26,7 +26,7 @@ async def test_buttons(
     hass: HomeAssistant,
     connection: None,
     config_entry: MockConfigEntry,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
     button: str,
     function: str,
 ) -> None:

@@ -109,14 +109,16 @@ async def mock_http_client(
 
 @pytest.fixture
 async def themes_ws_client(
-    hass: HomeAssistant, hass_ws_client: ClientSessionGenerator, frontend_themes
-) -> TestClient:
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, frontend_themes
+) -> MockHAClientWebSocket:
     """Start the Home Assistant HTTP component."""
     return await hass_ws_client(hass)
 
 
 @pytest.fixture
-async def ws_client(hass, hass_ws_client, frontend):
+async def ws_client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, frontend
+) -> MockHAClientWebSocket:
     """Start the Home Assistant HTTP component."""
     return await hass_ws_client(hass)
 

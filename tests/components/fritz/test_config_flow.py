@@ -93,7 +93,7 @@ from tests.common import MockConfigEntry
 async def test_user(
     hass: HomeAssistant,
     fc_class_mock,
-    mock_get_source_ip,
+    mock_get_source_ip: None,
     show_advanced_options: bool,
     user_input: dict,
     expected_config: dict,
@@ -156,7 +156,7 @@ async def test_user(
 async def test_user_already_configured(
     hass: HomeAssistant,
     fc_class_mock,
-    mock_get_source_ip,
+    mock_get_source_ip: None,
     show_advanced_options: bool,
     user_input,
 ) -> None:
@@ -218,7 +218,7 @@ async def test_user_already_configured(
 )
 async def test_exception_security(
     hass: HomeAssistant,
-    mock_get_source_ip,
+    mock_get_source_ip: None,
     error,
     show_advanced_options: bool,
     user_input,
@@ -251,7 +251,7 @@ async def test_exception_security(
 )
 async def test_exception_connection(
     hass: HomeAssistant,
-    mock_get_source_ip,
+    mock_get_source_ip: None,
     show_advanced_options: bool,
     user_input,
 ) -> None:
@@ -282,7 +282,10 @@ async def test_exception_connection(
     [(True, MOCK_USER_INPUT_ADVANCED), (False, MOCK_USER_INPUT_SIMPLE)],
 )
 async def test_exception_unknown(
-    hass: HomeAssistant, mock_get_source_ip, show_advanced_options: bool, user_input
+    hass: HomeAssistant,
+    mock_get_source_ip: None,
+    show_advanced_options: bool,
+    user_input,
 ) -> None:
     """Test starting a flow by user with an unknown exception."""
 
@@ -309,7 +312,7 @@ async def test_exception_unknown(
 async def test_reauth_successful(
     hass: HomeAssistant,
     fc_class_mock,
-    mock_get_source_ip,
+    mock_get_source_ip: None,
 ) -> None:
     """Test starting a reauthentication flow."""
 
@@ -374,7 +377,7 @@ async def test_reauth_successful(
 async def test_reauth_not_successful(
     hass: HomeAssistant,
     fc_class_mock,
-    mock_get_source_ip,
+    mock_get_source_ip: None,
     side_effect,
     error,
 ) -> None:
@@ -442,7 +445,7 @@ async def test_reauth_not_successful(
 async def test_reconfigure_successful(
     hass: HomeAssistant,
     fc_class_mock,
-    mock_get_source_ip,
+    mock_get_source_ip: None,
     show_advanced_options: bool,
     user_input: dict,
     expected_config: dict,
@@ -508,7 +511,7 @@ async def test_reconfigure_successful(
 async def test_reconfigure_not_successful(
     hass: HomeAssistant,
     fc_class_mock,
-    mock_get_source_ip,
+    mock_get_source_ip: None,
 ) -> None:
     """Test starting a reconfigure flow but no connection found."""
 
@@ -580,7 +583,7 @@ async def test_reconfigure_not_successful(
 
 
 async def test_ssdp_already_configured(
-    hass: HomeAssistant, fc_class_mock, mock_get_source_ip
+    hass: HomeAssistant, fc_class_mock, mock_get_source_ip: None
 ) -> None:
     """Test starting a flow from discovery with an already configured device."""
 
@@ -609,7 +612,7 @@ async def test_ssdp_already_configured(
 
 
 async def test_ssdp_already_configured_host(
-    hass: HomeAssistant, fc_class_mock, mock_get_source_ip
+    hass: HomeAssistant, fc_class_mock, mock_get_source_ip: None
 ) -> None:
     """Test starting a flow from discovery with an already configured host."""
 
@@ -638,7 +641,7 @@ async def test_ssdp_already_configured_host(
 
 
 async def test_ssdp_already_configured_host_uuid(
-    hass: HomeAssistant, fc_class_mock, mock_get_source_ip
+    hass: HomeAssistant, fc_class_mock, mock_get_source_ip: None
 ) -> None:
     """Test starting a flow from discovery with an already configured uuid."""
 
@@ -667,7 +670,7 @@ async def test_ssdp_already_configured_host_uuid(
 
 
 async def test_ssdp_already_in_progress_host(
-    hass: HomeAssistant, fc_class_mock, mock_get_source_ip
+    hass: HomeAssistant, fc_class_mock, mock_get_source_ip: None
 ) -> None:
     """Test starting a flow from discovery twice."""
     with patch(
@@ -690,7 +693,9 @@ async def test_ssdp_already_in_progress_host(
         assert result["reason"] == "already_in_progress"
 
 
-async def test_ssdp(hass: HomeAssistant, fc_class_mock, mock_get_source_ip) -> None:
+async def test_ssdp(
+    hass: HomeAssistant, fc_class_mock, mock_get_source_ip: None
+) -> None:
     """Test starting a flow from discovery."""
     with (
         patch(
@@ -732,7 +737,7 @@ async def test_ssdp(hass: HomeAssistant, fc_class_mock, mock_get_source_ip) -> N
     assert mock_setup_entry.called
 
 
-async def test_ssdp_exception(hass: HomeAssistant, mock_get_source_ip) -> None:
+async def test_ssdp_exception(hass: HomeAssistant, mock_get_source_ip: None) -> None:
     """Test starting a flow from discovery but no device found."""
     with patch(
         "homeassistant.components.fritz.config_flow.FritzConnection",

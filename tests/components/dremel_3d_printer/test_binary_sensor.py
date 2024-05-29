@@ -1,7 +1,5 @@
 """Binary sensor tests for the Dremel 3D Printer integration."""
 
-from unittest.mock import AsyncMock
-
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.dremel_3d_printer.const import DOMAIN
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON
@@ -15,7 +13,7 @@ async def test_binary_sensors(
     hass: HomeAssistant,
     connection,
     config_entry: MockConfigEntry,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test we get binary sensor data."""
     await hass.config_entries.async_setup(config_entry.entry_id)

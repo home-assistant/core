@@ -580,7 +580,7 @@ async def test_no_alerts(
 )
 async def test_alerts_change(
     hass: HomeAssistant,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     aioclient_mock: AiohttpClientMocker,
     ha_version: str,
     fixture_1: str,

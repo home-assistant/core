@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 from requests.exceptions import ConnectionError as RequestsConnectionError
-from requests_mock.mocker import Mocker
+import requests_mock
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fitbit.const import DOMAIN, OAUTH2_TOKEN
@@ -57,7 +57,7 @@ def platforms() -> list[str]:
 
 
 @pytest.fixture(autouse=True)
-def mock_token_refresh(requests_mock: Mocker) -> None:
+def mock_token_refresh(requests_mock: requests_mock.Mocker) -> None:
     """Test that platform configuration is imported successfully."""
 
     requests_mock.register_uri(
@@ -610,7 +610,7 @@ async def test_sensor_update_failed(
     hass: HomeAssistant,
     setup_credentials: None,
     integration_setup: Callable[[], Awaitable[bool]],
-    requests_mock: Mocker,
+    requests_mock: requests_mock.Mocker,
     request_condition: dict[str, Any],
 ) -> None:
     """Test a failed sensor update when talking to the API."""
@@ -640,7 +640,7 @@ async def test_sensor_update_failed_requires_reauth(
     hass: HomeAssistant,
     setup_credentials: None,
     integration_setup: Callable[[], Awaitable[bool]],
-    requests_mock: Mocker,
+    requests_mock: requests_mock.Mocker,
 ) -> None:
     """Test a sensor update request requires reauth."""
 
@@ -673,7 +673,7 @@ async def test_sensor_update_success(
     hass: HomeAssistant,
     setup_credentials: None,
     integration_setup: Callable[[], Awaitable[bool]],
-    requests_mock: Mocker,
+    requests_mock: requests_mock.Mocker,
 ) -> None:
     """Test API failure for a battery level sensor for devices."""
 
@@ -718,7 +718,7 @@ async def test_device_battery_level_update_failed(
     hass: HomeAssistant,
     setup_credentials: None,
     integration_setup: Callable[[], Awaitable[bool]],
-    requests_mock: Mocker,
+    requests_mock: requests_mock.Mocker,
 ) -> None:
     """Test API failure for a battery level sensor for devices."""
 
@@ -773,7 +773,7 @@ async def test_device_battery_level_reauth_required(
     setup_credentials: None,
     integration_setup: Callable[[], Awaitable[bool]],
     config_entry: MockConfigEntry,
-    requests_mock: Mocker,
+    requests_mock: requests_mock.Mocker,
 ) -> None:
     """Test API failure requires reauth."""
 

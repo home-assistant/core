@@ -7,7 +7,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-from requests_mock.mocker import Mocker
+import requests_mock
 
 from homeassistant import config_entries
 from homeassistant.components.fitbit.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
@@ -160,7 +160,7 @@ async def test_api_failure(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
-    requests_mock: Mocker,
+    requests_mock: requests_mock.Mocker,
     setup_credentials: None,
     http_status: HTTPStatus,
     json: Any,
@@ -212,7 +212,7 @@ async def test_config_entry_already_exists(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
-    requests_mock: Mocker,
+    requests_mock: requests_mock.Mocker,
     setup_credentials: None,
     integration_setup: Callable[[], Awaitable[bool]],
     config_entry: MockConfigEntry,
@@ -266,7 +266,7 @@ async def test_import_fitbit_config(
     fitbit_config_setup: None,
     sensor_platform_setup: Callable[[], Awaitable[bool]],
     issue_registry: ir.IssueRegistry,
-    requests_mock: Mocker,
+    requests_mock: requests_mock.Mocker,
 ) -> None:
     """Test that platform configuration is imported successfully."""
 
@@ -321,7 +321,7 @@ async def test_import_fitbit_config_failure_cannot_connect(
     fitbit_config_setup: None,
     sensor_platform_setup: Callable[[], Awaitable[bool]],
     issue_registry: ir.IssueRegistry,
-    requests_mock: Mocker,
+    requests_mock: requests_mock.Mocker,
 ) -> None:
     """Test platform configuration fails to import successfully."""
 
@@ -360,7 +360,7 @@ async def test_import_fitbit_config_cannot_refresh(
     fitbit_config_setup: None,
     sensor_platform_setup: Callable[[], Awaitable[bool]],
     issue_registry: ir.IssueRegistry,
-    requests_mock: Mocker,
+    requests_mock: requests_mock.Mocker,
     status_code: HTTPStatus,
 ) -> None:
     """Test platform configuration import fails when refreshing the token."""
@@ -393,7 +393,7 @@ async def test_import_fitbit_config_already_exists(
     fitbit_config_setup: None,
     sensor_platform_setup: Callable[[], Awaitable[bool]],
     issue_registry: ir.IssueRegistry,
-    requests_mock: Mocker,
+    requests_mock: requests_mock.Mocker,
 ) -> None:
     """Test that platform configuration is not imported if it already exists."""
 
