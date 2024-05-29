@@ -176,6 +176,44 @@ async def test_open_lock_operation(hass: HomeAssistant) -> None:
     assert lock_online_with_unlatch_name.state == STATE_UNLOCKED
 
 
+async def test_open_lock_operation_pubnub_connected(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test open lock operation using the open service when pubnub is connected."""
+    lock_with_unlatch = await _mock_lock_with_unlatch(hass)
+    assert lock_with_unlatch.pubsub_channel == "pubsub"
+
+    pubnub = AugustPubNub()
+    await _create_august_with_devices(hass, [lock_with_unlatch], pubnub=pubnub)
+    pubnub.connected = True
+
+    lock_online_with_unlatch_name = hass.states.get("lock.online_with_unlatch_name")
+    assert lock_online_with_unlatch_name.state == STATE_LOCKED
+
+    data = {ATTR_ENTITY_ID: "lock.online_with_unlatch_name"}
+    await hass.services.async_call(LOCK_DOMAIN, SERVICE_OPEN, data, blocking=True)
+    await hass.async_block_till_done()
+
+    pubnub.message(
+        pubnub,
+        Mock(
+            channel=lock_with_unlatch.pubsub_channel,
+            timetoken=(dt_util.utcnow().timestamp() + 2) * 10000000,
+            message={
+                "status": "kAugLockState_Unlocked",
+            },
+        ),
+    )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    lock_online_with_unlatch_name = hass.states.get("lock.online_with_unlatch_name")
+    assert lock_online_with_unlatch_name.state == STATE_UNLOCKED
+    await hass.async_block_till_done()
+
+
 async def test_one_lock_operation_pubnub_connected(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

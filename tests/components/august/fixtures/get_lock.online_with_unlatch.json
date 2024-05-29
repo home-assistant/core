@@ -4,7 +4,7 @@
   "Created": "2024-03-14T18:03:09.003Z",
   "Updated": "2024-03-14T18:03:09.003Z",
   "LockID": "online_with_unlatch",
-  "HouseID": "a550ffff-a111-4e70-b18f-a70121223b92",
+  "HouseID": "mockhouseid1",
   "HouseName": "Zuhause",
   "Calibrated": false,
   "timeZone": "Europe/Berlin",
@@ -78,7 +78,7 @@
       "identifiers": ["phone:+494444444", "email:m10x@example.com"]
     }
   },
-  "pubsubChannel": "01884448-bc19-45fd-85b1-7e2f6074722b",
+  "pubsubChannel": "pubsub",
   "ruleHash": {},
   "cameras": [],
   "geofenceLimits": {
