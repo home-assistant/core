@@ -1137,7 +1137,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "znrb": (
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
-            name="Temperature",
+            translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
