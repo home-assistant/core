@@ -1262,7 +1262,7 @@ async def test_auto_purge_disabled(
 async def test_auto_statistics(
     hass: HomeAssistant,
     setup_recorder: None,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test periodic statistics scheduling."""
     timezone = "Europe/Copenhagen"

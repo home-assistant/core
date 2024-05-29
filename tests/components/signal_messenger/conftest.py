@@ -4,7 +4,7 @@ from http import HTTPStatus
 
 from pysignalclirestapi import SignalCliRestApi
 import pytest
-from requests_mock.mocker import Mocker
+import requests_mock
 
 from homeassistant.components.signal_messenger.notify import SignalNotificationService
 from homeassistant.core import HomeAssistant
@@ -28,12 +28,14 @@ def signal_notification_service(hass: HomeAssistant) -> SignalNotificationServic
 
 
 @pytest.fixture
-def signal_requests_mock_factory(requests_mock: Mocker) -> Mocker:
+def signal_requests_mock_factory(
+    requests_mock: requests_mock.Mocker,
+):
     """Create signal service mock from factory."""
 
     def _signal_requests_mock_factory(
         success_send_result: bool = True, content_length_header: str | None = None
-    ) -> Mocker:
+    ) -> requests_mock.Mocker:
         requests_mock.register_uri(
             "GET",
             "http://127.0.0.1:8080/v1/about",
