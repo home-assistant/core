@@ -8,33 +8,31 @@ from pylaunches.types import Event, Launch
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import LaunchLibraryData
-from .const import DOMAIN
 
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ConfigEntry[LaunchLibraryData],
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-
-    coordinator: DataUpdateCoordinator[LaunchLibraryData] = hass.data[DOMAIN]
-    if coordinator.data is None:
-        return {}
+    diagnostics = {}
+    if (runtime_data := entry.runtime_data) is None:
+        return diagnostics
 
     def _first_element(data: list[Launch | Event]) -> dict[str, Any] | None:
         if not data:
             return None
         return data[0]
 
-    return {
-        "next_launch": _first_element(coordinator.data["upcoming_launches"]),
-        "starship_launch": _first_element(
-            coordinator.data["starship_events"].upcoming.launches
-        ),
-        "starship_event": _first_element(
-            coordinator.data["starship_events"].upcoming.events
-        ),
-    }
+    if (launches := runtime_data["upcoming_launches"].data) is not None:
+        diagnostics["next_launch"] = _first_element(launches)
+
+    if (starship := runtime_data["starship_events"].data) is not None:
+        diagnostics["starship_launch"] = _first_element(
+            starship["upcoming"]["launches"]
+        )
+        diagnostics["starship_event"] = _first_element(starship["upcoming"]["events"])
+
+    return diagnostics
