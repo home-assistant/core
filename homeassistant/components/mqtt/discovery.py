@@ -342,7 +342,11 @@ async def async_start(  # noqa: C901
                     f"{node_id} {component_id}" if node_id else component_id
                 )
                 _replace_all_abbreviations(config)
+                # Add wrapper with discovery data
                 discovery_payload = MQTTDiscoveryPayload(config)
+                # If the dict empty after removing the platform, the payload is
+                # assumed to remove the existing config and we do not want to add
+                # device or orig or shared availability attributes
                 if discovery_payload:
                     discovery_payload.device_discovery = True
                     discovery_payload[CONF_DEVICE] = device_config
