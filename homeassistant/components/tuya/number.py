@@ -281,7 +281,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "znrb": (
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
-            name="Set Temperature",
+            translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
         ),
     ),
