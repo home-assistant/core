@@ -198,7 +198,6 @@ class IntentTool(Tool):
         response = intent_response.as_dict()
         del response["language"]
         del response["card"]
-        del response["speech"]
         return response
 
 
