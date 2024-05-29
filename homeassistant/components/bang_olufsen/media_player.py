@@ -341,6 +341,8 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         ):
             self._playback_progress = PlaybackProgress(progress=0)
 
+        self.async_write_ha_state()
+
     async def _update_volume(self, data: VolumeState) -> None:
         """Update _volume."""
         self._volume = data

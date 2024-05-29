@@ -247,13 +247,14 @@ async def test_config_entry_error(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, side_effect, state, reauth
 ) -> None:
     """Test different configuration entry errors."""
+    mock_client = AsyncMock()
+    mock_client.get_model.side_effect = side_effect
     with patch(
-        "homeassistant.components.google_generative_ai_conversation.genai.get_model",
-        side_effect=side_effect,
+        "google.ai.generativelanguage_v1beta.ModelServiceAsyncClient",
+        return_value=mock_client,
     ):
-        mock_config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        assert mock_config_entry.state is state
+        assert mock_config_entry.state == state
         mock_config_entry.async_get_active_flows(hass, {"reauth"})
-        assert any(mock_config_entry.async_get_active_flows(hass, {"reauth"})) is reauth
+        assert any(mock_config_entry.async_get_active_flows(hass, {"reauth"})) == reauth

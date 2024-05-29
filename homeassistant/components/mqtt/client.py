@@ -148,7 +148,7 @@ async def async_publish(
         )
     mqtt_data = hass.data[DATA_MQTT]
     outgoing_payload = payload
-    if not isinstance(payload, bytes):
+    if not isinstance(payload, bytes) and payload is not None:
         if not encoding:
             _LOGGER.error(
                 (

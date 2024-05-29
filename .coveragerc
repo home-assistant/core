@@ -256,9 +256,6 @@ omit =
     homeassistant/components/dormakaba_dkey/sensor.py
     homeassistant/components/dovado/*
     homeassistant/components/downloader/__init__.py
-    homeassistant/components/dsmr_reader/__init__.py
-    homeassistant/components/dsmr_reader/definitions.py
-    homeassistant/components/dsmr_reader/sensor.py
     homeassistant/components/dte_energy_bridge/sensor.py
     homeassistant/components/dublin_bus_transport/sensor.py
     homeassistant/components/dunehd/__init__.py
@@ -755,6 +752,7 @@ omit =
     homeassistant/components/matrix/__init__.py
     homeassistant/components/matrix/notify.py
     homeassistant/components/matter/__init__.py
+    homeassistant/components/matter/fan.py
     homeassistant/components/meater/__init__.py
     homeassistant/components/meater/sensor.py
     homeassistant/components/medcom_ble/__init__.py
@@ -979,6 +977,7 @@ omit =
     homeassistant/components/oru/*
     homeassistant/components/orvibo/switch.py
     homeassistant/components/osoenergy/__init__.py
+    homeassistant/components/osoenergy/binary_sensor.py
     homeassistant/components/osoenergy/sensor.py
     homeassistant/components/osoenergy/water_heater.py
     homeassistant/components/osramlightify/light.py
@@ -1657,10 +1656,7 @@ omit =
     homeassistant/components/xs1/*
     homeassistant/components/yale_smart_alarm/__init__.py
     homeassistant/components/yale_smart_alarm/alarm_control_panel.py
-    homeassistant/components/yale_smart_alarm/binary_sensor.py
-    homeassistant/components/yale_smart_alarm/button.py
     homeassistant/components/yale_smart_alarm/entity.py
-    homeassistant/components/yale_smart_alarm/lock.py
     homeassistant/components/yalexs_ble/__init__.py
     homeassistant/components/yalexs_ble/binary_sensor.py
     homeassistant/components/yalexs_ble/entity.py

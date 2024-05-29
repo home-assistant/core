@@ -84,7 +84,10 @@ async def test_select_viewer_remove(
 
 
 async def test_select_setup_light(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    light: Light,
 ) -> None:
     """Test select entity setup for light devices."""
 
@@ -92,7 +95,6 @@ async def test_select_setup_light(
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.SELECT, 2, 2)
 
-    entity_registry = er.async_get(hass)
     expected_values = ("On Motion - When Dark", "Not Paired")
 
     for index, description in enumerate(LIGHT_SELECTS):
@@ -111,7 +113,11 @@ async def test_select_setup_light(
 
 
 async def test_select_setup_viewer(
-    hass: HomeAssistant, ufp: MockUFPFixture, viewer: Viewer, liveview: Liveview
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    viewer: Viewer,
+    liveview: Liveview,
 ) -> None:
     """Test select entity setup for light devices."""
 
@@ -119,7 +125,6 @@ async def test_select_setup_viewer(
     await init_entry(hass, ufp, [viewer])
     assert_entity_counts(hass, Platform.SELECT, 1, 1)
 
-    entity_registry = er.async_get(hass)
     description = VIEWER_SELECTS[0]
 
     unique_id, entity_id = ids_from_device_description(
@@ -137,14 +142,16 @@ async def test_select_setup_viewer(
 
 
 async def test_select_setup_camera_all(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
 ) -> None:
     """Test select entity setup for camera devices (all features)."""
 
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
-    entity_registry = er.async_get(hass)
     expected_values = (
         "Always",
         "Auto",
@@ -169,14 +176,16 @@ async def test_select_setup_camera_all(
 
 
 async def test_select_setup_camera_none(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    camera: Camera,
 ) -> None:
     """Test select entity setup for camera devices (no features)."""
 
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.SELECT, 2, 2)
 
-    entity_registry = er.async_get(hass)
     expected_values = ("Always", "Auto", "Default Message (Welcome)")
 
     for index, description in enumerate(CAMERA_SELECTS):
