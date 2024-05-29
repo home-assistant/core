@@ -7,13 +7,14 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.components.hassio.handler import HassIO, HassioAPIError
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.setup import async_setup_component
 
 from . import SUPERVISOR_TOKEN
 
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -45,7 +46,12 @@ def hassio_env():
 
 
 @pytest.fixture
-def hassio_stubs(hassio_env, hass, hass_client, aioclient_mock):
+def hassio_stubs(
+    hassio_env,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+):
     """Create mock hassio http client."""
     with (
         patch(
@@ -100,7 +106,7 @@ async def hassio_client_supervisor(hass, aiohttp_client, hassio_stubs):
 
 
 @pytest.fixture
-async def hassio_handler(hass, aioclient_mock):
+async def hassio_handler(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
     """Create mock hassio handler."""
     with patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}):
         yield HassIO(hass.loop, async_get_clientsession(hass), "127.0.0.1")
@@ -109,7 +115,7 @@ async def hassio_handler(hass, aioclient_mock):
 @pytest.fixture
 def all_setup_requests(
     aioclient_mock: AiohttpClientMocker, request: pytest.FixtureRequest
-):
+) -> None:
     """Mock all setup requests."""
     include_addons = hasattr(request, "param") and request.param.get(
         "include_addons", False
