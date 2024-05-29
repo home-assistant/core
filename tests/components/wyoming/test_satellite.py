@@ -23,10 +23,9 @@ from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
 from homeassistant.components import assist_pipeline, wyoming
-from homeassistant.components.wyoming.data import WyomingService
 from homeassistant.components.wyoming.devices import SatelliteDevice
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_ON
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import intent as intent_helper
 from homeassistant.setup import async_setup_component
 
@@ -444,16 +443,7 @@ async def test_satellite_muted(hass: HomeAssistant) -> None:
     """Test callback for a satellite that has been muted."""
     on_muted_event = asyncio.Event()
 
-    original_make_satellite = wyoming._make_satellite
     original_on_muted = wyoming.satellite.WyomingSatellite.on_muted
-
-    def make_muted_satellite(
-        hass: HomeAssistant, config_entry: ConfigEntry, service: WyomingService
-    ):
-        satellite = original_make_satellite(hass, config_entry, service)
-        satellite.device.set_is_muted(True)
-
-        return satellite
 
     async def on_muted(self):
         # Trigger original function
@@ -472,7 +462,10 @@ async def test_satellite_muted(hass: HomeAssistant) -> None:
             "homeassistant.components.wyoming.data.load_wyoming_info",
             return_value=SATELLITE_INFO,
         ),
-        patch("homeassistant.components.wyoming._make_satellite", make_muted_satellite),
+        patch(
+            "homeassistant.components.wyoming.switch.WyomingSatelliteMuteSwitch.async_get_last_state",
+            return_value=State("switch.test_mute", STATE_ON),
+        ),
         patch(
             "homeassistant.components.wyoming.satellite.WyomingSatellite.on_muted",
             on_muted,

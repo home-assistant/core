@@ -739,7 +739,7 @@ class IntentHandler:
     """Intent handler registration."""
 
     intent_type: str
-    platforms: Iterable[str] | None = []
+    platforms: set[str] | None = None
     description: str | None = None
 
     @property
@@ -810,6 +810,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         required_features: int | None = None,
         required_states: set[str] | None = None,
         description: str | None = None,
+        platforms: set[str] | None = None,
     ) -> None:
         """Create Service Intent Handler."""
         self.intent_type = intent_type
@@ -818,6 +819,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         self.required_features = required_features
         self.required_states = required_states
         self.description = description
+        self.platforms = platforms
 
         self.required_slots: dict[tuple[str, str], vol.Schema] = {}
         if required_slots:
@@ -1108,6 +1110,7 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         required_features: int | None = None,
         required_states: set[str] | None = None,
         description: str | None = None,
+        platforms: set[str] | None = None,
     ) -> None:
         """Create service handler."""
         super().__init__(
@@ -1119,6 +1122,7 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
             required_features=required_features,
             required_states=required_states,
             description=description,
+            platforms=platforms,
         )
         self.domain = domain
         self.service = service
