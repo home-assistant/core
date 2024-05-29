@@ -1038,6 +1038,7 @@ omit =
     homeassistant/components/pocketcasts/sensor.py
     homeassistant/components/point/__init__.py
     homeassistant/components/point/alarm_control_panel.py
+    homeassistant/components/point/api.py
     homeassistant/components/point/binary_sensor.py
     homeassistant/components/point/sensor.py
     homeassistant/components/powerwall/__init__.py
