@@ -13,6 +13,7 @@ from homeassistant.components.intent.timers import (
     TimerNotFoundError,
     TimersNotSupportedError,
     _round_time,
+    async_device_supports_timers,
     async_register_timer_handler,
 )
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME
@@ -1440,6 +1441,17 @@ async def test_start_timer_with_conversation_command(
 
     async_register_timer_handler(hass, device_id, handle_timer)
 
+    # Device id is required if no conversation command
+    timer_manager = TimerManager(hass)
+    with pytest.raises(ValueError):
+        timer_manager.start_timer(
+            device_id=None,
+            hours=None,
+            minutes=5,
+            seconds=None,
+            language=hass.config.language,
+        )
+
     with patch("homeassistant.components.conversation.async_converse") as mock_converse:
         result = await intent.async_handle(
             hass,
@@ -1566,3 +1578,24 @@ async def test_pause_unpause_timer_disambiguate(
         await updated_event.wait()
         assert len(unpaused_timer_ids) == 2
         assert unpaused_timer_ids[1] == started_timer_ids[0]
+
+
+async def test_async_device_supports_timers(hass: HomeAssistant) -> None:
+    """Test async_device_supports_timers function."""
+    device_id = "test_device"
+
+    # Before intent initialization
+    assert not async_device_supports_timers(hass, device_id)
+
+    # After intent initialization
+    assert await async_setup_component(hass, "intent", {})
+    assert not async_device_supports_timers(hass, device_id)
+
+    @callback
+    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+        pass
+
+    async_register_timer_handler(hass, device_id, handle_timer)
+
+    # After handler registration
+    assert async_device_supports_timers(hass, device_id)
