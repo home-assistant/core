@@ -830,8 +830,10 @@ class SonosSpeaker:
         if "zone_player_uui_ds_in_group" not in event.variables:
             return
         self.event_stats.process(event)
-        self.hass.async_create_task(
-            self.create_update_groups_coro(event), eager_start=True
+        self.hass.async_create_background_task(
+            self.create_update_groups_coro(event),
+            name=f"sonos group update {self.zone_name}",
+            eager_start=True,
         )
 
     def create_update_groups_coro(self, event: SonosEvent | None = None) -> Coroutine:
