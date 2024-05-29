@@ -519,12 +519,16 @@ async def test_start_addon(
     s2_access_control_key = "s2_access_control"
     s2_authenticated_key = "s2_authenticated"
     s2_unauthenticated_key = "s2_unauthenticated"
+    lr_s2_access_control_key = "lr_s2_access_control"
+    lr_s2_authenticated_key = "lr_s2_authenticated"
     addon_options = {
         "device": device,
         "s0_legacy_key": s0_legacy_key,
         "s2_access_control_key": s2_access_control_key,
         "s2_authenticated_key": s2_authenticated_key,
         "s2_unauthenticated_key": s2_unauthenticated_key,
+        "lr_s2_access_control_key": lr_s2_access_control_key,
+        "lr_s2_authenticated_key": lr_s2_authenticated_key,
     }
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -536,6 +540,8 @@ async def test_start_addon(
             "s2_access_control_key": s2_access_control_key,
             "s2_authenticated_key": s2_authenticated_key,
             "s2_unauthenticated_key": s2_unauthenticated_key,
+            "lr_s2_access_control_key": lr_s2_access_control_key,
+            "lr_s2_authenticated_key": lr_s2_authenticated_key,
         },
     )
     entry.add_to_hass(hass)

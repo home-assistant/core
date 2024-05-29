@@ -1066,7 +1066,9 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
         CONF_ADDON_S2_AUTHENTICATED_KEY: s2_authenticated_key,
         CONF_ADDON_S2_UNAUTHENTICATED_KEY: s2_unauthenticated_key,
     }
-    if AwesomeVersion(addon_info.version) >= AwesomeVersion("1.0.0"):
+    if addon_info.version and AwesomeVersion(addon_info.version) >= AwesomeVersion(
+        "1.0.0"
+    ):
         addon_config[CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY] = lr_s2_access_control_key
         addon_config[CONF_ADDON_LR_S2_AUTHENTICATED_KEY] = lr_s2_authenticated_key
 
