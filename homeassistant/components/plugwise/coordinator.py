@@ -56,7 +56,6 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
             websession=async_get_clientsession(hass, verify_ssl=False),
         )
         self.device_list: list[dr.DeviceEntry] = []
-        self.hass = hass
         self.new_devices: bool = False
 
     async def _connect(self) -> None:
