@@ -90,15 +90,11 @@ async def test_form_import_ics(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.local_calendar.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_CALENDAR_NAME: "My Calendar", CONF_IMPORT_ICS: True},
-        )
-        assert result2["type"] is FlowResultType.FORM
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_CALENDAR_NAME: "My Calendar", CONF_IMPORT_ICS: True},
+    )
+    assert result2["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.local_calendar.async_setup_entry",
