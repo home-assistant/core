@@ -5,9 +5,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal, cast
 
-from pylaunches.types import Event, Launch
+from pylaunches.types import Event, Launch, StarshipResponse
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -37,6 +37,7 @@ class LaunchLibrarySensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[Launch | Event], datetime | int | str | None]
     attributes_fn: Callable[[Launch | Event], dict[str, Any] | None]
+    coordinator: Literal["upcoming_launches", "starship_events"]
 
 
 SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
@@ -44,6 +45,7 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
         key="next_launch",
         icon="mdi:rocket-launch",
         translation_key="next_launch",
+        coordinator="upcoming_launches",
         value_fn=lambda nl: nl["name"],
         attributes_fn=lambda nl: {
             "provider": nl["launch_service_provider"]["name"],
@@ -56,6 +58,7 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
         key="launch_time",
         icon="mdi:clock-outline",
         translation_key="launch_time",
+        coordinator="upcoming_launches",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda nl: parse_datetime(nl["net"]),
         attributes_fn=lambda nl: {
@@ -68,6 +71,7 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
         key="launch_probability",
         icon="mdi:dice-multiple",
         translation_key="launch_probability",
+        coordinator="upcoming_launches",
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda nl: None if nl["probability"] == -1 else nl["probability"],
         attributes_fn=lambda nl: None,
@@ -76,6 +80,7 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
         key="launch_status",
         icon="mdi:rocket-launch",
         translation_key="launch_status",
+        coordinator="upcoming_launches",
         value_fn=lambda nl: nl["status"]["name"],
         attributes_fn=lambda nl: {"reason": nl.get("holdreason")},
     ),
@@ -83,6 +88,7 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
         key="launch_mission",
         icon="mdi:orbit",
         translation_key="launch_mission",
+        coordinator="upcoming_launches",
         value_fn=lambda nl: nl["mission"]["name"],
         attributes_fn=lambda nl: {
             "mission_type": nl["mission"]["type"],
@@ -94,6 +100,7 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
         key="starship_launch",
         icon="mdi:rocket",
         translation_key="starship_launch",
+        coordinator="starship_events",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda sl: parse_datetime(sl["net"]),
         attributes_fn=lambda sl: {
@@ -107,6 +114,7 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
         key="starship_event",
         icon="mdi:calendar",
         translation_key="starship_event",
+        coordinator="starship_events",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda se: parse_datetime(se["date"]),
         attributes_fn=lambda se: {
@@ -121,26 +129,29 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ConfigEntry[LaunchLibraryData],
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
     name = entry.data.get(CONF_NAME, DEFAULT_NEXT_LAUNCH_NAME)
-    coordinator: DataUpdateCoordinator[LaunchLibraryData] = hass.data[DOMAIN]
 
     async_add_entities(
-        LaunchLibrarySensor(
-            coordinator=coordinator,
-            entry_id=entry.entry_id,
-            description=description,
-            name=name,
-        )
-        for description in SENSOR_DESCRIPTIONS
+        (
+            LaunchLibrarySensor(
+                coordinator=entry.runtime_data[description.coordinator],
+                entry_id=entry.entry_id,
+                description=description,
+                name=name,
+            )
+            for description in SENSOR_DESCRIPTIONS
+        ),
+        True,
     )
 
 
 class LaunchLibrarySensor(
-    CoordinatorEntity[DataUpdateCoordinator[LaunchLibraryData]], SensorEntity
+    CoordinatorEntity[DataUpdateCoordinator[list[Launch] | StarshipResponse]],
+    SensorEntity,
 ):
     """Representation of the next launch sensors."""
 
@@ -151,7 +162,7 @@ class LaunchLibrarySensor(
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[LaunchLibraryData],
+        coordinator: DataUpdateCoordinator[list[Launch] | StarshipResponse],
         entry_id: str,
         description: LaunchLibrarySensorEntityDescription,
         name: str,
@@ -188,14 +199,16 @@ class LaunchLibrarySensor(
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self.entity_description.key == "starship_launch":
-            events = self.coordinator.data["starship_events"]["upcoming"]["launches"]
-        elif self.entity_description.key == "starship_event":
-            events = self.coordinator.data["starship_events"]["upcoming"]["events"]
+        if (data := self.coordinator.data) is None:
+            return
+        if (description_key := self.entity_description.key) == "starship_launch":
+            events = cast(StarshipResponse, data)["upcoming"]["launches"]
+        elif description_key == "starship_event":
+            events = cast(StarshipResponse, data)["upcoming"]["events"]
         else:
-            events = self.coordinator.data["upcoming_launches"]
+            events = data
 
-        self._next_event = next((event for event in (events)), None)
+        self._next_event = next((event for event in events or []), None)
         super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:

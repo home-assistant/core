@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Coroutine
 from datetime import timedelta
 import logging
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from pylaunches import PyLaunches, PyLaunchesError
 from pylaunches.types import Launch, StarshipResponse
@@ -25,48 +26,55 @@ PLATFORMS = [Platform.SENSOR]
 class LaunchLibraryData(TypedDict):
     """Typed dict representation of data returned from pylaunches."""
 
-    upcoming_launches: list[Launch]
-    starship_events: StarshipResponse
+    upcoming_launches: DataUpdateCoordinator[list[Launch]]
+    starship_events: DataUpdateCoordinator[StarshipResponse]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry[LaunchLibraryData],
+) -> bool:
     """Set up this integration using UI."""
+    launches = PyLaunches(session=async_get_clientsession(hass), dev=True)
 
-    hass.data.setdefault(DOMAIN, {})
+    def _create_coordinator(
+        name: str,
+        update_method: Coroutine,
+    ) -> DataUpdateCoordinator[list[Any]]:
+        async def _update_method():
+            try:
+                return await update_method
+            except PyLaunchesError as ex:
+                raise UpdateFailed(ex) from ex
 
-    session = async_get_clientsession(hass)
-    launches = PyLaunches(session)
+        return DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_{name}",
+            update_method=_update_method,
+            update_interval=timedelta(hours=1),
+        )
 
-    async def async_update() -> LaunchLibraryData:
-        try:
-            return LaunchLibraryData(
-                upcoming_launches=await launches.launch_upcoming(
-                    filters={"limit": 1, "hide_recent_previous": "True"},
-                ),
-                starship_events=await launches.dashboard_starship(),
-            )
-        except PyLaunchesError as ex:
-            raise UpdateFailed(ex) from ex
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=DOMAIN,
-        update_method=async_update,
-        update_interval=timedelta(hours=1),
+    entry.runtime_data = LaunchLibraryData(
+        starship_events=_create_coordinator(
+            name="dashboard_starship",
+            update_method=launches.dashboard_starship(),
+        ),
+        upcoming_launches=_create_coordinator(
+            name="launch_upcoming",
+            update_method=launches.launch_upcoming(
+                filters={
+                    "limit": 1,
+                    "hide_recent_previous": "True",
+                },
+            ),
+        ),
     )
 
-    await coordinator.async_config_entry_first_refresh()
-
-    hass.data[DOMAIN] = coordinator
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle removal of an entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        del hass.data[DOMAIN]
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
