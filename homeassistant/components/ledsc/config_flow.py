@@ -12,8 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .consts import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
-from .exceptions import CannotConnect
-from .light import LedSClient
+from websc_client import WebSClientAsync as WebSClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,8 +33,9 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     host = data[CONF_HOST]
     port = data[CONF_PORT]
 
-    client = LedSClient(hass)
-    await client.connect(host, port)
+    client = WebSClient(host, port)
+    await client.connect()
+    await client.disconnect()
 
     return {"title": f"LedSC server {host}:{port}"}
 
@@ -58,7 +58,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 info = await validate_input(self.hass, user_input)
-            except CannotConnect:
+            except ConnectionError:
                 errors["base"] = "Cannot connect"
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)

@@ -3,8 +3,8 @@
   "name": "LedSC",
   "codeowners": ["@PatrikKr010"],
   "config_flow": true,
-  "documentation": "(https://www.home-assistant.io/integrations/ledsc/",
+  "documentation": "https://www.home-assistant.io/integrations/ledsc/",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "requirements": ["requests==2.31.0"]
+  "requirements": ["websc-client==1.0.1"]
 }

@@ -2456,9 +2456,6 @@ renson-endura-delta==1.7.1
 # homeassistant.components.reolink
 reolink-aio==0.8.11
 
-# homeassistant.components.ledsc
-requests==2.31.0
-
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
 
@@ -2877,6 +2874,9 @@ webmin-xmlrpc==0.0.2
 
 # homeassistant.components.assist_pipeline
 webrtc-noise-gain==1.2.3
+
+# homeassistant.components.ledsc
+websc-client==1.0.1
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.8

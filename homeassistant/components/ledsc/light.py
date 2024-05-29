@@ -1,19 +1,15 @@
 """LedSC light."""
 
-import asyncio
-import json
 import logging
-
-import websockets as websocket
-from websockets import WebSocketClientProtocol
-from websockets.exceptions import ConnectionClosedOK
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.components.light import ColorMode, LightEntity
+from homeassistant.core import HomeAssistant
 
-from .exceptions import CannotConnect
-from .ledsc import LedSC
+from websc_client import WebSClientAsync as WebSClient
+from websc_client import WebSCAsync
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,91 +34,142 @@ async def __setup(hass: HomeAssistant, config: dict, add_entities: AddEntitiesCa
 
     load the configured devices and add them to hass.
     """
-    client = LedSClient(hass)
-    await client.connect(host=config["host"], port=config["port"])
-    add_entities(client.devices.values(), True)
+    host = config["host"]
+    port = config["port"]
+
+    client = WebSClient(host=host, port=port)
+    await client.connect()
+    hass.async_create_background_task(client.observer(), name="ledsc-observer")
+
+    devices: list[LedSC] = list()
+    for websc in client.devices.values():
+        ledsc = LedSC(
+            client_id=f"{host}:{port}",
+            websc=websc,
+            hass=hass,
+        )
+        websc.set_callback(__generate_callback(ledsc))
+        devices.append(ledsc)
+    add_entities(devices, True)
 
 
-class LedSClient:
-    """Client for LedSC devices. Mediates websocket communication with WebSC."""
+class LedSC(LightEntity):
+    """Representation of an Awesome Light."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Set variables to default values."""
-        self.client: WebSocketClientProtocol | None = None
-        self.connection_setup: tuple[str, int] | None = None
-        self.devices: dict[str, LedSC] = {}
-        self.ws_service_running = False
-        self.hass = hass
+    def __init__(
+        self,
+        client_id: str,
+        websc: WebSCAsync,
+        hass: HomeAssistant,
+    ) -> None:
+        """Initialize an AwesomeLight."""
+        self._hass: HomeAssistant = hass
+        self._websc: WebSCAsync = websc
+        self.__id = f"{client_id}-{websc.name}"
+        _LOGGER.info(f"LedSC '%s' initialized!", self.name)
 
-    async def connect(self, host: str, port: int) -> bool:
+    @property
+    def unique_id(self) -> str | None:
+        """Return id unique for client and entity name combination."""
+        return self.__id
+
+    @property
+    def supported_color_modes(self) -> set[ColorMode] | set[str] | None:
+        """List of supported color modes."""
+        return {ColorMode.RGBW}
+
+    @property
+    def color_mode(self) -> ColorMode | str | None:
+        """Return the current color mode (static)."""
+        return ColorMode.RGBW
+
+    @property
+    def available(self) -> bool:
         """
-        Connect to WebSC.
+        Check if light is available.
 
-        Read configuration from initial message and create LedSC devices.
-        Create background task for websocket listening.
+        The information is from WebSC.
         """
-        self.connection_setup = (host, port)
-        if self.client is not None and not self.client.closed:
-            raise CannotConnect(f"LedSClient: Already connected to {host}:{port}")
-        _LOGGER.debug(f"LedSClient: Connecting to %s:%s", host, port)
+        return not self._websc.is_lost
 
-        try:
-            self.client = await websocket.connect(f"ws://{host}:{port}", open_timeout=2)
-        except OSError as E:
-            raise CannotConnect(
-                f"LedSClient: Could not connect to websocket at {host}:{port}"
-            ) from E
-        _LOGGER.info(f"LedSClient: Connected to %s:%s", host, port)
-        initial_message = json.loads(await self.client.recv())
+    @property
+    def name(self) -> str:
+        """Return the display name of this light."""
+        return self._websc.name
 
-        if "dev" in initial_message:
-            for name, data in initial_message["dev"].items():
-                if name in self.devices:
-                    device = self.devices[name]
-                    await device.data(value=data)
-                    device.client = self.client
-                else:
-                    self.devices[name] = LedSC(
-                        name=name,
-                        data=data,
-                        client_id=f"{host}:{port}",
-                        client=self.client,
-                        hass=self.hass,
-                    )
+    @property
+    def brightness(self) -> int | None:
+        """Return the brightness of the light."""
+        return max(self._websc.rgbw)
 
-        _LOGGER.info(f"LedSClient: devices: %s", self.devices.keys())
+    @brightness.setter
+    def brightness(self, value: int) -> None:
+        """Set brightness of the light."""
+        actual = self.brightness
+        if actual is None or actual == 0:
+            self.hass.async_create_task(
+                self._websc.set_rgbw(red=value, green=value, blue=value, white=value)
+            )
+        else:
+            diff = value - actual
+            ratio = diff / actual
+            self.hass.async_create_task(
+                self._websc.set_rgbw(
+                    red=round(self._websc.red * (1 + ratio)),
+                    green=round(self._websc.green * (1 + ratio)),
+                    blue=round(self._websc.blue * (1 + ratio)),
+                    white=round(self._websc.white * (1 + ratio)),
+                )
+            )
 
-        if not self.ws_service_running:
-            self.hass.async_create_background_task(self.ws_service(), name="ledsc-ws")
+    @property
+    def rgbw_color(self) -> tuple[int, int, int, int] | None:
+        """Get color."""
+        return self._websc.rgbw
 
-        return True
+    @rgbw_color.setter
+    def rgbw_color(self, value: tuple[int, int, int, int]) -> None:
+        """Set color to WebSC."""
+        self.hass.async_create_task(
+            self._websc.set_rgbw(
+                red=value[0],
+                green=value[1],
+                blue=value[2],
+                white=value[3],
+            )
+        )
 
-    async def ws_service(self):
-        """Listen on the WebSC and resending data to the LedSC devices."""
-        try:
-            self.ws_service_running = True
-            while True:
-                try:
-                    _data = json.loads(await self.client.recv())
-                    if "dev" in _data:
-                        for name, data in _data["dev"].items():
-                            if name in self.devices:
-                                await self.devices[name].data(data)
-                except ConnectionClosedOK:
-                    _LOGGER.warning("LedSClient: Connection closed. Reconnecting...")
-                    for device in self.devices.values():
-                        await device.data({"is_lost": 1})
-                    while self.client.closed:
-                        try:
-                            await self.connect(*self.connection_setup)
-                            await asyncio.sleep(1)
-                        except CannotConnect:
-                            await asyncio.sleep(5)
-        finally:
-            self.ws_service_running = False
-            await self.disconnect()
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if light is on."""
+        return bool(
+            self._websc.red
+            or self._websc.green
+            or self._websc.blue
+            or self._websc.white
+        )
 
-    async def disconnect(self) -> None:
-        """Disconnect from WebSC."""
-        if self.client:
-            await self.client.close()
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Instruct the light to turn on."""
+        if "brightness" in kwargs:
+            self.brightness = kwargs["brightness"]
+        elif "rgbw_color" in kwargs:
+            self.rgbw_color = kwargs["rgbw_color"]
+        elif not self.is_on:
+            await self.switch()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Instruct the light to turn off."""
+        if self.is_on:
+            await self.switch()
+
+    async def switch(self) -> None:
+        """Send switch event to WebSC."""
+        await self._websc.do_px_trigger()
+
+
+def __generate_callback(ledsc: LedSC):
+    async def on_device_change(data: dict[str, int]):
+        await ledsc.async_update_ha_state(force_refresh=True)
+
+    return on_device_change
