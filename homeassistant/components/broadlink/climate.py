@@ -50,6 +50,7 @@ class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
         super().__init__(device)
         self._attr_unique_id = device.unique_id
         self._attr_hvac_mode = None
+        self.sensor = 0
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -61,6 +62,7 @@ class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
     @callback
     def _update_state(self, data: dict[str, Any]) -> None:
         """Update data."""
+        self.sensor = data.get("sensor")
         if data.get("power"):
             if data.get("auto_mode"):
                 self._attr_hvac_mode = HVACMode.AUTO
@@ -74,8 +76,10 @@ class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
         else:
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_hvac_action = HVACAction.OFF
-
-        self._attr_current_temperature = data.get("room_temp")
+        if self.sensor:
+            self._attr_current_temperature = data.get("external_temp")
+        else:
+            self._attr_current_temperature = data.get("room_temp")
         self._attr_target_temperature = data.get("thermostat_temp")
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -85,7 +89,7 @@ class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
         else:
             await self._device.async_request(self._device.api.set_power, 1)
             mode = 0 if hvac_mode == HVACMode.HEAT else 1
-            await self._device.async_request(self._device.api.set_mode, mode, 0)
+            await self._device.async_request(self._device.api.set_mode, mode, 0, self.sensor)
 
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
