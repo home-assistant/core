@@ -115,7 +115,7 @@ class ConditionProtocol(Protocol):
         """Evaluate state based on configuration."""
 
 
-ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool | None]
+type ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool | None]
 
 
 def condition_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:
@@ -352,7 +352,7 @@ async def async_not_from_config(
 
 def numeric_state(
     hass: HomeAssistant,
-    entity: None | str | State,
+    entity: str | State | None,
     below: float | str | None = None,
     above: float | str | None = None,
     value_template: Template | None = None,
@@ -373,7 +373,7 @@ def numeric_state(
 
 def async_numeric_state(
     hass: HomeAssistant,
-    entity: None | str | State,
+    entity: str | State | None,
     below: float | str | None = None,
     above: float | str | None = None,
     value_template: Template | None = None,
@@ -545,7 +545,7 @@ def async_numeric_state_from_config(config: ConfigType) -> ConditionCheckerType:
 
 def state(
     hass: HomeAssistant,
-    entity: None | str | State,
+    entity: str | State | None,
     req_state: Any,
     for_period: timedelta | None = None,
     attribute: str | None = None,
@@ -803,7 +803,7 @@ def time(
     hass: HomeAssistant,
     before: dt_time | str | None = None,
     after: dt_time | str | None = None,
-    weekday: None | str | Container[str] = None,
+    weekday: str | Container[str] | None = None,
 ) -> bool:
     """Test if local time condition matches.
 
@@ -902,8 +902,8 @@ def time_from_config(config: ConfigType) -> ConditionCheckerType:
 
 def zone(
     hass: HomeAssistant,
-    zone_ent: None | str | State,
-    entity: None | str | State,
+    zone_ent: str | State | None,
+    entity: str | State | None,
 ) -> bool:
     """Test if zone-condition matches.
 

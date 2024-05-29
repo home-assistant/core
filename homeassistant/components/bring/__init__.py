@@ -24,7 +24,7 @@ PLATFORMS: list[Platform] = [Platform.TODO]
 
 _LOGGER = logging.getLogger(__name__)
 
-BringConfigEntry = ConfigEntry[BringDataUpdateCoordinator]
+type BringConfigEntry = ConfigEntry[BringDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BringConfigEntry) -> bool:

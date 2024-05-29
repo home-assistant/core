@@ -42,7 +42,11 @@ async def test_light_remove(
 
 
 async def test_light_setup(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    light: Light,
+    unadopted_light: Light,
 ) -> None:
     """Test light entity setup."""
 
@@ -52,7 +56,6 @@ async def test_light_setup(
     unique_id = light.mac
     entity_id = "light.test_light"
 
-    entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(entity_id)
     assert entity
     assert entity.unique_id == unique_id

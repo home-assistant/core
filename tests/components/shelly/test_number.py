@@ -227,7 +227,6 @@ async def test_block_set_value_auth_error(
         {ATTR_ENTITY_ID: "number.test_name_valve_position", ATTR_VALUE: 30},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
 

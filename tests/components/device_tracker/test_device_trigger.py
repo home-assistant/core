@@ -8,7 +8,7 @@ from homeassistant.components import automation, zone
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_tracker import DOMAIN, device_trigger
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -37,7 +37,7 @@ HOME_LONGITUDE = -117.237561
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -145,7 +145,7 @@ async def test_if_fires_on_zone_change(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for enter and leave triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -252,7 +252,7 @@ async def test_if_fires_on_zone_change_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for enter and leave triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})

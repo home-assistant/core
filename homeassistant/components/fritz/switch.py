@@ -29,13 +29,12 @@ from .const import (
 )
 from .coordinator import (
     AvmWrapper,
-    FritzBoxBaseEntity,
     FritzData,
     FritzDevice,
-    FritzDeviceBase,
     SwitchInfo,
     device_filter_out_from_trackers,
 )
+from .entity import FritzBoxBaseEntity, FritzDeviceBase
 
 _LOGGER = logging.getLogger(__name__)
 

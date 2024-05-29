@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Generator, Iterable
 import contextlib
 import glob
+import logging
 import os
 import sys
 from typing import Any
@@ -1101,14 +1102,14 @@ async def test_tasks_logged_that_block_stage_2(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we log tasks that delay stage 2 startup."""
+    done_future = hass.loop.create_future()
 
     def gen_domain_setup(domain):
         async def async_setup(hass, config):
             async def _not_marked_background_task():
-                await asyncio.sleep(0.2)
+                await done_future
 
             hass.async_create_task(_not_marked_background_task())
-            await asyncio.sleep(0.1)
             return True
 
         return async_setup
@@ -1122,16 +1123,36 @@ async def test_tasks_logged_that_block_stage_2(
         ),
     )
 
+    wanted_messages = {
+        "Setup timed out for stage 2 waiting on",
+        "waiting on",
+        "_not_marked_background_task",
+    }
+
+    def on_message_logged(log_record: logging.LogRecord, *args):
+        for message in list(wanted_messages):
+            if message in log_record.message:
+                wanted_messages.remove(message)
+        if not done_future.done() and not wanted_messages:
+            done_future.set_result(None)
+            return
+
     with (
         patch.object(bootstrap, "STAGE_2_TIMEOUT", 0),
         patch.object(bootstrap, "COOLDOWN_TIME", 0),
+        patch.object(
+            caplog.handler,
+            "emit",
+            wraps=caplog.handler.emit,
+            side_effect=on_message_logged,
+        ),
     ):
         await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
+        async with asyncio.timeout(2):
+            await done_future
         await hass.async_block_till_done()
 
-    assert "Setup timed out for stage 2 waiting on" in caplog.text
-    assert "waiting on" in caplog.text
-    assert "_not_marked_background_task" in caplog.text
+    assert not wanted_messages
 
 
 @pytest.mark.parametrize("load_registries", [False])
