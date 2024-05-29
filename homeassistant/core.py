@@ -2287,6 +2287,7 @@ class StateMachine:
             # mypy does not understand this is only possible if old_state is not None
             old_last_reported = old_state.last_reported  # type: ignore[union-attr]
             old_state.last_reported = now  # type: ignore[union-attr]
+            old_state.last_reported_timestamp = timestamp  # type: ignore[union-attr]
             self._bus.async_fire_internal(
                 EVENT_STATE_REPORTED,
                 {
