@@ -14,7 +14,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
@@ -77,6 +77,18 @@ class TimerInfo:
 
     floor_id: str | None = None
     """Id of floor that the device's area belongs to."""
+
+    conversation_command: str | None = None
+    """Text of conversation command to execute when timer is finished.
+
+    This command must be in the language used to set the timer.
+    """
+
+    conversation_agent_id: str | None = None
+    """Id of the conversation agent used to set the timer.
+
+    This agent will be used to execute the conversation command.
+    """
 
     @property
     def seconds_left(self) -> int:
@@ -207,6 +219,8 @@ class TimerManager:
         seconds: int | None,
         language: str,
         name: str | None = None,
+        conversation_command: str | None = None,
+        conversation_agent_id: str | None = None,
     ) -> str:
         """Start a timer."""
         if not self.is_timer_device(device_id):
@@ -235,6 +249,8 @@ class TimerManager:
             device_id=device_id,
             created_at=created_at,
             updated_at=created_at,
+            conversation_command=conversation_command,
+            conversation_agent_id=conversation_agent_id,
         )
 
         # Fill in area/floor info
@@ -409,6 +425,23 @@ class TimerManager:
             timer.name,
             timer.device_id,
         )
+
+        if timer.conversation_command:
+            # pylint: disable-next=import-outside-toplevel
+            from homeassistant.components.conversation import async_converse
+
+            self.hass.async_create_background_task(
+                async_converse(
+                    self.hass,
+                    timer.conversation_command,
+                    conversation_id=None,
+                    context=Context(),
+                    language=timer.language,
+                    agent_id=timer.conversation_agent_id,
+                    device_id=timer.device_id,
+                ),
+                "timer assist command",
+            )
 
     def is_timer_device(self, device_id: str) -> bool:
         """Return True if device has been registered to handle timer events."""
@@ -742,6 +775,7 @@ class StartTimerIntentHandler(intent.IntentHandler):
     slot_schema = {
         vol.Required(vol.Any("hours", "minutes", "seconds")): cv.positive_int,
         vol.Optional("name"): cv.string,
+        vol.Optional("conversation_command"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -772,6 +806,10 @@ class StartTimerIntentHandler(intent.IntentHandler):
         if "seconds" in slots:
             seconds = int(slots["seconds"]["value"])
 
+        conversation_command: str | None = None
+        if "conversation_command" in slots:
+            conversation_command = slots["conversation_command"]["value"]
+
         timer_manager.start_timer(
             intent_obj.device_id,
             hours,
@@ -779,6 +817,8 @@ class StartTimerIntentHandler(intent.IntentHandler):
             seconds,
             language=intent_obj.language,
             name=name,
+            conversation_command=conversation_command,
+            conversation_agent_id=intent_obj.conversation_agent_id,
         )
 
         return intent_obj.create_response()

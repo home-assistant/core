@@ -927,6 +927,7 @@ async def test_non_default_response(hass: HomeAssistant, init_components) -> Non
             conversation_id=None,
             device_id=None,
             language=hass.config.language,
+            agent_id=None,
         )
     )
     assert len(calls) == 1
