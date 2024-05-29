@@ -58,7 +58,10 @@ class PublishMessage:
     retain: bool
 
 
-@dataclass(slots=True, frozen=True)
+# eq=False so we use the id() of the object for comparison
+# since client will only generate one instance of this object
+# per messages/subscribed_topic.
+@dataclass(slots=True, frozen=True, eq=False)
 class ReceiveMessage:
     """MQTT Message received."""
 
@@ -419,6 +422,16 @@ class MqttData:
     state_write_requests: EntityTopicState = field(default_factory=EntityTopicState)
     subscriptions_to_restore: list[Subscription] = field(default_factory=list)
     tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)
+
+
+@dataclass(slots=True)
+class MqttComponentConfig:
+    """(component, object_id, node_id, discovery_payload)."""
+
+    component: str
+    object_id: str
+    node_id: str | None
+    discovery_payload: MQTTDiscoveryPayload
 
 
 DATA_MQTT: HassKey[MqttData] = HassKey("mqtt")

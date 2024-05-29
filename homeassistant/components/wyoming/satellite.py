@@ -420,8 +420,6 @@ class WyomingSatellite:
             self.hass.add_job(self._client.write_event(Detect().event()))
         elif event.type == assist_pipeline.PipelineEventType.WAKE_WORD_END:
             # Wake word detection
-            self.device.set_is_active(True)
-
             # Inform client of wake word detection
             if event.data and (wake_word_output := event.data.get("wake_word_output")):
                 detection = Detection(

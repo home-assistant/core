@@ -1,11 +1,14 @@
 """Test the owntracks_http platform."""
 
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components import owntracks
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_component
+from tests.typing import ClientSessionGenerator
 
 MINIMAL_LOCATION_MESSAGE = {
     "_type": "location",
@@ -39,7 +42,9 @@ def mock_dev_track(mock_device_tracker_conf):
 
 
 @pytest.fixture
-def mock_client(hass, hass_client_no_auth):
+def mock_client(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> TestClient:
     """Start the Home Assistant HTTP component."""
     mock_component(hass, "group")
     mock_component(hass, "zone")

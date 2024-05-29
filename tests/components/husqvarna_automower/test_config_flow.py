@@ -32,9 +32,9 @@ from tests.typing import ClientSessionGenerator
 )
 async def test_full_flow(
     hass: HomeAssistant,
-    hass_client_no_auth,
+    hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host,
+    current_request_with_host: None,
     jwt: str,
     new_scope: str,
     amount: int,
