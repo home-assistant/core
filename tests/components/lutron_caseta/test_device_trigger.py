@@ -319,7 +319,9 @@ async def test_if_fires_on_button_event_without_lip(
     assert calls[0].data["some"] == "test_trigger_button_press"
 
 
-async def test_validate_trigger_config_no_device(hass: HomeAssistant, calls) -> None:
+async def test_validate_trigger_config_no_device(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test for no press with no device."""
 
     assert await async_setup_component(

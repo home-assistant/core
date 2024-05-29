@@ -99,7 +99,9 @@ async def test_service_data_not_a_dict(
     assert "Result is not a Dictionary" in caplog.text
 
 
-async def test_service_data_single_template(hass: HomeAssistant, calls) -> None:
+async def test_service_data_single_template(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test service data not dict."""
     with assert_setup_component(1, automation.DOMAIN):
         assert await async_setup_component(
@@ -122,7 +124,9 @@ async def test_service_data_single_template(hass: HomeAssistant, calls) -> None:
     assert calls[0].data["foo"] == "bar"
 
 
-async def test_service_specify_data(hass: HomeAssistant, calls) -> None:
+async def test_service_specify_data(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test service data."""
     assert await async_setup_component(
         hass,
@@ -156,7 +160,9 @@ async def test_service_specify_data(hass: HomeAssistant, calls) -> None:
     assert state.attributes.get("last_triggered") == time
 
 
-async def test_service_specify_entity_id(hass: HomeAssistant, calls) -> None:
+async def test_service_specify_entity_id(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test service data."""
     assert await async_setup_component(
         hass,
@@ -175,7 +181,9 @@ async def test_service_specify_entity_id(hass: HomeAssistant, calls) -> None:
     assert ["hello.world"] == calls[0].data.get(ATTR_ENTITY_ID)
 
 
-async def test_service_specify_entity_id_list(hass: HomeAssistant, calls) -> None:
+async def test_service_specify_entity_id_list(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test service data."""
     assert await async_setup_component(
         hass,
@@ -197,7 +205,7 @@ async def test_service_specify_entity_id_list(hass: HomeAssistant, calls) -> Non
     assert ["hello.world", "hello.world2"] == calls[0].data.get(ATTR_ENTITY_ID)
 
 
-async def test_two_triggers(hass: HomeAssistant, calls) -> None:
+async def test_two_triggers(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test triggers."""
     assert await async_setup_component(
         hass,
@@ -274,7 +282,9 @@ async def test_trigger_service_ignoring_condition(
     assert len(calls) == 2
 
 
-async def test_two_conditions_with_and(hass: HomeAssistant, calls) -> None:
+async def test_two_conditions_with_and(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test two and conditions."""
     entity_id = "test.entity"
     assert await async_setup_component(
@@ -312,7 +322,9 @@ async def test_two_conditions_with_and(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 1
 
 
-async def test_shorthand_conditions_template(hass: HomeAssistant, calls) -> None:
+async def test_shorthand_conditions_template(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test shorthand nation form in conditions."""
     assert await async_setup_component(
         hass,
@@ -337,7 +349,9 @@ async def test_shorthand_conditions_template(hass: HomeAssistant, calls) -> None
     assert len(calls) == 1
 
 
-async def test_automation_list_setting(hass: HomeAssistant, calls) -> None:
+async def test_automation_list_setting(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Event is not a valid condition."""
     assert await async_setup_component(
         hass,
@@ -365,7 +379,9 @@ async def test_automation_list_setting(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 2
 
 
-async def test_automation_calling_two_actions(hass: HomeAssistant, calls) -> None:
+async def test_automation_calling_two_actions(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test if we can call two actions from automation async definition."""
     assert await async_setup_component(
         hass,
@@ -389,7 +405,7 @@ async def test_automation_calling_two_actions(hass: HomeAssistant, calls) -> Non
     assert calls[1].data["position"] == 1
 
 
-async def test_shared_context(hass: HomeAssistant, calls) -> None:
+async def test_shared_context(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test that the shared context is passed down the chain."""
     assert await async_setup_component(
         hass,
@@ -456,7 +472,7 @@ async def test_shared_context(hass: HomeAssistant, calls) -> None:
     assert calls[0].context is second_trigger_context
 
 
-async def test_services(hass: HomeAssistant, calls) -> None:
+async def test_services(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test the automation services for turning entities on/off."""
     entity_id = "automation.hello"
 
@@ -621,7 +637,9 @@ async def test_reload_config_service(
     assert calls[1].data.get("event") == "test_event2"
 
 
-async def test_reload_config_when_invalid_config(hass: HomeAssistant, calls) -> None:
+async def test_reload_config_when_invalid_config(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test the reload config service handling invalid config."""
     with assert_setup_component(1, automation.DOMAIN):
         assert await async_setup_component(
@@ -660,7 +678,9 @@ async def test_reload_config_when_invalid_config(hass: HomeAssistant, calls) -> 
     assert len(calls) == 1
 
 
-async def test_reload_config_handles_load_fails(hass: HomeAssistant, calls) -> None:
+async def test_reload_config_handles_load_fails(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test the reload config service."""
     assert await async_setup_component(
         hass,
@@ -875,7 +895,9 @@ async def test_reload_single_unchanged_does_not_stop(
     assert len(calls) == 1
 
 
-async def test_reload_single_add_automation(hass: HomeAssistant, calls) -> None:
+async def test_reload_single_add_automation(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test that reloading a single automation."""
     config1 = {automation.DOMAIN: {}}
     config2 = {
@@ -909,7 +931,9 @@ async def test_reload_single_add_automation(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 1
 
 
-async def test_reload_single_parallel_calls(hass: HomeAssistant, calls) -> None:
+async def test_reload_single_parallel_calls(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test reloading single automations in parallel."""
     config1 = {automation.DOMAIN: {}}
     config2 = {
@@ -1022,7 +1046,9 @@ async def test_reload_single_parallel_calls(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 4
 
 
-async def test_reload_single_remove_automation(hass: HomeAssistant, calls) -> None:
+async def test_reload_single_remove_automation(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test that reloading a single automation."""
     config1 = {
         automation.DOMAIN: {
@@ -2414,7 +2440,9 @@ async def test_automation_this_var_always(
     assert "Error rendering variables" not in caplog.text
 
 
-async def test_blueprint_automation(hass: HomeAssistant, calls) -> None:
+async def test_blueprint_automation(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test blueprint automation."""
     assert await async_setup_component(
         hass,
@@ -2532,7 +2560,7 @@ async def test_blueprint_automation_fails_substitution(
     ) in caplog.text
 
 
-async def test_trigger_service(hass: HomeAssistant, calls) -> None:
+async def test_trigger_service(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test the automation trigger service."""
     assert await async_setup_component(
         hass,
@@ -2562,7 +2590,9 @@ async def test_trigger_service(hass: HomeAssistant, calls) -> None:
     assert calls[0].context.parent_id is context.id
 
 
-async def test_trigger_condition_implicit_id(hass: HomeAssistant, calls) -> None:
+async def test_trigger_condition_implicit_id(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test triggers."""
     assert await async_setup_component(
         hass,
@@ -2612,7 +2642,9 @@ async def test_trigger_condition_implicit_id(hass: HomeAssistant, calls) -> None
     assert calls[-1].data.get("param") == "one"
 
 
-async def test_trigger_condition_explicit_id(hass: HomeAssistant, calls) -> None:
+async def test_trigger_condition_explicit_id(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test triggers."""
     assert await async_setup_component(
         hass,

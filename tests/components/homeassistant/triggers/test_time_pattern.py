@@ -343,7 +343,7 @@ async def test_default_values(
     assert len(calls) == 2
 
 
-async def test_invalid_schemas(hass: HomeAssistant, calls) -> None:
+async def test_invalid_schemas(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test invalid schemas."""
     schemas = (
         None,

@@ -28,7 +28,7 @@ def setup_comp(hass):
     mock_component(hass, "group")
 
 
-async def test_if_fires_on_event(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_event(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test the firing of events."""
     context = Context()
 
@@ -64,7 +64,9 @@ async def test_if_fires_on_event(hass: HomeAssistant, calls) -> None:
     assert calls[0].data["id"] == 0
 
 
-async def test_if_fires_on_templated_event(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_templated_event(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test the firing of events."""
     context = Context()
 
@@ -97,7 +99,9 @@ async def test_if_fires_on_templated_event(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 1
 
 
-async def test_if_fires_on_multiple_events(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_multiple_events(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test the firing of events."""
     context = Context()
 
@@ -288,7 +292,9 @@ async def test_if_fires_on_event_with_empty_data_and_context_config(
     assert len(calls) == 1
 
 
-async def test_if_fires_on_event_with_nested_data(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_event_with_nested_data(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test the firing of events with nested data.
 
     This test exercises the slow path of using vol.Schema to validate
@@ -316,7 +322,9 @@ async def test_if_fires_on_event_with_nested_data(hass: HomeAssistant, calls) ->
     assert len(calls) == 1
 
 
-async def test_if_fires_on_event_with_empty_data(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_event_with_empty_data(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test the firing of events with empty data.
 
     This test exercises the fast path to validate matching event data.
@@ -340,7 +348,9 @@ async def test_if_fires_on_event_with_empty_data(hass: HomeAssistant, calls) -> 
     assert len(calls) == 1
 
 
-async def test_if_fires_on_sample_zha_event(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_sample_zha_event(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test the firing of events with a sample zha event.
 
     This test exercises the fast path to validate matching event data.
@@ -474,7 +484,9 @@ async def test_if_fires_on_multiple_user_ids(
     assert len(calls) == 1
 
 
-async def test_event_data_with_list(hass: HomeAssistant, calls) -> None:
+async def test_event_data_with_list(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test the (non)firing of event when the data schema has lists."""
     assert await async_setup_component(
         hass,

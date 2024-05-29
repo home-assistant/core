@@ -245,7 +245,7 @@ async def test_if_not_fires_using_wrong_at(
     assert len(calls) == 0
 
 
-async def test_if_action_before(hass: HomeAssistant, calls) -> None:
+async def test_if_action_before(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test for if action before."""
     assert await async_setup_component(
         hass,
@@ -276,7 +276,7 @@ async def test_if_action_before(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 1
 
 
-async def test_if_action_after(hass: HomeAssistant, calls) -> None:
+async def test_if_action_after(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test for if action after."""
     assert await async_setup_component(
         hass,
@@ -307,7 +307,9 @@ async def test_if_action_after(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 1
 
 
-async def test_if_action_one_weekday(hass: HomeAssistant, calls) -> None:
+async def test_if_action_one_weekday(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test for if action with one weekday."""
     assert await async_setup_component(
         hass,
@@ -339,7 +341,9 @@ async def test_if_action_one_weekday(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 1
 
 
-async def test_if_action_list_weekday(hass: HomeAssistant, calls) -> None:
+async def test_if_action_list_weekday(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test for action with a list of weekdays."""
     assert await async_setup_component(
         hass,
@@ -539,7 +543,9 @@ def test_schema_invalid(conf) -> None:
         time.TRIGGER_SCHEMA(conf)
 
 
-async def test_datetime_in_past_on_load(hass: HomeAssistant, calls) -> None:
+async def test_datetime_in_past_on_load(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test time trigger works if input_datetime is in past."""
     await async_setup_component(
         hass,
