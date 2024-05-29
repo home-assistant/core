@@ -1779,7 +1779,13 @@ def service_calls() -> Generator[None, None, list[ServiceCall]]:
     """Track all service calls."""
     calls = []
 
-    async def _async_call(self, domain, service, service_data, **kwargs):
+    async def _async_call(
+        self,
+        domain: str,
+        service: str,
+        service_data: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ):
         calls.append(ServiceCall(domain, service, service_data))
 
     with patch("homeassistant.core.ServiceRegistry.async_call", _async_call):
