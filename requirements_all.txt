@@ -2945,7 +2945,7 @@ youless-api==1.1.1
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2024.05.26
+yt-dlp==2024.05.27
 
 # homeassistant.components.zamg
 zamg==0.3.6
