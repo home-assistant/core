@@ -6,7 +6,7 @@ from homeassistant.components import automation
 from homeassistant.components.tag import async_scan_tag
 from homeassistant.components.tag.const import DEVICE_ID, DOMAIN, TAG_ID
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
@@ -42,7 +42,9 @@ def calls(hass: HomeAssistant):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_triggers(hass: HomeAssistant, tag_setup, calls) -> None:
+async def test_triggers(
+    hass: HomeAssistant, tag_setup, calls: list[ServiceCall]
+) -> None:
     """Test tag triggers."""
     assert await tag_setup()
     assert await async_setup_component(
@@ -88,7 +90,7 @@ async def test_triggers(hass: HomeAssistant, tag_setup, calls) -> None:
 
 
 async def test_exception_bad_trigger(
-    hass: HomeAssistant, calls, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, calls: list[ServiceCall], caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for exception on event triggers firing."""
 
@@ -112,7 +114,7 @@ async def test_exception_bad_trigger(
 
 
 async def test_multiple_tags_and_devices_trigger(
-    hass: HomeAssistant, tag_setup, calls
+    hass: HomeAssistant, tag_setup, calls: list[ServiceCall]
 ) -> None:
     """Test multiple tags and devices triggers."""
     assert await tag_setup()
