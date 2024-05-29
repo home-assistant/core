@@ -2,10 +2,11 @@
 
 from unittest.mock import AsyncMock, patch
 
-from airgradient import ConfigurationControl
+from airgradient import ConfigurationControl, Measures
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.airgradient import DOMAIN
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
@@ -17,7 +18,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, load_fixture, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -29,6 +30,24 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
+    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_all_entities_outdoor(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities."""
+    mock_airgradient_client.get_current_measures.return_value = Measures.from_json(
+        load_fixture("current_measures_outdoor.json", DOMAIN)
+    )
     with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.SELECT]):
         await setup_integration(hass, mock_config_entry)
 

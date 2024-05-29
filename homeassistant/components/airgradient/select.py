@@ -13,7 +13,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import AirGradientConfigCoordinator
+from .coordinator import AirGradientConfigCoordinator, AirGradientMeasurementCoordinator
 from .entity import AirGradientEntity
 
 
@@ -23,6 +23,7 @@ class AirGradientSelectEntityDescription(SelectEntityDescription):
 
     value_fn: Callable[[Config], str]
     set_value_fn: Callable[[AirGradientClient, str], Awaitable[None]]
+    requires_display: bool = False
 
 
 CONFIG_CONTROL_ENTITY = AirGradientSelectEntityDescription(
@@ -44,6 +45,7 @@ PROTECTED_SELECT_TYPES: tuple[AirGradientSelectEntityDescription, ...] = (
         set_value_fn=lambda client, value: client.set_temperature_unit(
             TemperatureUnit(value)
         ),
+        requires_display=True,
     ),
 )
 
@@ -53,15 +55,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up AirGradient select entities based on a config entry."""
 
-    coordinator: AirGradientConfigCoordinator = hass.data[DOMAIN][entry.entry_id][
-        "config"
-    ]
+    config_coordinator: AirGradientConfigCoordinator = hass.data[DOMAIN][
+        entry.entry_id
+    ]["config"]
+    measurement_coordinator: AirGradientMeasurementCoordinator = hass.data[DOMAIN][
+        entry.entry_id
+    ]["measurement"]
 
-    entities = [AirGradientSelect(coordinator, CONFIG_CONTROL_ENTITY)]
+    entities = [AirGradientSelect(config_coordinator, CONFIG_CONTROL_ENTITY)]
 
     entities.extend(
-        AirGradientProtectedSelect(coordinator, description)
+        AirGradientProtectedSelect(config_coordinator, description)
         for description in PROTECTED_SELECT_TYPES
+        if description.requires_display
+        and measurement_coordinator.data.model.startswith("I")
     )
 
     async_add_entities(entities)
