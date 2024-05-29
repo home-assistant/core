@@ -676,7 +676,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     "znrb": (
         SwitchEntityDescription(
             key=DPCode.SWITCH,
-            name="Switch",
+            translation_key="switch",
         ),
     ),  
 }
