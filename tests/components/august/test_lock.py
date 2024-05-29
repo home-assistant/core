@@ -478,16 +478,5 @@ async def test_open_throws_hass_service_not_supported_error(
     mocked_lock_detail = await _mock_operative_august_lock_detail(hass)
     await _create_august_with_devices(hass, [mocked_lock_detail])
     data = {ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name"}
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(LOCK_DOMAIN, SERVICE_OPEN, data, blocking=True)
-
-
-async def test_open_on_supported_lock(
-    hass: HomeAssistant,
-) -> None:
-    """Test open throws correct error on entity does not support this service error."""
-    mocked_lock_detail = await _mock_operative_august_lock_detail(hass)
-    await _create_august_with_devices(hass, [mocked_lock_detail])
-    data = {ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name"}
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="does not support this service"):
         await hass.services.async_call(LOCK_DOMAIN, SERVICE_OPEN, data, blocking=True)
