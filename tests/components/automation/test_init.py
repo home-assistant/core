@@ -72,13 +72,13 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 async def test_service_data_not_a_dict(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, calls
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, calls: list[ServiceCall]
 ) -> None:
     """Test service data not dict."""
     with assert_setup_component(1, automation.DOMAIN):
@@ -222,7 +222,7 @@ async def test_two_triggers(hass: HomeAssistant, calls) -> None:
 
 
 async def test_trigger_service_ignoring_condition(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, calls
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, calls: list[ServiceCall]
 ) -> None:
     """Test triggers."""
     assert await async_setup_component(
@@ -539,7 +539,10 @@ async def test_services(hass: HomeAssistant, calls) -> None:
 
 
 async def test_reload_config_service(
-    hass: HomeAssistant, calls, hass_admin_user: MockUser, hass_read_only_user: MockUser
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
 ) -> None:
     """Test the reload config service."""
     assert await async_setup_component(
@@ -697,7 +700,9 @@ async def test_reload_config_handles_load_fails(hass: HomeAssistant, calls) -> N
 @pytest.mark.parametrize(
     "service", ["turn_off_stop", "turn_off_no_stop", "reload", "reload_single"]
 )
-async def test_automation_stops(hass: HomeAssistant, calls, service) -> None:
+async def test_automation_stops(
+    hass: HomeAssistant, calls: list[ServiceCall], service: str
+) -> None:
     """Test that turning off / reloading stops any running actions as appropriate."""
     entity_id = "automation.hello"
     test_entity = "test.entity"
@@ -774,7 +779,7 @@ async def test_automation_stops(hass: HomeAssistant, calls, service) -> None:
 
 @pytest.mark.parametrize("extra_config", [{}, {"id": "sun"}])
 async def test_reload_unchanged_does_not_stop(
-    hass: HomeAssistant, calls, extra_config
+    hass: HomeAssistant, calls: list[ServiceCall], extra_config: dict[str, str]
 ) -> None:
     """Test that reloading stops any running actions as appropriate."""
     test_entity = "test.entity"
@@ -820,7 +825,7 @@ async def test_reload_unchanged_does_not_stop(
 
 
 async def test_reload_single_unchanged_does_not_stop(
-    hass: HomeAssistant, calls
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test that reloading stops any running actions as appropriate."""
     test_entity = "test.entity"
@@ -1052,7 +1057,7 @@ async def test_reload_single_remove_automation(hass: HomeAssistant, calls) -> No
 
 
 async def test_reload_moved_automation_without_alias(
-    hass: HomeAssistant, calls
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test that changing the order of automations without alias triggers reload."""
     with patch(
@@ -1107,7 +1112,7 @@ async def test_reload_moved_automation_without_alias(
 
 
 async def test_reload_identical_automations_without_id(
-    hass: HomeAssistant, calls
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test reloading of identical automations without id."""
     with patch(
@@ -1282,7 +1287,7 @@ async def test_reload_identical_automations_without_id(
     ],
 )
 async def test_reload_unchanged_automation(
-    hass: HomeAssistant, calls, automation_config
+    hass: HomeAssistant, calls: list[ServiceCall], automation_config: dict[str, Any]
 ) -> None:
     """Test an unmodified automation is not reloaded."""
     with patch(
@@ -1317,7 +1322,7 @@ async def test_reload_unchanged_automation(
 
 @pytest.mark.parametrize("extra_config", [{}, {"id": "sun"}])
 async def test_reload_automation_when_blueprint_changes(
-    hass: HomeAssistant, calls, extra_config
+    hass: HomeAssistant, calls: list[ServiceCall], extra_config: dict[str, str]
 ) -> None:
     """Test an automation is updated at reload if the blueprint has changed."""
     with patch(

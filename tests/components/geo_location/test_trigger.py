@@ -11,7 +11,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service, mock_component
@@ -23,7 +23,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -414,7 +414,7 @@ async def test_if_fires_on_zone_disappear(hass: HomeAssistant, calls) -> None:
 
 
 async def test_zone_undefined(
-    hass: HomeAssistant, calls, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, calls: list[ServiceCall], caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for undefined zone."""
     hass.states.async_set(

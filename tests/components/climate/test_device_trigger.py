@@ -14,7 +14,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import EntityCategory, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -36,7 +36,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -151,7 +151,7 @@ async def test_if_fires_on_state_change(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -272,7 +272,7 @@ async def test_if_fires_on_state_change_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
