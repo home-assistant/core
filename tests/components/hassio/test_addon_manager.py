@@ -198,12 +198,12 @@ async def test_not_available_raises_exception(
     with pytest.raises(AddonError) as err:
         await addon_manager.async_install_addon()
 
-    assert str(err.value) == "Test add-on is not available anymore"
+    assert str(err.value) == "Test add-on is not available"
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_update_addon()
 
-    assert str(err.value) == "Test add-on is not available anymore"
+    assert str(err.value) == "Test add-on is not available"
 
 
 async def test_get_addon_discovery_info(

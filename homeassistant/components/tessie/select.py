@@ -5,11 +5,11 @@ from __future__ import annotations
 from tessie_api import set_seat_heat
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, TessieSeatHeaterOptions
+from . import TessieConfigEntry
+from .const import TessieSeatHeaterOptions
 from .entity import TessieEntity
 
 SEAT_HEATERS = {
@@ -24,16 +24,18 @@ SEAT_HEATERS = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TessieConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Tessie select platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
-        TessieSeatHeaterSelectEntity(vehicle.state_coordinator, key)
-        for vehicle in data
+        TessieSeatHeaterSelectEntity(vehicle, key)
+        for vehicle in data.vehicles
         for key in SEAT_HEATERS
-        if key in vehicle.state_coordinator.data
+        if key in vehicle.data
     )
 
 

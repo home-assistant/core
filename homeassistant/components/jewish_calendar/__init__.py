@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LANGUAGE,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_TIME_ZONE,
@@ -134,11 +135,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         location, language, candle_lighting_offset, havdalah_offset
     )
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
-        "language": language,
-        "diaspora": diaspora,
-        "location": location,
-        "candle_lighting_offset": candle_lighting_offset,
-        "havdalah_offset": havdalah_offset,
+        CONF_LANGUAGE: language,
+        CONF_DIASPORA: diaspora,
+        CONF_LOCATION: location,
+        CONF_CANDLE_LIGHT_MINUTES: candle_lighting_offset,
+        CONF_HAVDALAH_OFFSET_MINUTES: havdalah_offset,
         "prefix": prefix,
     }
 

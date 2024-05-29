@@ -193,6 +193,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="cqi1",
                 translation_key="cqi1",
                 icon="mdi:speedometer",
+                entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "dl_mcs": HuaweiSensorEntityDescription(
                 key="dl_mcs",
@@ -266,6 +267,97 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                         "4G": "mdi:signal-4g",
                     }.get(str(x), "mdi:signal")
                 ),
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrbler": HuaweiSensorEntityDescription(
+                key="nrbler",
+                translation_key="nrbler",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrcqi0": HuaweiSensorEntityDescription(
+                key="nrcqi0",
+                translation_key="nrcqi0",
+                icon="mdi:speedometer",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrcqi1": HuaweiSensorEntityDescription(
+                key="nrcqi1",
+                translation_key="nrcqi1",
+                icon="mdi:speedometer",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrdlbandwidth": HuaweiSensorEntityDescription(
+                key="nrdlbandwidth",
+                translation_key="nrdlbandwidth",
+                # Could add icon_fn like we have for dlbandwidth,
+                # if we find a good source what to use as 5G thresholds.
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrdlmcs": HuaweiSensorEntityDescription(
+                key="nrdlmcs",
+                translation_key="nrdlmcs",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrearfcn": HuaweiSensorEntityDescription(
+                key="nrearfcn",
+                translation_key="nrearfcn",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrrank": HuaweiSensorEntityDescription(
+                key="nrrank",
+                translation_key="nrrank",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrrsrp": HuaweiSensorEntityDescription(
+                key="nrrsrp",
+                translation_key="nrrsrp",
+                device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+                # Could add icon_fn as in rsrp, source for 5G thresholds?
+                state_class=SensorStateClass.MEASUREMENT,
+                entity_category=EntityCategory.DIAGNOSTIC,
+                entity_registry_enabled_default=True,
+            ),
+            "nrrsrq": HuaweiSensorEntityDescription(
+                key="nrrsrq",
+                translation_key="nrrsrq",
+                device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+                # Could add icon_fn as in rsrq, source for 5G thresholds?
+                state_class=SensorStateClass.MEASUREMENT,
+                entity_category=EntityCategory.DIAGNOSTIC,
+                entity_registry_enabled_default=True,
+            ),
+            "nrsinr": HuaweiSensorEntityDescription(
+                key="nrsinr",
+                translation_key="nrsinr",
+                device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+                # Could add icon_fn as in sinr, source for thresholds?
+                state_class=SensorStateClass.MEASUREMENT,
+                entity_category=EntityCategory.DIAGNOSTIC,
+                entity_registry_enabled_default=True,
+            ),
+            "nrtxpower": HuaweiSensorEntityDescription(
+                key="nrtxpower",
+                translation_key="nrtxpower",
+                # The value we get from the API tends to consist of several, e.g.
+                #     PPusch:21dBm PPucch:2dBm PSrs:0dBm PPrach:10dBm
+                # Present as SIGNAL_STRENGTH only if it was parsed to a number.
+                # We could try to parse this to separate component sensors sometime.
+                device_class_fn=lambda x: (
+                    SensorDeviceClass.SIGNAL_STRENGTH
+                    if isinstance(x, (float, int))
+                    else None
+                ),
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrulbandwidth": HuaweiSensorEntityDescription(
+                key="nrulbandwidth",
+                translation_key="nrulbandwidth",
+                # Could add icon_fn as in ulbandwidth, source for 5G thresholds?
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrulmcs": HuaweiSensorEntityDescription(
+                key="nrulmcs",
+                translation_key="nrulmcs",
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "pci": HuaweiSensorEntityDescription(

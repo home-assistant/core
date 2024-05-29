@@ -344,7 +344,11 @@ async def test_browse_media_root_single_console(
 
 
 async def test_browse_media_camera(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, camera: Camera
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    camera: Camera,
 ) -> None:
     """Test browsing camera selector level media."""
 
@@ -360,7 +364,6 @@ async def test_browse_media_camera(
         ),
     ]
 
-    entity_registry = er.async_get(hass)
     entity_registry.async_update_entity(
         "camera.test_camera_high_resolution_channel",
         disabled_by=er.RegistryEntryDisabler("user"),

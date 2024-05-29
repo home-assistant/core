@@ -2,13 +2,14 @@
 
 import pytest
 
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_mock_service
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 

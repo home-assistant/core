@@ -104,6 +104,7 @@ async def async_handle(
     language: str | None = None,
     assistant: str | None = None,
     device_id: str | None = None,
+    conversation_agent_id: str | None = None,
 ) -> IntentResponse:
     """Handle an intent."""
     handler = hass.data.get(DATA_KEY, {}).get(intent_type)
@@ -127,6 +128,7 @@ async def async_handle(
         language=language,
         assistant=assistant,
         device_id=device_id,
+        conversation_agent_id=conversation_agent_id,
     )
 
     try:
@@ -737,7 +739,7 @@ class IntentHandler:
     """Intent handler registration."""
 
     intent_type: str
-    platforms: Iterable[str] | None = []
+    platforms: set[str] | None = None
     description: str | None = None
 
     @property
@@ -808,6 +810,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         required_features: int | None = None,
         required_states: set[str] | None = None,
         description: str | None = None,
+        platforms: set[str] | None = None,
     ) -> None:
         """Create Service Intent Handler."""
         self.intent_type = intent_type
@@ -816,6 +819,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         self.required_features = required_features
         self.required_states = required_states
         self.description = description
+        self.platforms = platforms
 
         self.required_slots: dict[tuple[str, str], vol.Schema] = {}
         if required_slots:
@@ -1106,6 +1110,7 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         required_features: int | None = None,
         required_states: set[str] | None = None,
         description: str | None = None,
+        platforms: set[str] | None = None,
     ) -> None:
         """Create service handler."""
         super().__init__(
@@ -1117,6 +1122,7 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
             required_features=required_features,
             required_states=required_states,
             description=description,
+            platforms=platforms,
         )
         self.domain = domain
         self.service = service
@@ -1152,6 +1158,7 @@ class Intent:
         "category",
         "assistant",
         "device_id",
+        "conversation_agent_id",
     ]
 
     def __init__(
@@ -1166,6 +1173,7 @@ class Intent:
         category: IntentCategory | None = None,
         assistant: str | None = None,
         device_id: str | None = None,
+        conversation_agent_id: str | None = None,
     ) -> None:
         """Initialize an intent."""
         self.hass = hass
@@ -1178,6 +1186,7 @@ class Intent:
         self.category = category
         self.assistant = assistant
         self.device_id = device_id
+        self.conversation_agent_id = conversation_agent_id
 
     @callback
     def create_response(self) -> IntentResponse:

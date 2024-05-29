@@ -15,13 +15,19 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import SUN_EVENT_SUNSET
+from homeassistant.const import CONF_LANGUAGE, CONF_LOCATION, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import (
+    CONF_CANDLE_LIGHT_MINUTES,
+    CONF_DIASPORA,
+    CONF_HAVDALAH_OFFSET_MINUTES,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,11 +175,11 @@ class JewishCalendarSensor(SensorEntity):
         self.entity_description = description
         self._attr_name = f"{DEFAULT_NAME} {description.name}"
         self._attr_unique_id = f'{data["prefix"]}_{description.key}'
-        self._location = data["location"]
-        self._hebrew = data["language"] == "hebrew"
-        self._candle_lighting_offset = data["candle_lighting_offset"]
-        self._havdalah_offset = data["havdalah_offset"]
-        self._diaspora = data["diaspora"]
+        self._location = data[CONF_LOCATION]
+        self._hebrew = data[CONF_LANGUAGE] == "hebrew"
+        self._candle_lighting_offset = data[CONF_CANDLE_LIGHT_MINUTES]
+        self._havdalah_offset = data[CONF_HAVDALAH_OFFSET_MINUTES]
+        self._diaspora = data[CONF_DIASPORA]
         self._holiday_attrs: dict[str, str] = {}
 
     async def async_update(self) -> None:
