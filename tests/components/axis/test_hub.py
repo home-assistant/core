@@ -2,14 +2,13 @@
 
 from ipaddress import ip_address
 from unittest import mock
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, call, patch
 
 import axis as axislib
 import pytest
 
 from homeassistant.components import axis, zeroconf
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
-from homeassistant.components.axis.hub import AxisHub
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_ZEROCONF
 from homeassistant.const import (
@@ -52,7 +51,7 @@ async def test_device_setup(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Successful setup."""
-    hub = AxisHub.get_hub(hass, setup_config_entry)
+    hub = setup_config_entry.runtime_data
 
     assert hub.api.vapix.firmware_version == "9.10.1"
     assert hub.api.vapix.product_number == "M1065-LW"
@@ -78,7 +77,7 @@ async def test_device_setup(
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_BASIC_DEVICE_INFO])
 async def test_device_info(hass: HomeAssistant, setup_config_entry) -> None:
     """Verify other path of device information works."""
-    hub = AxisHub.get_hub(hass, setup_config_entry)
+    hub = setup_config_entry.runtime_data
 
     assert hub.api.vapix.firmware_version == "9.80.1"
     assert hub.api.vapix.product_number == "M1065-LW"
@@ -91,7 +90,8 @@ async def test_device_support_mqtt(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_config_entry
 ) -> None:
     """Successful setup."""
-    mqtt_mock.async_subscribe.assert_called_with(f"axis/{MAC}/#", mock.ANY, 0, "utf-8")
+    mqtt_call = call(f"axis/{MAC}/#", mock.ANY, 0, "utf-8", ANY)
+    assert mqtt_call in mqtt_mock.async_subscribe.call_args_list
 
     topic = f"axis/{MAC}/event/tns:onvif/Device/tns:axis/Sensor/PIR/$source/sensor/0"
     message = (
@@ -109,34 +109,40 @@ async def test_device_support_mqtt(
     assert pir.name == f"{NAME} PIR 0"
 
 
+@pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_MQTT])
+@pytest.mark.parametrize("mqtt_status_code", [401])
+async def test_device_support_mqtt_low_privilege(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_config_entry
+) -> None:
+    """Successful setup."""
+    mqtt_call = call(f"{MAC}/#", mock.ANY, 0, "utf-8")
+    assert mqtt_call not in mqtt_mock.async_subscribe.call_args_list
+
+
 async def test_update_address(
     hass: HomeAssistant, setup_config_entry, mock_vapix_requests
 ) -> None:
     """Test update address works."""
-    hub = AxisHub.get_hub(hass, setup_config_entry)
+    hub = setup_config_entry.runtime_data
     assert hub.api.config.host == "1.2.3.4"
 
-    with patch(
-        "homeassistant.components.axis.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        mock_vapix_requests("2.3.4.5")
-        await hass.config_entries.flow.async_init(
-            AXIS_DOMAIN,
-            data=zeroconf.ZeroconfServiceInfo(
-                ip_address=ip_address("2.3.4.5"),
-                ip_addresses=[ip_address("2.3.4.5")],
-                hostname="mock_hostname",
-                name="name",
-                port=80,
-                properties={"macaddress": MAC},
-                type="mock_type",
-            ),
-            context={"source": SOURCE_ZEROCONF},
-        )
-        await hass.async_block_till_done()
+    mock_vapix_requests("2.3.4.5")
+    await hass.config_entries.flow.async_init(
+        AXIS_DOMAIN,
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("2.3.4.5"),
+            ip_addresses=[ip_address("2.3.4.5")],
+            hostname="mock_hostname",
+            name="name",
+            port=80,
+            properties={"macaddress": MAC},
+            type="mock_type",
+        ),
+        context={"source": SOURCE_ZEROCONF},
+    )
+    await hass.async_block_till_done()
 
     assert hub.api.config.host == "2.3.4.5"
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_device_unavailable(

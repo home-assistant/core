@@ -18,7 +18,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def tag_setup(hass, hass_storage):
+def tag_setup(hass: HomeAssistant, hass_storage):
     """Tag setup."""
 
     async def _storage(items=None):
@@ -37,7 +37,7 @@ def tag_setup(hass, hass_storage):
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 

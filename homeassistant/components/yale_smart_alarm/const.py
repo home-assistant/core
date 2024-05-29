@@ -26,7 +26,6 @@ MANUFACTURER = "Yale"
 MODEL = "main"
 
 DOMAIN = "yale_smart_alarm"
-COORDINATOR = "coordinator"
 
 DEFAULT_SCAN_INTERVAL = 15
 

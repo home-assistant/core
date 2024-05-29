@@ -20,6 +20,7 @@ from homeassistant.const import STATE_ON
 from homeassistant.core import (
     Event,
     EventStateChangedData,
+    HassJobType,
     HomeAssistant,
     State,
     callback,
@@ -272,6 +273,7 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
                     self.hass,
                     [self.linked_motion_sensor],
                     self._async_update_motion_state_event,
+                    job_type=HassJobType.Callback,
                 )
             )
 
@@ -282,6 +284,7 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
                     self.hass,
                     [self.linked_doorbell_sensor],
                     self._async_update_doorbell_state_event,
+                    job_type=HassJobType.Callback,
                 )
             )
 
@@ -353,7 +356,7 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
             stream_source = await camera.async_get_stream_source(
                 self.hass, self.entity_id
             )
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Failed to get stream source - this could be a transient error or your"
                 " camera might not be compatible with HomeKit yet"
@@ -500,7 +503,7 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
             _LOGGER.info("[%s] %s stream", session_id, shutdown_method)
             try:
                 await getattr(stream, shutdown_method)()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception(
                     "[%s] Failed to %s stream", session_id, shutdown_method
                 )

@@ -1,7 +1,5 @@
 """Tests for the FinTS client."""
 
-from typing import Optional
-
 from fints.client import BankIdentifier, FinTSOperations
 import pytest
 
@@ -51,10 +49,10 @@ BANK_INFORMATION = {
     ],
 )
 async def test_account_type(
-    account_number: Optional[str],
-    iban: Optional[str],
+    account_number: str | None,
+    iban: str | None,
     product_name: str,
-    account_type: Optional[int],
+    account_type: int | None,
     expected_balance_result: bool,
     expected_holdings_result: bool,
 ) -> None:

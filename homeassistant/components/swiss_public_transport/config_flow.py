@@ -54,7 +54,7 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except OpendataTransportError:
                 errors["base"] = "bad_config"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unknown error")
                 errors["base"] = "unknown"
             else:
@@ -87,7 +87,7 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         except OpendataTransportError:
             return self.async_abort(reason="bad_config")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             _LOGGER.error(
                 "Unknown error raised by python-opendata-transport for '%s %s', check at http://transport.opendata.ch/examples/stationboard.html if your station names and your parameters are valid",
                 import_input[CONF_START],

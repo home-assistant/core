@@ -290,7 +290,7 @@ async def test_reload_service(
 async def test_service_setup_failed(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test service setup failed."""
     await knx.setup_integration({})
-    await knx.mock_config_entry.async_unload(hass)
+    await hass.config_entries.async_unload(knx.mock_config_entry.entry_id)
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(

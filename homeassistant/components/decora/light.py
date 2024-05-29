@@ -7,7 +7,7 @@ import copy
 from functools import wraps
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate
 
 from bluepy.btle import BTLEException
 import decora
@@ -28,10 +28,6 @@ if TYPE_CHECKING:
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
     from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-
-_DecoraLightT = TypeVar("_DecoraLightT", bound="DecoraLight")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +56,7 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 
-def retry(
+def retry[_DecoraLightT: DecoraLight, **_P, _R](
     method: Callable[Concatenate[_DecoraLightT, _P], _R],
 ) -> Callable[Concatenate[_DecoraLightT, _P], _R | None]:
     """Retry bluetooth commands."""
@@ -82,8 +78,7 @@ def retry(
                     "Decora connect error for device %s. Reconnecting",
                     device.name,
                 )
-                # pylint: disable-next=protected-access
-                device._switch.connect()
+                device._switch.connect()  # noqa: SLF001
 
     return wrapper_retry
 

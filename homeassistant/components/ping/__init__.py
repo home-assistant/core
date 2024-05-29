@@ -83,7 +83,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def _can_use_icmp_lib_with_privilege() -> None | bool:
+async def _can_use_icmp_lib_with_privilege() -> bool | None:
     """Verify we can create a raw socket."""
     try:
         await async_ping("127.0.0.1", count=0, timeout=0, privileged=True)

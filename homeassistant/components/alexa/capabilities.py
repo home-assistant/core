@@ -268,7 +268,7 @@ class AlexaCapability:
                 prop_value = self.get_property(prop_name)
             except UnsupportedProperty:
                 raise
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception(
                     "Unexpected error getting %s.%s property from %s",
                     self.name(),
@@ -300,6 +300,10 @@ class Alexa(AlexaCapability):
     The API suggests you should explicitly include this interface.
 
     https://developer.amazon.com/docs/device-apis/alexa-interface.html
+
+    To compare current supported locales in Home Assistant
+    with Alexa supported locales, run the following script:
+    python -m script.alexa_locales
     """
 
     supported_locales = {

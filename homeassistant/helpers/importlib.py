@@ -10,12 +10,15 @@ import sys
 from types import ModuleType
 
 from homeassistant.core import HomeAssistant
+from homeassistant.util.hass_dict import HassKey
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_IMPORT_CACHE = "import_cache"
-DATA_IMPORT_FUTURES = "import_futures"
-DATA_IMPORT_FAILURES = "import_failures"
+DATA_IMPORT_CACHE: HassKey[dict[str, ModuleType]] = HassKey("import_cache")
+DATA_IMPORT_FUTURES: HassKey[dict[str, asyncio.Future[ModuleType]]] = HassKey(
+    "import_futures"
+)
+DATA_IMPORT_FAILURES: HassKey[dict[str, bool]] = HassKey("import_failures")
 
 
 def _get_module(cache: dict[str, ModuleType], name: str) -> ModuleType:
@@ -26,17 +29,15 @@ def _get_module(cache: dict[str, ModuleType], name: str) -> ModuleType:
 
 async def async_import_module(hass: HomeAssistant, name: str) -> ModuleType:
     """Import a module or return it from the cache."""
-    cache: dict[str, ModuleType] = hass.data.setdefault(DATA_IMPORT_CACHE, {})
+    cache = hass.data.setdefault(DATA_IMPORT_CACHE, {})
     if module := cache.get(name):
         return module
 
-    failure_cache: dict[str, bool] = hass.data.setdefault(DATA_IMPORT_FAILURES, {})
+    failure_cache = hass.data.setdefault(DATA_IMPORT_FAILURES, {})
     if name in failure_cache:
         raise ModuleNotFoundError(f"{name} not found", name=name)
 
-    import_futures: dict[str, asyncio.Future[ModuleType]]
     import_futures = hass.data.setdefault(DATA_IMPORT_FUTURES, {})
-
     if future := import_futures.get(name):
         return await future
 

@@ -699,7 +699,8 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             return
 
         if kwargs.get(ATTR_MEDIA_ANNOUNCE):
-            return await self._async_announce(media_id)
+            await self._async_announce(media_id)
+            return
 
         # if kwargs[ATTR_MEDIA_ENQUEUE] is None, we assume MediaPlayerEnqueue.REPLACE
         # if kwargs[ATTR_MEDIA_ENQUEUE] is True, we assume MediaPlayerEnqueue.ADD
@@ -709,11 +710,12 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE
         )
         if enqueue in {True, MediaPlayerEnqueue.ADD, MediaPlayerEnqueue.REPLACE}:
-            return await self.api.add_to_queue(
+            await self.api.add_to_queue(
                 uris=media_id,
                 playback="start",
                 clear=enqueue == MediaPlayerEnqueue.REPLACE,
             )
+            return
 
         current_position = next(
             (
@@ -724,13 +726,14 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             0,
         )
         if enqueue == MediaPlayerEnqueue.NEXT:
-            return await self.api.add_to_queue(
+            await self.api.add_to_queue(
                 uris=media_id,
                 playback="start",
                 position=current_position + 1,
             )
+            return
         # enqueue == MediaPlayerEnqueue.PLAY
-        return await self.api.add_to_queue(
+        await self.api.add_to_queue(
             uris=media_id,
             playback="start",
             position=current_position,

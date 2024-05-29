@@ -21,6 +21,7 @@ IMPROV_BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     ),
     time=0,
     connectable=True,
+    tx_power=-127,
 )
 
 
@@ -39,6 +40,7 @@ PROVISIONED_IMPROV_BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     ),
     time=0,
     connectable=True,
+    tx_power=-127,
 )
 
 
@@ -57,4 +59,5 @@ NOT_IMPROV_BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(),
     time=0,
     connectable=True,
+    tx_power=-127,
 )

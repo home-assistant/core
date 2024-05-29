@@ -132,7 +132,7 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
         """Wait for device to enter pairing mode."""
         if not self._pairing_task:
             self._pairing_task = self.hass.async_create_task(
-                self._async_wait_for_pairing_mode(), eager_start=False
+                self._async_wait_for_pairing_mode()
             )
 
         if not self._pairing_task.done():
