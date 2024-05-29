@@ -24,8 +24,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import AirGradientDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import AirGradientMeasurementCoordinator
 from .entity import AirGradientEntity
 
 
@@ -130,7 +130,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up AirGradient sensor entities based on a config entry."""
 
-    coordinator: AirGradientDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: AirGradientMeasurementCoordinator = hass.data[DOMAIN][entry.entry_id][
+        "measurement"
+    ]
     listener: Callable[[], None] | None = None
     not_setup: set[AirGradientSensorEntityDescription] = set(SENSOR_TYPES)
 
@@ -162,16 +164,17 @@ class AirGradientSensor(AirGradientEntity, SensorEntity):
     """Defines an AirGradient sensor."""
 
     entity_description: AirGradientSensorEntityDescription
+    coordinator: AirGradientMeasurementCoordinator
 
     def __init__(
         self,
-        coordinator: AirGradientDataUpdateCoordinator,
+        coordinator: AirGradientMeasurementCoordinator,
         description: AirGradientSensorEntityDescription,
     ) -> None:
         """Initialize airgradient sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.data.serial_number}-{description.key}"
+        self._attr_unique_id = f"{coordinator.serial_number}-{description.key}"
 
     @property
     def native_value(self) -> StateType:
