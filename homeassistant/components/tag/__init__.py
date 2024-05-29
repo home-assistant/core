@@ -7,7 +7,6 @@ from typing import Any, final
 import uuid
 
 import voluptuous as vol
-from voluptuous.humanize import humanize_error
 
 from homeassistant.components import websocket_api
 from homeassistant.const import CONF_NAME
@@ -110,8 +109,6 @@ class TagStorageCollection(collection.DictStorageCollection):
             original_name=data.get(CONF_NAME, DEFAULT_NAME),
             suggested_object_id=slugify(data.get(CONF_NAME, DEFAULT_NAME)),
         )
-        if CONF_NAME in data:
-            data.pop(CONF_NAME)
         return data
 
     @callback
@@ -141,9 +138,15 @@ class TagStorageCollection(collection.DictStorageCollection):
                     original_name=data.get(CONF_NAME, DEFAULT_NAME),
                     suggested_object_id=slugify(data.get(CONF_NAME, DEFAULT_NAME)),
                 )
-            data.pop(CONF_NAME)
 
         return data
+
+    def _serialize_item(self, item_id: str, item: dict) -> dict:
+        """Return the serialized representation of an item for storing.
+
+        We don't store the name, it's stored in the entity registry.
+        """
+        return {k: v for k, v in item.items() if k != CONF_NAME}
 
 
 class TagDictStorageCollectionWebsocket(
@@ -184,78 +187,6 @@ class TagDictStorageCollectionWebsocket(
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug("Listing tags %s", tag_items)
         connection.send_result(msg["id"], tag_items)
-
-    async def ws_create_item(
-        self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
-    ) -> None:
-        """Create a tag item.
-
-        Provides name from entity registry.
-        """
-        try:
-            data = dict(msg)
-            data.pop("id")
-            data.pop("type")
-            item = await self.storage_collection.async_create_item(data)
-            if (
-                entity_id := self.entity_registry.async_get_entity_id(
-                    DOMAIN, DOMAIN, item[TAG_ID]
-                )
-            ) and (entity := self.entity_registry.async_get(entity_id)):
-                item[CONF_NAME] = entity.name or entity.original_name
-            if _LOGGER.isEnabledFor(logging.DEBUG):
-                _LOGGER.debug("Creating tag %s", item)
-            connection.send_result(msg["id"], item)
-        except vol.Invalid as err:
-            connection.send_error(
-                msg["id"],
-                websocket_api.const.ERR_INVALID_FORMAT,
-                humanize_error(data, err),
-            )
-        except ValueError as err:
-            connection.send_error(
-                msg["id"], websocket_api.const.ERR_INVALID_FORMAT, str(err)
-            )
-
-    async def ws_update_item(
-        self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
-    ) -> None:
-        """Update a tag item.
-
-        Provides the name from entity registry.
-        """
-        data = dict(msg)
-        msg_id = data.pop("id")
-        item_id = data.pop(self.item_id_key)
-        data.pop("type")
-
-        try:
-            item = await self.storage_collection.async_update_item(item_id, data)
-            if (
-                entity_id := self.entity_registry.async_get_entity_id(
-                    DOMAIN, DOMAIN, item[TAG_ID]
-                )
-            ) and (entity := self.entity_registry.async_get(entity_id)):
-                item[CONF_NAME] = entity.name or entity.original_name
-            if _LOGGER.isEnabledFor(logging.DEBUG):
-                _LOGGER.debug("Sending updated tag %s", item)
-            connection.send_result(msg_id, item)
-        except collection.ItemNotFound:
-            connection.send_error(
-                msg["id"],
-                websocket_api.const.ERR_NOT_FOUND,
-                f"Unable to find {self.item_id_key} {item_id}",
-            )
-        except vol.Invalid as err:
-            connection.send_error(
-                msg["id"],
-                websocket_api.const.ERR_INVALID_FORMAT,
-                humanize_error(data, err),
-            )
-        except ValueError as err:
-            connection.send_error(
-                msg_id, websocket_api.const.ERR_INVALID_FORMAT, str(err)
-            )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
