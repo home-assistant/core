@@ -27,6 +27,7 @@ from homeassistant import core
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
 from .v2.device import async_setup_devices
@@ -52,6 +53,7 @@ class CameDomoticServer:
         # store actual api connection to CAME server as api
         self.api_came: CameDomoticAPI | None = None
         self.server_info: CameServerInfo | None = None
+        self.mac_address: str | None = None
 
         # store (this) server object in hass data
         hass.data.setdefault(DOMAIN, {})[self.config_entry.entry_id] = self
@@ -83,6 +85,8 @@ class CameDomoticServer:
                 )
                 self.api_came = CameDomoticAPI(auth)
                 self.server_info = await self.api_came.async_get_server_info()
+
+            self.mac_address = format_mac(self.server_info.keycode)
 
             setup_ok = True
         except (CameDomoticServerNotFoundError, CameDomoticAuthError) as err:
