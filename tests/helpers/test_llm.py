@@ -165,13 +165,11 @@ async def test_assist_api(
         device_id="test_device",
     )
     assert response == {
-        "card": {},
         "data": {
             "failed": [],
             "success": [],
             "targets": [],
         },
-        "language": "*",
         "response_type": "action_done",
         "speech": {},
     }

@@ -195,7 +195,11 @@ class IntentTool(Tool):
             assistant=tool_context.assistant,
             device_id=tool_context.device_id,
         )
-        return intent_response.as_dict()
+        response = intent_response.as_dict()
+        del response["language"]
+        del response["card"]
+        del response["speech"]
+        return response
 
 
 class AssistAPI(API):
