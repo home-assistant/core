@@ -2072,15 +2072,9 @@ async def test_in_memory_database(
     assert "In-memory SQLite database is not supported" in caplog.text
 
 
-@pytest.mark.parametrize(
-    "db_engine",
-    [
-        "mysql",
-    ],
-)
+@pytest.mark.parametrize("db_engine", ["mysql"])
 async def test_database_connection_keep_alive(
     hass: HomeAssistant,
-    db_engine: str,
     recorder_dialect_name: None,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
