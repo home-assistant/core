@@ -101,6 +101,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "aiohttp_server": "Callable[[], TestServer]",
     "area_registry": "AreaRegistry",
     "async_setup_recorder_instance": "RecorderInstanceGenerator",
+    "calls": "list[ServiceCall]",
     "caplog": "pytest.LogCaptureFixture",
     "current_request_with_host": "None",
     "device_registry": "DeviceRegistry",
