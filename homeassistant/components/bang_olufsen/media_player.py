@@ -58,7 +58,6 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
-
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
@@ -414,7 +413,9 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             self.async_write_ha_state()
 
     @callback
-    def _async_update_playback_metadata(self, data: PlaybackContentMetadata) -> None:
+    async def _async_update_playback_metadata(
+        self, data: PlaybackContentMetadata
+    ) -> None:
         """Update _playback_metadata and related."""
         self._playback_metadata = data
 
