@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import sqlite3
 import threading
-from typing import cast
+from typing import Any, cast
 from unittest.mock import MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -305,7 +305,7 @@ async def test_saving_state_with_nul(
     db_engine: str,
     recorder_dialect_name: None,
     setup_recorder: None,
-    expected_attributes,
+    expected_attributes: dict[str, Any],
 ) -> None:
     """Test saving and restoring a state with nul in attributes."""
     entity_id = "test.recorder"
