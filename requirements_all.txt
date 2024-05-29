@@ -1953,7 +1953,7 @@ pylacrosse==0.4
 pylast==5.1.0
 
 # homeassistant.components.launch_library
-pylaunches==1.4.0
+pylaunches==2.0.0
 
 # homeassistant.components.lg_netcast
 pylgnetcast==0.3.9
@@ -2049,7 +2049,7 @@ pyopnsense==0.4.0
 pyoppleio-legacy==1.0.8
 
 # homeassistant.components.osoenergy
-pyosoenergyapi==1.1.3
+pyosoenergyapi==1.1.4
 
 # homeassistant.components.opentherm_gw
 pyotgw==2.2.0
@@ -2945,7 +2945,7 @@ youless-api==1.1.1
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2024.05.26
+yt-dlp==2024.05.27
 
 # homeassistant.components.zamg
 zamg==0.3.6
