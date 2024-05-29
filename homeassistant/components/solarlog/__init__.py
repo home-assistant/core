@@ -39,14 +39,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     if config_entry.version == 1:
         if config_entry.minor_version < 2:
-            # migrate config_entry
-            new = {**config_entry.data}
-            new["extended_data"] = False
-
-            hass.config_entries.async_update_entry(
-                config_entry, data=new, minor_version=2, version=1
-            )
-
             # migrate old entity unique id
             entity_reg = er.async_get(hass)
             entities: list[er.RegistryEntry] = er.async_entries_for_config_entry(
@@ -62,6 +54,14 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     entity_reg.async_update_entity(
                         entity.entity_id, new_unique_id=new_uid
                     )
+
+            # migrate config_entry
+            new = {**config_entry.data}
+            new["extended_data"] = False
+
+            hass.config_entries.async_update_entry(
+                config_entry, data=new, minor_version=2, version=1
+            )
 
     _LOGGER.debug(
         "Migration to version %s.%s successful",
