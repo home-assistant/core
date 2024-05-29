@@ -905,9 +905,9 @@ class EntityPlatform:
 
         def remove_entity_cb() -> None:
             """Remove entity from entities dict."""
-            self.entities.pop(entity_id)
-            self.domain_entities.pop(entity_id)
-            self.domain_platform_entities.pop(entity_id)
+            del self.entities[entity_id]
+            del self.domain_entities[entity_id]
+            del self.domain_platform_entities[entity_id]
 
         entity.async_on_remove(remove_entity_cb)
 

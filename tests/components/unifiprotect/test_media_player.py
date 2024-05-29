@@ -49,6 +49,7 @@ async def test_media_player_camera_remove(
 
 async def test_media_player_setup(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
@@ -61,7 +62,6 @@ async def test_media_player_setup(
     unique_id = f"{doorbell.mac}_speaker"
     entity_id = "media_player.test_camera_speaker"
 
-    entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(entity_id)
     assert entity
     assert entity.unique_id == unique_id

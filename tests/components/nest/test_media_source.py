@@ -249,7 +249,9 @@ async def test_no_eligible_devices(hass: HomeAssistant, setup_platform) -> None:
 
 
 @pytest.mark.parametrize("device_traits", [CAMERA_TRAITS, BATTERY_CAMERA_TRAITS])
-async def test_supported_device(hass: HomeAssistant, setup_platform) -> None:
+async def test_supported_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, setup_platform
+) -> None:
     """Test a media source with a supported camera."""
     await setup_platform()
 
@@ -257,7 +259,6 @@ async def test_supported_device(hass: HomeAssistant, setup_platform) -> None:
     camera = hass.states.get("camera.front")
     assert camera is not None
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
@@ -308,6 +309,7 @@ async def test_integration_unloaded(hass: HomeAssistant, auth, setup_platform) -
 async def test_camera_event(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
     subscriber,
     auth,
     setup_platform,
@@ -319,7 +321,6 @@ async def test_camera_event(
     camera = hass.states.get("camera.front")
     assert camera is not None
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
@@ -410,7 +411,11 @@ async def test_camera_event(
 
 
 async def test_event_order(
-    hass: HomeAssistant, auth, subscriber, setup_platform
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    auth,
+    subscriber,
+    setup_platform,
 ) -> None:
     """Test multiple events are in descending timestamp order."""
     await setup_platform()
@@ -449,7 +454,6 @@ async def test_event_order(
     camera = hass.states.get("camera.front")
     assert camera is not None
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
@@ -478,6 +482,7 @@ async def test_event_order(
 
 async def test_multiple_image_events_in_session(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     auth,
     hass_client: ClientSessionGenerator,
     subscriber,
@@ -494,7 +499,6 @@ async def test_multiple_image_events_in_session(
     camera = hass.states.get("camera.front")
     assert camera is not None
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
@@ -593,6 +597,7 @@ async def test_multiple_image_events_in_session(
 @pytest.mark.parametrize("device_traits", [BATTERY_CAMERA_TRAITS])
 async def test_multiple_clip_preview_events_in_session(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     auth,
     hass_client: ClientSessionGenerator,
     subscriber,
@@ -608,7 +613,6 @@ async def test_multiple_clip_preview_events_in_session(
     camera = hass.states.get("camera.front")
     assert camera is not None
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
@@ -691,12 +695,11 @@ async def test_multiple_clip_preview_events_in_session(
 
 
 async def test_browse_invalid_device_id(
-    hass: HomeAssistant, auth, setup_platform
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, auth, setup_platform
 ) -> None:
     """Test a media source request for an invalid device id."""
     await setup_platform()
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
@@ -712,12 +715,11 @@ async def test_browse_invalid_device_id(
 
 
 async def test_browse_invalid_event_id(
-    hass: HomeAssistant, auth, setup_platform
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, auth, setup_platform
 ) -> None:
     """Test a media source browsing for an invalid event id."""
     await setup_platform()
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
@@ -735,12 +737,11 @@ async def test_browse_invalid_event_id(
 
 
 async def test_resolve_missing_event_id(
-    hass: HomeAssistant, auth, setup_platform
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, auth, setup_platform
 ) -> None:
     """Test a media source request missing an event id."""
     await setup_platform()
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
@@ -767,12 +768,11 @@ async def test_resolve_invalid_device_id(
 
 
 async def test_resolve_invalid_event_id(
-    hass: HomeAssistant, auth, setup_platform
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, auth, setup_platform
 ) -> None:
     """Test resolving media for an invalid event id."""
     await setup_platform()
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
@@ -793,6 +793,7 @@ async def test_resolve_invalid_event_id(
 @pytest.mark.parametrize("device_traits", [BATTERY_CAMERA_TRAITS])
 async def test_camera_event_clip_preview(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     auth,
     hass_client: ClientSessionGenerator,
     mp4,
@@ -820,7 +821,6 @@ async def test_camera_event_clip_preview(
     camera = hass.states.get("camera.front")
     assert camera is not None
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
@@ -911,11 +911,14 @@ async def test_event_media_render_invalid_device_id(
 
 
 async def test_event_media_render_invalid_event_id(
-    hass: HomeAssistant, auth, hass_client: ClientSessionGenerator, setup_platform
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    auth,
+    hass_client: ClientSessionGenerator,
+    setup_platform,
 ) -> None:
     """Test event media API called with an invalid device id."""
     await setup_platform()
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
@@ -927,6 +930,7 @@ async def test_event_media_render_invalid_event_id(
 
 async def test_event_media_failure(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     auth,
     hass_client: ClientSessionGenerator,
     subscriber,
@@ -955,7 +959,6 @@ async def test_event_media_failure(
     camera = hass.states.get("camera.front")
     assert camera is not None
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
@@ -982,6 +985,7 @@ async def test_event_media_failure(
 
 async def test_media_permission_unauthorized(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     auth,
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
@@ -993,7 +997,6 @@ async def test_media_permission_unauthorized(
     camera = hass.states.get("camera.front")
     assert camera is not None
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
@@ -1012,6 +1015,7 @@ async def test_media_permission_unauthorized(
 
 async def test_multiple_devices(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     auth,
     hass_client: ClientSessionGenerator,
     create_device,
@@ -1029,7 +1033,6 @@ async def test_multiple_devices(
     )
     await setup_platform()
 
-    device_registry = dr.async_get(hass)
     device1 = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device1
     device2 = device_registry.async_get_device(identifiers={(DOMAIN, device_id2)})
@@ -1106,6 +1109,7 @@ def event_store() -> Generator[None, None, None]:
 @pytest.mark.parametrize("device_traits", [BATTERY_CAMERA_TRAITS])
 async def test_media_store_persistence(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     auth,
     hass_client: ClientSessionGenerator,
     event_store,
@@ -1116,7 +1120,6 @@ async def test_media_store_persistence(
     """Test the disk backed media store persistence."""
     await setup_platform()
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
@@ -1169,7 +1172,6 @@ async def test_media_store_persistence(
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
@@ -1200,6 +1202,7 @@ async def test_media_store_persistence(
 @pytest.mark.parametrize("device_traits", [BATTERY_CAMERA_TRAITS])
 async def test_media_store_save_filesystem_error(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     auth,
     hass_client: ClientSessionGenerator,
     subscriber,
@@ -1228,7 +1231,6 @@ async def test_media_store_save_filesystem_error(
     camera = hass.states.get("camera.front")
     assert camera is not None
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
@@ -1253,6 +1255,7 @@ async def test_media_store_save_filesystem_error(
 
 async def test_media_store_load_filesystem_error(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     auth,
     hass_client: ClientSessionGenerator,
     subscriber,
@@ -1265,7 +1268,6 @@ async def test_media_store_load_filesystem_error(
     camera = hass.states.get("camera.front")
     assert camera is not None
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
@@ -1307,6 +1309,7 @@ async def test_media_store_load_filesystem_error(
 @pytest.mark.parametrize(("device_traits", "cache_size"), [(BATTERY_CAMERA_TRAITS, 5)])
 async def test_camera_event_media_eviction(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     auth,
     hass_client: ClientSessionGenerator,
     subscriber,
@@ -1315,7 +1318,6 @@ async def test_camera_event_media_eviction(
     """Test media files getting evicted from the cache."""
     await setup_platform()
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
@@ -1384,6 +1386,7 @@ async def test_camera_event_media_eviction(
 
 async def test_camera_image_resize(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     auth,
     hass_client: ClientSessionGenerator,
     subscriber,
@@ -1392,7 +1395,6 @@ async def test_camera_image_resize(
     """Test scaling a thumbnail for an event image."""
     await setup_platform()
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME

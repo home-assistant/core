@@ -73,6 +73,7 @@ from .const import (
     DATA_HOST_INFO,
     DATA_INFO,
     DATA_KEY_SUPERVISOR_ISSUES,
+    DATA_NETWORK_INFO,
     DATA_OS_INFO,
     DATA_STORE,
     DATA_SUPERVISOR_INFO,
@@ -429,6 +430,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 hass.data[DATA_CORE_INFO],
                 hass.data[DATA_SUPERVISOR_INFO],
                 hass.data[DATA_OS_INFO],
+                hass.data[DATA_NETWORK_INFO],
             ) = await asyncio.gather(
                 create_eager_task(hassio.get_info()),
                 create_eager_task(hassio.get_host_info()),
@@ -436,6 +438,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 create_eager_task(hassio.get_core_info()),
                 create_eager_task(hassio.get_supervisor_info()),
                 create_eager_task(hassio.get_os_info()),
+                create_eager_task(hassio.get_network_info()),
             )
 
         except HassioAPIError as err:

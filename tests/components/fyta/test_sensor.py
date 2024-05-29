@@ -4,7 +4,8 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
-from fyta_cli.fyta_exceptions import FytaConnectionError
+from fyta_cli.fyta_exceptions import FytaConnectionError, FytaPlantError
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE, Platform
@@ -29,8 +30,16 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        FytaConnectionError,
+        FytaPlantError,
+    ],
+)
 async def test_connection_error(
     hass: HomeAssistant,
+    exception: Exception,
     mock_fyta_connector: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
@@ -38,7 +47,7 @@ async def test_connection_error(
     """Test connection error."""
     await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
 
-    mock_fyta_connector.update_all_plants.side_effect = FytaConnectionError
+    mock_fyta_connector.update_all_plants.side_effect = exception
 
     freezer.tick(delta=timedelta(hours=12))
     async_fire_time_changed(hass)

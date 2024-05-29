@@ -1,10 +1,12 @@
 """The tests for the Google Assistant component."""
 
+from asyncio import AbstractEventLoop
 from http import HTTPStatus
 import json
 from unittest.mock import patch
 
 from aiohttp.hdrs import AUTHORIZATION
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant import const, core, setup
@@ -24,6 +26,8 @@ from homeassistant.helpers import entity_registry as er
 
 from . import DEMO_DEVICES
 
+from tests.typing import ClientSessionGenerator
+
 API_PASSWORD = "test1234"
 
 PROJECT_ID = "hasstest-1234"
@@ -38,7 +42,11 @@ def auth_header(hass_access_token):
 
 
 @pytest.fixture
-def assistant_client(event_loop, hass, hass_client_no_auth):
+def assistant_client(
+    event_loop: AbstractEventLoop,
+    hass: core.HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> TestClient:
     """Create web client for the Google Assistant API."""
     loop = event_loop
     loop.run_until_complete(
@@ -83,7 +91,9 @@ async def wanted_platforms_only() -> None:
 
 
 @pytest.fixture
-def hass_fixture(event_loop, hass):
+def hass_fixture(
+    event_loop: AbstractEventLoop, hass: core.HomeAssistant
+) -> core.HomeAssistant:
     """Set up a Home Assistant instance for these tests."""
     loop = event_loop
 
