@@ -250,7 +250,8 @@ class AssistAPI(API):
         prompt = [
             (
                 "Call the intent tools to control Home Assistant. "
-                "None of their parameters take a list. "
+                "Their domain parameter does not take a list. "
+                "When controlling a device, prefer passing just its name."
                 "When controlling an area, prefer passing just area name and domain."
             )
         ]
