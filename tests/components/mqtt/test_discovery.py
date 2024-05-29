@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 import re
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 import pytest
 
@@ -43,6 +43,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.signal_type import SignalTypeFormat
 
 from .test_common import help_all_subscribe_calls, help_test_unload_config_entry
+from .test_tag import DEFAULT_TAG_ID, DEFAULT_TAG_SCAN
 
 from tests.common import (
     MockConfigEntry,
@@ -369,6 +370,13 @@ async def test_discovery_integration_info(
                         "state_topic": "foobar/sensors/bla2/state",
                     },
                 ),
+                (
+                    "homeassistant/tag/0AFFD2/bla3/config",
+                    {
+                        "device": {"identifiers": ["0AFFD2"]},
+                        "topic": "foobar/tags/bla3/see",
+                    },
+                ),
             ],
             "homeassistant/device/0AFFD2/config",
             {
@@ -387,6 +395,10 @@ async def test_discovery_integration_info(
                         "platform": "sensor",
                         "state_topic": "foobar/sensors/bla2/state",
                     },
+                    "bla3": {
+                        "platform": "tag",
+                        "topic": "foobar/tags/bla3/see",
+                    },
                 },
             },
         )
@@ -396,7 +408,7 @@ async def test_discovery_migration(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    tag_mock: AsyncMock,
     single_configs: list[tuple[str, dict[str, Any]]],
     device_discovery_topic: str,
     device_config: dict[str, Any],
@@ -430,6 +442,12 @@ async def test_discovery_migration(
         state = hass.states.get("sensor.mqtt_sensor")
         assert state is not None
 
+        # Check the tag works
+        async_fire_mqtt_message(hass, "foobar/tags/bla3/see", DEFAULT_TAG_SCAN)
+        await hass.async_block_till_done()
+        tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
+        tag_mock.reset_mock()
+
     await check_discovered_items()
 
     # Migrate to device based discovery
@@ -447,7 +465,7 @@ async def test_discovery_migration(
     expected_topics = {item[0] for item in single_configs}
     assert published_topics == expected_topics
     published_payloads = [call[1][1] for call in publish_mock.mock_calls]
-    assert published_payloads == [None, None]
+    assert published_payloads == [None, None, None]
 
 
 @pytest.mark.parametrize(
