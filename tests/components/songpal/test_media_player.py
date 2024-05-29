@@ -122,7 +122,11 @@ async def test_setup_failed(
     assert not any(x.levelno == logging.ERROR for x in caplog.records)
 
 
-async def test_state(hass: HomeAssistant) -> None:
+async def test_state(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test state of the entity."""
     mocked_device = _create_mocked_device()
     entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)
@@ -144,7 +148,6 @@ async def test_state(hass: HomeAssistant) -> None:
     assert attributes["sound_mode"] == "Sound Mode 2"
     assert attributes["supported_features"] == SUPPORT_SONGPAL
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(songpal.DOMAIN, MAC)})
     assert device.connections == {(dr.CONNECTION_NETWORK_MAC, MAC)}
     assert device.manufacturer == "Sony Corporation"
@@ -152,12 +155,15 @@ async def test_state(hass: HomeAssistant) -> None:
     assert device.sw_version == SW_VERSION
     assert device.model == MODEL
 
-    entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(ENTITY_ID)
     assert entity.unique_id == MAC
 
 
-async def test_state_wireless(hass: HomeAssistant) -> None:
+async def test_state_wireless(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test state of the entity with only Wireless MAC."""
     mocked_device = _create_mocked_device(wired_mac=None, wireless_mac=WIRELESS_MAC)
     entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)
@@ -179,7 +185,6 @@ async def test_state_wireless(hass: HomeAssistant) -> None:
     assert attributes["sound_mode"] == "Sound Mode 2"
     assert attributes["supported_features"] == SUPPORT_SONGPAL
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={(songpal.DOMAIN, WIRELESS_MAC)}
     )
@@ -189,12 +194,15 @@ async def test_state_wireless(hass: HomeAssistant) -> None:
     assert device.sw_version == SW_VERSION
     assert device.model == MODEL
 
-    entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(ENTITY_ID)
     assert entity.unique_id == WIRELESS_MAC
 
 
-async def test_state_both(hass: HomeAssistant) -> None:
+async def test_state_both(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test state of the entity with both Wired and Wireless MAC."""
     mocked_device = _create_mocked_device(wired_mac=MAC, wireless_mac=WIRELESS_MAC)
     entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)
@@ -216,7 +224,6 @@ async def test_state_both(hass: HomeAssistant) -> None:
     assert attributes["sound_mode"] == "Sound Mode 2"
     assert attributes["supported_features"] == SUPPORT_SONGPAL
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(songpal.DOMAIN, MAC)})
     assert device.connections == {
         (dr.CONNECTION_NETWORK_MAC, MAC),
@@ -227,7 +234,6 @@ async def test_state_both(hass: HomeAssistant) -> None:
     assert device.sw_version == SW_VERSION
     assert device.model == MODEL
 
-    entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(ENTITY_ID)
     # We prefer the wired mac if present.
     assert entity.unique_id == MAC

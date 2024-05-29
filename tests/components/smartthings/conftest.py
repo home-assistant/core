@@ -342,7 +342,7 @@ def event_request_factory_fixture(event_factory):
         if events is None:
             events = []
         if device_ids:
-            events.extend([event_factory(id) for id in device_ids])
+            events.extend([event_factory(device_id) for device_id in device_ids])
             events.append(event_factory(uuid4()))
             events.append(event_factory(device_ids[0], event_type="OTHER"))
         request.events = events

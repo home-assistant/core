@@ -104,11 +104,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Add an event to the outgoing Zabbix list."""
         state = event.data.get("new_state")
         if state is None or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE):
-            return
+            return None
 
         entity_id = state.entity_id
         if not entities_filter(entity_id):
-            return
+            return None
 
         floats = {}
         strings = {}

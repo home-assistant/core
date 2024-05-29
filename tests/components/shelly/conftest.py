@@ -122,7 +122,7 @@ MOCK_BLOCKS = [
         set_state=AsyncMock(side_effect=mock_light_set_state),
     ),
     Mock(
-        sensor_ids={"motion": 0, "temp": 22.1, "gas": "mild"},
+        sensor_ids={"motion": 0, "temp": 22.1, "gas": "mild", "motionActive": 1},
         channel="0",
         motion=0,
         temp=22.1,

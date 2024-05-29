@@ -23,6 +23,10 @@ _COMMON_ARGUMENTS: dict[str, list[str]] = {
     "hass": ["HomeAssistant", "HomeAssistant | None"]
 }
 _PLATFORMS: set[str] = {platform.value for platform in Platform}
+_KNOWN_GENERIC_TYPES: set[str] = {
+    "ConfigEntry",
+}
+_KNOWN_GENERIC_TYPES_TUPLE = tuple(_KNOWN_GENERIC_TYPES)
 
 
 class _Special(Enum):
@@ -94,6 +98,7 @@ _METHOD_MATCH: list[TypeHintMatch] = [
 _TEST_FIXTURES: dict[str, list[str] | str] = {
     "aioclient_mock": "AiohttpClientMocker",
     "aiohttp_client": "ClientSessionGenerator",
+    "aiohttp_server": "Callable[[], TestServer]",
     "area_registry": "AreaRegistry",
     "async_setup_recorder_instance": "RecorderInstanceGenerator",
     "caplog": "pytest.LogCaptureFixture",
@@ -106,6 +111,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "enable_schema_validation": "bool",
     "entity_registry": "EntityRegistry",
     "entity_registry_enabled_by_default": "None",
+    "event_loop": "AbstractEventLoop",
     "freezer": "FrozenDateTimeFactory",
     "hass_access_token": "str",
     "hass_admin_credential": "Credentials",
@@ -142,9 +148,12 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "recorder_mock": "Recorder",
     "requests_mock": "requests_mock.Mocker",
     "snapshot": "SnapshotAssertion",
+    "socket_enabled": "None",
     "stub_blueprint_populate": "None",
     "tmp_path": "Path",
     "tmpdir": "py.path.local",
+    "unused_tcp_port_factory": "Callable[[], int]",
+    "unused_udp_port_factory": "Callable[[], int]",
 }
 _TEST_FUNCTION_MATCH = TypeHintMatch(
     function_name="test_*",
@@ -2974,6 +2983,16 @@ def _is_valid_type(
         and not in_return
         and isinstance(node, nodes.Name)
         and node.name in ("float", "int")
+    ):
+        return True
+
+    # Allow subscripts or type aliases for generic types
+    if (
+        isinstance(node, nodes.Subscript)
+        and isinstance(node.value, nodes.Name)
+        and node.value.name in _KNOWN_GENERIC_TYPES
+        or isinstance(node, nodes.Name)
+        and node.name.endswith(_KNOWN_GENERIC_TYPES_TUPLE)
     ):
         return True
 

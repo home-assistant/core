@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
 
 from . import group as group_pre_import  # noqa: F401
+from .const import DOMAIN
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -32,8 +33,6 @@ ATTR_PM_0_1: Final = "particulate_matter_0_1"
 ATTR_PM_10: Final = "particulate_matter_10"
 ATTR_PM_2_5: Final = "particulate_matter_2_5"
 ATTR_SO2: Final = "sulphur_dioxide"
-
-DOMAIN: Final = "air_quality"
 
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 

@@ -12,7 +12,12 @@ from requests.exceptions import HTTPError
 from homeassistant.components import ssdp
 from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_UDN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    SOURCE_SSDP,
+    SOURCE_USER,
+)
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -200,6 +205,80 @@ async def test_reauth_not_successful(hass: HomeAssistant, fritz: Mock) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
+
+
+async def test_reconfigure_success(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test starting a reconfigure flow."""
+    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config.add_to_hass(hass)
+
+    assert mock_config.data[CONF_HOST] == "10.0.0.1"
+    assert mock_config.data[CONF_USERNAME] == "fake_user"
+    assert mock_config.data[CONF_PASSWORD] == "fake_pass"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config.entry_id},
+        data=mock_config.data,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "new_host",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config.data[CONF_HOST] == "new_host"
+    assert mock_config.data[CONF_USERNAME] == "fake_user"
+    assert mock_config.data[CONF_PASSWORD] == "fake_pass"
+
+
+async def test_reconfigure_failed(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test starting a reconfigure flow with failure."""
+    fritz().login.side_effect = [OSError("Boom"), None]
+
+    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config.add_to_hass(hass)
+
+    assert mock_config.data[CONF_HOST] == "10.0.0.1"
+    assert mock_config.data[CONF_USERNAME] == "fake_user"
+    assert mock_config.data[CONF_PASSWORD] == "fake_pass"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config.entry_id},
+        data=mock_config.data,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "new_host",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+    assert result["errors"]["base"] == "no_devices_found"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "new_host",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config.data[CONF_HOST] == "new_host"
+    assert mock_config.data[CONF_USERNAME] == "fake_user"
+    assert mock_config.data[CONF_PASSWORD] == "fake_pass"
 
 
 @pytest.mark.parametrize(

@@ -119,10 +119,10 @@ def core_rs(hass_storage):
     return _storage
 
 
-async def test_select(hass: HomeAssistant, siren) -> None:
+async def test_select(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, siren
+) -> None:
     """Test ZHA select platform."""
-
-    entity_registry = er.async_get(hass)
     zha_device, cluster = siren
     assert cluster is not None
     entity_id = find_entity_id(
@@ -206,11 +206,9 @@ async def test_select_restore_state(
 
 
 async def test_on_off_select_new_join(
-    hass: HomeAssistant, light, zha_device_joined
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, light, zha_device_joined
 ) -> None:
     """Test ZHA on off select - new join."""
-
-    entity_registry = er.async_get(hass)
     on_off_cluster = light.endpoints[1].on_off
     on_off_cluster.PLUGGED_ATTR_READS = {
         "start_up_on_off": general.OnOff.StartUpOnOff.On
@@ -267,11 +265,9 @@ async def test_on_off_select_new_join(
 
 
 async def test_on_off_select_restored(
-    hass: HomeAssistant, light, zha_device_restored
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, light, zha_device_restored
 ) -> None:
     """Test ZHA on off select - restored."""
-
-    entity_registry = er.async_get(hass)
     on_off_cluster = light.endpoints[1].on_off
     on_off_cluster.PLUGGED_ATTR_READS = {
         "start_up_on_off": general.OnOff.StartUpOnOff.On
@@ -464,7 +460,9 @@ async def zigpy_device_aqara_sensor_v2(
 
 
 async def test_on_off_select_attribute_report_v2(
-    hass: HomeAssistant, zigpy_device_aqara_sensor_v2
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    zigpy_device_aqara_sensor_v2,
 ) -> None:
     """Test ZHA attribute report parsing for select platform."""
 
@@ -487,7 +485,6 @@ async def test_on_off_select_attribute_report_v2(
     )
     assert hass.states.get(entity_id).state == AqaraMotionSensitivities.Low.name
 
-    entity_registry = er.async_get(hass)
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
     assert entity_entry.entity_category == EntityCategory.CONFIG

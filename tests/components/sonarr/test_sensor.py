@@ -24,13 +24,12 @@ UPCOMING_ENTITY_ID = f"{SENSOR_DOMAIN}.sonarr_upcoming"
 
 async def test_sensors(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_sonarr: MagicMock,
     entity_registry_enabled_by_default: None,
 ) -> None:
     """Test the creation and values of the sensors."""
-    registry = er.async_get(hass)
-
     sensors = {
         "commands": "sonarr_commands",
         "diskspace": "sonarr_disk_space",
@@ -44,7 +43,7 @@ async def test_sensors(
     await hass.async_block_till_done()
 
     for unique, oid in sensors.items():
-        entity = registry.async_get(f"sensor.{oid}")
+        entity = entity_registry.async_get(f"sensor.{oid}")
         assert entity
         assert entity.unique_id == f"{mock_config_entry.entry_id}_{unique}"
 
@@ -100,16 +99,15 @@ async def test_sensors(
 )
 async def test_disabled_by_default_sensors(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
     entity_id: str,
 ) -> None:
     """Test the disabled by default sensors."""
-    registry = er.async_get(hass)
-
     state = hass.states.get(entity_id)
     assert state is None
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

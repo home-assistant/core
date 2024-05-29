@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TypeVar
+from typing import Any
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -10,10 +10,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import WithingsDataUpdateCoordinator
 
-_T = TypeVar("_T", bound=WithingsDataUpdateCoordinator)
 
-
-class WithingsEntity(CoordinatorEntity[_T]):
+class WithingsEntity[_T: WithingsDataUpdateCoordinator[Any]](CoordinatorEntity[_T]):
     """Base class for withings entities."""
 
     _attr_has_entity_name = True

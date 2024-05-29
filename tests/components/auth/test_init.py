@@ -546,27 +546,33 @@ async def test_ws_delete_all_refresh_tokens_error(
 
     tokens = result["result"]
 
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "auth/delete_all_refresh_tokens",
+    with patch("homeassistant.components.auth.DELETE_CURRENT_TOKEN_DELAY", 0.001):
+        await ws_client.send_json(
+            {
+                "id": 6,
+                "type": "auth/delete_all_refresh_tokens",
+            }
+        )
+
+        caplog.clear()
+        result = await ws_client.receive_json()
+        assert result, result["success"] is False
+        assert result["error"] == {
+            "code": "token_removing_error",
+            "message": "During removal, an error was raised.",
         }
-    )
 
-    caplog.clear()
-    result = await ws_client.receive_json()
-    assert result, result["success"] is False
-    assert result["error"] == {
-        "code": "token_removing_error",
-        "message": "During removal, an error was raised.",
-    }
+    records = [
+        record
+        for record in caplog.records
+        if record.msg == "Error during refresh token removal"
+    ]
+    assert len(records) == 1
+    assert records[0].levelno == logging.ERROR
+    assert records[0].exc_info and str(records[0].exc_info[1]) == "I'm bad"
+    assert records[0].name == "homeassistant.components.auth"
 
-    assert (
-        "homeassistant.components.auth",
-        logging.ERROR,
-        "During refresh token removal, the following error occurred: I'm bad",
-    ) in caplog.record_tuples
-
+    await hass.async_block_till_done()
     for token in tokens:
         refresh_token = hass.auth.async_get_refresh_token(token["id"])
         assert refresh_token is None
@@ -625,18 +631,20 @@ async def test_ws_delete_all_refresh_tokens(
     result = await ws_client.receive_json()
     assert result["success"], result
 
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "auth/delete_all_refresh_tokens",
-            **delete_token_type,
-            **delete_current_token,
-        }
-    )
+    with patch("homeassistant.components.auth.DELETE_CURRENT_TOKEN_DELAY", 0.001):
+        await ws_client.send_json(
+            {
+                "id": 6,
+                "type": "auth/delete_all_refresh_tokens",
+                **delete_token_type,
+                **delete_current_token,
+            }
+        )
 
-    result = await ws_client.receive_json()
-    assert result, result["success"]
+        result = await ws_client.receive_json()
+        assert result, result["success"]
 
+    await hass.async_block_till_done()
     # We need to enumerate the user since we may remove the token
     # that is used to authenticate the user which will prevent the websocket
     # connection from working

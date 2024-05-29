@@ -888,7 +888,9 @@ async def test_extraction_functions(
     assert script.blueprint_in_script(hass, "script.test3") is None
 
 
-async def test_config_basic(hass: HomeAssistant) -> None:
+async def test_config_basic(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test passing info in config."""
     assert await async_setup_component(
         hass,
@@ -908,8 +910,7 @@ async def test_config_basic(hass: HomeAssistant) -> None:
     assert test_script.name == "Script Name"
     assert test_script.attributes["icon"] == "mdi:party"
 
-    registry = er.async_get(hass)
-    entry = registry.async_get("script.test_script")
+    entry = entity_registry.async_get("script.test_script")
     assert entry
     assert entry.unique_id == "test_script"
 
@@ -1503,11 +1504,12 @@ async def test_websocket_config(
     assert msg["error"]["code"] == "not_found"
 
 
-async def test_script_service_changed_entity_id(hass: HomeAssistant) -> None:
+async def test_script_service_changed_entity_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the script service works for scripts with overridden entity_id."""
-    entity_reg = er.async_get(hass)
-    entry = entity_reg.async_get_or_create("script", "script", "test")
-    entry = entity_reg.async_update_entity(
+    entry = entity_registry.async_get_or_create("script", "script", "test")
+    entry = entity_registry.async_update_entity(
         entry.entity_id, new_entity_id="script.custom_entity_id"
     )
     assert entry.entity_id == "script.custom_entity_id"
@@ -1545,7 +1547,7 @@ async def test_script_service_changed_entity_id(hass: HomeAssistant) -> None:
     assert calls[0].data["entity_id"] == "script.custom_entity_id"
 
     # Change entity while the script entity is loaded, and make sure the service still works
-    entry = entity_reg.async_update_entity(
+    entry = entity_registry.async_update_entity(
         entry.entity_id, new_entity_id="script.custom_entity_id_2"
     )
     assert entry.entity_id == "script.custom_entity_id_2"
@@ -1741,3 +1743,46 @@ async def test_responses_no_response(hass: HomeAssistant) -> None:
         )
         is None
     )
+
+
+async def test_script_queued_mode(hass: HomeAssistant) -> None:
+    """Test calling a queued mode script called in parallel."""
+    calls = 0
+
+    async def async_service_handler(*args, **kwargs) -> None:
+        """Service that simulates doing background I/O."""
+        nonlocal calls
+        calls += 1
+        await asyncio.sleep(0)
+
+    hass.services.async_register("test", "simulated_remote", async_service_handler)
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "test_main": {
+                    "sequence": [
+                        {
+                            "parallel": [
+                                {"service": "script.test_sub"},
+                                {"service": "script.test_sub"},
+                                {"service": "script.test_sub"},
+                                {"service": "script.test_sub"},
+                            ]
+                        }
+                    ]
+                },
+                "test_sub": {
+                    "mode": "queued",
+                    "sequence": [
+                        {"service": "test.simulated_remote"},
+                    ],
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call("script", "test_main", blocking=True)
+    assert calls == 4

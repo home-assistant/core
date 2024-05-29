@@ -257,7 +257,7 @@ class SensorTemplate(TemplateEntity, SensorEntity):
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
         self._template: template.Template = config[CONF_STATE]
-        self._attr_last_reset_template: None | template.Template = config.get(
+        self._attr_last_reset_template: template.Template | None = config.get(
             ATTR_LAST_RESET
         )
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
