@@ -65,13 +65,8 @@ class LedSC(LightEntity):
         """Initialize an AwesomeLight."""
         self._hass: HomeAssistant = hass
         self._websc: WebSCAsync = websc
-        self.__id = f"{client_id}-{websc.name}"
-        _LOGGER.info(f"LedSC '%s' initialized!", self.name)
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return id unique for client and entity name combination."""
-        return self.__id
+        self._attr_unique_id = f"{client_id}-{websc.name}"
+        _LOGGER.debug(f"LedSC '%s' initialized!", self.name)
 
     @property
     def supported_color_modes(self) -> set[ColorMode] | set[str] | None:
@@ -85,11 +80,7 @@ class LedSC(LightEntity):
 
     @property
     def available(self) -> bool:
-        """
-        Check if light is available.
-
-        The information is from WebSC.
-        """
+        """Check if light is available."""
         return not self._websc.is_lost
 
     @property

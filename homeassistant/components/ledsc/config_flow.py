@@ -1,19 +1,20 @@
-"""Config flow for Hello World integration."""
+"""Config flow for LedSC integration."""
 
 from __future__ import annotations
 
 import logging
 from typing import Any
-
 import voluptuous as vol
+from websc_client import WebSClientAsync as WebSClient
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigFlowResult
+import homeassistant.helpers.config_validation as cv
 
 from .consts import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
-from websc_client import WebSClientAsync as WebSClient
-import homeassistant.helpers.config_validation as cv
+
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
@@ -25,11 +26,7 @@ DATA_SCHEMA = vol.Schema(
 
 
 async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
-    """
-    Validate the user input allows us to connect.
-
-    Data has the keys from DATA_SCHEMA with values provided by the user.
-    """
+    """Validate the user input allows us to connect."""
     host = data[CONF_HOST]
     port = data[CONF_PORT]
 
@@ -41,11 +38,13 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Hello World."""
+    """Handle a config flow for LedSC."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None):
+    async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input:
@@ -59,7 +58,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_input(self.hass, user_input)
             except ConnectionError:
-                errors["base"] = "Cannot connect"
+                errors["base"] = "cannot connect"
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)
 
