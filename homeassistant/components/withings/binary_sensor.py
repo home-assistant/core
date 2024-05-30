@@ -8,6 +8,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -45,7 +46,7 @@ async def async_setup_entry(
         callback = coordinator.async_add_listener(_async_add_bed_presence_entity)
 
 
-class WithingsBinarySensor(WithingsEntity, BinarySensorEntity):
+class WithingsBinarySensor(WithingsEntity, BinarySensorEntity, RestoreEntity):
     """Implementation of a Withings sensor."""
 
     _attr_translation_key = "in_bed"
@@ -60,3 +61,12 @@ class WithingsBinarySensor(WithingsEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.coordinator.in_bed
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+
+        # Restore the state as the last known state from the storage
+        last_state = await self.async_get_last_state()
+        if last_state:
+            self.coordinator.in_bed = last_state.state == "on"
