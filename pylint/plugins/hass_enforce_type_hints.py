@@ -140,7 +140,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "mock_get_source_ip": "None",
     "mock_hass_config": "None",
     "mock_hass_config_yaml": "None",
-    "mock_zeroconf": "None",
+    "mock_zeroconf": "MagicMock",
     "mqtt_client_mock": "MqttMockPahoClient",
     "mqtt_mock": "MqttMockHAClient",
     "mqtt_mock_entry": "MqttMockHAClientGenerator",

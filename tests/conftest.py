@@ -1190,7 +1190,7 @@ def disable_translations_once(translations_once):
 
 
 @pytest.fixture
-def mock_zeroconf() -> Generator[None, None, None]:
+def mock_zeroconf() -> Generator[MagicMock, None, None]:
     """Mock zeroconf."""
     from zeroconf import DNSCache  # pylint: disable=import-outside-toplevel
 
