@@ -13,13 +13,13 @@ from homeassistant.core import HomeAssistant
 
 from .consts import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
 from websc_client import WebSClientAsync as WebSClient
-
+import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
 
