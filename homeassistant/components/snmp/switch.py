@@ -135,7 +135,7 @@ async def async_setup_platform(
     command_oid = config.get(CONF_COMMAND_OID)
     command_payload_on = config.get(CONF_COMMAND_PAYLOAD_ON)
     command_payload_off = config.get(CONF_COMMAND_PAYLOAD_OFF)
-    version = config.get(CONF_VERSION)
+    version: str = config[CONF_VERSION]
     username = config.get(CONF_USERNAME)
     authkey = config.get(CONF_AUTH_KEY)
     authproto = config.get(CONF_AUTH_PROTOCOL)
@@ -145,28 +145,39 @@ async def async_setup_platform(
     payload_off = config.get(CONF_PAYLOAD_OFF)
     vartype = config.get(CONF_VARTYPE)
 
-    switch = SnmpSwitch(
-        name,
-        host,
-        port,
-        community,
-        baseoid,
-        command_oid,
-        version,
-        username,
-        authkey,
-        authproto,
-        privkey,
-        privproto,
-        payload_on,
-        payload_off,
-        command_payload_on,
-        command_payload_off,
-        vartype,
-    )
-    await switch.async_setup()
+    if version == "3":
+        auth_data = UsmUserData(
+            username,
+            authKey=authkey or None,
+            privKey=privkey or None,
+            authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto or "none"]),
+            privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto or "none"]),
+        )
+    else:
+        auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
 
-    async_add_entities([switch], True)
+    request_args = await async_create_request_cmd_args(
+        hass, auth_data, UdpTransportTarget((host, port))
+    )
+
+    async_add_entities(
+        [
+            SnmpSwitch(
+                name,
+                host,
+                port,
+                baseoid,
+                command_oid,
+                payload_on,
+                payload_off,
+                command_payload_on,
+                command_payload_off,
+                vartype,
+                request_args,
+            )
+        ],
+        True,
+    )
 
 
 class SnmpSwitch(SwitchEntity):
@@ -177,20 +188,14 @@ class SnmpSwitch(SwitchEntity):
         name,
         host,
         port,
-        community,
         baseoid,
         commandoid,
-        version,
-        username,
-        authkey,
-        authproto,
-        privkey,
-        privproto,
         payload_on,
         payload_off,
         command_payload_on,
         command_payload_off,
         vartype,
+        request_args,
     ) -> None:
         """Initialize the switch."""
 
@@ -207,30 +212,7 @@ class SnmpSwitch(SwitchEntity):
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._target = UdpTransportTarget((host, port))
-        self._request_args: RequestArgsType | None = None
-
-        if version == "3":
-            if not authkey:
-                authproto = "none"
-            if not privkey:
-                privproto = "none"
-
-            self._auth_data = UsmUserData(
-                username,
-                authKey=authkey or None,
-                privKey=privkey or None,
-                authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
-                privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
-            )
-
-        else:
-            self._auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
-
-    async def async_setup(self) -> None:
-        """Set up the switch."""
-        self._request_args = await async_create_request_cmd_args(
-            self.hass, self._auth_data, self._target
-        )
+        self._request_args: RequestArgsType = request_args
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
