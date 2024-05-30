@@ -150,7 +150,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     old_prefix = get_unique_prefix(
         location, language, candle_lighting_offset, havdalah_offset
     )
-    async_update_unique_ids(hass, config_entry.entry_id, old_prefix)
+
+    ent_reg = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(ent_reg, config_entry.entry_id)
+    if not entries or any(entry.unique_id.startswith(old_prefix) for entry in entries):
+        async_update_unique_ids(ent_reg, config_entry.entry_id, old_prefix)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
@@ -170,14 +174,12 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 @callback
 def async_update_unique_ids(
-    hass: HomeAssistant, new_prefix: str, old_prefix: str
+    ent_reg: er.EntityRegistry, new_prefix: str, old_prefix: str
 ) -> None:
     """Update unique ID to be unrelated to user defined options.
 
     Introduced with release 2024.5
     """
-    ent_reg = er.async_get(hass)
-
     for platform, descriptions in PLATFORM_DESCRIPTIONS.items():
         for description in descriptions:
             new_unique_id = f"{new_prefix}-{description.key}"
