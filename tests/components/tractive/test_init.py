@@ -84,6 +84,19 @@ async def test_config_not_ready_2(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_config_not_ready_3(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test for setup failure if the tracker_details doesn't contain '_id'."""
+    mock_tractive_client.tracker.return_value.details.return_value.pop("_id")
+
+    await init_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_trackable_without_details(
     hass: HomeAssistant,
     mock_tractive_client: AsyncMock,
