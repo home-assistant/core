@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from aiohttp import ClientSession
 from lektricowifi import DeviceConnectionError, lektricowifi
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
@@ -15,7 +15,7 @@ from .const import LOGGER
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
-class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator[lektricowifi.Info]):
+class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     """Data update coordinator for Lektrico device."""
 
     def __init__(
@@ -23,7 +23,6 @@ class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator[lektricowifi.Inf
         hass: HomeAssistant,
         friendly_name: str,
         host: str,
-        session: ClientSession,
         serial_number: str,
         board_revision: str,
         device_type: str,
@@ -37,7 +36,7 @@ class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator[lektricowifi.Inf
         )
         self.device = lektricowifi.Device(
             host,
-            session=session,
+            session=async_get_clientsession(hass),
         )
         self.serial_number: str = serial_number
         self.board_revision: str = board_revision
