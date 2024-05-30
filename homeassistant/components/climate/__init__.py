@@ -304,7 +304,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_target_humidity: float | None = None
     _attr_target_temperature_high: float | None
     _attr_target_temperature_low: float | None
-    _attr_min_temperature_range: float | None = None
+    _attr_min_temperature_range: float | None
     _attr_target_temperature_step: float | None = None
     _attr_target_temperature: float | None = None
     _attr_temperature_unit: str
@@ -524,7 +524,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         supported_features = self.supported_features
         temperature_unit = self.temperature_unit
         precision = self.precision
-        min_temp_range = self.min_temperature_range
         hass = self.hass
 
         data: dict[str, str | float | None] = {
@@ -548,7 +547,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             data[ATTR_TARGET_TEMP_LOW] = show_temp(
                 hass, self.target_temperature_low, temperature_unit, precision
             )
-            data[ATTR_MIN_TEMP_RANGE] = min_temp_range
+            if hasattr(self, "min_temperature_range"):
+                data[ATTR_MIN_TEMP_RANGE] = self.min_temperature_range
 
         if (current_humidity := self.current_humidity) is not None:
             data[ATTR_CURRENT_HUMIDITY] = current_humidity
