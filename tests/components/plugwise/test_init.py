@@ -256,3 +256,30 @@ async def test_update_device(
         for device_entry in list(device_registry.devices.values()):
             item_list.extend(x[1] for x in device_entry.identifiers)
         assert "01234567890abcdefghijklmnopqrstu" in item_list
+
+    # Remove the existing Tom/Floor
+    data.devices.pop("1772a4ea304041adb83f357b751341ff")
+    with patch(HA_PLUGWISE_SMILE_ASYNC_UPDATE, return_value=data):
+        async_fire_time_changed(hass, utcnow + timedelta(minutes=1))
+        await hass.async_block_till_done()
+
+        assert (
+            len(
+                er.async_entries_for_config_entry(
+                    entity_registry, mock_config_entry.entry_id
+                )
+            )
+            == 28
+        )
+        assert (
+            len(
+                dr.async_entries_for_config_entry(
+                    device_registry, mock_config_entry.entry_id
+                )
+            )
+            == 6
+        )
+        item_list: list[str] = []
+        for device_entry in list(device_registry.devices.values()):
+            item_list.extend(x[1] for x in device_entry.identifiers)
+        assert "1772a4ea304041adb83f357b751341ff" not in item_list
