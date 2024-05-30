@@ -12,7 +12,7 @@ from homeassistant.const import CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 DEFAULT_NAME = "OTP Sensor"
 
@@ -46,15 +46,13 @@ class TOTPSensor(SensorEntity):
 
     _attr_icon = "mdi:update"
     _attr_should_poll = False
-    _attr_has_entity_name = True
+    _attr_native_value: StateType = None
+    _next_expiration: float | None = None
 
     def __init__(self, name: str, token: str) -> None:
         """Initialize the sensor."""
         self._attr_name = name
-        self._attr_unique_id = token
         self._otp = pyotp.TOTP(token)
-        self._attr_native_value = None
-        self._next_expiration: float | None = None
 
     async def async_added_to_hass(self) -> None:
         """Handle when an entity is about to be added to Home Assistant."""
