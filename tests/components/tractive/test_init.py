@@ -45,46 +45,31 @@ async def test_unload_entry(
     assert not hass.data.get(DOMAIN)
 
 
-async def test_auth_failed(
+@pytest.mark.parametrize(
+    ("method", "exc", "entry_state"),
+    [
+        ("authenticate", UnauthorizedError, ConfigEntryState.SETUP_ERROR),
+        ("authenticate", TractiveError, ConfigEntryState.SETUP_RETRY),
+        ("trackable_objects", TractiveError, ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_setup_failed(
     hass: HomeAssistant,
     mock_tractive_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    method: str,
+    exc: Exception,
+    entry_state: ConfigEntryState,
 ) -> None:
-    """Test for setup failure if the auth fails."""
-    mock_tractive_client.authenticate.side_effect = UnauthorizedError
+    """Test for setup failure."""
+    getattr(mock_tractive_client, method).side_effect = exc
 
     await init_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is entry_state
 
 
 async def test_config_not_ready(
-    hass: HomeAssistant,
-    mock_tractive_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test for setup failure if the connection to the service fails."""
-    mock_tractive_client.authenticate.side_effect = TractiveError
-
-    await init_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_config_not_ready_2(
-    hass: HomeAssistant,
-    mock_tractive_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test for setup failure if the connection to the service fails."""
-    mock_tractive_client.trackable_objects.side_effect = TractiveError
-
-    await init_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_config_not_ready_3(
     hass: HomeAssistant,
     mock_tractive_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
