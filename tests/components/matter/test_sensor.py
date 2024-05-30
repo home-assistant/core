@@ -442,7 +442,7 @@ async def test_air_purifier_sensor(
     assert state.state == "100"
     assert state.attributes["state_class"] == "measurement"
     assert state.attributes["unit_of_measurement"] == "%"
-    assert state.attributes["friendly_name"] == "Air Purifier Hepa Filter Condition"
+    assert state.attributes["friendly_name"] == "Air Purifier Hepa filter condition"
 
     # Activated Carbon Filter Condition
     state = hass.states.get("sensor.air_purifier_activated_carbon_filter_condition")
