@@ -37,10 +37,6 @@ from .const import (
 from .sensor import INFO_SENSORS, TIME_SENSORS
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
-PLATFORM_DESCRIPTIONS = {
-    Platform.BINARY_SENSOR: BINARY_SENSORS,
-    Platform.SENSOR: (*INFO_SENSORS, *TIME_SENSORS),
-}
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -180,12 +176,13 @@ def async_update_unique_ids(
 
     Introduced with release 2024.6
     """
-    for platform, descriptions in PLATFORM_DESCRIPTIONS.items():
+    platform_descriptions = {
+        Platform.BINARY_SENSOR: BINARY_SENSORS,
+        Platform.SENSOR: (*INFO_SENSORS, *TIME_SENSORS),
+    }
+    for platform, descriptions in platform_descriptions.items():
         for description in descriptions:
             new_unique_id = f"{new_prefix}-{description.key}"
-            if ent_reg.async_get_entity_id(platform, DOMAIN, new_unique_id):
-                return
-
             old_unique_id = f"{old_prefix}_{description.key}"
             if entity_id := ent_reg.async_get_entity_id(
                 platform, DOMAIN, old_unique_id
