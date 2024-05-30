@@ -137,7 +137,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "mock_bluetooth": "None",
     "mock_bluetooth_adapters": "None",
     "mock_device_tracker_conf": "list[Device]",
-    "mock_get_source_ip": "None",
+    "mock_get_source_ip": "Patcher",
     "mock_hass_config": "None",
     "mock_hass_config_yaml": "None",
     "mock_zeroconf": "None",

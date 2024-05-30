@@ -77,6 +77,7 @@ from .typing import (
     MqttMockHAClient,
     MqttMockHAClientGenerator,
     MqttMockPahoClient,
+    Patcher,
     RecorderInstanceGenerator,
     WebSocketGenerator,
 )
@@ -1151,7 +1152,7 @@ def mock_network() -> Generator[None, None, None]:
 
 
 @pytest.fixture(autouse=True, scope="session")
-def mock_get_source_ip() -> Generator[patch, None, None]:
+def mock_get_source_ip() -> Generator[Patcher, None, None]:
     """Mock network util's async_get_source_ip."""
     patcher = patch(
         "homeassistant.components.network.util.async_get_source_ip",
@@ -1165,7 +1166,7 @@ def mock_get_source_ip() -> Generator[patch, None, None]:
 
 
 @pytest.fixture(autouse=True, scope="session")
-def translations_once() -> Generator[patch, None, None]:
+def translations_once() -> Generator[Patcher, None, None]:
     """Only load translations once per session."""
     from homeassistant.helpers.translation import _TranslationsCacheData
 
@@ -1182,7 +1183,9 @@ def translations_once() -> Generator[patch, None, None]:
 
 
 @pytest.fixture
-def disable_translations_once(translations_once):
+def disable_translations_once(
+    translations_once: Patcher,
+) -> Generator[None, None, None]:
     """Override loading translations once."""
     translations_once.stop()
     yield
