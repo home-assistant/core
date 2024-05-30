@@ -140,7 +140,7 @@ class APIInstance:
         """Call a LLM tool, validate args and return the response."""
         async_conversation_trace_append(
             ConversationTraceEventType.LLM_TOOL_CALL,
-            {"tool_name": tool_input.tool_name, "tool_args": str(tool_input.tool_args)},
+            {"tool_name": tool_input.tool_name, "tool_args": tool_input.tool_args},
         )
 
         for tool in self.tools:
