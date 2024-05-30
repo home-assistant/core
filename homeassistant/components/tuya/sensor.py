@@ -43,7 +43,6 @@ class TuyaSensorEntityDescription(SensorEntityDescription):
     """Describes Tuya sensor entity."""
 
     subkey: str | None = None
-    scale: int | None = None
 
 
 # Commonly used battery sensors, that are re-used in the sensors down below.
@@ -1080,13 +1079,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             suggested_display_precision=0,
             suggested_unit_of_measurement=UnitOfPower.WATT,
         ),
-        TuyaSensorEntityDescription(
-            key=DPCode.TEMP_CURRENT,
-            translation_key="temperature",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            scale=0,
-        ),
     ),
 }
 
@@ -1155,8 +1147,6 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             self._type = DPType.INTEGER
             if description.native_unit_of_measurement is None:
                 self._attr_native_unit_of_measurement = int_type.unit
-            if description.scale is not None:
-                self._type_data.scale = description.scale
         elif enum_type := self.find_dpcode(
             description.key, dptype=DPType.ENUM, prefer_function=True
         ):
