@@ -38,4 +38,4 @@ type RecorderInstanceGenerator = Callable[..., Coroutine[Any, Any, Recorder]]
 type WebSocketGenerator = Callable[..., Coroutine[Any, Any, MockHAClientWebSocket]]
 
 type Patcher = _patch_default_new
-"""Type alias for unittest.mock._patcher."""
+"""Type alias for unittest.mock._patch_default_new."""
