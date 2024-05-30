@@ -86,6 +86,7 @@ CONF_TEMP_MIN = "min_temp"
 CONF_CERTIFICATE = "certificate"
 CONF_CLIENT_KEY = "client_key"
 CONF_CLIENT_CERT = "client_cert"
+CONF_COMPONENTS = "components"
 CONF_TLS_INSECURE = "tls_insecure"
 
 # Device and integration info options
@@ -149,8 +150,7 @@ DEFAULT_WILL = {
 
 DOMAIN = "mqtt"
 
-MQTT_CONNECTED = "mqtt_connected"
-MQTT_DISCONNECTED = "mqtt_disconnected"
+MQTT_CONNECTION_STATE = "mqtt_connection_state"
 
 PAYLOAD_EMPTY_JSON = "{}"
 PAYLOAD_NONE = "None"

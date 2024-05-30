@@ -26,7 +26,6 @@ from homeassistant.components.recorder.models import (
     process_timestamp,
 )
 from homeassistant.components.recorder.util import (
-    chunked_or_all,
     end_incomplete_runs,
     is_second_sunday,
     resolve_period,
@@ -722,7 +721,7 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
 
 
 async def test_basic_sanity_check(
-    hass: HomeAssistant, setup_recorder: None, recorder_db_url
+    hass: HomeAssistant, setup_recorder: None, recorder_db_url: str
 ) -> None:
     """Test the basic sanity checks with a missing table."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
@@ -743,7 +742,7 @@ async def test_combined_checks(
     hass: HomeAssistant,
     setup_recorder: None,
     caplog: pytest.LogCaptureFixture,
-    recorder_db_url,
+    recorder_db_url: str,
 ) -> None:
     """Run Checks on the open database."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
@@ -832,7 +831,7 @@ async def test_end_incomplete_runs(
 
 
 async def test_periodic_db_cleanups(
-    hass: HomeAssistant, setup_recorder: None, recorder_db_url
+    hass: HomeAssistant, setup_recorder: None, recorder_db_url: str
 ) -> None:
     """Test periodic db cleanups."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
@@ -1051,24 +1050,3 @@ async def test_resolve_period(hass: HomeAssistant) -> None:
             }
         }
     ) == (now - timedelta(hours=1, minutes=25), now - timedelta(minutes=25))
-
-
-def test_chunked_or_all():
-    """Test chunked_or_all can iterate chunk sizes larger than the passed in collection."""
-    all_items = []
-    incoming = (1, 2, 3, 4)
-    for chunk in chunked_or_all(incoming, 2):
-        assert len(chunk) == 2
-        all_items.extend(chunk)
-    assert all_items == [1, 2, 3, 4]
-
-    all_items = []
-    incoming = (1, 2, 3, 4)
-    for chunk in chunked_or_all(incoming, 5):
-        assert len(chunk) == 4
-        # Verify the chunk is the same object as the incoming
-        # collection since we want to avoid copying the collection
-        # if we don't need to
-        assert chunk is incoming
-        all_items.extend(chunk)
-    assert all_items == [1, 2, 3, 4]

@@ -30,7 +30,9 @@ async def test_subscribing_config_topic(
     discovery_topic = DEFAULT_PREFIX
 
     assert mqtt_mock.async_subscribe.called
-    mqtt_mock.async_subscribe.assert_any_call(discovery_topic + "/#", ANY, 0, "utf-8")
+    mqtt_mock.async_subscribe.assert_any_call(
+        discovery_topic + "/#", ANY, 0, "utf-8", ANY
+    )
 
 
 async def test_future_discovery_message(

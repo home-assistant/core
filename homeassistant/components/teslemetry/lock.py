@@ -7,11 +7,11 @@ from typing import Any
 from tesla_fleet_api.const import Scope
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import TeslemetryConfigEntry
 from .const import DOMAIN
 from .entity import TeslemetryVehicleEntity
 from .models import TeslemetryVehicleData
@@ -20,7 +20,9 @@ ENGAGED = "Engaged"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Teslemetry lock platform from a config entry."""
 

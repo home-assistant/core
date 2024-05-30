@@ -48,4 +48,5 @@ def mock_v2c_client() -> Generator[AsyncMock, None, None]:
         client = mock_client.return_value
         get_data_json = load_json_object_fixture("get_data.json", DOMAIN)
         client.get_data.return_value = TrydanData.from_api(get_data_json)
+        client.firmware_version = get_data_json["FirmwareVersion"]
         yield client

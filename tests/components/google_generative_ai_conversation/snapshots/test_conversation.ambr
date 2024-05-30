@@ -1,4 +1,120 @@
 # serializer version: 1
+# name: test_chat_history
+  list([
+    tuple(
+      '',
+      tuple(
+      ),
+      dict({
+        'generation_config': dict({
+          'max_output_tokens': 150,
+          'temperature': 1.0,
+          'top_k': 64,
+          'top_p': 0.95,
+        }),
+        'model_name': 'models/gemini-1.5-flash-latest',
+        'safety_settings': dict({
+          'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
+          'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
+          'HATE': 'BLOCK_MEDIUM_AND_ABOVE',
+          'SEXUAL': 'BLOCK_MEDIUM_AND_ABOVE',
+        }),
+        'tools': None,
+      }),
+    ),
+    tuple(
+      '().start_chat',
+      tuple(
+      ),
+      dict({
+        'history': list([
+          dict({
+            'parts': '''
+              You are a voice assistant for Home Assistant.
+              Answer in plain text. Keep it simple and to the point.
+              The current time is 05:00:00.
+              Today's date is 05/24/24.
+              Only if the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
+            ''',
+            'role': 'user',
+          }),
+          dict({
+            'parts': 'Ok',
+            'role': 'model',
+          }),
+        ]),
+      }),
+    ),
+    tuple(
+      '().start_chat().send_message_async',
+      tuple(
+        '1st user request',
+      ),
+      dict({
+      }),
+    ),
+    tuple(
+      '',
+      tuple(
+      ),
+      dict({
+        'generation_config': dict({
+          'max_output_tokens': 150,
+          'temperature': 1.0,
+          'top_k': 64,
+          'top_p': 0.95,
+        }),
+        'model_name': 'models/gemini-1.5-flash-latest',
+        'safety_settings': dict({
+          'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
+          'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
+          'HATE': 'BLOCK_MEDIUM_AND_ABOVE',
+          'SEXUAL': 'BLOCK_MEDIUM_AND_ABOVE',
+        }),
+        'tools': None,
+      }),
+    ),
+    tuple(
+      '().start_chat',
+      tuple(
+      ),
+      dict({
+        'history': list([
+          dict({
+            'parts': '''
+              You are a voice assistant for Home Assistant.
+              Answer in plain text. Keep it simple and to the point.
+              The current time is 05:00:00.
+              Today's date is 05/24/24.
+              Only if the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
+            ''',
+            'role': 'user',
+          }),
+          dict({
+            'parts': 'Ok',
+            'role': 'model',
+          }),
+          dict({
+            'parts': '1st user request',
+            'role': 'user',
+          }),
+          dict({
+            'parts': '1st model response',
+            'role': 'model',
+          }),
+        ]),
+      }),
+    ),
+    tuple(
+      '().start_chat().send_message_async',
+      tuple(
+        '2nd user request',
+      ),
+      dict({
+      }),
+    ),
+  ])
+# ---
 # name: test_default_prompt[config_entry_options0-None]
   list([
     tuple(
@@ -13,6 +129,12 @@
           'top_p': 0.95,
         }),
         'model_name': 'models/gemini-1.5-flash-latest',
+        'safety_settings': dict({
+          'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
+          'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
+          'HATE': 'BLOCK_MEDIUM_AND_ABOVE',
+          'SEXUAL': 'BLOCK_MEDIUM_AND_ABOVE',
+        }),
         'tools': None,
       }),
     ),
@@ -23,7 +145,13 @@
       dict({
         'history': list([
           dict({
-            'parts': 'Answer in plain text. Keep it simple and to the point.',
+            'parts': '''
+              You are a voice assistant for Home Assistant.
+              Answer in plain text. Keep it simple and to the point.
+              The current time is 05:00:00.
+              Today's date is 05/24/24.
+              <no_api_prompt>
+            ''',
             'role': 'user',
           }),
           dict({
@@ -57,6 +185,12 @@
           'top_p': 0.95,
         }),
         'model_name': 'models/gemini-1.5-flash-latest',
+        'safety_settings': dict({
+          'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
+          'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
+          'HATE': 'BLOCK_MEDIUM_AND_ABOVE',
+          'SEXUAL': 'BLOCK_MEDIUM_AND_ABOVE',
+        }),
         'tools': None,
       }),
     ),
@@ -67,7 +201,13 @@
       dict({
         'history': list([
           dict({
-            'parts': 'Answer in plain text. Keep it simple and to the point.',
+            'parts': '''
+              You are a voice assistant for Home Assistant.
+              Answer in plain text. Keep it simple and to the point.
+              The current time is 05:00:00.
+              Today's date is 05/24/24.
+              <no_api_prompt>
+            ''',
             'role': 'user',
           }),
           dict({
@@ -101,6 +241,12 @@
           'top_p': 0.95,
         }),
         'model_name': 'models/gemini-1.5-flash-latest',
+        'safety_settings': dict({
+          'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
+          'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
+          'HATE': 'BLOCK_MEDIUM_AND_ABOVE',
+          'SEXUAL': 'BLOCK_MEDIUM_AND_ABOVE',
+        }),
         'tools': None,
       }),
     ),
@@ -112,8 +258,11 @@
         'history': list([
           dict({
             'parts': '''
-              Call the intent tools to control Home Assistant. Just pass the name to the intent.
+              You are a voice assistant for Home Assistant.
               Answer in plain text. Keep it simple and to the point.
+              The current time is 05:00:00.
+              Today's date is 05/24/24.
+              <api_prompt>
             ''',
             'role': 'user',
           }),
@@ -148,6 +297,12 @@
           'top_p': 0.95,
         }),
         'model_name': 'models/gemini-1.5-flash-latest',
+        'safety_settings': dict({
+          'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
+          'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
+          'HATE': 'BLOCK_MEDIUM_AND_ABOVE',
+          'SEXUAL': 'BLOCK_MEDIUM_AND_ABOVE',
+        }),
         'tools': None,
       }),
     ),
@@ -159,8 +314,11 @@
         'history': list([
           dict({
             'parts': '''
-              Call the intent tools to control Home Assistant. Just pass the name to the intent.
+              You are a voice assistant for Home Assistant.
               Answer in plain text. Keep it simple and to the point.
+              The current time is 05:00:00.
+              Today's date is 05/24/24.
+              <api_prompt>
             ''',
             'role': 'user',
           }),

@@ -32,11 +32,11 @@ async def test_setup(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")
-async def test_unique_id(hass: HomeAssistant) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test unique id."""
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
-
-    entity_registry = er.async_get(hass)
 
     main = entity_registry.async_get(ENTITY_ID)
     assert main.unique_id == "any"
