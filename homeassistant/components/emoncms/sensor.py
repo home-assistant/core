@@ -145,10 +145,10 @@ class EmonCmsSensor(SensorEntity):
         hass: HomeAssistant,
         data: EmonCmsData,
         name: str | None,
-        value_template: template.Template,
+        value_template: template.Template | None,
         unit_of_measurement: str | None,
         sensorid: str,
-        elem: dict,
+        elem: dict[str, Any],
     ) -> None:
         """Initialize the sensor."""
         if name is None:
@@ -169,15 +169,7 @@ class EmonCmsSensor(SensorEntity):
         self._value_template = value_template
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._sensorid = sensorid
-        self._attr_extra_state_attributes = {
-            ATTR_FEEDID: elem["id"],
-            ATTR_TAG: elem["tag"],
-            ATTR_FEEDNAME: elem["name"],
-            ATTR_SIZE: elem["size"],
-            ATTR_USERID: elem["userid"],
-            ATTR_LASTUPDATETIME: elem["time"],
-            ATTR_LASTUPDATETIMESTR: template.timestamp_local(float(elem["time"])),
-        }
+        self._elem = elem
 
         if unit_of_measurement in ("kWh", "Wh"):
             self._attr_device_class = SensorDeviceClass.ENERGY
@@ -215,6 +207,19 @@ class EmonCmsSensor(SensorEntity):
         else:
             self._attr_native_value = None
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the sensor extra attributes."""
+        return {
+            ATTR_FEEDID: self._elem["id"],
+            ATTR_TAG: self._elem["tag"],
+            ATTR_FEEDNAME: self._elem["name"],
+            ATTR_SIZE: self._elem["size"],
+            ATTR_USERID: self._elem["userid"],
+            ATTR_LASTUPDATETIME: self._elem["time"],
+            ATTR_LASTUPDATETIMESTR: template.timestamp_local(float(self._elem["time"])),
+        }
+
     def update(self) -> None:
         """Get the latest data and updates the state."""
         self._data.update()
@@ -240,6 +245,8 @@ class EmonCmsSensor(SensorEntity):
 
         if elem is None:
             return
+
+        self._elem = elem
 
         if self._value_template is not None:
             self._attr_native_value = (
