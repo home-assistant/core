@@ -14,6 +14,7 @@ from homeassistant.components.conversation.trace import (
     ConversationTraceEventType,
     async_conversation_trace_append,
 )
+from homeassistant.components.cover.intent import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
 from homeassistant.components.weather.intent import INTENT_GET_WEATHER
@@ -208,6 +209,8 @@ class AssistAPI(API):
     IGNORE_INTENTS = {
         INTENT_GET_TEMPERATURE,
         INTENT_GET_WEATHER,
+        INTENT_OPEN_COVER,  # deprecated
+        INTENT_CLOSE_COVER,  # deprecated
         intent.INTENT_GET_STATE,
         intent.INTENT_NEVERMIND,
         intent.INTENT_TOGGLE,
