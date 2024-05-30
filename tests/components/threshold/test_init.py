@@ -12,6 +12,7 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize("platform", ["binary_sensor"])
 async def test_setup_and_remove_config_entry(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     platform: str,
 ) -> None:
     """Test setting up and removing a config entry."""
@@ -19,7 +20,6 @@ async def test_setup_and_remove_config_entry(
 
     input_sensor = "sensor.input"
 
-    registry = er.async_get(hass)
     threshold_entity_id = f"{platform}.input_threshold"
 
     # Setup the config entry
@@ -40,7 +40,7 @@ async def test_setup_and_remove_config_entry(
     await hass.async_block_till_done()
 
     # Check the entity is registered in the entity registry
-    assert registry.async_get(threshold_entity_id) is not None
+    assert entity_registry.async_get(threshold_entity_id) is not None
 
     # Check the platform is setup correctly
     state = hass.states.get(threshold_entity_id)
@@ -59,4 +59,4 @@ async def test_setup_and_remove_config_entry(
 
     # Check the state and entity registry entry are removed
     assert hass.states.get(threshold_entity_id) is None
-    assert registry.async_get(threshold_entity_id) is None
+    assert entity_registry.async_get(threshold_entity_id) is None

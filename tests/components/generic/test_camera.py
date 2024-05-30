@@ -74,7 +74,7 @@ async def test_fetching_url(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     fakeimgbytes_png,
-    caplog: pytest.CaptureFixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that it fetches the given url."""
     hass.states.async_set("sensor.temp", "http://example.com/0a")

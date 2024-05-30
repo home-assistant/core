@@ -1,6 +1,8 @@
 """Test config flow for Twitch."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock
+
+from twitchAPI.object.api import TwitchUser
 
 from homeassistant.components.twitch.const import (
     CONF_CHANNELS,
@@ -12,10 +14,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from . import setup_integration
+from . import get_generator, setup_integration
 
 from tests.common import MockConfigEntry
-from tests.components.twitch import TwitchMock
 from tests.components.twitch.conftest import CLIENT_ID, TITLE
 from tests.typing import ClientSessionGenerator
 
@@ -51,7 +52,7 @@ async def test_full_flow(
     hass_client_no_auth: ClientSessionGenerator,
     current_request_with_host: None,
     mock_setup_entry,
-    twitch: TwitchMock,
+    twitch_mock: AsyncMock,
     scopes: list[str],
 ) -> None:
     """Check full flow."""
@@ -80,7 +81,7 @@ async def test_already_configured(
     current_request_with_host: None,
     config_entry: MockConfigEntry,
     mock_setup_entry,
-    twitch: TwitchMock,
+    twitch_mock: AsyncMock,
     scopes: list[str],
 ) -> None:
     """Check flow aborts when account already configured."""
@@ -90,13 +91,10 @@ async def test_already_configured(
     )
     await _do_get_token(hass, result, hass_client_no_auth, scopes)
 
-    with patch(
-        "homeassistant.components.twitch.config_flow.Twitch", return_value=TwitchMock()
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_reauth(
@@ -105,7 +103,7 @@ async def test_reauth(
     current_request_with_host: None,
     config_entry: MockConfigEntry,
     mock_setup_entry,
-    twitch: TwitchMock,
+    twitch_mock: AsyncMock,
     scopes: list[str],
 ) -> None:
     """Check reauth flow."""
@@ -136,7 +134,7 @@ async def test_reauth_from_import(
     hass_client_no_auth: ClientSessionGenerator,
     current_request_with_host: None,
     mock_setup_entry,
-    twitch: TwitchMock,
+    twitch_mock: AsyncMock,
     expires_at,
     scopes: list[str],
 ) -> None:
@@ -163,7 +161,7 @@ async def test_reauth_from_import(
         current_request_with_host,
         config_entry,
         mock_setup_entry,
-        twitch,
+        twitch_mock,
         scopes,
     )
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -178,12 +176,14 @@ async def test_reauth_wrong_account(
     current_request_with_host: None,
     config_entry: MockConfigEntry,
     mock_setup_entry,
-    twitch: TwitchMock,
+    twitch_mock: AsyncMock,
     scopes: list[str],
 ) -> None:
     """Check reauth flow."""
     await setup_integration(hass, config_entry)
-    twitch.different_user_id = True
+    twitch_mock.return_value.get_users = lambda *args, **kwargs: get_generator(
+        "get_users_2.json", TwitchUser
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={

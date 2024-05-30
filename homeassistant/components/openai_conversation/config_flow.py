@@ -34,7 +34,6 @@ from .const import (
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_TOP_P,
-    DEFAULT_PROMPT,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
@@ -53,7 +52,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 RECOMMENDED_OPTIONS = {
     CONF_RECOMMENDED: True,
     CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-    CONF_PROMPT: DEFAULT_PROMPT,
+    CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
 }
 
 
@@ -170,7 +169,11 @@ def openai_config_option_schema(
     schema = {
         vol.Optional(
             CONF_PROMPT,
-            description={"suggested_value": options.get(CONF_PROMPT, DEFAULT_PROMPT)},
+            description={
+                "suggested_value": options.get(
+                    CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                )
+            },
         ): TemplateSelector(),
         vol.Optional(
             CONF_LLM_HASS_API,

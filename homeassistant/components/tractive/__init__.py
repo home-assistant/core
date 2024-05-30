@@ -148,6 +148,13 @@ async def _generate_trackables(
         tracker.details(), tracker.hw_info(), tracker.pos_report()
     )
 
+    if not tracker_details.get("_id"):
+        _LOGGER.info(
+            "Tractive API returns incomplete data for tracker %s",
+            trackable["device_id"],
+        )
+        raise ConfigEntryNotReady
+
     return Trackables(tracker, trackable, tracker_details, hw_info, pos_report)
 
 

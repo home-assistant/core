@@ -230,7 +230,6 @@ async def test_block_set_state_auth_error(
         {ATTR_ENTITY_ID: "switch.test_name_channel_1"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
 
@@ -374,7 +373,6 @@ async def test_rpc_auth_error(
         {ATTR_ENTITY_ID: "switch.test_switch_0"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
 

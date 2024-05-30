@@ -423,7 +423,7 @@ async def test_if_fires_not_on_above_below(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
 ) -> None:
@@ -463,7 +463,7 @@ async def test_if_fires_on_state_above(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
     enable_custom_integrations: None,
 ) -> None:
     """Test for value triggers firing."""
@@ -528,7 +528,7 @@ async def test_if_fires_on_state_below(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
     enable_custom_integrations: None,
 ) -> None:
     """Test for value triggers firing."""
@@ -593,7 +593,7 @@ async def test_if_fires_on_state_between(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
     enable_custom_integrations: None,
 ) -> None:
     """Test for value triggers firing."""
@@ -670,7 +670,7 @@ async def test_if_fires_on_state_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
     enable_custom_integrations: None,
 ) -> None:
     """Test for value triggers firing."""
@@ -735,7 +735,7 @@ async def test_if_fires_on_state_change_with_for(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
     enable_custom_integrations: None,
 ) -> None:
     """Test for triggers firing with delay."""

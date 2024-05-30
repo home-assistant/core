@@ -5,13 +5,14 @@ from __future__ import annotations
 from typing import Any, Literal
 
 import google.ai.generativelanguage as glm
-from google.api_core.exceptions import ClientError
+from google.api_core.exceptions import GoogleAPICallError
 import google.generativeai as genai
 import google.generativeai.types as genai_types
 import voluptuous as vol
 from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
+from homeassistant.components.conversation import trace
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
@@ -31,7 +32,6 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
-    DEFAULT_PROMPT,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
@@ -149,13 +149,22 @@ class GoogleGenerativeAIConversationEntity(
     ) -> conversation.ConversationResult:
         """Process a sentence."""
         intent_response = intent.IntentResponse(language=user_input.language)
-        llm_api: llm.API | None = None
+        llm_api: llm.APIInstance | None = None
         tools: list[dict[str, Any]] | None = None
 
         if self.entry.options.get(CONF_LLM_HASS_API):
             try:
-                llm_api = llm.async_get_api(
-                    self.hass, self.entry.options[CONF_LLM_HASS_API]
+                llm_api = await llm.async_get_api(
+                    self.hass,
+                    self.entry.options[CONF_LLM_HASS_API],
+                    llm.ToolContext(
+                        platform=DOMAIN,
+                        context=user_input.context,
+                        user_prompt=user_input.text,
+                        language=user_input.language,
+                        assistant=conversation.DOMAIN,
+                        device_id=user_input.device_id,
+                    ),
                 )
             except HomeAssistantError as err:
                 LOGGER.error("Error getting LLM API: %s", err)
@@ -166,7 +175,7 @@ class GoogleGenerativeAIConversationEntity(
                 return conversation.ConversationResult(
                     response=intent_response, conversation_id=user_input.conversation_id
                 )
-            tools = [_format_tool(tool) for tool in llm_api.async_get_tools()]
+            tools = [_format_tool(tool) for tool in llm_api.tools]
 
         model = genai.GenerativeModel(
             model_name=self.entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
@@ -206,26 +215,17 @@ class GoogleGenerativeAIConversationEntity(
 
         try:
             if llm_api:
-                empty_tool_input = llm.ToolInput(
-                    tool_name="",
-                    tool_args={},
-                    platform=DOMAIN,
-                    context=user_input.context,
-                    user_prompt=user_input.text,
-                    language=user_input.language,
-                    assistant=conversation.DOMAIN,
-                    device_id=user_input.device_id,
-                )
-
-                api_prompt = await llm_api.async_get_api_prompt(empty_tool_input)
-
+                api_prompt = llm_api.api_prompt
             else:
-                api_prompt = llm.PROMPT_NO_API_CONFIGURED
+                api_prompt = llm.async_render_no_api_prompt(self.hass)
 
             prompt = "\n".join(
                 (
                     template.Template(
-                        self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT), self.hass
+                        self.entry.options.get(
+                            CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                        ),
+                        self.hass,
                     ).async_render(
                         {
                             "ha_name": self.hass.config.location_name,
@@ -250,6 +250,9 @@ class GoogleGenerativeAIConversationEntity(
         messages[1] = {"role": "model", "parts": "Ok"}
 
         LOGGER.debug("Input: '%s' with history: %s", user_input.text, messages)
+        trace.async_conversation_trace_append(
+            trace.ConversationTraceEventType.AGENT_DETAIL, {"messages": messages}
+        )
 
         chat = model.start_chat(history=messages)
         chat_request = user_input.text
@@ -258,7 +261,7 @@ class GoogleGenerativeAIConversationEntity(
             try:
                 chat_response = await chat.send_message_async(chat_request)
             except (
-                ClientError,
+                GoogleAPICallError,
                 ValueError,
                 genai_types.BlockedPromptException,
                 genai_types.StopCandidateException,
@@ -292,43 +295,41 @@ class GoogleGenerativeAIConversationEntity(
                     response=intent_response, conversation_id=conversation_id
                 )
             self.history[conversation_id] = chat.history
-            tool_call = chat_response.parts[0].function_call
-
-            if not tool_call or not llm_api:
+            tool_calls = [
+                part.function_call for part in chat_response.parts if part.function_call
+            ]
+            if not tool_calls or not llm_api:
                 break
 
-            tool_input = llm.ToolInput(
-                tool_name=tool_call.name,
-                tool_args=dict(tool_call.args),
-                platform=DOMAIN,
-                context=user_input.context,
-                user_prompt=user_input.text,
-                language=user_input.language,
-                assistant=conversation.DOMAIN,
-                device_id=user_input.device_id,
-            )
-            LOGGER.debug(
-                "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
-            )
-            try:
-                function_response = await llm_api.async_call_tool(tool_input)
-            except (HomeAssistantError, vol.Invalid) as e:
-                function_response = {"error": type(e).__name__}
-                if str(e):
-                    function_response["error_text"] = str(e)
+            tool_responses = []
+            for tool_call in tool_calls:
+                tool_input = llm.ToolInput(
+                    tool_name=tool_call.name,
+                    tool_args=dict(tool_call.args),
+                )
+                LOGGER.debug(
+                    "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
+                )
+                try:
+                    function_response = await llm_api.async_call_tool(tool_input)
+                except (HomeAssistantError, vol.Invalid) as e:
+                    function_response = {"error": type(e).__name__}
+                    if str(e):
+                        function_response["error_text"] = str(e)
 
-            LOGGER.debug("Tool response: %s", function_response)
-            chat_request = glm.Content(
-                parts=[
+                LOGGER.debug("Tool response: %s", function_response)
+                tool_responses.append(
                     glm.Part(
                         function_response=glm.FunctionResponse(
                             name=tool_call.name, response=function_response
                         )
                     )
-                ]
-            )
+                )
+            chat_request = glm.Content(parts=tool_responses)
 
-        intent_response.async_set_speech(chat_response.text)
+        intent_response.async_set_speech(
+            " ".join([part.text for part in chat_response.parts if part.text])
+        )
         return conversation.ConversationResult(
             response=intent_response, conversation_id=conversation_id
         )

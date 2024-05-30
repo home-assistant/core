@@ -149,7 +149,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_left',
-    'unique_id': 'VINVINVIN-climate_state_seat_heater_left',
+    'unique_id': 'LRWXF7EK4KC700000-climate_state_seat_heater_left',
     'unit_of_measurement': None,
   })
 # ---
@@ -208,7 +208,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_right',
-    'unique_id': 'VINVINVIN-climate_state_seat_heater_right',
+    'unique_id': 'LRWXF7EK4KC700000-climate_state_seat_heater_right',
     'unit_of_measurement': None,
   })
 # ---
@@ -267,7 +267,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_rear_center',
-    'unique_id': 'VINVINVIN-climate_state_seat_heater_rear_center',
+    'unique_id': 'LRWXF7EK4KC700000-climate_state_seat_heater_rear_center',
     'unit_of_measurement': None,
   })
 # ---
@@ -326,7 +326,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_rear_left',
-    'unique_id': 'VINVINVIN-climate_state_seat_heater_rear_left',
+    'unique_id': 'LRWXF7EK4KC700000-climate_state_seat_heater_rear_left',
     'unit_of_measurement': None,
   })
 # ---
@@ -385,7 +385,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_rear_right',
-    'unique_id': 'VINVINVIN-climate_state_seat_heater_rear_right',
+    'unique_id': 'LRWXF7EK4KC700000-climate_state_seat_heater_rear_right',
     'unit_of_measurement': None,
   })
 # ---
@@ -444,7 +444,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_third_row_left',
-    'unique_id': 'VINVINVIN-climate_state_seat_heater_third_row_left',
+    'unique_id': 'LRWXF7EK4KC700000-climate_state_seat_heater_third_row_left',
     'unit_of_measurement': None,
   })
 # ---
@@ -503,7 +503,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_third_row_right',
-    'unique_id': 'VINVINVIN-climate_state_seat_heater_third_row_right',
+    'unique_id': 'LRWXF7EK4KC700000-climate_state_seat_heater_third_row_right',
     'unit_of_measurement': None,
   })
 # ---
@@ -561,7 +561,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_steering_wheel_heat_level',
-    'unique_id': 'VINVINVIN-climate_state_steering_wheel_heat_level',
+    'unique_id': 'LRWXF7EK4KC700000-climate_state_steering_wheel_heat_level',
     'unit_of_measurement': None,
   })
 # ---

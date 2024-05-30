@@ -167,7 +167,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT water heater device through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttWaterHeater,
@@ -281,18 +281,17 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
                 assert isinstance(payload, str)
             self._attr_current_operation = payload
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        topics: dict[str, dict[str, Any]] = {}
-
+        # add subscriptions for WaterHeaterEntity
         self.add_subscription(
-            topics,
             CONF_MODE_STATE_TOPIC,
             self._handle_current_mode_received,
             {"_attr_current_operation"},
         )
-
-        self.prepare_subscribe_topics(topics)
+        # add subscriptions for MqttTemperatureControlEntity
+        self.prepare_subscribe_topics()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

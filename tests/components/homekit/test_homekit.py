@@ -111,7 +111,7 @@ def always_patch_driver(hk_driver):
 
 
 @pytest.fixture(autouse=True)
-def patch_source_ip(mock_get_source_ip):
+def patch_source_ip():
     """Patch homeassistant and pyhap functions for getting local address."""
     with patch("pyhap.util.get_local_address", return_value="10.10.10.10"):
         yield
