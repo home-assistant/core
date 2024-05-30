@@ -8,7 +8,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_flow_works(hass: HomeAssistant, mock_get_source_ip: None) -> None:
+async def test_flow_works(hass: HomeAssistant, mock_get_source_ip) -> None:
     """Test that config flow works."""
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
@@ -22,7 +22,7 @@ async def test_flow_works(hass: HomeAssistant, mock_get_source_ip: None) -> None
 
 
 async def test_flow_already_registered_entry(
-    hass: HomeAssistant, mock_get_source_ip: None
+    hass: HomeAssistant, mock_get_source_ip
 ) -> None:
     """Test that config flow doesn't allow existing names."""
     MockConfigEntry(

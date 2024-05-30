@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 
 import pytest
-import requests_mock
+from requests_mock.mocker import Mocker
 
 from homeassistant.components.fitbit.const import (
     CONF_CLIENT_ID,
@@ -144,7 +144,7 @@ async def test_device_update_coordinator_failure(
     integration_setup: Callable[[], Awaitable[bool]],
     config_entry: MockConfigEntry,
     setup_credentials: None,
-    requests_mock: requests_mock.Mocker,
+    requests_mock: Mocker,
 ) -> None:
     """Test case where the device update coordinator fails on the first request."""
     assert config_entry.state is ConfigEntryState.NOT_LOADED
@@ -164,7 +164,7 @@ async def test_device_update_coordinator_reauth(
     integration_setup: Callable[[], Awaitable[bool]],
     config_entry: MockConfigEntry,
     setup_credentials: None,
-    requests_mock: requests_mock.Mocker,
+    requests_mock: Mocker,
 ) -> None:
     """Test case where the device update coordinator fails on the first request."""
     assert config_entry.state is ConfigEntryState.NOT_LOADED

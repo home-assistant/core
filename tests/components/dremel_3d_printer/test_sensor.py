@@ -1,6 +1,7 @@
 """Sensor tests for the Dremel 3D Printer integration."""
 
 from datetime import datetime
+from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 
@@ -29,7 +30,7 @@ async def test_sensors(
     hass: HomeAssistant,
     connection,
     config_entry: MockConfigEntry,
-    entity_registry_enabled_by_default: None,
+    entity_registry_enabled_by_default: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test we get sensor data."""
