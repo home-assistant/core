@@ -1137,7 +1137,6 @@ def test_pytest_function(
     async def test_sample( #@
         hass: HomeAssistant,
         caplog: pytest.LogCaptureFixture,
-        requests_mock: Mocker,
         aiohttp_server: Callable[[], TestServer],
         unused_tcp_port_factory: Callable[[], int],
     ) -> None:
