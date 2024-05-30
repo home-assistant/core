@@ -206,10 +206,11 @@ class AssistAPI(API):
     """API exposing Assist API to LLMs."""
 
     IGNORE_INTENTS = {
-        intent.INTENT_NEVERMIND,
-        intent.INTENT_GET_STATE,
-        INTENT_GET_WEATHER,
         INTENT_GET_TEMPERATURE,
+        INTENT_GET_WEATHER,
+        intent.INTENT_GET_STATE,
+        intent.INTENT_NEVERMIND,
+        intent.INTENT_TOGGLE,
     }
 
     def __init__(self, hass: HomeAssistant) -> None:
