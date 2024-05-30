@@ -83,6 +83,8 @@ async def async_setup_entry(
     tado: TadoConnector = hass.data[DOMAIN][entry.entry_id][DATA]
     tracked: set = set()
 
+    # Fix none string chars in unique_id
+    # Can be removed in 2025.1
     entity_registry = er.async_get(hass)
     for device_key in tado.data["mobile_device"]:
         if entity_id := entity_registry.async_get_entity_id(
