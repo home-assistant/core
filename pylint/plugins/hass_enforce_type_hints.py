@@ -3206,7 +3206,7 @@ class HassTypeHintChecker(BaseChecker):
                 if self._ignore_function(function_node, annotations):
                     continue
 
-                self._check_function(function_node, match, annotations)
+                self._check_function(function_node, match, annotations, False)
                 checked_class_methods.add(function_node.name)
 
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
@@ -3226,16 +3226,19 @@ class HassTypeHintChecker(BaseChecker):
                 )
 
         # Check method or function matchers.
+        is_test_function = False
         if node.is_method():
             matchers = _METHOD_MATCH
         else:
             matchers = self._function_matchers
-            if self._is_test_function(node):
+            is_test_function = self._in_test_module and node.name.startswith("test_")
+            if is_test_function:
                 self._check_test_function(node, annotations)
+
         for match in matchers:
             if not match.need_to_check_function(node):
                 continue
-            self._check_function(node, match, annotations)
+            self._check_function(node, match, annotations, is_test_function)
 
     visit_asyncfunctiondef = visit_functiondef
 
@@ -3244,13 +3247,14 @@ class HassTypeHintChecker(BaseChecker):
         node: nodes.FunctionDef,
         match: TypeHintMatch,
         annotations: list[nodes.NodeNG | None],
+        is_test_function: bool,
     ) -> None:
         # Check that all positional arguments are correctly annotated.
         if match.arg_types:
             for key, expected_type in match.arg_types.items():
                 if (
                     node.args.args[key].name in _COMMON_ARGUMENTS
-                    or self._is_test_function(node)
+                    or is_test_function
                     and node.args.args[key].name in _TEST_FIXTURES
                 ):
                     # It has already been checked, avoid double-message
@@ -3267,7 +3271,7 @@ class HassTypeHintChecker(BaseChecker):
             for arg_name, expected_type in match.named_arg_types.items():
                 if (
                     arg_name in _COMMON_ARGUMENTS
-                    or self._is_test_function(node)
+                    or is_test_function
                     and arg_name in _TEST_FIXTURES
                 ):
                     # It has already been checked, avoid double-message
@@ -3323,10 +3327,6 @@ class HassTypeHintChecker(BaseChecker):
                     node=arg_node,
                     args=(arg_name, expected_type, node.name),
                 )
-
-    def _is_test_function(self, node: nodes.FunctionDef) -> bool:
-        """Return True if function is a pytest function."""
-        return self._in_test_module and node.name.startswith("test_")
 
 
 def register(linter: PyLinter) -> None:
