@@ -70,6 +70,7 @@ FLOWS = {
         "azure_data_explorer",
         "azure_devops",
         "azure_event_hub",
+        "azure_openai_conversation",
         "baf",
         "balboa",
         "bang_olufsen",

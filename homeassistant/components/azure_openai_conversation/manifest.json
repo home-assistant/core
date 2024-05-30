@@ -1,0 +1,12 @@
+{
+  "domain": "azure_openai_conversation",
+  "name": "Azure OpenAI Conversation",
+  "after_dependencies": ["assist_pipeline", "intent"],
+  "codeowners": ["@zweckj"],
+  "config_flow": true,
+  "dependencies": ["conversation"],
+  "documentation": "https://www.home-assistant.io/integrations/azure_openai_conversation",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "requirements": ["openai==1.3.8", "voluptuous-openapi==0.0.4"]
+}
