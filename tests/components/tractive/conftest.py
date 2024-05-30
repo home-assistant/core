@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiotractive.trackable_object import TrackableObject
 from aiotractive.tracker import Tracker
@@ -31,7 +31,7 @@ def mock_tractive_client() -> Generator[AsyncMock, None, None]:
         client = mock_client.return_value
         client.authenticate.return_value = {"user_id": "12345"}
         client.trackable_objects.return_value = [
-            AsyncMock(
+            Mock(
                 spec=TrackableObject,
                 _id="xyz123",
                 type="pet",
