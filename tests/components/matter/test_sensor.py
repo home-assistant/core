@@ -387,3 +387,7 @@ async def test_air_purifier_sensor(
     state = hass.states.get("sensor.air_purifier_vocs")
     assert state
     assert state.state == "2.0"
+    assert state.attributes["state_class"] == "measurement"
+    assert state.attributes["unit_of_measurement"] == "ppm"
+    assert state.attributes["device_class"] == "volatile_organic_compounds_parts"
+    assert state.attributes["friendly_name"] == "Air Purifier VOCs"
