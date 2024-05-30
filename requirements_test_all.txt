@@ -2104,9 +2104,11 @@ temescal==0.5
 # homeassistant.components.temper
 temperusb==1.6.1
 
-# homeassistant.components.teslemetry
 # homeassistant.components.tessie
 tesla-fleet-api==0.6.1
+
+# homeassistant.components.teslemetry
+tesla-fleet-api==0.5.14
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
