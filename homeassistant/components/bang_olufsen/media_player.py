@@ -201,7 +201,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WebsocketNotification.ACTIVE_LISTENING_MODE}",
-                self._update_sound_modes,
+                self._async_update_sound_modes,
             )
         )
 
@@ -248,7 +248,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         # If the device has been updated with new sources, then the API will fail here.
         await self._update_sources()
 
-        await self._update_sound_modes()
+        await self._async_update_sound_modes()
 
         # Set the static entity attributes that needed more information.
         self._attr_source_list = list(self._sources.values())
@@ -369,7 +369,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         self.async_write_ha_state()
 
     @callback
-    async def _update_sound_modes(
+    async def _async_update_sound_modes(
         self, active_sound_mode: ListeningModeProps | ListeningModeRef | None = None
     ) -> None:
         """Update the available sound modes."""
