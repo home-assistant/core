@@ -54,6 +54,7 @@ def test_regex_get_module_platform(
         ("list[dict[str, str]]", 1, ("list", "dict[str, str]")),
         ("list[dict[str, Any]]", 1, ("list", "dict[str, Any]")),
         ("tuple[bytes | None, str | None]", 2, ("tuple", "bytes | None", "str | None")),
+        ("Callable[[], TestServer]", 2, ("Callable", "[]", "TestServer")),
     ],
 )
 def test_regex_x_of_y_i(
@@ -1130,12 +1131,14 @@ def test_notify_get_service(
 def test_pytest_function(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
-    """Ensure valid hints are accepted for async_get_service."""
+    """Ensure valid hints are accepted for a test function."""
     func_node = astroid.extract_node(
         """
     async def test_sample( #@
         hass: HomeAssistant,
         caplog: pytest.LogCaptureFixture,
+        aiohttp_server: Callable[[], TestServer],
+        unused_tcp_port_factory: Callable[[], int],
     ) -> None:
         pass
     """,
@@ -1152,16 +1155,20 @@ def test_pytest_function(
 def test_pytest_invalid_function(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
-    """Ensure invalid hints are rejected for async_get_service."""
-    func_node, hass_node, caplog_node = astroid.extract_node(
-        """
+    """Ensure invalid hints are rejected for a test function."""
+    func_node, hass_node, caplog_node, first_none_node, second_none_node = (
+        astroid.extract_node(
+            """
     async def test_sample( #@
         hass: Something, #@
         caplog: SomethingElse, #@
+        current_request_with_host, #@
+        enable_custom_integrations: None, #@
     ) -> Anything:
         pass
     """,
-        "tests.components.pylint_test.notify",
+            "tests.components.pylint_test.notify",
+        )
     )
     type_hint_checker.visit_module(func_node.parent)
 
@@ -1193,6 +1200,33 @@ def test_pytest_invalid_function(
             col_offset=4,
             end_line=4,
             end_col_offset=25,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-consider-usefixtures-decorator",
+            node=first_none_node,
+            args=("current_request_with_host", "None", "test_sample"),
+            line=5,
+            col_offset=4,
+            end_line=5,
+            end_col_offset=29,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=first_none_node,
+            args=("current_request_with_host", "None", "test_sample"),
+            line=5,
+            col_offset=4,
+            end_line=5,
+            end_col_offset=29,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-consider-usefixtures-decorator",
+            node=second_none_node,
+            args=("enable_custom_integrations", "None", "test_sample"),
+            line=6,
+            col_offset=4,
+            end_line=6,
+            end_col_offset=36,
         ),
     ):
         type_hint_checker.visit_asyncfunctiondef(func_node)

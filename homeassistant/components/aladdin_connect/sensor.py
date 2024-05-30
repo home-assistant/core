@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast
 
-from AIOAladdinConnect import AladdinConnectClient
+from genie_partner_sdk.client import AladdinConnectClient
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,13 +15,14 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import api
 from .const import DOMAIN
-from .model import DoorDevice
+from .model import GarageDoor
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -40,24 +41,6 @@ SENSORS: tuple[AccSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=AladdinConnectClient.get_battery_status,
     ),
-    AccSensorEntityDescription(
-        key="rssi",
-        translation_key="wifi_strength",
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-        entity_registry_enabled_default=False,
-        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=AladdinConnectClient.get_rssi_status,
-    ),
-    AccSensorEntityDescription(
-        key="ble_strength",
-        translation_key="ble_strength",
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-        entity_registry_enabled_default=False,
-        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=AladdinConnectClient.get_ble_strength,
-    ),
 )
 
 
@@ -66,7 +49,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up Aladdin Connect sensor devices."""
 
-    acc: AladdinConnectClient = hass.data[DOMAIN][entry.entry_id]
+    session: api.AsyncConfigEntryAuth = hass.data[DOMAIN][entry.entry_id]
+    acc = AladdinConnectClient(session)
 
     entities = []
     doors = await acc.get_doors()
@@ -88,26 +72,20 @@ class AladdinConnectSensor(SensorEntity):
     def __init__(
         self,
         acc: AladdinConnectClient,
-        device: DoorDevice,
+        device: GarageDoor,
         description: AccSensorEntityDescription,
     ) -> None:
         """Initialize a sensor for an Aladdin Connect device."""
-        self._device_id = device["device_id"]
-        self._number = device["door_number"]
+        self._device_id = device.device_id
+        self._number = device.door_number
         self._acc = acc
         self.entity_description = description
-        self._attr_unique_id = f"{self._device_id}-{self._number}-{description.key}"
+        self._attr_unique_id = f"{device.unique_id}-{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{self._device_id}-{self._number}")},
-            name=device["name"],
+            identifiers={(DOMAIN, device.unique_id)},
+            name=device.name,
             manufacturer="Overhead Door",
-            model=device["model"],
         )
-        if device["model"] == "01" and description.key in (
-            "battery_level",
-            "ble_strength",
-        ):
-            self._attr_entity_registry_enabled_default = True
 
     @property
     def native_value(self) -> float | None:
