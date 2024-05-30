@@ -86,6 +86,9 @@ class EvoService(StrEnum):
     RESET_ZONE_OVERRIDE: Final = "clear_zone_override"
 
 
+# system mode schemas are built dynamically when the services are regiatered
+
+
 RESET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
     {vol.Required(ATTR_ENTITY_ID): cv.entity_id}
 )
@@ -100,5 +103,3 @@ SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
         ),
     }
 )
-
-# system mode schemas are built dynamically, below

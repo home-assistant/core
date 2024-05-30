@@ -85,8 +85,6 @@ __all__ = ["CONFIG_SCHEMA", "DOMAIN", "EvoChild", "EvoDevice", "async_setup"]
 
 _LOGGER = logging.getLogger(__name__)
 
-# system mode schemas are built dynamically, below
-
 
 def _dt_local_to_aware(dt_naive: datetime) -> datetime:
     dt_aware = dt_util.now() + (dt_naive - datetime.now())
