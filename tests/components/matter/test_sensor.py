@@ -413,3 +413,25 @@ async def test_air_purifier_sensor(
     state = hass.states.get("sensor.air_purifier_carbon_monoxide")
     assert state
     assert state.state == "2.0"
+    assert state.attributes["state_class"] == "measurement"
+    assert state.attributes["unit_of_measurement"] == "ppm"
+    assert state.attributes["device_class"] == "carbon_monoxide"
+    assert state.attributes["friendly_name"] == "Air Purifier Carbon monoxide"
+
+    # Nitrogen Dioxide
+    state = hass.states.get("sensor.air_purifier_nitrogen_dioxide")
+    assert state
+    assert state.state == "2.0"
+    assert state.attributes["state_class"] == "measurement"
+    assert state.attributes["unit_of_measurement"] == "ppm"
+    assert state.attributes["device_class"] == "nitrogen_dioxide"
+    assert state.attributes["friendly_name"] == "Air Purifier Nitrogen dioxide"
+
+    # Ozone Concentration
+    state = hass.states.get("sensor.air_purifier_ozone")
+    assert state
+    assert state.state == "2.0"
+    assert state.attributes["state_class"] == "measurement"
+    assert state.attributes["unit_of_measurement"] == "ppm"
+    assert state.attributes["device_class"] == "ozone"
+    assert state.attributes["friendly_name"] == "Air Purifier Ozone"
