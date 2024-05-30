@@ -968,13 +968,27 @@ async def async_service_temperature_set(
         and high_temp - low_temp < min_temp_range
     ):
         # Ensure there is a minimum gap from the new temp.
+        new_high_temp = high_temp
+        new_low_temp = low_temp
         if (
             entity.target_temperature_high
             and abs(high_temp - entity.target_temperature_high) < 0.01
         ):
-            kwargs[ATTR_TARGET_TEMP_HIGH] = low_temp + min_temp_range
+            new_high_temp = low_temp + min_temp_range
         else:
-            kwargs[ATTR_TARGET_TEMP_LOW] = high_temp - min_temp_range
+            new_low_temp = high_temp - min_temp_range
+
+        if new_high_temp > (max_temp := entity.max_temp):
+            diff = new_high_temp - max_temp
+            new_high_temp -= diff
+            new_low_temp -= diff
+        elif new_low_temp < (min_temp := entity.min_temp):
+            diff = min_temp - new_low_temp
+            new_high_temp += diff
+            new_low_temp += diff
+
+        kwargs[ATTR_TARGET_TEMP_HIGH] = new_high_temp
+        kwargs[ATTR_TARGET_TEMP_LOW] = new_low_temp
 
     await entity.async_set_temperature(**kwargs)
 
