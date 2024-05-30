@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 import re
-from typing import Any
+from typing import Any, Final
 
 import evohomeasync as ev1
 from evohomeasync.schema import SZ_ID, SZ_SESSION_ID, SZ_TEMP
@@ -64,14 +64,15 @@ from .const import (
     ACCESS_TOKEN_EXPIRES,
     ATTR_DURATION_DAYS,
     ATTR_DURATION_HOURS,
+    ATTR_DURATION_UNTIL,
     ATTR_SYSTEM_MODE,
+    ATTR_ZONE_TEMP,
     CONF_LOCATION_IDX,
-    CONFIG_SCHEMA,
     DOMAIN,
     GWS,
     REFRESH_TOKEN,
-    RESET_ZONE_OVERRIDE_SCHEMA,
-    SET_ZONE_OVERRIDE_SCHEMA,
+    SCAN_INTERVAL_DEFAULT,
+    SCAN_INTERVAL_MINIMUM,
     STORAGE_KEY,
     STORAGE_VER,
     TCS,
@@ -80,10 +81,40 @@ from .const import (
     EvoService,
 )
 
-__all__ = ["CONFIG_SCHEMA", "DOMAIN", "EvoChild", "EvoDevice", "async_setup"]
-
-
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA: Final = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_LOCATION_IDX, default=0): cv.positive_int,
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=SCAN_INTERVAL_DEFAULT
+                ): vol.All(cv.time_period, vol.Range(min=SCAN_INTERVAL_MINIMUM)),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+# system mode schemas are built dynamically when the services are regiatered
+
+RESET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
+    {vol.Required(ATTR_ENTITY_ID): cv.entity_id}
+)
+SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_ZONE_TEMP): vol.All(
+            vol.Coerce(float), vol.Range(min=4.0, max=35.0)
+        ),
+        vol.Optional(ATTR_DURATION_UNTIL): vol.All(
+            cv.time_period, vol.Range(min=timedelta(days=0), max=timedelta(days=1))
+        ),
+    }
+)
 
 
 def _dt_local_to_aware(dt_naive: datetime) -> datetime:
