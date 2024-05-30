@@ -148,7 +148,7 @@ def get_zeroconf_info_mock_model(model):
     return mock_zc_info
 
 
-async def test_setup(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
+async def test_setup(hass: HomeAssistant, mock_async_zeroconf: MagicMock) -> None:
     """Test configured options for a device are loaded via config entry."""
     mock_zc = {
         "_http._tcp.local.": [
@@ -994,7 +994,9 @@ async def test_info_from_service_can_return_ipv6(hass: HomeAssistant) -> None:
     assert info.host == "fd11:1111:1111:0:1234:1234:1234:1234"
 
 
-async def test_get_instance(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
+async def test_get_instance(
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
+) -> None:
     """Test we get an instance."""
     assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
     assert await zeroconf.async_get_async_instance(hass) is mock_async_zeroconf
