@@ -80,7 +80,7 @@
     },
     "sensor": {
       "activated_carbon_filter_condition": {
-        "name": "Activated Carbon Filter Condition"
+        "name": "Activated carbon filter condition"
       },
       "air_quality": {
         "name": "Air Quality",
