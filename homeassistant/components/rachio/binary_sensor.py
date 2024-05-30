@@ -20,6 +20,7 @@ from .const import (
     KEY_DEVICE_ID,
     KEY_LOW,
     KEY_RAIN_SENSOR_TRIPPED,
+    KEY_REPLACE,
     KEY_REPORTED_STATE,
     KEY_STATE,
     KEY_STATUS,
@@ -171,4 +172,7 @@ class RachioHoseTimerBattery(RachioHoseTimerEntity, BinarySensorEntity):
         data = self.coordinator.data[self.id]
 
         self._static_attrs = data[KEY_STATE][KEY_REPORTED_STATE]
-        self._attr_is_on = self._static_attrs[KEY_BATTERY_STATUS] == KEY_LOW
+        self._attr_is_on = self._static_attrs[KEY_BATTERY_STATUS] in [
+            KEY_LOW,
+            KEY_REPLACE,
+        ]

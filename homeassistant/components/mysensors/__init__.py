@@ -110,7 +110,7 @@ def setup_mysensors_platform(
     device_class: type[MySensorsChildEntity]
     | Mapping[SensorType, type[MySensorsChildEntity]],
     device_args: (
-        None | tuple
+        tuple | None
     ) = None,  # extra arguments that will be given to the entity constructor
     async_add_entities: Callable | None = None,
 ) -> list[MySensorsChildEntity] | None:

@@ -8,6 +8,7 @@ from typing import Any
 from switchbot import (
     SwitchbotAccountConnectionError,
     SwitchBotAdvertisement,
+    SwitchbotApiError,
     SwitchbotAuthenticationError,
     SwitchbotLock,
     SwitchbotModel,
@@ -33,6 +34,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_ENCRYPTION_KEY,
@@ -175,14 +177,19 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders = {}
         if user_input is not None:
             try:
-                key_details = await self.hass.async_add_executor_job(
-                    SwitchbotLock.retrieve_encryption_key,
+                key_details = await SwitchbotLock.async_retrieve_encryption_key(
+                    async_get_clientsession(self.hass),
                     self._discovered_adv.address,
                     user_input[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
                 )
-            except SwitchbotAccountConnectionError as ex:
-                raise AbortFlow("cannot_connect") from ex
+            except (SwitchbotApiError, SwitchbotAccountConnectionError) as ex:
+                _LOGGER.debug(
+                    "Failed to connect to SwitchBot API: %s", ex, exc_info=True
+                )
+                raise AbortFlow(
+                    "api_error", description_placeholders={"error_detail": str(ex)}
+                ) from ex
             except SwitchbotAuthenticationError as ex:
                 _LOGGER.debug("Authentication failed: %s", ex, exc_info=True)
                 errors = {"base": "auth_failed"}

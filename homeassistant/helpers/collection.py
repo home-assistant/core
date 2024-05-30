@@ -35,9 +35,6 @@ CHANGE_ADDED = "added"
 CHANGE_UPDATED = "updated"
 CHANGE_REMOVED = "removed"
 
-_ItemT = TypeVar("_ItemT")
-_StoreT = TypeVar("_StoreT", bound="SerializedStorageCollection")
-_StorageCollectionT = TypeVar("_StorageCollectionT", bound="StorageCollection")
 _EntityT = TypeVar("_EntityT", bound=Entity, default=Entity)
 
 
@@ -55,7 +52,7 @@ class CollectionChangeSet:
     item: Any
 
 
-ChangeListener = Callable[
+type ChangeListener = Callable[
     [
         # Change type
         str,
@@ -67,7 +64,7 @@ ChangeListener = Callable[
     Awaitable[None],
 ]
 
-ChangeSetListener = Callable[[Iterable[CollectionChangeSet]], Awaitable[None]]
+type ChangeSetListener = Callable[[Iterable[CollectionChangeSet]], Awaitable[None]]
 
 
 class CollectionError(HomeAssistantError):
@@ -129,7 +126,7 @@ class CollectionEntity(Entity):
         """Handle updated configuration."""
 
 
-class ObservableCollection(ABC, Generic[_ItemT]):
+class ObservableCollection[_ItemT](ABC):
     """Base collection type that can be observed."""
 
     def __init__(self, id_manager: IDManager | None) -> None:
@@ -236,7 +233,9 @@ class SerializedStorageCollection(TypedDict):
     items: list[dict[str, Any]]
 
 
-class StorageCollection(ObservableCollection[_ItemT], Generic[_ItemT, _StoreT]):
+class StorageCollection[_ItemT, _StoreT: SerializedStorageCollection](
+    ObservableCollection[_ItemT]
+):
     """Offer a CRUD interface on top of JSON storage."""
 
     def __init__(
@@ -512,7 +511,7 @@ def sync_entity_lifecycle(
     ).async_setup()
 
 
-class StorageCollectionWebsocket(Generic[_StorageCollectionT]):
+class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
     """Class to expose storage collection management over websocket."""
 
     def __init__(

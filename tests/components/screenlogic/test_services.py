@@ -473,7 +473,7 @@ async def test_service_config_entry_not_loaded(
         assert hass.services.has_service(DOMAIN, SERVICE_SET_COLOR_MODE)
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-        await mock_config_entry.async_unload(hass)
+        await hass.config_entries.async_unload(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 

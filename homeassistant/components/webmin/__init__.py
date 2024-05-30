@@ -8,7 +8,7 @@ from .coordinator import WebminUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
-WebminConfigEntry = ConfigEntry[WebminUpdateCoordinator]
+type WebminConfigEntry = ConfigEntry[WebminUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WebminConfigEntry) -> bool:

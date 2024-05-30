@@ -10,7 +10,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_unordered import unordered
 
-from homeassistant.components.homeassistant_alerts import (
+from homeassistant.components.homeassistant_alerts.const import (
     COMPONENT_LOADED_COOLDOWN,
     DOMAIN,
     UPDATE_INTERVAL,
@@ -134,15 +134,15 @@ async def test_alerts(
 
     with (
         patch(
-            "homeassistant.components.homeassistant_alerts.__version__",
+            "homeassistant.components.homeassistant_alerts.coordinator.__version__",
             ha_version,
         ),
         patch(
-            "homeassistant.components.homeassistant_alerts.is_hassio",
+            "homeassistant.components.homeassistant_alerts.coordinator.is_hassio",
             return_value=supervisor_info is not None,
         ),
         patch(
-            "homeassistant.components.homeassistant_alerts.get_supervisor_info",
+            "homeassistant.components.homeassistant_alerts.coordinator.get_supervisor_info",
             return_value=supervisor_info,
         ),
     ):
@@ -317,15 +317,15 @@ async def test_alerts_refreshed_on_component_load(
 
     with (
         patch(
-            "homeassistant.components.homeassistant_alerts.__version__",
+            "homeassistant.components.homeassistant_alerts.coordinator.__version__",
             ha_version,
         ),
         patch(
-            "homeassistant.components.homeassistant_alerts.is_hassio",
+            "homeassistant.components.homeassistant_alerts.coordinator.is_hassio",
             return_value=supervisor_info is not None,
         ),
         patch(
-            "homeassistant.components.homeassistant_alerts.get_supervisor_info",
+            "homeassistant.components.homeassistant_alerts.coordinator.get_supervisor_info",
             return_value=supervisor_info,
         ),
     ):
@@ -361,15 +361,15 @@ async def test_alerts_refreshed_on_component_load(
 
     with (
         patch(
-            "homeassistant.components.homeassistant_alerts.__version__",
+            "homeassistant.components.homeassistant_alerts.coordinator.__version__",
             ha_version,
         ),
         patch(
-            "homeassistant.components.homeassistant_alerts.is_hassio",
+            "homeassistant.components.homeassistant_alerts.coordinator.is_hassio",
             return_value=supervisor_info is not None,
         ),
         patch(
-            "homeassistant.components.homeassistant_alerts.get_supervisor_info",
+            "homeassistant.components.homeassistant_alerts.coordinator.get_supervisor_info",
             return_value=supervisor_info,
         ),
     ):
@@ -456,7 +456,7 @@ async def test_bad_alerts(
         hass.config.components.add(domain)
 
     with patch(
-        "homeassistant.components.homeassistant_alerts.__version__",
+        "homeassistant.components.homeassistant_alerts.coordinator.__version__",
         ha_version,
     ):
         assert await async_setup_component(hass, DOMAIN, {})
@@ -615,7 +615,7 @@ async def test_alerts_change(
         hass.config.components.add(domain)
 
     with patch(
-        "homeassistant.components.homeassistant_alerts.__version__",
+        "homeassistant.components.homeassistant_alerts.coordinator.__version__",
         ha_version,
     ):
         assert await async_setup_component(hass, DOMAIN, {})

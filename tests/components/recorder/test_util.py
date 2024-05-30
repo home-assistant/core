@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 import os
 from pathlib import Path
 import sqlite3
+import threading
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -25,7 +26,6 @@ from homeassistant.components.recorder.models import (
     process_timestamp,
 )
 from homeassistant.components.recorder.util import (
-    chunked_or_all,
     end_incomplete_runs,
     is_second_sunday,
     resolve_period,
@@ -33,7 +33,7 @@ from homeassistant.components.recorder.util import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from .common import (
@@ -617,7 +617,11 @@ def test_warn_unsupported_dialect(
     ],
 )
 async def test_issue_for_mariadb_with_MDEV_25020(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mysql_version, min_version
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mysql_version,
+    min_version,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we create an issue for MariaDB versions affected.
 
@@ -652,8 +656,7 @@ async def test_issue_for_mariadb_with_MDEV_25020(
     )
     await hass.async_block_till_done()
 
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
+    issue = issue_registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
     assert issue is not None
     assert issue.translation_placeholders == {"min_version": min_version}
 
@@ -672,7 +675,10 @@ async def test_issue_for_mariadb_with_MDEV_25020(
     ],
 )
 async def test_no_issue_for_mariadb_with_MDEV_25020(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mysql_version
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mysql_version,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we do not create an issue for MariaDB versions not affected.
 
@@ -707,8 +713,7 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
     )
     await hass.async_block_till_done()
 
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
+    issue = issue_registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
     assert issue is None
 
     assert database_engine is not None
@@ -843,9 +848,7 @@ async def test_periodic_db_cleanups(
     assert str(text_obj) == "PRAGMA wal_checkpoint(TRUNCATE);"
 
 
-@patch("homeassistant.components.recorder.pool.check_loop")
 async def test_write_lock_db(
-    skip_check_loop,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     tmp_path: Path,
@@ -864,6 +867,7 @@ async def test_write_lock_db(
         with instance.engine.connect() as connection:
             connection.execute(text("DROP TABLE events;"))
 
+    instance.recorder_and_worker_thread_ids.add(threading.get_ident())
     with util.write_lock_db_sqlite(instance), pytest.raises(OperationalError):
         # Database should be locked now, try writing SQL command
         # This needs to be called in another thread since
@@ -872,7 +876,7 @@ async def test_write_lock_db(
         # in the same thread as the one holding the lock since it
         # would be allowed to proceed as the goal is to prevent
         # all the other threads from accessing the database
-        await hass.async_add_executor_job(_drop_table)
+        await instance.async_add_executor_job(_drop_table)
 
 
 def test_is_second_sunday() -> None:
@@ -1046,24 +1050,3 @@ async def test_resolve_period(hass: HomeAssistant) -> None:
             }
         }
     ) == (now - timedelta(hours=1, minutes=25), now - timedelta(minutes=25))
-
-
-def test_chunked_or_all():
-    """Test chunked_or_all can iterate chunk sizes larger than the passed in collection."""
-    all_items = []
-    incoming = (1, 2, 3, 4)
-    for chunk in chunked_or_all(incoming, 2):
-        assert len(chunk) == 2
-        all_items.extend(chunk)
-    assert all_items == [1, 2, 3, 4]
-
-    all_items = []
-    incoming = (1, 2, 3, 4)
-    for chunk in chunked_or_all(incoming, 5):
-        assert len(chunk) == 4
-        # Verify the chunk is the same object as the incoming
-        # collection since we want to avoid copying the collection
-        # if we don't need to
-        assert chunk is incoming
-        all_items.extend(chunk)
-    assert all_items == [1, 2, 3, 4]

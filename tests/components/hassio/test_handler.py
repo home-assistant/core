@@ -322,8 +322,8 @@ async def test_api_ingress_panels(
 )
 async def test_api_headers(
     aiohttp_raw_server,  # 'aiohttp_raw_server' must be before 'hass'!
-    hass,
-    socket_enabled,
+    hass: HomeAssistant,
+    socket_enabled: None,
     api_call: str,
     method: Literal["GET", "POST"],
     payload: Any,
