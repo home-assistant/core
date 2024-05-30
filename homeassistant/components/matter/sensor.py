@@ -349,4 +349,19 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(clusters.HepaFilterMonitoring.Attributes.Condition,),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ActivatedCarbonFilterCondition",
+            native_unit_of_measurement=PERCENTAGE,
+            device_class=None,
+            state_class=SensorStateClass.MEASUREMENT,
+            translation_key="activated_carbon_filter_condition",
+            icon="mdi:filter-check",
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.ActivatedCarbonFilterMonitoring.Attributes.Condition,
+        ),
+    ),
 ]

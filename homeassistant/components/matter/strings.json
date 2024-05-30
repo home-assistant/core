@@ -79,6 +79,9 @@
       }
     },
     "sensor": {
+      "activated_carbon_filter_condition": {
+        "name": "Activated Carbon Filter Condition"
+      },
       "air_quality": {
         "name": "Air Quality",
         "state": {
