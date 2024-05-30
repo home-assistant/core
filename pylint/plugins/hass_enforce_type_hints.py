@@ -69,7 +69,7 @@ class ClassTypeHintMatch:
     matches: list[TypeHintMatch]
 
 
-_INNER_MATCH = r"((?:[\w\| ]+)|(?:\.{3})|(?:\w+\[.+\]))"
+_INNER_MATCH = r"((?:[\w\| ]+)|(?:\.{3})|(?:\w+\[.+\])|(?:\[\]))"
 _TYPE_HINT_MATCHERS: dict[str, re.Pattern[str]] = {
     # a_or_b matches items such as "DiscoveryInfoType | None"
     # or "dict | list | None"
@@ -146,7 +146,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "mqtt_mock_entry": "MqttMockHAClientGenerator",
     "recorder_db_url": "str",
     "recorder_mock": "Recorder",
-    "requests_mock": "requests_mock.Mocker",
+    "requests_mock": "Mocker",
     "snapshot": "SnapshotAssertion",
     "socket_enabled": "None",
     "stub_blueprint_populate": "None",
@@ -2913,6 +2913,10 @@ def _is_valid_type(
     # Const occurs when the type is an Ellipsis
     if expected_type == "...":
         return isinstance(node, nodes.Const) and node.value == Ellipsis
+
+    # Special case for an empty list, such as Callable[[], TestServer]
+    if expected_type == "[]":
+        return isinstance(node, nodes.List) and node.elts == []
 
     # Special case for `xxx | yyy`
     if match := _TYPE_HINT_MATCHERS["a_or_b"].match(expected_type):

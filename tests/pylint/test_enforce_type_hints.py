@@ -54,6 +54,7 @@ def test_regex_get_module_platform(
         ("list[dict[str, str]]", 1, ("list", "dict[str, str]")),
         ("list[dict[str, Any]]", 1, ("list", "dict[str, Any]")),
         ("tuple[bytes | None, str | None]", 2, ("tuple", "bytes | None", "str | None")),
+        ("Callable[[], TestServer]", 2, ("Callable", "[]", "TestServer")),
     ],
 )
 def test_regex_x_of_y_i(
@@ -1130,12 +1131,15 @@ def test_notify_get_service(
 def test_pytest_function(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
-    """Ensure valid hints are accepted for async_get_service."""
+    """Ensure valid hints are accepted for a test function."""
     func_node = astroid.extract_node(
         """
     async def test_sample( #@
         hass: HomeAssistant,
         caplog: pytest.LogCaptureFixture,
+        requests_mock: Mocker,
+        aiohttp_server: Callable[[], TestServer],
+        unused_tcp_port_factory: Callable[[], int],
     ) -> None:
         pass
     """,
@@ -1152,7 +1156,7 @@ def test_pytest_function(
 def test_pytest_invalid_function(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
-    """Ensure invalid hints are rejected for async_get_service."""
+    """Ensure invalid hints are rejected for a test function."""
     func_node, hass_node, caplog_node = astroid.extract_node(
         """
     async def test_sample( #@
