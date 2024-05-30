@@ -13,7 +13,6 @@ from homeassistant.const import (
     ATTR_HW_VERSION,
     ATTR_SERIAL_NUMBER,
     CONF_HOST,
-    CONF_NAME,
     CONF_TYPE,
 )
 from homeassistant.core import callback
@@ -33,13 +32,11 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize flow."""
-        self._host: str
-        self._name: str
-        self._serial_number: str
-        self._board_revision: str
-        self._device_type: str
+    _host: str
+    _name: str
+    _serial_number: str
+    _board_revision: str
+    _device_type: str
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
@@ -82,7 +79,6 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
             title=self._name,
             data={
                 CONF_HOST: self._host,
-                CONF_NAME: self._name,
                 ATTR_SERIAL_NUMBER: self._serial_number,
                 CONF_TYPE: self._device_type,
                 ATTR_HW_VERSION: self._board_revision,
