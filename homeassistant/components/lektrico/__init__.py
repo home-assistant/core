@@ -5,13 +5,7 @@ from __future__ import annotations
 from lektricowifi import Device
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_HW_VERSION,
-    ATTR_SERIAL_NUMBER,
-    CONF_HOST,
-    CONF_TYPE,
-    Platform,
-)
+from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -29,10 +23,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = LektricoDeviceDataUpdateCoordinator(
         hass,
         f"{entry.data[CONF_TYPE]}_{entry.data[ATTR_SERIAL_NUMBER]}",
-        entry.data[CONF_HOST],
-        entry.data[ATTR_SERIAL_NUMBER],
-        entry.data[ATTR_HW_VERSION],
-        entry.data[CONF_TYPE],
     )
 
     await coordinator.async_config_entry_first_refresh()
