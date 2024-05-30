@@ -28,7 +28,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
-    CONF_API_VERSION,
+    AZURE_OPEN_API_VERSION,
     CONF_AZURE_OPENAI_RESOURCE,
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -36,7 +36,6 @@ from .const import (
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_TOP_P,
-    DEFAULT_API_VERSION,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
@@ -50,7 +49,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_AZURE_OPENAI_RESOURCE): str,
         vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_API_VERSION, default=DEFAULT_API_VERSION): str,
     }
 )
 
@@ -66,43 +64,42 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    client = openai.AsyncAzureOpenAI(
-        azure_endpoint=f"https://{data[CONF_AZURE_OPENAI_RESOURCE]}.openai.azure.com",
-        api_key=str(data[CONF_API_KEY]),
-        api_version=str(data[CONF_API_VERSION]),
-    )
-    await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
 
 
-class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
+class AzureOpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Azure OpenAI Conversation."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
-
         errors = {}
 
-        try:
-            await validate_input(self.hass, user_input)
-        except openai.APIConnectionError:
-            errors["base"] = "cannot_connect"
-        except openai.AuthenticationError:
-            errors["base"] = "invalid_auth"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            return self.async_create_entry(
-                title="Azure OpenAI",
-                data=user_input,
-                options=RECOMMENDED_OPTIONS,
+        if user_input is not None:
+            client = openai.AsyncAzureOpenAI(
+                azure_endpoint=f"https://{user_input[CONF_AZURE_OPENAI_RESOURCE]}.openai.azure.com",
+                api_key=str(user_input[CONF_API_KEY]),
+                api_version=AZURE_OPEN_API_VERSION,
             )
+            try:
+                await self.hass.async_add_executor_job(
+                    client.with_options(timeout=10.0).models.list
+                )
+            except openai.APIConnectionError:
+                errors["base"] = "cannot_connect"
+            except openai.AuthenticationError:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(user_input[CONF_AZURE_OPENAI_RESOURCE])
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title="Azure OpenAI",
+                    data=user_input,
+                    options=RECOMMENDED_OPTIONS,
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -113,10 +110,10 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Create the options flow."""
-        return OpenAIOptionsFlow(config_entry)
+        return AzureOpenAIOptionsFlow(config_entry)
 
 
-class OpenAIOptionsFlow(OptionsFlow):
+class AzureOpenAIOptionsFlow(OptionsFlow):
     """OpenAI config flow options handler."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
