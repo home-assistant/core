@@ -67,4 +67,5 @@ async def test_import_unique_id_migration(hass: HomeAssistant) -> None:
 
     # Confirm that when the component is reloaded, the unique_id is not changed
     await hass.config_entries.async_reload(entries[0].entry_id)
-    assert ent_reg.async_get(sample_entity.entity_id).unique_id == new_unique_id
+    er_entries = er.async_entries_for_config_entry(ent_reg, entries[0].entry_id)
+    assert all(entry.unique_id.startswith(entries[0].entry_id) for entry in er_entries)
