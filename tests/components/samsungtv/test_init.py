@@ -33,10 +33,11 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_samsungtv_entry
 from .const import (
+    MOCK_ENTRY_WS_WITH_MAC,
     MOCK_ENTRYDATA_ENCRYPTED_WS,
     MOCK_ENTRYDATA_WS,
     MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
@@ -216,3 +217,50 @@ async def test_incorrectly_formatted_mac_fixed(hass: HomeAssistant) -> None:
         config_entries = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
         assert len(config_entries) == 1
         assert config_entries[0].data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
+
+
+@pytest.mark.usefixtures("remotews", "rest_api")
+async def test_cleanup_mac(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, snapshot: SnapshotAssertion
+) -> None:
+    """Test for `none` mac cleanup #103512."""
+    entry = MockConfigEntry(
+        domain=SAMSUNGTV_DOMAIN,
+        data=MOCK_ENTRY_WS_WITH_MAC,
+        entry_id="123456",
+        unique_id="any",
+        version=2,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    # Setup initial device registry, with incorrect MAC
+    device_registry.async_get_or_create(
+        config_entry_id="123456",
+        connections={
+            (dr.CONNECTION_NETWORK_MAC, "none"),
+            (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
+        },
+        identifiers={("samsungtv", "any")},
+        model="82GXARRS",
+        name="fake",
+    )
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert device_entries == snapshot
+    assert device_entries[0].connections == {
+        (dr.CONNECTION_NETWORK_MAC, "none"),
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
+    }
+
+    # Run setup, and ensure the NONE mac is removed
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert device_entries == snapshot
+    assert device_entries[0].connections == {
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")
+    }
+
+    assert entry.version == 2
+    assert entry.minor_version == 2

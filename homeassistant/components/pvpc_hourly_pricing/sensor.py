@@ -23,8 +23,8 @@ from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ElecPricesDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import ElecPricesDataUpdateCoordinator
 from .helpers import make_sensor_unique_id
 
 _LOGGER = logging.getLogger(__name__)

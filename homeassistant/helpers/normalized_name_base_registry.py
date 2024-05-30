@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import TypeVar
 
 from .registry import BaseRegistryItems
 
@@ -15,16 +14,15 @@ class NormalizedNameBaseRegistryEntry:
     normalized_name: str
 
 
-_VT = TypeVar("_VT", bound=NormalizedNameBaseRegistryEntry)
-
-
 @lru_cache(maxsize=1024)
 def normalize_name(name: str) -> str:
     """Normalize a name by removing whitespace and case folding."""
     return name.casefold().replace(" ", "")
 
 
-class NormalizedNameBaseRegistryItems(BaseRegistryItems[_VT]):
+class NormalizedNameBaseRegistryItems[_VT: NormalizedNameBaseRegistryEntry](
+    BaseRegistryItems[_VT]
+):
     """Base container for normalized name registry items, maps key -> entry.
 
     Maintains an additional index:

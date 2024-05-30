@@ -5,7 +5,8 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from . import api, config_flow
+from .api import OndiloClient
+from .config_flow import OndiloIcoOAuth2FlowHandler
 from .const import DOMAIN
 from .coordinator import OndiloIcoCoordinator
 from .oauth_impl import OndiloOauth2Implementation
@@ -16,7 +17,7 @@ PLATFORMS = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ondilo ICO from a config entry."""
 
-    config_flow.OAuth2FlowHandler.async_register_implementation(
+    OndiloIcoOAuth2FlowHandler.async_register_implementation(
         hass,
         OndiloOauth2Implementation(hass),
     )
@@ -27,9 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    coordinator = OndiloIcoCoordinator(
-        hass, api.OndiloClient(hass, entry, implementation)
-    )
+    coordinator = OndiloIcoCoordinator(hass, OndiloClient(hass, entry, implementation))
 
     await coordinator.async_config_entry_first_refresh()
 

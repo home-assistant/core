@@ -55,17 +55,19 @@ async def test_device_config_file_changed_confirm_step(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
     client,
     multisensor_6_state,
     integration,
 ) -> None:
     """Test the device_config_file_changed issue confirm step."""
-    dev_reg = dr.async_get(hass)
     node = await _trigger_repair_issue(hass, client, multisensor_6_state)
 
     client.async_send_command_no_wait.reset_mock()
 
-    device = dev_reg.async_get_device(identifiers={get_device_id(client.driver, node)})
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, node)}
+    )
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
 
@@ -128,17 +130,19 @@ async def test_device_config_file_changed_ignore_step(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
     client,
     multisensor_6_state,
     integration,
 ) -> None:
     """Test the device_config_file_changed issue ignore step."""
-    dev_reg = dr.async_get(hass)
     node = await _trigger_repair_issue(hass, client, multisensor_6_state)
 
     client.async_send_command_no_wait.reset_mock()
 
-    device = dev_reg.async_get_device(identifiers={get_device_id(client.driver, node)})
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, node)}
+    )
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
 
@@ -256,15 +260,17 @@ async def test_abort_confirm(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
     client,
     multisensor_6_state,
     integration,
 ) -> None:
     """Test aborting device_config_file_changed issue in confirm step."""
-    dev_reg = dr.async_get(hass)
     node = await _trigger_repair_issue(hass, client, multisensor_6_state)
 
-    device = dev_reg.async_get_device(identifiers={get_device_id(client.driver, node)})
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, node)}
+    )
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
 

@@ -40,7 +40,7 @@ from homeassistant.components.bluetooth.match import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -3151,6 +3151,7 @@ async def test_issue_outdated_haos_removed(
     mock_bleak_scanner_start: MagicMock,
     no_adapters: None,
     operating_system_85: None,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we do not create an issue on outdated haos anymore."""
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
@@ -3158,8 +3159,7 @@ async def test_issue_outdated_haos_removed(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "haos_outdated")
+    issue = issue_registry.async_get_issue(DOMAIN, "haos_outdated")
     assert issue is None
 
 
@@ -3168,6 +3168,7 @@ async def test_haos_9_or_later(
     mock_bleak_scanner_start: MagicMock,
     one_adapter: None,
     operating_system_90: None,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we do not create issues for haos 9.x or later."""
     entry = MockConfigEntry(
@@ -3178,8 +3179,7 @@ async def test_haos_9_or_later(
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "haos_outdated")
+    issue = issue_registry.async_get_issue(DOMAIN, "haos_outdated")
     assert issue is None
 
 

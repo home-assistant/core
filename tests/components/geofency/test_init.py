@@ -3,6 +3,7 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant import config_entries
@@ -20,6 +21,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
+
+from tests.typing import ClientSessionGenerator
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
@@ -118,7 +121,9 @@ def mock_dev_track(mock_device_tracker_conf):
 
 
 @pytest.fixture
-async def geofency_client(hass, hass_client_no_auth):
+async def geofency_client(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> TestClient:
     """Geofency mock client (unauthenticated)."""
 
     assert await async_setup_component(

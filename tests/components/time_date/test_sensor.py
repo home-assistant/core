@@ -51,7 +51,7 @@ async def test_intervals(
     tracked_time,
 ) -> None:
     """Test timing intervals of sensors when time zone is UTC."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to(start_time)
 
     await load_int(hass, display_option)
@@ -61,7 +61,7 @@ async def test_intervals(
 
 async def test_states(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Test states of sensors."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     now = dt_util.utc_from_timestamp(1495068856)
     freezer.move_to(now)
 
@@ -121,7 +121,7 @@ async def test_states_non_default_timezone(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test states of sensors in a timezone other than UTC."""
-    hass.config.set_time_zone("America/New_York")
+    await hass.config.async_set_time_zone("America/New_York")
     now = dt_util.utc_from_timestamp(1495068856)
     freezer.move_to(now)
 
@@ -254,7 +254,7 @@ async def test_timezone_intervals(
     tracked_time,
 ) -> None:
     """Test timing intervals of sensors in timezone other than UTC."""
-    hass.config.set_time_zone(time_zone)
+    await hass.config.async_set_time_zone(time_zone)
     freezer.move_to(start_time)
 
     await load_int(hass, "date")
@@ -304,6 +304,7 @@ async def test_deprecation_warning(
     display_options: list[str],
     expected_warnings: list[str],
     expected_issues: list[str],
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test deprecation warning for swatch beat."""
     config = {
@@ -321,7 +322,6 @@ async def test_deprecation_warning(
     for expected_warning in expected_warnings:
         assert any(expected_warning in warning.message for warning in warnings)
 
-    issue_registry = ir.async_get(hass)
     assert len(issue_registry.issues) == len(expected_issues)
     for expected_issue in expected_issues:
         assert (DOMAIN, expected_issue) in issue_registry.issues

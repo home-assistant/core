@@ -9,7 +9,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
 
-from .bridge import DiscoveryService
 from .const import (
     COORDINATORS,
     DATA_DISCOVERY_SERVICE,
@@ -17,6 +16,7 @@ from .const import (
     DISPATCHERS,
     DOMAIN,
 )
+from .coordinator import DiscoveryService
 
 _LOGGER = logging.getLogger(__name__)
 

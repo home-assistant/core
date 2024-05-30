@@ -1,6 +1,6 @@
 """Support for the OSO Energy devices and services."""
 
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from aiohttp.web_exceptions import HTTPException
 from apyosoenergyapi import OSOEnergy
@@ -21,19 +21,14 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
-_OSOEnergyT = TypeVar(
-    "_OSOEnergyT",
-    OSOEnergyBinarySensorData,
-    OSOEnergySensorData,
-    OSOEnergyWaterHeaterData,
-)
-
 MANUFACTURER = "OSO Energy"
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.SENSOR,
     Platform.WATER_HEATER,
 ]
 PLATFORM_LOOKUP = {
+    Platform.BINARY_SENSOR: "binary_sensor",
     Platform.SENSOR: "sensor",
     Platform.WATER_HEATER: "water_heater",
 }
@@ -77,7 +72,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class OSOEnergyEntity(Entity, Generic[_OSOEnergyT]):
+class OSOEnergyEntity[
+    _OSOEnergyT: (
+        OSOEnergyBinarySensorData,
+        OSOEnergySensorData,
+        OSOEnergyWaterHeaterData,
+    )
+](Entity):
     """Initiate OSO Energy Base Class."""
 
     _attr_has_entity_name = True
