@@ -432,7 +432,7 @@ async def test_assist_api_prompt(
 
     area_prompt = (
         "When a user asks to turn on all devices of a specific type, "
-        "ask user to specify an area."
+        "ask user to specify an area, unless there is only one device of that type."
     )
     api = await llm.async_get_api(hass, "assist", tool_context)
     assert api.api_prompt == (

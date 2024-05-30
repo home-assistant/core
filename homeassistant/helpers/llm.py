@@ -282,7 +282,7 @@ class AssistAPI(API):
         else:
             prompt.append(
                 "When a user asks to turn on all devices of a specific type, "
-                "ask user to specify an area."
+                "ask user to specify an area, unless there is only one device of that type."
             )
 
         if not tool_context.device_id or not async_device_supports_timers(
