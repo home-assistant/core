@@ -15,6 +15,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
+    SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     HVACMode,
 )
@@ -37,6 +38,7 @@ from .const import (
 from tests.common import async_fire_time_changed
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_climate(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -108,7 +110,82 @@ async def test_climate(
     state = hass.states.get(entity_id)
     assert state.state == HVACMode.OFF
 
+    entity_id = "climate.test_cabin_overheat_protection"
 
+    # Turn On and Set Low
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: [entity_id],
+            ATTR_TEMPERATURE: 30,
+            ATTR_HVAC_MODE: HVACMode.FAN_ONLY,
+        },
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_TEMPERATURE] == 30
+    assert state.state == HVACMode.FAN_ONLY
+
+    # Set Temp Medium
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: [entity_id],
+            ATTR_TEMPERATURE: 35,
+        },
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_TEMPERATURE] == 35
+
+    # Set Temp High
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: [entity_id],
+            ATTR_TEMPERATURE: 40,
+        },
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_TEMPERATURE] == 40
+
+    # Turn Off
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: [entity_id]},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == HVACMode.OFF
+
+    # Turn On
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: [entity_id]},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == HVACMode.COOL
+
+    # pytest raises ServiceValidationError
+    with pytest.raises(ServiceValidationError) as error:
+        # Invalid Temp
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 25},
+            blocking=True,
+        )
+        assert error
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_climate_alt(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -122,6 +199,7 @@ async def test_climate_alt(
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_climate_offline(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -201,6 +279,7 @@ async def test_ignored_error(
         mock_on.assert_called_once()
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_asleep_or_offline(
     hass: HomeAssistant,
     mock_vehicle_data,
