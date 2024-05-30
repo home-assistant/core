@@ -102,6 +102,7 @@ from .const import (
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     LIB_LOGGER,
     LOGGER,
+    LR_ADDON_VERSION,
     USER_AGENT,
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
@@ -1066,9 +1067,7 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
         CONF_ADDON_S2_AUTHENTICATED_KEY: s2_authenticated_key,
         CONF_ADDON_S2_UNAUTHENTICATED_KEY: s2_unauthenticated_key,
     }
-    if addon_info.version and AwesomeVersion(addon_info.version) >= AwesomeVersion(
-        "1.0.0"
-    ):
+    if addon_info.version and AwesomeVersion(addon_info.version) >= LR_ADDON_VERSION:
         addon_config[CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY] = lr_s2_access_control_key
         addon_config[CONF_ADDON_LR_S2_AUTHENTICATED_KEY] = lr_s2_authenticated_key
 
@@ -1111,7 +1110,9 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
     if s2_unauthenticated_key != addon_s2_unauthenticated_key:
         updates[CONF_S2_UNAUTHENTICATED_KEY] = addon_s2_unauthenticated_key
 
-    if AwesomeVersion(addon_info.version) >= AwesomeVersion("1.0.0"):
+    if addon_info.version and AwesomeVersion(addon_info.version) >= AwesomeVersion(
+        LR_ADDON_VERSION
+    ):
         addon_lr_s2_access_control_key = addon_options.get(
             CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY, ""
         )

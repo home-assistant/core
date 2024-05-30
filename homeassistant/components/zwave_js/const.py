@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import logging
 
+from awesomeversion import AwesomeVersion
 from zwave_js_server.const.command_class.window_covering import (
     WindowCoveringPropertyKey,
 )
 
 from homeassistant.const import APPLICATION_NAME, __version__ as HA_VERSION
+
+LR_ADDON_VERSION = AwesomeVersion("0.5.0")
 
 USER_AGENT = {APPLICATION_NAME: HA_VERSION}
 
