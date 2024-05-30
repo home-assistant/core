@@ -6,6 +6,13 @@ from datetime import timedelta
 
 from lektricowifi import DeviceConnectionError, lektricowifi
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_HW_VERSION,
+    ATTR_SERIAL_NUMBER,
+    CONF_HOST,
+    CONF_TYPE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -18,15 +25,9 @@ SCAN_INTERVAL = timedelta(seconds=10)
 class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     """Data update coordinator for Lektrico device."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        friendly_name: str,
-        host: str,
-        serial_number: str,
-        board_revision: str,
-        device_type: str,
-    ) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant, friendly_name: str) -> None:
         """Initialize a Lektrico Device."""
         super().__init__(
             hass,
@@ -35,12 +36,12 @@ class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=SCAN_INTERVAL,
         )
         self.device = lektricowifi.Device(
-            host,
+            self.config_entry.data[CONF_HOST],
             session=async_get_clientsession(hass),
         )
-        self.serial_number: str = serial_number
-        self.board_revision: str = board_revision
-        self.device_type: str = device_type
+        self.serial_number: str = self.config_entry.data[ATTR_SERIAL_NUMBER]
+        self.board_revision: str = self.config_entry.data[ATTR_HW_VERSION]
+        self.device_type: str = self.config_entry.data[CONF_TYPE]
 
     async def _async_update_data(self) -> lektricowifi.Info:
         """Async Update device state."""
