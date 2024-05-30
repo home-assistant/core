@@ -749,7 +749,7 @@ class EvoChild(EvoDevice):
             )
         except evo.InvalidSchedule as err:
             _LOGGER.warning(
-                "%s: Unable to retrieve the schedule: %s",
+                "%s: Unable to retrieve a valid schedule: %s",
                 self._evo_device,
                 err,
             )
