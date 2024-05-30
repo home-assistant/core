@@ -11,6 +11,7 @@ from pysnmp.hlapi.asyncio import (
     UsmUserData,
 )
 from pysnmp.hlapi.asyncio.cmdgen import lcd
+from pysnmp.hlapi.asyncio.transport import AbstractTransportTarget
 
 from homeassistant.core import HomeAssistant
 
@@ -20,6 +21,13 @@ type RequestArgsType = tuple[
     UdpTransportTarget | Udp6TransportTarget,
     ContextData,
 ]
+
+
+class NullTransport(AbstractTransportTarget):
+    """Null transport target."""
+
+    def openClientMode(self) -> None:
+        """Open client mode."""
 
 
 async def async_create_request_cmd_args(
@@ -40,6 +48,8 @@ def _create_request_cmd_args(
     """Create request arguments."""
     engine = SnmpEngine()
     context_data = ContextData()
-    # Configure the LCD which does blocking I/O
-    lcd.configure(engine, auth_data, target, context_data.contextName)
+    # Configure the LCD which does blocking I/O, but we cannot
+    # configure the transport because it needs to be run in the
+    # event loop so we use a null transport.
+    lcd.configure(engine, auth_data, NullTransport(), context_data.contextName)
     return (engine, auth_data, target, context_data)
