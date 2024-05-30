@@ -13,11 +13,11 @@
       },
       "options_1": {
         "section": {
-          "data": {
-            "bool": "Optional boolean",
-            "int": "Numeric input"
-          },
           "section_1": {
+            "data": {
+              "bool": "Optional boolean",
+              "int": "Numeric input"
+            },
             "description": "This section allows input of some extra data",
             "name": "Collapsible section"
           }
