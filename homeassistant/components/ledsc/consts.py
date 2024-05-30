@@ -1,8 +1,5 @@
-"""Constant variables."""
-
-from homeassistant.const import Platform
+"""Constants for the LedSC integration."""
 
 DOMAIN = "ledsc"
-PLATFORMS: list[str] = [Platform.LIGHT]
 DEFAULT_HOST = "demo.ledsc.eu"
 DEFAULT_PORT = 8443

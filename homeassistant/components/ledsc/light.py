@@ -4,6 +4,7 @@ import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
@@ -14,37 +15,22 @@ from websc_client import WebSCAsync
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(
-    hass: HomeAssistant, config, add_entities: AddEntitiesCallback, discovery_info=None
-):
-    """Redirects to '__setup'."""
-    hass.async_create_task(__setup(hass, dict(config), add_entities))
-
-
 async def async_setup_entry(
     hass: HomeAssistant, config: ConfigEntry, add_entities: AddEntitiesCallback
 ):
-    """Redirects to '__setup'."""
-    await __setup(hass, dict(config.data), add_entities)
-
-
-async def __setup(hass: HomeAssistant, config: dict, add_entities: AddEntitiesCallback):
     """
     Connect to WebSC.
 
-    load the configured devices and add them to hass.
+    load the configured devices from WebSC Server and add them to hass.
     """
-    host = config["host"]
-    port = config["port"]
-
-    client = WebSClient(host=host, port=port)
+    client = WebSClient(host=config.data[CONF_HOST], port=config.data[CONF_PORT])
     await client.connect()
     hass.async_create_background_task(client.observer(), name="ledsc-observer")
 
-    devices: list[LedSC] = list()
+    devices: list[LedSCLightEntity] = []
     for websc in client.devices.values():
-        ledsc = LedSC(
-            client_id=f"{host}:{port}",
+        ledsc = LedSCLightEntity(
+            client_id=f"{config.data[CONF_HOST]}:{config.data[CONF_PORT]}",
             websc=websc,
             hass=hass,
         )
@@ -53,8 +39,8 @@ async def __setup(hass: HomeAssistant, config: dict, add_entities: AddEntitiesCa
     add_entities(devices, True)
 
 
-class LedSC(LightEntity):
-    """Representation of an Awesome Light."""
+class LedSCLightEntity(LightEntity):
+    """Representation of an LedSC Light."""
 
     def __init__(
         self,
@@ -62,7 +48,7 @@ class LedSC(LightEntity):
         websc: WebSCAsync,
         hass: HomeAssistant,
     ) -> None:
-        """Initialize an AwesomeLight."""
+        """Initialize an LedSC Light."""
         self._hass: HomeAssistant = hass
         self._websc: WebSCAsync = websc
         self._attr_unique_id = f"{client_id}-{websc.name}"
@@ -159,7 +145,8 @@ class LedSC(LightEntity):
         await self._websc.do_px_trigger()
 
 
-def __generate_callback(ledsc: LedSC):
+def __generate_callback(ledsc: LedSCLightEntity):
+    """Generates a callback to respond to a LedSC state change."""
     async def on_device_change(data: dict[str, int]):
         await ledsc.async_update_ha_state(force_refresh=True)
 

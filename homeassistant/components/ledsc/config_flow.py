@@ -7,10 +7,9 @@ from typing import Any
 import voluptuous as vol
 from websc_client import WebSClientAsync as WebSClient
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigFlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .consts import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
@@ -37,7 +36,7 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     return {"title": f"LedSC server {host}:{port}"}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class LedSCConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for LedSC."""
 
     VERSION = 1
@@ -48,13 +47,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input:
-            self._async_abort_entries_match(
-                {
-                    CONF_HOST: user_input[CONF_HOST],
-                    CONF_PORT: user_input[CONF_PORT],
-                }
-            )
-
+            self._async_abort_entries_match(user_input)
             try:
                 info = await validate_input(self.hass, user_input)
             except ConnectionError:
