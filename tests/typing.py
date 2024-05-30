@@ -10,7 +10,7 @@ from aiohttp import ClientWebSocketResponse
 from aiohttp.test_utils import TestClient
 
 if TYPE_CHECKING:
-    # _patcher is not available at runtime
+    # _patch_default_new is not available at runtime
     from unittest.mock import _patch_default_new
 
     # Local import to avoid processing recorder module when running a
