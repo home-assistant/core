@@ -138,20 +138,25 @@ async def async_setup_platform(
     version: str = config[CONF_VERSION]
     username = config.get(CONF_USERNAME)
     authkey = config.get(CONF_AUTH_KEY)
-    authproto = config.get(CONF_AUTH_PROTOCOL)
+    authproto: str = config[CONF_AUTH_PROTOCOL]
     privkey = config.get(CONF_PRIV_KEY)
-    privproto = config.get(CONF_PRIV_PROTOCOL)
+    privproto: str = config[CONF_PRIV_PROTOCOL]
     payload_on = config.get(CONF_PAYLOAD_ON)
     payload_off = config.get(CONF_PAYLOAD_OFF)
     vartype = config.get(CONF_VARTYPE)
 
     if version == "3":
+        if not authkey:
+            authproto = "none"
+        if not privkey:
+            privproto = "none"
+
         auth_data = UsmUserData(
             username,
             authKey=authkey or None,
             privKey=privkey or None,
-            authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto or "none"]),
-            privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto or "none"]),
+            authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
+            privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
         )
     else:
         auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
