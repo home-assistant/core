@@ -19,7 +19,6 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             DOMAIN,
             SERVICE_OPEN_COVER,
             "Opened {}",
-            description="Opens a cover",
             platforms={DOMAIN},
         ),
     )
@@ -30,7 +29,6 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             DOMAIN,
             SERVICE_CLOSE_COVER,
             "Closed {}",
-            description="Closes a cover",
             platforms={DOMAIN},
         ),
     )
