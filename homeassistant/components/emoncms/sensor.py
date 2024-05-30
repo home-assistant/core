@@ -86,9 +86,9 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Emoncms sensor."""
-    apikey = str(config.get(CONF_API_KEY))
-    url = str(config.get(CONF_URL))
-    sensorid = config.get(CONF_ID)
+    apikey = config[CONF_API_KEY]
+    url = config[CONF_URL]
+    sensorid = config[CONF_ID]
     value_template = config.get(CONF_VALUE_TEMPLATE)
     config_unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     exclude_feeds = config.get(CONF_EXCLUDE_FEEDID)
@@ -158,18 +158,26 @@ class EmonCmsSensor(SensorEntity):
             id_for_name = "" if str(sensorid) == "1" else sensorid
             # Use the feed name assigned in EmonCMS or fall back to the feed ID
             feed_name = elem.get("name") or f"Feed {elem['id']}"
-            self._name = f"EmonCMS{id_for_name} {feed_name}"
+            self._attr_name = f"EmonCMS{id_for_name} {feed_name}"
         else:
-            self._name = name
+            self._attr_name = name
         self._identifier = get_id(
             sensorid, elem["tag"], elem["name"], elem["id"], elem["userid"]
         )
         self._hass = hass
         self._data = data
         self._value_template = value_template
-        self._unit_of_measurement = unit_of_measurement
+        self._attr_native_unit_of_measurement = unit_of_measurement
         self._sensorid = sensorid
-        self._elem = elem
+        self._attr_extra_state_attributes = {
+            ATTR_FEEDID: elem["id"],
+            ATTR_TAG: elem["tag"],
+            ATTR_FEEDNAME: elem["name"],
+            ATTR_SIZE: elem["size"],
+            ATTR_USERID: elem["userid"],
+            ATTR_LASTUPDATETIME: elem["time"],
+            ATTR_LASTUPDATETIMESTR: template.timestamp_local(float(elem["time"])),
+        }
 
         if unit_of_measurement in ("kWh", "Wh"):
             self._attr_device_class = SensorDeviceClass.ENERGY
@@ -197,41 +205,15 @@ class EmonCmsSensor(SensorEntity):
             self._attr_state_class = SensorStateClass.MEASUREMENT
 
         if self._value_template is not None:
-            self._state = self._value_template.render_with_possible_json_value(
-                elem["value"], STATE_UNKNOWN
+            self._attr_native_value = (
+                self._value_template.render_with_possible_json_value(
+                    elem["value"], STATE_UNKNOWN
+                )
             )
         elif elem["value"] is not None:
-            self._state = round(float(elem["value"]), DECIMALS)
+            self._attr_native_value = round(float(elem["value"]), DECIMALS)
         else:
-            self._state = None
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the attributes of the sensor."""
-        return {
-            ATTR_FEEDID: self._elem["id"],
-            ATTR_TAG: self._elem["tag"],
-            ATTR_FEEDNAME: self._elem["name"],
-            ATTR_SIZE: self._elem["size"],
-            ATTR_USERID: self._elem["userid"],
-            ATTR_LASTUPDATETIME: self._elem["time"],
-            ATTR_LASTUPDATETIMESTR: template.timestamp_local(float(self._elem["time"])),
-        }
+            self._attr_native_value = None
 
     def update(self) -> None:
         """Get the latest data and updates the state."""
@@ -259,16 +241,16 @@ class EmonCmsSensor(SensorEntity):
         if elem is None:
             return
 
-        self._elem = elem
-
         if self._value_template is not None:
-            self._state = self._value_template.render_with_possible_json_value(
-                elem["value"], STATE_UNKNOWN
+            self._attr_native_value = (
+                self._value_template.render_with_possible_json_value(
+                    elem["value"], STATE_UNKNOWN
+                )
             )
         elif elem["value"] is not None:
-            self._state = round(float(elem["value"]), DECIMALS)
+            self._attr_native_value = round(float(elem["value"]), DECIMALS)
         else:
-            self._state = None
+            self._attr_native_value = None
 
 
 class EmonCmsData:
@@ -279,10 +261,10 @@ class EmonCmsData:
         self._apikey = apikey
         self._url = f"{url}/feed/list.json"
         self._hass = hass
-        self.data: dict | None = None
+        self.data: list[dict[str, Any]] | None = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Emoncms."""
         try:
             parameters = {"apikey": self._apikey}
