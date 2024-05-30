@@ -25,7 +25,8 @@ DEFAULT_TIMEOUT = 5
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PIN): vol.All(vol.Coerce(str), vol.Match(r"\d{4}")),
+        # The pin can either be a four digit number (0-9) or a four letter string (A-D) depending on the mower model
+        vol.Required(CONF_PIN): vol.All(vol.Coerce(str), vol.Match(r"(\d{4}|[A-D]{4})")),
         vol.Optional(CONF_ALLOW_UNREACHABLE, default=True): cv.boolean,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
