@@ -222,6 +222,19 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="TotalVolatileOrganicCompoundsSensor",
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Attributes.MeasuredValue,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="PM1Sensor",
             native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             device_class=SensorDeviceClass.PM1,
