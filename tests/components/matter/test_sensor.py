@@ -408,3 +408,8 @@ async def test_air_purifier_sensor(
     assert set(state.attributes["options"]) == set(expected_options)
     assert state.attributes["device_class"] == "enum"
     assert state.attributes["friendly_name"] == "Air Purifier Air Quality"
+
+    # Carbon MonoOxide
+    state = hass.states.get("sensor.air_purifier_carbon_monoxide")
+    assert state
+    assert state.state == "2.0"
