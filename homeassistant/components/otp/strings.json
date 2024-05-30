@@ -2,23 +2,17 @@
   "config": {
     "step": {
       "user": {
-        "description": "Leave `authenticator token` empty to generate a new random token.",
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "token": "Authenticator token (OTP)"
-        }
-      },
-      "confirm": {
-        "title": "Verify One-Time Password (OTP)",
-        "description": "Before completing setup of One-Time Password (OTP), verify with a verification code. Scan the QR code with your authentication app. If you don't have one, we recommend either [Google Authenticator](https://support.google.com/accounts/answer/1066447) or [Authy](https://authy.com/).\n\n{qr_code}\n\nAfter scanning the code, enter the six digit code from your app to verify the setup. If you have problems scanning the QR code, do a manual setup with code **`{code}`**.",
-        "data": {
-          "code": "Verification code (OTP)"
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
     "error": {
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "invalid_code": "Invalid code, please try again. If you get this error consistently, please make sure the clock of your Home Assistant system is accurate."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

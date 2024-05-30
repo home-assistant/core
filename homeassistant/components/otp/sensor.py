@@ -59,7 +59,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the OTP sensor."""
 
-    async_add_entities([TOTPSensor(entry.title, entry.data[CONF_TOKEN])], True)
+    async_add_entities(
+        [TOTPSensor(entry.data[CONF_NAME], entry.data[CONF_TOKEN])], True
+    )
 
 
 # Only TOTP supported at the moment, HOTP might be added later

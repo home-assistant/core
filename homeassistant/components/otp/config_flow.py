@@ -5,10 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import pyotp
 import voluptuous as vol
 
-from homeassistant.auth.mfa_modules.totp import _generate_qr_code
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CODE, CONF_NAME, CONF_TOKEN
 
@@ -38,65 +36,19 @@ class TOTPConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            # generate new token if empty
-            if not user_input.get(CONF_TOKEN):
-                user_input[CONF_TOKEN] = await self.hass.async_add_executor_job(
-                    pyotp.random_base32
-                )
-
             await self.async_set_unique_id(user_input[CONF_TOKEN])
             self._abort_if_unique_id_configured()
 
-            self.user_input = user_input
-            return await self.async_step_confirm()
+            return self.async_create_entry(
+                title=user_input[CONF_NAME],
+                data=user_input,
+            )
 
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=STEP_USER_DATA_SCHEMA, suggested_values=user_input
             ),
-            errors=errors,
-            last_step=False,
-        )
-
-    async def async_step_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the confirmation step."""
-
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            try:
-                if await self.hass.async_add_executor_job(
-                    pyotp.TOTP(self.user_input[CONF_TOKEN]).verify, user_input["code"]
-                ):
-                    return self.async_create_entry(
-                        title=self.user_input[CONF_NAME],
-                        data={CONF_TOKEN: self.user_input[CONF_TOKEN]},
-                    )
-
-                errors["base"] = "invalid_code"
-
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-
-        url = await self.hass.async_add_executor_job(
-            pyotp.TOTP(self.user_input[CONF_TOKEN]).provisioning_uri,
-            self.user_input[CONF_NAME],
-            "Home Assistant",
-        )
-        qr_code = await self.hass.async_add_executor_job(_generate_qr_code, url)
-
-        return self.async_show_form(
-            step_id="confirm",
-            data_schema=STEP_CONFIRM_DATA_SCHEMA,
-            description_placeholders={
-                "code": self.user_input[CONF_TOKEN],
-                "url": url,
-                "qr_code": qr_code,
-            },
             errors=errors,
         )
 
