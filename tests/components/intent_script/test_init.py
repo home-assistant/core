@@ -22,6 +22,7 @@ async def test_intent_script(hass: HomeAssistant) -> None:
         {
             "intent_script": {
                 "HelloWorld": {
+                    "description": "Intent to control a test service.",
                     "action": {
                         "service": "test.service",
                         "data_template": {"hello": "{{ name }}"},
@@ -35,6 +36,16 @@ async def test_intent_script(hass: HomeAssistant) -> None:
             }
         },
     )
+
+    handlers = [
+        intent_handler
+        for intent_handler in intent.async_get(hass)
+        if intent_handler.intent_type == "HelloWorld"
+    ]
+
+    assert len(handlers) == 1
+    handler = handlers[0]
+    assert handler.description == "Intent to control a test service."
 
     response = await intent.async_handle(
         hass, "test", "HelloWorld", {"name": {"value": "Paulus"}}
