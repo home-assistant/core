@@ -6,7 +6,6 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
-# from bimmer_connected.vehicle.reports import ConditionBasedServiceReport
 from . import setup_mocked_integration
 
 
