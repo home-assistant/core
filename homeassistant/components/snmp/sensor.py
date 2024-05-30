@@ -11,10 +11,8 @@ from pysnmp.error import PySnmpError
 import pysnmp.hlapi.asyncio as hlapi
 from pysnmp.hlapi.asyncio import (
     CommunityData,
-    ContextData,
     ObjectIdentity,
     ObjectType,
-    SnmpEngine,
     Udp6TransportTarget,
     UdpTransportTarget,
     UsmUserData,
@@ -71,6 +69,7 @@ from .const import (
     MAP_PRIV_PROTOCOLS,
     SNMP_VERSIONS,
 )
+from .util import async_create_request_cmd_args
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -145,26 +144,17 @@ async def async_setup_platform(
             authproto = "none"
         if not privkey:
             privproto = "none"
-
-        request_args = [
-            SnmpEngine(),
-            UsmUserData(
-                username,
-                authKey=authkey or None,
-                privKey=privkey or None,
-                authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
-                privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
-            ),
-            target,
-            ContextData(),
-        ]
+        auth_data = UsmUserData(
+            username,
+            authKey=authkey or None,
+            privKey=privkey or None,
+            authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
+            privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
+        )
     else:
-        request_args = [
-            SnmpEngine(),
-            CommunityData(community, mpModel=SNMP_VERSIONS[version]),
-            target,
-            ContextData(),
-        ]
+        auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
+
+    request_args = await async_create_request_cmd_args(hass, auth_data, target)
     get_result = await getCmd(*request_args, ObjectType(ObjectIdentity(baseoid)))
     errindication, _, _, _ = get_result
 

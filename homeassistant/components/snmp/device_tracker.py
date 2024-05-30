@@ -4,14 +4,13 @@ from __future__ import annotations
 
 import binascii
 import logging
+from typing import TYPE_CHECKING
 
 from pysnmp.error import PySnmpError
 from pysnmp.hlapi.asyncio import (
     CommunityData,
-    ContextData,
     ObjectIdentity,
     ObjectType,
-    SnmpEngine,
     Udp6TransportTarget,
     UdpTransportTarget,
     UsmUserData,
@@ -43,6 +42,7 @@ from .const import (
     DEFAULT_VERSION,
     SNMP_VERSIONS,
 )
+from .util import RequestArgsType, async_create_request_cmd_args
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,33 +99,29 @@ class SnmpScanner(DeviceScanner):
             if not privkey:
                 privproto = "none"
 
-            request_args = [
-                SnmpEngine(),
-                UsmUserData(
-                    community,
-                    authKey=authkey or None,
-                    privKey=privkey or None,
-                    authProtocol=authproto,
-                    privProtocol=privproto,
-                ),
-                target,
-                ContextData(),
-            ]
+            self._auth_data = UsmUserData(
+                community,
+                authKey=authkey or None,
+                privKey=privkey or None,
+                authProtocol=authproto,
+                privProtocol=privproto,
+            )
         else:
-            request_args = [
-                SnmpEngine(),
-                CommunityData(community, mpModel=SNMP_VERSIONS[DEFAULT_VERSION]),
-                target,
-                ContextData(),
-            ]
+            self._auth_data = CommunityData(
+                community, mpModel=SNMP_VERSIONS[DEFAULT_VERSION]
+            )
 
-        self.request_args = request_args
+        self._target = target
+        self.request_args: RequestArgsType | None = None
         self.baseoid = baseoid
         self.last_results = []
         self.success_init = False
 
     async def async_init(self):
         """Make a one-off read to check if the target device is reachable and readable."""
+        self.request_args = await async_create_request_cmd_args(
+            self.hass, self._auth_data, self._target
+        )
         data = await self.async_get_snmp_data()
         self.success_init = data is not None
 
@@ -156,6 +152,8 @@ class SnmpScanner(DeviceScanner):
     async def async_get_snmp_data(self):
         """Fetch MAC addresses from access point via SNMP."""
         devices = []
+        if TYPE_CHECKING:
+            assert self.request_args is not None
 
         walker = bulkWalkCmd(
             *self.request_args,
