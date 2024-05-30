@@ -3206,7 +3206,7 @@ class HassTypeHintChecker(BaseChecker):
                 if self._ignore_function(function_node, annotations):
                     continue
 
-                self._check_function(function_node, match, annotations, False)
+                self._check_function(function_node, match, annotations)
                 checked_class_methods.add(function_node.name)
 
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
@@ -3226,19 +3226,18 @@ class HassTypeHintChecker(BaseChecker):
                 )
 
         # Check method or function matchers.
-        is_test_function = False
         if node.is_method():
             matchers = _METHOD_MATCH
         else:
             matchers = self._function_matchers
-            is_test_function = self._in_test_module and node.name.startswith("test_")
-            if is_test_function:
-                self._check_test_function(node, annotations)
+            if self._in_test_module and node.name.startswith("test_"):
+                self._check_test_function(node)
+                return
 
         for match in matchers:
             if not match.need_to_check_function(node):
                 continue
-            self._check_function(node, match, annotations, is_test_function)
+            self._check_function(node, match, annotations)
 
     visit_asyncfunctiondef = visit_functiondef
 
@@ -3247,16 +3246,11 @@ class HassTypeHintChecker(BaseChecker):
         node: nodes.FunctionDef,
         match: TypeHintMatch,
         annotations: list[nodes.NodeNG | None],
-        is_test_function: bool,
     ) -> None:
         # Check that all positional arguments are correctly annotated.
         if match.arg_types:
             for key, expected_type in match.arg_types.items():
-                if (
-                    node.args.args[key].name in _COMMON_ARGUMENTS
-                    or is_test_function
-                    and node.args.args[key].name in _TEST_FIXTURES
-                ):
+                if node.args.args[key].name in _COMMON_ARGUMENTS:
                     # It has already been checked, avoid double-message
                     continue
                 if not _is_valid_type(expected_type, annotations[key]):
@@ -3269,11 +3263,7 @@ class HassTypeHintChecker(BaseChecker):
         # Check that all keyword arguments are correctly annotated.
         if match.named_arg_types is not None:
             for arg_name, expected_type in match.named_arg_types.items():
-                if (
-                    arg_name in _COMMON_ARGUMENTS
-                    or is_test_function
-                    and arg_name in _TEST_FIXTURES
-                ):
+                if arg_name in _COMMON_ARGUMENTS:
                     # It has already been checked, avoid double-message
                     continue
                 arg_node, annotation = _get_named_annotation(node, arg_name)
@@ -3302,9 +3292,7 @@ class HassTypeHintChecker(BaseChecker):
                 args=(match.return_type or "None", node.name),
             )
 
-    def _check_test_function(
-        self, node: nodes.FunctionDef, annotations: list[nodes.NodeNG | None]
-    ) -> None:
+    def _check_test_function(self, node: nodes.FunctionDef) -> None:
         # Check the return type, should always be `None` for test_*** functions.
         if not _is_valid_type(None, node.returns, True):
             self.add_message(
