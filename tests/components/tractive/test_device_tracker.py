@@ -27,8 +27,8 @@ async def test_device_tracker(
     ):
         await init_integration(hass, mock_config_entry)
 
-        mock_tractive_client.send_position_event(hass)
-        mock_tractive_client.send_hardware_event(hass)
+        mock_tractive_client.send_position_event(mock_config_entry)
+        mock_tractive_client.send_hardware_event(mock_config_entry)
         await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -42,15 +42,17 @@ async def test_source_type_phone(
     await init_integration(hass, mock_config_entry)
 
     mock_tractive_client.send_position_event(
-        hass,
+        mock_config_entry,
         {
-            "latitude": 22.333,
-            "longitude": 44.555,
-            "accuracy": 99,
-            "sensor_used": "PHONE",
+            "tracker_id": "device_id_123",
+            "position": {
+                "latlong": [22.333, 44.555],
+                "accuracy": 99,
+                "sensor_used": "PHONE",
+            },
         },
     )
-    mock_tractive_client.send_hardware_event(hass)
+    mock_tractive_client.send_hardware_event(mock_config_entry)
     await hass.async_block_till_done()
 
     assert (

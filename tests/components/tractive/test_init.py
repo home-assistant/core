@@ -160,7 +160,7 @@ async def test_server_unavailable(
     await init_integration(hass, mock_config_entry)
 
     # send event to make the entity available
-    mock_tractive_client.send_hardware_event(hass)
+    mock_tractive_client.send_hardware_event(mock_config_entry)
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
@@ -172,7 +172,7 @@ async def test_server_unavailable(
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # send event to make the entity available once again
-    mock_tractive_client.send_hardware_event(hass)
+    mock_tractive_client.send_hardware_event(mock_config_entry)
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE

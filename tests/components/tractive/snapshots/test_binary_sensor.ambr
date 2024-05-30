@@ -43,7 +43,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_sensor[binary_sensor.test_pet_tracker_battery_charging-entry]
