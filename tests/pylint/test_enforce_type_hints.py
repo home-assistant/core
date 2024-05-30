@@ -1156,7 +1156,7 @@ def test_pytest_function(
 def test_pytest_invalid_function(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
-    """Ensure invalid hints are rejected for a test function."""
+    """Ensure invalid hints are rejected for async_get_service."""
     func_node, hass_node, caplog_node = astroid.extract_node(
         """
     async def test_sample( #@
