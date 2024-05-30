@@ -83,7 +83,7 @@
         "name": "Activated carbon filter condition"
       },
       "air_quality": {
-        "name": "Air Quality",
+        "name": "Air quality",
         "state": {
           "extremely_poor": "Extremely poor",
           "very_poor": "Very poor",
