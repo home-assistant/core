@@ -63,7 +63,8 @@ async def test_import_once(hass: HomeAssistant) -> None:
     mock_setup_entry.assert_not_called()
 
 
-async def test_options_flow(hass: HomeAssistant, no_platforms) -> None:
+@pytest.mark.usefixtures("no_platforms")
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     config_entry = MockConfigEntry(domain=DOMAIN)
     config_entry.add_to_hass(hass)
