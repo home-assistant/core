@@ -3113,6 +3113,12 @@ class HassTypeHintChecker(BaseChecker):
             "hass-return-type",
             "Used when method return type is incorrect",
         ),
+        "W7433": (
+            "Argument %s is of type %s and could be move to "
+            "`@pytest.mark.usefixtures` decorator in %s",
+            "hass-consider-usefixtures-decorator",
+            "Used when an argument type is None and could be a fixture",
+        ),
     }
     options = (
         (
@@ -3308,6 +3314,12 @@ class HassTypeHintChecker(BaseChecker):
         # Check that all positional arguments are correctly annotated.
         for arg_name, expected_type in _TEST_FIXTURES.items():
             arg_node, annotation = _get_named_annotation(node, arg_name)
+            if arg_node and expected_type == "None":
+                self.add_message(
+                    "hass-consider-usefixtures-decorator",
+                    node=arg_node,
+                    args=(arg_name, expected_type, node.name),
+                )
             if arg_node and not _is_valid_type(expected_type, annotation):
                 self.add_message(
                     "hass-argument-type",
