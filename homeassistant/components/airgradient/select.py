@@ -8,6 +8,7 @@ from airgradient.models import ConfigurationControl, TemperatureUnit
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -30,6 +31,7 @@ CONFIG_CONTROL_ENTITY = AirGradientSelectEntityDescription(
     key="configuration_control",
     translation_key="configuration_control",
     options=[x.value for x in ConfigurationControl],
+    entity_category=EntityCategory.CONFIG,
     value_fn=lambda config: config.configuration_control,
     set_value_fn=lambda client, value: client.set_configuration_control(
         ConfigurationControl(value)
@@ -41,6 +43,7 @@ PROTECTED_SELECT_TYPES: tuple[AirGradientSelectEntityDescription, ...] = (
         key="display_temperature_unit",
         translation_key="display_temperature_unit",
         options=[x.value for x in TemperatureUnit],
+        entity_category=EntityCategory.CONFIG,
         value_fn=lambda config: config.temperature_unit,
         set_value_fn=lambda client, value: client.set_temperature_unit(
             TemperatureUnit(value)
