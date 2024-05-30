@@ -15,7 +15,7 @@ import sqlite3
 import ssl
 import threading
 from typing import TYPE_CHECKING, Any, cast
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
 
 from aiohttp import client
 from aiohttp.test_utils import (
@@ -77,7 +77,6 @@ from .typing import (
     MqttMockHAClient,
     MqttMockHAClientGenerator,
     MqttMockPahoClient,
-    Patcher,
     RecorderInstanceGenerator,
     WebSocketGenerator,
 )
@@ -1152,7 +1151,7 @@ def mock_network() -> Generator[None, None, None]:
 
 
 @pytest.fixture(autouse=True, scope="session")
-def mock_get_source_ip() -> Generator[Patcher, None, None]:
+def mock_get_source_ip() -> Generator[_patch, None, None]:
     """Mock network util's async_get_source_ip."""
     patcher = patch(
         "homeassistant.components.network.util.async_get_source_ip",
@@ -1166,7 +1165,7 @@ def mock_get_source_ip() -> Generator[Patcher, None, None]:
 
 
 @pytest.fixture(autouse=True, scope="session")
-def translations_once() -> Generator[Patcher, None, None]:
+def translations_once() -> Generator[_patch, None, None]:
     """Only load translations once per session."""
     from homeassistant.helpers.translation import _TranslationsCacheData
 
@@ -1184,7 +1183,7 @@ def translations_once() -> Generator[Patcher, None, None]:
 
 @pytest.fixture
 def disable_translations_once(
-    translations_once: Patcher,
+    translations_once: _patch,
 ) -> Generator[None, None, None]:
     """Override loading translations once."""
     translations_once.stop()

@@ -10,9 +10,6 @@ from aiohttp import ClientWebSocketResponse
 from aiohttp.test_utils import TestClient
 
 if TYPE_CHECKING:
-    # _patch_default_new is not available at runtime
-    from unittest.mock import _patch_default_new
-
     # Local import to avoid processing recorder module when running a
     # testcase which does not use the recorder.
     from homeassistant.components.recorder import Recorder
@@ -36,6 +33,3 @@ type MqttMockHAClientGenerator = Callable[..., Coroutine[Any, Any, MqttMockHACli
 type RecorderInstanceGenerator = Callable[..., Coroutine[Any, Any, Recorder]]
 """Instance generator for `homeassistant.components.recorder.Recorder`."""
 type WebSocketGenerator = Callable[..., Coroutine[Any, Any, MockHAClientWebSocket]]
-
-type Patcher = _patch_default_new
-"""Type alias for unittest.mock._patch_default_new."""
