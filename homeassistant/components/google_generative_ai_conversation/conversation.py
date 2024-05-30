@@ -229,6 +229,8 @@ class GoogleGenerativeAIConversationEntity(
                     ).async_render(
                         {
                             "ha_name": self.hass.config.location_name,
+                            "user_id": user_input.context.user_id,
+                            "user_device_id": user_input.device_id,
                         },
                         parse_result=False,
                     ),
