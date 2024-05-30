@@ -20,7 +20,7 @@ import re
 from socket import (  # type: ignore[attr-defined]  # private, not in typeshed
     _GLOBAL_DEFAULT_TIMEOUT,
 )
-from typing import Any, cast, overload
+from typing import Any, TypedDict, cast, overload
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -862,20 +862,31 @@ class multi_select:
         return selected
 
 
-class expandable:
-    """Expandable."""
+class SectionConfig(TypedDict, total=False):
+    """Class to represent a section config."""
+
+    collapsed: bool
+
+
+class section:
+    """Data input flow section."""
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("collapsed", default=False): boolean,
+        },
+    )
 
     def __init__(
-        self, schema: vol.Schema, options: dict[str, Any] | None = None
+        self, schema: vol.Schema, options: SectionConfig | None = None
     ) -> None:
-        """Initialize expandable."""
+        """Initialize."""
         self.schema = schema
-        self.options = options or {}
+        self.options: SectionConfig = self.CONFIG_SCHEMA(options or {})
 
     def __call__(self, value: Any) -> Any:
         """Validate input."""
-        self.schema(value)
-        return value
+        return self.schema(value)
 
 
 def _deprecated_or_removed(
@@ -1064,14 +1075,13 @@ def custom_serializer(schema: Any) -> Any:
     if schema is boolean:
         return {"type": "boolean"}
 
-    if isinstance(schema, expandable):
+    if isinstance(schema, section):
         return {
-            "type": "expandable",
-            "title": schema.options.get("title"),
-            "icon": schema.options.get("icon"),
+            "type": "section",
             "schema": voluptuous_serialize.convert(
                 schema.schema, custom_serializer=custom_serializer
             ),
+            "collapsed": schema.options["collapsed"],
         }
 
     if isinstance(schema, multi_select):
