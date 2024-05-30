@@ -9,7 +9,8 @@
       }
     },
     "error": {
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_token": "Invalid Token"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
