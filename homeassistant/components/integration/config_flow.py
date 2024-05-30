@@ -101,7 +101,9 @@ async def _get_options_dict(handler: SchemaCommonFlowHandler | None) -> dict:
                 min=0, max=6, mode=selector.NumberSelectorMode.BOX
             ),
         ),
-        vol.Optional(CONF_MAX_SUB_INTERVAL): selector.DurationSelector(),
+        vol.Optional(CONF_MAX_SUB_INTERVAL): selector.DurationSelector(
+            selector.DurationSelectorConfig(allow_negative=False)
+        ),
     }
 
 
