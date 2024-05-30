@@ -238,7 +238,7 @@ async def test_setup_with_overly_long_url_and_name(
 
 
 async def test_setup_with_defaults(
-    hass: HomeAssistant, mock_zeroconf: None, mock_async_zeroconf: None
+    hass: HomeAssistant, mock_zeroconf: MagicMock, mock_async_zeroconf: None
 ) -> None:
     """Test default interface config."""
     with (
