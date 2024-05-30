@@ -150,11 +150,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     old_prefix = get_unique_prefix(
         location, language, candle_lighting_offset, havdalah_offset
     )
-    for platform, descriptions in PLATFORM_DESCRIPTIONS.items():
-        for description in descriptions:
-            async_update_unique_id(
-                hass, config_entry.entry_id, old_prefix, platform, description.key
-            )
+    async_update_unique_ids(hass, config_entry.entry_id, old_prefix)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
@@ -173,12 +169,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 
 @callback
-def async_update_unique_id(
-    hass: HomeAssistant,
-    new_prefix: str,
-    old_prefix: str,
-    sensor_domain: str,
-    sensor_key: str,
+def async_update_unique_ids(
+    hass: HomeAssistant, new_prefix: str, old_prefix: str
 ) -> None:
     """Update unique ID to be unrelated to user defined options.
 
@@ -186,10 +178,14 @@ def async_update_unique_id(
     """
     ent_reg = er.async_get(hass)
 
-    new_unique_id = f"{new_prefix}-{sensor_key}"
-    if ent_reg.async_get_entity_id(sensor_domain, DOMAIN, new_unique_id):
-        return
+    for platform, descriptions in PLATFORM_DESCRIPTIONS.items():
+        for description in descriptions:
+            new_unique_id = f"{new_prefix}-{description.key}"
+            if ent_reg.async_get_entity_id(platform, DOMAIN, new_unique_id):
+                return
 
-    old_unique_id = f"{old_prefix}_{sensor_key}"
-    if entity_id := ent_reg.async_get_entity_id(sensor_domain, DOMAIN, old_unique_id):
-        ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+            old_unique_id = f"{old_prefix}_{description.key}"
+            if entity_id := ent_reg.async_get_entity_id(
+                platform, DOMAIN, old_unique_id
+            ):
+                ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
