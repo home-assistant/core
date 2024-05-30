@@ -79,9 +79,6 @@
       }
     },
     "sensor": {
-      "flow": {
-        "name": "Flow"
-      },
       "air_quality": {
         "name": "Air Quality",
         "state": {
@@ -93,6 +90,12 @@
           "moderate": "Moderate",
           "unknown": "Unknown"
         }
+      },
+      "flow": {
+        "name": "Flow"
+      },
+      "hepa_filter_condition": {
+        "name": "Hepa Filter Condition"
       }
     }
   },
