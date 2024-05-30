@@ -2916,7 +2916,7 @@ def _is_valid_type(
 
     # Special case for an empty list, such as Callable[[], TestServer]
     if expected_type == "[]":
-        return isinstance(node, nodes.List) and node.elts == []
+        return isinstance(node, nodes.List) and not node.elts
 
     # Special case for `xxx | yyy`
     if match := _TYPE_HINT_MATCHERS["a_or_b"].match(expected_type):
