@@ -1,7 +1,7 @@
 """Test Zeroconf component setup process."""
 
 from typing import Any
-from unittest.mock import call, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 from zeroconf import (
@@ -1285,7 +1285,7 @@ async def test_async_detect_interfaces_explicitly_set_ipv6_freebsd(
     )
 
 
-async def test_no_name(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
+async def test_no_name(hass: HomeAssistant, mock_async_zeroconf: MagicMock) -> None:
     """Test fallback to Home for mDNS announcement if the name is missing."""
     hass.config.location_name = ""
     with patch("homeassistant.components.zeroconf.HaZeroconf"):
@@ -1299,7 +1299,7 @@ async def test_no_name(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
 
 
 async def test_setup_with_disallowed_characters_in_local_name(
-    hass: HomeAssistant, mock_async_zeroconf: None, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
 ) -> None:
     """Test we still setup with disallowed characters in the location name."""
     with (
@@ -1323,7 +1323,7 @@ async def test_setup_with_disallowed_characters_in_local_name(
 
 
 async def test_start_with_frontend(
-    hass: HomeAssistant, mock_async_zeroconf: None
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
 ) -> None:
     """Test we start with the frontend."""
     with patch("homeassistant.components.zeroconf.HaZeroconf"):

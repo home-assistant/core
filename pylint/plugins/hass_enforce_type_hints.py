@@ -132,7 +132,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "issue_registry": "IssueRegistry",
     "legacy_auth": "LegacyApiPasswordAuthProvider",
     "local_auth": "HassAuthProvider",
-    "mock_async_zeroconf": "None",
+    "mock_async_zeroconf": "MagicMock",
     "mock_bleak_scanner_start": "MagicMock",
     "mock_bluetooth": "None",
     "mock_bluetooth_adapters": "None",

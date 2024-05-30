@@ -1,6 +1,6 @@
 """Test the thread websocket API."""
 
-from unittest.mock import ANY, AsyncMock, Mock
+from unittest.mock import ANY, AsyncMock, MagicMock, Mock
 
 import pytest
 from zeroconf.asyncio import AsyncServiceInfo
@@ -24,7 +24,9 @@ from . import (
 )
 
 
-async def test_discover_routers(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
+async def test_discover_routers(
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
+) -> None:
     """Test discovering thread routers."""
     mock_async_zeroconf.async_add_service_listener = AsyncMock()
     mock_async_zeroconf.async_remove_service_listener = AsyncMock()
