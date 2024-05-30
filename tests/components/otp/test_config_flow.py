@@ -85,3 +85,20 @@ async def test_errors_and_recover(
     assert result["title"] == "OTP Sensor"
     assert result["data"] == TEST_DATA
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_flow_import(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_pyotp: MagicMock
+) -> None:
+    """Test that we can import a YAML config."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=TEST_DATA,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "OTP Sensor"
+    assert result["data"] == TEST_DATA
