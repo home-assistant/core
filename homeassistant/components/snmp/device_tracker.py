@@ -9,8 +9,6 @@ from typing import TYPE_CHECKING
 from pysnmp.error import PySnmpError
 from pysnmp.hlapi.asyncio import (
     CommunityData,
-    ObjectIdentity,
-    ObjectType,
     Udp6TransportTarget,
     UdpTransportTarget,
     UsmUserData,
@@ -155,11 +153,15 @@ class SnmpScanner(DeviceScanner):
         if TYPE_CHECKING:
             assert self.request_args is not None
 
+        engine, auth_data, target, context_data, object_type = self.request_args
         walker = bulkWalkCmd(
-            *self.request_args,
+            engine,
+            auth_data,
+            target,
+            context_data,
             0,
             50,
-            ObjectType(ObjectIdentity(self.baseoid)),
+            object_type,
             lexicographicMode=False,
         )
         async for errindication, errstatus, errindex, res in walker:

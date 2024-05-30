@@ -11,8 +11,6 @@ from pysnmp.error import PySnmpError
 import pysnmp.hlapi.asyncio as hlapi
 from pysnmp.hlapi.asyncio import (
     CommunityData,
-    ObjectIdentity,
-    ObjectType,
     Udp6TransportTarget,
     UdpTransportTarget,
     UsmUserData,
@@ -118,7 +116,7 @@ async def async_setup_platform(
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     community = config.get(CONF_COMMUNITY)
-    baseoid = config.get(CONF_BASEOID)
+    baseoid: str = config[CONF_BASEOID]
     version = config[CONF_VERSION]
     username = config.get(CONF_USERNAME)
     authkey = config.get(CONF_AUTH_KEY)
@@ -154,8 +152,8 @@ async def async_setup_platform(
     else:
         auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
 
-    request_args = await async_create_request_cmd_args(hass, auth_data, target)
-    get_result = await getCmd(*request_args, ObjectType(ObjectIdentity(baseoid)))
+    request_args = await async_create_request_cmd_args(hass, auth_data, target, baseoid)
+    get_result = await getCmd(*request_args)
     errindication, _, _, _ = get_result
 
     if errindication and not accept_errors:
@@ -234,9 +232,7 @@ class SnmpData:
     async def async_update(self):
         """Get the latest data from the remote SNMP capable host."""
 
-        get_result = await getCmd(
-            *self._request_args, ObjectType(ObjectIdentity(self._baseoid))
-        )
+        get_result = await getCmd(*self._request_args)
         errindication, errstatus, errindex, restable = get_result
 
         if errindication and not self._accept_errors:

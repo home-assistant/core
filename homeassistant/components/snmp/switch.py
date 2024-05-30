@@ -8,8 +8,6 @@ from typing import Any
 import pysnmp.hlapi.asyncio as hlapi
 from pysnmp.hlapi.asyncio import (
     CommunityData,
-    ObjectIdentity,
-    ObjectType,
     UdpTransportTarget,
     UsmUserData,
     getCmd,
@@ -131,7 +129,7 @@ async def async_setup_platform(
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     community = config.get(CONF_COMMUNITY)
-    baseoid = config.get(CONF_BASEOID)
+    baseoid: str = config[CONF_BASEOID]
     command_oid = config.get(CONF_COMMAND_OID)
     command_payload_on = config.get(CONF_COMMAND_PAYLOAD_ON)
     command_payload_off = config.get(CONF_COMMAND_PAYLOAD_OFF)
@@ -162,7 +160,7 @@ async def async_setup_platform(
         auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
 
     request_args = await async_create_request_cmd_args(
-        hass, auth_data, UdpTransportTarget((host, port))
+        hass, auth_data, UdpTransportTarget((host, port)), baseoid
     )
 
     async_add_entities(
@@ -242,9 +240,7 @@ class SnmpSwitch(SwitchEntity):
 
     async def async_update(self) -> None:
         """Update the state."""
-        get_result = await getCmd(
-            *self._request_args, ObjectType(ObjectIdentity(self._baseoid))
-        )
+        get_result = await getCmd(*self._request_args)
         errindication, errstatus, errindex, restable = get_result
 
         if errindication:
@@ -279,6 +275,4 @@ class SnmpSwitch(SwitchEntity):
         return self._state
 
     async def _set(self, value):
-        await setCmd(
-            *self._request_args, ObjectType(ObjectIdentity(self._commandoid), value)
-        )
+        await setCmd(*self._request_args, value)
