@@ -6,7 +6,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-import requests_mock
+from requests_mock import Mocker
 
 from homeassistant.components.mjpeg.const import (
     CONF_MJPEG_URL,
@@ -60,7 +60,7 @@ def mock_reload_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_mjpeg_requests(requests_mock: requests_mock.Mocker) -> requests_mock.Mocker:
+def mock_mjpeg_requests(requests_mock: Mocker) -> Mocker:
     """Fixture to provide a requests mocker."""
     requests_mock.get("https://example.com/mjpeg", text="resp")
     requests_mock.get("https://example.com/still", text="resp")
@@ -69,9 +69,7 @@ def mock_mjpeg_requests(requests_mock: requests_mock.Mocker) -> requests_mock.Mo
 
 @pytest.fixture
 async def init_integration(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_mjpeg_requests: requests_mock.Mocker,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_mjpeg_requests: Mocker
 ) -> MockConfigEntry:
     """Set up the MJPEG IP Camera integration for testing."""
     mock_config_entry.add_to_hass(hass)

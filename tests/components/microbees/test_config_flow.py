@@ -139,7 +139,7 @@ async def test_config_reauth_profile(
     aioclient_mock: AiohttpClientMocker,
     config_entry: MockConfigEntry,
     microbees: AsyncMock,
-    current_request_with_host: None,
+    current_request_with_host,
 ) -> None:
     """Test reauth an existing profile reauthenticates the config entry."""
     await setup_integration(hass, config_entry)
@@ -200,7 +200,7 @@ async def test_config_reauth_wrong_account(
     aioclient_mock: AiohttpClientMocker,
     config_entry: MockConfigEntry,
     microbees: AsyncMock,
-    current_request_with_host: None,
+    current_request_with_host,
 ) -> None:
     """Test reauth with wrong account."""
     await setup_integration(hass, config_entry)
@@ -260,7 +260,7 @@ async def test_config_flow_with_invalid_credentials(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     microbees: AsyncMock,
-    current_request_with_host: None,
+    current_request_with_host,
 ) -> None:
     """Test flow with invalid credentials."""
     result = await hass.config_entries.flow.async_init(
@@ -318,7 +318,7 @@ async def test_unexpected_exceptions(
     microbees: AsyncMock,
     exception: Exception,
     error: str,
-    current_request_with_host: None,
+    current_request_with_host,
 ) -> None:
     """Test unknown error from server."""
     await setup_integration(hass, config_entry)
