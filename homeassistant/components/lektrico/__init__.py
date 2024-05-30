@@ -13,7 +13,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 from .coordinator import LektricoDeviceDataUpdateCoordinator
@@ -27,13 +26,10 @@ LB_DEVICES_PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Lektrico Charging Station from a config entry."""
-    session = async_get_clientsession(hass)
-
     coordinator = LektricoDeviceDataUpdateCoordinator(
         hass,
         f"{entry.data[CONF_TYPE]}_{entry.data[ATTR_SERIAL_NUMBER]}",
         entry.data[CONF_HOST],
-        session,
         entry.data[ATTR_SERIAL_NUMBER],
         entry.data[ATTR_HW_VERSION],
         entry.data[CONF_TYPE],
