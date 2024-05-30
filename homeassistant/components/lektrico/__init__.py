@@ -9,7 +9,6 @@ from homeassistant.const import (
     ATTR_HW_VERSION,
     ATTR_SERIAL_NUMBER,
     CONF_HOST,
-    CONF_NAME,
     CONF_TYPE,
     Platform,
 )
@@ -32,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = LektricoDeviceDataUpdateCoordinator(
         hass,
-        entry.data[CONF_NAME],
+        f"{entry.data[CONF_TYPE]}_{entry.data[ATTR_SERIAL_NUMBER]}",
         entry.data[CONF_HOST],
         session,
         entry.data[ATTR_SERIAL_NUMBER],

@@ -11,7 +11,6 @@ from homeassistant.const import (
     ATTR_HW_VERSION,
     ATTR_SERIAL_NUMBER,
     CONF_HOST,
-    CONF_NAME,
     CONF_TYPE,
 )
 from homeassistant.core import HomeAssistant
@@ -54,7 +53,6 @@ async def test_user_setup(
     assert result.get("title") == f"{MOCKED_DEVICE_TYPE}_{MOCKED_DEVICE_SERIAL_NUMBER}"
     assert result.get("data") == {
         CONF_HOST: MOCKED_DEVICE_IP_ADDRESS,
-        CONF_NAME: f"{MOCKED_DEVICE_TYPE}_{MOCKED_DEVICE_SERIAL_NUMBER}",
         ATTR_SERIAL_NUMBER: MOCKED_DEVICE_SERIAL_NUMBER,
         CONF_TYPE: MOCKED_DEVICE_TYPE,
         ATTR_HW_VERSION: MOCKED_DEVICE_BOARD_REV,
@@ -137,7 +135,6 @@ async def test_discovered_zeroconf(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         CONF_HOST: MOCKED_DEVICE_IP_ADDRESS,
-        CONF_NAME: f"{MOCKED_DEVICE_TYPE}_{MOCKED_DEVICE_SERIAL_NUMBER}",
         ATTR_SERIAL_NUMBER: MOCKED_DEVICE_SERIAL_NUMBER,
         CONF_TYPE: MOCKED_DEVICE_TYPE,
         ATTR_HW_VERSION: MOCKED_DEVICE_BOARD_REV,
