@@ -178,7 +178,7 @@ def async_update_unique_ids(
 ) -> None:
     """Update unique ID to be unrelated to user defined options.
 
-    Introduced with release 2024.5
+    Introduced with release 2024.6
     """
     for platform, descriptions in PLATFORM_DESCRIPTIONS.items():
         for description in descriptions:
