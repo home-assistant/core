@@ -93,6 +93,7 @@ async def test_import_with_options(hass: HomeAssistant) -> None:
         }
     }
 
+    # Simulate HomeAssistant setting up the component
     assert await async_setup_component(hass, DOMAIN, conf.copy())
     await hass.async_block_till_done()
 
