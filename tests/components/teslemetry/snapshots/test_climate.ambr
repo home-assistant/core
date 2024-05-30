@@ -55,14 +55,14 @@
       'min_temp': 30,
       'supported_features': <ClimateEntityFeature: 385>,
       'target_temp_step': 5,
-      'temperature': None,
+      'temperature': 40,
     }),
     'context': <ANY>,
     'entity_id': 'climate.test_cabin_overheat_protection',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'cool',
   })
 # ---
 # name: test_climate[climate.test_climate-entry]
@@ -202,7 +202,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_climate_alt[climate.test_climate-entry]
