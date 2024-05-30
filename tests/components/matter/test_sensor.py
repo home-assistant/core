@@ -391,3 +391,20 @@ async def test_air_purifier_sensor(
     assert state.attributes["unit_of_measurement"] == "ppm"
     assert state.attributes["device_class"] == "volatile_organic_compounds_parts"
     assert state.attributes["friendly_name"] == "Air Purifier VOCs"
+
+    # Air Quality
+    state = hass.states.get("sensor.air_purifier_air_quality")
+    assert state
+    assert state.state == "good"
+    expected_options = [
+        "extremely_poor",
+        "very_poor",
+        "poor",
+        "fair",
+        "good",
+        "moderate",
+        "unknown",
+    ]
+    assert set(state.attributes["options"]) == set(expected_options)
+    assert state.attributes["device_class"] == "enum"
+    assert state.attributes["friendly_name"] == "Air Purifier Air Quality"

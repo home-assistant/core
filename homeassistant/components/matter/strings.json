@@ -81,6 +81,18 @@
     "sensor": {
       "flow": {
         "name": "Flow"
+      },
+      "air_quality": {
+        "name": "Air Quality",
+        "state": {
+          "extremely_poor": "Extremely poor",
+          "very_poor": "Very poor",
+          "poor": "Poor",
+          "fair": "Fair",
+          "good": "Good",
+          "moderate": "Moderate",
+          "unknown": "Unknown"
+        }
       }
     }
   },

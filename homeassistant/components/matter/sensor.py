@@ -37,6 +37,17 @@ from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
+AIR_QUALITY_MAP = {
+    clusters.AirQuality.Enums.AirQualityEnum.kExtremelyPoor: "extremely_poor",
+    clusters.AirQuality.Enums.AirQualityEnum.kVeryPoor: "very_poor",
+    clusters.AirQuality.Enums.AirQualityEnum.kPoor: "poor",
+    clusters.AirQuality.Enums.AirQualityEnum.kFair: "fair",
+    clusters.AirQuality.Enums.AirQualityEnum.kGood: "good",
+    clusters.AirQuality.Enums.AirQualityEnum.kModerate: "moderate",
+    clusters.AirQuality.Enums.AirQualityEnum.kUnknown: "unknown",
+    clusters.AirQuality.Enums.AirQualityEnum.kUnknownEnumValue: "unknown",
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -270,5 +281,20 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.Pm10ConcentrationMeasurement.Attributes.MeasuredValue,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="AirQuality",
+            translation_key="air_quality",
+            device_class=SensorDeviceClass.ENUM,
+            state_class=None,
+            # convert to set first to remove the duplicate unknown value
+            options=list(set(AIR_QUALITY_MAP.values())),
+            measurement_to_ha=lambda x: AIR_QUALITY_MAP[x],
+            icon="mdi:air-filter",
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.AirQuality.Attributes.AirQuality,),
     ),
 ]
