@@ -64,7 +64,7 @@ from .conftest import (
 from .data import BASE_CUSTOM_CONFIGURATION, CONFIG_WITH_ALARM_OPTIONS
 
 from tests.common import MockConfigEntry, MockUser
-from tests.typing import WebSocketGenerator
+from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -157,7 +157,7 @@ async def zha_client(
     hass_ws_client: WebSocketGenerator,
     device_switch,
     device_groupable,
-):
+) -> MockHAClientWebSocket:
     """Get ZHA WebSocket client."""
 
     # load the ZHA API

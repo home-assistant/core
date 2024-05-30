@@ -428,7 +428,7 @@ async def test_restore_traces(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     hass_ws_client: WebSocketGenerator,
-    domain,
+    domain: str,
 ) -> None:
     """Test restored traces."""
     hass.set_state(CoreState.not_running)
@@ -599,8 +599,8 @@ async def test_restore_traces_overflow(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     hass_ws_client: WebSocketGenerator,
-    domain,
-    num_restored_moon_traces,
+    domain: str,
+    num_restored_moon_traces: int,
 ) -> None:
     """Test restored traces are evicted first."""
     hass.set_state(CoreState.not_running)
@@ -679,9 +679,9 @@ async def test_restore_traces_late_overflow(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     hass_ws_client: WebSocketGenerator,
-    domain,
-    num_restored_moon_traces,
-    restored_run_id,
+    domain: str,
+    num_restored_moon_traces: int,
+    restored_run_id: str,
 ) -> None:
     """Test restored traces are evicted first."""
     hass.set_state(CoreState.not_running)

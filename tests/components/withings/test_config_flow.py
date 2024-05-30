@@ -138,7 +138,7 @@ async def test_config_reauth_profile(
     aioclient_mock: AiohttpClientMocker,
     polling_config_entry: MockConfigEntry,
     withings: AsyncMock,
-    current_request_with_host: None,
+    current_request_with_host,
 ) -> None:
     """Test reauth an existing profile reauthenticates the config entry."""
     await setup_integration(hass, polling_config_entry)
@@ -200,7 +200,7 @@ async def test_config_reauth_wrong_account(
     aioclient_mock: AiohttpClientMocker,
     polling_config_entry: MockConfigEntry,
     withings: AsyncMock,
-    current_request_with_host: None,
+    current_request_with_host,
 ) -> None:
     """Test reauth with wrong account."""
     await setup_integration(hass, polling_config_entry)
@@ -262,7 +262,7 @@ async def test_config_flow_with_invalid_credentials(
     aioclient_mock: AiohttpClientMocker,
     polling_config_entry: MockConfigEntry,
     withings: AsyncMock,
-    current_request_with_host: None,
+    current_request_with_host,
 ) -> None:
     """Test flow with invalid credentials."""
     result = await hass.config_entries.flow.async_init(
