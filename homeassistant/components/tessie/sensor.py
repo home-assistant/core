@@ -392,6 +392,12 @@ async def async_setup_entry(
                 for vehicle in entry.runtime_data.vehicles
                 for description in DESCRIPTIONS
             ),
+            (  # Add energy site info
+                TessieEnergyInfoSensorEntity(energysite, description)
+                for energysite in entry.runtime_data.energysites
+                for description in ENERGY_INFO_DESCRIPTIONS
+                if description.key in energysite.info_coordinator.data
+            ),
             (  # Add energy site live
                 TessieEnergyLiveSensorEntity(energysite, description)
                 for energysite in entry.runtime_data.energysites
@@ -403,12 +409,6 @@ async def async_setup_entry(
                 for energysite in entry.runtime_data.energysites
                 for din in energysite.live_coordinator.data.get("wall_connectors", {})
                 for description in WALL_CONNECTOR_DESCRIPTIONS
-            ),
-            (  # Add energy site info
-                TessieEnergyInfoSensorEntity(energysite, description)
-                for energysite in entry.runtime_data.energysites
-                for description in ENERGY_INFO_DESCRIPTIONS
-                if description.key in energysite.info_coordinator.data
             ),
         )
     )
@@ -425,8 +425,8 @@ class TessieVehicleSensorEntity(TessieEntity, SensorEntity):
         description: TessieSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, description.key)
         self.entity_description = description
+        super().__init__(coordinator, description.key)
 
     @property
     def native_value(self) -> StateType | datetime:
