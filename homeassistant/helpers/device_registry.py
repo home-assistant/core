@@ -815,7 +815,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         config_entries = old.config_entries
 
         if merge_connections is not UNDEFINED and new_connections is not UNDEFINED:
-            raise HomeAssistantError("Cannot define both merge_connections and new_connections")
+            raise HomeAssistantError(
+                "Cannot define both merge_connections and new_connections"
+            )
 
         if merge_identifiers is not UNDEFINED and new_identifiers is not UNDEFINED:
             raise HomeAssistantError
