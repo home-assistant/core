@@ -38,25 +38,19 @@ class TessieBaseEntity(
         key: str,
     ) -> None:
         """Initialize common aspects of a Tessie entity."""
-        super().__init__(coordinator)
 
         self.key = key
         self._attr_translation_key = key
+        super().__init__(coordinator)
 
     @property
     def _value(self) -> Any:
         """Return value from coordinator data."""
-        return self.coordinator.data[self.key]
+        return self.coordinator.data.get(self.key)
 
     def get(self, key: str | None = None, default: Any | None = None) -> Any:
         """Return a specific value from coordinator data."""
         return self.coordinator.data.get(key or self.key, default)
-
-    def set(self, *args: Any) -> None:
-        """Set a value in coordinator data."""
-        for key, value in args:
-            self.coordinator.data[key] = value
-        self.async_write_ha_state()
 
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -95,6 +89,12 @@ class TessieEntity(TessieBaseEntity):
         )
 
         super().__init__(coordinator, key)
+
+    def set(self, *args: Any) -> None:
+        """Set a value in coordinator data."""
+        for key, value in args:
+            self.coordinator.data[key] = value
+        self.async_write_ha_state()
 
     async def run(
         self, func: Callable[..., Awaitable[dict[str, Any]]], **kargs: Any
@@ -136,7 +136,7 @@ class TessieEnergyInfoEntity(TessieBaseEntity):
         self._attr_unique_id = f"{data.id}-{key}"
         self._attr_device_info = data.device
 
-        super().__init__(TessieEnergyData.info_coordinator, key)
+        super().__init__(data.info_coordinator, key)
 
 
 class TessieEnergyLiveEntity(TessieBaseEntity):
@@ -152,7 +152,7 @@ class TessieEnergyLiveEntity(TessieBaseEntity):
         self._attr_unique_id = f"{data.id}-{key}"
         self._attr_device_info = data.device
 
-        super().__init__(TessieEnergyData.live_coordinator, key)
+        super().__init__(data.live_coordinator, key)
 
 
 class TessieWallConnectorEntity(TessieBaseEntity):
