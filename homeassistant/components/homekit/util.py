@@ -38,9 +38,15 @@ from homeassistant.const import (
     CONF_TYPE,
     UnitOfTemperature,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.util.unit_conversion import TemperatureConverter
 
@@ -66,6 +72,8 @@ from .const import (
     CONF_STREAM_COUNT,
     CONF_STREAM_SOURCE,
     CONF_SUPPORT_AUDIO,
+    CONF_THRESHOLD_CO,
+    CONF_THRESHOLD_CO2,
     CONF_VIDEO_CODEC,
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
@@ -217,6 +225,13 @@ SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
     }
 )
 
+SENSOR_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {
+        vol.Optional(CONF_THRESHOLD_CO): vol.Any(None, cv.positive_int),
+        vol.Optional(CONF_THRESHOLD_CO2): vol.Any(None, cv.positive_int),
+    }
+)
+
 
 HOMEKIT_CHAR_TRANSLATIONS = {
     0: " ",  # nul
@@ -290,6 +305,9 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
 
         elif domain == "cover":
             config = COVER_SCHEMA(config)
+
+        elif domain == "sensor":
+            config = SENSOR_SCHEMA(config)
 
         else:
             config = BASIC_INFO_SCHEMA(config)
@@ -395,14 +413,14 @@ def cleanup_name_for_homekit(name: str | None) -> str:
     return name.translate(HOMEKIT_CHAR_TRANSLATIONS)[:MAX_NAME_LENGTH]
 
 
-def temperature_to_homekit(temperature: float | int, unit: str) -> float:
+def temperature_to_homekit(temperature: float, unit: str) -> float:
     """Convert temperature to Celsius for HomeKit."""
     return round(
         TemperatureConverter.convert(temperature, unit, UnitOfTemperature.CELSIUS), 1
     )
 
 
-def temperature_to_states(temperature: float | int, unit: str) -> float:
+def temperature_to_states(temperature: float, unit: str) -> float:
     """Convert temperature back from Celsius to Home Assistant unit."""
     return (
         round(

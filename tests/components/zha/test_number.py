@@ -5,8 +5,7 @@ from unittest.mock import call, patch
 import pytest
 from zigpy.exceptions import ZigbeeException
 from zigpy.profiles import zha
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.lighting as lighting
+from zigpy.zcl.clusters import general, lighting
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
@@ -62,7 +61,7 @@ def zigpy_analog_output_device(zigpy_device_mock):
 async def light(zigpy_device_mock):
     """Siren fixture."""
 
-    zigpy_device = zigpy_device_mock(
+    return zigpy_device_mock(
         {
             1: {
                 SIG_EP_PROFILE: zha.PROFILE_ID,
@@ -79,8 +78,6 @@ async def light(zigpy_device_mock):
         },
         node_descriptor=b"\x02@\x84_\x11\x7fd\x00\x00,d\x00\x00",
     )
-
-    return zigpy_device
 
 
 async def test_number(
@@ -203,6 +200,7 @@ async def test_number(
 )
 async def test_level_control_number(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     light: ZHADevice,
     zha_device_joined,
     attr: str,
@@ -210,8 +208,6 @@ async def test_level_control_number(
     new_value: int,
 ) -> None:
     """Test ZHA level control number entities - new join."""
-
-    entity_registry = er.async_get(hass)
     level_control_cluster = light.endpoints[1].level
     level_control_cluster.PLUGGED_ATTR_READS = {
         attr: initial_value,
@@ -328,6 +324,7 @@ async def test_level_control_number(
 )
 async def test_color_number(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     light: ZHADevice,
     zha_device_joined,
     attr: str,
@@ -335,8 +332,6 @@ async def test_color_number(
     new_value: int,
 ) -> None:
     """Test ZHA color number entities - new join."""
-
-    entity_registry = er.async_get(hass)
     color_cluster = light.endpoints[1].light_color
     color_cluster.PLUGGED_ATTR_READS = {
         attr: initial_value,

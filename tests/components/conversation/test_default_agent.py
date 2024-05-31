@@ -6,17 +6,24 @@ from unittest.mock import AsyncMock, patch
 from hassil.recognize import Intent, IntentData, MatchEntity, RecognizeResult
 import pytest
 
-from homeassistant.components import conversation
+from homeassistant.components import conversation, cover, media_player
+from homeassistant.components.conversation import default_agent
 from homeassistant.components.homeassistant.exposed_entities import (
     async_get_assistant_settings,
 )
-from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.core import DOMAIN as HASS_DOMAIN, Context, HomeAssistant
+from homeassistant.components.intent import (
+    TimerEventType,
+    TimerInfo,
+    async_register_timer_handler,
+)
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, STATE_CLOSED
+from homeassistant.core import DOMAIN as HASS_DOMAIN, Context, HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity,
     entity_registry as er,
+    floor_registry as fr,
     intent,
 )
 from homeassistant.setup import async_setup_component
@@ -150,9 +157,7 @@ async def test_conversation_agent(
     init_components,
 ) -> None:
     """Test DefaultAgent."""
-    agent = await conversation._get_agent_manager(hass).async_get_agent(
-        conversation.HOME_ASSISTANT_AGENT
-    )
+    agent = default_agent.async_get_default_agent(hass)
     with patch(
         "homeassistant.components.conversation.default_agent.get_languages",
         return_value=["dwarvish", "elvish", "entish"],
@@ -179,6 +184,7 @@ async def test_expose_flag_automatically_set(
 
     # After setting up conversation, the expose flag should now be set on all entities
     assert async_get_assistant_settings(hass, conversation.DOMAIN) == {
+        "conversation.home_assistant": {"should_expose": False},
         light.entity_id: {"should_expose": True},
         test.entity_id: {"should_expose": False},
     }
@@ -188,6 +194,7 @@ async def test_expose_flag_automatically_set(
     hass.states.async_set(new_light, "test")
     await hass.async_block_till_done()
     assert async_get_assistant_settings(hass, conversation.DOMAIN) == {
+        "conversation.home_assistant": {"should_expose": False},
         light.entity_id: {"should_expose": True},
         new_light: {"should_expose": True},
         test.entity_id: {"should_expose": False},
@@ -252,10 +259,8 @@ async def test_trigger_sentences(hass: HomeAssistant, init_components) -> None:
     trigger_sentences = ["It's party time", "It is time to party"]
     trigger_response = "Cowabunga!"
 
-    agent = await conversation._get_agent_manager(hass).async_get_agent(
-        conversation.HOME_ASSISTANT_AGENT
-    )
-    assert isinstance(agent, conversation.DefaultAgent)
+    agent = default_agent.async_get_default_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
 
     callback = AsyncMock(return_value=trigger_response)
     unregister = agent.register_trigger(trigger_sentences, callback)
@@ -480,6 +485,20 @@ async def test_error_no_area(hass: HomeAssistant, init_components) -> None:
     )
 
 
+async def test_error_no_floor(hass: HomeAssistant, init_components) -> None:
+    """Test error message when floor is missing."""
+    result = await conversation.async_converse(
+        hass, "turn on all the lights on missing floor", None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Sorry, I am not aware of any floor called missing"
+    )
+
+
 async def test_error_no_device_in_area(
     hass: HomeAssistant, init_components, area_registry: ar.AreaRegistry
 ) -> None:
@@ -549,16 +568,67 @@ async def test_error_no_domain_in_area(
     )
 
 
+async def test_error_no_domain_in_floor(
+    hass: HomeAssistant,
+    init_components,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test error message when no devices/entities for a domain exist on a floor."""
+    floor_ground = floor_registry.async_create("ground")
+    area_kitchen = area_registry.async_get_or_create("kitchen_id")
+    area_kitchen = area_registry.async_update(
+        area_kitchen.id, name="kitchen", floor_id=floor_ground.floor_id
+    )
+    result = await conversation.async_converse(
+        hass, "turn on all lights on the ground floor", None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Sorry, I am not aware of any light on the ground floor"
+    )
+
+    # Add a new floor/area to trigger registry event handlers
+    floor_upstairs = floor_registry.async_create("upstairs")
+    area_bedroom = area_registry.async_get_or_create("bedroom_id")
+    area_bedroom = area_registry.async_update(
+        area_bedroom.id, name="bedroom", floor_id=floor_upstairs.floor_id
+    )
+
+    result = await conversation.async_converse(
+        hass, "turn on all lights upstairs", None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Sorry, I am not aware of any light on the upstairs floor"
+    )
+
+
 async def test_error_no_device_class(hass: HomeAssistant, init_components) -> None:
     """Test error message when no entities of a device class exist."""
+    # Create a cover entity that is not a window.
+    # This ensures that the filtering below won't exit early because there are
+    # no entities in the cover domain.
+    hass.states.async_set(
+        "cover.garage_door",
+        STATE_CLOSED,
+        attributes={ATTR_DEVICE_CLASS: cover.CoverDeviceClass.GARAGE},
+    )
 
     # We don't have a sentence for opening all windows
+    cover_domain = MatchEntity(name="domain", value="cover", text="cover")
     window_class = MatchEntity(name="device_class", value="window", text="windows")
     recognize_result = RecognizeResult(
         intent=Intent("HassTurnOn"),
         intent_data=IntentData([]),
-        entities={"device_class": window_class},
-        entities_list=[window_class],
+        entities={"domain": cover_domain, "device_class": window_class},
+        entities_list=[cover_domain, window_class],
     )
 
     with patch(
@@ -727,6 +797,141 @@ async def test_error_duplicate_names_in_area(
         )
 
 
+async def test_error_wrong_state(hass: HomeAssistant, init_components) -> None:
+    """Test error message when no entities are in the correct state."""
+    assert await async_setup_component(hass, media_player.DOMAIN, {})
+
+    hass.states.async_set(
+        "media_player.test_player",
+        media_player.STATE_IDLE,
+        {ATTR_FRIENDLY_NAME: "test player"},
+    )
+    expose_entity(hass, "media_player.test_player", True)
+
+    result = await conversation.async_converse(
+        hass, "pause test player", None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+    assert result.response.speech["plain"]["speech"] == "Sorry, no device is playing"
+
+
+async def test_error_feature_not_supported(
+    hass: HomeAssistant, init_components
+) -> None:
+    """Test error message when no devices support a required feature."""
+    assert await async_setup_component(hass, media_player.DOMAIN, {})
+
+    hass.states.async_set(
+        "media_player.test_player",
+        media_player.STATE_PLAYING,
+        {ATTR_FRIENDLY_NAME: "test player"},
+        # missing VOLUME_SET feature
+    )
+    expose_entity(hass, "media_player.test_player", True)
+
+    result = await conversation.async_converse(
+        hass, "set test player volume to 100%", None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Sorry, no device supports the required features"
+    )
+
+
+async def test_error_no_timer_support(hass: HomeAssistant, init_components) -> None:
+    """Test error message when a device does not support timers (no handler is registered)."""
+    device_id = "test_device"
+
+    # No timer handler is registered for the device
+    result = await conversation.async_converse(
+        hass, "pause timer", None, Context(), None, device_id=device_id
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Sorry, timers are not supported on this device"
+    )
+
+
+async def test_error_timer_not_found(hass: HomeAssistant, init_components) -> None:
+    """Test error message when a timer cannot be matched."""
+    device_id = "test_device"
+
+    @callback
+    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+        pass
+
+    # Register a handler so the device "supports" timers
+    async_register_timer_handler(hass, device_id, handle_timer)
+
+    result = await conversation.async_converse(
+        hass, "pause timer", None, Context(), None, device_id=device_id
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
+    assert (
+        result.response.speech["plain"]["speech"] == "Sorry, I couldn't find that timer"
+    )
+
+
+async def test_error_multiple_timers_matched(
+    hass: HomeAssistant,
+    init_components,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test error message when an intent would target multiple timers."""
+    area_kitchen = area_registry.async_create("kitchen")
+
+    # Starting a timer requires a device in an area
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+    device_kitchen = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections=set(),
+        identifiers={("demo", "device-kitchen")},
+    )
+    device_registry.async_update_device(device_kitchen.id, area_id=area_kitchen.id)
+    device_id = device_kitchen.id
+
+    @callback
+    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+        pass
+
+    # Register a handler so the device "supports" timers
+    async_register_timer_handler(hass, device_id, handle_timer)
+
+    # Create two identical timers from the same device
+    result = await conversation.async_converse(
+        hass, "set a timer for 5 minutes", None, Context(), None, device_id=device_id
+    )
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+
+    result = await conversation.async_converse(
+        hass, "set a timer for 5 minutes", None, Context(), None, device_id=device_id
+    )
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+
+    # Cannot target multiple timers
+    result = await conversation.async_converse(
+        hass, "cancel timer", None, Context(), None, device_id=device_id
+    )
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Sorry, I am unable to target multiple timers"
+    )
+
+
 async def test_no_states_matched_default_error(
     hass: HomeAssistant, init_components, area_registry: ar.AreaRegistry
 ) -> None:
@@ -736,7 +941,9 @@ async def test_no_states_matched_default_error(
 
     with patch(
         "homeassistant.components.conversation.default_agent.intent.async_handle",
-        side_effect=intent.NoStatesMatchedError(None, None, None, None),
+        side_effect=intent.MatchFailedError(
+            intent.MatchTargetsResult(False), intent.MatchTargetsConstraints()
+        ),
     ):
         result = await conversation.async_converse(
             hass, "turn on lights in the kitchen", None, Context(), None
@@ -759,11 +966,16 @@ async def test_empty_aliases(
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    floor_registry: fr.FloorRegistry,
 ) -> None:
     """Test that empty aliases are not added to slot lists."""
+    floor_1 = floor_registry.async_create("first floor", aliases={" "})
+
     area_kitchen = area_registry.async_get_or_create("kitchen_id")
     area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
-    area_kitchen = area_registry.async_update(area_kitchen.id, aliases={" "})
+    area_kitchen = area_registry.async_update(
+        area_kitchen.id, aliases={" "}, floor_id=floor_1.floor_id
+    )
 
     entry = MockConfigEntry()
     entry.add_to_hass(hass)
@@ -788,7 +1000,7 @@ async def test_empty_aliases(
     )
 
     with patch(
-        "homeassistant.components.conversation.DefaultAgent._recognize",
+        "homeassistant.components.conversation.default_agent.DefaultAgent._recognize",
         return_value=None,
     ) as mock_recognize_all:
         await conversation.async_converse(
@@ -799,16 +1011,18 @@ async def test_empty_aliases(
         slot_lists = mock_recognize_all.call_args[0][2]
 
         # Slot lists should only contain non-empty text
-        assert slot_lists.keys() == {"area", "name"}
+        assert slot_lists.keys() == {"area", "name", "floor"}
         areas = slot_lists["area"]
         assert len(areas.values) == 1
-        assert areas.values[0].value_out == area_kitchen.id
         assert areas.values[0].text_in.text == area_kitchen.normalized_name
 
         names = slot_lists["name"]
         assert len(names.values) == 1
-        assert names.values[0].value_out == kitchen_light.name
         assert names.values[0].text_in.text == kitchen_light.name
+
+        floors = slot_lists["floor"]
+        assert len(floors.values) == 1
+        assert floors.values[0].text_in.text == floor_1.name
 
 
 async def test_all_domains_loaded(hass: HomeAssistant, init_components) -> None:
@@ -1016,3 +1230,89 @@ async def test_same_aliased_entities_in_different_areas(
         hass, "how many lights are on?", None, Context(), None
     )
     assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
+
+
+async def test_device_id_in_handler(hass: HomeAssistant, init_components) -> None:
+    """Test that the default agent passes device_id to intent handler."""
+    device_id = "test_device"
+
+    # Reuse custom sentences in test config to trigger default agent.
+    class OrderBeerIntentHandler(intent.IntentHandler):
+        intent_type = "OrderBeer"
+
+        def __init__(self) -> None:
+            super().__init__()
+            self.device_id: str | None = None
+
+        async def async_handle(
+            self, intent_obj: intent.Intent
+        ) -> intent.IntentResponse:
+            self.device_id = intent_obj.device_id
+            return intent_obj.create_response()
+
+    handler = OrderBeerIntentHandler()
+    intent.async_register(hass, handler)
+
+    result = await conversation.async_converse(
+        hass,
+        "I'd like to order a stout please",
+        None,
+        Context(),
+        device_id=device_id,
+    )
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert handler.device_id == device_id
+
+
+async def test_name_wildcard_lower_priority(
+    hass: HomeAssistant, init_components
+) -> None:
+    """Test that the default agent does not prioritize a {name} slot when it's a wildcard."""
+
+    class OrderBeerIntentHandler(intent.IntentHandler):
+        intent_type = "OrderBeer"
+
+        def __init__(self) -> None:
+            super().__init__()
+            self.triggered = False
+
+        async def async_handle(
+            self, intent_obj: intent.Intent
+        ) -> intent.IntentResponse:
+            self.triggered = True
+            return intent_obj.create_response()
+
+    class OrderFoodIntentHandler(intent.IntentHandler):
+        intent_type = "OrderFood"
+
+        def __init__(self) -> None:
+            super().__init__()
+            self.triggered = False
+
+        async def async_handle(
+            self, intent_obj: intent.Intent
+        ) -> intent.IntentResponse:
+            self.triggered = True
+            return intent_obj.create_response()
+
+    beer_handler = OrderBeerIntentHandler()
+    food_handler = OrderFoodIntentHandler()
+    intent.async_register(hass, beer_handler)
+    intent.async_register(hass, food_handler)
+
+    # Matches OrderBeer because more literal text is matched ("a")
+    result = await conversation.async_converse(
+        hass, "I'd like to order a stout please", None, Context(), None
+    )
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert beer_handler.triggered
+    assert not food_handler.triggered
+
+    # Matches OrderFood because "cookie" is not in the beer styles list
+    beer_handler.triggered = False
+    result = await conversation.async_converse(
+        hass, "I'd like to order a cookie please", None, Context(), None
+    )
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert not beer_handler.triggered
+    assert food_handler.triggered

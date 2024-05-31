@@ -1,13 +1,13 @@
 """Test init of Brother integration."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from brother import SnmpError
 import pytest
 
 from homeassistant.components.brother.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_TYPE, STATE_UNAVAILABLE
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
@@ -15,59 +15,76 @@ from . import init_integration
 from tests.common import MockConfigEntry
 
 
-async def test_async_setup_entry(hass: HomeAssistant) -> None:
+async def test_async_setup_entry(
+    hass: HomeAssistant,
+    mock_brother_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test a successful setup entry."""
-    await init_integration(hass)
+    await init_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.hl_l2340dw_status")
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "waiting"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_config_not_ready(hass: HomeAssistant) -> None:
+async def test_config_not_ready(
+    hass: HomeAssistant,
+    mock_brother_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test for setup failure if connection to broker is missing."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="HL-L2340DW 0123456789",
-        unique_id="0123456789",
-        data={CONF_HOST: "localhost", CONF_TYPE: "laser"},
-    )
+    mock_brother_client.async_update.side_effect = ConnectionError
 
-    with (
-        patch("brother.Brother.initialize"),
-        patch("brother.Brother._get_data", side_effect=ConnectionError()),
-    ):
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state is ConfigEntryState.SETUP_RETRY
+    await init_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize("exc", [(SnmpError("SNMP Error")), (ConnectionError)])
-async def test_error_on_init(hass: HomeAssistant, exc: Exception) -> None:
+async def test_error_on_init(
+    hass: HomeAssistant, exc: Exception, mock_config_entry: MockConfigEntry
+) -> None:
     """Test for error on init."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="HL-L2340DW 0123456789",
-        unique_id="0123456789",
-        data={CONF_HOST: "localhost", CONF_TYPE: "laser"},
-    )
+    with patch(
+        "homeassistant.components.brother.Brother.create",
+        new=AsyncMock(side_effect=exc),
+    ):
+        await init_integration(hass, mock_config_entry)
 
-    with patch("brother.Brother.initialize", side_effect=exc):
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_entry(hass: HomeAssistant) -> None:
+async def test_unload_entry(
+    hass: HomeAssistant,
+    mock_brother_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test successful unload of entry."""
-    entry = await init_integration(hass)
+    await init_integration(hass, mock_config_entry)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.brother.lcd.unconfigure") as mock_unconfigure:
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    assert mock_unconfigure.called
 
-    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
+
+
+async def test_unconfigure_snmp_engine_on_ha_stop(
+    hass: HomeAssistant,
+    mock_brother_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the SNMP engine is unconfigured when HA stops."""
+    await init_integration(hass, mock_config_entry)
+
+    with patch(
+        "homeassistant.components.brother.utils.lcd.unconfigure"
+    ) as mock_unconfigure:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+    assert mock_unconfigure.called

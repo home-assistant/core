@@ -47,9 +47,9 @@ async def test_setup(hass: HomeAssistant) -> None:
         )
 
     assert len(mock_ex.mock_calls) == 1
-    hass, script, source, data = mock_ex.mock_calls[0][1]
+    test_hass, script, source, data = mock_ex.mock_calls[0][1]
 
-    assert hass is hass
+    assert test_hass is hass
     assert script == "hello.py"
     assert source == "fake source"
     assert data == {"some": "data"}
@@ -682,7 +682,7 @@ hass.states.set('hello.c', c)
     ],
 )
 async def test_prohibited_augmented_assignment_operations(
-    hass: HomeAssistant, case: str, error: str, caplog
+    hass: HomeAssistant, case: str, error: str, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that prohibited augmented assignment operations raise an error."""
     hass.async_add_executor_job(execute, hass, "aug_assign_prohibited.py", case, {})

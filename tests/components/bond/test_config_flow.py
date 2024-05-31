@@ -15,6 +15,7 @@ from homeassistant.components.bond.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .common import (
     patch_bond_bridge,
@@ -35,7 +36,7 @@ async def test_user_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -53,7 +54,7 @@ async def test_user_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "bond-name"
     assert result2["data"] == {
         CONF_HOST: "some host",
@@ -68,7 +69,7 @@ async def test_user_form_with_non_bridge(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -90,7 +91,7 @@ async def test_user_form_with_non_bridge(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "New Fan"
     assert result2["data"] == {
         CONF_HOST: "some host",
@@ -117,7 +118,7 @@ async def test_user_form_invalid_auth(hass: HomeAssistant) -> None:
             {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -137,7 +138,7 @@ async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
             {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -157,7 +158,7 @@ async def test_user_form_old_firmware(hass: HomeAssistant) -> None:
             {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "old_firmware"}
 
 
@@ -205,7 +206,7 @@ async def test_user_form_one_entry_per_device_allowed(hass: HomeAssistant) -> No
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
     assert len(mock_setup_entry.mock_calls) == 0
@@ -228,7 +229,7 @@ async def test_zeroconf_form(hass: HomeAssistant) -> None:
                 type="mock_type",
             ),
         )
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {}
 
     with (
@@ -243,7 +244,7 @@ async def test_zeroconf_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "bond-name"
     assert result2["data"] == {
         CONF_HOST: "127.0.0.1",
@@ -270,7 +271,7 @@ async def test_zeroconf_form_token_unavailable(hass: HomeAssistant) -> None:
             ),
         )
         await hass.async_block_till_done()
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -285,7 +286,7 @@ async def test_zeroconf_form_token_unavailable(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "bond-name"
     assert result2["data"] == {
         CONF_HOST: "127.0.0.1",
@@ -312,7 +313,7 @@ async def test_zeroconf_form_token_times_out(hass: HomeAssistant) -> None:
             ),
         )
         await hass.async_block_till_done()
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -327,7 +328,7 @@ async def test_zeroconf_form_token_times_out(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "bond-name"
     assert result2["data"] == {
         CONF_HOST: "127.0.0.1",
@@ -359,7 +360,7 @@ async def test_zeroconf_form_with_token_available(hass: HomeAssistant) -> None:
             ),
         )
         await hass.async_block_till_done()
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with _patch_async_setup_entry() as mock_setup_entry:
@@ -369,7 +370,7 @@ async def test_zeroconf_form_with_token_available(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "discovered-name"
     assert result2["data"] == {
         CONF_HOST: "127.0.0.1",
@@ -403,7 +404,7 @@ async def test_zeroconf_form_with_token_available_name_unavailable(
             ),
         )
         await hass.async_block_till_done()
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with _patch_async_setup_entry() as mock_setup_entry:
@@ -413,7 +414,7 @@ async def test_zeroconf_form_with_token_available_name_unavailable(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ZXXX12345"
     assert result2["data"] == {
         CONF_HOST: "127.0.0.1",
@@ -448,7 +449,7 @@ async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "127.0.0.2"
     assert len(mock_setup_entry.mock_calls) == 1
@@ -486,7 +487,7 @@ async def test_zeroconf_in_setup_retry_state(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "127.0.0.2"
     assert len(mock_setup_entry.mock_calls) == 1
@@ -533,7 +534,7 @@ async def test_zeroconf_already_configured_refresh_token(hass: HomeAssistant) ->
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "127.0.0.2"
     assert entry.data[CONF_ACCESS_TOKEN] == "discovered-token"
@@ -572,7 +573,7 @@ async def test_zeroconf_already_configured_no_reload_same_host(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(mock_setup_entry.mock_calls) == 0
 
@@ -618,7 +619,7 @@ async def _help_test_form_unexpected_error(
             result["flow_id"], user_input
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 

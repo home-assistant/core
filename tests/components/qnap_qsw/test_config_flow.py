@@ -5,12 +5,13 @@ from unittest.mock import MagicMock, patch
 from aioqsw.const import API_MAC_ADDR, API_PRODUCT, API_RESULT
 from aioqsw.exceptions import LoginError, QswError
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.qnap_qsw.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
 
 from .util import CONFIG, LIVE_MOCK, SYSTEM_BOARD_MOCK, USERS_LOGIN_MOCK
@@ -53,7 +54,7 @@ async def test_form(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {}
 
@@ -67,7 +68,7 @@ async def test_form(hass: HomeAssistant) -> None:
         entry = conf_entries[0]
         assert entry.state is ConfigEntryState.LOADED
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert (
             result["title"]
             == f"QNAP {SYSTEM_BOARD_MOCK[API_RESULT][API_PRODUCT]} {SYSTEM_BOARD_MOCK[API_RESULT][API_MAC_ADDR]}"
@@ -102,7 +103,7 @@ async def test_form_duplicated_id(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["type"] == "abort"
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -120,7 +121,7 @@ async def test_form_unique_id_error(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["type"] == "abort"
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "invalid_id"
 
 
@@ -164,7 +165,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovered_connection"
 
     with (
@@ -193,7 +194,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
@@ -216,7 +217,7 @@ async def test_dhcp_flow_error(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -233,7 +234,7 @@ async def test_dhcp_connection_error(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovered_connection"
 
     with patch(
@@ -264,7 +265,7 @@ async def test_dhcp_login_error(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovered_connection"
 
     with patch(

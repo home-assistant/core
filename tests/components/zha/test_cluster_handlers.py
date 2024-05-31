@@ -19,7 +19,7 @@ import zigpy.zcl.clusters
 from zigpy.zcl.clusters import CLUSTERS_BY_ID
 import zigpy.zdo.types as zdo_t
 
-import homeassistant.components.zha.core.cluster_handlers as cluster_handlers
+from homeassistant.components.zha.core import cluster_handlers, registries
 from homeassistant.components.zha.core.cluster_handlers.lighting import (
     ColorClusterHandler,
 )
@@ -27,7 +27,6 @@ import homeassistant.components.zha.core.const as zha_const
 from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.components.zha.core.endpoint import Endpoint
 from homeassistant.components.zha.core.helpers import get_zha_gateway
-import homeassistant.components.zha.core.registries as registries
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -120,8 +119,7 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
         "test model",
     )
 
-    zha_device = await zha_device_restored(zigpy_dev)
-    return zha_device
+    return await zha_device_restored(zigpy_dev)
 
 
 @pytest.mark.parametrize(
@@ -841,7 +839,9 @@ async def test_configure_reporting(hass: HomeAssistant, endpoint) -> None:
     ]
 
 
-async def test_invalid_cluster_handler(hass: HomeAssistant, caplog) -> None:
+async def test_invalid_cluster_handler(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setting up a cluster handler that fails to match properly."""
 
     class TestZigbeeClusterHandler(cluster_handlers.ClusterHandler):
@@ -883,7 +883,9 @@ async def test_invalid_cluster_handler(hass: HomeAssistant, caplog) -> None:
     assert "missing_attr" in caplog.text
 
 
-async def test_standard_cluster_handler(hass: HomeAssistant, caplog) -> None:
+async def test_standard_cluster_handler(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setting up a cluster handler that matches a standard cluster."""
 
     class TestZigbeeClusterHandler(ColorClusterHandler):
@@ -918,7 +920,9 @@ async def test_standard_cluster_handler(hass: HomeAssistant, caplog) -> None:
     )
 
 
-async def test_quirk_id_cluster_handler(hass: HomeAssistant, caplog) -> None:
+async def test_quirk_id_cluster_handler(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setting up a cluster handler that matches a standard cluster."""
 
     class TestZigbeeClusterHandler(ColorClusterHandler):

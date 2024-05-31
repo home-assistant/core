@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import aiounifi
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.unifi.config_flow import _async_discover_unifi
 from homeassistant.components.unifi.const import (
@@ -33,6 +33,7 @@ from homeassistant.const import (
     CONTENT_TYPE_JSON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .test_hub import setup_unifi_integration
 
@@ -105,7 +106,7 @@ async def test_flow_works(
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["data_schema"]({CONF_USERNAME: "", CONF_PASSWORD: ""}) == {
         CONF_HOST: "unifi",
@@ -145,7 +146,7 @@ async def test_flow_works(
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Site name"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
@@ -165,7 +166,7 @@ async def test_flow_works_negative_discovery(
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["data_schema"]({CONF_USERNAME: "", CONF_PASSWORD: ""}) == {
         CONF_HOST: "",
@@ -184,7 +185,7 @@ async def test_flow_multiple_sites(
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     aioclient_mock.get("https://1.2.3.4:1234", status=302)
@@ -218,7 +219,7 @@ async def test_flow_multiple_sites(
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "site"
     assert result["data_schema"]({"site": "1"})
     assert result["data_schema"]({"site": "2"})
@@ -234,7 +235,7 @@ async def test_flow_raise_already_configured(
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     aioclient_mock.clear_requests()
@@ -269,7 +270,7 @@ async def test_flow_raise_already_configured(
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -278,20 +279,16 @@ async def test_flow_aborts_configuration_updated(
 ) -> None:
     """Test config flow aborts since a connected config entry already exists."""
     entry = MockConfigEntry(
-        domain=UNIFI_DOMAIN, data={"host": "1.2.3.4", "site": "office"}, unique_id="2"
-    )
-    entry.add_to_hass(hass)
-
-    entry = MockConfigEntry(
         domain=UNIFI_DOMAIN, data={"host": "1.2.3.4", "site": "site_id"}, unique_id="1"
     )
     entry.add_to_hass(hass)
+    entry.runtime_data = None
 
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     aioclient_mock.get("https://1.2.3.4:1234", status=302)
@@ -325,7 +322,7 @@ async def test_flow_aborts_configuration_updated(
             },
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "configuration_updated"
 
 
@@ -337,7 +334,7 @@ async def test_flow_fails_user_credentials_faulty(
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     aioclient_mock.get("https://1.2.3.4:1234", status=302)
@@ -354,7 +351,7 @@ async def test_flow_fails_user_credentials_faulty(
             },
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "faulty_credentials"}
 
 
@@ -366,7 +363,7 @@ async def test_flow_fails_hub_unavailable(
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     aioclient_mock.get("https://1.2.3.4:1234", status=302)
@@ -383,7 +380,7 @@ async def test_flow_fails_hub_unavailable(
             },
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "service_unavailable"}
 
 
@@ -392,7 +389,7 @@ async def test_reauth_flow_update_configuration(
 ) -> None:
     """Verify reauth flow can update hub configuration."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
     hub.websocket.available = False
 
     result = await hass.config_entries.flow.async_init(
@@ -405,7 +402,7 @@ async def test_reauth_flow_update_configuration(
         data=config_entry.data,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     aioclient_mock.clear_requests()
@@ -440,7 +437,7 @@ async def test_reauth_flow_update_configuration(
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert config_entry.data[CONF_HOST] == "1.2.3.4"
     assert config_entry.data[CONF_USERNAME] == "new_name"
@@ -465,7 +462,7 @@ async def test_advanced_option_flow(
         config_entry.entry_id, context={"show_advanced_options": True}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_entity_sources"
     assert not result["last_step"]
     assert list(result["data_schema"].schema[CONF_CLIENT_SOURCE].options.keys()) == [
@@ -476,7 +473,7 @@ async def test_advanced_option_flow(
         user_input={CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"]},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "device_tracker"
     assert not result["last_step"]
     assert list(result["data_schema"].schema[CONF_SSID_FILTER].options.keys()) == [
@@ -498,7 +495,7 @@ async def test_advanced_option_flow(
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "client_control"
     assert not result["last_step"]
 
@@ -510,7 +507,7 @@ async def test_advanced_option_flow(
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "statistics_sensors"
     assert result["last_step"]
 
@@ -522,7 +519,7 @@ async def test_advanced_option_flow(
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"],
         CONF_TRACK_CLIENTS: False,
@@ -550,7 +547,7 @@ async def test_simple_option_flow(
         config_entry.entry_id, context={"show_advanced_options": False}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "simple_options"
     assert result["last_step"]
 
@@ -563,25 +560,12 @@ async def test_simple_option_flow(
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_TRACK_CLIENTS: False,
         CONF_TRACK_DEVICES: False,
         CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
     }
-
-
-async def test_option_flow_integration_not_setup(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test advanced config flow options."""
-    config_entry = await setup_unifi_integration(hass, aioclient_mock)
-
-    hass.data[UNIFI_DOMAIN].pop(config_entry.entry_id)
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "integration_not_setup"
 
 
 async def test_form_ssdp(hass: HomeAssistant) -> None:
@@ -601,7 +585,7 @@ async def test_form_ssdp(hass: HomeAssistant) -> None:
             },
         ),
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -646,7 +630,7 @@ async def test_form_ssdp_aborts_if_host_already_exists(hass: HomeAssistant) -> N
             },
         ),
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -673,7 +657,7 @@ async def test_form_ssdp_aborts_if_serial_already_exists(hass: HomeAssistant) ->
             },
         ),
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -700,7 +684,7 @@ async def test_form_ssdp_gets_form_with_ignored_entry(hass: HomeAssistant) -> No
             },
         ),
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
     context = next(

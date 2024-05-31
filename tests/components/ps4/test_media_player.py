@@ -147,9 +147,7 @@ async def setup_mock_component(hass, entry=None):
 
     mock_entities = hass.states.async_entity_ids()
 
-    mock_entity_id = mock_entities[0]
-
-    return mock_entity_id
+    return mock_entities[0]
 
 
 async def mock_ddp_response(hass, mock_status_data):

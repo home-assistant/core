@@ -270,7 +270,7 @@ class SnmpData:
             "SNMP OID %s received type=%s and data %s",
             self._baseoid,
             type(value),
-            bytes(value),
+            value,
         )
         if isinstance(value, NoSuchObject):
             _LOGGER.error(
@@ -289,8 +289,7 @@ class SnmpData:
             try:
                 decoded_value, _ = decoder.decode(bytes(value))
                 return str(decoded_value)
-            # pylint: disable=broad-except
-            except Exception as decode_exception:
+            except Exception as decode_exception:  # noqa: BLE001
                 _LOGGER.error(
                     "SNMP error in decoding opaque type: %s", decode_exception
                 )

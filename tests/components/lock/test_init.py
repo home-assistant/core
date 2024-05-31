@@ -22,6 +22,7 @@ from homeassistant.components.lock import (
     STATE_UNLOCKING,
     LockEntityFeature,
 )
+from homeassistant.const import STATE_OPEN, STATE_OPENING
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.entity_registry as er
@@ -55,6 +56,8 @@ async def test_lock_default(hass: HomeAssistant, mock_lock_entity: MockLock) -> 
     assert mock_lock_entity.is_locked is None
     assert mock_lock_entity.is_locking is None
     assert mock_lock_entity.is_unlocking is None
+    assert mock_lock_entity.is_opening is None
+    assert mock_lock_entity.is_open is None
 
 
 async def test_lock_states(hass: HomeAssistant, mock_lock_entity: MockLock) -> None:
@@ -84,6 +87,19 @@ async def test_lock_states(hass: HomeAssistant, mock_lock_entity: MockLock) -> N
     assert mock_lock_entity.is_jammed
     assert mock_lock_entity.state == STATE_JAMMED
     assert not mock_lock_entity.is_locked
+
+    mock_lock_entity._attr_is_jammed = False
+    mock_lock_entity._attr_is_opening = True
+    assert mock_lock_entity.is_opening
+    assert mock_lock_entity.state == STATE_OPENING
+    assert mock_lock_entity.is_opening
+
+    mock_lock_entity._attr_is_opening = False
+    mock_lock_entity._attr_is_open = True
+    assert not mock_lock_entity.is_opening
+    assert mock_lock_entity.state == STATE_OPEN
+    assert not mock_lock_entity.is_opening
+    assert mock_lock_entity.is_open
 
 
 @pytest.mark.parametrize(

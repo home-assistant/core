@@ -101,7 +101,7 @@
 # ---
 # name: test_get_agent_info
   dict({
-    'id': 'homeassistant',
+    'id': 'conversation.home_assistant',
     'name': 'Home Assistant',
   })
 # ---
@@ -113,21 +113,15 @@
 # ---
 # name: test_get_agent_info.2
   dict({
-    'id': 'homeassistant',
+    'id': 'conversation.home_assistant',
     'name': 'Home Assistant',
-  })
-# ---
-# name: test_get_agent_info.3
-  dict({
-    'id': 'mock-entry',
-    'name': 'test',
   })
 # ---
 # name: test_get_agent_list
   dict({
     'agents': list([
       dict({
-        'id': 'homeassistant',
+        'id': 'conversation.home_assistant',
         'name': 'Home Assistant',
         'supported_languages': list([
           'af',
@@ -207,7 +201,7 @@
   dict({
     'agents': list([
       dict({
-        'id': 'homeassistant',
+        'id': 'conversation.home_assistant',
         'name': 'Home Assistant',
         'supported_languages': list([
         ]),
@@ -231,7 +225,7 @@
   dict({
     'agents': list([
       dict({
-        'id': 'homeassistant',
+        'id': 'conversation.home_assistant',
         'name': 'Home Assistant',
         'supported_languages': list([
           'en',
@@ -255,7 +249,7 @@
   dict({
     'agents': list([
       dict({
-        'id': 'homeassistant',
+        'id': 'conversation.home_assistant',
         'name': 'Home Assistant',
         'supported_languages': list([
           'en',
@@ -279,7 +273,7 @@
   dict({
     'agents': list([
       dict({
-        'id': 'homeassistant',
+        'id': 'conversation.home_assistant',
         'name': 'Home Assistant',
         'supported_languages': list([
           'de',
@@ -304,7 +298,7 @@
   dict({
     'agents': list([
       dict({
-        'id': 'homeassistant',
+        'id': 'conversation.home_assistant',
         'name': 'Home Assistant',
         'supported_languages': list([
           'de-CH',
@@ -386,6 +380,36 @@
   })
 # ---
 # name: test_http_processing_intent[None]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': 'entity',
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent[conversation.home_assistant]
   dict({
     'conversation_id': None,
     'response': dict({
@@ -1035,6 +1059,36 @@
     }),
   })
 # ---
+# name: test_turn_on_intent[None-turn kitchen on-conversation.home_assistant]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
 # name: test_turn_on_intent[None-turn kitchen on-homeassistant]
   dict({
     'conversation_id': None,
@@ -1066,6 +1120,36 @@
   })
 # ---
 # name: test_turn_on_intent[None-turn on kitchen-None]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_turn_on_intent[None-turn on kitchen-conversation.home_assistant]
   dict({
     'conversation_id': None,
     'response': dict({
@@ -1155,6 +1239,36 @@
     }),
   })
 # ---
+# name: test_turn_on_intent[my_new_conversation-turn kitchen on-conversation.home_assistant]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
 # name: test_turn_on_intent[my_new_conversation-turn kitchen on-homeassistant]
   dict({
     'conversation_id': None,
@@ -1186,6 +1300,36 @@
   })
 # ---
 # name: test_turn_on_intent[my_new_conversation-turn on kitchen-None]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_turn_on_intent[my_new_conversation-turn on kitchen-conversation.home_assistant]
   dict({
     'conversation_id': None,
     'response': dict({
@@ -1365,30 +1509,6 @@
     }),
   })
 # ---
-# name: test_ws_get_agent_info
-  dict({
-    'attribution': None,
-  })
-# ---
-# name: test_ws_get_agent_info.1
-  dict({
-    'attribution': None,
-  })
-# ---
-# name: test_ws_get_agent_info.2
-  dict({
-    'attribution': dict({
-      'name': 'Mock assistant',
-      'url': 'https://assist.me',
-    }),
-  })
-# ---
-# name: test_ws_get_agent_info.3
-  dict({
-    'code': 'invalid_format',
-    'message': "invalid agent ID for dictionary value @ data['agent_id']. Got 'not_exist'",
-  })
-# ---
 # name: test_ws_hass_agent_debug
   dict({
     'results': list([
@@ -1512,15 +1632,6 @@
       }),
       None,
     ]),
-  })
-# ---
-# name: test_ws_hass_agent_debug.1
-  dict({
-    'name': dict({
-      'name': 'name',
-      'text': 'my cool light',
-      'value': 'my cool light',
-    }),
   })
 # ---
 # name: test_ws_hass_agent_debug_custom_sentence

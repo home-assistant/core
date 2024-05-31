@@ -36,6 +36,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
@@ -359,14 +360,20 @@ async def test_set_value(
     state = hass.states.get("number.test")
     assert state.state == "60.0"
 
-    # test ValueError trigger
-    with pytest.raises(ValueError):
+    # test range validation
+    with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_VALUE,
             {ATTR_VALUE: 110.0, ATTR_ENTITY_ID: "number.test"},
             blocking=True,
         )
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "out_of_range"
+    assert (
+        str(exc.value)
+        == "Value 110.0 for number.test is outside valid range 0.0 - 100.0"
+    )
 
     await hass.async_block_till_done()
     state = hass.states.get("number.test")
@@ -697,6 +704,7 @@ async def test_restore_number_restore_state(
 )
 async def test_custom_unit(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_class,
     native_unit,
     custom_unit,
@@ -705,8 +713,6 @@ async def test_custom_unit(
     custom_value,
 ) -> None:
     """Test custom unit."""
-    entity_registry = er.async_get(hass)
-
     entry = entity_registry.async_get_or_create("number", "test", "very_unique")
     entity_registry.async_update_entity_options(
         entry.entity_id, "number", {"unit_of_measurement": custom_unit}
@@ -773,6 +779,7 @@ async def test_custom_unit(
 )
 async def test_custom_unit_change(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     native_unit,
     custom_unit,
     used_custom_unit,
@@ -782,7 +789,6 @@ async def test_custom_unit_change(
     default_value,
 ) -> None:
     """Test custom unit changes are picked up."""
-    entity_registry = er.async_get(hass)
     entity0 = common.MockNumberEntity(
         name="Test",
         native_value=native_value,

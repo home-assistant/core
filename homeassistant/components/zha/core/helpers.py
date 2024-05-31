@@ -14,7 +14,7 @@ from dataclasses import dataclass
 import enum
 import logging
 import re
-from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, overload
+from typing import TYPE_CHECKING, Any, overload
 
 import voluptuous as vol
 import zigpy.exceptions
@@ -59,14 +59,9 @@ from .const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, CUSTOM_CONFIGURATION, DATA
 from .registries import BINDABLE_CLUSTERS
 
 if TYPE_CHECKING:
-    from .cluster_handlers import ClusterHandler
     from .device import ZHADevice
     from .gateway import ZHAGateway
 
-_ClusterHandlerT = TypeVar("_ClusterHandlerT", bound="ClusterHandler")
-_T = TypeVar("_T")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -102,7 +97,7 @@ async def safe_read(
             only_cache=only_cache,
             manufacturer=manufacturer,
         )
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         return {}
     return result
 
@@ -232,7 +227,7 @@ def async_is_bindable_target(source_zha_device, target_zha_device):
 
 
 @callback
-def async_get_zha_config_value(
+def async_get_zha_config_value[_T](
     config_entry: ConfigEntry, section: str, config_key: str, default: _T
 ) -> _T:
     """Get the value for the specified configuration from the ZHA config entry."""
@@ -296,7 +291,7 @@ def mean_int(*args):
 
 def mean_tuple(*args):
     """Return the mean values along the columns of the supplied values."""
-    return tuple(sum(x) / len(x) for x in zip(*args))
+    return tuple(sum(x) / len(x) for x in zip(*args, strict=False))
 
 
 def reduce_attribute(
@@ -508,9 +503,9 @@ def validate_device_class(
 
 
 def validate_device_class(
-    device_class_enum: type[BinarySensorDeviceClass]
-    | type[SensorDeviceClass]
-    | type[NumberDeviceClass],
+    device_class_enum: type[
+        BinarySensorDeviceClass | SensorDeviceClass | NumberDeviceClass
+    ],
     metadata_value: enum.Enum,
     platform: str,
     logger: logging.Logger,

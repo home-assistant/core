@@ -35,3 +35,9 @@ async def mock_init_component(hass: HomeAssistant, mock_config_entry: MockConfig
     ):
         assert await async_setup_component(hass, ollama.DOMAIN, {})
         await hass.async_block_till_done()
+
+
+@pytest.fixture(autouse=True)
+async def setup_ha(hass: HomeAssistant) -> None:
+    """Set up Home Assistant."""
+    assert await async_setup_component(hass, "homeassistant", {})

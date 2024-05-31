@@ -15,9 +15,8 @@ import zigpy.profiles.zha
 import zigpy.types
 from zigpy.types.named import EUI64
 import zigpy.util
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import general, security
 from zigpy.zcl.clusters.general import Groups
-import zigpy.zcl.clusters.security as security
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.components.websocket_api import const
@@ -65,6 +64,7 @@ from .conftest import (
 from .data import BASE_CUSTOM_CONFIGURATION, CONFIG_WITH_ALARM_OPTIONS
 
 from tests.common import MockConfigEntry, MockUser
+from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -152,7 +152,12 @@ async def device_groupable(hass, zigpy_device_mock, zha_device_joined):
 
 
 @pytest.fixture
-async def zha_client(hass, hass_ws_client, device_switch, device_groupable):
+async def zha_client(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_switch,
+    device_groupable,
+) -> MockHAClientWebSocket:
     """Get ZHA WebSocket client."""
 
     # load the ZHA API
@@ -303,7 +308,7 @@ async def test_update_zha_config(
     app_controller: ControllerApplication,
 ) -> None:
     """Test updating ZHA custom configuration."""
-    configuration: dict = deepcopy(CONFIG_WITH_ALARM_OPTIONS)
+    configuration: dict = deepcopy(BASE_CUSTOM_CONFIGURATION)
     configuration["data"]["zha_options"]["default_light_transition"] = 10
 
     with patch(
@@ -318,8 +323,8 @@ async def test_update_zha_config(
 
     await zha_client.send_json({ID: 6, TYPE: "zha/configuration"})
     msg = await zha_client.receive_json()
-    configuration = msg["result"]
-    assert configuration == configuration
+    test_configuration = msg["result"]
+    assert test_configuration == configuration
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 

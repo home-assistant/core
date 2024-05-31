@@ -10,7 +10,7 @@ from aiohttp.web_exceptions import HTTPUnauthorized
 from aiohttp.web_middlewares import middleware
 import pytest
 
-import homeassistant.components.http as http
+from homeassistant.components import http
 from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS
 from homeassistant.components.http.ban import (
     IP_BANS_FILE,
@@ -190,6 +190,7 @@ async def test_ip_ban_manager_never_started(
             BANNED_IPS_WITH_SUPERVISOR,
             [1, 1, 0],
             [HTTPStatus.FORBIDDEN, HTTPStatus.FORBIDDEN, HTTPStatus.UNAUTHORIZED],
+            strict=False,
         )
     ),
 )

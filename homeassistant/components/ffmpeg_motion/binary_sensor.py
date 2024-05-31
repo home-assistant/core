@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, TypeVar
+from typing import Any
 
 from haffmpeg.core import HAFFmpeg
 import haffmpeg.sensor as ffmpeg_sensor
@@ -26,8 +26,6 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-_HAFFmpegT = TypeVar("_HAFFmpegT", bound=HAFFmpeg)
 
 CONF_RESET = "reset"
 CONF_CHANGES = "changes"
@@ -70,7 +68,9 @@ async def async_setup_platform(
     async_add_entities([entity])
 
 
-class FFmpegBinarySensor(FFmpegBase[_HAFFmpegT], BinarySensorEntity):
+class FFmpegBinarySensor[_HAFFmpegT: HAFFmpeg](
+    FFmpegBase[_HAFFmpegT], BinarySensorEntity
+):
     """A binary sensor which use FFmpeg for noise detection."""
 
     def __init__(self, ffmpeg: _HAFFmpegT, config: dict[str, Any]) -> None:

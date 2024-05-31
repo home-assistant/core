@@ -28,7 +28,7 @@ LEVEL_TYPES = {
     "music_surround_level": (-15, 15),
 }
 
-SocoFeatures = list[tuple[str, tuple[int, int]]]
+type SocoFeatures = list[tuple[str, tuple[int, int]]]
 
 _LOGGER = logging.getLogger(__name__)
 

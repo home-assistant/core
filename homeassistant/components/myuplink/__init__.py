@@ -5,7 +5,7 @@ from __future__ import annotations
 from http import HTTPStatus
 
 from aiohttp import ClientError, ClientResponseError
-from myuplink import MyUplinkAPI, get_manufacturer, get_system_name
+from myuplink import MyUplinkAPI, get_manufacturer, get_model, get_system_name
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -92,7 +92,7 @@ def create_devices(
                     identifiers={(DOMAIN, device_id)},
                     name=get_system_name(system),
                     manufacturer=get_manufacturer(device),
-                    model=device.productName,
+                    model=get_model(device),
                     sw_version=device.firmwareCurrent,
                     serial_number=device.product_serial_number,
                 )

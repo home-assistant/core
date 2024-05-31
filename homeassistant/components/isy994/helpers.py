@@ -431,7 +431,7 @@ def _categorize_programs(isy_data: IsyData, programs: Programs) -> None:
 
 
 def convert_isy_value_to_hass(
-    value: int | float | None,
+    value: float | None,
     uom: str | None,
     precision: int | str,
     fallback_precision: int | None = None,

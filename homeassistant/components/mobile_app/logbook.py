@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Any
 
 from homeassistant.components.logbook import (
     LOGBOOK_ENTRY_ENTITY_ID,
@@ -12,6 +13,7 @@ from homeassistant.components.logbook import (
 )
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.util.event_type import EventType
 
 from .const import DOMAIN
 
@@ -21,7 +23,7 @@ IOS_EVENT_ZONE_EXITED = "ios.zone_exited"
 ATTR_ZONE = "zone"
 ATTR_SOURCE_DEVICE_NAME = "sourceDeviceName"
 ATTR_SOURCE_DEVICE_ID = "sourceDeviceID"
-EVENT_TO_DESCRIPTION = {
+EVENT_TO_DESCRIPTION: dict[EventType[Any] | str, str] = {
     IOS_EVENT_ZONE_ENTERED: "entered zone",
     IOS_EVENT_ZONE_EXITED: "exited zone",
 }

@@ -4,7 +4,7 @@ from enum import Enum
 
 import pytest
 
-import homeassistant.components.cover as cover
+from homeassistant.components import cover
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
@@ -107,6 +107,15 @@ async def test_services(
     set_state(ent6, STATE_CLOSED)
     await call_service(hass, SERVICE_TOGGLE, ent6)
     assert is_opening(hass, ent6)
+
+    # After the unusual state transition: closing -> fully open, toggle should close
+    set_state(ent5, STATE_OPEN)
+    await call_service(hass, SERVICE_TOGGLE, ent5)  # Start closing
+    assert is_closing(hass, ent5)
+    set_state(ent5, STATE_OPEN)  # Unusual state transition from closing -> fully open
+    set_cover_position(ent5, 100)
+    await call_service(hass, SERVICE_TOGGLE, ent5)  # Should close, not open
+    assert is_closing(hass, ent5)
 
 
 def call_service(hass, service, ent):

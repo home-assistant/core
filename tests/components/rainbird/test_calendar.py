@@ -20,9 +20,10 @@ from .conftest import CONFIG_ENTRY_DATA_OLD_FORMAT, mock_response, mock_response
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMockResponse
+from tests.typing import ClientSessionGenerator
 
 TEST_ENTITY = "calendar.rain_bird_controller"
-GetEventsFn = Callable[[str, str], Awaitable[dict[str, Any]]]
+type GetEventsFn = Callable[[str, str], Awaitable[dict[str, Any]]]
 
 SCHEDULE_RESPONSES = [
     # Current controller status
@@ -87,13 +88,13 @@ async def setup_config_entry(
 ) -> list[Platform]:
     """Fixture to setup the config entry."""
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 @pytest.fixture(autouse=True)
-def set_time_zone(hass: HomeAssistant):
+async def set_time_zone(hass: HomeAssistant):
     """Set the time zone for the tests."""
-    hass.config.set_time_zone("America/Regina")
+    await hass.config.async_set_time_zone("America/Regina")
 
 
 @pytest.fixture(autouse=True)
@@ -125,7 +126,7 @@ def get_events_fixture(
         )
         assert response.status == HTTPStatus.OK
         results = await response.json()
-        return [{k: event[k] for k in {"summary", "start", "end"}} for event in results]
+        return [{k: event[k] for k in ("summary", "start", "end")} for event in results]
 
     return _fetch
 
@@ -191,7 +192,7 @@ async def test_event_state(
     freezer.move_to(freeze_time)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get(TEST_ENTITY)
     assert state is not None
@@ -237,7 +238,7 @@ async def test_no_schedule(
     hass: HomeAssistant,
     get_events: GetEventsFn,
     responses: list[AiohttpClientMockResponse],
-    hass_client: Callable[..., Awaitable[ClientSession]],
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test calendar error when fetching the calendar."""
     responses.extend([mock_response_error(HTTPStatus.BAD_GATEWAY)])  # Arbitrary error
@@ -295,7 +296,7 @@ async def test_no_unique_id(
     responses.insert(0, mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE))
 
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get(TEST_ENTITY)
     assert state is not None
