@@ -129,6 +129,36 @@ def mock_device_execute() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
+def mock_device_execute_response() -> Generator[AsyncMock, None, dict[str, Any] | None]:
+    """Mock the device execute function response."""
+    with patch.object(
+        Device,
+        "execute_command",
+        return_value={
+            "ret": "ok",
+            "resp": {
+                "header": {
+                    "pri": 1,
+                    "tzm": 480,
+                    "ts": "1717113600000",
+                    "ver": "0.0.1",
+                    "fwVer": "1.2.0",
+                    "hwVer": "0.1.0",
+                },
+                "body": {
+                    "code": 0,
+                    "msg": "ok",
+                    "data": {"result": "test string success"},
+                },
+            },
+            "id": "xRV3",
+            "payloadType": "j",
+        },
+    ) as mock_device_execute_response:
+        yield mock_device_execute_response
+
+
+@pytest.fixture
 def platforms() -> Platform | list[Platform]:
     """Platforms, which should be loaded during the test."""
     return PLATFORMS

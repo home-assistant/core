@@ -1,0 +1,27 @@
+# serializer version: 1
+# name: test_send_custom_command_service[yna5x1][vacuum.ozmo_950:custom-command-response]
+  dict({
+    'vacuum.ozmo_950': dict({
+      'id': 'xRV3',
+      'payloadType': 'j',
+      'resp': dict({
+        'body': dict({
+          'code': 0,
+          'data': dict({
+            'result': 'test string success',
+          }),
+          'msg': 'ok',
+        }),
+        'header': dict({
+          'fwVer': '1.2.0',
+          'hwVer': '0.1.0',
+          'pri': 1,
+          'ts': '1717113600000',
+          'tzm': 480,
+          'ver': '0.0.1',
+        }),
+      }),
+      'ret': 'ok',
+    }),
+  })
+# ---
