@@ -927,7 +927,7 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient, None,
 
         @ha.callback
         def _async_fire_mqtt_message(topic, payload, qos, retain):
-            async_fire_mqtt_message(hass, topic, payload, qos, retain)
+            async_fire_mqtt_message(hass, topic, payload or b"", qos, retain)
             mid = get_mid()
             hass.loop.call_soon(mock_client.on_publish, 0, 0, mid)
             return FakeInfo(mid)
@@ -1023,7 +1023,7 @@ async def _mqtt_mock_entry(
         mock_mqtt_instance.connected = True
         mqtt_client_mock.on_connect(mqtt_client_mock, None, 0, 0, 0)
 
-        async_dispatcher_send(hass, mqtt.MQTT_CONNECTED)
+        async_dispatcher_send(hass, mqtt.MQTT_CONNECTION_STATE, True)
         await hass.async_block_till_done()
 
         return mock_mqtt_instance
@@ -1190,7 +1190,7 @@ def disable_translations_once(translations_once):
 
 
 @pytest.fixture
-def mock_zeroconf() -> Generator[None, None, None]:
+def mock_zeroconf() -> Generator[MagicMock, None, None]:
     """Mock zeroconf."""
     from zeroconf import DNSCache  # pylint: disable=import-outside-toplevel
 
@@ -1206,7 +1206,7 @@ def mock_zeroconf() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def mock_async_zeroconf(mock_zeroconf: None) -> Generator[None, None, None]:
+def mock_async_zeroconf(mock_zeroconf: MagicMock) -> Generator[MagicMock, None, None]:
     """Mock AsyncZeroconf."""
     from zeroconf import DNSCache, Zeroconf  # pylint: disable=import-outside-toplevel
     from zeroconf.asyncio import (  # pylint: disable=import-outside-toplevel

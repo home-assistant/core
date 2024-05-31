@@ -163,10 +163,6 @@ async def test_get_icons_while_loading_components(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.helpers.icon._component_icons_path",
-            return_value="choochoo.json",
-        ),
-        patch(
             "homeassistant.helpers.icon._load_icons_files",
             mock_load_icons_files,
         ),

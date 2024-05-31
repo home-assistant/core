@@ -26,7 +26,7 @@ from tests.common import (
     mock_integration,
     mock_platform,
 )
-from tests.typing import WebSocketGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture
@@ -43,7 +43,9 @@ def mock_test_component(hass):
 
 
 @pytest.fixture
-async def client(hass, hass_client) -> TestClient:
+async def client(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> TestClient:
     """Fixture that can interact with the config manager API."""
     await async_setup_component(hass, "http", {})
     config_entries.async_setup(hass)

@@ -15,6 +15,7 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import conversation
+from homeassistant.components.conversation import trace
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -85,7 +86,7 @@ async def test_conversation_agent(
 
 
 @patch(
-    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI.async_get_tools"
+    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI._async_get_tools"
 )
 async def test_function_call(
     mock_get_tools,
@@ -183,7 +184,6 @@ async def test_function_call(
     assert mock_create.mock_calls[1][2]["messages"][3] == {
         "role": "tool",
         "tool_call_id": "call_AbCdEfGhIjKlMnOpQrStUvWx",
-        "name": "test_tool",
         "content": '"Test response"',
     }
     mock_tool.async_call.assert_awaited_once_with(
@@ -191,6 +191,8 @@ async def test_function_call(
         llm.ToolInput(
             tool_name="test_tool",
             tool_args={"param1": "test_value"},
+        ),
+        llm.ToolContext(
             platform="openai_conversation",
             context=context,
             user_prompt="Please call the test function",
@@ -200,9 +202,23 @@ async def test_function_call(
         ),
     )
 
+    # Test Conversation tracing
+    traces = trace.async_get_traces()
+    assert traces
+    last_trace = traces[-1].as_dict()
+    trace_events = last_trace.get("events", [])
+    assert [event["event_type"] for event in trace_events] == [
+        trace.ConversationTraceEventType.ASYNC_PROCESS,
+        trace.ConversationTraceEventType.AGENT_DETAIL,
+        trace.ConversationTraceEventType.LLM_TOOL_CALL,
+    ]
+    # AGENT_DETAIL event contains the raw prompt passed to the model
+    detail_event = trace_events[1]
+    assert "Answer in plain text" in detail_event["data"]["messages"][0]["content"]
+
 
 @patch(
-    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI.async_get_tools"
+    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI._async_get_tools"
 )
 async def test_function_exception(
     mock_get_tools,
@@ -300,7 +316,6 @@ async def test_function_exception(
     assert mock_create.mock_calls[1][2]["messages"][3] == {
         "role": "tool",
         "tool_call_id": "call_AbCdEfGhIjKlMnOpQrStUvWx",
-        "name": "test_tool",
         "content": '{"error": "HomeAssistantError", "error_text": "Test tool exception"}',
     }
     mock_tool.async_call.assert_awaited_once_with(
@@ -308,6 +323,8 @@ async def test_function_exception(
         llm.ToolInput(
             tool_name="test_tool",
             tool_args={"param1": "test_value"},
+        ),
+        llm.ToolContext(
             platform="openai_conversation",
             context=context,
             user_prompt="Please call the test function",

@@ -30,7 +30,10 @@
         'history': list([
           dict({
             'parts': '''
+              You are a voice assistant for Home Assistant.
               Answer in plain text. Keep it simple and to the point.
+              The current time is 05:00:00.
+              Today's date is 05/24/24.
               Only if the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
             ''',
             'role': 'user',
@@ -79,7 +82,10 @@
         'history': list([
           dict({
             'parts': '''
+              You are a voice assistant for Home Assistant.
               Answer in plain text. Keep it simple and to the point.
+              The current time is 05:00:00.
+              Today's date is 05/24/24.
               Only if the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
             ''',
             'role': 'user',
@@ -140,8 +146,11 @@
         'history': list([
           dict({
             'parts': '''
+              You are a voice assistant for Home Assistant.
               Answer in plain text. Keep it simple and to the point.
-              Only if the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
+              The current time is 05:00:00.
+              Today's date is 05/24/24.
+              <no_api_prompt>
             ''',
             'role': 'user',
           }),
@@ -193,8 +202,11 @@
         'history': list([
           dict({
             'parts': '''
+              You are a voice assistant for Home Assistant.
               Answer in plain text. Keep it simple and to the point.
-              Only if the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
+              The current time is 05:00:00.
+              Today's date is 05/24/24.
+              <no_api_prompt>
             ''',
             'role': 'user',
           }),
@@ -246,8 +258,11 @@
         'history': list([
           dict({
             'parts': '''
+              You are a voice assistant for Home Assistant.
               Answer in plain text. Keep it simple and to the point.
-              Call the intent tools to control Home Assistant. Just pass the name to the intent.
+              The current time is 05:00:00.
+              Today's date is 05/24/24.
+              <api_prompt>
             ''',
             'role': 'user',
           }),
@@ -299,8 +314,11 @@
         'history': list([
           dict({
             'parts': '''
+              You are a voice assistant for Home Assistant.
               Answer in plain text. Keep it simple and to the point.
-              Call the intent tools to control Home Assistant. Just pass the name to the intent.
+              The current time is 05:00:00.
+              Today's date is 05/24/24.
+              <api_prompt>
             ''',
             'role': 'user',
           }),
