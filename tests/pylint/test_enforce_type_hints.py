@@ -1272,7 +1272,7 @@ def test_pytest_invalid_fixture(
         hass: Something, #@
         caplog: SomethingElse, #@
         current_request_with_host, #@
-    ) -> Anything:
+    ) -> Any:
         pass
     """,
         "tests.components.pylint_test.notify",
