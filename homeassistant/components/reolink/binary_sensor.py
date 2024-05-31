@@ -99,7 +99,7 @@ BINARY_SENSORS = (
         translation_key="sleeping",
         value=lambda api, ch: api.sleeping(ch),
         supported=lambda api, ch: api.supported(ch, "sleep"),
-    )
+    ),
 )
 
 
