@@ -52,7 +52,7 @@ def enable() -> None:
         HTTPConnection.putrequest, loop_thread_id=loop_thread_id
     )
 
-    # Prevent sleeping in event loop. Non-strict since 2022.02
+    # Prevent sleeping in event loop.
     time.sleep = protect_loop(
         time.sleep,
         check_allowed=_check_sleep_call_allowed,
