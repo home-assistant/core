@@ -1,0 +1,14 @@
+send_custom_command:
+  target:
+    entity:
+      domain: vacuum
+  fields:
+    command:
+      required: true
+      example: "getPos"
+      selector:
+        text:
+    params:
+      example: '{ "key": "value" }'
+      selector:
+        object:

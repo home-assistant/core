@@ -261,5 +261,21 @@
         "self_hosted": "Self-hosted"
       }
     }
+  },
+  "services": {
+    "send_custom_command": {
+      "name": "Send custom command",
+      "description": "Sends a custom command to the vacuum cleaner and optionally get the response.",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "Command to execute."
+        },
+        "params": {
+          "name": "Parameters",
+          "description": "Parameters for the command."
+        }
+      }
+    }
   }
 }

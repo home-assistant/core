@@ -11,8 +11,11 @@ from deebot_client.device import Device
 from deebot_client.events import BatteryEvent, FanSpeedEvent, RoomsEvent, StateEvent
 from deebot_client.models import CleanAction, CleanMode, Room, State
 import sucks
+import voluptuous as vol
 
 from homeassistant.components.vacuum import (
+    ATTR_COMMAND,
+    ATTR_PARAMS,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
@@ -23,8 +26,9 @@ from homeassistant.components.vacuum import (
     StateVacuumEntityDescription,
     VacuumEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
@@ -39,6 +43,13 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_ERROR = "error"
 ATTR_COMPONENT_PREFIX = "component_"
 
+SERVICE_SEND_CUSTOM_COMMAND = "send_custom_command"
+
+SERVICE_SEND_CUSTOM_COMMAND_SCHEMA = {
+    vol.Required(ATTR_COMMAND): cv.string,
+    vol.Optional(ATTR_PARAMS): vol.Any(dict, cv.ensure_list),
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -46,6 +57,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Ecovacs vacuums."""
+
     controller = config_entry.runtime_data
     vacuums: list[EcovacsVacuum | EcovacsLegacyVacuum] = [
         EcovacsVacuum(device) for device in controller.devices(VacuumCapabilities)
@@ -55,6 +67,14 @@ async def async_setup_entry(
         vacuums.append(EcovacsLegacyVacuum(device))
     _LOGGER.debug("Adding Ecovacs Vacuums to Home Assistant: %s", vacuums)
     async_add_entities(vacuums)
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_SEND_CUSTOM_COMMAND,
+        SERVICE_SEND_CUSTOM_COMMAND_SCHEMA,
+        "async_send_custom_command",
+        supports_response=SupportsResponse.OPTIONAL,
+    )
 
 
 class EcovacsLegacyVacuum(StateVacuumEntity):
@@ -196,6 +216,14 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
     ) -> None:
         """Send a command to a vacuum cleaner."""
         self.device.run(sucks.VacBotCommand(command, params))
+
+    async def async_send_custom_command(
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+    ) -> None:
+        """Send a custom command to a vacumm cleaner and optionally return the response."""
+        self.send_command(command, params)
 
 
 _STATE_TO_VACUUM_STATE = {
@@ -377,3 +405,17 @@ class EcovacsVacuum(
             await self._device.execute_command(
                 self._capability.custom.set(command, params)
             )
+
+    async def async_send_custom_command(
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+    ) -> dict[str, Any] | None:
+        """Send a custom command to a vacumm cleaner and optionally return the response."""
+        _LOGGER.debug("async_send_custom_command %s with %s", command, params)
+        if params is None:
+            params = {}
+
+        return await self._device.execute_command(
+            self._capability.custom.set(command, params)
+        )
