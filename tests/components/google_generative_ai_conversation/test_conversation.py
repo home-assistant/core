@@ -478,7 +478,7 @@ async def test_template_variables(
         chat_response = MagicMock()
         mock_chat.send_message_async.return_value = chat_response
         mock_part = MagicMock()
-        mock_part.text = "2nd model response"
+        mock_part.text = "Model response"
         chat_response.parts = [mock_part]
         result = await conversation.async_converse(
             hass, "hello", None, context, agent_id=mock_config_entry.entry_id
