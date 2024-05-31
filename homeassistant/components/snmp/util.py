@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from pysnmp.entity import config
+from functools import cache
+
 from pysnmp.hlapi.asyncio import (
     CommunityData,
     ContextData,
@@ -25,6 +26,12 @@ type RequestArgsType = tuple[
 ]
 
 
+@cache
+def snmp_engine() -> SnmpEngine:
+    """Return a cached instance of SnmpEngine."""
+    return SnmpEngine()
+
+
 async def async_create_request_cmd_args(
     hass: HomeAssistant,
     auth_data: UsmUserData | CommunityData,
@@ -33,42 +40,17 @@ async def async_create_request_cmd_args(
 ) -> RequestArgsType:
     """Create request arguments."""
     return await hass.async_add_executor_job(
-        _create_request_cmd_args, auth_data, target, object_id
+        _create_request_cmd_args, snmp_engine(), auth_data, target, object_id
     )
 
 
 def _create_request_cmd_args(
+    engine: SnmpEngine,
     auth_data: UsmUserData | CommunityData,
     target: UdpTransportTarget | Udp6TransportTarget,
     object_id: str,
 ) -> RequestArgsType:
     """Create request arguments."""
-    engine = SnmpEngine()
     context_data = ContextData()
-    # Configure the auth data since it may do blocking
-    # I/O to load the MIBs from disk
-    if isinstance(auth_data, CommunityData):
-        config.addV1System(
-            engine,
-            auth_data.communityIndex,
-            auth_data.communityName,
-            auth_data.contextEngineId,
-            auth_data.contextName,
-            auth_data.tag,
-            auth_data.securityName,
-        )
-    elif isinstance(auth_data, UsmUserData):
-        config.addV3User(
-            engine,
-            auth_data.userName,
-            auth_data.authProtocol,
-            auth_data.authKey,
-            auth_data.privProtocol,
-            auth_data.privKey,
-            securityEngineId=auth_data.securityEngineId,
-            securityName=auth_data.securityName,
-            authKeyType=auth_data.authKeyType,
-            privKeyType=auth_data.privKeyType,
-        )
     object_type = ObjectType(ObjectIdentity(object_id))
     return (engine, auth_data, target, context_data, object_type)
