@@ -149,7 +149,7 @@ class DlnaDmrFlowHandler(ConfigFlow, domain=DOMAIN):
         # case the device doesn't have a static and unique UDN (breaking the
         # UPnP spec).
         for entry in self._async_current_entries(include_ignore=True):
-            if self._location == entry.data[CONF_URL]:
+            if self._location == entry.data.get(CONF_URL):
                 return self.async_abort(reason="already_configured")
             if self._mac and self._mac == entry.data.get(CONF_MAC):
                 return self.async_abort(reason="already_configured")
