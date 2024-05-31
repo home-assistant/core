@@ -423,15 +423,16 @@ async def test_assist_api_prompt(
     )
     first_part_prompt = (
         "Call the intent tools to control Home Assistant. "
+        "Do not pass the domain to the intent tools as a list. "
         "When controlling a device, prefer passing just its name and its domain "
         "(what comes before the dot in its entity id). "
-        "When controlling an area, prefer passing just area name and a single domain."
+        "When controlling an area, prefer passing just area name and domain."
     )
     no_timer_prompt = "This device does not support timers."
 
     area_prompt = (
         "When a user asks to turn on all devices of a specific type, "
-        "ask user to specify an area."
+        "ask user to specify an area, unless there is only one device of that type."
     )
     api = await llm.async_get_api(hass, "assist", tool_context)
     assert api.api_prompt == (

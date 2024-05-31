@@ -1,5 +1,7 @@
 """Tests for tag triggers."""
 
+from typing import Any
+
 import pytest
 
 from homeassistant.components import automation
@@ -18,7 +20,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def tag_setup(hass: HomeAssistant, hass_storage):
+def tag_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Tag setup."""
 
     async def _storage(items=None):

@@ -849,12 +849,12 @@ async def test_rtsp_to_web_rtc_offer(
 
 
 async def test_unsupported_rtsp_to_web_rtc_stream_type(
-    hass,
-    hass_ws_client,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     mock_camera,
     mock_hls_stream_source,  # Not an RTSP stream source
     mock_rtsp_to_web_rtc,
-):
+) -> None:
     """Test rtsp-to-webrtc is not registered for non-RTSP streams."""
     client = await hass_ws_client(hass)
     await client.send_json(
