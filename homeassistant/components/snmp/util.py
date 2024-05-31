@@ -16,6 +16,7 @@ from pysnmp.hlapi.asyncio import (
     UsmUserData,
 )
 from pysnmp.hlapi.asyncio.cmdgen import vbProcessor
+from pysnmp.smi.builder import MibBuilder
 
 from homeassistant.core import HomeAssistant
 
@@ -60,6 +61,9 @@ def _create_request_cmd_args(
     # Actually load the MIBs from disk so we do
     # not do it in the event loop
     mib_controller.indexMib()
+    builder: MibBuilder = mib_controller.mibBuilder
+    if not builder.mibSymbols:
+        builder.loadModules()
     object_identity.resolveWithMib(mib_controller)
     return (engine, auth_data, target, ContextData(), ObjectType(object_identity))
 
