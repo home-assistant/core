@@ -1361,6 +1361,19 @@ async def test_update(
             "via_device_id": None,
         },
     }
+    with pytest.raises(HomeAssistantError):
+        device_registry.async_update_device(
+            entry.id,
+            merge_connections=new_connections,
+            new_connections=new_connections,
+        )
+
+    with pytest.raises(HomeAssistantError):
+        device_registry.async_update_device(
+            entry.id,
+            merge_identifiers=new_identifiers,
+            new_identifiers=new_identifiers,
+        )
 
 
 @pytest.mark.parametrize(
