@@ -301,11 +301,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             for device in dr.async_entries_for_config_entry(
                 dev_reg, config_entry.entry_id
             ):
-                new_connections = {
-                    c
-                    for c in device.connections
-                    if c != (dr.CONNECTION_NETWORK_MAC, "none")
-                }
+                new_connections = device.connections.copy()
+                new_connections.discard((dr.CONNECTION_NETWORK_MAC, "none"))
                 if new_connections != device.connections:
                     dev_reg.async_update_device(
                         device.id, new_connections=new_connections
