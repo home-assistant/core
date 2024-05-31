@@ -127,7 +127,9 @@ def default_request_fixture(
 ) -> Callable[[str], None]:
     """Mock default UniFi requests responses."""
 
-    def __mock_default_requests(host: str, site_id: str) -> None:
+    def __mock_default_requests(
+        host: str = DEFAULT_HOST, site_id: str = DEFAULT_SITE
+    ) -> None:
         url = f"https://{host}:{DEFAULT_PORT}"
 
         def mock_get_request(path: str, payload: list[dict[str, Any]]) -> None:
@@ -229,12 +231,20 @@ def wlan_data_fixture() -> list[dict[str, Any]]:
     return []
 
 
-@pytest.fixture(name="setup_default_unifi_requests")
-def default_vapix_requests_fixture(
-    config_entry: ConfigEntry,
+@pytest.fixture(name="mock_default_unifi_requests")
+def mock_default_unifi_requests_fixture(
     mock_unifi_requests: Callable[[str, str], None],
 ) -> None:
     """Mock default UniFi requests responses."""
+    mock_unifi_requests(DEFAULT_HOST, DEFAULT_SITE)
+
+
+@pytest.fixture(name="setup_default_unifi_requests")
+def default_unifi_requests_fixture(
+    config_entry: ConfigEntry,
+    mock_unifi_requests: Callable[[str, str], None],
+) -> None:
+    """Mock config entry and default UniFi requests responses."""
     mock_unifi_requests(config_entry.data[CONF_HOST], config_entry.data[CONF_SITE_ID])
 
 

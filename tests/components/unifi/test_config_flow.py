@@ -4,6 +4,7 @@ import socket
 from unittest.mock import PropertyMock, patch
 
 import aiounifi
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
@@ -30,12 +31,9 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    CONTENT_TYPE_JSON,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from .test_hub import setup_unifi_integration
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -98,7 +96,7 @@ DPI_GROUPS = [
 
 
 async def test_flow_works(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_discovery
+    hass: HomeAssistant, mock_discovery, mock_default_unifi_requests: None
 ) -> None:
     """Test config flow."""
     mock_discovery.return_value = "1"
@@ -115,25 +113,6 @@ async def test_flow_works(
         CONF_PORT: 443,
         CONF_VERIFY_SSL: False,
     }
-
-    aioclient_mock.get("https://1.2.3.4:1234", status=302)
-
-    aioclient_mock.post(
-        "https://1.2.3.4:1234/api/login",
-        json={"data": "login successful", "meta": {"rc": "ok"}},
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
-
-    aioclient_mock.get(
-        "https://1.2.3.4:1234/api/self/sites",
-        json={
-            "data": [
-                {"desc": "Site name", "name": "site_id", "role": "admin", "_id": "1"}
-            ],
-            "meta": {"rc": "ok"},
-        },
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -159,7 +138,7 @@ async def test_flow_works(
 
 
 async def test_flow_works_negative_discovery(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_discovery
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test config flow with a negative outcome of async_discovery_unifi."""
     result = await hass.config_entries.flow.async_init(
@@ -177,8 +156,17 @@ async def test_flow_works_negative_discovery(
     }
 
 
+@pytest.mark.parametrize(
+    "site_payload",
+    [
+        [
+            {"name": "default", "role": "admin", "desc": "site name", "_id": "1"},
+            {"name": "site2", "role": "admin", "desc": "site2 name", "_id": "2"},
+        ]
+    ],
+)
 async def test_flow_multiple_sites(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, mock_default_unifi_requests: None
 ) -> None:
     """Test config flow works when finding multiple sites."""
     result = await hass.config_entries.flow.async_init(
@@ -187,26 +175,6 @@ async def test_flow_multiple_sites(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-
-    aioclient_mock.get("https://1.2.3.4:1234", status=302)
-
-    aioclient_mock.post(
-        "https://1.2.3.4:1234/api/login",
-        json={"data": "login successful", "meta": {"rc": "ok"}},
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
-
-    aioclient_mock.get(
-        "https://1.2.3.4:1234/api/self/sites",
-        json={
-            "data": [
-                {"name": "default", "role": "admin", "desc": "site name", "_id": "1"},
-                {"name": "site2", "role": "admin", "desc": "site2 name", "_id": "2"},
-            ],
-            "meta": {"rc": "ok"},
-        },
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -226,9 +194,7 @@ async def test_flow_multiple_sites(
 
 
 async def test_flow_raise_already_configured(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    setup_config_entry: ConfigEntry,
+    hass: HomeAssistant, setup_config_entry: ConfigEntry
 ) -> None:
     """Test config flow aborts since a connected config entry already exists."""
     result = await hass.config_entries.flow.async_init(
@@ -254,9 +220,7 @@ async def test_flow_raise_already_configured(
 
 
 async def test_flow_aborts_configuration_updated(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    setup_config_entry: ConfigEntry,
+    hass: HomeAssistant, setup_config_entry: ConfigEntry
 ) -> None:
     """Test config flow aborts since a connected config entry already exists."""
     result = await hass.config_entries.flow.async_init(
@@ -265,25 +229,6 @@ async def test_flow_aborts_configuration_updated(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-
-    aioclient_mock.get("https://1.2.3.4:1234", status=302)
-
-    aioclient_mock.post(
-        "https://1.2.3.4:1234/api/login",
-        json={"data": "login successful", "meta": {"rc": "ok"}},
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
-
-    aioclient_mock.get(
-        "https://1.2.3.4:1234/api/self/sites",
-        json={
-            "data": [
-                {"desc": "Site name", "name": "site_id", "role": "admin", "_id": "1"}
-            ],
-            "meta": {"rc": "ok"},
-        },
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
 
     with patch("homeassistant.components.unifi.async_setup_entry") and patch(
         "homeassistant.components.unifi.UnifiHub.available", new_callable=PropertyMock
@@ -305,7 +250,7 @@ async def test_flow_aborts_configuration_updated(
 
 
 async def test_flow_fails_user_credentials_faulty(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, mock_default_unifi_requests: None
 ) -> None:
     """Test config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -314,8 +259,6 @@ async def test_flow_fails_user_credentials_faulty(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-
-    aioclient_mock.get("https://1.2.3.4:1234", status=302)
 
     with patch("aiounifi.Controller.login", side_effect=aiounifi.errors.Unauthorized):
         result = await hass.config_entries.flow.async_configure(
@@ -334,7 +277,7 @@ async def test_flow_fails_user_credentials_faulty(
 
 
 async def test_flow_fails_hub_unavailable(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, mock_default_unifi_requests: None
 ) -> None:
     """Test config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -343,8 +286,6 @@ async def test_flow_fails_hub_unavailable(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-
-    aioclient_mock.get("https://1.2.3.4:1234", status=302)
 
     with patch("aiounifi.Controller.login", side_effect=aiounifi.errors.RequestError):
         result = await hass.config_entries.flow.async_configure(
@@ -363,9 +304,7 @@ async def test_flow_fails_hub_unavailable(
 
 
 async def test_reauth_flow_update_configuration(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    setup_config_entry: ConfigEntry,
+    hass: HomeAssistant, setup_config_entry: ConfigEntry
 ) -> None:
     """Verify reauth flow can update hub configuration."""
     config_entry = setup_config_entry
@@ -405,19 +344,15 @@ async def test_reauth_flow_update_configuration(
     assert config_entry.data[CONF_PASSWORD] == "new_pass"
 
 
+@pytest.mark.parametrize("client_payload", [CLIENTS])
+@pytest.mark.parametrize("device_payload", [DEVICES])
+@pytest.mark.parametrize("wlan_payload", [WLANS])
+@pytest.mark.parametrize("dpi_group_payload", [DPI_GROUPS])
 async def test_advanced_option_flow(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, setup_config_entry: ConfigEntry
 ) -> None:
     """Test advanced config flow options."""
-    config_entry = await setup_unifi_integration(
-        hass,
-        aioclient_mock,
-        clients_response=CLIENTS,
-        devices_response=DEVICES,
-        wlans_response=WLANS,
-        dpigroup_response=DPI_GROUPS,
-        dpiapp_response=[],
-    )
+    config_entry = setup_config_entry
 
     result = await hass.config_entries.options.async_init(
         config_entry.entry_id, context={"show_advanced_options": True}
@@ -496,13 +431,12 @@ async def test_advanced_option_flow(
     }
 
 
+@pytest.mark.parametrize("client_payload", [CLIENTS])
 async def test_simple_option_flow(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, setup_config_entry: ConfigEntry
 ) -> None:
     """Test simple config flow options."""
-    config_entry = await setup_unifi_integration(
-        hass, aioclient_mock, clients_response=CLIENTS
-    )
+    config_entry = setup_config_entry
 
     result = await hass.config_entries.options.async_init(
         config_entry.entry_id, context={"show_advanced_options": False}
@@ -569,21 +503,18 @@ async def test_form_ssdp(hass: HomeAssistant) -> None:
     }
 
 
-async def test_form_ssdp_aborts_if_host_already_exists(hass: HomeAssistant) -> None:
+async def test_form_ssdp_aborts_if_host_already_exists(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
     """Test we abort if the host is already configured."""
 
-    entry = MockConfigEntry(
-        domain=UNIFI_DOMAIN,
-        data={"host": "192.168.208.1", "site": "site_id"},
-    )
-    entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
         data=ssdp.SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
-            ssdp_location="http://192.168.208.1:41417/rootDesc.xml",
+            ssdp_location="http://1.2.3.4:1234/rootDesc.xml",
             upnp={
                 "friendlyName": "UniFi Dream Machine",
                 "modelDescription": "UniFi Dream Machine Pro",
@@ -595,26 +526,22 @@ async def test_form_ssdp_aborts_if_host_already_exists(hass: HomeAssistant) -> N
     assert result["reason"] == "already_configured"
 
 
-async def test_form_ssdp_aborts_if_serial_already_exists(hass: HomeAssistant) -> None:
+async def test_form_ssdp_aborts_if_serial_already_exists(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
     """Test we abort if the serial is already configured."""
 
-    entry = MockConfigEntry(
-        domain=UNIFI_DOMAIN,
-        data={"controller": {"host": "1.2.3.4", "site": "site_id"}},
-        unique_id="e0:63:da:20:14:a9",
-    )
-    entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
         data=ssdp.SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
-            ssdp_location="http://192.168.208.1:41417/rootDesc.xml",
+            ssdp_location="http://1.2.3.4:1234/rootDesc.xml",
             upnp={
                 "friendlyName": "UniFi Dream Machine",
                 "modelDescription": "UniFi Dream Machine Pro",
-                "serialNumber": "e0:63:da:20:14:a9",
+                "serialNumber": "1",
             },
         ),
     )
