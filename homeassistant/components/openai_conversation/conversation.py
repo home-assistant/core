@@ -271,7 +271,7 @@ class OpenAIConversationEntity(
         self.history[conversation_id] = messages
 
         intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_speech(response.content if response.content else "")
+        intent_response.async_set_speech(response.content or "")
         return conversation.ConversationResult(
             response=intent_response, conversation_id=conversation_id
         )
