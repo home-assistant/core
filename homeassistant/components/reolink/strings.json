@@ -86,73 +86,153 @@
   "entity": {
     "binary_sensor": {
       "face": {
-        "name": "Face"
+        "name": "Face",
+        "state": {
+          "off": "Clear",
+          "on": "Detected"
+        }
       },
       "person": {
-        "name": "Person"
+        "name": "Person",
+        "state": {
+          "off": "Clear",
+          "on": "Detected"
+        }
       },
       "vehicle": {
-        "name": "Vehicle"
+        "name": "Vehicle",
+        "state": {
+          "off": "Clear",
+          "on": "Detected"
+        }
       },
       "pet": {
-        "name": "Pet"
+        "name": "Pet",
+        "state": {
+          "off": "Clear",
+          "on": "Detected"
+        }
       },
       "animal": {
-        "name": "Animal"
+        "name": "Animal",
+        "state": {
+          "off": "Clear",
+          "on": "Detected"
+        }
       },
       "visitor": {
         "name": "Visitor"
       },
       "package": {
-        "name": "Package"
+        "name": "Package",
+        "state": {
+          "off": "Clear",
+          "on": "Detected"
+        }
       },
       "motion_lens_0": {
-        "name": "Motion lens 0"
+        "name": "Motion lens 0",
+        "state": {
+          "off": "Clear",
+          "on": "Detected"
+        }
       },
       "face_lens_0": {
-        "name": "Face lens 0"
+        "name": "Face lens 0",
+        "state": {
+          "off": "Clear",
+          "on": "Detected"
+        }
       },
       "person_lens_0": {
-        "name": "Person lens 0"
+        "name": "Person lens 0",
+        "state": {
+          "off": "Clear",
+          "on": "Detected"
+        }
       },
       "vehicle_lens_0": {
-        "name": "Vehicle lens 0"
+        "name": "Vehicle lens 0",
+        "state": {
+          "off": "Clear",
+          "on": "Detected"
+        }
       },
       "pet_lens_0": {
-        "name": "Pet lens 0"
+        "name": "Pet lens 0",
+        "state": {
+          "off": "Clear",
+          "on": "Detected"
+        }
       },
       "animal_lens_0": {
-        "name": "Animal lens 0"
+        "name": "Animal lens 0",
+        "state": {
+          "off": "Clear",
+          "on": "Detected"
+        }
       },
       "visitor_lens_0": {
         "name": "Visitor lens 0"
       },
       "package_lens_0": {
-        "name": "Package lens 0"
+        "name": "Package lens 0",
+        "state": {
+          "off": "Clear",
+          "on": "Detected"
+        }
       },
       "motion_lens_1": {
-        "name": "Motion lens 1"
+        "name": "Motion lens 1",
+        "state": {
+          "off": "Clear",
+          "on": "Detected"
+        }
       },
       "face_lens_1": {
-        "name": "Face lens 1"
+        "name": "Face lens 1",
+        "state": {
+          "off": "Clear",
+          "on": "Detected"
+        }
       },
       "person_lens_1": {
-        "name": "Person lens 1"
+        "name": "Person lens 1",
+        "state": {
+          "off": "Clear",
+          "on": "Detected"
+        }
       },
       "vehicle_lens_1": {
-        "name": "Vehicle lens 1"
+        "name": "Vehicle lens 1",
+        "state": {
+          "off": "Clear",
+          "on": "Detected"
+        }
       },
       "pet_lens_1": {
-        "name": "Pet lens 1"
+        "name": "Pet lens 1",
+        "state": {
+          "off": "Clear",
+          "on": "Detected"
+        }
       },
       "animal_lens_1": {
-        "name": "Animal lens 1"
+        "name": "Animal lens 1",
+        "state": {
+          "off": "Clear",
+          "on": "Detected"
+        }
       },
       "visitor_lens_1": {
         "name": "Visitor lens 1"
       },
       "package_lens_1": {
-        "name": "Package lens 1"
+        "name": "Package lens 1",
+        "state": {
+          "off": "Clear",
+          "on": "Detected"
+        }
       }
     },
     "button": {
