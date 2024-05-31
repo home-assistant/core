@@ -62,8 +62,9 @@ def _create_request_cmd_args(
     # not do it in the event loop
     mib_controller.indexMib()
     builder: MibBuilder = mib_controller.mibBuilder
-    if not builder.mibSymbols:
+    if "__SNMPv2-MIB" not in builder.mibSymbols:
         builder.loadModules()
+        builder.importSymbols("__SNMPv2-MIB", "snmpInPkts")
     object_identity.resolveWithMib(mib_controller)
     return (engine, auth_data, target, ContextData(), ObjectType(object_identity))
 
