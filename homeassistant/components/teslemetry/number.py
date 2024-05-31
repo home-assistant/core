@@ -82,7 +82,7 @@ ENERGY_INFO_DESCRIPTIONS: tuple[TeslemetryNumberBatteryEntityDescription, ...] =
         requires="components_battery",
     ),
     TeslemetryNumberBatteryEntityDescription(
-        key="off_grid_vehicle_charging_reserve",
+        key="off_grid_vehicle_charging_reserve_percent",
         func=lambda api, value: api.off_grid_vehicle_charging_reserve(int(value)),
         requires="components_off_grid_vehicle_charging_reserve_supported",
     ),
