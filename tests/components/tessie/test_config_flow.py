@@ -79,6 +79,7 @@ async def test_form_errors(
         result2["flow_id"],
         TEST_CONFIG,
     )
+    assert "errors" not in result3
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
