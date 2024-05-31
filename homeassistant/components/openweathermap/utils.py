@@ -8,7 +8,7 @@ from homeassistant.const import CONF_LANGUAGE, CONF_MODE
 
 from .const import DEFAULT_LANGUAGE, DEFAULT_OWM_MODE
 
-OPTIONS_KEYS = {CONF_LANGUAGE, CONF_MODE}
+OPTION_DEFAULTS = {CONF_LANGUAGE: DEFAULT_LANGUAGE, CONF_MODE: DEFAULT_OWM_MODE}
 
 
 async def validate_api_key(api_key, mode):
@@ -32,10 +32,6 @@ def build_data_and_options(
     combined_data: dict[str, Any],
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Split combined data and options."""
-    data = {k: v for k, v in combined_data.items() if k not in OPTIONS_KEYS}
-    options = {k: v for k, v in combined_data.items() if k in OPTIONS_KEYS}
-    if CONF_LANGUAGE not in options:
-        options[CONF_LANGUAGE] = DEFAULT_LANGUAGE
-    if CONF_MODE not in options:
-        options[CONF_MODE] = DEFAULT_OWM_MODE
+    data = {k: v for k, v in combined_data.items() if k not in OPTION_DEFAULTS}
+    options = {k: combined_data.get(v, v) for k, v in OPTION_DEFAULTS.items()}
     return (data, options)
