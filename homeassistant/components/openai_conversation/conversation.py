@@ -231,11 +231,13 @@ class OpenAIConversationEntity(
                         )
                         for tool_call in message.tool_calls
                     ]
-                return ChatCompletionAssistantMessageParam(
+                param = ChatCompletionAssistantMessageParam(
                     role=message.role,
-                    tool_calls=tool_calls,
                     content=message.content,
                 )
+                if tool_calls:
+                    param["tool_calls"] = tool_calls
+                return param
 
             messages.append(message_convert(response))
             tool_calls = response.tool_calls
