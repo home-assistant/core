@@ -14,6 +14,7 @@ from homeassistant.components.conversation.trace import (
     ConversationTraceEventType,
     async_conversation_trace_append,
 )
+from homeassistant.components.cover.intent import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
 from homeassistant.components.weather.intent import INTENT_GET_WEATHER
@@ -139,7 +140,7 @@ class APIInstance:
         """Call a LLM tool, validate args and return the response."""
         async_conversation_trace_append(
             ConversationTraceEventType.LLM_TOOL_CALL,
-            {"tool_name": tool_input.tool_name, "tool_args": str(tool_input.tool_args)},
+            {"tool_name": tool_input.tool_name, "tool_args": tool_input.tool_args},
         )
 
         for tool in self.tools:
@@ -206,10 +207,13 @@ class AssistAPI(API):
     """API exposing Assist API to LLMs."""
 
     IGNORE_INTENTS = {
-        intent.INTENT_NEVERMIND,
-        intent.INTENT_GET_STATE,
-        INTENT_GET_WEATHER,
         INTENT_GET_TEMPERATURE,
+        INTENT_GET_WEATHER,
+        INTENT_OPEN_COVER,  # deprecated
+        INTENT_CLOSE_COVER,  # deprecated
+        intent.INTENT_GET_STATE,
+        intent.INTENT_NEVERMIND,
+        intent.INTENT_TOGGLE,
     }
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -249,8 +253,12 @@ class AssistAPI(API):
 
         prompt = [
             (
-                "Call the intent tools to control Home Assistant. "
-                "When controlling an area, prefer passing area name and domain."
+                "When controlling Home Assistant always call the intent tools. "
+                "Do not pass the domain to the intent tools as a list. "
+                "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
+                "When controlling a device, prefer passing just its name and its domain "
+                "(what comes before the dot in its entity id). "
+                "When controlling an area, prefer passing just area name and domain."
             )
         ]
         area: ar.AreaEntry | None = None
@@ -275,7 +283,7 @@ class AssistAPI(API):
         else:
             prompt.append(
                 "When a user asks to turn on all devices of a specific type, "
-                "ask user to specify an area."
+                "ask user to specify an area, unless there is only one device of that type."
             )
 
         if not tool_context.device_id or not async_device_supports_timers(

@@ -703,7 +703,7 @@ debugpy==1.8.1
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==7.2.0
+deebot-client==7.3.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1087,7 +1087,7 @@ hole==0.8.0
 holidays==0.49
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240529.0
+home-assistant-frontend==20240530.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.5.28
@@ -2352,7 +2352,7 @@ pytradfri[async]==9.0.1
 pytrafikverket==0.3.10
 
 # homeassistant.components.v2c
-pytrydan==0.6.0
+pytrydan==0.6.1
 
 # homeassistant.components.usb
 pyudev==0.24.1
@@ -2442,7 +2442,7 @@ rapt-ble==0.1.2
 raspyrfm-client==1.2.8
 
 # homeassistant.components.refoss
-refoss-ha==1.2.0
+refoss-ha==1.2.1
 
 # homeassistant.components.rainmachine
 regenmaschine==2024.03.0
