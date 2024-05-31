@@ -63,19 +63,19 @@ def enable() -> None:
     )
 
     glob.glob = protect_loop(
-        glob.glob, strict_core=False, strict=False, loop_thread_id=False
+        glob.glob, strict_core=False, strict=False, loop_thread_id=loop_thread_id
     )
     glob.iglob = protect_loop(
-        glob.iglob, strict_core=False, strict=False, loop_thread_id=False
+        glob.iglob, strict_core=False, strict=False, loop_thread_id=loop_thread_id
     )
 
     if not _IN_TESTS:
         # Prevent files being opened inside the event loop
         os.listdir = protect_loop(  # type: ignore[assignment]
-            os.listdir, strict_core=False, strict=False, loop_thread_id=False
+            os.listdir, strict_core=False, strict=False, loop_thread_id=loop_thread_id
         )
         os.scandir = protect_loop(  # type: ignore[assignment]
-            os.scandir, strict_core=False, strict=False, loop_thread_id=False
+            os.scandir, strict_core=False, strict=False, loop_thread_id=loop_thread_id
         )
 
         builtins.open = protect_loop(  # type: ignore[assignment]
