@@ -240,7 +240,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         # Set the static entity attributes that needed more information.
         self._attr_source_list = list(self._sources.values())
 
-    @callback
     async def _async_update_sources(self) -> None:
         """Get sources for the specific product."""
 
