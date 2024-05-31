@@ -3305,7 +3305,7 @@ class HassTypeHintChecker(BaseChecker):
         self, node: nodes.FunctionDef, annotations: list[nodes.NodeNG | None]
     ) -> None:
         # Check the return type, should always be `None` for test_*** functions.
-        if not _is_valid_type(None, node, True):
+        if not _is_valid_type(None, node.returns, True):
             self.add_message(
                 "hass-return-type",
                 node=node,
