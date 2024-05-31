@@ -155,10 +155,6 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "unused_tcp_port_factory": "Callable[[], int]",
     "unused_udp_port_factory": "Callable[[], int]",
 }
-_TEST_FUNCTION_MATCH = TypeHintMatch(
-    function_name="test_*",
-    return_type=None,
-)
 
 
 _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
@@ -3308,12 +3304,12 @@ class HassTypeHintChecker(BaseChecker):
     def _check_test_function(
         self, node: nodes.FunctionDef, annotations: list[nodes.NodeNG | None]
     ) -> None:
-        # Check the return type.
-        if not _is_valid_return_type(_TEST_FUNCTION_MATCH, node.returns):
+        # Check the return type, should always be `None` for test_*** functions.
+        if not _is_valid_type(None, node, True):
             self.add_message(
                 "hass-return-type",
                 node=node,
-                args=(_TEST_FUNCTION_MATCH.return_type or "None", node.name),
+                args=("None", node.name),
             )
         # Check that all positional arguments are correctly annotated.
         for arg_name, expected_type in _TEST_FIXTURES.items():
