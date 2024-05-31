@@ -71,7 +71,7 @@ def async_register_api(hass: HomeAssistant, api: API) -> None:
 
 
 async def async_get_api(
-    hass: HomeAssistant, api_id: str, tool_context: ToolContext
+    hass: HomeAssistant, api_id: str, llm_context: LLMContext
 ) -> APIInstance:
     """Get an API."""
     apis = _async_get_apis(hass)
@@ -79,7 +79,7 @@ async def async_get_api(
     if api_id not in apis:
         raise HomeAssistantError(f"API {api_id} not found")
 
-    return await apis[api_id].async_get_api_instance(tool_context)
+    return await apis[api_id].async_get_api_instance(llm_context)
 
 
 @callback
@@ -89,7 +89,7 @@ def async_get_apis(hass: HomeAssistant) -> list[API]:
 
 
 @dataclass(slots=True)
-class ToolContext:
+class LLMContext:
     """Tool input to be processed."""
 
     platform: str
@@ -117,7 +117,7 @@ class Tool:
 
     @abstractmethod
     async def async_call(
-        self, hass: HomeAssistant, tool_input: ToolInput, tool_context: ToolContext
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
         """Call the tool."""
         raise NotImplementedError
@@ -133,7 +133,7 @@ class APIInstance:
 
     api: API
     api_prompt: str
-    tool_context: ToolContext
+    llm_context: LLMContext
     tools: list[Tool]
 
     async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
@@ -149,7 +149,7 @@ class APIInstance:
         else:
             raise HomeAssistantError(f'Tool "{tool_input.tool_name}" not found')
 
-        return await tool.async_call(self.api.hass, tool_input, self.tool_context)
+        return await tool.async_call(self.api.hass, tool_input, self.llm_context)
 
 
 @dataclass(slots=True, kw_only=True)
@@ -161,7 +161,7 @@ class API(ABC):
     name: str
 
     @abstractmethod
-    async def async_get_api_instance(self, tool_context: ToolContext) -> APIInstance:
+    async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
         """Return the instance of the API."""
         raise NotImplementedError
 
@@ -182,20 +182,20 @@ class IntentTool(Tool):
             self.parameters = vol.Schema(slot_schema)
 
     async def async_call(
-        self, hass: HomeAssistant, tool_input: ToolInput, tool_context: ToolContext
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
         """Handle the intent."""
         slots = {key: {"value": val} for key, val in tool_input.tool_args.items()}
         intent_response = await intent.async_handle(
             hass=hass,
-            platform=tool_context.platform,
+            platform=llm_context.platform,
             intent_type=self.name,
             slots=slots,
-            text_input=tool_context.user_prompt,
-            context=tool_context.context,
-            language=tool_context.language,
-            assistant=tool_context.assistant,
-            device_id=tool_context.device_id,
+            text_input=llm_context.user_prompt,
+            context=llm_context.context,
+            language=llm_context.language,
+            assistant=llm_context.assistant,
+            device_id=llm_context.device_id,
         )
         response = intent_response.as_dict()
         del response["language"]
@@ -224,25 +224,25 @@ class AssistAPI(API):
             name="Assist",
         )
 
-    async def async_get_api_instance(self, tool_context: ToolContext) -> APIInstance:
+    async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
         """Return the instance of the API."""
-        if tool_context.assistant:
+        if llm_context.assistant:
             exposed_entities: dict | None = _get_exposed_entities(
-                self.hass, tool_context.assistant
+                self.hass, llm_context.assistant
             )
         else:
             exposed_entities = None
 
         return APIInstance(
             api=self,
-            api_prompt=self._async_get_api_prompt(tool_context, exposed_entities),
-            tool_context=tool_context,
-            tools=self._async_get_tools(tool_context, exposed_entities),
+            api_prompt=self._async_get_api_prompt(llm_context, exposed_entities),
+            llm_context=llm_context,
+            tools=self._async_get_tools(llm_context, exposed_entities),
         )
 
     @callback
     def _async_get_api_prompt(
-        self, tool_context: ToolContext, exposed_entities: dict | None
+        self, llm_context: LLMContext, exposed_entities: dict | None
     ) -> str:
         """Return the prompt for the API."""
         if not exposed_entities:
@@ -263,9 +263,9 @@ class AssistAPI(API):
         ]
         area: ar.AreaEntry | None = None
         floor: fr.FloorEntry | None = None
-        if tool_context.device_id:
+        if llm_context.device_id:
             device_reg = dr.async_get(self.hass)
-            device = device_reg.async_get(tool_context.device_id)
+            device = device_reg.async_get(llm_context.device_id)
 
             if device:
                 area_reg = ar.async_get(self.hass)
@@ -286,8 +286,8 @@ class AssistAPI(API):
                 "ask user to specify an area, unless there is only one device of that type."
             )
 
-        if not tool_context.device_id or not async_device_supports_timers(
-            self.hass, tool_context.device_id
+        if not llm_context.device_id or not async_device_supports_timers(
+            self.hass, llm_context.device_id
         ):
             prompt.append("This device does not support timers.")
 
@@ -301,12 +301,12 @@ class AssistAPI(API):
 
     @callback
     def _async_get_tools(
-        self, tool_context: ToolContext, exposed_entities: dict | None
+        self, llm_context: LLMContext, exposed_entities: dict | None
     ) -> list[Tool]:
         """Return a list of LLM tools."""
         ignore_intents = self.IGNORE_INTENTS
-        if not tool_context.device_id or not async_device_supports_timers(
-            self.hass, tool_context.device_id
+        if not llm_context.device_id or not async_device_supports_timers(
+            self.hass, llm_context.device_id
         ):
             ignore_intents = ignore_intents | {
                 intent.INTENT_START_TIMER,

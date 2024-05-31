@@ -119,7 +119,7 @@ class OpenAIConversationEntity(
                 llm_api = await llm.async_get_api(
                     self.hass,
                     options[CONF_LLM_HASS_API],
-                    llm.ToolContext(
+                    llm.LLMContext(
                         platform=DOMAIN,
                         context=user_input.context,
                         user_prompt=user_input.text,
