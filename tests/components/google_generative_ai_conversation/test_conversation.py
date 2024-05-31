@@ -231,7 +231,7 @@ async def test_function_call(
                 "param2": "param2's value",
             },
         ),
-        llm.ToolContext(
+        llm.LLMContext(
             platform="google_generative_ai_conversation",
             context=context,
             user_prompt="Please call the test function",
@@ -330,7 +330,7 @@ async def test_function_exception(
             tool_name="test_tool",
             tool_args={"param1": 1},
         ),
-        llm.ToolContext(
+        llm.LLMContext(
             platform="google_generative_ai_conversation",
             context=context,
             user_prompt="Please call the test function",
