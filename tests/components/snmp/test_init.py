@@ -1,4 +1,4 @@
-"""SNMP sensor tests."""
+"""SNMP tests."""
 
 from unittest.mock import patch
 
