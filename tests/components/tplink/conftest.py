@@ -84,11 +84,6 @@ def entity_reg_fixture(hass):
     return mock_registry(hass)
 
 
-@pytest.fixture(autouse=True)
-def tplink_mock_get_source_ip(mock_get_source_ip):
-    """Mock network util's async_get_source_ip."""
-
-
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Override async_setup_entry."""

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun import freeze_time
+from google.ai.generativelanguage_v1beta.types.content import FunctionCall
 from google.api_core.exceptions import GoogleAPICallError
 import google.generativeai.types as genai_types
 import pytest
@@ -179,8 +180,13 @@ async def test_function_call(
         chat_response = MagicMock()
         mock_chat.send_message_async.return_value = chat_response
         mock_part = MagicMock()
-        mock_part.function_call.name = "test_tool"
-        mock_part.function_call.args = {"param1": ["test_value"]}
+        mock_part.function_call = FunctionCall(
+            name="test_tool",
+            args={
+                "param1": ["test_value", "param1\\'s value"],
+                "param2": "param2\\'s value",
+            },
+        )
 
         def tool_call(hass, tool_input, tool_context):
             mock_part.function_call = None
@@ -220,7 +226,10 @@ async def test_function_call(
         hass,
         llm.ToolInput(
             tool_name="test_tool",
-            tool_args={"param1": ["test_value"]},
+            tool_args={
+                "param1": ["test_value", "param1's value"],
+                "param2": "param2's value",
+            },
         ),
         llm.ToolContext(
             platform="google_generative_ai_conversation",
@@ -279,8 +288,7 @@ async def test_function_exception(
         chat_response = MagicMock()
         mock_chat.send_message_async.return_value = chat_response
         mock_part = MagicMock()
-        mock_part.function_call.name = "test_tool"
-        mock_part.function_call.args = {"param1": 1}
+        mock_part.function_call = FunctionCall(name="test_tool", args={"param1": 1})
 
         def tool_call(hass, tool_input, tool_context):
             mock_part.function_call = None

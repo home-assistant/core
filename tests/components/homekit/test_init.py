@@ -26,9 +26,7 @@ from tests.common import MockConfigEntry
 from tests.components.logbook.common import MockRow, mock_humanify
 
 
-async def test_humanify_homekit_changed_event(
-    hass: HomeAssistant, hk_driver, mock_get_source_ip
-) -> None:
+async def test_humanify_homekit_changed_event(hass: HomeAssistant, hk_driver) -> None:
     """Test humanifying HomeKit changed event."""
     hass.config.components.add("recorder")
     with patch("homeassistant.components.homekit.HomeKit") as mock_homekit:

@@ -13,6 +13,8 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
+from tests.typing import ClientSessionGenerator
+
 SESSION_ID = "a9b84cec-46b6-484e-8f31-f65dba03ae6d"
 INTENT_ID = "c6a74079-a8f0-46cd-b372-5a934d23591c"
 INTENT_NAME = "tests"
@@ -37,7 +39,7 @@ async def calls(hass: HomeAssistant, fixture) -> list[ServiceCall]:
 
 
 @pytest.fixture
-async def fixture(hass, hass_client_no_auth):
+async def fixture(hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator):
     """Initialize a Home Assistant server for testing this module."""
     await async_setup_component(hass, dialogflow.DOMAIN, {"dialogflow": {}})
     await async_setup_component(

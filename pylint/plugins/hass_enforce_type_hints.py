@@ -69,7 +69,7 @@ class ClassTypeHintMatch:
     matches: list[TypeHintMatch]
 
 
-_INNER_MATCH = r"((?:[\w\| ]+)|(?:\.{3})|(?:\w+\[.+\]))"
+_INNER_MATCH = r"((?:[\w\| ]+)|(?:\.{3})|(?:\w+\[.+\])|(?:\[\]))"
 _TYPE_HINT_MATCHERS: dict[str, re.Pattern[str]] = {
     # a_or_b matches items such as "DiscoveryInfoType | None"
     # or "dict | list | None"
@@ -132,7 +132,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "issue_registry": "IssueRegistry",
     "legacy_auth": "LegacyApiPasswordAuthProvider",
     "local_auth": "HassAuthProvider",
-    "mock_async_zeroconf": "None",
+    "mock_async_zeroconf": "MagicMock",
     "mock_bleak_scanner_start": "MagicMock",
     "mock_bluetooth": "None",
     "mock_bluetooth_adapters": "None",
@@ -140,13 +140,13 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "mock_get_source_ip": "None",
     "mock_hass_config": "None",
     "mock_hass_config_yaml": "None",
-    "mock_zeroconf": "None",
+    "mock_zeroconf": "MagicMock",
     "mqtt_client_mock": "MqttMockPahoClient",
     "mqtt_mock": "MqttMockHAClient",
     "mqtt_mock_entry": "MqttMockHAClientGenerator",
     "recorder_db_url": "str",
     "recorder_mock": "Recorder",
-    "requests_mock": "requests_mock.Mocker",
+    "requests_mock": "Mocker",
     "snapshot": "SnapshotAssertion",
     "socket_enabled": "None",
     "stub_blueprint_populate": "None",
@@ -2914,6 +2914,10 @@ def _is_valid_type(
     if expected_type == "...":
         return isinstance(node, nodes.Const) and node.value == Ellipsis
 
+    # Special case for an empty list, such as Callable[[], TestServer]
+    if expected_type == "[]":
+        return isinstance(node, nodes.List) and not node.elts
+
     # Special case for `xxx | yyy`
     if match := _TYPE_HINT_MATCHERS["a_or_b"].match(expected_type):
         return (
@@ -3113,6 +3117,12 @@ class HassTypeHintChecker(BaseChecker):
             "hass-return-type",
             "Used when method return type is incorrect",
         ),
+        "W7433": (
+            "Argument %s is of type %s and could be move to "
+            "`@pytest.mark.usefixtures` decorator in %s",
+            "hass-consider-usefixtures-decorator",
+            "Used when an argument type is None and could be a fixture",
+        ),
     }
     options = (
         (
@@ -3308,6 +3318,12 @@ class HassTypeHintChecker(BaseChecker):
         # Check that all positional arguments are correctly annotated.
         for arg_name, expected_type in _TEST_FIXTURES.items():
             arg_node, annotation = _get_named_annotation(node, arg_name)
+            if arg_node and expected_type == "None":
+                self.add_message(
+                    "hass-consider-usefixtures-decorator",
+                    node=arg_node,
+                    args=(arg_name, expected_type, node.name),
+                )
             if arg_node and not _is_valid_type(expected_type, annotation):
                 self.add_message(
                     "hass-argument-type",
