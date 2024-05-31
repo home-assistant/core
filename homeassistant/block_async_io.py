@@ -55,7 +55,6 @@ def enable() -> None:
     # Prevent sleeping in event loop. Non-strict since 2022.02
     time.sleep = protect_loop(
         time.sleep,
-        strict=False,
         check_allowed=_check_sleep_call_allowed,
         loop_thread_id=loop_thread_id,
     )
