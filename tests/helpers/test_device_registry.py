@@ -1363,6 +1363,92 @@ async def test_update(
     }
 
 
+@pytest.mark.parametrize(
+    ("initial_connections", "new_connections", "updated_connections"),
+    [
+        (  # No connection -> single connection
+            None,
+            {(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+            {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
+        ),
+        (  # No connection -> double connection
+            None,
+            {
+                (dr.CONNECTION_NETWORK_MAC, "65:43:21:FE:DC:BA"),
+                (dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF"),
+            },
+            {
+                (dr.CONNECTION_NETWORK_MAC, "65:43:21:fe:dc:ba"),
+                (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef"),
+            },
+        ),
+        (  # single connection -> no connection
+            {(dr.CONNECTION_NETWORK_MAC, "65:43:21:FE:DC:BA")},
+            set(),
+            set(),
+        ),
+        (  # single connection -> single connection
+            {(dr.CONNECTION_NETWORK_MAC, "65:43:21:FE:DC:BA")},
+            {(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+            {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
+        ),
+        (  # single connection -> double connection
+            {(dr.CONNECTION_NETWORK_MAC, "65:43:21:FE:DC:BA")},
+            {
+                (dr.CONNECTION_NETWORK_MAC, "65:43:21:FE:DC:BA"),
+                (dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF"),
+            },
+            {
+                (dr.CONNECTION_NETWORK_MAC, "65:43:21:fe:dc:ba"),
+                (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef"),
+            },
+        ),
+        (  # Double connection -> None
+            {
+                (dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF"),
+                (dr.CONNECTION_NETWORK_MAC, "65:43:21:FE:DC:BA"),
+            },
+            set(),
+            set(),
+        ),
+        (  # Double connection -> single connection
+            {
+                (dr.CONNECTION_NETWORK_MAC, "65:43:21:FE:DC:BA"),
+                (dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF"),
+            },
+            {(dr.CONNECTION_NETWORK_MAC, "65:43:21:FE:DC:BA")},
+            {(dr.CONNECTION_NETWORK_MAC, "65:43:21:fe:dc:ba")},
+        ),
+    ],
+)
+async def test_update_connection(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    initial_connections: set[tuple[str, str]] | None,
+    new_connections: set[tuple[str, str]] | None,
+    updated_connections: set[tuple[str, str]] | None,
+) -> None:
+    """Verify that we can update some attributes of a device."""
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections=initial_connections,
+        identifiers={("hue", "456"), ("bla", "123")},
+    )
+
+    with patch.object(device_registry, "async_schedule_save") as mock_save:
+        updated_entry = device_registry.async_update_device(
+            entry.id,
+            new_connections=new_connections,
+        )
+
+    assert mock_save.call_count == 1
+    assert updated_entry != entry
+    assert updated_entry.connections == updated_connections
+    assert (
+        device_registry.async_get_device(identifiers={("bla", "123")}) == updated_entry
+    )
+
+
 async def test_update_remove_config_entries(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
