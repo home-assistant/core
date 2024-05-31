@@ -41,12 +41,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def render_image(call: ServiceCall) -> ServiceResponse:
         """Render an image with dall-e."""
-        entry = hass.config_entries.async_get_entry(call.data["config_entry"])
+        entry_id = call.data["config_entry"]
+        entry = hass.config_entries.async_get_entry(entry_id)
 
         if entry is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="config_entry_missing",
+                translation_key="invalid_config_entry",
+                translation_placeholders={"config_entry": entry_id},
             )
 
         client: openai.AsyncClient = entry.runtime_data
@@ -67,17 +69,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         else:
             size = call.data["size"]
 
-        if size not in ("256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_image_size",
-                translation_placeholders={"size": size},
-            )
-
         size = cast(
             Literal["256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"],
-            call.data["size"],
-        )
+            size,
+        )  # size is selector, so no need to check further
 
         try:
             response = await client.images.generate(

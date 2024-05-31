@@ -61,10 +61,9 @@
     }
   },
   "exceptions": {
-    "config_entry_missing": {
-      "message": "No Config Entry found for openai_conversation"
-    },
-    "invalid_image_size": { "message": "Image size {size} is not valid." }
+    "invalid_config_entry": {
+      "message": "Invalid config entry provided. Got {config_entry}"
+    }
   },
   "issues": {
     "image_size_deprecated_format": {
