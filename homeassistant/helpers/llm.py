@@ -253,8 +253,9 @@ class AssistAPI(API):
 
         prompt = [
             (
-                "Call the intent tools to control Home Assistant. "
+                "When controlling Home Assistant always call the intent tools. "
                 "Do not pass the domain to the intent tools as a list. "
+                "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
                 "When controlling a device, prefer passing just its name and its domain "
                 "(what comes before the dot in its entity id). "
                 "When controlling an area, prefer passing just area name and domain."
