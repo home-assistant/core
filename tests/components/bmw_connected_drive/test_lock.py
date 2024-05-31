@@ -9,17 +9,21 @@ import pytest
 import respx
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt as dt_util
 
 from . import check_remote_service_call, setup_mocked_integration
 
+from tests.components.recorder.common import async_wait_recording_done
+
 
 @freeze_time("2023-06-22 10:30:00+00:00")
+@pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entity_state_attrs(
     hass: HomeAssistant,
-    bmw_fixture: respx.Router,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test lock states and attributes."""
@@ -31,6 +35,7 @@ async def test_entity_state_attrs(
     assert hass.states.async_all("lock") == snapshot
 
 
+@pytest.mark.usefixtures("recorder_mock")
 @pytest.mark.parametrize(
     ("entity_id", "new_value", "old_value", "service", "remote_service"),
     [
@@ -60,6 +65,8 @@ async def test_service_call_success(
     hass.states.async_set(entity_id, old_value)
     assert hass.states.get(entity_id).state == old_value
 
+    now = dt_util.utcnow()
+
     # Test
     await hass.services.async_call(
         "lock",
@@ -70,7 +77,16 @@ async def test_service_call_success(
     check_remote_service_call(bmw_fixture, remote_service)
     assert hass.states.get(entity_id).state == new_value
 
+    # wait for the recorder to really store the data
+    await async_wait_recording_done(hass)
+    states = await hass.async_add_executor_job(
+        get_significant_states, hass, now, None, [entity_id]
+    )
+    assert any(s for s in states[entity_id] if s.state == "unknown") is False
 
+
+@pytest.mark.usefixtures("bmw_fixture")
+@pytest.mark.usefixtures("recorder_mock")
 @pytest.mark.parametrize(
     ("entity_id", "service"),
     [
@@ -82,7 +98,6 @@ async def test_service_call_fail(
     hass: HomeAssistant,
     entity_id: str,
     service: str,
-    bmw_fixture: respx.Router,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test failed button press."""
@@ -90,6 +105,8 @@ async def test_service_call_fail(
     # Setup component
     assert await setup_mocked_integration(hass)
     old_value = hass.states.get(entity_id).state
+
+    now = dt_util.utcnow()
 
     # Setup exception
     monkeypatch.setattr(
@@ -107,3 +124,10 @@ async def test_service_call_fail(
             target={"entity_id": entity_id},
         )
     assert hass.states.get(entity_id).state == old_value
+
+    # wait for the recorder to really store the data
+    await async_wait_recording_done(hass)
+    states = await hass.async_add_executor_job(
+        get_significant_states, hass, now, None, [entity_id]
+    )
+    assert states[entity_id][-2].state == "unknown"
