@@ -6,7 +6,7 @@ import ipaddress
 import logging
 from typing import NamedTuple
 
-from vallox_websocket_api import MetricData, Profile, Vallox, ValloxApiException
+from vallox_websocket_api import Profile, Vallox, ValloxApiException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,11 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DEFAULT_FAN_SPEED_AWAY,
@@ -26,8 +22,8 @@ from .const import (
     DEFAULT_FAN_SPEED_HOME,
     DEFAULT_NAME,
     DOMAIN,
-    STATE_SCAN_INTERVAL,
 )
+from .coordinator import ValloxDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,10 +89,6 @@ SERVICE_TO_METHOD = {
 }
 
 
-class ValloxDataUpdateCoordinator(DataUpdateCoordinator[MetricData]):  # pylint: disable=hass-enforce-coordinator-module
-    """The DataUpdateCoordinator for Vallox."""
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the client and boot the platforms."""
     host = entry.data[CONF_HOST]
@@ -104,22 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     client = Vallox(host)
 
-    async def async_update_data() -> MetricData:
-        """Fetch state update."""
-        _LOGGER.debug("Updating Vallox state cache")
-
-        try:
-            return await client.fetch_metric_data()
-        except ValloxApiException as err:
-            raise UpdateFailed("Error during state cache update") from err
-
-    coordinator = ValloxDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"{name} DataUpdateCoordinator",
-        update_interval=STATE_SCAN_INTERVAL,
-        update_method=async_update_data,
-    )
+    coordinator = ValloxDataUpdateCoordinator(hass, name, client)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -161,7 +138,7 @@ class ValloxServiceHandler:
     """Services implementation."""
 
     def __init__(
-        self, client: Vallox, coordinator: DataUpdateCoordinator[MetricData]
+        self, client: Vallox, coordinator: ValloxDataUpdateCoordinator
     ) -> None:
         """Initialize the proxy."""
         self._client = client

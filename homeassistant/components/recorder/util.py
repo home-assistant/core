@@ -2,17 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Collection, Generator, Iterable, Sequence
+from collections.abc import Callable, Generator, Sequence
 import contextlib
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
-from functools import partial
-from itertools import islice
 import logging
 import os
 import time
-from typing import TYPE_CHECKING, Any, Concatenate, NoReturn, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, NoReturn
 
 from awesomeversion import (
     AwesomeVersion,
@@ -60,9 +58,6 @@ if TYPE_CHECKING:
     from sqlite3.dbapi2 import Cursor as SQLiteCursor
 
     from . import Recorder
-
-_RecorderT = TypeVar("_RecorderT", bound="Recorder")
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,7 +137,7 @@ def session_scope(
         if session.get_transaction() and not read_only:
             need_rollback = True
             session.commit()
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:
         _LOGGER.exception("Error executing query")
         if need_rollback:
             session.rollback()
@@ -628,18 +623,20 @@ def _is_retryable_error(instance: Recorder, err: OperationalError) -> bool:
     )
 
 
-_FuncType = Callable[Concatenate[_RecorderT, _P], bool]
+type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], _R]
 
 
-def retryable_database_job(
+def retryable_database_job[_RecorderT: Recorder, **_P](
     description: str,
-) -> Callable[[_FuncType[_RecorderT, _P]], _FuncType[_RecorderT, _P]]:
+) -> Callable[[_FuncType[_RecorderT, _P, bool]], _FuncType[_RecorderT, _P, bool]]:
     """Try to execute a database job.
 
     The job should return True if it finished, and False if it needs to be rescheduled.
     """
 
-    def decorator(job: _FuncType[_RecorderT, _P]) -> _FuncType[_RecorderT, _P]:
+    def decorator(
+        job: _FuncType[_RecorderT, _P, bool],
+    ) -> _FuncType[_RecorderT, _P, bool]:
         @functools.wraps(job)
         def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> bool:
             try:
@@ -664,12 +661,9 @@ def retryable_database_job(
     return decorator
 
 
-_WrappedFuncType = Callable[Concatenate[_RecorderT, _P], None]
-
-
-def database_job_retry_wrapper(
+def database_job_retry_wrapper[_RecorderT: Recorder, **_P](
     description: str, attempts: int = 5
-) -> Callable[[_WrappedFuncType[_RecorderT, _P]], _WrappedFuncType[_RecorderT, _P]]:
+) -> Callable[[_FuncType[_RecorderT, _P, None]], _FuncType[_RecorderT, _P, None]]:
     """Try to execute a database job multiple times.
 
     This wrapper handles InnoDB deadlocks and lock timeouts.
@@ -679,8 +673,8 @@ def database_job_retry_wrapper(
     """
 
     def decorator(
-        job: _WrappedFuncType[_RecorderT, _P],
-    ) -> _WrappedFuncType[_RecorderT, _P]:
+        job: _FuncType[_RecorderT, _P, None],
+    ) -> _FuncType[_RecorderT, _P, None]:
         @functools.wraps(job)
         def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> None:
             for attempt in range(attempts):
@@ -861,36 +855,6 @@ def resolve_period(
             end_time += offset
 
     return (start_time, end_time)
-
-
-def take(take_num: int, iterable: Iterable) -> list[Any]:
-    """Return first n items of the iterable as a list.
-
-    From itertools recipes
-    """
-    return list(islice(iterable, take_num))
-
-
-def chunked(iterable: Iterable, chunked_num: int) -> Iterable[Any]:
-    """Break *iterable* into lists of length *n*.
-
-    From more-itertools
-    """
-    return iter(partial(take, chunked_num, iter(iterable)), [])
-
-
-def chunked_or_all(iterable: Collection[Any], chunked_num: int) -> Iterable[Any]:
-    """Break *collection* into iterables of length *n*.
-
-    Returns the collection if its length is less than *n*.
-
-    Unlike chunked, this function requires a collection so it can
-    determine the length of the collection and return the collection
-    if it is less than *n*.
-    """
-    if len(iterable) <= chunked_num:
-        return (iterable,)
-    return chunked(iterable, chunked_num)
 
 
 def get_index_by_name(session: Session, table_name: str, index_name: str) -> str | None:

@@ -92,6 +92,7 @@ async def test_do_not_see_device_if_time_not_updated(
             advertisement=generate_advertisement_data(local_name="empty"),
             time=0,
             connectable=False,
+            tx_power=-127,
         )
         # Return with name with time = 0 for all the updates
         mock_async_discovered_service_info.return_value = [device]
@@ -157,6 +158,7 @@ async def test_see_device_if_time_updated(
             advertisement=generate_advertisement_data(local_name="empty"),
             time=0,
             connectable=False,
+            tx_power=-127,
         )
         # Return with name with time = 0 initially
         mock_async_discovered_service_info.return_value = [device]
@@ -191,6 +193,7 @@ async def test_see_device_if_time_updated(
             advertisement=generate_advertisement_data(local_name="empty"),
             time=1,
             connectable=False,
+            tx_power=-127,
         )
         # Return with name with time = 0 initially
         mock_async_discovered_service_info.return_value = [device]
@@ -237,6 +240,7 @@ async def test_preserve_new_tracked_device_name(
             advertisement=generate_advertisement_data(local_name="empty"),
             time=0,
             connectable=False,
+            tx_power=-127,
         )
         # Return with name when seen first time
         mock_async_discovered_service_info.return_value = [device]
@@ -262,6 +266,7 @@ async def test_preserve_new_tracked_device_name(
             advertisement=generate_advertisement_data(local_name="empty"),
             time=0,
             connectable=False,
+            tx_power=-127,
         )
         # Return with name when seen first time
         mock_async_discovered_service_info.return_value = [device]
@@ -305,6 +310,7 @@ async def test_tracking_battery_times_out(
             advertisement=generate_advertisement_data(local_name="empty"),
             time=0,
             connectable=False,
+            tx_power=-127,
         )
         # Return with name when seen first time
         mock_async_discovered_service_info.return_value = [device]
@@ -373,6 +379,7 @@ async def test_tracking_battery_fails(
             advertisement=generate_advertisement_data(local_name="empty"),
             time=0,
             connectable=False,
+            tx_power=-127,
         )
         # Return with name when seen first time
         mock_async_discovered_service_info.return_value = [device]
@@ -440,6 +447,7 @@ async def test_tracking_battery_successful(
             advertisement=generate_advertisement_data(local_name="empty"),
             time=0,
             connectable=True,
+            tx_power=-127,
         )
         # Return with name when seen first time
         mock_async_discovered_service_info.return_value = [device]

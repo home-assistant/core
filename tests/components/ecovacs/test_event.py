@@ -76,7 +76,7 @@ async def test_last_job(
     await notify_and_wait(
         hass,
         event_bus,
-        ReportStatsEvent(0, 1, "spotArea", "3", CleanJobStatus.MANUAL_STOPPED, [1]),
+        ReportStatsEvent(0, 1, "spotArea", "3", CleanJobStatus.MANUALLY_STOPPED, [1]),
     )
 
     assert (state := hass.states.get(state.entity_id))

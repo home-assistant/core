@@ -202,6 +202,16 @@ def _install_default_mocks(aioclient_mock: AiohttpClientMocker):
             },
         },
     )
+    aioclient_mock.get(
+        "http://127.0.0.1/network/info",
+        json={
+            "result": "ok",
+            "data": {
+                "host_internet": True,
+                "supervisor_internet": True,
+            },
+        },
+    )
 
 
 @pytest.mark.parametrize(

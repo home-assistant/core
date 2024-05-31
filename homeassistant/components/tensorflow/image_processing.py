@@ -376,7 +376,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
         matches = {}
         total_matches = 0
-        for box, score, obj_class in zip(boxes, scores, classes):
+        for box, score, obj_class in zip(boxes, scores, classes, strict=False):
             score = score * 100
             boxes = box.tolist()
 

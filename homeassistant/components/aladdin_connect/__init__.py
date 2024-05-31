@@ -1,40 +1,33 @@
-"""The aladdin_connect component."""
+"""The Aladdin Connect Genie integration."""
 
-import logging
-from typing import Final
-
-from AIOAladdinConnect import AladdinConnectClient
-import AIOAladdinConnect.session_manager as Aladdin
-from aiohttp import ClientError
+from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
-from .const import CLIENT_ID, DOMAIN
+from . import api
+from .const import CONFIG_FLOW_MINOR_VERSION, CONFIG_FLOW_VERSION
 
-_LOGGER: Final = logging.getLogger(__name__)
-
-PLATFORMS: list[Platform] = [Platform.COVER, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.COVER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up platform from a ConfigEntry."""
-    username = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
-    acc = AladdinConnectClient(
-        username, password, async_get_clientsession(hass), CLIENT_ID
+    """Set up Aladdin Connect Genie from a config entry."""
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
+        )
     )
-    try:
-        await acc.login()
-    except (ClientError, TimeoutError, Aladdin.ConnectionError) as ex:
-        raise ConfigEntryNotReady("Can not connect to host") from ex
-    except Aladdin.InvalidPasswordError as ex:
-        raise ConfigEntryAuthFailed("Incorrect Password") from ex
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = acc
+    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+
+    # If using an aiohttp-based API lib
+    entry.runtime_data = api.AsyncConfigEntryAuth(
+        aiohttp_client.async_get_clientsession(hass), session
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -42,7 +35,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    return unload_ok
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old config."""
+    if config_entry.version < CONFIG_FLOW_VERSION:
+        config_entry.async_start_reauth(hass)
+        new_data = {**config_entry.data}
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data=new_data,
+            version=CONFIG_FLOW_VERSION,
+            minor_version=CONFIG_FLOW_MINOR_VERSION,
+        )
+
+    return True

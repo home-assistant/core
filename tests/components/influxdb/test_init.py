@@ -1,9 +1,9 @@
 """The tests for the InfluxDB component."""
 
-import asyncio
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
+import logging
 from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import pytest
@@ -1573,21 +1573,25 @@ async def test_invalid_inputs_error(
     await _setup(hass, mock_client, config_ext, get_write_api)
 
     write_api = get_write_api(mock_client)
+    write_api.side_effect = test_exception
 
-    write_api_done_event = asyncio.Event()
+    log_emit_done = hass.loop.create_future()
 
-    def wait_for_write(*args, **kwargs):
-        hass.loop.call_soon_threadsafe(write_api_done_event.set)
-        raise test_exception
+    original_emit = caplog.handler.emit
 
-    write_api.side_effect = wait_for_write
+    def wait_for_emit(record: logging.LogRecord) -> None:
+        original_emit(record)
+        if record.levelname == "ERROR":
+            hass.loop.call_soon_threadsafe(log_emit_done.set_result, None)
 
-    with patch(f"{INFLUX_PATH}.time.sleep") as sleep:
-        write_api_done_event.clear()
+    with (
+        patch(f"{INFLUX_PATH}.time.sleep") as sleep,
+        patch.object(caplog.handler, "emit", wait_for_emit),
+    ):
         hass.states.async_set("fake.something", 1)
         await hass.async_block_till_done()
         await async_wait_for_queue_to_process(hass)
-        await write_api_done_event.wait()
+        await log_emit_done
         await hass.async_block_till_done()
 
         write_api.assert_called_once()

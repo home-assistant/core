@@ -89,6 +89,9 @@
       },
       "comfort_heating_temperature": {
         "name": "[%key:component::vicare::entity::number::comfort_temperature::name%]"
+      },
+      "dhw_secondary_temperature": {
+        "name": "DHW secondary temperature"
       }
     },
     "sensor": {

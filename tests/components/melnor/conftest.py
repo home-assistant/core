@@ -35,6 +35,7 @@ FAKE_SERVICE_INFO_1 = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(local_name=""),
     time=0,
     connectable=True,
+    tx_power=-127,
 )
 
 FAKE_SERVICE_INFO_2 = BluetoothServiceInfoBleak(
@@ -51,11 +52,12 @@ FAKE_SERVICE_INFO_2 = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(local_name=""),
     time=0,
     connectable=True,
+    tx_power=-127,
 )
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth):
+def mock_bluetooth(enable_bluetooth: None) -> None:
     """Auto mock bluetooth."""
 
 

@@ -3,6 +3,7 @@
 import logging
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 import requests_mock
 
 from homeassistant.components.ring.const import SCAN_INTERVAL
@@ -94,10 +95,10 @@ async def test_only_chime_devices(
     hass: HomeAssistant,
     requests_mock: requests_mock.Mocker,
     freezer: FrozenDateTimeFactory,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Tests the update service works correctly if only chimes are returned."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
     requests_mock.get(
         "https://api.ring.com/clients_api/ring_devices",
