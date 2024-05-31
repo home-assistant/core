@@ -22,7 +22,6 @@ from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
 from homeassistant.components.conversation import trace
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, TemplateError
@@ -30,6 +29,7 @@ from homeassistant.helpers import device_registry as dr, intent, llm, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import ulid
 
+from . import OpenAIConfigEntry
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -50,7 +50,7 @@ MAX_TOOL_ITERATIONS = 10
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OpenAIConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up conversation entities."""
@@ -74,7 +74,7 @@ class OpenAIConversationEntity(
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: OpenAIConfigEntry) -> None:
         """Initialize the agent."""
         self.entry = entry
         self.history: dict[str, list[ChatCompletionMessageParam]] = {}
@@ -119,7 +119,7 @@ class OpenAIConversationEntity(
                 llm_api = await llm.async_get_api(
                     self.hass,
                     options[CONF_LLM_HASS_API],
-                    llm.ToolContext(
+                    llm.LLMContext(
                         platform=DOMAIN,
                         context=user_input.context,
                         user_prompt=user_input.text,
@@ -187,7 +187,7 @@ class OpenAIConversationEntity(
             trace.ConversationTraceEventType.AGENT_DETAIL, {"messages": messages}
         )
 
-        client: openai.AsyncClient = self.hass.data[DOMAIN][self.entry.entry_id]
+        client = self.entry.runtime_data
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
