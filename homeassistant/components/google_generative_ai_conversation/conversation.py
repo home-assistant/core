@@ -169,7 +169,7 @@ class GoogleGenerativeAIConversationEntity(
                 llm_api = await llm.async_get_api(
                     self.hass,
                     self.entry.options[CONF_LLM_HASS_API],
-                    llm.ToolContext(
+                    llm.LLMContext(
                         platform=DOMAIN,
                         context=user_input.context,
                         user_prompt=user_input.text,
