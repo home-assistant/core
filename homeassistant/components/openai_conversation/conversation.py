@@ -113,20 +113,22 @@ class OpenAIConversationEntity(
         intent_response = intent.IntentResponse(language=user_input.language)
         llm_api: llm.APIInstance | None = None
         tools: list[ChatCompletionToolParam] | None = None
+        user_name: str | None = None
+        llm_context = llm.LLMContext(
+            platform=DOMAIN,
+            context=user_input.context,
+            user_prompt=user_input.text,
+            language=user_input.language,
+            assistant=conversation.DOMAIN,
+            device_id=user_input.device_id,
+        )
 
         if options.get(CONF_LLM_HASS_API):
             try:
                 llm_api = await llm.async_get_api(
                     self.hass,
                     options[CONF_LLM_HASS_API],
-                    llm.LLMContext(
-                        platform=DOMAIN,
-                        context=user_input.context,
-                        user_prompt=user_input.text,
-                        language=user_input.language,
-                        assistant=conversation.DOMAIN,
-                        device_id=user_input.device_id,
-                    ),
+                    llm_context,
                 )
             except HomeAssistantError as err:
                 LOGGER.error("Error getting LLM API: %s", err)
@@ -144,6 +146,18 @@ class OpenAIConversationEntity(
             messages = self.history[conversation_id]
         else:
             conversation_id = ulid.ulid_now()
+
+            if (
+                user_input.context
+                and user_input.context.user_id
+                and (
+                    user := await self.hass.auth.async_get_user(
+                        user_input.context.user_id
+                    )
+                )
+            ):
+                user_name = user.name
+
             try:
                 if llm_api:
                     api_prompt = llm_api.api_prompt
@@ -158,6 +172,8 @@ class OpenAIConversationEntity(
                         ).async_render(
                             {
                                 "ha_name": self.hass.config.location_name,
+                                "user_name": user_name,
+                                "llm_context": llm_context,
                             },
                             parse_result=False,
                         ),
