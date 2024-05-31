@@ -1,7 +1,9 @@
 """Tests for async util methods from Python source."""
 
 import contextlib
+import glob
 import importlib
+import os
 from pathlib import Path, PurePosixPath
 import time
 from typing import Any
@@ -10,6 +12,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant import block_async_io
+from homeassistant.core import HomeAssistant
 
 from tests.common import extract_stack_to_frame
 
@@ -235,3 +238,55 @@ async def test_protect_open_path(path: Any, caplog: pytest.LogCaptureFixture) ->
         open(path).close()
 
     assert "Detected blocking call to open with args" in caplog.text
+
+
+async def test_protect_loop_glob(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test glob calls in the loop are logged."""
+    block_async_io.enable()
+    glob.glob("/dev/null")
+    assert "Detected blocking call to glob with args" in caplog.text
+    caplog.clear()
+    await hass.async_add_executor_job(glob.glob, "/dev/null")
+    assert "Detected blocking call to glob with args" not in caplog.text
+
+
+async def test_protect_loop_iglob(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test iglob calls in the loop are logged."""
+    block_async_io.enable()
+    glob.iglob("/dev/null")
+    assert "Detected blocking call to iglob with args" in caplog.text
+    caplog.clear()
+    await hass.async_add_executor_job(glob.iglob, "/dev/null")
+    assert "Detected blocking call to iglob with args" not in caplog.text
+
+
+async def test_protect_loop_scandir(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test glob calls in the loop are logged."""
+    block_async_io.enable()
+    with contextlib.suppress(FileNotFoundError):
+        os.scandir("/path/that/does/not/exists")
+    assert "Detected blocking call to scandir with args" in caplog.text
+    caplog.clear()
+    with contextlib.suppress(FileNotFoundError):
+        await hass.async_add_executor_job(os.scandir, "/path/that/does/not/exists")
+    assert "Detected blocking call to listdir with args" not in caplog.text
+
+
+async def test_protect_loop_listdir(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test listdir calls in the loop are logged."""
+    block_async_io.enable()
+    with contextlib.suppress(FileNotFoundError):
+        os.listdir("/path/that/does/not/exists")
+    assert "Detected blocking call to listdir with args" in caplog.text
+    caplog.clear()
+    with contextlib.suppress(FileNotFoundError):
+        await hass.async_add_executor_job(os.listdir, "/path/that/does/not/exists")
+    assert "Detected blocking call to listdir with args" not in caplog.text
