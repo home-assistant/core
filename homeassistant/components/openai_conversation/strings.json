@@ -60,6 +60,12 @@
       }
     }
   },
+  "exceptions": {
+    "config_entry_missing": {
+      "message": "No Config Entry found for openai_conversation"
+    },
+    "invalid_image_size": { "message": "Image size {size} is not valid." }
+  },
   "issues": {
     "image_size_deprecated_format": {
       "title": "Deprecated size format for image generation service",
