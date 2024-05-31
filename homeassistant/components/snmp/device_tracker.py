@@ -60,7 +60,7 @@ async def async_get_scanner(
 ) -> SnmpScanner | None:
     """Validate the configuration and return an SNMP scanner."""
     scanner = SnmpScanner(config[DOMAIN])
-    await scanner.async_init()
+    await scanner.async_init(hass)
 
     return scanner if scanner.success_init else None
 
@@ -115,10 +115,10 @@ class SnmpScanner(DeviceScanner):
         self.last_results = []
         self.success_init = False
 
-    async def async_init(self):
+    async def async_init(self, hass: HomeAssistant) -> None:
         """Make a one-off read to check if the target device is reachable and readable."""
         self.request_args = await async_create_request_cmd_args(
-            self.hass, self._auth_data, self._target, self.baseoid
+            hass, self._auth_data, self._target, self.baseoid
         )
         data = await self.async_get_snmp_data()
         self.success_init = data is not None
