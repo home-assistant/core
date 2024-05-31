@@ -365,7 +365,7 @@ class CachedProperties(type):
                 attr = getattr(cls, attr_name)
                 if isinstance(attr, (FunctionType, property)):
                     raise TypeError(f"Can't override {attr_name} in subclass")
-                setattr(cls, private_attr_name, getattr(cls, attr_name))
+                setattr(cls, private_attr_name, attr)
                 annotations = cls.__annotations__
                 if attr_name in annotations:
                     annotations[private_attr_name] = annotations.pop(attr_name)
