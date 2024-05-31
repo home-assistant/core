@@ -73,7 +73,7 @@ async def test_template_error(
     assert result.response.error_code == "unknown", result
 
 
-async def test_template_user_name(
+async def test_template_variables(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that template variables work."""
@@ -85,7 +85,10 @@ async def test_template_user_name(
     hass.config_entries.async_update_entry(
         mock_config_entry,
         options={
-            "prompt": "The user name is {{ user_name }}.",
+            "prompt": (
+                "The user name is {{ user_name }}. "
+                "The user id is {{ llm_context.context.user_id }}."
+            ),
         },
     )
     with (
@@ -109,6 +112,10 @@ async def test_template_user_name(
     ), result
     assert (
         "The user name is Test User."
+        in mock_create.mock_calls[0][2]["messages"][0]["content"]
+    )
+    assert (
+        "The user id is 12345."
         in mock_create.mock_calls[0][2]["messages"][0]["content"]
     )
 
