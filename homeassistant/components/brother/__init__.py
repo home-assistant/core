@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from brother import Brother, SnmpError
 
-from homeassistant.components.snmp.util import async_get_snmp_engine
+from homeassistant.components.snmp import async_get_snmp_engine
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
