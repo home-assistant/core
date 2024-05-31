@@ -118,7 +118,7 @@ class SnmpScanner(DeviceScanner):
     async def async_init(self):
         """Make a one-off read to check if the target device is reachable and readable."""
         self.request_args = await async_create_request_cmd_args(
-            self.hass, self._auth_data, self._target
+            self.hass, self._auth_data, self._target, self.baseoid
         )
         data = await self.async_get_snmp_data()
         self.success_init = data is not None
