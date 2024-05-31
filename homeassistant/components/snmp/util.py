@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from functools import cache
-
 from pysnmp.hlapi.asyncio import (
     CommunityData,
     ContextData,
@@ -18,6 +16,9 @@ from pysnmp.hlapi.asyncio.cmdgen import vbProcessor
 from pysnmp.smi.builder import MibBuilder
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.singleton import singleton
+
+DATA_SNMP_ENGINE = "snmp_engine"
 
 type RequestArgsType = tuple[
     SnmpEngine,
@@ -28,12 +29,6 @@ type RequestArgsType = tuple[
 ]
 
 
-@cache
-def snmp_engine() -> SnmpEngine:
-    """Return a cached instance of SnmpEngine."""
-    return SnmpEngine()
-
-
 async def async_create_request_cmd_args(
     hass: HomeAssistant,
     auth_data: UsmUserData | CommunityData,
@@ -41,19 +36,24 @@ async def async_create_request_cmd_args(
     object_id: str,
 ) -> RequestArgsType:
     """Create request arguments."""
-    return await hass.async_add_executor_job(
-        _create_request_cmd_args, auth_data, target, object_id
+    return (
+        await async_get_snmp_engine(hass),
+        auth_data,
+        target,
+        ContextData(),
+        ObjectType(ObjectIdentity(object_id)),
     )
 
 
-def _create_request_cmd_args(
-    auth_data: UsmUserData | CommunityData,
-    target: UdpTransportTarget | Udp6TransportTarget,
-    object_id: str,
-) -> RequestArgsType:
-    """Create request arguments."""
-    engine = snmp_engine()
-    object_identity = ObjectIdentity(object_id)
+@singleton(DATA_SNMP_ENGINE)
+async def async_get_snmp_engine(hass: HomeAssistant) -> SnmpEngine:
+    """Get the SNMP engine."""
+    return await hass.async_add_executor_job(_get_snmp_engine)
+
+
+def _get_snmp_engine() -> SnmpEngine:
+    """Return a cached instance of SnmpEngine."""
+    engine = SnmpEngine()
     mib_controller = vbProcessor.getMibViewController(engine)
     # Actually load the MIBs from disk so we do
     # not do it in the event loop
@@ -61,5 +61,4 @@ def _create_request_cmd_args(
     builder: MibBuilder = mib_controller.mibBuilder
     if "PYSNMP-MIB" not in builder.mibSymbols:
         builder.loadModules()
-    object_identity.resolveWithMib(mib_controller)
-    return (engine, auth_data, target, ContextData(), ObjectType(object_identity))
+    return engine
