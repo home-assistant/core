@@ -2,7 +2,7 @@
 
 import asyncio
 from typing import Any
-from unittest.mock import ANY, AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
 from python_otbr_api.tlv_parser import TLVError
@@ -710,7 +710,7 @@ async def test_set_preferred_extended_address(hass: HomeAssistant) -> None:
 
 
 async def test_automatically_set_preferred_dataset(
-    hass: HomeAssistant, mock_async_zeroconf: None
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
 ) -> None:
     """Test automatically setting the first dataset as the preferred dataset."""
     add_service_listener_called = asyncio.Event()
@@ -775,7 +775,7 @@ async def test_automatically_set_preferred_dataset(
 
 
 async def test_automatically_set_preferred_dataset_own_and_other_router(
-    hass: HomeAssistant, mock_async_zeroconf: None
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
 ) -> None:
     """Test automatically setting the first dataset as the preferred dataset.
 
@@ -854,7 +854,7 @@ async def test_automatically_set_preferred_dataset_own_and_other_router(
 
 
 async def test_automatically_set_preferred_dataset_other_router(
-    hass: HomeAssistant, mock_async_zeroconf: None
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
 ) -> None:
     """Test automatically setting the first dataset as the preferred dataset.
 
@@ -922,7 +922,7 @@ async def test_automatically_set_preferred_dataset_other_router(
 
 
 async def test_automatically_set_preferred_dataset_no_router(
-    hass: HomeAssistant, mock_async_zeroconf: None
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
 ) -> None:
     """Test automatically setting the first dataset as the preferred dataset.
 

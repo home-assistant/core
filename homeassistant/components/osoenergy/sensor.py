@@ -18,8 +18,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import OSOEnergyEntity
 from .const import DOMAIN
+from .entity import OSOEnergyEntity
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -184,7 +184,6 @@ async def test_function_call(
     assert mock_create.mock_calls[1][2]["messages"][3] == {
         "role": "tool",
         "tool_call_id": "call_AbCdEfGhIjKlMnOpQrStUvWx",
-        "name": "test_tool",
         "content": '"Test response"',
     }
     mock_tool.async_call.assert_awaited_once_with(
@@ -193,7 +192,7 @@ async def test_function_call(
             tool_name="test_tool",
             tool_args={"param1": "test_value"},
         ),
-        llm.ToolContext(
+        llm.LLMContext(
             platform="openai_conversation",
             context=context,
             user_prompt="Please call the test function",
@@ -317,7 +316,6 @@ async def test_function_exception(
     assert mock_create.mock_calls[1][2]["messages"][3] == {
         "role": "tool",
         "tool_call_id": "call_AbCdEfGhIjKlMnOpQrStUvWx",
-        "name": "test_tool",
         "content": '{"error": "HomeAssistantError", "error_text": "Test tool exception"}',
     }
     mock_tool.async_call.assert_awaited_once_with(
@@ -326,7 +324,7 @@ async def test_function_exception(
             tool_name="test_tool",
             tool_args={"param1": "test_value"},
         ),
-        llm.ToolContext(
+        llm.LLMContext(
             platform="openai_conversation",
             context=context,
             user_prompt="Please call the test function",
