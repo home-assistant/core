@@ -550,7 +550,7 @@ async def test_form_ssdp_aborts_if_serial_already_exists(
 
 
 async def test_form_ssdp_gets_form_with_ignored_entry(hass: HomeAssistant) -> None:
-    """Test we can still setup if there is an ignored entry."""
+    """Test we can still setup if there is an ignored never configured entry."""
 
     entry = MockConfigEntry(
         domain=UNIFI_DOMAIN,
@@ -564,11 +564,11 @@ async def test_form_ssdp_gets_form_with_ignored_entry(hass: HomeAssistant) -> No
         data=ssdp.SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
-            ssdp_location="http://1.2.3.4:41417/rootDesc.xml",
+            ssdp_location="http://1.2.3.4:1234/rootDesc.xml",
             upnp={
                 "friendlyName": "UniFi Dream Machine New",
                 "modelDescription": "UniFi Dream Machine Pro",
-                "serialNumber": "e0:63:da:20:14:a9",
+                "serialNumber": "1",
             },
         ),
     )

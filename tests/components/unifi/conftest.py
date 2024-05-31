@@ -87,7 +87,6 @@ def config_entry_fixture(
         unique_id="1",
         data=config_entry_data,
         options=config_entry_options,
-        version=1,
     )
     config_entry.add_to_hass(hass)
     return config_entry
