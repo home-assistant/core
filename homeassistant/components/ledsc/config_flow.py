@@ -51,7 +51,7 @@ class LedSCConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_input(self.hass, user_input)
             except ConnectionError:
-                errors["base"] = "cannot connect"
+                errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)
 
