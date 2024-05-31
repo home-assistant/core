@@ -10,10 +10,10 @@ from . import setup_mocked_integration
 
 
 @freeze_time("2023-06-22 10:30:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entity_state_attrs(
     hass: HomeAssistant,
     bmw_fixture: respx.Router,
-    entity_registry_enabled_by_default: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test binary sensor states and attributes."""
