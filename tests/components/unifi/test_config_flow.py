@@ -96,7 +96,7 @@ DPI_GROUPS = [
 
 
 async def test_flow_works(
-    hass: HomeAssistant, mock_discovery, mock_default_unifi_requests: None
+    hass: HomeAssistant, mock_discovery, mock_default_requests: None
 ) -> None:
     """Test config flow."""
     mock_discovery.return_value = "1"
@@ -166,7 +166,7 @@ async def test_flow_works_negative_discovery(
     ],
 )
 async def test_flow_multiple_sites(
-    hass: HomeAssistant, mock_default_unifi_requests: None
+    hass: HomeAssistant, mock_default_requests: None
 ) -> None:
     """Test config flow works when finding multiple sites."""
     result = await hass.config_entries.flow.async_init(
@@ -194,7 +194,7 @@ async def test_flow_multiple_sites(
 
 
 async def test_flow_raise_already_configured(
-    hass: HomeAssistant, setup_config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: ConfigEntry
 ) -> None:
     """Test config flow aborts since a connected config entry already exists."""
     result = await hass.config_entries.flow.async_init(
@@ -220,7 +220,7 @@ async def test_flow_raise_already_configured(
 
 
 async def test_flow_aborts_configuration_updated(
-    hass: HomeAssistant, setup_config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: ConfigEntry
 ) -> None:
     """Test config flow aborts since a connected config entry already exists."""
     result = await hass.config_entries.flow.async_init(
@@ -250,7 +250,7 @@ async def test_flow_aborts_configuration_updated(
 
 
 async def test_flow_fails_user_credentials_faulty(
-    hass: HomeAssistant, mock_default_unifi_requests: None
+    hass: HomeAssistant, mock_default_requests: None
 ) -> None:
     """Test config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -277,7 +277,7 @@ async def test_flow_fails_user_credentials_faulty(
 
 
 async def test_flow_fails_hub_unavailable(
-    hass: HomeAssistant, mock_default_unifi_requests: None
+    hass: HomeAssistant, mock_default_requests: None
 ) -> None:
     """Test config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -304,10 +304,10 @@ async def test_flow_fails_hub_unavailable(
 
 
 async def test_reauth_flow_update_configuration(
-    hass: HomeAssistant, setup_config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: ConfigEntry
 ) -> None:
     """Verify reauth flow can update hub configuration."""
-    config_entry = setup_config_entry
+    config_entry = config_entry_setup
 
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
@@ -349,10 +349,10 @@ async def test_reauth_flow_update_configuration(
 @pytest.mark.parametrize("wlan_payload", [WLANS])
 @pytest.mark.parametrize("dpi_group_payload", [DPI_GROUPS])
 async def test_advanced_option_flow(
-    hass: HomeAssistant, setup_config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: ConfigEntry
 ) -> None:
     """Test advanced config flow options."""
-    config_entry = setup_config_entry
+    config_entry = config_entry_setup
 
     result = await hass.config_entries.options.async_init(
         config_entry.entry_id, context={"show_advanced_options": True}
@@ -433,10 +433,10 @@ async def test_advanced_option_flow(
 
 @pytest.mark.parametrize("client_payload", [CLIENTS])
 async def test_simple_option_flow(
-    hass: HomeAssistant, setup_config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: ConfigEntry
 ) -> None:
     """Test simple config flow options."""
-    config_entry = setup_config_entry
+    config_entry = config_entry_setup
 
     result = await hass.config_entries.options.async_init(
         config_entry.entry_id, context={"show_advanced_options": False}
