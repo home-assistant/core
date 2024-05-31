@@ -85,7 +85,7 @@ class SynoApi:
 
         self._login_future: asyncio.Future[None] | None = None
 
-    async def async_login(self) -> None:
+    async def async_login(self, during_setup: bool = False) -> None:
         """Login to the Synology DSM API.
 
         This function will only login once if called multiple times
@@ -102,7 +102,7 @@ class SynoApi:
             await self.dsm.login()
             self._login_future.set_result(None)
         except BaseException as err:
-            if not self._login_future.done():
+            if not self._login_future.done() and not during_setup:
                 self._login_future.set_exception(err)
             raise
         finally:
@@ -121,7 +121,7 @@ class SynoApi:
             timeout=DEFAULT_TIMEOUT,
             device_token=self._entry.data.get(CONF_DEVICE_TOKEN),
         )
-        await self.async_login()
+        await self.async_login(True)
 
         # check if surveillance station is used
         self._with_surveillance_station = bool(
