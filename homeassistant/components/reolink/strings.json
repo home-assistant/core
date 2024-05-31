@@ -88,36 +88,36 @@
       "face": {
         "name": "Face",
         "state": {
-          "off": "Clear",
-          "on": "Detected"
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
       "person": {
         "name": "Person",
         "state": {
-          "off": "Clear",
-          "on": "Detected"
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
       "vehicle": {
         "name": "Vehicle",
         "state": {
-          "off": "Clear",
-          "on": "Detected"
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
       "pet": {
         "name": "Pet",
         "state": {
-          "off": "Clear",
-          "on": "Detected"
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
       "animal": {
         "name": "Animal",
         "state": {
-          "off": "Clear",
-          "on": "Detected"
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
       "visitor": {
@@ -126,50 +126,50 @@
       "package": {
         "name": "Package",
         "state": {
-          "off": "Clear",
-          "on": "Detected"
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
       "motion_lens_0": {
         "name": "Motion lens 0",
         "state": {
-          "off": "Clear",
-          "on": "Detected"
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
       "face_lens_0": {
         "name": "Face lens 0",
         "state": {
-          "off": "Clear",
-          "on": "Detected"
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
       "person_lens_0": {
         "name": "Person lens 0",
         "state": {
-          "off": "Clear",
-          "on": "Detected"
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
       "vehicle_lens_0": {
         "name": "Vehicle lens 0",
         "state": {
-          "off": "Clear",
-          "on": "Detected"
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
       "pet_lens_0": {
         "name": "Pet lens 0",
         "state": {
-          "off": "Clear",
-          "on": "Detected"
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
       "animal_lens_0": {
         "name": "Animal lens 0",
         "state": {
-          "off": "Clear",
-          "on": "Detected"
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
       "visitor_lens_0": {
@@ -178,50 +178,50 @@
       "package_lens_0": {
         "name": "Package lens 0",
         "state": {
-          "off": "Clear",
-          "on": "Detected"
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
       "motion_lens_1": {
         "name": "Motion lens 1",
         "state": {
-          "off": "Clear",
-          "on": "Detected"
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
       "face_lens_1": {
         "name": "Face lens 1",
         "state": {
-          "off": "Clear",
-          "on": "Detected"
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
       "person_lens_1": {
         "name": "Person lens 1",
         "state": {
-          "off": "Clear",
-          "on": "Detected"
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
       "vehicle_lens_1": {
         "name": "Vehicle lens 1",
         "state": {
-          "off": "Clear",
-          "on": "Detected"
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
       "pet_lens_1": {
         "name": "Pet lens 1",
         "state": {
-          "off": "Clear",
-          "on": "Detected"
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
       "animal_lens_1": {
         "name": "Animal lens 1",
         "state": {
-          "off": "Clear",
-          "on": "Detected"
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
       "visitor_lens_1": {
@@ -230,8 +230,8 @@
       "package_lens_1": {
         "name": "Package lens 1",
         "state": {
-          "off": "Clear",
-          "on": "Detected"
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       }
     },
