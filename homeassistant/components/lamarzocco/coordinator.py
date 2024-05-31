@@ -3,7 +3,6 @@
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
-from typing import Any
 
 from bleak.backends.device import BLEDevice
 from lmcloud import LMCloud as LaMarzoccoClient
@@ -132,11 +131,11 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
         self.lm.initialized = True
 
-    async def _async_handle_request(
+    async def _async_handle_request[**_P](
         self,
-        func: Callable[..., Coroutine[None, None, None]],
-        *args: Any,
-        **kwargs: Any,
+        func: Callable[_P, Coroutine[None, None, None]],
+        *args: _P.args,
+        **kwargs: _P.kwargs,
     ) -> None:
         """Handle a request to the API."""
         try:
@@ -147,7 +146,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             raise ConfigEntryAuthFailed(msg) from ex
         except RequestNotSuccessful as ex:
             _LOGGER.debug(ex, exc_info=True)
-            raise UpdateFailed("Querying API failed. Error: %s" % ex) from ex
+            raise UpdateFailed(f"Querying API failed. Error: {ex}") from ex
 
     def async_get_ble_device(self) -> BLEDevice | None:
         """Get a Bleak Client for the machine."""

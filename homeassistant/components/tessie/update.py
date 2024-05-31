@@ -7,24 +7,24 @@ from typing import Any
 from tessie_api import schedule_software_update
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, TessieUpdateStatus
+from . import TessieConfigEntry
+from .const import TessieUpdateStatus
 from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TessieConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Tessie Update platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
-    async_add_entities(
-        TessieUpdateEntity(vehicle.state_coordinator) for vehicle in data
-    )
+    async_add_entities(TessieUpdateEntity(vehicle) for vehicle in data.vehicles)
 
 
 class TessieUpdateEntity(TessieEntity, UpdateEntity):

@@ -123,7 +123,13 @@ ENTITY_ID_STATES = {
 @pytest.mark.parametrize("appliance", [TEST_HC_APP], indirect=True)
 @pytest.mark.parametrize(
     ("states", "event_run"),
-    list(zip(list(zip(*ENTITY_ID_STATES.values())), PROGRAM_SEQUENCE_EVENTS)),
+    list(
+        zip(
+            list(zip(*ENTITY_ID_STATES.values(), strict=False)),
+            PROGRAM_SEQUENCE_EVENTS,
+            strict=False,
+        )
+    ),
 )
 async def test_event_sensors(
     appliance: Mock,
@@ -150,7 +156,7 @@ async def test_event_sensors(
     assert config_entry.state == ConfigEntryState.LOADED
 
     appliance.status.update(event_run)
-    for entity_id, state in zip(entity_ids, states):
+    for entity_id, state in zip(entity_ids, states, strict=False):
         await async_update_entity(hass, entity_id)
         await hass.async_block_till_done()
         assert hass.states.is_state(entity_id, state)
@@ -197,7 +203,7 @@ async def test_remaining_prog_time_edge_cases(
     for (
         event,
         expected_state,
-    ) in zip(PROGRAM_SEQUENCE_EDGE_CASE, ENTITY_ID_EDGE_CASE_STATES):
+    ) in zip(PROGRAM_SEQUENCE_EDGE_CASE, ENTITY_ID_EDGE_CASE_STATES, strict=False):
         appliance.status.update(event)
         await async_update_entity(hass, entity_id)
         await hass.async_block_till_done()

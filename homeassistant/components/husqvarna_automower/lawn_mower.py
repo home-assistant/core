@@ -83,7 +83,7 @@ class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
     async def async_start_mowing(self) -> None:
         """Resume schedule."""
         try:
-            await self.coordinator.api.resume_schedule(self.mower_id)
+            await self.coordinator.api.commands.resume_schedule(self.mower_id)
         except ApiException as exception:
             raise HomeAssistantError(
                 f"Command couldn't be sent to the command queue: {exception}"
@@ -92,7 +92,7 @@ class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
     async def async_pause(self) -> None:
         """Pauses the mower."""
         try:
-            await self.coordinator.api.pause_mowing(self.mower_id)
+            await self.coordinator.api.commands.pause_mowing(self.mower_id)
         except ApiException as exception:
             raise HomeAssistantError(
                 f"Command couldn't be sent to the command queue: {exception}"
@@ -101,7 +101,7 @@ class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
     async def async_dock(self) -> None:
         """Parks the mower until next schedule."""
         try:
-            await self.coordinator.api.park_until_next_schedule(self.mower_id)
+            await self.coordinator.api.commands.park_until_next_schedule(self.mower_id)
         except ApiException as exception:
             raise HomeAssistantError(
                 f"Command couldn't be sent to the command queue: {exception}"

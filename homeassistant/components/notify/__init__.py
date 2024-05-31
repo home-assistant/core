@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from enum import IntFlag
 from functools import cached_property, partial
 import logging
 from typing import Any, final, override
@@ -40,6 +41,7 @@ from .legacy import (  # noqa: F401
     async_setup_legacy,
     check_templates_warn,
 )
+from .repairs import migrate_notify_issue  # noqa: F401
 
 # mypy: disallow-any-generics
 
@@ -58,6 +60,12 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 
+class NotifyEntityFeature(IntFlag):
+    """Supported features of a notify entity."""
+
+    TITLE = 1
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the notify services."""
 
@@ -73,7 +81,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component = hass.data[DOMAIN] = EntityComponent[NotifyEntity](_LOGGER, DOMAIN, hass)
     component.async_register_entity_service(
         SERVICE_SEND_MESSAGE,
-        {vol.Required(ATTR_MESSAGE): cv.string},
+        {
+            vol.Required(ATTR_MESSAGE): cv.string,
+            vol.Optional(ATTR_TITLE): cv.string,
+        },
         "_async_send_message",
     )
 
@@ -128,6 +139,7 @@ class NotifyEntity(RestoreEntity):
     """Representation of a notify entity."""
 
     entity_description: NotifyEntityDescription
+    _attr_supported_features: NotifyEntityFeature = NotifyEntityFeature(0)
     _attr_should_poll = False
     _attr_device_class: None
     _attr_state: None = None
@@ -162,10 +174,19 @@ class NotifyEntity(RestoreEntity):
         self.async_write_ha_state()
         await self.async_send_message(**kwargs)
 
-    def send_message(self, message: str) -> None:
+    def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
         raise NotImplementedError
 
-    async def async_send_message(self, message: str) -> None:
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
-        await self.hass.async_add_executor_job(partial(self.send_message, message))
+        kwargs: dict[str, Any] = {}
+        if (
+            title is not None
+            and self.supported_features
+            and self.supported_features & NotifyEntityFeature.TITLE
+        ):
+            kwargs[ATTR_TITLE] = title
+        await self.hass.async_add_executor_job(
+            partial(self.send_message, message, **kwargs)
+        )

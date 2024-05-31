@@ -100,7 +100,7 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity[SwitchBeeDimmer], LightEntity):
             await self.coordinator.api.set_state(self._device.id, state)
         except (SwitchBeeError, SwitchBeeDeviceOfflineError) as exp:
             raise HomeAssistantError(
-                f"Failed to set {self.name} state {state}, {str(exp)}"
+                f"Failed to set {self.name} state {state}, {exp!s}"
             ) from exp
 
         if not isinstance(state, int):
@@ -120,7 +120,7 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity[SwitchBeeDimmer], LightEntity):
             await self.coordinator.api.set_state(self._device.id, ApiStateCommand.OFF)
         except (SwitchBeeError, SwitchBeeDeviceOfflineError) as exp:
             raise HomeAssistantError(
-                f"Failed to turn off {self._attr_name}, {str(exp)}"
+                f"Failed to turn off {self._attr_name}, {exp!s}"
             ) from exp
 
         # update the coordinator manually

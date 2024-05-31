@@ -368,7 +368,7 @@ def filter_turn_on_params(light: LightEntity, params: dict[str, Any]) -> dict[st
         params.pop(ATTR_TRANSITION, None)
 
     supported_color_modes = (
-        light._light_internal_supported_color_modes  # pylint:disable=protected-access
+        light._light_internal_supported_color_modes  # noqa: SLF001
     )
     if not brightness_supported(supported_color_modes):
         params.pop(ATTR_BRIGHTNESS, None)
@@ -445,8 +445,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         ):
             profiles.apply_default(light.entity_id, light.is_on, params)
 
-        # pylint: disable-next=protected-access
-        legacy_supported_color_modes = light._light_internal_supported_color_modes
+        legacy_supported_color_modes = light._light_internal_supported_color_modes  # noqa: SLF001
         supported_color_modes = light.supported_color_modes
 
         # If a color temperature is specified, emulate it if not supported by the light
@@ -517,13 +516,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                     params[ATTR_COLOR_TEMP_KELVIN]
                 )
         elif ATTR_RGB_COLOR in params and ColorMode.RGB not in supported_color_modes:
-            assert (rgb_color := params.pop(ATTR_RGB_COLOR)) is not None
+            rgb_color = params.pop(ATTR_RGB_COLOR)
+            assert rgb_color is not None
             if ColorMode.RGBW in supported_color_modes:
                 params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             elif ColorMode.RGBWW in supported_color_modes:
-                # https://github.com/python/mypy/issues/13673
                 params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
-                    *rgb_color,  # type: ignore[call-arg]
+                    *rgb_color,
                     light.min_color_temp_kelvin,
                     light.max_color_temp_kelvin,
                 )
@@ -584,9 +583,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         elif (
             ATTR_RGBWW_COLOR in params and ColorMode.RGBWW not in supported_color_modes
         ):
-            assert (rgbww_color := params.pop(ATTR_RGBWW_COLOR)) is not None
-            # https://github.com/python/mypy/issues/13673
-            rgb_color = color_util.color_rgbww_to_rgb(  # type: ignore[call-arg]
+            rgbww_color = params.pop(ATTR_RGBWW_COLOR)
+            assert rgbww_color is not None
+            rgb_color = color_util.color_rgbww_to_rgb(
                 *rgbww_color, light.min_color_temp_kelvin, light.max_color_temp_kelvin
             )
             if ColorMode.RGB in supported_color_modes:

@@ -441,7 +441,7 @@ async def test_preset_indefinite_away(ecobee_fixture, thermostat) -> None:
     """Test indefinite away showing correctly, and not as temporary away."""
     ecobee_fixture["program"]["currentClimateRef"] = "away"
     ecobee_fixture["events"][0]["holdClimateRef"] = "away"
-    assert thermostat.preset_mode == "Away"
+    assert thermostat.preset_mode == "away"
 
     ecobee_fixture["events"][0]["endDate"] = "2999-01-01"
     assert thermostat.preset_mode == PRESET_AWAY_INDEFINITELY

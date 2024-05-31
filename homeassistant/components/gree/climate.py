@@ -42,7 +42,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .bridge import DeviceDataUpdateCoordinator
 from .const import (
     COORDINATORS,
     DISPATCH_DEVICE_DISCOVERED,
@@ -51,6 +50,7 @@ from .const import (
     FAN_MEDIUM_LOW,
     TARGET_TEMPERATURE_STEP,
 )
+from .coordinator import DeviceDataUpdateCoordinator
 from .entity import GreeEntity
 
 _LOGGER = logging.getLogger(__name__)

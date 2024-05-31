@@ -94,7 +94,9 @@ class LegacySubscriptionRepairFlow(RepairsFlow):
             )
 
         if not self.wait_task:
-            self.wait_task = self.hass.async_create_task(_async_wait_for_plan_change())
+            self.wait_task = self.hass.async_create_task(
+                _async_wait_for_plan_change(), eager_start=False
+            )
             migration = await async_migrate_paypal_agreement(cloud)
             return self.async_external_step(
                 step_id="change_plan",
