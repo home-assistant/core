@@ -151,20 +151,22 @@ class GoogleGenerativeAIConversationEntity(
         intent_response = intent.IntentResponse(language=user_input.language)
         llm_api: llm.APIInstance | None = None
         tools: list[dict[str, Any]] | None = None
+        user_name: str | None = None
+        llm_context = llm.ToolContext(
+            platform=DOMAIN,
+            context=user_input.context,
+            user_prompt=user_input.text,
+            language=user_input.language,
+            assistant=conversation.DOMAIN,
+            device_id=user_input.device_id,
+        )
 
         if self.entry.options.get(CONF_LLM_HASS_API):
             try:
                 llm_api = await llm.async_get_api(
                     self.hass,
                     self.entry.options[CONF_LLM_HASS_API],
-                    llm.ToolContext(
-                        platform=DOMAIN,
-                        context=user_input.context,
-                        user_prompt=user_input.text,
-                        language=user_input.language,
-                        assistant=conversation.DOMAIN,
-                        device_id=user_input.device_id,
-                    ),
+                    llm_context,
                 )
             except HomeAssistantError as err:
                 LOGGER.error("Error getting LLM API: %s", err)
@@ -213,6 +215,15 @@ class GoogleGenerativeAIConversationEntity(
             conversation_id = ulid.ulid_now()
             messages = [{}, {}]
 
+        if (
+            user_input.context
+            and user_input.context.user_id
+            and (
+                user := await self.hass.auth.async_get_user(user_input.context.user_id)
+            )
+        ):
+            user_name = user.name
+
         try:
             if llm_api:
                 api_prompt = llm_api.api_prompt
@@ -229,8 +240,8 @@ class GoogleGenerativeAIConversationEntity(
                     ).async_render(
                         {
                             "ha_name": self.hass.config.location_name,
-                            "user_id": user_input.context.user_id,
-                            "user_device_id": user_input.device_id,
+                            "user_name": user_name,
+                            "llm_context": llm_context,
                         },
                         parse_result=False,
                     ),
