@@ -8,14 +8,7 @@ from struct import unpack
 
 from pyasn1.codec.ber import decoder
 from pysnmp.error import PySnmpError
-import pysnmp.hlapi.asyncio as hlapi
-from pysnmp.hlapi.asyncio import (
-    CommunityData,
-    Udp6TransportTarget,
-    UdpTransportTarget,
-    UsmUserData,
-    getCmd,
-)
+from pysnmp.hlapi.asyncio import Udp6TransportTarget, UdpTransportTarget, getCmd
 from pysnmp.proto.rfc1902 import Opaque
 from pysnmp.proto.rfc1905 import NoSuchObject
 import voluptuous as vol
@@ -67,7 +60,7 @@ from .const import (
     MAP_PRIV_PROTOCOLS,
     SNMP_VERSIONS,
 )
-from .util import async_create_request_cmd_args
+from .util import async_create_request_cmd_args, make_auth_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,21 +130,9 @@ async def async_setup_platform(
             _LOGGER.error("Invalid SNMP host: %s", err)
             return
 
-    if version == "3":
-        if not authkey:
-            authproto = "none"
-        if not privkey:
-            privproto = "none"
-        auth_data = UsmUserData(
-            username,
-            authKey=authkey or None,
-            privKey=privkey or None,
-            authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
-            privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
-        )
-    else:
-        auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
-
+    auth_data = make_auth_data(
+        version, community, authproto, authkey, privproto, privkey, username
+    )
     request_args = await async_create_request_cmd_args(hass, auth_data, target, baseoid)
     get_result = await getCmd(*request_args)
     errindication, _, _, _ = get_result

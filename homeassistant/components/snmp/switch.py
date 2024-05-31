@@ -5,14 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import pysnmp.hlapi.asyncio as hlapi
-from pysnmp.hlapi.asyncio import (
-    CommunityData,
-    UdpTransportTarget,
-    UsmUserData,
-    getCmd,
-    setCmd,
-)
+from pysnmp.hlapi.asyncio import UdpTransportTarget, getCmd, setCmd
 from pysnmp.proto.rfc1902 import (
     Counter32,
     Counter64,
@@ -63,7 +56,7 @@ from .const import (
     MAP_PRIV_PROTOCOLS,
     SNMP_VERSIONS,
 )
-from .util import RequestArgsType, async_create_request_cmd_args
+from .util import RequestArgsType, async_create_request_cmd_args, make_auth_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,22 +135,9 @@ async def async_setup_platform(
     payload_on = config.get(CONF_PAYLOAD_ON)
     payload_off = config.get(CONF_PAYLOAD_OFF)
     vartype = config.get(CONF_VARTYPE)
-
-    if version == "3":
-        if not authkey:
-            authproto = "none"
-        if not privkey:
-            privproto = "none"
-
-        auth_data = UsmUserData(
-            username,
-            authKey=authkey or None,
-            privKey=privkey or None,
-            authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
-            privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
-        )
-    else:
-        auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
+    auth_data = make_auth_data(
+        version, community, authproto, authkey, privproto, privkey, username
+    )
 
     request_args = await async_create_request_cmd_args(
         hass, auth_data, UdpTransportTarget((host, port)), baseoid
