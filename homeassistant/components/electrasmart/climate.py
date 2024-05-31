@@ -10,6 +10,7 @@ from typing import Any
 from electrasmart.api import STATUS_SUCCESS, Attributes, ElectraAPI, ElectraApiError
 from electrasmart.device import ElectraAirConditioner, OperationMode
 from electrasmart.device.const import MAX_TEMP, MIN_TEMP, Feature
+from electrasmart.api.const import SID_EXPIRATION
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -160,7 +161,7 @@ class ElectraClimateEntity(ClimateEntity):
         self._skip_update = True
         self._was_available = True
         
-        electrasmart.api.const.SID_EXPIRATION = int(timedelta(minutes=19).total_seconds())
+        SID_EXPIRATION = int(timedelta(minutes=19).total_seconds())
 
         _LOGGER.debug("Added %s Electra AC device", self._attr_name)
 
