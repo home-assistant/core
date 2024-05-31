@@ -114,7 +114,7 @@ class OpenAIConversationEntity(
         llm_api: llm.APIInstance | None = None
         tools: list[ChatCompletionToolParam] | None = None
         user_name: str | None = None
-        llm_context = llm.ToolContext(
+        llm_context = llm.LLMContext(
             platform=DOMAIN,
             context=user_input.context,
             user_prompt=user_input.text,
