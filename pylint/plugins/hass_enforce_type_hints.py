@@ -113,6 +113,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "entity_registry_enabled_by_default": "None",
     "event_loop": "AbstractEventLoop",
     "freezer": "FrozenDateTimeFactory",
+    "hass": "HomeAssistant",
     "hass_access_token": "str",
     "hass_admin_credential": "Credentials",
     "hass_admin_user": "MockUser",
@@ -3218,16 +3219,6 @@ class HassTypeHintChecker(BaseChecker):
         if self._ignore_function(node, annotations):
             return
 
-        # Check that common arguments are correctly typed.
-        for arg_name, expected_type in _COMMON_ARGUMENTS.items():
-            arg_node, annotation = _get_named_annotation(node, arg_name)
-            if arg_node and not _is_valid_type(expected_type, annotation):
-                self.add_message(
-                    "hass-argument-type",
-                    node=arg_node,
-                    args=(arg_name, expected_type, node.name),
-                )
-
         # Check method or function matchers.
         if node.is_method():
             matchers = _METHOD_MATCH
@@ -3245,6 +3236,16 @@ class HassTypeHintChecker(BaseChecker):
                     self._check_test_function(node, True)
                     return
             matchers = self._function_matchers
+
+        # Check that common arguments are correctly typed.
+        for arg_name, expected_type in _COMMON_ARGUMENTS.items():
+            arg_node, annotation = _get_named_annotation(node, arg_name)
+            if arg_node and not _is_valid_type(expected_type, annotation):
+                self.add_message(
+                    "hass-argument-type",
+                    node=arg_node,
+                    args=(arg_name, expected_type, node.name),
+                )
 
         for match in matchers:
             if not match.need_to_check_function(node):
