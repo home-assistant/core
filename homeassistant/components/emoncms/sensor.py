@@ -196,29 +196,33 @@ class EmonCmsSensor(SensorEntity):
             self._attr_device_class = SensorDeviceClass.PRESSURE
             self._attr_state_class = SensorStateClass.MEASUREMENT
 
+    @property
+    def native_value(self) -> str | float | None:
+        """Render the state of the feed."""
         if self._value_template is not None:
-            self._attr_native_value = (
-                self._value_template.render_with_possible_json_value(
-                    elem["value"], STATE_UNKNOWN
-                )
+            return self._value_template.render_with_possible_json_value(
+                self._elem["value"], STATE_UNKNOWN
             )
-        elif elem["value"] is not None:
-            self._attr_native_value = round(float(elem["value"]), DECIMALS)
-        else:
-            self._attr_native_value = None
+        if self._elem["value"] is not None:
+            return round(float(self._elem["value"]), DECIMALS)
+        return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the sensor extra attributes."""
-        return {
+        result = {
             ATTR_FEEDID: self._elem["id"],
             ATTR_TAG: self._elem["tag"],
             ATTR_FEEDNAME: self._elem["name"],
-            ATTR_SIZE: self._elem["size"],
-            ATTR_USERID: self._elem["userid"],
-            ATTR_LASTUPDATETIME: self._elem["time"],
-            ATTR_LASTUPDATETIMESTR: template.timestamp_local(float(self._elem["time"])),
         }
+        if self._elem["value"] is not None:
+            result[ATTR_SIZE] = self._elem["size"]
+            result[ATTR_USERID] = self._elem["userid"]
+            result[ATTR_LASTUPDATETIME] = self._elem["time"]
+            result[ATTR_LASTUPDATETIMESTR] = template.timestamp_local(
+                float(self._elem["time"])
+            )
+        return result
 
     def update(self) -> None:
         """Get the latest data and updates the state."""
@@ -247,17 +251,6 @@ class EmonCmsSensor(SensorEntity):
             return
 
         self._elem = elem
-
-        if self._value_template is not None:
-            self._attr_native_value = (
-                self._value_template.render_with_possible_json_value(
-                    elem["value"], STATE_UNKNOWN
-                )
-            )
-        elif elem["value"] is not None:
-            self._attr_native_value = round(float(elem["value"]), DECIMALS)
-        else:
-            self._attr_native_value = None
 
 
 class EmonCmsData:
