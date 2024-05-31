@@ -96,7 +96,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
         is_fixable=False,
-        breaks_in_ha_version="2024.11.0",
+        breaks_in_ha_version="2024.12.0",
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
         translation_placeholders={
