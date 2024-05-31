@@ -2,8 +2,10 @@
 
 import builtins
 from contextlib import suppress
+import glob
 from http.client import HTTPConnection
 import importlib
+import os
 import sys
 import threading
 import time
@@ -52,16 +54,29 @@ def enable() -> None:
         HTTPConnection.putrequest, loop_thread_id=loop_thread_id
     )
 
-    # Prevent sleeping in event loop. Non-strict since 2022.02
+    # Prevent sleeping in event loop.
     time.sleep = protect_loop(
         time.sleep,
-        strict=False,
         check_allowed=_check_sleep_call_allowed,
         loop_thread_id=loop_thread_id,
     )
 
+    glob.glob = protect_loop(
+        glob.glob, strict_core=False, strict=False, loop_thread_id=loop_thread_id
+    )
+    glob.iglob = protect_loop(
+        glob.iglob, strict_core=False, strict=False, loop_thread_id=loop_thread_id
+    )
+
     if not _IN_TESTS:
         # Prevent files being opened inside the event loop
+        os.listdir = protect_loop(  # type: ignore[assignment]
+            os.listdir, strict_core=False, strict=False, loop_thread_id=loop_thread_id
+        )
+        os.scandir = protect_loop(  # type: ignore[assignment]
+            os.scandir, strict_core=False, strict=False, loop_thread_id=loop_thread_id
+        )
+
         builtins.open = protect_loop(  # type: ignore[assignment]
             builtins.open,
             strict_core=False,
