@@ -108,4 +108,13 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
             **user_input,
         }
 
+        url = urlparse(user_input[CONF_HOST], "http")
+        netloc = url.netloc or url.path
+        path = url.path if url.netloc else ""
+        url = ParseResult("http", netloc, path, *url[3:])
+        user_input[CONF_HOST] = url.geturl()
+
+        if self._host_in_configuration_exists(user_input[CONF_HOST]):
+            return self.async_abort(reason="already_configured")
+
         return await self.async_step_user(user_input)
