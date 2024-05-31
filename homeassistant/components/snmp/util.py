@@ -59,6 +59,7 @@ def _create_request_cmd_args(
     mib_controller = vbProcessor.getMibViewController(engine)
     # Actually load the MIBs from disk so we do
     # not do it in the event loop
+    mib_controller.indexMib()
     object_identity.resolveWithMib(mib_controller)
     return (engine, auth_data, target, ContextData(), ObjectType(object_identity))
 
