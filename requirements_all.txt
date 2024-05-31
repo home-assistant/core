@@ -2876,7 +2876,7 @@ webmin-xmlrpc==0.0.2
 webrtc-noise-gain==1.2.3
 
 # homeassistant.components.ledsc
-websc-client==1.0.1
+websc-client==1.0.2
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.8

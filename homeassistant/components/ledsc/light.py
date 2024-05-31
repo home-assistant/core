@@ -3,14 +3,13 @@
 import logging
 from typing import Any
 
+from websc_client import WebSCAsync, WebSClientAsync as WebSClient
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
-
-from websc_client import WebSClientAsync as WebSClient
-from websc_client import WebSCAsync
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,8 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant, config: ConfigEntry, add_entities: AddEntitiesCallback
 ):
-    """
-    Connect to WebSC.
+    """Connect to WebSC.
 
     load the configured devices from WebSC Server and add them to hass.
     """

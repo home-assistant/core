@@ -6,6 +6,7 @@ import logging
 from typing import Any
 import voluptuous as vol
 from websc_client import WebSClientAsync as WebSClient
+from websc_client.exceptions import WebSClientError
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -50,7 +51,7 @@ class LedSCConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(user_input)
             try:
                 info = await validate_input(self.hass, user_input)
-            except ConnectionError:
+            except WebSClientError:
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)
