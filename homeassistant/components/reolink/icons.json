@@ -42,6 +42,12 @@
         "state": {
           "on": "mdi:motion-sensor"
         }
+      },
+      "sleeping": {
+        "default": "mdi:sleep-off",
+        "state": {
+          "on": "mdi:sleep"
+        }
       }
     },
     "button": {

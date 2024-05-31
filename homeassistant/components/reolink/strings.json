@@ -153,6 +153,13 @@
       },
       "package_lens_1": {
         "name": "Package lens 1"
+      },
+      "sleeping": {
+        "name": "Sleeping",
+        "state": {
+          "off": "Active",
+          "on": "Sleeping",
+        }
       }
     },
     "button": {
