@@ -1175,15 +1175,6 @@ def test_pytest_invalid_function(
     with assert_adds_messages(
         linter,
         pylint.testutils.MessageTest(
-            msg_id="hass-argument-type",
-            node=hass_node,
-            args=("hass", ["HomeAssistant", "HomeAssistant | None"], "test_sample"),
-            line=3,
-            col_offset=4,
-            end_line=3,
-            end_col_offset=19,
-        ),
-        pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=func_node,
             args=("None", "test_sample"),
@@ -1227,6 +1218,15 @@ def test_pytest_invalid_function(
             col_offset=4,
             end_line=6,
             end_col_offset=36,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=hass_node,
+            args=("hass", "HomeAssistant", "test_sample"),
+            line=3,
+            col_offset=4,
+            end_line=3,
+            end_col_offset=19,
         ),
     ):
         type_hint_checker.visit_asyncfunctiondef(func_node)
@@ -1283,15 +1283,6 @@ def test_pytest_invalid_fixture(
         linter,
         pylint.testutils.MessageTest(
             msg_id="hass-argument-type",
-            node=hass_node,
-            args=("hass", ["HomeAssistant", "HomeAssistant | None"], "sample_fixture"),
-            line=6,
-            col_offset=4,
-            end_line=6,
-            end_col_offset=19,
-        ),
-        pylint.testutils.MessageTest(
-            msg_id="hass-argument-type",
             node=caplog_node,
             args=("caplog", "pytest.LogCaptureFixture", "sample_fixture"),
             line=7,
@@ -1307,6 +1298,15 @@ def test_pytest_invalid_fixture(
             col_offset=4,
             end_line=8,
             end_col_offset=29,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=hass_node,
+            args=("hass", "HomeAssistant", "sample_fixture"),
+            line=6,
+            col_offset=4,
+            end_line=6,
+            end_col_offset=19,
         ),
     ):
         type_hint_checker.visit_asyncfunctiondef(func_node)
