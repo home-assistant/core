@@ -44,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         entry_id = call.data["config_entry"]
         entry = hass.config_entries.async_get_entry(entry_id)
 
-        if entry is None:
+        if entry is None or entry.domain != DOMAIN:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_config_entry",
