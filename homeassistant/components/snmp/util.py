@@ -61,6 +61,7 @@ async def async_get_snmp_engine(hass: HomeAssistant) -> SnmpEngine:
         lcd.unconfigure(engine, None)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown_listener)
+    return engine
 
 
 def _get_snmp_engine() -> SnmpEngine:
