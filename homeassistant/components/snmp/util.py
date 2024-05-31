@@ -69,7 +69,6 @@ def _get_snmp_engine() -> SnmpEngine:
     mib_controller = vbProcessor.getMibViewController(engine)
     # Actually load the MIBs from disk so we do
     # not do it in the event loop
-    mib_controller.indexMib()
     builder: MibBuilder = mib_controller.mibBuilder
     if "PYSNMP-MIB" not in builder.mibSymbols:
         builder.loadModules()
