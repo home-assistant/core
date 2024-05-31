@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any
 
 from pyopenweathermap import OWMClient
 
@@ -19,11 +18,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import CONFIG_FLOW_VERSION, OWM_MODE_V25, PLATFORMS
+from .const import (
+    CONFIG_FLOW_VERSION,
+    DEFAULT_LANGUAGE,
+    DEFAULT_OWM_MODE,
+    OWM_MODE_V25,
+    PLATFORMS,
+)
 from .coordinator import WeatherUpdateCoordinator
 from .repairs import async_create_issue, async_delete_issue
 
 _LOGGER = logging.getLogger(__name__)
+OPTIONS_KEYS = {CONF_LANGUAGE, CONF_MODE}
 
 type OpenweathermapConfigEntry = ConfigEntry[OpenweathermapData]
 
@@ -44,8 +50,8 @@ async def async_setup_entry(
     api_key = entry.data[CONF_API_KEY]
     latitude = entry.data.get(CONF_LATITUDE, hass.config.latitude)
     longitude = entry.data.get(CONF_LONGITUDE, hass.config.longitude)
-    language = _get_config_value(entry, CONF_LANGUAGE)
-    mode = _get_config_value(entry, CONF_MODE)
+    language = entry.options.get(CONF_LANGUAGE, DEFAULT_LANGUAGE)
+    mode = entry.options.get(CONF_MODE, DEFAULT_OWM_MODE)
 
     if mode == OWM_MODE_V25:
         async_create_issue(hass, entry.entry_id)
@@ -77,10 +83,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("Migrating OpenWeatherMap entry from version %s", version)
 
-    if version < 4:
-        new_data = {**data, **options, CONF_MODE: OWM_MODE_V25}
+    if version < 5:
+        combined_data = {**data, **options, CONF_MODE: OWM_MODE_V25}
         config_entries.async_update_entry(
-            entry, data=new_data, options={}, version=CONFIG_FLOW_VERSION
+            entry,
+            data={k: v for k, v in combined_data.items() if k not in OPTIONS_KEYS},
+            options={k: v for k, v in combined_data.items() if k in OPTIONS_KEYS},
+            version=CONFIG_FLOW_VERSION,
         )
 
     _LOGGER.info("Migration to version %s successful", CONFIG_FLOW_VERSION)
@@ -98,9 +107,3 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-def _get_config_value(config_entry: ConfigEntry, key: str) -> Any:
-    if config_entry.options:
-        return config_entry.options[key]
-    return config_entry.data[key]
