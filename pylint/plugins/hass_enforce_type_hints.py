@@ -132,7 +132,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "issue_registry": "IssueRegistry",
     "legacy_auth": "LegacyApiPasswordAuthProvider",
     "local_auth": "HassAuthProvider",
-    "mock_async_zeroconf": "None",
+    "mock_async_zeroconf": "MagicMock",
     "mock_bleak_scanner_start": "MagicMock",
     "mock_bluetooth": "None",
     "mock_bluetooth_adapters": "None",
@@ -140,7 +140,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "mock_get_source_ip": "None",
     "mock_hass_config": "None",
     "mock_hass_config_yaml": "None",
-    "mock_zeroconf": "None",
+    "mock_zeroconf": "MagicMock",
     "mqtt_client_mock": "MqttMockPahoClient",
     "mqtt_mock": "MqttMockHAClient",
     "mqtt_mock_entry": "MqttMockHAClientGenerator",
@@ -155,10 +155,6 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "unused_tcp_port_factory": "Callable[[], int]",
     "unused_udp_port_factory": "Callable[[], int]",
 }
-_TEST_FUNCTION_MATCH = TypeHintMatch(
-    function_name="test_*",
-    return_type=None,
-)
 
 
 _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
@@ -3308,12 +3304,12 @@ class HassTypeHintChecker(BaseChecker):
     def _check_test_function(
         self, node: nodes.FunctionDef, annotations: list[nodes.NodeNG | None]
     ) -> None:
-        # Check the return type.
-        if not _is_valid_return_type(_TEST_FUNCTION_MATCH, node.returns):
+        # Check the return type, should always be `None` for test_*** functions.
+        if not _is_valid_type(None, node.returns, True):
             self.add_message(
                 "hass-return-type",
                 node=node,
-                args=(_TEST_FUNCTION_MATCH.return_type or "None", node.name),
+                args=("None", node.name),
             )
         # Check that all positional arguments are correctly annotated.
         for arg_name, expected_type in _TEST_FIXTURES.items():

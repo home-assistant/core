@@ -255,7 +255,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await component.async_add_entities(
                 [
                     TagEntity(
-                        hass,
                         entity.name or entity.original_name,
                         updated_config[TAG_ID],
                         updated_config.get(LAST_SCANNED),
@@ -301,7 +300,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         name = entity.name or entity.original_name
         entities.append(
             TagEntity(
-                hass,
                 name,
                 tag[TAG_ID],
                 tag.get(LAST_SCANNED),
@@ -365,14 +363,12 @@ class TagEntity(Entity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         name: str,
         tag_id: str,
         last_scanned: str | None,
         device_id: str | None,
     ) -> None:
         """Initialize the Tag event."""
-        self.hass = hass
         self._attr_name = name
         self._tag_id = tag_id
         self._attr_unique_id = tag_id
