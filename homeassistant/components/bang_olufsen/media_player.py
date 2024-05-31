@@ -339,7 +339,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         # Update beolink attributes and device name.
         await self._update_name_and_beolink()
 
-
     async def _async_update_sources(self) -> None:
         """Get sources for the specific product."""
 
@@ -410,8 +409,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         self._attr_source_list = list(self._sources.values())
 
-        if update_ha_state:
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     @callback
     async def _async_update_playback_metadata(
@@ -422,9 +420,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         # Update current artwork and remote_leader.
         self._media_image = get_highest_resolution_artwork(self._playback_metadata)
-        await self._update_beolink(should_update=False)
-
-        self.async_write_ha_state()
+        await self._update_beolink()
 
     @callback
     def _async_update_playback_error(self, data: PlaybackError) -> None:
@@ -482,11 +478,9 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             name=beolink_self.friendly_name,
         )
 
-        await self._update_beolink(should_update=False)
+        await self._update_beolink()
 
-        self.async_write_ha_state()
-
-    async def _update_beolink(self, should_update: bool = True) -> None:
+    async def _update_beolink(self) -> None:
         """Update the current Beolink leader, listeners, peers and self."""
 
         self._beolink_attribute = {}
@@ -568,8 +562,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         self._attr_group_members = group_members
 
-        if should_update:
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     def _get_entity_id_from_jid(self, jid: str) -> str | None:
         """Get entity_id from Beolink JID (if available)."""
