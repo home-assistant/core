@@ -184,7 +184,6 @@ async def test_function_call(
     assert mock_create.mock_calls[1][2]["messages"][3] == {
         "role": "tool",
         "tool_call_id": "call_AbCdEfGhIjKlMnOpQrStUvWx",
-        "name": "test_tool",
         "content": '"Test response"',
     }
     mock_tool.async_call.assert_awaited_once_with(
@@ -317,7 +316,6 @@ async def test_function_exception(
     assert mock_create.mock_calls[1][2]["messages"][3] == {
         "role": "tool",
         "tool_call_id": "call_AbCdEfGhIjKlMnOpQrStUvWx",
-        "name": "test_tool",
         "content": '{"error": "HomeAssistantError", "error_text": "Test tool exception"}',
     }
     mock_tool.async_call.assert_awaited_once_with(
