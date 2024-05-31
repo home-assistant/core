@@ -44,7 +44,7 @@ async def test_send_custom_command_service(
     snapshot: SnapshotAssertion,
     tests: list[CustomCommandTestCase],
 ) -> None:
-    """Test that number entity snapshots match."""
+    """Test that send_custom_command service response snapshots match."""
     for test_case in tests:
         entity_id = test_case.entity_id
 
