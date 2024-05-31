@@ -56,7 +56,6 @@ class BMWLock(BMWBaseEntity, LockEntity):
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the car."""
         _LOGGER.debug("%s: locking doors", self.vehicle.name)
-        prev_state = self._attr_is_locked
         # Only update the HA state machine if the vehicle reliably reports its lock state
         if self.door_lock_state_available:
             # Optimistic state set here because it takes some time before the
@@ -66,16 +65,17 @@ class BMWLock(BMWBaseEntity, LockEntity):
         try:
             await self.vehicle.remote_services.trigger_remote_door_lock()
         except MyBMWAPIError as ex:
-            self._attr_is_locked = prev_state
+            # Set the state to unknown if the command fails
+            self._attr_is_locked = None
             self.async_write_ha_state()
             raise HomeAssistantError(ex) from ex
-
-        self.coordinator.async_update_listeners()
+        finally:
+            # Always update the listeners to get the latest state
+            self.coordinator.async_update_listeners()
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the car."""
         _LOGGER.debug("%s: unlocking doors", self.vehicle.name)
-        prev_state = self._attr_is_locked
         # Only update the HA state machine if the vehicle reliably reports its lock state
         if self.door_lock_state_available:
             # Optimistic state set here because it takes some time before the
@@ -85,11 +85,13 @@ class BMWLock(BMWBaseEntity, LockEntity):
         try:
             await self.vehicle.remote_services.trigger_remote_door_unlock()
         except MyBMWAPIError as ex:
-            self._attr_is_locked = prev_state
+            # Set the state to unknown if the command fails
+            self._attr_is_locked = None
             self.async_write_ha_state()
             raise HomeAssistantError(ex) from ex
-
-        self.coordinator.async_update_listeners()
+        finally:
+            # Always update the listeners to get the latest state
+            self.coordinator.async_update_listeners()
 
     @callback
     def _handle_coordinator_update(self) -> None:
