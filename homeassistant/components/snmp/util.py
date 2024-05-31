@@ -52,11 +52,9 @@ def _create_request_cmd_args(
 ) -> RequestArgsType:
     """Create request arguments."""
     engine = snmp_engine()
-    context_data = ContextData()
     object_identity = ObjectIdentity(object_id)
-    object_type = ObjectType(object_identity)
     mib_controller = vbProcessor.getMibViewController(engine)
     # Actually load the MIBs from disk so we do
     # not do it in the event loop
     object_identity.resolveWithMib(mib_controller)
-    return (engine, auth_data, target, context_data, object_type)
+    return (engine, auth_data, target, ContextData(), ObjectType(object_identity))
