@@ -1257,6 +1257,7 @@ async def test_update(
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("hue", "456"), ("bla", "123")},
     )
+    new_connections = {(dr.CONNECTION_NETWORK_MAC, "65:43:21:FE:DC:BA")}
     new_identifiers = {("hue", "654"), ("bla", "321")}
     assert not entry.area_id
     assert not entry.labels
@@ -1275,6 +1276,7 @@ async def test_update(
             model="Test Model",
             name_by_user="Test Friendly Name",
             name="name",
+            new_connections=new_connections,
             new_identifiers=new_identifiers,
             serial_number="serial_no",
             suggested_area="suggested_area",
@@ -1288,7 +1290,7 @@ async def test_update(
         area_id="12345A",
         config_entries={mock_config_entry.entry_id},
         configuration_url="https://example.com/config",
-        connections={("mac", "12:34:56:ab:cd:ef")},
+        connections={("mac", "65:43:21:fe:dc:ba")},
         disabled_by=dr.DeviceEntryDisabler.USER,
         entry_type=dr.DeviceEntryType.SERVICE,
         hw_version="hw_version",
@@ -1319,6 +1321,12 @@ async def test_update(
         device_registry.async_get_device(
             connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")}
         )
+        is None
+    )
+    assert (
+        device_registry.async_get_device(
+            connections={(dr.CONNECTION_NETWORK_MAC, "65:43:21:FE:DC:BA")}
+        )
         == updated_entry
     )
 
@@ -1336,6 +1344,7 @@ async def test_update(
         "device_id": entry.id,
         "changes": {
             "area_id": None,
+            "connections": {("mac", "12:34:56:ab:cd:ef")},
             "configuration_url": None,
             "disabled_by": None,
             "entry_type": None,
