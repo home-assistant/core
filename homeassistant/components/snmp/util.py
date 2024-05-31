@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from pysnmp.hlapi.asyncio import (
     CommunityData,
     ContextData,
@@ -12,13 +14,16 @@ from pysnmp.hlapi.asyncio import (
     UdpTransportTarget,
     UsmUserData,
 )
-from pysnmp.hlapi.asyncio.cmdgen import vbProcessor
+from pysnmp.hlapi.asyncio.cmdgen import lcd, vbProcessor
 from pysnmp.smi.builder import MibBuilder
 
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.singleton import singleton
 
 DATA_SNMP_ENGINE = "snmp_engine"
+
+_LOGGER = logging.getLogger(__name__)
 
 type RequestArgsType = tuple[
     SnmpEngine,
@@ -48,7 +53,14 @@ async def async_create_request_cmd_args(
 @singleton(DATA_SNMP_ENGINE)
 async def async_get_snmp_engine(hass: HomeAssistant) -> SnmpEngine:
     """Get the SNMP engine."""
-    return await hass.async_add_executor_job(_get_snmp_engine)
+    engine = await hass.async_add_executor_job(_get_snmp_engine)
+
+    @callback
+    def _async_shutdown_listener(ev: Event) -> None:
+        _LOGGER.debug("Unconfiguring SNMP engine")
+        lcd.unconfigure(engine, None)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown_listener)
 
 
 def _get_snmp_engine() -> SnmpEngine:
