@@ -159,6 +159,8 @@ class ElectraClimateEntity(ClimateEntity):
         self._consecutive_failures = 0
         self._skip_update = True
         self._was_available = True
+        
+        electrasmart.api.const.SID_EXPIRATION = int(timedelta(minutes=19).total_seconds())
 
         _LOGGER.debug("Added %s Electra AC device", self._attr_name)
 
