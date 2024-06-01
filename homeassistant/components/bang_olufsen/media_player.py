@@ -176,7 +176,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",
-                self._update_sources,
+                self._async_update_sources,
             )
         )
         self.async_on_remove(
@@ -235,12 +235,12 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         self._media_image = get_highest_resolution_artwork(self._playback_metadata)
 
         # If the device has been updated with new sources, then the API will fail here.
-        await self._update_sources()
+        await self._async_update_sources()
 
         # Set the static entity attributes that needed more information.
         self._attr_source_list = list(self._sources.values())
 
-    async def _update_sources(self) -> None:
+    async def _async_update_sources(self) -> None:
         """Get sources for the specific product."""
 
         # Audio sources

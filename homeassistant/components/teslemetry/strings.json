@@ -254,7 +254,7 @@
       "charge_state_charge_limit_soc": {
         "name": "Charge limit"
       },
-      "off_grid_vehicle_charging_reserve": {
+      "off_grid_vehicle_charging_reserve_percent": {
         "name": "Off grid reserve"
       }
     },

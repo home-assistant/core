@@ -524,7 +524,7 @@ bring-api==0.7.1
 broadlink==0.19.0
 
 # homeassistant.components.brother
-brother==4.1.0
+brother==4.2.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==1.0.5
@@ -889,7 +889,7 @@ hole==0.8.0
 holidays==0.49
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240529.0
+home-assistant-frontend==20240530.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.5.28
@@ -1832,7 +1832,7 @@ pytradfri[async]==9.0.1
 pytrafikverket==0.3.10
 
 # homeassistant.components.v2c
-pytrydan==0.6.0
+pytrydan==0.6.1
 
 # homeassistant.components.usb
 pyudev==0.24.1
