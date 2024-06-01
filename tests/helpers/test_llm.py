@@ -421,7 +421,6 @@ async def test_assist_api_prompt(
     )
     first_part_prompt = (
         "When controlling Home Assistant always call the intent tools. "
-        "Do not pass the domain to the intent tools as a list. "
         "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
         "When controlling a device, prefer passing just its name and its domain "
         "(what comes before the dot in its entity id). "
