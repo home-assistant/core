@@ -19,11 +19,6 @@ from .coordinator import HydrawiseDataUpdateCoordinator
 from .entity import HydrawiseEntity
 
 
-def _controller_online(sensor: HydrawiseBinarySensor) -> float | None:
-    """Get the online status for the controller."""
-    return sensor.controller.online
-
-
 @dataclass(frozen=True, kw_only=True)
 class HydrawiseBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Hydrawise binary sensor."""
@@ -41,7 +36,7 @@ CONTROLLER_BINARY_SENSORS: tuple[HydrawiseBinarySensorEntityDescription, ...] = 
         key="online",
         translation_key="online",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        value_fn=_controller_online,
+        value_fn=lambda status_sensor: status_sensor.controller.online,
     ),
 )
 
