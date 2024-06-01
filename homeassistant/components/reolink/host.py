@@ -67,7 +67,7 @@ class ReolinkHost:
             timeout=DEFAULT_TIMEOUT,
         )
 
-        self.update_cmd_list: list[str] = []
+        self.update_cmd_list: dict[str:list[int]] = {}
 
         self.webhook_id: str | None = None
         self._onvif_push_supported: bool = True
@@ -320,7 +320,7 @@ class ReolinkHost:
 
     async def update_states(self) -> None:
         """Call the API of the camera device to update the internal states."""
-        await self._api.get_states(cmd_list=self.update_cmd_list)
+        await self._api.get_states(cmd_list=self.update_cmd_list, wake=False)
 
     async def disconnect(self) -> None:
         """Disconnect from the API, so the connection will be released."""
