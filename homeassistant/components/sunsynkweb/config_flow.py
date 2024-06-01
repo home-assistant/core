@@ -3,18 +3,19 @@
 from __future__ import annotations
 
 import logging
+import traceback
 from typing import Any
 
 import aiohttp
+from pysunsynkweb.const import BASE_URL
+from pysunsynkweb.exceptions import AuthenticationFailed
+from pysunsynkweb.session import SunsynkwebSession
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow as BaseConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import get_bearer_token
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,39 +28,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class AuthChecker:
-    """Check authentication in config flow."""
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize."""
-        self.session = async_get_clientsession(hass)
-
-    async def authenticate(self, username: str, password: str) -> bool:
-        """Test if we can authenticate with the host."""
-        try:
-            await get_bearer_token(self.session, username, password)
-        except KeyError:
-            return False
-        return True
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-
-    hub = AuthChecker(hass)
-    try:
-        if not await hub.authenticate(data[CONF_USERNAME], data[CONF_PASSWORD]):
-            raise InvalidAuth
-    except aiohttp.ClientConnectionError as err:
-        raise CannotConnect from err
-
-    # Return info that you want to store in the config entry.
-    return {"title": "Sunsynk Web status"}
-
-
 class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sunsynk Inverter Web."""
 
@@ -69,27 +37,26 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
+        session = async_get_clientsession(self.hass)
         if user_input is not None:
+            swebsession = SunsynkwebSession(
+                session, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+            )
             try:
-                info = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
+                await swebsession.get(BASE_URL)
+            except AuthenticationFailed:
                 errors["base"] = "invalid_auth"
+            except aiohttp.ClientConnectionError:
+                errors["base"] = "cannot_connect"
             except Exception:
-                _LOGGER.exception("Unexpected exception")
+                _LOGGER.exception("Unexpected exception %s", traceback.format_exc())
                 errors["base"] = "unknown"
+
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(
+                    title="Sunsynk web data", data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""

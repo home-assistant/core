@@ -2,13 +2,16 @@
 
 from asyncio import timeout as async_timeout
 from datetime import timedelta
+import logging
+
+from pysunsynkweb.model import get_plants
+from pysunsynkweb.session import SunsynkwebSession
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import get_bearer_token
-from .model import _LOGGER, get_plants
+_LOGGER = logging.getLogger(__name__)
 
 
 class PlantUpdateCoordinator(DataUpdateCoordinator):
@@ -27,7 +30,11 @@ class PlantUpdateCoordinator(DataUpdateCoordinator):
         self.bearer = None
         self.config = config
         self.hass = hass
-        self.session = async_get_clientsession(hass)
+        self.session = SunsynkwebSession(
+            session=async_get_clientsession(hass),
+            username=config.data["username"],
+            password=config.data["password"],
+        )
         self.cache = None
 
     async def _async_update_data(self):
@@ -39,16 +46,10 @@ class PlantUpdateCoordinator(DataUpdateCoordinator):
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
-            async with async_timeout(10):
-                if self.bearer is None:
-                    self.bearer = await get_bearer_token(
-                        self.session,
-                        self.config.data["username"],
-                        self.config.data["password"],
-                    )
-                if self.cache is None:
-                    self.cache = await get_plants(self)
-                await self.cache.update(self)
+            if self.cache is None:
+                async with async_timeout(10):
+                    self.cache = await get_plants(self.session)
+            await self.cache.update()
         except KeyError as err:
             # Raising ConfigEntryAuthFailed will cancel future updates
             # and start a config flow with SOURCE_REAUTH (async_step_reauth)

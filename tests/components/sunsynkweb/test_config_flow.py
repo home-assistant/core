@@ -42,7 +42,7 @@ async def test_form(
         await hass.async_block_till_done()
 
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "Sunsynk Web status"
+        assert result["title"] == "Sunsynk web data"
         assert result["data"] == {
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
@@ -101,7 +101,7 @@ async def test_form_invalid_auth(
         await hass.async_block_till_done()
 
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "Sunsynk Web status"
+        assert result["title"] == "Sunsynk web data"
         assert result["data"] == {
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
@@ -164,7 +164,7 @@ async def test_form_cannot_connect(
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Sunsynk Web status"
+    assert result["title"] == "Sunsynk web data"
     assert result["data"] == {
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
