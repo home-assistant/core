@@ -102,8 +102,11 @@ class SynoApi:
             await self.dsm.login()
             self._login_future.set_result(None)
         except BaseException as err:
-            if not self._login_future.done() and not during_setup:
+            if not self._login_future.done():
                 self._login_future.set_exception(err)
+            if during_setup:
+                with suppress(BaseException):
+                    await self._login_future
             raise
         finally:
             self._login_future = None
