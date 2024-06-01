@@ -7,12 +7,7 @@ from typing import Any
 
 from aiohttp import ClientResponseError
 from tesla_fleet_api import EnergySpecific
-from tesla_fleet_api.exceptions import (
-    Forbidden,
-    InvalidToken,
-    SubscriptionRequired,
-    TeslaFleetError,
-)
+from tesla_fleet_api.exceptions import InvalidToken, MissingToken, TeslaFleetError
 from tessie_api import get_state, get_status
 
 from homeassistant.core import HomeAssistant
@@ -110,7 +105,7 @@ class TessieEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         try:
             data = (await self.api.live_status())["response"]
-        except (InvalidToken, Forbidden, SubscriptionRequired) as e:
+        except (InvalidToken, MissingToken) as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
@@ -141,7 +136,7 @@ class TessieEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         try:
             data = (await self.api.site_info())["response"]
-        except (InvalidToken, Forbidden, SubscriptionRequired) as e:
+        except (InvalidToken, MissingToken) as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e

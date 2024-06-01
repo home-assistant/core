@@ -51,8 +51,6 @@ def mock_get_state_of_all_vehicles():
 
 
 # Fleet API
-
-
 @pytest.fixture(autouse=True)
 def mock_products():
     """Mock Tesla Fleet Api products method."""
