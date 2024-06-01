@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import AbortFlow, FlowResultType
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -119,27 +119,19 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
         """Import config from yaml."""
-        # Raise an issue that this is deprecated and has been imported
-        config = {
-            CONF_HOST: import_info[CONF_HOST],
-            CONF_PASSWORD: import_info.get(CONF_PASSWORD),
-            CONF_PORT: import_info.get(CONF_PORT, DEFAULT_PORT),
-            CONF_SSL: import_info.get(CONF_SSL, False),
-            CONF_USERNAME: import_info.get(CONF_USERNAME),
-            CONF_VERIFY_SSL: True,
-        }
 
-        result = await self.async_step_user(config)
+        async def create_issue():
+            """Create an issue.
 
-        if (
-            result.get("type") == FlowResultType.CREATE_ENTRY
-            or result.get("reason") == "already_configured"
-        ):
+            Raise an issue that this is deprecated and has been imported
+            """
+
             async_create_issue(
                 self.hass,
                 HOMEASSISTANT_DOMAIN,
                 f"deprecated_yaml_{DOMAIN}",
                 is_fixable=False,
+                issue_domain=DOMAIN,
                 breaks_in_ha_version="2025.01.0",
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_yaml",
@@ -148,22 +140,35 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
                     "integration_title": "pyLoad",
                 },
             )
-        else:
-            error = result.get("reason")
-            if errors := result.get("errors"):
-                error = errors["base"]
 
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"deprecated_yaml_import_issue_{error}",
-                breaks_in_ha_version="2025.01.0",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=IssueSeverity.WARNING,
-                translation_key=f"deprecated_yaml_import_issue_{error}",
-                translation_placeholders=ISSUE_PLACEHOLDER,
-            )
+        config = {
+            CONF_HOST: import_info[CONF_HOST],
+            CONF_PASSWORD: import_info.get(CONF_PASSWORD),
+            CONF_PORT: import_info.get(CONF_PORT, DEFAULT_PORT),
+            CONF_SSL: import_info.get(CONF_SSL, False),
+            CONF_USERNAME: import_info.get(CONF_USERNAME),
+            CONF_VERIFY_SSL: True,
+        }
+        try:
+            result = await self.async_step_user(config)
+        except AbortFlow as e:
+            await create_issue()
+            raise AbortFlow(e.reason) from e
+        else:
+            if result.get("type") == FlowResultType.CREATE_ENTRY:
+                await create_issue()
+            elif errors := result.get("errors"):
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"deprecated_yaml_import_issue_{errors["base"]}",
+                    breaks_in_ha_version="2025.01.0",
+                    is_fixable=False,
+                    issue_domain=DOMAIN,
+                    severity=IssueSeverity.WARNING,
+                    translation_key=f"deprecated_yaml_import_issue_{errors["base"]}",
+                    translation_placeholders=ISSUE_PLACEHOLDER,
+                )
 
         return result
 
