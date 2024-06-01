@@ -9,13 +9,15 @@ from aiohttp import ClientResponseError
 from incomfortclient import Gateway as InComfortGateway, Heater as InComfortHeater
 
 from homeassistant.components.water_heater import WaterHeaterEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, IncomfortEntity
+from . import DATA_INCOMFORT, DOMAIN, IncomfortEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,10 +34,22 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    client = hass.data[DOMAIN]["client"]
-    heaters = hass.data[DOMAIN]["heaters"]
+    client = hass.data[DATA_INCOMFORT][DOMAIN].client
+    heaters = hass.data[DATA_INCOMFORT][DOMAIN].heaters
 
     async_add_entities([IncomfortWaterHeater(client, h) for h in heaters])
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up an InComfort/InTouch water_heater device."""
+    incomfort_data = hass.data[DATA_INCOMFORT][entry.entry_id]
+    async_add_entities(
+        IncomfortWaterHeater(incomfort_data.client, h) for h in incomfort_data.heaters
+    )
 
 
 class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
@@ -53,6 +67,15 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
 
         self._client = client
         self._heater = heater
+        self._attr_unique_id = heater.serial_no
+        self._attr_name = None
+        self._attr_has_entity_name = True
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, heater.serial_no)},
+            manufacturer="Intergas",
+            name="Boiler",
+        )
+        _attr_should_poll = True
 
         self._attr_unique_id = heater.serial_no
 

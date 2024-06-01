@@ -3,23 +3,23 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
-from aiohttp import ClientResponseError
-from incomfortclient import Gateway as InComfortGateway
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
+from .errors import raise_from_error_code
+from .models import DATA_INCOMFORT, InComfortData, async_connect_gateway
 
-DOMAIN = "incomfort"
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -44,30 +44,57 @@ PLATFORMS = (
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Create an Intergas InComfort/Intouch system."""
-    incomfort_data = hass.data[DOMAIN] = {}
 
-    credentials = dict(hass_config[DOMAIN])
-    hostname = credentials.pop(CONF_HOST)
+    if config := hass_config.get(DOMAIN):
+        ir.async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2025.1.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Intergas InComfort/Intouch Lan2RF gateway",
+            },
+        )
 
-    client = incomfort_data["client"] = InComfortGateway(
-        hostname, **credentials, session=async_get_clientsession(hass)
-    )
-
-    try:
-        heaters = incomfort_data["heaters"] = list(await client.heaters())
-    except ClientResponseError as err:
-        _LOGGER.warning("Setup failed, check your configuration, message is: %s", err)
-        return False
-
-    for heater in heaters:
-        await heater.update()
-
-    for platform in PLATFORMS:
+    if hass.config_entries.async_entries(DOMAIN):
+        return True
+    # Start import flow
+    if config:
         hass.async_create_task(
-            async_load_platform(hass, platform, DOMAIN, {}, hass_config)
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+            )
         )
 
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a config entry."""
+    errors: dict[str, str] = {}
+    if (data := await async_connect_gateway(hass, dict(entry.data), errors)) is None:
+        raise_from_error_code(errors)
+    if TYPE_CHECKING:
+        assert isinstance(data, InComfortData)
+
+    hass.data.setdefault(DATA_INCOMFORT, {entry.entry_id: data})
+    for heater in data.heaters:
+        await heater.update()
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    del hass.data[DOMAIN][entry.entry_id]
+    return unload_ok
 
 
 class IncomfortEntity(Entity):
