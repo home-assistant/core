@@ -32,8 +32,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ista Ecotrend."""
 
-    VERSION = 1
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -47,9 +45,6 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 await self.hass.async_add_executor_job(ista.login)
-                info = await self.hass.async_add_executor_job(
-                    ista.get_consumption_unit_details
-                )
             except (ServerError, InternalServerError):
                 errors["base"] = "cannot_connect"
             except (LoginError, KeycloakError):
@@ -58,14 +53,7 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                title = next(
-                    (
-                        f"{details["address"]["street"]} {details["address"]["houseNumber"]}"
-                        for details in info["consumptionUnits"]
-                        if details["id"] == ista._uuid  # noqa: SLF001
-                    ),
-                    None,
-                )
+                title = f"{ista._a_firstName} {ista._a_lastName}".strip()  # noqa: SLF001
                 await self.async_set_unique_id(ista._uuid)  # noqa: SLF001
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
