@@ -32,7 +32,7 @@ async def test_form(
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Luxemburger Str. 1"
+    assert result["title"] == "Max Istamann"
     assert result["data"] == {
         CONF_EMAIL: "test@example.com",
         CONF_PASSWORD: "test-password",
@@ -82,7 +82,7 @@ async def test_form_invalid_auth(
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Luxemburger Str. 1"
+    assert result["title"] == "Max Istamann"
     assert result["data"] == {
         CONF_EMAIL: "test@example.com",
         CONF_PASSWORD: "test-password",

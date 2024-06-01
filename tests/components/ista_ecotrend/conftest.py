@@ -24,6 +24,8 @@ def mock_ista() -> Generator[MagicMock, None, None]:
     ) as mock_client:
         client = mock_client.return_value
         client._uuid = "26e93f1a-c828-11ea-87d0-0242ac130003"
+        client._a_firstName = "Max"
+        client._a_lastName = "Istamann"
         client.get_consumption_unit_details.return_value = {
             "consumptionUnits": [
                 {
