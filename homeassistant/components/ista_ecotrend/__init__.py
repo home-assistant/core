@@ -37,7 +37,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IstaConfigEntry) -> bool
     try:
         await hass.async_add_executor_job(ista.login)
     except (ServerError, InternalServerError, RequestException, TimeoutError) as e:
-        _LOGGER.debug(e.args[0])
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="connection_exception",

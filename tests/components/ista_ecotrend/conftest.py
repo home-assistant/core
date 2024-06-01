@@ -5,6 +5,24 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.components.ista_ecotrend.const import DOMAIN
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture(name="ista_config_entry")
+def mock_ista_config_entry() -> MockConfigEntry:
+    """Mock ista EcoTrend configuration entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_EMAIL: "test@example.com",
+            CONF_PASSWORD: "test-password",
+        },
+        unique_id="26e93f1a-c828-11ea-87d0-0242ac130003",
+    )
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
@@ -18,10 +36,16 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_ista() -> Generator[MagicMock, None, None]:
     """Mock Pyecotrend_ista client."""
-    with patch(
-        "homeassistant.components.ista_ecotrend.config_flow.PyEcotrendIsta",
-        autospec=True,
-    ) as mock_client:
+    with (
+        patch(
+            "homeassistant.components.ista_ecotrend.PyEcotrendIsta",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.ista_ecotrend.config_flow.PyEcotrendIsta",
+            new=mock_client,
+        ),
+    ):
         client = mock_client.return_value
         client._uuid = "26e93f1a-c828-11ea-87d0-0242ac130003"
         client._a_firstName = "Max"
