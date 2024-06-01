@@ -12,7 +12,9 @@ from .coordinator import PlantUpdateCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+type SunsyncConfigEntry = ConfigEntry[PlantUpdateCoordinator]
+
+async def async_setup_entry(hass: HomeAssistant, entry: SunsyncConfigEntry ) -> bool:
     """Set up the Sunsynkweb coordinator from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
