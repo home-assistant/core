@@ -80,7 +80,7 @@ async def test_default_prompt(
         mock_chat.send_message_async.return_value = chat_response
         mock_part = MagicMock()
         mock_part.function_call = None
-        mock_part.text = "Hi there!"
+        mock_part.text = "Hi there!\n"
         chat_response.parts = [mock_part]
         result = await conversation.async_converse(
             hass,
