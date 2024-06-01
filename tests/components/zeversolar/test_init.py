@@ -57,7 +57,7 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
     with (
         patch("zeversolar.ZeverSolarClient.get_data", return_value=MOCK_DATA),
     ):
-        result = await init.async_setup_entry(hass, config)
+        result = await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
         assert result is True
