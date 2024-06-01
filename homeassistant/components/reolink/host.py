@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
+from datetime import datetime, timedelta
 import logging
-from datetime import timedelta, datetime
 from typing import Any, Literal
 
 import aiohttp
@@ -73,7 +73,7 @@ class ReolinkHost:
             timeout=DEFAULT_TIMEOUT,
         )
 
-        self.update_cmd_list: dict[str:list[int]] = {}
+        self.update_cmd_list: dict[str : list[int]] = {}
         self._last_wake: datetime = EPOCHORDINAL
 
         self.webhook_id: str | None = None

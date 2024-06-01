@@ -132,8 +132,9 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
+        cmd_key = self.entity_description.cmd_key
         if (
-            self.entity_description.cmd_key is not None
-            and self._channel not in self._host.update_cmd_list[self.entity_description.cmd_key]
+            cmd_key is not None
+            and self._channel not in self._host.update_cmd_list[cmd_key]
         ):
-            self._host.update_cmd_list[self.entity_description.cmd_key].append(self._channel)
+            self._host.update_cmd_list[cmd_key].append(self._channel)
