@@ -1,0 +1,9 @@
+{
+  "domain": "ticktick",
+  "name": "TickTick",
+  "codeowners": ["@arne182"],
+  "config_flow": true,
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "version": "0.0.1"
+}
