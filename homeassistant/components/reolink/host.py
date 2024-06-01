@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 import logging
+from datetime import timedelta, datetime
 from typing import Any, Literal
 
 import aiohttp
@@ -27,6 +28,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.util.dt import EPOCHORDINAL, now
 
 from .const import CONF_USE_HTTPS, DOMAIN
 from .exceptions import ReolinkSetupException, ReolinkWebhookException, UserNotAdmin
@@ -38,6 +40,10 @@ SUBSCRIPTION_RENEW_THRESHOLD = 300
 POLL_INTERVAL_NO_PUSH = 5
 LONG_POLL_COOLDOWN = 0.75
 LONG_POLL_ERROR_COOLDOWN = 30
+
+# Conserve battery by not waking the battery cameras each minute during normal update
+# Most props are cached in the Home Hub and updated, but some are skipped
+BATTERY_WAKE_UPDATE_INTERVAL = timedelta(hours=1)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,6 +74,7 @@ class ReolinkHost:
         )
 
         self.update_cmd_list: dict[str:list[int]] = {}
+        self._last_wake: datetime = EPOCHORDINAL
 
         self.webhook_id: str | None = None
         self._onvif_push_supported: bool = True
@@ -320,7 +327,13 @@ class ReolinkHost:
 
     async def update_states(self) -> None:
         """Call the API of the camera device to update the internal states."""
-        await self._api.get_states(cmd_list=self.update_cmd_list, wake=False)
+        wake = False
+        if now() - self._last_wake > BATTERY_WAKE_UPDATE_INTERVAL:
+            # wake the battery cameras for a complete update
+            wake = True
+            self._last_wake = now()
+
+        await self._api.get_states(cmd_list=self.update_cmd_list, wake=wake)
 
     async def disconnect(self) -> None:
         """Disconnect from the API, so the connection will be released."""
