@@ -58,7 +58,6 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
         self._client = client
         self._room = room
         self._attr_name = None
-        self._attr_has_entity_name = True
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=f"Thermostat {room.room_no} ({heater.serial_no})",

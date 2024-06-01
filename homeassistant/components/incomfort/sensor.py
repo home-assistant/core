@@ -93,7 +93,6 @@ class IncomfortSensor(IncomfortEntity, SensorEntity):
         self._heater = heater
 
         self._attr_unique_id = f"{heater.serial_no}_{slugify(description.name)}"
-        self._attr_has_entity_name = True
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, heater.serial_no)},
         )
