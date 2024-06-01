@@ -6,6 +6,7 @@ from collections.abc import Generator
 from dataclasses import dataclass
 from datetime import timedelta
 from http import HTTPStatus
+import re
 from unittest.mock import MagicMock, patch
 
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
@@ -308,6 +309,37 @@ async def test_config_failure(hass: HomeAssistant, config_ext) -> None:
 
     with pytest.raises(Invalid):
         PLATFORM_SCHEMA(config)
+
+
+@pytest.mark.parametrize(
+    "mock_client",
+    [
+        (API_VERSION_2,),
+    ],
+    indirect=["mock_client"],
+)
+async def test_verbatim_query(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_client
+) -> None:
+    """Test that verbatim queries are not vfurther modified."""
+    _set_query_mock_v2(mock_client, return_value=_make_v2_resultset(42, "not used"))
+
+    queries = BASE_V2_QUERY
+    query = queries["queries_flux"][0]
+    query["verbatim"] = True
+    expected_query = query["query"]
+
+    await _setup(hass, BASE_V2_CONFIG, queries, ["sensor.test"])
+
+    def extract_query_from_log(records):
+        for record in records:
+            match = re.match(r"^Running query:\s+(.+)\.$", record.message)
+            if match is not None:
+                return match.group(1)
+        pytest.fail("Failed to extract query from log message")
+
+    actual_query = extract_query_from_log(caplog.records)
+    assert expected_query == actual_query
 
 
 @pytest.mark.parametrize(
