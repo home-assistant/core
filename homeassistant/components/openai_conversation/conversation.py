@@ -167,7 +167,8 @@ class OpenAIConversationEntity(
                 prompt = "\n".join(
                     (
                         template.Template(
-                            options.get(CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT),
+                            llm.BASE_PROMPT
+                            + options.get(CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT),
                             self.hass,
                         ).async_render(
                             {
