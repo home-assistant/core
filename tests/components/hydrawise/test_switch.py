@@ -121,7 +121,7 @@ async def test_controller_offline(
     """Test that all binary sensors are working."""
     with patch(
         "homeassistant.components.hydrawise.PLATFORMS",
-        [Platform.SENSOR],
+        [Platform.SWITCH],
     ):
         config_entry = await mock_add_config_entry()
         controller.online = False
@@ -142,7 +142,7 @@ async def test_api_offline(
     """Test that all binary sensors are working."""
     with patch(
         "homeassistant.components.hydrawise.PLATFORMS",
-        [Platform.SENSOR],
+        [Platform.SWITCH],
     ):
         config_entry = await mock_add_config_entry()
         mock_pydrawise.get_user.reset_mock(return_value=True)
