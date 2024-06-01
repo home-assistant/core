@@ -74,7 +74,7 @@ class ReolinkHost:
         )
 
         self.update_cmd_list: dict[str : list[int]] = {}
-        self._last_wake = datetime(1970, 1, 1, tzinfo=DEFAULT_TIME_ZONE)
+        self.last_wake = datetime(1970, 1, 1, tzinfo=DEFAULT_TIME_ZONE)
 
         self.webhook_id: str | None = None
         self._onvif_push_supported: bool = True
@@ -328,10 +328,10 @@ class ReolinkHost:
     async def update_states(self) -> None:
         """Call the API of the camera device to update the internal states."""
         wake = False
-        if now() - self._last_wake > BATTERY_WAKE_UPDATE_INTERVAL:
+        if now() - self.last_wake > BATTERY_WAKE_UPDATE_INTERVAL:
             # wake the battery cameras for a complete update
             wake = True
-            self._last_wake = now()
+            self.last_wake = now()
 
         await self._api.get_states(cmd_list=self.update_cmd_list, wake=wake)
 
