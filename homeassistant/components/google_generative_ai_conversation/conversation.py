@@ -354,7 +354,7 @@ class GoogleGenerativeAIConversationEntity(
             chat_request = glm.Content(parts=tool_responses)
 
         intent_response.async_set_speech(
-            " ".join([part.text for part in chat_response.parts if part.text]).strip()
+            " ".join([part.text.strip() for part in chat_response.parts if part.text])
         )
         return conversation.ConversationResult(
             response=intent_response, conversation_id=conversation_id
