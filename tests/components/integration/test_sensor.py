@@ -18,12 +18,17 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    condition,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
+    async_fire_time_changed,
     mock_restore_cache,
     mock_restore_cache_with_extra_data,
 )
@@ -745,3 +750,146 @@ async def test_device_id(
     integration_entity = entity_registry.async_get("sensor.integration")
     assert integration_entity is not None
     assert integration_entity.device_id == source_entity.device_id
+
+
+def _integral_sensor_config(max_sub_interval: dict[str, int] | None = {"minutes": 1}):
+    sensor = {
+        "platform": "integration",
+        "name": "integration",
+        "source": "sensor.power",
+        "method": "right",
+    }
+    if max_sub_interval is not None:
+        sensor["max_sub_interval"] = max_sub_interval
+    return {"sensor": sensor}
+
+
+async def _setup_integral_sensor(
+    hass: HomeAssistant, max_sub_interval: dict[str, int] | None = {"minutes": 1}
+) -> None:
+    await async_setup_component(
+        hass, "sensor", _integral_sensor_config(max_sub_interval=max_sub_interval)
+    )
+    await hass.async_block_till_done()
+
+
+async def _update_source_sensor(hass: HomeAssistant, value: int | str) -> None:
+    hass.states.async_set(
+        _integral_sensor_config()["sensor"]["source"],
+        value,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
+        force_update=True,
+    )
+    await hass.async_block_till_done()
+
+
+async def test_on_valid_source_expect_update_on_time(
+    hass: HomeAssistant,
+) -> None:
+    """Test whether time based integration updates the integral on a valid source."""
+    start_time = dt_util.utcnow()
+
+    with freeze_time(start_time) as freezer:
+        await _setup_integral_sensor(hass)
+        await _update_source_sensor(hass, 100)
+        state_before_max_sub_interval_exceeded = hass.states.get("sensor.integration")
+
+        freezer.tick(61)
+        async_fire_time_changed(hass, dt_util.now())
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.integration")
+        assert (
+            condition.async_numeric_state(hass, state_before_max_sub_interval_exceeded)
+            is False
+        )
+        assert state_before_max_sub_interval_exceeded.state != state.state
+        assert condition.async_numeric_state(hass, state) is True
+        assert float(state.state) > 1.69  # approximately 100 * 61 / 3600
+        assert float(state.state) < 1.8
+
+
+async def test_on_unvailable_source_expect_no_update_on_time(
+    hass: HomeAssistant,
+) -> None:
+    """Test whether time based integration handles unavailability of the source properly."""
+
+    start_time = dt_util.utcnow()
+    with freeze_time(start_time) as freezer:
+        await _setup_integral_sensor(hass)
+        await _update_source_sensor(hass, 100)
+        freezer.tick(61)
+        async_fire_time_changed(hass, dt_util.now())
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.integration")
+        assert condition.async_numeric_state(hass, state) is True
+
+        await _update_source_sensor(hass, STATE_UNAVAILABLE)
+        await hass.async_block_till_done()
+
+        freezer.tick(61)
+        async_fire_time_changed(hass, dt_util.now())
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.integration")
+        assert condition.state(hass, state, STATE_UNAVAILABLE) is True
+
+
+async def test_on_statechanges_source_expect_no_update_on_time(
+    hass: HomeAssistant,
+) -> None:
+    """Test whether state changes cancel time based integration."""
+
+    start_time = dt_util.utcnow()
+    with freeze_time(start_time) as freezer:
+        await _setup_integral_sensor(hass)
+        await _update_source_sensor(hass, 100)
+
+        freezer.tick(30)
+        await hass.async_block_till_done()
+        await _update_source_sensor(hass, 101)
+
+        state_after_30s = hass.states.get("sensor.integration")
+        assert condition.async_numeric_state(hass, state_after_30s) is True
+
+        freezer.tick(35)
+        async_fire_time_changed(hass, dt_util.now())
+        await hass.async_block_till_done()
+        state_after_65s = hass.states.get("sensor.integration")
+        assert (dt_util.now() - start_time).total_seconds() > 60
+        # No state change because the timer was cancelled because of an update after 30s
+        assert state_after_65s == state_after_30s
+
+        freezer.tick(35)
+        async_fire_time_changed(hass, dt_util.now())
+        await hass.async_block_till_done()
+        state_after_105s = hass.states.get("sensor.integration")
+        # Update based on time
+        assert float(state_after_105s.state) > float(state_after_65s.state)
+
+
+async def test_on_no_max_sub_interval_expect_no_timebased_updates(
+    hass: HomeAssistant,
+) -> None:
+    """Test whether integratal is not updated by time when max_sub_interval is not configured."""
+
+    start_time = dt_util.utcnow()
+    with freeze_time(start_time) as freezer:
+        await _setup_integral_sensor(hass, max_sub_interval=None)
+        await _update_source_sensor(hass, 100)
+        await hass.async_block_till_done()
+        await _update_source_sensor(hass, 101)
+        await hass.async_block_till_done()
+
+        state_after_last_state_change = hass.states.get("sensor.integration")
+
+        assert (
+            condition.async_numeric_state(hass, state_after_last_state_change) is True
+        )
+
+        freezer.tick(100)
+        async_fire_time_changed(hass, dt_util.now())
+        await hass.async_block_till_done()
+        state_after_100s = hass.states.get("sensor.integration")
+        assert state_after_100s == state_after_last_state_change

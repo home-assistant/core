@@ -6,15 +6,12 @@ from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from http import HTTPStatus
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from aiohttp import web
 import voluptuous as vol
 
 from .view import HomeAssistantView
-
-_HassViewT = TypeVar("_HassViewT", bound=HomeAssistantView)
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +33,7 @@ class RequestDataValidator:
         self._schema = schema
         self._allow_empty = allow_empty
 
-    def __call__(
+    def __call__[_HassViewT: HomeAssistantView, **_P](
         self,
         method: Callable[
             Concatenate[_HassViewT, web.Request, dict[str, Any], _P],

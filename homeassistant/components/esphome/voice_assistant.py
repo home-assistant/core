@@ -16,6 +16,7 @@ from aioesphomeapi import (
     VoiceAssistantCommandFlag,
     VoiceAssistantEventType,
     VoiceAssistantFeature,
+    VoiceAssistantTimerEventType,
 )
 
 from homeassistant.components import stt, tts
@@ -33,6 +34,7 @@ from homeassistant.components.assist_pipeline.error import (
     WakeWordDetectionAborted,
     WakeWordDetectionError,
 )
+from homeassistant.components.intent.timers import TimerEventType, TimerInfo
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.core import Context, HomeAssistant, callback
 
@@ -63,6 +65,17 @@ _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
         VoiceAssistantEventType.VOICE_ASSISTANT_STT_VAD_START: PipelineEventType.STT_VAD_START,
         VoiceAssistantEventType.VOICE_ASSISTANT_STT_VAD_END: PipelineEventType.STT_VAD_END,
     }
+)
+
+_TIMER_EVENT_TYPES: EsphomeEnumMapper[VoiceAssistantTimerEventType, TimerEventType] = (
+    EsphomeEnumMapper(
+        {
+            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_STARTED: TimerEventType.STARTED,
+            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_UPDATED: TimerEventType.UPDATED,
+            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_CANCELLED: TimerEventType.CANCELLED,
+            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_FINISHED: TimerEventType.FINISHED,
+        }
+    )
 )
 
 
@@ -237,12 +250,12 @@ class VoiceAssistantPipeline:
             await self._tts_done.wait()
 
             _LOGGER.debug("Pipeline finished")
-        except PipelineNotFound:
+        except PipelineNotFound as e:
             self.handle_event(
                 VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
                 {
-                    "code": "pipeline not found",
-                    "message": "Selected pipeline not found",
+                    "code": e.code,
+                    "message": e.message,
                 },
             )
             _LOGGER.warning("Pipeline not found")
@@ -438,3 +451,23 @@ class VoiceAssistantAPIPipeline(VoiceAssistantPipeline):
 
         self.started = False
         self.stop_requested = True
+
+
+def handle_timer_event(
+    api_client: APIClient, event_type: TimerEventType, timer_info: TimerInfo
+) -> None:
+    """Handle timer events."""
+    try:
+        native_event_type = _TIMER_EVENT_TYPES.from_hass(event_type)
+    except KeyError:
+        _LOGGER.debug("Received unknown timer event type: %s", event_type)
+        return
+
+    api_client.send_voice_assistant_timer_event(
+        native_event_type,
+        timer_info.id,
+        timer_info.name,
+        timer_info.seconds,
+        timer_info.seconds_left,
+        timer_info.is_active,
+    )

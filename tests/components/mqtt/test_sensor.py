@@ -111,6 +111,36 @@ async def test_setting_sensor_value_via_mqtt_message(
 
 
 @pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                }
+            }
+        },
+    ],
+)
+async def test_setting_sensor_to_long_state_via_mqtt_message(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the setting of the value via MQTT."""
+    await mqtt_mock_entry()
+
+    async_fire_mqtt_message(hass, "test-topic", "".join("x" for _ in range(310)))
+    state = hass.states.get("sensor.test")
+    await hass.async_block_till_done()
+
+    assert state.state == STATE_UNKNOWN
+
+    assert "Cannot update state for entity sensor.test" in caplog.text
+
+
+@pytest.mark.parametrize(
     ("hass_config", "device_class", "native_value", "state_value", "log"),
     [
         (

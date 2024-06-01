@@ -39,6 +39,7 @@ from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
+from .helpers.json import json_bytes, json_fragment
 from .util.hass_dict import HassKey
 from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
@@ -94,6 +95,11 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
     # https://community.home-assistant.io/t/psa-2024-5-upgrade-failure-and-dreame-vacuum-custom-integration/724612
     "dreame_vacuum": BlockedIntegration(
         AwesomeVersion("1.0.4"), "crashes Home Assistant"
+    ),
+    # Added in 2024.5.5 because of
+    # https://github.com/sh00t2kill/dolphin-robot/issues/185
+    "mydolphin_plus": BlockedIntegration(
+        AwesomeVersion("1.0.13"), "crashes Home Assistant"
     ),
 }
 
@@ -756,6 +762,11 @@ class Integration:
         self._missing_platforms_cache = hass.data[DATA_MISSING_PLATFORMS]
         self._top_level_files = top_level_files or set()
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
+
+    @cached_property
+    def manifest_json_fragment(self) -> json_fragment:
+        """Return manifest as a JSON fragment."""
+        return json_fragment(json_bytes(self.manifest))
 
     @cached_property
     def name(self) -> str:
@@ -1666,6 +1677,14 @@ def async_get_issue_tracker(
     if not integration and not integration_domain and not module:
         # If we know nothing about the entity, suggest opening an issue on HA core
         return issue_tracker
+
+    if (
+        not integration
+        and (hass and integration_domain)
+        and (comps_or_future := hass.data.get(DATA_CUSTOM_COMPONENTS))
+        and not isinstance(comps_or_future, asyncio.Future)
+    ):
+        integration = comps_or_future.get(integration_domain)
 
     if not integration and (hass and integration_domain):
         with suppress(IntegrationNotLoaded):
