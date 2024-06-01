@@ -51,8 +51,7 @@ def create_config_mock():
 async def test_async_setup_entry(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test async_setup_entry."""
 
-    config = create_config_mock()
-    config.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
 
     with (
         patch("zeversolar.ZeverSolarClient.get_data", return_value=MOCK_DATA),
