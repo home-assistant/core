@@ -245,7 +245,8 @@ class GoogleGenerativeAIConversationEntity(
             prompt = "\n".join(
                 (
                     template.Template(
-                        self.entry.options.get(
+                        llm.BASE_PROMPT
+                        + self.entry.options.get(
                             CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
                         ),
                         self.hass,
