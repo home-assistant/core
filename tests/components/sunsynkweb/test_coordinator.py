@@ -6,11 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from pysunsynkweb.model import Installation, Plant
 import pytest
 
-from homeassistant.components.sunsynkweb import (
-    DOMAIN,
-    async_setup_entry,
-    async_unload_entry,
-)
+from homeassistant.components.sunsynkweb import async_setup_entry, async_unload_entry
 from homeassistant.components.sunsynkweb.coordinator import PlantUpdateCoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -36,7 +32,7 @@ async def test_coordinator_creation_destruction(
         config = MockConfigEntry(data={"username": "blah", "password": "blahblah"})
         hass.config_entries.async_forward_entry_setups = AsyncMock()
         await async_setup_entry(hass, config)
-        coordinator = hass.data[DOMAIN][config.entry_id]
+        coordinator = config.runtime_data
         assert len(coordinator.cache.plants) == 2
         await async_unload_entry(hass, config)
 

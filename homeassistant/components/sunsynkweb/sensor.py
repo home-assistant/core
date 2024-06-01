@@ -15,7 +15,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN
 from .coordinator import PlantUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,6 +34,7 @@ class SunSynkApiSensor(CoordinatorEntity, SensorEntity):
         CoordinatorEntity.__init__(self, coordinator, context=coordinator)
         self.coordinator: PlantUpdateCoordinator = coordinator
         self.entity_id = f"sensor.sunsynk_{description.key}_{sum(p.id for p in coordinator.cache.plants)}"
+
         self.name = description.name
         self.entity_description = description
         self.agg_func = agg_func
@@ -173,7 +173,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,  # noqa: F821
 ) -> None:
     """Set up sensor devices."""
-    coordinator: PlantUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: PlantUpdateCoordinator = entry.runtime_data
 
     async_add_entities(
         [

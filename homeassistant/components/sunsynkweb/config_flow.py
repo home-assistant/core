@@ -7,7 +7,7 @@ import traceback
 from typing import Any
 
 import aiohttp
-from pysunsynkweb.const import BASE_URL
+from pysunsynkweb.const import BASE_API
 from pysunsynkweb.exceptions import AuthenticationFailed
 from pysunsynkweb.session import SunsynkwebSession
 import voluptuous as vol
@@ -31,7 +31,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sunsynk Inverter Web."""
 
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -43,7 +42,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
                 session, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
             try:
-                await swebsession.get(BASE_URL)
+                await swebsession.get(BASE_API)
             except AuthenticationFailed:
                 errors["base"] = "invalid_auth"
             except aiohttp.ClientConnectionError:

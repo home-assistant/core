@@ -6,7 +6,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
 from .coordinator import PlantUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -17,7 +16,6 @@ type SunsyncConfigEntry = ConfigEntry[PlantUpdateCoordinator]
 async def async_setup_entry(hass: HomeAssistant, entry: SunsyncConfigEntry ) -> bool:
     """Set up the Sunsynkweb coordinator from a config entry."""
 
-    hass.data.setdefault(DOMAIN, {})
     coordinator = PlantUpdateCoordinator(hass, entry)
     entry.runtime_data = coordinator
     await coordinator.async_config_entry_first_refresh()
