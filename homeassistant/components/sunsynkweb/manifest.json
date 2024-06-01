@@ -3,11 +3,7 @@
   "name": "Sunsynk Inverter Web",
   "codeowners": ["@francoisverbeek"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/sunsynkweb",
-  "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["pysunsynkweb==0.0.1"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["pysunsynkweb==0.0.1"]
 }

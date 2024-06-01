@@ -28,7 +28,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
+class SunsynkConfigFlow(BaseConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sunsynk Inverter Web."""
 
     async def async_step_user(

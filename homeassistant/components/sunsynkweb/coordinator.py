@@ -1,8 +1,11 @@
 """Coordinator for the sunsynk web api."""
 
+from __future__ import annotations
+
 from asyncio import timeout as async_timeout
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from pysunsynkweb.model import get_plants
 from pysunsynkweb.session import SunsynkwebSession
@@ -14,10 +17,14 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 _LOGGER = logging.getLogger(__name__)
 
 
-class PlantUpdateCoordinator(DataUpdateCoordinator):
+if TYPE_CHECKING:
+    from pysunsynkweb import SunsynkConfigEntry
+
+
+class SunsynkUpdateCoordinator(DataUpdateCoordinator[None]):
     """A Coordinator that updates sunsynk plants."""
 
-    def __init__(self, hass: HomeAssistant, config) -> None:
+    def __init__(self, hass: HomeAssistant, config: SunsynkConfigEntry) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
@@ -37,7 +44,7 @@ class PlantUpdateCoordinator(DataUpdateCoordinator):
         )
         self.cache = None
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> None:
         """Fetch data from API endpoint.
 
         This is the place to pre-process the data to lookup tables
@@ -49,8 +56,7 @@ class PlantUpdateCoordinator(DataUpdateCoordinator):
             if self.cache is None:
                 async with async_timeout(10):
                     self.cache = await get_plants(self.session)
+            assert self.cache is not None  # placate mypy type checker
             await self.cache.update()
         except KeyError as err:
-            # Raising ConfigEntryAuthFailed will cancel future updates
-            # and start a config flow with SOURCE_REAUTH (async_step_reauth)
             raise UpdateFailed(f"Error communicating with API: {err}") from err

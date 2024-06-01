@@ -1,5 +1,7 @@
 """Basic coordinator tests."""
 
+from __future__ import annotations
+
 from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -7,7 +9,7 @@ from pysunsynkweb.model import Installation, Plant
 import pytest
 
 from homeassistant.components.sunsynkweb import async_setup_entry, async_unload_entry
-from homeassistant.components.sunsynkweb.coordinator import PlantUpdateCoordinator
+from homeassistant.components.sunsynkweb.coordinator import SunsynkUpdateCoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -42,7 +44,7 @@ async def test_coordinator(
 ) -> None:
     """Run coordinator tests."""
     config = MockConfigEntry(data={"username": "blah", "password": "blahblah"})
-    coordinator = PlantUpdateCoordinator(hass, config)
+    coordinator = SunsynkUpdateCoordinator(hass, config)
     with patch(
         "homeassistant.components.sunsynkweb.coordinator.get_plants"
     ) as mockedplants:
