@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
+from pydrawise.schema import Controller
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.hydrawise.const import SCAN_INTERVAL
@@ -48,3 +49,31 @@ async def test_update_data_fails(
     connectivity = hass.states.get("binary_sensor.home_controller_connectivity")
     assert connectivity is not None
     assert connectivity.state == "unavailable"
+
+
+async def test_online(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    mock_pydrawise: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    controller: Controller,
+) -> None:
+    """Test that no data from the API sets the correct connectivity."""
+    # Make the coordinator refresh data.
+    controller.online = False
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    connectivity = hass.states.get("binary_sensor.home_controller_online")
+    assert connectivity is not None
+    assert connectivity.state == "off"
+
+    controller.online = True
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    connectivity = hass.states.get("binary_sensor.home_controller_online")
+    assert connectivity is not None
+    assert connectivity.state == "on"

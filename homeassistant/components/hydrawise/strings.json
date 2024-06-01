@@ -27,6 +27,9 @@
       },
       "rain_sensor": {
         "name": "Rain sensor"
+      },
+      "online": {
+        "name": "Online"
       }
     },
     "sensor": {
