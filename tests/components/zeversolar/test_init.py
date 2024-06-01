@@ -35,7 +35,8 @@ MOCK_DATA = ZeverSolarData(
 )
 
 
-def create_config_mock():
+@pytest.fixture
+def config_entry() -> MockConfigEntry:
     """Create a mock config entry."""
 
     return MockConfigEntry(
