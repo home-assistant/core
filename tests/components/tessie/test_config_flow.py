@@ -15,13 +15,26 @@ from .common import (
     ERROR_CONNECTION,
     ERROR_UNKNOWN,
     TEST_CONFIG,
+    TEST_STATE_OF_ALL_VEHICLES,
     setup_platform,
 )
 
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant, mock_get_state_of_all_vehicles) -> None:
+@pytest.fixture(autouse=True)
+def mock_config_flow_get_state_of_all_vehicles():
+    """Mock get_state_of_all_vehicles in config flow."""
+    with patch(
+        "homeassistant.components.tessie.config_flow.get_state_of_all_vehicles",
+        return_value=TEST_STATE_OF_ALL_VEHICLES,
+    ) as mock_config_flow_get_state_of_all_vehicles:
+        yield mock_config_flow_get_state_of_all_vehicles
+
+
+async def test_form(
+    hass: HomeAssistant, mock_config_flow_get_state_of_all_vehicles
+) -> None:
     """Test we get the form."""
 
     result1 = await hass.config_entries.flow.async_init(
@@ -40,7 +53,7 @@ async def test_form(hass: HomeAssistant, mock_get_state_of_all_vehicles) -> None
         )
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1
-        assert len(mock_get_state_of_all_vehicles.mock_calls) == 1
+        assert len(mock_config_flow_get_state_of_all_vehicles.mock_calls) == 1
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Tessie"
@@ -56,7 +69,7 @@ async def test_form(hass: HomeAssistant, mock_get_state_of_all_vehicles) -> None
     ],
 )
 async def test_form_errors(
-    hass: HomeAssistant, side_effect, error, mock_get_state_of_all_vehicles
+    hass: HomeAssistant, side_effect, error, mock_config_flow_get_state_of_all_vehicles
 ) -> None:
     """Test errors are handled."""
 
@@ -64,7 +77,7 @@ async def test_form_errors(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_get_state_of_all_vehicles.side_effect = side_effect
+    mock_config_flow_get_state_of_all_vehicles.side_effect = side_effect
     result2 = await hass.config_entries.flow.async_configure(
         result1["flow_id"],
         TEST_CONFIG,
@@ -74,7 +87,7 @@ async def test_form_errors(
     assert result2["errors"] == error
 
     # Complete the flow
-    mock_get_state_of_all_vehicles.side_effect = None
+    mock_config_flow_get_state_of_all_vehicles.side_effect = None
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         TEST_CONFIG,
@@ -83,7 +96,9 @@ async def test_form_errors(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_reauth(hass: HomeAssistant, mock_get_state_of_all_vehicles) -> None:
+async def test_reauth(
+    hass: HomeAssistant, mock_config_flow_get_state_of_all_vehicles
+) -> None:
     """Test reauth flow."""
 
     mock_entry = MockConfigEntry(
@@ -115,7 +130,7 @@ async def test_reauth(hass: HomeAssistant, mock_get_state_of_all_vehicles) -> No
         )
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1
-        assert len(mock_get_state_of_all_vehicles.mock_calls) == 1
+        assert len(mock_config_flow_get_state_of_all_vehicles.mock_calls) == 1
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
@@ -131,12 +146,12 @@ async def test_reauth(hass: HomeAssistant, mock_get_state_of_all_vehicles) -> No
     ],
 )
 async def test_reauth_errors(
-    hass: HomeAssistant, mock_get_state_of_all_vehicles, side_effect, error
+    hass: HomeAssistant, mock_config_flow_get_state_of_all_vehicles, side_effect, error
 ) -> None:
     """Test reauth flows that fail."""
 
     mock_entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
-    mock_get_state_of_all_vehicles.side_effect = side_effect
+    mock_config_flow_get_state_of_all_vehicles.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -158,7 +173,7 @@ async def test_reauth_errors(
     assert result2["errors"] == error
 
     # Complete the flow
-    mock_get_state_of_all_vehicles.side_effect = None
+    mock_config_flow_get_state_of_all_vehicles.side_effect = None
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         TEST_CONFIG,
