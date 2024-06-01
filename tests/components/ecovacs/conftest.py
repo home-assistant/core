@@ -129,7 +129,7 @@ def mock_device_execute() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_device_execute_response() -> Generator[AsyncMock, None, dict[str, Any] | None]:
+def mock_device_execute_response() -> Generator[AsyncMock, None, None]:
     """Mock the device execute function response."""
     with patch.object(
         Device,
