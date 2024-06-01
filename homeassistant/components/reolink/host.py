@@ -28,7 +28,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.util.dt import now
+from homeassistant.util.dt import DEFAULT_TIME_ZONE, now
 
 from .const import CONF_USE_HTTPS, DOMAIN
 from .exceptions import ReolinkSetupException, ReolinkWebhookException, UserNotAdmin
@@ -74,7 +74,7 @@ class ReolinkHost:
         )
 
         self.update_cmd_list: dict[str : list[int]] = {}
-        self._last_wake = datetime(1970, 1, 1)
+        self._last_wake = datetime(1970, 1, 1, tzinfo=DEFAULT_TIME_ZONE)
 
         self.webhook_id: str | None = None
         self._onvif_push_supported: bool = True
