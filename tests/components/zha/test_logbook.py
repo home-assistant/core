@@ -61,7 +61,7 @@ async def mock_devices(hass, zigpy_device_mock, zha_device_joined):
 
 
 async def test_zha_logbook_event_device_with_triggers(
-    hass: HomeAssistant, mock_devices
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, mock_devices
 ) -> None:
     """Test ZHA logbook events with device and triggers."""
 
@@ -78,10 +78,7 @@ async def test_zha_logbook_event_device_with_triggers(
 
     ieee_address = str(zha_device.ieee)
 
-    ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device(
-        identifiers={("zha", ieee_address)}
-    )
+    reg_device = device_registry.async_get_device(identifiers={("zha", ieee_address)})
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
@@ -151,16 +148,13 @@ async def test_zha_logbook_event_device_with_triggers(
 
 
 async def test_zha_logbook_event_device_no_triggers(
-    hass: HomeAssistant, mock_devices
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, mock_devices
 ) -> None:
     """Test ZHA logbook events with device and without triggers."""
 
     zigpy_device, zha_device = mock_devices
     ieee_address = str(zha_device.ieee)
-    ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device(
-        identifiers={("zha", ieee_address)}
-    )
+    reg_device = device_registry.async_get_device(identifiers={("zha", ieee_address)})
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})

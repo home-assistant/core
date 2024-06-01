@@ -135,23 +135,28 @@ async def test_merten_507801(
 
 
 async def test_shelly_001p10_disabled_entities(
-    hass: HomeAssistant, client, shelly_qnsh_001P10_shutter, integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client,
+    shelly_qnsh_001P10_shutter,
+    integration,
 ) -> None:
     """Test that Shelly 001P10 entity created by endpoint 2 is disabled."""
-    registry = er.async_get(hass)
     entity_ids = [
         "cover.wave_shutter_2",
     ]
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
         assert state is None
-        entry = registry.async_get(entity_id)
+        entry = entity_registry.async_get(entity_id)
         assert entry
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
         # Test enabling entity
-        updated_entry = registry.async_update_entity(entry.entity_id, disabled_by=None)
+        updated_entry = entity_registry.async_update_entity(
+            entry.entity_id, disabled_by=None
+        )
         assert updated_entry != entry
         assert updated_entry.disabled is False
 
@@ -161,10 +166,13 @@ async def test_shelly_001p10_disabled_entities(
 
 
 async def test_merten_507801_disabled_enitites(
-    hass: HomeAssistant, client, merten_507801, integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client,
+    merten_507801,
+    integration,
 ) -> None:
     """Test that Merten 507801 entities created by endpoint 2 are disabled."""
-    registry = er.async_get(hass)
     entity_ids = [
         "cover.connect_roller_shutter_2",
         "select.connect_roller_shutter_local_protection_state_2",
@@ -173,26 +181,31 @@ async def test_merten_507801_disabled_enitites(
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
         assert state is None
-        entry = registry.async_get(entity_id)
+        entry = entity_registry.async_get(entity_id)
         assert entry
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
         # Test enabling entity
-        updated_entry = registry.async_update_entity(entry.entity_id, disabled_by=None)
+        updated_entry = entity_registry.async_update_entity(
+            entry.entity_id, disabled_by=None
+        )
         assert updated_entry != entry
         assert updated_entry.disabled is False
 
 
 async def test_zooz_zen72(
-    hass: HomeAssistant, client, switch_zooz_zen72, integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client,
+    switch_zooz_zen72,
+    integration,
 ) -> None:
     """Test that Zooz ZEN72 Indicators are discovered as number entities."""
-    ent_reg = er.async_get(hass)
     assert len(hass.states.async_entity_ids(NUMBER_DOMAIN)) == 1
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 2  # includes ping
     entity_id = "number.z_wave_plus_700_series_dimmer_switch_indicator_value"
-    entry = ent_reg.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.entity_category == EntityCategory.CONFIG
     state = hass.states.get(entity_id)
@@ -222,7 +235,7 @@ async def test_zooz_zen72(
     client.async_send_command.reset_mock()
 
     entity_id = "button.z_wave_plus_700_series_dimmer_switch_identify"
-    entry = ent_reg.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.entity_category == EntityCategory.CONFIG
     await hass.services.async_call(
@@ -244,18 +257,22 @@ async def test_zooz_zen72(
 
 
 async def test_indicator_test(
-    hass: HomeAssistant, client, indicator_test, integration
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client,
+    indicator_test,
+    integration,
 ) -> None:
     """Test that Indicators are discovered properly.
 
     This test covers indicators that we don't already have device fixtures for.
     """
-    device = dr.async_get(hass).async_get_device(
+    device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, indicator_test)}
     )
     assert device
-    ent_reg = er.async_get(hass)
-    entities = er.async_entries_for_device(ent_reg, device.id)
+    entities = er.async_entries_for_device(entity_registry, device.id)
 
     def len_domain(domain):
         return len([entity for entity in entities if entity.domain == domain])
@@ -267,7 +284,7 @@ async def test_indicator_test(
     assert len_domain(SWITCH_DOMAIN) == 1
 
     entity_id = "binary_sensor.this_is_a_fake_device_binary_sensor"
-    entry = ent_reg.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     state = hass.states.get(entity_id)
@@ -277,7 +294,7 @@ async def test_indicator_test(
     client.async_send_command.reset_mock()
 
     entity_id = "sensor.this_is_a_fake_device_sensor"
-    entry = ent_reg.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     state = hass.states.get(entity_id)
@@ -287,7 +304,7 @@ async def test_indicator_test(
     client.async_send_command.reset_mock()
 
     entity_id = "switch.this_is_a_fake_device_switch"
-    entry = ent_reg.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.entity_category == EntityCategory.CONFIG
     state = hass.states.get(entity_id)

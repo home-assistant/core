@@ -3,6 +3,7 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant import config_entries
@@ -15,6 +16,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
 
+from tests.typing import ClientSessionGenerator
+
 
 @pytest.fixture(autouse=True)
 def mock_dev_track(mock_device_tracker_conf):
@@ -22,7 +25,9 @@ def mock_dev_track(mock_device_tracker_conf):
 
 
 @pytest.fixture
-async def locative_client(hass, hass_client):
+async def locative_client(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> TestClient:
     """Locative mock client."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()

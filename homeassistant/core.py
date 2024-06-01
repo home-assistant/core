@@ -74,6 +74,7 @@ from .const import (
     EVENT_STATE_CHANGED,
     EVENT_STATE_REPORTED,
     MATCH_ALL,
+    MAX_EXPECTED_ENTITY_IDS,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_STATE_STATE,
     UnitOfLength,
@@ -177,7 +178,6 @@ _DEPRECATED_SOURCE_YAML = DeprecatedConstantEnum(ConfigSource.YAML, "2025.1")
 # How long to wait until things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
 
-MAX_EXPECTED_ENTITY_IDS = 16384
 
 EVENTS_EXCLUDED_FROM_MATCH_ALL = {
     EVENT_HOMEASSISTANT_CLOSE,
@@ -1803,9 +1803,16 @@ class State:
         # The recorder or the websocket_api will always call the timestamps,
         # so we will set the timestamp values here to avoid the overhead of
         # the function call in the property we know will always be called.
-        self.last_updated_timestamp = self.last_updated.timestamp()
-        if self.last_changed == self.last_updated:
-            self.__dict__["last_changed_timestamp"] = self.last_updated_timestamp
+        last_updated = self.last_updated
+        last_updated_timestamp = last_updated.timestamp()
+        self.last_updated_timestamp = last_updated_timestamp
+        if self.last_changed == last_updated:
+            self.__dict__["last_changed_timestamp"] = last_updated_timestamp
+        # If last_reported is the same as last_updated async_set will pass
+        # the same datetime object for both values so we can use an identity
+        # check here.
+        if self.last_reported is last_updated:
+            self.__dict__["last_reported_timestamp"] = last_updated_timestamp
 
     @cached_property
     def name(self) -> str:
@@ -1822,8 +1829,6 @@ class State:
     @cached_property
     def last_reported_timestamp(self) -> float:
         """Timestamp of last report."""
-        if self.last_reported == self.last_updated:
-            return self.last_updated_timestamp
         return self.last_reported.timestamp()
 
     @cached_property
@@ -2282,6 +2287,7 @@ class StateMachine:
             # mypy does not understand this is only possible if old_state is not None
             old_last_reported = old_state.last_reported  # type: ignore[union-attr]
             old_state.last_reported = now  # type: ignore[union-attr]
+            old_state.last_reported_timestamp = timestamp  # type: ignore[union-attr]
             self._bus.async_fire_internal(
                 EVENT_STATE_REPORTED,
                 {

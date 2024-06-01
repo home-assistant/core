@@ -14,10 +14,10 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import TeslemetryConfigEntry
 from .entity import TeslemetryEnergyInfoEntity, TeslemetryVehicleEntity
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
@@ -85,7 +85,9 @@ VEHICLE_CHARGE_DESCRIPTION = TeslemetrySwitchEntityDescription(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Teslemetry Switch platform from a config entry."""
 

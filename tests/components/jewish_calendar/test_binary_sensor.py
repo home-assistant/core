@@ -5,9 +5,14 @@ import logging
 
 import pytest
 
-from homeassistant.components import jewish_calendar
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.jewish_calendar.const import (
+    CONF_CANDLE_LIGHT_MINUTES,
+    CONF_DIASPORA,
+    CONF_HAVDALAH_OFFSET_MINUTES,
+    DOMAIN,
+)
+from homeassistant.const import CONF_LANGUAGE, CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -187,12 +192,12 @@ async def test_issur_melacha_sensor(
 
     with alter_time(test_time):
         entry = MockConfigEntry(
-            domain=jewish_calendar.DOMAIN,
+            domain=DOMAIN,
             data={
-                "language": "english",
-                "diaspora": diaspora,
-                "candle_lighting_minutes_before_sunset": candle_lighting,
-                "havdalah_minutes_after_sunset": havdalah,
+                CONF_LANGUAGE: "english",
+                CONF_DIASPORA: diaspora,
+                CONF_CANDLE_LIGHT_MINUTES: candle_lighting,
+                CONF_HAVDALAH_OFFSET_MINUTES: havdalah,
             },
         )
         entry.add_to_hass(hass)
@@ -259,12 +264,12 @@ async def test_issur_melacha_sensor_update(
 
     with alter_time(test_time):
         entry = MockConfigEntry(
-            domain=jewish_calendar.DOMAIN,
+            domain=DOMAIN,
             data={
-                "language": "english",
-                "diaspora": diaspora,
-                "candle_lighting_minutes_before_sunset": candle_lighting,
-                "havdalah_minutes_after_sunset": havdalah,
+                CONF_LANGUAGE: "english",
+                CONF_DIASPORA: diaspora,
+                CONF_CANDLE_LIGHT_MINUTES: candle_lighting,
+                CONF_HAVDALAH_OFFSET_MINUTES: havdalah,
             },
         )
         entry.add_to_hass(hass)
@@ -297,7 +302,7 @@ async def test_no_discovery_info(
     assert await async_setup_component(
         hass,
         BINARY_SENSOR_DOMAIN,
-        {BINARY_SENSOR_DOMAIN: {"platform": jewish_calendar.DOMAIN}},
+        {BINARY_SENSOR_DOMAIN: {CONF_PLATFORM: DOMAIN}},
     )
     await hass.async_block_till_done()
     assert BINARY_SENSOR_DOMAIN in hass.config.components

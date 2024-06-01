@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from homeassistant.components.webostv.const import LIVE_TV_APP_ID
+from homeassistant.core import HomeAssistant, ServiceCall
 
 from .const import CHANNEL_1, CHANNEL_2, CLIENT_KEY, FAKE_UUID, MOCK_APPS, MOCK_INPUTS
 
@@ -22,7 +23,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
