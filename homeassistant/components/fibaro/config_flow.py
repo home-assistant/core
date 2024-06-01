@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResu
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from . import FibaroAuthFailed, FibaroConnectFailed, FibaroController
+from . import FibaroAuthFailed, FibaroConnectFailed, init_controller
 from .const import CONF_IMPORT_PLUGINS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,19 +28,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-def _connect_to_fibaro(data: dict[str, Any]) -> FibaroController:
-    """Validate the user input allows us to connect to fibaro."""
-    controller = FibaroController(data)
-    controller.connect_with_error_handling()
-    return controller
-
-
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    controller = await hass.async_add_executor_job(_connect_to_fibaro, data)
+    controller = await hass.async_add_executor_job(init_controller, data)
 
     _LOGGER.debug(
         "Successfully connected to fibaro home center %s with name %s",

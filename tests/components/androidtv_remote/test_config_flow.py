@@ -324,6 +324,7 @@ async def test_user_flow_already_configured_host_changed_reloads_entry(
         state=ConfigEntryState.LOADED,
     )
     mock_config_entry.add_to_hass(hass)
+    hass.config.components.add(DOMAIN)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -640,6 +641,7 @@ async def test_zeroconf_flow_already_configured_host_changed_reloads_entry(
         state=ConfigEntryState.LOADED,
     )
     mock_config_entry.add_to_hass(hass)
+    hass.config.components.add(DOMAIN)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -769,6 +771,7 @@ async def test_reauth_flow_success(
         state=ConfigEntryState.LOADED,
     )
     mock_config_entry.add_to_hass(hass)
+    hass.config.components.add(DOMAIN)
 
     mock_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()

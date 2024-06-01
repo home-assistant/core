@@ -9,7 +9,7 @@ from homeassistant.components.device_automation.exceptions import (
 )
 from homeassistant.components.webostv import DOMAIN, device_trigger
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import async_get as get_dev_reg
 from homeassistant.setup import async_setup_component
@@ -41,7 +41,9 @@ async def test_get_triggers(hass: HomeAssistant, client) -> None:
     assert turn_on_trigger in triggers
 
 
-async def test_if_fires_on_turn_on_request(hass: HomeAssistant, calls, client) -> None:
+async def test_if_fires_on_turn_on_request(
+    hass: HomeAssistant, calls: list[ServiceCall], client
+) -> None:
     """Test for turn_on and turn_off triggers firing."""
     await setup_webostv(hass)
 
@@ -92,7 +94,6 @@ async def test_if_fires_on_turn_on_request(hass: HomeAssistant, calls, client) -
         blocking=True,
     )
 
-    await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[0].data["some"] == device.id
     assert calls[0].data["id"] == 0

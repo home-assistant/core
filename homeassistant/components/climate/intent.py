@@ -22,7 +22,9 @@ class GetTemperatureIntent(intent.IntentHandler):
     """Handle GetTemperature intents."""
 
     intent_type = INTENT_GET_TEMPERATURE
+    description = "Gets the current temperature of a climate device or entity"
     slot_schema = {vol.Optional("area"): str, vol.Optional("name"): str}
+    platforms = {DOMAIN}
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
@@ -56,6 +58,7 @@ class GetTemperatureIntent(intent.IntentHandler):
 
             if climate_state is None:
                 raise intent.NoStatesMatchedError(
+                    reason=intent.MatchFailedReason.AREA,
                     name=entity_text or entity_name,
                     area=area_name or area_id,
                     floor=None,
@@ -74,6 +77,7 @@ class GetTemperatureIntent(intent.IntentHandler):
 
             if climate_state is None:
                 raise intent.NoStatesMatchedError(
+                    reason=intent.MatchFailedReason.NAME,
                     name=entity_name,
                     area=None,
                     floor=None,

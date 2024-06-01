@@ -34,7 +34,7 @@ def recorder_url_mock():
 
 
 async def test_setup(
-    hass: HomeAssistant, mock_zeroconf: None, mock_get_source_ip, mock_bluetooth: None
+    hass: HomeAssistant, mock_zeroconf: None, mock_bluetooth: None
 ) -> None:
     """Test setup."""
     recorder_helper.async_initialize_recorder(hass)

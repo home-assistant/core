@@ -93,6 +93,10 @@
           "description": "Whether to enable or disable asyncio debug."
         }
       }
+    },
+    "log_current_tasks": {
+      "name": "Log current asyncio tasks",
+      "description": "Logs all the current asyncio tasks."
     }
   }
 }

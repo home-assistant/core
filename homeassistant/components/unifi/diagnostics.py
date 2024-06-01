@@ -7,13 +7,11 @@ from itertools import chain
 from typing import Any
 
 from homeassistant.components.diagnostics import REDACTED, async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import DOMAIN as UNIFI_DOMAIN
-from .hub import UnifiHub
+from . import UnifiConfigEntry
 
 TO_REDACT = {CONF_PASSWORD}
 REDACT_CONFIG = {CONF_HOST, CONF_PASSWORD, CONF_USERNAME}
@@ -73,10 +71,10 @@ def async_replace_list_data(
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: UnifiConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    hub: UnifiHub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
     diag: dict[str, Any] = {}
     macs_to_redact: dict[str, str] = {}
 

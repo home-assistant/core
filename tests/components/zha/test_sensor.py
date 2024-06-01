@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import math
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -646,7 +647,7 @@ def hass_ms(hass: HomeAssistant):
 
 
 @pytest.fixture
-def core_rs(hass_storage):
+def core_rs(hass_storage: dict[str, Any]):
     """Core.restore_state fixture."""
 
     def _storage(entity_id, uom, state):

@@ -1,6 +1,6 @@
 """Constants for 1-Wire integration."""
 
-from pyownet.protocol import Error as ProtocolError
+from pyownet.protocol import ProtocolError
 
 from homeassistant.components.onewire.const import Platform
 
@@ -56,6 +56,12 @@ MOCK_OWPROXY_DEVICES = {
         Platform.SENSOR: [
             {ATTR_INJECT_READS: b"    251123"},
             {ATTR_INJECT_READS: b"    248125"},
+        ],
+    },
+    "16.111111111111": {
+        # Test case for issue #115984, where the device type cannot be read
+        ATTR_INJECT_READS: [
+            ProtocolError(),  # read device type
         ],
     },
     "1F.111111111111": {

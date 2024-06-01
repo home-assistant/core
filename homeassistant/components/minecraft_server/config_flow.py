@@ -32,6 +32,9 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             address = user_input[CONF_ADDRESS]
 
+            # Abort config flow if service is already configured.
+            self._async_abort_entries_match({CONF_ADDRESS: address})
+
             # Prepare config entry data.
             config_data = {
                 CONF_NAME: user_input[CONF_NAME],

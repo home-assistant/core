@@ -93,7 +93,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         except (TimeoutError, httpx.ConnectError):
             errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
 
@@ -151,7 +151,6 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
             self.download_task = self.hass.async_create_background_task(
                 self.client.pull(self.model),
                 f"Downloading {self.model}",
-                eager_start=False,
             )
 
         if self.download_task.done():

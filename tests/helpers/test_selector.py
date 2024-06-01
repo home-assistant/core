@@ -282,6 +282,8 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
         {"filter": [{"supported_features": ["blah"]}]},
         # Unknown feature enum
         {"filter": [{"supported_features": ["blah.FooEntityFeature.blah"]}]},
+        # Unknown feature enum
+        {"filter": [{"supported_features": ["light.FooEntityFeature.blah"]}]},
         # Unknown feature enum member
         {"filter": [{"supported_features": ["light.LightEntityFeature.blah"]}]},
     ],
@@ -742,6 +744,11 @@ def test_attribute_selector_schema(
             {"enable_day": True},
             ({"seconds": 10}, {"days": 10}),
             (None, {}),
+        ),
+        (
+            {"allow_negative": False},
+            ({"seconds": 10}, {"days": 10}),
+            (None, {}, {"seconds": -1}),
         ),
     ],
 )

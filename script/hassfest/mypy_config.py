@@ -32,9 +32,15 @@ HEADER: Final = """
 
 GENERAL_SETTINGS: Final[dict[str, str]] = {
     "python_version": ".".join(str(x) for x in REQUIRED_PYTHON_VER[:2]),
+    "platform": "linux",
     "plugins": "pydantic.mypy",
     "show_error_codes": "true",
-    "follow_imports": "silent",
+    "follow_imports": "normal",
+    "enable_incomplete_feature": ",".join(  # noqa: FLY002
+        [
+            "NewGenericSyntax",
+        ]
+    ),
     # Enable some checks globally.
     "local_partial_types": "true",
     "strict_equality": "true",

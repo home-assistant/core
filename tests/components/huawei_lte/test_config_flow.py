@@ -134,7 +134,7 @@ async def test_connection_errors(
 
 
 @pytest.fixture
-def login_requests_mock(requests_mock):
+def login_requests_mock(requests_mock: requests_mock.Mocker) -> requests_mock.Mocker:
     """Set up a requests_mock with base mocks for login tests."""
     https_url = urlunparse(
         urlparse(FIXTURE_USER_INPUT[CONF_URL])._replace(scheme="https")
