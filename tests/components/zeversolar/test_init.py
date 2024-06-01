@@ -48,7 +48,7 @@ def create_config_mock():
     )
 
 
-async def test_async_setup_entry(hass: HomeAssistant) -> None:
+async def test_async_setup_entry(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test async_setup_entry."""
 
     config = create_config_mock()
