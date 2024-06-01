@@ -1,11 +1,8 @@
 """Coordinator for the sunsynk web api."""
 
-from __future__ import annotations
-
 from asyncio import timeout as async_timeout
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
 
 from pysunsynkweb.model import get_plants
 from pysunsynkweb.session import SunsynkwebSession
@@ -17,14 +14,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 _LOGGER = logging.getLogger(__name__)
 
 
-if TYPE_CHECKING:
-    from pysunsynkweb import SunsynkConfigEntry
-
-
 class SunsynkUpdateCoordinator(DataUpdateCoordinator[None]):
     """A Coordinator that updates sunsynk plants."""
 
-    def __init__(self, hass: HomeAssistant, config: SunsynkConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
@@ -35,12 +28,12 @@ class SunsynkUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=timedelta(seconds=30),
         )
         self.bearer = None
-        self.config = config
         self.hass = hass
+        assert self.config_entry is not None
         self.session = SunsynkwebSession(
             session=async_get_clientsession(hass),
-            username=config.data["username"],
-            password=config.data["password"],
+            username=self.config_entry.data["username"],
+            password=self.config_entry.data["password"],
         )
         self.cache = None
 

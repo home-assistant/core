@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .config_entry import SunsynkConfigEntry
+from . import SunsynkConfigEntry
 from .coordinator import SunsynkUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,15 +38,18 @@ class SunSynkApiSensor(CoordinatorEntity[SunsynkUpdateCoordinator], SensorEntity
     the maximum of the state of charge.
     """
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator, description) -> None:
         """Initialise the common elements for sunsynk web api sensors."""
         CoordinatorEntity.__init__(self, coordinator, context=coordinator)
         self.coordinator = coordinator
+
         self._attr_unique_id = (
             f"{description.key}_{sum(p.id for p in coordinator.cache.plants)}"
         )
 
-        self.translation_key = description.translation_key
+        self._attr_translation_key = description.translation_key
         self.entity_description = description
 
     @callback

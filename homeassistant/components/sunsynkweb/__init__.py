@@ -2,19 +2,20 @@
 
 from __future__ import annotations
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .config_entry import SunsynkConfigEntry
 from .coordinator import SunsynkUpdateCoordinator
 
+type SunsynkConfigEntry = ConfigEntry[SunsynkUpdateCoordinator]
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SunsynkConfigEntry) -> bool:
     """Set up the Sunsynkweb coordinator from a config entry."""
 
-    coordinator = SunsynkUpdateCoordinator(hass, entry)
+    coordinator = SunsynkUpdateCoordinator(hass)
     entry.runtime_data = coordinator
     await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
