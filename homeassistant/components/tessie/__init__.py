@@ -75,17 +75,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
     ]
 
     # Energy Sites
-    fleet_api = Tessie(session, api_key)
+    tessie = Tessie(session, api_key)
     try:
-        products = (await fleet_api.products())["response"]
+        products = (await tessie.products())["response"]
     except TeslaFleetError as e:
         raise ConfigEntryNotReady from e
 
-    energysites = []
+    energysites: list[TessieEnergyData] = []
     for product in products:
         if "energy_site_id" in product:
             site_id = product["energy_site_id"]
-            api = EnergySpecific(fleet_api.energy, site_id)
+            api = EnergySpecific(tessie.energy, site_id)
             energysites.append(
                 TessieEnergyData(
                     api=api,
@@ -100,6 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
                 )
             )
 
+    # Populate coordinator data before forwarding to platforms
     await asyncio.gather(
         *(
             energysite.live_coordinator.async_config_entry_first_refresh()
