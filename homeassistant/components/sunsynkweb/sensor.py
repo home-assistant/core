@@ -42,9 +42,11 @@ class SunSynkApiSensor(CoordinatorEntity[SunsynkUpdateCoordinator], SensorEntity
         """Initialise the common elements for sunsynk web api sensors."""
         CoordinatorEntity.__init__(self, coordinator, context=coordinator)
         self.coordinator = coordinator
-        self._attr_unique_id = f"sensor.sunsynk_{description.key}_{sum(p.id for p in coordinator.cache.plants)}"
+        self._attr_unique_id = (
+            f"{description.key}_{sum(p.id for p in coordinator.cache.plants)}"
+        )
 
-        self.name = description.name
+        self.translation_key = description.translation_key
         self.entity_description = description
 
     @callback
