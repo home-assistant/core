@@ -1,6 +1,6 @@
 """Tests for the OpenAI integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from httpx import Response
 from openai import RateLimitError
@@ -73,6 +73,53 @@ async def test_template_error(
     assert result.response.error_code == "unknown", result
 
 
+async def test_template_variables(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that template variables work."""
+    context = Context(user_id="12345")
+    mock_user = Mock()
+    mock_user.id = "12345"
+    mock_user.name = "Test User"
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            "prompt": (
+                "The user name is {{ user_name }}. "
+                "The user id is {{ llm_context.context.user_id }}."
+            ),
+        },
+    )
+    with (
+        patch(
+            "openai.resources.models.AsyncModels.list",
+        ),
+        patch(
+            "openai.resources.chat.completions.AsyncCompletions.create",
+            new_callable=AsyncMock,
+        ) as mock_create,
+        patch("homeassistant.auth.AuthManager.async_get_user", return_value=mock_user),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        result = await conversation.async_converse(
+            hass, "hello", None, context, agent_id=mock_config_entry.entry_id
+        )
+
+    assert (
+        result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    ), result
+    assert (
+        "The user name is Test User."
+        in mock_create.mock_calls[0][2]["messages"][0]["content"]
+    )
+    assert (
+        "The user id is 12345."
+        in mock_create.mock_calls[0][2]["messages"][0]["content"]
+    )
+
+
 async def test_conversation_agent(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -86,7 +133,7 @@ async def test_conversation_agent(
 
 
 @patch(
-    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI.async_get_tools"
+    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI._async_get_tools"
 )
 async def test_function_call(
     mock_get_tools,
@@ -184,7 +231,6 @@ async def test_function_call(
     assert mock_create.mock_calls[1][2]["messages"][3] == {
         "role": "tool",
         "tool_call_id": "call_AbCdEfGhIjKlMnOpQrStUvWx",
-        "name": "test_tool",
         "content": '"Test response"',
     }
     mock_tool.async_call.assert_awaited_once_with(
@@ -192,6 +238,8 @@ async def test_function_call(
         llm.ToolInput(
             tool_name="test_tool",
             tool_args={"param1": "test_value"},
+        ),
+        llm.LLMContext(
             platform="openai_conversation",
             context=context,
             user_prompt="Please call the test function",
@@ -217,7 +265,7 @@ async def test_function_call(
 
 
 @patch(
-    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI.async_get_tools"
+    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI._async_get_tools"
 )
 async def test_function_exception(
     mock_get_tools,
@@ -315,7 +363,6 @@ async def test_function_exception(
     assert mock_create.mock_calls[1][2]["messages"][3] == {
         "role": "tool",
         "tool_call_id": "call_AbCdEfGhIjKlMnOpQrStUvWx",
-        "name": "test_tool",
         "content": '{"error": "HomeAssistantError", "error_text": "Test tool exception"}',
     }
     mock_tool.async_call.assert_awaited_once_with(
@@ -323,6 +370,8 @@ async def test_function_exception(
         llm.ToolInput(
             tool_name="test_tool",
             tool_args={"param1": "test_value"},
+        ),
+        llm.LLMContext(
             platform="openai_conversation",
             context=context,
             user_prompt="Please call the test function",
@@ -380,7 +429,9 @@ async def test_assist_api_tools_conversion(
             ),
         ),
     ) as mock_create:
-        await conversation.async_converse(hass, "hello", None, None, agent_id=agent_id)
+        await conversation.async_converse(
+            hass, "hello", None, Context(), agent_id=agent_id
+        )
 
     tools = mock_create.mock_calls[0][2]["tools"]
     assert tools

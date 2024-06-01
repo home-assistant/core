@@ -23,6 +23,23 @@
     }
   },
   "entity": {
+    "select": {
+      "configuration_control": {
+        "name": "Configuration source",
+        "state": {
+          "cloud": "Cloud",
+          "local": "Local",
+          "both": "Both"
+        }
+      },
+      "display_temperature_unit": {
+        "name": "Display temperature unit",
+        "state": {
+          "c": "Celsius",
+          "f": "Fahrenheit"
+        }
+      }
+    },
     "sensor": {
       "total_volatile_organic_component_index": {
         "name": "Total VOC index"
@@ -39,6 +56,11 @@
       "raw_nitrogen": {
         "name": "Raw nitrogen"
       }
+    }
+  },
+  "exceptions": {
+    "no_local_configuration": {
+      "message": "Device should be configured with local configuration to be able to change settings."
     }
   }
 }

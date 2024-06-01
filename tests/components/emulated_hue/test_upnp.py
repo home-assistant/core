@@ -1,11 +1,14 @@
 """The tests for the emulated Hue component."""
 
+from asyncio import AbstractEventLoop
+from collections.abc import Generator
 from http import HTTPStatus
 import json
 import unittest
 from unittest.mock import patch
 
 from aiohttp import web
+from aiohttp.test_utils import TestClient
 import defusedxml.ElementTree as ET
 import pytest
 
@@ -16,6 +19,7 @@ from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 
 from tests.common import get_test_instance_port
+from tests.typing import ClientSessionGenerator
 
 BRIDGE_SERVER_PORT = get_test_instance_port()
 
@@ -33,13 +37,19 @@ class MockTransport:
 
 
 @pytest.fixture
-def aiohttp_client(event_loop, aiohttp_client, socket_enabled):
+def aiohttp_client(
+    event_loop: AbstractEventLoop,
+    aiohttp_client: ClientSessionGenerator,
+    socket_enabled: None,
+) -> ClientSessionGenerator:
     """Return aiohttp_client and allow opening sockets."""
     return aiohttp_client
 
 
 @pytest.fixture
-def hue_client(aiohttp_client):
+def hue_client(
+    aiohttp_client: ClientSessionGenerator,
+) -> Generator[TestClient, None, None]:
     """Return a hue API client."""
     app = web.Application()
     with unittest.mock.patch(

@@ -39,9 +39,11 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.logging import catch_log_exception, log_exception
@@ -111,6 +113,8 @@ RECONNECT_INTERVAL_SECONDS = 10
 MAX_SUBSCRIBES_PER_CALL = 500
 MAX_UNSUBSCRIBES_PER_CALL = 500
 
+MAX_PACKETS_TO_READ = 500
+
 type SocketType = socket.socket | ssl.SSLSocket | mqtt.WebsocketWrapper | Any
 
 type SubscribePayloadType = str | bytes  # Only bytes if encoding is None
@@ -146,7 +150,7 @@ async def async_publish(
         )
     mqtt_data = hass.data[DATA_MQTT]
     outgoing_payload = payload
-    if not isinstance(payload, bytes):
+    if not isinstance(payload, bytes) and payload is not None:
         if not encoding:
             _LOGGER.error(
                 (
@@ -489,13 +493,13 @@ class MQTT:
         """Handle HA stop."""
         await self.async_disconnect()
 
-    def start(
+    async def async_start(
         self,
         mqtt_data: MqttData,
     ) -> None:
         """Start Home Assistant MQTT client."""
         self._mqtt_data = mqtt_data
-        self.init_client()
+        await self.async_init_client()
 
     @property
     def subscriptions(self) -> list[Subscription]:
@@ -526,8 +530,11 @@ class MQTT:
             mqttc.on_socket_open = self._async_on_socket_open
             mqttc.on_socket_register_write = self._async_on_socket_register_write
 
-    def init_client(self) -> None:
+    async def async_init_client(self) -> None:
         """Initialize paho client."""
+        with async_pause_setup(self.hass, SetupPhases.WAIT_IMPORT_PACKAGES):
+            await async_import_module(self.hass, "paho.mqtt.client")
+
         mqttc = MqttClientSetup(self.conf).client
         # on_socket_unregister_write and _async_on_socket_close
         # are only ever called in the event loop
@@ -567,7 +574,7 @@ class MQTT:
     @callback
     def _async_reader_callback(self, client: mqtt.Client) -> None:
         """Handle reading data from the socket."""
-        if (status := client.loop_read()) != 0:
+        if (status := client.loop_read(MAX_PACKETS_TO_READ)) != 0:
             self._async_on_disconnect(status)
 
     @callback
@@ -629,6 +636,9 @@ class MQTT:
             self._increase_socket_buffer_size(sock)
             self.loop.add_reader(sock, partial(self._async_reader_callback, client))
         self._async_start_misc_loop()
+        # Try to consume the buffer right away so it doesn't fill up
+        # since add_reader will wait for the next loop iteration
+        self._async_reader_callback(client)
 
     @callback
     def _async_on_socket_close(

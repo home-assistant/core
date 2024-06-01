@@ -1,16 +1,15 @@
-"""Support for (EMEA/EU-based) Honeywell TCC climate systems.
+"""Support for (EMEA/EU-based) Honeywell TCC systems.
 
-Such systems include evohome, Round Thermostat, and others.
+Such systems provide heating/cooling and DHW and include Evohome, Round Thermostat, and
+others.
 """
 
 from __future__ import annotations
 
 from collections.abc import Awaitable
-from datetime import datetime, timedelta
-from http import HTTPStatus
+from datetime import datetime, timedelta, timezone
 import logging
-import re
-from typing import Any
+from typing import Any, Final
 
 import evohomeasync as ev1
 from evohomeasync.schema import SZ_ID, SZ_SESSION_ID, SZ_TEMP
@@ -58,21 +57,38 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, GWS, STORAGE_KEY, STORAGE_VER, TCS, UTC_OFFSET
+from .const import (
+    ACCESS_TOKEN,
+    ACCESS_TOKEN_EXPIRES,
+    ATTR_DURATION_DAYS,
+    ATTR_DURATION_HOURS,
+    ATTR_DURATION_UNTIL,
+    ATTR_SYSTEM_MODE,
+    ATTR_ZONE_TEMP,
+    CONF_LOCATION_IDX,
+    DOMAIN,
+    GWS,
+    REFRESH_TOKEN,
+    SCAN_INTERVAL_DEFAULT,
+    SCAN_INTERVAL_MINIMUM,
+    STORAGE_KEY,
+    STORAGE_VER,
+    TCS,
+    USER_DATA,
+    UTC_OFFSET,
+    EvoService,
+)
+from .helpers import (
+    convert_dict,
+    convert_until,
+    dt_aware_to_naive,
+    dt_local_to_aware,
+    handle_evo_exception,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-ACCESS_TOKEN = "access_token"
-ACCESS_TOKEN_EXPIRES = "access_token_expires"
-REFRESH_TOKEN = "refresh_token"
-USER_DATA = "user_data"
-
-CONF_LOCATION_IDX = "location_idx"
-
-SCAN_INTERVAL_DEFAULT = timedelta(seconds=300)
-SCAN_INTERVAL_MINIMUM = timedelta(seconds=60)
-
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA: Final = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
@@ -88,22 +104,12 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-ATTR_SYSTEM_MODE = "mode"
-ATTR_DURATION_DAYS = "period"
-ATTR_DURATION_HOURS = "duration"
+# system mode schemas are built dynamically when the services are regiatered
 
-ATTR_ZONE_TEMP = "setpoint"
-ATTR_DURATION_UNTIL = "duration"
-
-SVC_REFRESH_SYSTEM = "refresh_system"
-SVC_SET_SYSTEM_MODE = "set_system_mode"
-SVC_RESET_SYSTEM = "reset_system"
-SVC_SET_ZONE_OVERRIDE = "set_zone_override"
-SVC_RESET_ZONE_OVERRIDE = "clear_zone_override"
-
-
-RESET_ZONE_OVERRIDE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_id})
-SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
+RESET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
+    {vol.Required(ATTR_ENTITY_ID): cv.entity_id}
+)
+SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
         vol.Required(ATTR_ZONE_TEMP): vol.All(
@@ -114,99 +120,6 @@ SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
         ),
     }
 )
-# system mode schemas are built dynamically, below
-
-
-def _dt_local_to_aware(dt_naive: datetime) -> datetime:
-    dt_aware = dt_util.now() + (dt_naive - datetime.now())
-    if dt_aware.microsecond >= 500000:
-        dt_aware += timedelta(seconds=1)
-    return dt_aware.replace(microsecond=0)
-
-
-def _dt_aware_to_naive(dt_aware: datetime) -> datetime:
-    dt_naive = datetime.now() + (dt_aware - dt_util.now())
-    if dt_naive.microsecond >= 500000:
-        dt_naive += timedelta(seconds=1)
-    return dt_naive.replace(microsecond=0)
-
-
-def convert_until(status_dict: dict, until_key: str) -> None:
-    """Reformat a dt str from "%Y-%m-%dT%H:%M:%SZ" as local/aware/isoformat."""
-    if until_key in status_dict and (  # only present for certain modes
-        dt_utc_naive := dt_util.parse_datetime(status_dict[until_key])
-    ):
-        status_dict[until_key] = dt_util.as_local(dt_utc_naive).isoformat()
-
-
-def convert_dict(dictionary: dict[str, Any]) -> dict[str, Any]:
-    """Recursively convert a dict's keys to snake_case."""
-
-    def convert_key(key: str) -> str:
-        """Convert a string to snake_case."""
-        string = re.sub(r"[\-\.\s]", "_", str(key))
-        return (
-            (string[0]).lower()
-            + re.sub(
-                r"[A-Z]",
-                lambda matched: f"_{matched.group(0).lower()}",  # type:ignore[str-bytes-safe]
-                string[1:],
-            )
-        )
-
-    return {
-        (convert_key(k) if isinstance(k, str) else k): (
-            convert_dict(v) if isinstance(v, dict) else v
-        )
-        for k, v in dictionary.items()
-    }
-
-
-def _handle_exception(err: evo.RequestFailed) -> None:
-    """Return False if the exception can't be ignored."""
-
-    try:
-        raise err
-
-    except evo.AuthenticationFailed:
-        _LOGGER.error(
-            (
-                "Failed to authenticate with the vendor's server. Check your username"
-                " and password. NB: Some special password characters that work"
-                " correctly via the website will not work via the web API. Message"
-                " is: %s"
-            ),
-            err,
-        )
-
-    except evo.RequestFailed:
-        if err.status is None:
-            _LOGGER.warning(
-                (
-                    "Unable to connect with the vendor's server. "
-                    "Check your network and the vendor's service status page. "
-                    "Message is: %s"
-                ),
-                err,
-            )
-
-        elif err.status == HTTPStatus.SERVICE_UNAVAILABLE:
-            _LOGGER.warning(
-                "The vendor says their server is currently unavailable. "
-                "Check the vendor's service status page"
-            )
-
-        elif err.status == HTTPStatus.TOO_MANY_REQUESTS:
-            _LOGGER.warning(
-                (
-                    "The vendor's API rate limit has been exceeded. "
-                    "If this message persists, consider increasing the %s"
-                ),
-                CONF_SCAN_INTERVAL,
-            )
-
-        else:
-            raise  # we don't expect/handle any other Exceptions
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -225,7 +138,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if tokens.get(ACCESS_TOKEN_EXPIRES) is not None and (
             expires := dt_util.parse_datetime(tokens[ACCESS_TOKEN_EXPIRES])
         ):
-            tokens[ACCESS_TOKEN_EXPIRES] = _dt_aware_to_naive(expires)
+            tokens[ACCESS_TOKEN_EXPIRES] = dt_aware_to_naive(expires)
 
         user_data = tokens.pop(USER_DATA, {})
         return (tokens, user_data)
@@ -243,7 +156,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     try:
         await client_v2.login()
     except evo.AuthenticationFailed as err:
-        _handle_exception(err)
+        handle_evo_exception(err)
         return False
     finally:
         config[DOMAIN][CONF_PASSWORD] = "REDACTED"
@@ -358,14 +271,14 @@ def setup_service_functions(hass: HomeAssistant, broker: EvoBroker) -> None:
 
         async_dispatcher_send(hass, DOMAIN, payload)
 
-    hass.services.async_register(DOMAIN, SVC_REFRESH_SYSTEM, force_refresh)
+    hass.services.async_register(DOMAIN, EvoService.REFRESH_SYSTEM, force_refresh)
 
     # Enumerate which operating modes are supported by this system
     modes = broker.config[SZ_ALLOWED_SYSTEM_MODES]
 
     # Not all systems support "AutoWithReset": register this handler only if required
     if [m[SZ_SYSTEM_MODE] for m in modes if m[SZ_SYSTEM_MODE] == SZ_AUTO_WITH_RESET]:
-        hass.services.async_register(DOMAIN, SVC_RESET_SYSTEM, set_system_mode)
+        hass.services.async_register(DOMAIN, EvoService.RESET_SYSTEM, set_system_mode)
 
     system_mode_schemas = []
     modes = [m for m in modes if m[SZ_SYSTEM_MODE] != SZ_AUTO_WITH_RESET]
@@ -409,7 +322,7 @@ def setup_service_functions(hass: HomeAssistant, broker: EvoBroker) -> None:
     if system_mode_schemas:
         hass.services.async_register(
             DOMAIN,
-            SVC_SET_SYSTEM_MODE,
+            EvoService.SET_SYSTEM_MODE,
             set_system_mode,
             schema=vol.Schema(vol.Any(*system_mode_schemas)),
         )
@@ -417,13 +330,13 @@ def setup_service_functions(hass: HomeAssistant, broker: EvoBroker) -> None:
     # The zone modes are consistent across all systems and use the same schema
     hass.services.async_register(
         DOMAIN,
-        SVC_RESET_ZONE_OVERRIDE,
+        EvoService.RESET_ZONE_OVERRIDE,
         set_zone_override,
         schema=RESET_ZONE_OVERRIDE_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        SVC_SET_ZONE_OVERRIDE,
+        EvoService.SET_ZONE_OVERRIDE,
         set_zone_override,
         schema=SET_ZONE_OVERRIDE_SCHEMA,
     )
@@ -452,13 +365,13 @@ class EvoBroker:
 
         self.config = client.installation_info[loc_idx][GWS][0][TCS][0]
         self.tcs: evo.ControlSystem = self._location._gateways[0]._control_systems[0]  # noqa: SLF001
-        self.tcs_utc_offset = timedelta(minutes=self._location.timeZone[UTC_OFFSET])
+        self.loc_utc_offset = timedelta(minutes=self._location.timeZone[UTC_OFFSET])
         self.temps: dict[str, float | None] = {}
 
     async def save_auth_tokens(self) -> None:
         """Save access tokens and session IDs to the store for later use."""
         # evohomeasync2 uses naive/local datetimes
-        access_token_expires = _dt_local_to_aware(
+        access_token_expires = dt_local_to_aware(
             self.client.access_token_expires  # type: ignore[arg-type]
         )
 
@@ -488,7 +401,7 @@ class EvoBroker:
         try:
             result = await client_api
         except evo.RequestFailed as err:
-            _handle_exception(err)
+            handle_evo_exception(err)
             return None
 
         if update_state:  # wait a moment for system to quiesce before updating state
@@ -563,7 +476,7 @@ class EvoBroker:
         try:
             status = await self._location.refresh_status()
         except evo.RequestFailed as err:
-            _handle_exception(err)
+            handle_evo_exception(err)
         else:
             async_dispatcher_send(self.hass, DOMAIN)
             _LOGGER.debug("Status = %s", status)
@@ -612,7 +525,10 @@ class EvoDevice(Entity):
             return
         if payload["unique_id"] != self._attr_unique_id:
             return
-        if payload["service"] in (SVC_SET_ZONE_OVERRIDE, SVC_RESET_ZONE_OVERRIDE):
+        if payload["service"] in (
+            EvoService.SET_ZONE_OVERRIDE,
+            EvoService.RESET_ZONE_OVERRIDE,
+        ):
             await self.async_zone_svc_request(payload["service"], payload["data"])
             return
         await self.async_tcs_svc_request(payload["service"], payload["data"])
@@ -685,7 +601,8 @@ class EvoChild(EvoDevice):
         if not (schedule := self._schedule.get("DailySchedules")):
             return {}  # no scheduled setpoints when {'DailySchedules': []}
 
-        day_time = dt_util.now()
+        # get dt in the same TZ as the TCS location, so we can compare schedule times
+        day_time = dt_util.now().astimezone(timezone(self._evo_broker.loc_utc_offset))
         day_of_week = day_time.weekday()  # for evohome, 0 is Monday
         time_of_day = day_time.strftime("%H:%M:%S")
 
@@ -699,7 +616,7 @@ class EvoChild(EvoDevice):
                 else:
                     break
 
-            # Did the current SP start yesterday? Does the next start SP tomorrow?
+            # Did this setpoint start yesterday? Does the next setpoint start tomorrow?
             this_sp_day = -1 if sp_idx == -1 else 0
             next_sp_day = 1 if sp_idx + 1 == len(day["Switchpoints"]) else 0
 
@@ -716,7 +633,7 @@ class EvoChild(EvoDevice):
                 )
                 assert switchpoint_time_of_day is not None  # mypy check
                 dt_aware = _dt_evo_to_aware(
-                    switchpoint_time_of_day, self._evo_broker.tcs_utc_offset
+                    switchpoint_time_of_day, self._evo_broker.loc_utc_offset
                 )
 
                 self._setpoints[f"{key}_sp_from"] = dt_aware.isoformat()

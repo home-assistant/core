@@ -502,7 +502,12 @@ async def test_http_processing_intent_conversion_not_expose_new(
 @pytest.mark.parametrize("sentence", ["turn on kitchen", "turn kitchen on"])
 @pytest.mark.parametrize("conversation_id", ["my_new_conversation", None])
 async def test_turn_on_intent(
-    hass: HomeAssistant, init_components, conversation_id, sentence, agent_id, snapshot
+    hass: HomeAssistant,
+    init_components,
+    conversation_id,
+    sentence,
+    agent_id,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test calling the turn on intent."""
     hass.states.async_set("light.kitchen", "off")
@@ -927,6 +932,7 @@ async def test_non_default_response(hass: HomeAssistant, init_components) -> Non
             conversation_id=None,
             device_id=None,
             language=hass.config.language,
+            agent_id=None,
         )
     )
     assert len(calls) == 1

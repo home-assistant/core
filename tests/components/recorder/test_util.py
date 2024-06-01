@@ -721,7 +721,7 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
 
 
 async def test_basic_sanity_check(
-    hass: HomeAssistant, setup_recorder: None, recorder_db_url
+    hass: HomeAssistant, setup_recorder: None, recorder_db_url: str
 ) -> None:
     """Test the basic sanity checks with a missing table."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
@@ -742,7 +742,7 @@ async def test_combined_checks(
     hass: HomeAssistant,
     setup_recorder: None,
     caplog: pytest.LogCaptureFixture,
-    recorder_db_url,
+    recorder_db_url: str,
 ) -> None:
     """Run Checks on the open database."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
@@ -831,7 +831,7 @@ async def test_end_incomplete_runs(
 
 
 async def test_periodic_db_cleanups(
-    hass: HomeAssistant, setup_recorder: None, recorder_db_url
+    hass: HomeAssistant, setup_recorder: None, recorder_db_url: str
 ) -> None:
     """Test periodic db cleanups."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):

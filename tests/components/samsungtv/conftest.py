@@ -56,11 +56,6 @@ async def silent_ssdp_scanner(hass):
 
 
 @pytest.fixture(autouse=True)
-def samsungtv_mock_get_source_ip(mock_get_source_ip):
-    """Mock network util's async_get_source_ip."""
-
-
-@pytest.fixture(autouse=True)
 def samsungtv_mock_async_get_local_ip():
     """Mock upnp util's async_get_local_ip."""
     with patch(
