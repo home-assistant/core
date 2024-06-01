@@ -5,6 +5,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
+from functools import cache
+import importlib
 from typing import Any
 
 import voluptuous as vol
@@ -18,7 +20,7 @@ from homeassistant.components.cover.intent import INTENT_CLOSE_COVER, INTENT_OPE
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
 from homeassistant.components.weather.intent import INTENT_GET_WEATHER
-from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.core import Context, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import yaml
 from homeassistant.util.json import JsonObjectType
@@ -341,6 +343,13 @@ class AssistAPI(API):
         return [IntentTool(intent_handler) for intent_handler in intent_handlers]
 
 
+@cache
+def _domain_llm_attributes(domain: str) -> list[str]:
+    """Return a cached list of attributes to be included."""
+    module = importlib.import_module(f"homeassistant.components.{domain}")
+    return getattr(module, "LLM_ATTRIBUTES", [])
+
+
 def _get_exposed_entities(
     hass: HomeAssistant, assistant: str
 ) -> dict[str, dict[str, Any]]:
@@ -400,10 +409,13 @@ def _get_exposed_entities(
         if area_names:
             info["areas"] = ", ".join(area_names)
 
+        domain = split_entity_id(state.entity_id)[0]
+
         if attributes := {
             attr_name: str(attr_value) if isinstance(attr_value, Enum) else attr_value
             for attr_name, attr_value in state.attributes.items()
             if attr_name in interesting_attributes
+            or attr_name in _domain_llm_attributes(domain)
         }:
             info["attributes"] = attributes
 
