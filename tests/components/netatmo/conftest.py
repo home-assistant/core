@@ -69,6 +69,15 @@ def mock_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
                     "area_name": "Home max",
                     "mode": "max",
                 },
+                "Home min": {
+                    "lat_ne": 32.2345678,
+                    "lon_ne": -117.1234567,
+                    "lat_sw": 32.1234567,
+                    "lon_sw": -117.2345678,
+                    "show_on_map": True,
+                    "area_name": "Home min",
+                    "mode": "min",
+                },
             }
         },
     )

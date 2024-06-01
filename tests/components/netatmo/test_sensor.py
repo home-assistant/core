@@ -81,6 +81,12 @@ async def test_public_weather_sensor(
     assert hass.states.get(f"{prefix}humidity").state == "76"
     assert hass.states.get(f"{prefix}atmospheric_pressure").state == "1014.4"
 
+    prefix = "sensor.home_min_"
+
+    assert hass.states.get(f"{prefix}temperature").state == "19.8"
+    assert hass.states.get(f"{prefix}humidity").state == "56"
+    assert hass.states.get(f"{prefix}atmospheric_pressure").state == "1005.4"
+
     prefix = "sensor.home_avg_"
 
     assert hass.states.get(f"{prefix}temperature").state == "22.7"
