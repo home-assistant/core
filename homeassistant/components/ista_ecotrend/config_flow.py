@@ -40,23 +40,15 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            ista = PyEcotrendIsta(
+                user_input[CONF_EMAIL],
+                user_input[CONF_PASSWORD],
+                _LOGGER,
+            )
             try:
-                ista = PyEcotrendIsta(
-                    user_input[CONF_EMAIL],
-                    user_input[CONF_PASSWORD],
-                    _LOGGER,
-                )
                 await self.hass.async_add_executor_job(ista.login)
                 info = await self.hass.async_add_executor_job(
                     ista.get_consumption_unit_details
-                )
-                title = next(
-                    (
-                        f"{details["address"]["street"]} {details["address"]["houseNumber"]}"
-                        for details in info["consumptionUnits"]
-                        if details["id"] == ista._uuid  # noqa: SLF001
-                    ),
-                    None,
                 )
             except (ServerError, InternalServerError):
                 errors["base"] = "cannot_connect"
@@ -66,10 +58,18 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                title = next(
+                    (
+                        f"{details["address"]["street"]} {details["address"]["houseNumber"]}"
+                        for details in info["consumptionUnits"]
+                        if details["id"] == ista._uuid  # noqa: SLF001
+                    ),
+                    None,
+                )
                 await self.async_set_unique_id(ista._uuid)  # noqa: SLF001
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=title if title else "ista EcoTrend", data=user_input
+                    title=title or "ista EcoTrend", data=user_input
                 )
 
         return self.async_show_form(

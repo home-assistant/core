@@ -29,16 +29,15 @@ type IstaConfigEntry = ConfigEntry[IstaCoordinator]
 
 async def async_setup_entry(hass: HomeAssistant, entry: IstaConfigEntry) -> bool:
     """Set up ista Ecotrend from a config entry."""
-
+    ista = PyEcotrendIsta(
+        entry.data[CONF_EMAIL],
+        entry.data[CONF_PASSWORD],
+        _LOGGER,
+    )
     try:
-        ista = PyEcotrendIsta(
-            entry.data[CONF_EMAIL],
-            entry.data[CONF_PASSWORD],
-            _LOGGER,
-        )
         await hass.async_add_executor_job(ista.login)
     except (ServerError, InternalServerError, RequestException, TimeoutError) as e:
-        _LOGGER.error(e.args[0])
+        _LOGGER.debug(e.args[0])
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="connection_exception",
