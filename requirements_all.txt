@@ -547,7 +547,7 @@ beautifulsoup4==4.12.3
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.38.4
+bellows==0.39.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.15.3
@@ -2794,7 +2794,7 @@ unifi_ap==0.0.1
 unifiled==0.11
 
 # homeassistant.components.zha
-universal-silabs-flasher==0.0.18
+universal-silabs-flasher==0.0.20
 
 # homeassistant.components.upb
 upb-lib==0.5.6
