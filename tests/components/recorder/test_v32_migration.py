@@ -12,14 +12,13 @@ from sqlalchemy.orm import Session
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import SQLITE_URL_PREFIX, core, statistics
-from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import EVENT_STATE_CHANGED, Event, EventOrigin, State
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .common import async_wait_recording_done
+from .common import async_wait_recording_done, select_event_type_ids
 
 from tests.common import async_test_home_assistant
 

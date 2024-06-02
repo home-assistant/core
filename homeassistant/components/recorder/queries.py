@@ -24,23 +24,14 @@ from .db_schema import (
 )
 
 
-def select_event_type_ids(event_types: tuple[str, ...]) -> Select:
-    """Generate a select for event type ids.
-
-    This query is intentionally not a lambda statement as it is used inside
-    other lambda statements.
-    """
-    return select(EventTypes.event_type_id).where(
-        EventTypes.event_type.in_(event_types)
-    )
-
-
 def get_shared_attributes(hashes: list[int]) -> StatementLambdaElement:
     """Load shared attributes from the database."""
     return lambda_stmt(
         lambda: select(
             StateAttributes.attributes_id, StateAttributes.shared_attrs
-        ).where(StateAttributes.hash.in_(hashes))
+        ).where(StateAttributes.hash.in_(hashes)),
+        track_on=("hashes",),
+        track_closure_variables=False,
     )
 
 
@@ -49,7 +40,9 @@ def get_shared_event_datas(hashes: list[int]) -> StatementLambdaElement:
     return lambda_stmt(
         lambda: select(EventData.data_id, EventData.shared_data).where(
             EventData.hash.in_(hashes)
-        )
+        ),
+        track_on=("hashes",),
+        track_closure_variables=False,
     )
 
 
@@ -58,13 +51,18 @@ def find_event_type_ids(event_types: Iterable[str]) -> StatementLambdaElement:
     return lambda_stmt(
         lambda: select(EventTypes.event_type_id, EventTypes.event_type).filter(
             EventTypes.event_type.in_(event_types)
-        )
+        ),
+        track_on=("event_types",),
+        track_closure_variables=False,
     )
 
 
 def find_all_states_metadata_ids() -> StatementLambdaElement:
     """Find all metadata_ids and entity_ids."""
-    return lambda_stmt(lambda: select(StatesMeta.metadata_id, StatesMeta.entity_id))
+    return lambda_stmt(
+        lambda: select(StatesMeta.metadata_id, StatesMeta.entity_id),
+        enable_tracking=False,
+    )
 
 
 def find_states_metadata_ids(entity_ids: Iterable[str]) -> StatementLambdaElement:
@@ -72,7 +70,9 @@ def find_states_metadata_ids(entity_ids: Iterable[str]) -> StatementLambdaElemen
     return lambda_stmt(
         lambda: select(StatesMeta.metadata_id, StatesMeta.entity_id).filter(
             StatesMeta.entity_id.in_(entity_ids)
-        )
+        ),
+        track_on=("entity_ids",),
+        track_closure_variables=False,
     )
 
 
@@ -88,7 +88,9 @@ def attributes_ids_exist_in_states_with_fast_in_distinct(
     return lambda_stmt(
         lambda: select(distinct(States.attributes_id)).filter(
             States.attributes_id.in_(attributes_ids)
-        )
+        ),
+        track_on=("attributes_ids",),
+        track_closure_variables=False,
     )
 
 

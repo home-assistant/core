@@ -51,7 +51,6 @@ from homeassistant.components.recorder.db_schema import (
     StatisticsRuns,
 )
 from homeassistant.components.recorder.models import process_timestamp
-from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.services import (
     SERVICE_DISABLE,
     SERVICE_ENABLE,
@@ -90,6 +89,7 @@ from .common import (
     convert_pending_states_to_meta,
     corrupt_db_file,
     run_information_with_session,
+    select_event_type_ids,
 )
 
 from tests.common import (

@@ -15,8 +15,9 @@ from typing import Any, Literal, cast
 from unittest.mock import MagicMock, patch, sentinel
 
 from freezegun import freeze_time
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm.session import Session
+from sqlalchemy.sql.selectable import Select
 
 from homeassistant import core as ha
 from homeassistant.components import recorder
@@ -457,3 +458,14 @@ async def async_attach_db_engine(hass: HomeAssistant) -> None:
             )
 
     await instance.async_add_executor_job(_mock_setup_recorder_connection)
+
+
+def select_event_type_ids(event_types: tuple[str, ...]) -> Select:
+    """Generate a select for event type ids.
+
+    This query is intentionally not a lambda statement as it is used inside
+    other lambda statements.
+    """
+    return select(EventTypes.event_type_id).where(
+        EventTypes.event_type.in_(event_types),
+    )

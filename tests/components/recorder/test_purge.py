@@ -25,7 +25,6 @@ from homeassistant.components.recorder.db_schema import (
 )
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.purge import purge_old_data
-from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.services import (
     SERVICE_PURGE,
     SERVICE_PURGE_ENTITIES,
@@ -43,6 +42,7 @@ from .common import (
     async_wait_recording_done,
     convert_pending_events_to_event_types,
     convert_pending_states_to_meta,
+    select_event_type_ids,
 )
 
 from tests.typing import RecorderInstanceGenerator
