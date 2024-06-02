@@ -138,7 +138,7 @@ class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
         """Override the schedule with mowing or parking."""
         if override_mode not in ["mowing", "parking"]:
             raise ServiceValidationError(
-                "Only `mowing` and `parking` are supported for this service."
+                "Only `mowing` and `parking` are supported for `override_mode`."
             )
         duration_in_min = int(duration.total_seconds() / 60)
         if override_mode == "mowing":

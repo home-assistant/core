@@ -180,7 +180,7 @@ async def test_lawn_mower_wrong_service_commands(
     await setup_integration(hass, mock_config_entry)
     with pytest.raises(
         ServiceValidationError,
-        match="Only `mowing` and `parking` are supported for this service.",
+        match="Only `mowing` and `parking` are supported for `override_mode`.",
     ):
         await hass.services.async_call(
             domain=DOMAIN,
