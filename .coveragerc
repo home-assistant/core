@@ -622,7 +622,6 @@ omit =
     homeassistant/components/irish_rail_transport/sensor.py
     homeassistant/components/iss/__init__.py
     homeassistant/components/iss/sensor.py
-    homeassistant/components/ista_ecotrend/__init__.py
     homeassistant/components/ista_ecotrend/coordinator.py
     homeassistant/components/ista_ecotrend/sensor.py
     homeassistant/components/ista_ecotrend/util.py
