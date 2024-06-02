@@ -1,0 +1,47 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'host': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'domain': 'v2c',
+      'entry_id': 'da58ee91f38c2406c2a36d0a1a7f8569',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'EVSE 1.1.1.1',
+      'unique_id': 'ABC123',
+      'version': 1,
+    }),
+    'data': "<MagicMock name='Trydan().data' id='4511132720'>",
+    'host_status': 200,
+    'raw_data': dict({
+      'BatteryPower': 0.0,
+      'ChargeEnergy': 1.8,
+      'ChargePower': 1500.27,
+      'ChargeState': 2,
+      'ChargeTime': 4355,
+      'ContractedPower': 4600,
+      'Dynamic': 0,
+      'DynamicPowerMode': 2,
+      'FVPower': 0.0,
+      'FirmwareVersion': '2.1.7',
+      'HousePower': 0.0,
+      'ID': 'ABC123',
+      'Intensity': 6,
+      'Locked': 0,
+      'MaxIntensity': 16,
+      'MinIntensity': 6,
+      'PauseDynamic': 0,
+      'Paused': 0,
+      'ReadyState': 0,
+      'SlaveError': 4,
+      'Timer': 0,
+    }),
+  })
+# ---
