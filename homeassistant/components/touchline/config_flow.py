@@ -45,6 +45,13 @@ def _try_connect_and_fetch_basic_info(host):
             host,
         )
         result["type"] = RESULT_CANNOT_CONNECT
+    except ConnectionError:
+        _LOGGER.debug(
+            "Failed to connect to device %s. Check the IP address "
+            "as well as whether the device is connected to power and network",
+            host,
+        )
+        result["type"] = RESULT_CANNOT_CONNECT
     _LOGGER.debug(
         "Number of devices found: %s",
         number_of_devices,
@@ -61,12 +68,73 @@ class TouchlineConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        if user_input is None:
-            return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
-        # Abort if an entry with same host is present.
-        self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+        errors = {}
+        result: dict[str, Any] = {"type": None, "data": {}}
 
+        if user_input is not None:
+            # Abort if an entry with same host is present.
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+
+            errors = self._validate_input(user_input)
+            if errors:
+                return self.async_show_form(
+                    step_id="user", data_schema=DATA_SCHEMA, errors=errors
+                )
+
+            try:
+                result = await self.hass.async_add_executor_job(
+                    _try_connect_and_fetch_basic_info, user_input[CONF_HOST]
+                )
+            except ConnectionRefusedError as e:
+                _LOGGER.error("Failed to connect: %s", e)
+                errors["base"] = "cannot_connect"
+
+            except ConnectionError as e:
+                _LOGGER.error("Failed to connect: %s", e)
+                errors["base"] = "cannot_connect"
+
+            if result["type"] != RESULT_SUCCESS:
+                errors["base"] = "cannot_connect"
+
+            await self.async_set_unique_id(result["data"])
+            self._abort_if_unique_id_configured()
+            _LOGGER.debug(
+                "Host: %s",
+                user_input[CONF_HOST],
+            )
+            if not errors:
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST], data=user_input
+                )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
+        """Import a configuration from yaml configuration."""
+        try:
+            result = await self.hass.async_add_executor_job(
+                _try_connect_and_fetch_basic_info, user_input[CONF_HOST]
+            )
+        except ConnectionRefusedError as e:
+            _LOGGER.error("Failed to connect: %s", e)
+            return self.async_abort(reason="cannot_connect")
+
+        except ConnectionError as e:
+            _LOGGER.error("Failed to connect: %s", e)
+            return self.async_abort(reason="cannot_connect")
+
+        if result["type"] != RESULT_SUCCESS:
+            return self.async_abort(reason="cannot_connect")
+
+        return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
+
+    def _validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
+        """Validate the user input."""
         errors = {}
         host = user_input[CONF_HOST]
         # Remove HTTPS and HTTP schema from URL.
@@ -78,26 +146,4 @@ class TouchlineConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_input"
         else:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            result = await self.hass.async_add_executor_job(
-                _try_connect_and_fetch_basic_info, user_input[CONF_HOST]
-            )
-
-            if result["type"] != RESULT_SUCCESS:
-                errors["base"] = "cannot_connect"
-
-        if errors:
-            return self.async_show_form(
-                step_id="user", data_schema=DATA_SCHEMA, errors=errors
-            )
-
-        await self.async_set_unique_id(result["data"])
-        self._abort_if_unique_id_configured()
-        _LOGGER.debug(
-            "Host: %s",
-            user_input[CONF_HOST],
-        )
-        return self.async_create_entry(title=host, data=user_input)
-
-    async def async_step_import(self, conf: dict[str, Any]) -> ConfigFlowResult:
-        """Import a configuration from yaml configuration."""
-        return await self.async_step_user(user_input=conf)
+        return errors
