@@ -239,14 +239,14 @@ async def setup_unifi_integration(
 
 async def test_hub_setup(
     device_registry: dr.DeviceRegistry,
-    prepare_config_entry: Callable[[], ConfigEntry],
+    config_entry_factory: Callable[[], ConfigEntry],
 ) -> None:
     """Successful setup."""
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
         return_value=True,
     ) as forward_entry_setup:
-        config_entry = await prepare_config_entry()
+        config_entry = await config_entry_factory()
         hub = config_entry.runtime_data
 
     entry = hub.config.entry
@@ -288,10 +288,10 @@ async def test_hub_setup(
 
 
 async def test_reset_after_successful_setup(
-    hass: HomeAssistant, setup_config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: ConfigEntry
 ) -> None:
     """Calling reset when the entry has been setup."""
-    config_entry = setup_config_entry
+    config_entry = config_entry_setup
     assert config_entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
@@ -299,10 +299,10 @@ async def test_reset_after_successful_setup(
 
 
 async def test_reset_fails(
-    hass: HomeAssistant, setup_config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: ConfigEntry
 ) -> None:
     """Calling reset when the entry has been setup can return false."""
-    config_entry = setup_config_entry
+    config_entry = config_entry_setup
     assert config_entry.state is ConfigEntryState.LOADED
 
     with patch(
@@ -330,7 +330,7 @@ async def test_reset_fails(
 async def test_connection_state_signalling(
     hass: HomeAssistant,
     mock_device_registry,
-    setup_config_entry: ConfigEntry,
+    config_entry_setup: ConfigEntry,
     websocket_mock,
 ) -> None:
     """Verify connection statesignalling and connection state are working."""
@@ -349,7 +349,7 @@ async def test_connection_state_signalling(
 async def test_reconnect_mechanism(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    setup_config_entry: ConfigEntry,
+    config_entry_setup: ConfigEntry,
     websocket_mock,
 ) -> None:
     """Verify reconnect prints only on first reconnection try."""
@@ -378,7 +378,7 @@ async def test_reconnect_mechanism(
 async def test_reconnect_mechanism_exceptions(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    setup_config_entry: ConfigEntry,
+    config_entry_setup: ConfigEntry,
     websocket_mock,
     exception,
 ) -> None:

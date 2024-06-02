@@ -41,7 +41,11 @@ def device_traits() -> dict[str, Any]:
 
 
 async def test_thermostat_device(
-    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    create_device: CreateDevice,
+    setup_platform: PlatformSetup,
 ) -> None:
     """Test a thermostat with temperature and humidity sensors."""
     create_device.create(
@@ -77,16 +81,14 @@ async def test_thermostat_device(
     assert humidity.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert humidity.attributes.get(ATTR_FRIENDLY_NAME) == "My Sensor Humidity"
 
-    registry = er.async_get(hass)
-    entry = registry.async_get("sensor.my_sensor_temperature")
+    entry = entity_registry.async_get("sensor.my_sensor_temperature")
     assert entry.unique_id == f"{DEVICE_ID}-temperature"
     assert entry.domain == "sensor"
 
-    entry = registry.async_get("sensor.my_sensor_humidity")
+    entry = entity_registry.async_get("sensor.my_sensor_humidity")
     assert entry.unique_id == f"{DEVICE_ID}-humidity"
     assert entry.domain == "sensor"
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
     assert device.name == "My Sensor"
     assert device.model == "Thermostat"
@@ -240,7 +242,11 @@ async def test_event_updates_sensor(
 
 @pytest.mark.parametrize("device_type", ["some-unknown-type"])
 async def test_device_with_unknown_type(
-    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    create_device: CreateDevice,
+    setup_platform: PlatformSetup,
 ) -> None:
     """Test a device without a custom name, inferring name from structure."""
     create_device.create(
@@ -257,12 +263,10 @@ async def test_device_with_unknown_type(
     assert temperature.state == "25.1"
     assert temperature.attributes.get(ATTR_FRIENDLY_NAME) == "My Sensor Temperature"
 
-    registry = er.async_get(hass)
-    entry = registry.async_get("sensor.my_sensor_temperature")
+    entry = entity_registry.async_get("sensor.my_sensor_temperature")
     assert entry.unique_id == f"{DEVICE_ID}-temperature"
     assert entry.domain == "sensor"
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
     assert device.name == "My Sensor"
     assert device.model is None

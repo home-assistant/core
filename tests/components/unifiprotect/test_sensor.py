@@ -80,14 +80,15 @@ async def test_sensor_sensor_remove(
 
 
 async def test_sensor_setup_sensor(
-    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
 ) -> None:
     """Test sensor entity setup for sensor devices."""
 
     await init_entry(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.SENSOR, 22, 14)
-
-    entity_registry = er.async_get(hass)
 
     expected_values = (
         "10",
@@ -131,14 +132,15 @@ async def test_sensor_setup_sensor(
 
 
 async def test_sensor_setup_sensor_none(
-    hass: HomeAssistant, ufp: MockUFPFixture, sensor: Sensor
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor: Sensor,
 ) -> None:
     """Test sensor entity setup for sensor devices with no sensors enabled."""
 
     await init_entry(hass, ufp, [sensor])
     assert_entity_counts(hass, Platform.SENSOR, 22, 14)
-
-    entity_registry = er.async_get(hass)
 
     expected_values = (
         "10",
@@ -165,7 +167,10 @@ async def test_sensor_setup_sensor_none(
 
 
 async def test_sensor_setup_nvr(
-    hass: HomeAssistant, ufp: MockUFPFixture, fixed_now: datetime
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    fixed_now: datetime,
 ) -> None:
     """Test sensor entity setup for NVR device."""
 
@@ -189,8 +194,6 @@ async def test_sensor_setup_nvr(
     await hass.async_block_till_done()
 
     assert_entity_counts(hass, Platform.SENSOR, 12, 9)
-
-    entity_registry = er.async_get(hass)
 
     expected_values = (
         fixed_now.replace(second=0, microsecond=0).isoformat(),
@@ -241,7 +244,7 @@ async def test_sensor_setup_nvr(
 
 
 async def test_sensor_nvr_missing_values(
-    hass: HomeAssistant, ufp: MockUFPFixture
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, ufp: MockUFPFixture
 ) -> None:
     """Test NVR sensor sensors if no data available."""
 
@@ -256,8 +259,6 @@ async def test_sensor_nvr_missing_values(
     await hass.async_block_till_done()
 
     assert_entity_counts(hass, Platform.SENSOR, 12, 9)
-
-    entity_registry = er.async_get(hass)
 
     # Uptime
     description = NVR_SENSORS[0]
@@ -311,14 +312,16 @@ async def test_sensor_nvr_missing_values(
 
 
 async def test_sensor_setup_camera(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    fixed_now: datetime,
 ) -> None:
     """Test sensor entity setup for camera devices."""
 
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SENSOR, 24, 12)
-
-    entity_registry = er.async_get(hass)
 
     expected_values = (
         fixed_now.replace(microsecond=0).isoformat(),
@@ -398,6 +401,7 @@ async def test_sensor_setup_camera(
 
 async def test_sensor_setup_camera_with_last_trip_time(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     entity_registry_enabled_by_default: None,
     ufp: MockUFPFixture,
     doorbell: Camera,
@@ -407,8 +411,6 @@ async def test_sensor_setup_camera_with_last_trip_time(
 
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SENSOR, 24, 24)
-
-    entity_registry = er.async_get(hass)
 
     # Last Trip Time
     unique_id, entity_id = ids_from_device_description(
@@ -474,6 +476,7 @@ async def test_sensor_update_alarm(
 
 async def test_sensor_update_alarm_with_last_trip_time(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     entity_registry_enabled_by_default: None,
     ufp: MockUFPFixture,
     sensor_all: Sensor,
@@ -488,7 +491,6 @@ async def test_sensor_update_alarm_with_last_trip_time(
     unique_id, entity_id = ids_from_device_description(
         Platform.SENSOR, sensor_all, SENSE_SENSORS_WRITE[-3]
     )
-    entity_registry = er.async_get(hass)
 
     entity = entity_registry.async_get(entity_id)
     assert entity

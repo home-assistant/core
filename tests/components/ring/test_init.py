@@ -82,7 +82,7 @@ async def test_error_on_setup(
     hass: HomeAssistant,
     requests_mock: requests_mock.Mocker,
     mock_config_entry: MockConfigEntry,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     error_type,
     log_msg,
 ) -> None:
@@ -111,7 +111,7 @@ async def test_auth_failure_on_global_update(
     hass: HomeAssistant,
     requests_mock: requests_mock.Mocker,
     mock_config_entry: MockConfigEntry,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test authentication failure on global data update."""
     mock_config_entry.add_to_hass(hass)
@@ -139,7 +139,7 @@ async def test_auth_failure_on_device_update(
     hass: HomeAssistant,
     requests_mock: requests_mock.Mocker,
     mock_config_entry: MockConfigEntry,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test authentication failure on device data update."""
     mock_config_entry.add_to_hass(hass)
@@ -181,7 +181,7 @@ async def test_error_on_global_update(
     hass: HomeAssistant,
     requests_mock: requests_mock.Mocker,
     mock_config_entry: MockConfigEntry,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     error_type,
     log_msg,
 ) -> None:
@@ -222,7 +222,7 @@ async def test_error_on_device_update(
     hass: HomeAssistant,
     requests_mock: requests_mock.Mocker,
     mock_config_entry: MockConfigEntry,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     error_type,
     log_msg,
 ) -> None:

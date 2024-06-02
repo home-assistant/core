@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
-from airgradient import Measures
+from airgradient import Config, Measures
 import pytest
 
 from homeassistant.components.airgradient.const import DOMAIN
@@ -28,7 +28,7 @@ def mock_airgradient_client() -> Generator[AsyncMock, None, None]:
     """Mock an AirGradient client."""
     with (
         patch(
-            "homeassistant.components.airgradient.coordinator.AirGradientClient",
+            "homeassistant.components.airgradient.AirGradientClient",
             autospec=True,
         ) as mock_client,
         patch(
@@ -37,8 +37,12 @@ def mock_airgradient_client() -> Generator[AsyncMock, None, None]:
         ),
     ):
         client = mock_client.return_value
+        client.host = "10.0.0.131"
         client.get_current_measures.return_value = Measures.from_json(
             load_fixture("current_measures.json", DOMAIN)
+        )
+        client.get_config.return_value = Config.from_json(
+            load_fixture("get_config.json", DOMAIN)
         )
         yield client
 

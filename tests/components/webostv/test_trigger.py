@@ -7,7 +7,7 @@ import pytest
 from homeassistant.components import automation
 from homeassistant.components.webostv import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import async_get as get_dev_reg
 from homeassistant.setup import async_setup_component
@@ -19,7 +19,7 @@ from tests.common import MockEntity, MockEntityPlatform
 
 
 async def test_webostv_turn_on_trigger_device_id(
-    hass: HomeAssistant, calls, client
+    hass: HomeAssistant, calls: list[ServiceCall], client
 ) -> None:
     """Test for turn_on triggers by device_id firing."""
     await setup_webostv(hass)
@@ -77,7 +77,7 @@ async def test_webostv_turn_on_trigger_device_id(
 
 
 async def test_webostv_turn_on_trigger_entity_id(
-    hass: HomeAssistant, calls, client
+    hass: HomeAssistant, calls: list[ServiceCall], client
 ) -> None:
     """Test for turn_on triggers by entity_id firing."""
     await setup_webostv(hass)
