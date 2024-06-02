@@ -56,7 +56,7 @@ def raise_for_blocking_call(
             _LOGGER.warning(
                 "Detected blocking call to %s with args %s in %s, "
                 "line %s: %s inside the event loop\n"
-                "Traceback (most recent call last)\n%s",
+                "Traceback (most recent call last):\n%s",
                 func.__name__,
                 mapped_args.get("args"),
                 offender_filename,
@@ -84,7 +84,7 @@ def raise_for_blocking_call(
     _LOGGER.warning(
         "Detected blocking call to %s inside the event loop by %sintegration '%s' "
         "at %s, line %s: %s (offender: %s, line %s: %s), please %s\n"
-        "Traceback (most recent call last)\n%s",
+        "Traceback (most recent call last):\n%s",
         func.__name__,
         "custom " if integration_frame.custom_integration else "",
         integration_frame.integration,
