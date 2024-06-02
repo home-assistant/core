@@ -1,0 +1,23 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Connect to your WebSC Server",
+        "description": "For more information click [here](https://ledsc.eu/websc/)",
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please verify the connection details",
+      "unknown": "Unexpected Error"
+    },
+    "abort": {
+      "already_configured": "This WebSC server is already configured",
+      "cannot_connect": "Failed to connect, please verify the connection details"
+    }
+  }
+}
