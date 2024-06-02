@@ -67,7 +67,7 @@ class ReolinkHost:
             timeout=DEFAULT_TIMEOUT,
         )
 
-        self.update_cmd_list: dict[str : list[int]] = {}
+        self.update_cmd_list: dict[str, list[int]] = {}
 
         self.webhook_id: str | None = None
         self._onvif_push_supported: bool = True
