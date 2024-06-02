@@ -29,7 +29,7 @@
     "zigpy-xbee==0.20.1",
     "zigpy-zigate==0.12.0",
     "zigpy-znp==0.12.1",
-    "universal-silabs-flasher==0.0.18",
+    "universal-silabs-flasher==0.0.20",
     "pyserial-asyncio-fast==0.11"
   ],
   "usb": [

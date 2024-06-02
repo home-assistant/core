@@ -2162,7 +2162,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.1.8
 
 # homeassistant.components.zha
-universal-silabs-flasher==0.0.18
+universal-silabs-flasher==0.0.20
 
 # homeassistant.components.upb
 upb-lib==0.5.6
