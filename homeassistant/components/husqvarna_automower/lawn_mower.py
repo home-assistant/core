@@ -17,7 +17,7 @@ from homeassistant.components.lawn_mower import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -136,6 +136,10 @@ class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
         self, override_mode: str, duration: timedelta
     ) -> None:
         """Override the schedule with mowing or parking."""
+        if override_mode not in ["mowing", "parking"]:
+            raise ServiceValidationError(
+                "Only `mowing` and `parking` are supported for this service."
+            )
         duration_in_min = int(duration.total_seconds() / 60)
         if override_mode == "mowing":
             await self.coordinator.api.commands.start_for(

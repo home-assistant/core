@@ -12,7 +12,7 @@ from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERV
 from homeassistant.components.husqvarna_automower.lawn_mower import EXCEPTION_TEXT
 from homeassistant.components.lawn_mower import LawnMowerActivity
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
@@ -147,6 +147,40 @@ async def test_lawn_mower_service_commands(
     with pytest.raises(
         HomeAssistantError,
         match=EXCEPTION_TEXT.format(exception="Test error"),
+    ):
+        await hass.services.async_call(
+            domain=DOMAIN,
+            service=service,
+            target={"entity_id": "lawn_mower.test_mower_1"},
+            service_data=service_data,
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        (
+            "override_schedule",
+            {
+                "duration": {"days": 1, "hours": 12, "minutes": 30},
+                "override_mode": "fly_to_moon",
+            },
+        ),
+    ],
+)
+async def test_lawn_mower_wrong_service_commands(
+    hass: HomeAssistant,
+    service: str,
+    service_data: dict[str, int] | None,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test lawn_mower commands."""
+    await setup_integration(hass, mock_config_entry)
+    with pytest.raises(
+        ServiceValidationError,
+        match="Only `mowing` and `parking` are supported for this service.",
     ):
         await hass.services.async_call(
             domain=DOMAIN,
