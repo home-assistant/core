@@ -325,6 +325,11 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         """Try to gather infos of this device."""
         return None
 
+    def _notify_reauth_callback(self) -> None:
+        """Notify access denied callback."""
+        if self._reauth_callback is not None:
+            self.hass.loop.call_soon_threadsafe(self._reauth_callback)
+
     def _get_remote(self) -> Remote:
         """Create or return a remote control instance."""
         if self._remote is None:
