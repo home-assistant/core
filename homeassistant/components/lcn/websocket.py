@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_DOMAIN,
     CONF_ENTITIES,
-    CONF_ID,
+    CONF_ENTITY_ID,
     CONF_NAME,
     CONF_RESOURCE,
 )
@@ -58,7 +58,6 @@ URL_BASE: Final = "/lcn_static"
 
 async def register_panel(hass: HomeAssistant) -> None:
     """Register the LCN Panel and Websocket API."""
-    websocket_api.async_register_command(hass, websocket_get_hosts)
     websocket_api.async_register_command(hass, websocket_get_device_configs)
     websocket_api.async_register_command(hass, websocket_get_entity_configs)
     websocket_api.async_register_command(hass, websocket_scan_devices)
@@ -82,27 +81,6 @@ async def register_panel(hass: HomeAssistant) -> None:
             embed_iframe=True,
             require_admin=True,
         )
-
-
-@websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "lcn/hosts"})
-@websocket_api.async_response
-async def websocket_get_hosts(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
-) -> None:
-    """Get LCN hosts."""
-    config_entries = hass.config_entries.async_entries(DOMAIN)
-
-    hosts = [
-        {
-            CONF_NAME: config_entry.title,
-            CONF_ID: config_entry.entry_id,
-        }
-        for config_entry in config_entries
-        if not config_entry.disabled_by
-    ]
-
-    connection.send_result(msg["id"], hosts)
 
 
 @websocket_api.require_admin
@@ -146,6 +124,19 @@ async def websocket_get_entity_configs(
         ]
     else:
         entity_configs = config_entry.data[CONF_ENTITIES]
+
+    entity_registry = er.async_get(hass)
+    for entity_config in entity_configs:
+        entity_unique_id = generate_unique_id(
+            config_entry.entry_id,
+            entity_config[CONF_ADDRESS],
+            entity_config[CONF_RESOURCE],
+        )
+        entity_id = entity_registry.async_get_entity_id(
+            entity_config[CONF_DOMAIN], DOMAIN, entity_unique_id
+        )
+
+        entity_config[CONF_ENTITY_ID] = entity_id
 
     connection.send_result(msg["id"], entity_configs)
 
@@ -382,15 +373,11 @@ async def websocket_delete_entity(
         connection.send_result(msg["id"], False)
         return
 
-<<<<<<< HEAD
     entity_configs = [
         ec for ec in config_entry.data[CONF_ENTITIES] if ec != entity_config
     ]
     data = {**config_entry.data, CONF_ENTITIES: entity_configs}
-=======
-    data = deepcopy(dict(config_entry.data))
-    data[CONF_ENTITIES].remove(entity_config)
->>>>>>> b72fb0c0b6 (Add tests for lcn websockets)
+
     hass.config_entries.async_update_entry(config_entry, data=data)
 
     # cleanup registries
