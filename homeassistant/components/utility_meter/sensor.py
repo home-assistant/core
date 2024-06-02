@@ -374,7 +374,9 @@ class UtilityMeterSensor(RestoreSensor):
 
     _attr_translation_key = "utility_meter"
     _attr_should_poll = False
-    _unrecorded_attributes = frozenset({ATTR_NEXT_RESET})
+    _unrecorded_attributes = frozenset(
+        {ATTR_NEXT_RESET, ATTR_CRON_PATTERN, ATTR_PERIOD, ATTR_SOURCE_ID}
+    )
 
     def __init__(
         self,
