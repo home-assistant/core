@@ -32,11 +32,9 @@ async def async_get_config_entry_diagnostics(
     coordinator_data = coordinator.evse.data
     evse_raw_data = coordinator.evse.raw_data
 
-    diagnostic_data: dict[str, Any] = {
+    return {
         "config_entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "data": str(coordinator_data),
         "raw_data": json_loads(evse_raw_data["content"]),  # type: ignore[arg-type]
         "host_status": evse_raw_data["status_code"],
     }
-
-    return diagnostic_data
