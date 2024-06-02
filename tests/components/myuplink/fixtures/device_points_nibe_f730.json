@@ -951,5 +951,43 @@
     ],
     "scaleValue": "1",
     "zoneId": null
+  },
+  {
+    "category": "NIBEF F730 CU 3x400V",
+    "parameterId": "47041",
+    "parameterName": "comfort mode",
+    "parameterUnit": "",
+    "writable": true,
+    "timestamp": "2024-05-22T15:02:03+00:00",
+    "value": 0,
+    "strVal": "economy",
+    "smartHomeCategories": [],
+    "minValue": null,
+    "maxValue": null,
+    "stepValue": 1,
+    "enumValues": [
+      {
+        "value": "4",
+        "text": "smart control",
+        "icon": ""
+      },
+      {
+        "value": "0",
+        "text": "economy",
+        "icon": ""
+      },
+      {
+        "value": "1",
+        "text": "normal",
+        "icon": ""
+      },
+      {
+        "value": "2",
+        "text": "luxury",
+        "icon": ""
+      }
+    ],
+    "scaleValue": "1",
+    "zoneId": null
   }
 ]

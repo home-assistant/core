@@ -21,6 +21,9 @@ def find_matching_platform(
             return Platform.SWITCH
         return Platform.BINARY_SENSOR
 
+    if len(device_point.enum_values) > 0 and device_point.writable:
+        return Platform.SELECT
+
     if (
         description
         and description.native_unit_of_measurement == "DM"
