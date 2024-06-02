@@ -3524,3 +3524,18 @@ async def test_set_time_zone_deprecated(hass: HomeAssistant) -> None:
         ),
     ):
         await hass.config.set_time_zone("America/New_York")
+
+
+async def test_async_set_updates_last_reported(hass: HomeAssistant) -> None:
+    """Test async_set method updates last_reported AND last_reported_timestamp."""
+    hass.states.async_set("light.bowl", "on", {})
+    state = hass.states.get("light.bowl")
+    last_reported = state.last_reported
+    last_reported_timestamp = state.last_reported_timestamp
+
+    for _ in range(2):
+        hass.states.async_set("light.bowl", "on", {})
+        assert state.last_reported != last_reported
+        assert state.last_reported_timestamp != last_reported_timestamp
+        last_reported = state.last_reported
+        last_reported_timestamp = state.last_reported_timestamp

@@ -580,13 +580,13 @@ async def test_no_alerts(
 )
 async def test_alerts_change(
     hass: HomeAssistant,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     aioclient_mock: AiohttpClientMocker,
     ha_version: str,
     fixture_1: str,
-    expected_alerts_1: list[tuple(str, str)],
+    expected_alerts_1: list[tuple[str, str]],
     fixture_2: str,
-    expected_alerts_2: list[tuple(str, str)],
+    expected_alerts_2: list[tuple[str, str]],
 ) -> None:
     """Test creating issues based on alerts."""
     fixture_1_content = load_fixture(fixture_1, "homeassistant_alerts")

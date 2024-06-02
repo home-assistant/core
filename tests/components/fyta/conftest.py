@@ -11,7 +11,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 
 from .const import ACCESS_TOKEN, EXPIRATION, PASSWORD, USERNAME
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -27,6 +27,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_EXPIRATION: EXPIRATION,
         },
         minor_version=2,
+        entry_id="ce5f5431554d101905d31797e1232da8",
     )
 
 
@@ -39,6 +40,13 @@ def mock_fyta_connector():
         tzinfo=UTC
     )
     mock_fyta_connector.client = AsyncMock(autospec=True)
+    mock_fyta_connector.update_all_plants.return_value = load_json_object_fixture(
+        "plant_status.json", FYTA_DOMAIN
+    )
+    mock_fyta_connector.plant_list = load_json_object_fixture(
+        "plant_list.json", FYTA_DOMAIN
+    )
+
     mock_fyta_connector.login = AsyncMock(
         return_value={
             CONF_ACCESS_TOKEN: ACCESS_TOKEN,
