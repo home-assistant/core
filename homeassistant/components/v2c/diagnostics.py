@@ -13,8 +13,6 @@ from homeassistant.util.json import json_loads
 from .const import DOMAIN
 from .coordinator import V2CUpdateCoordinator
 
-CONF_TITLE = "title"
-
 TO_REDACT = {
     CONF_HOST,
 }
