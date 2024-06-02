@@ -8,6 +8,7 @@ import google.ai.generativelanguage as glm
 from google.api_core.exceptions import GoogleAPICallError
 import google.generativeai as genai
 import google.generativeai.types as genai_types
+from google.protobuf.json_format import MessageToDict
 import voluptuous as vol
 from voluptuous_openapi import convert
 
@@ -105,6 +106,17 @@ def _format_tool(tool: llm.Tool) -> dict[str, Any]:
     )
 
 
+def _adjust_value(value: Any) -> Any:
+    """Reverse unnecessary single quotes escaping."""
+    if isinstance(value, str):
+        return value.replace("\\'", "'")
+    if isinstance(value, list):
+        return [_adjust_value(item) for item in value]
+    if isinstance(value, dict):
+        return {k: _adjust_value(v) for k, v in value.items()}
+    return value
+
+
 class GoogleGenerativeAIConversationEntity(
     conversation.ConversationEntity, conversation.AbstractConversationAgent
 ):
@@ -151,20 +163,22 @@ class GoogleGenerativeAIConversationEntity(
         intent_response = intent.IntentResponse(language=user_input.language)
         llm_api: llm.APIInstance | None = None
         tools: list[dict[str, Any]] | None = None
+        user_name: str | None = None
+        llm_context = llm.LLMContext(
+            platform=DOMAIN,
+            context=user_input.context,
+            user_prompt=user_input.text,
+            language=user_input.language,
+            assistant=conversation.DOMAIN,
+            device_id=user_input.device_id,
+        )
 
         if self.entry.options.get(CONF_LLM_HASS_API):
             try:
                 llm_api = await llm.async_get_api(
                     self.hass,
                     self.entry.options[CONF_LLM_HASS_API],
-                    llm.ToolContext(
-                        platform=DOMAIN,
-                        context=user_input.context,
-                        user_prompt=user_input.text,
-                        language=user_input.language,
-                        assistant=conversation.DOMAIN,
-                        device_id=user_input.device_id,
-                    ),
+                    llm_context,
                 )
             except HomeAssistantError as err:
                 LOGGER.error("Error getting LLM API: %s", err)
@@ -213,6 +227,15 @@ class GoogleGenerativeAIConversationEntity(
             conversation_id = ulid.ulid_now()
             messages = [{}, {}]
 
+        if (
+            user_input.context
+            and user_input.context.user_id
+            and (
+                user := await self.hass.auth.async_get_user(user_input.context.user_id)
+            )
+        ):
+            user_name = user.name
+
         try:
             if llm_api:
                 api_prompt = llm_api.api_prompt
@@ -222,13 +245,16 @@ class GoogleGenerativeAIConversationEntity(
             prompt = "\n".join(
                 (
                     template.Template(
-                        self.entry.options.get(
+                        llm.BASE_PROMPT
+                        + self.entry.options.get(
                             CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
                         ),
                         self.hass,
                     ).async_render(
                         {
                             "ha_name": self.hass.config.location_name,
+                            "user_name": user_name,
+                            "llm_context": llm_context,
                         },
                         parse_result=False,
                     ),
@@ -295,21 +321,22 @@ class GoogleGenerativeAIConversationEntity(
                     response=intent_response, conversation_id=conversation_id
                 )
             self.history[conversation_id] = chat.history
-            tool_calls = [
+            function_calls = [
                 part.function_call for part in chat_response.parts if part.function_call
             ]
-            if not tool_calls or not llm_api:
+            if not function_calls or not llm_api:
                 break
 
             tool_responses = []
-            for tool_call in tool_calls:
-                tool_input = llm.ToolInput(
-                    tool_name=tool_call.name,
-                    tool_args=dict(tool_call.args),
-                )
-                LOGGER.debug(
-                    "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
-                )
+            for function_call in function_calls:
+                tool_call = MessageToDict(function_call._pb)  # noqa: SLF001
+                tool_name = tool_call["name"]
+                tool_args = {
+                    key: _adjust_value(value)
+                    for key, value in tool_call["args"].items()
+                }
+                LOGGER.debug("Tool call: %s(%s)", tool_name, tool_args)
+                tool_input = llm.ToolInput(tool_name=tool_name, tool_args=tool_args)
                 try:
                     function_response = await llm_api.async_call_tool(tool_input)
                 except (HomeAssistantError, vol.Invalid) as e:
@@ -321,14 +348,14 @@ class GoogleGenerativeAIConversationEntity(
                 tool_responses.append(
                     glm.Part(
                         function_response=glm.FunctionResponse(
-                            name=tool_call.name, response=function_response
+                            name=tool_name, response=function_response
                         )
                     )
                 )
             chat_request = glm.Content(parts=tool_responses)
 
         intent_response.async_set_speech(
-            " ".join([part.text for part in chat_response.parts if part.text])
+            " ".join([part.text.strip() for part in chat_response.parts if part.text])
         )
         return conversation.ConversationResult(
             response=intent_response, conversation_id=conversation_id

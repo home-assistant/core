@@ -1,5 +1,7 @@
 """Tests for the tag component."""
 
+from typing import Any
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -18,7 +20,7 @@ from tests.typing import WebSocketGenerator
 @pytest.fixture
 def storage_setup_named_tag(
     hass: HomeAssistant,
-    hass_storage,
+    hass_storage: dict[str, Any],
 ):
     """Storage setup for test case of named tags."""
 
@@ -76,7 +78,7 @@ async def test_named_tag_scanned_event(
 
 
 @pytest.fixture
-def storage_setup_unnamed_tag(hass: HomeAssistant, hass_storage):
+def storage_setup_unnamed_tag(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage setup for test case of unnamed tags."""
 
     async def _storage(items=None):

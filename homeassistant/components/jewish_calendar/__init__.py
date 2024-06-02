@@ -16,11 +16,13 @@ from homeassistant.const import (
     CONF_TIME_ZONE,
     Platform,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
+from .binary_sensor import BINARY_SENSORS
 from .const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
@@ -32,6 +34,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
+from .sensor import INFO_SENSORS, TIME_SENSORS
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -93,7 +96,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
         is_fixable=False,
-        breaks_in_ha_version="2024.10.0",
+        issue_domain=DOMAIN,
+        breaks_in_ha_version="2024.12.0",
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
         translation_placeholders={
@@ -131,17 +135,23 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         timezone=config_entry.data.get(CONF_TIME_ZONE, hass.config.time_zone),
     )
 
-    prefix = get_unique_prefix(
-        location, language, candle_lighting_offset, havdalah_offset
-    )
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
         CONF_LANGUAGE: language,
         CONF_DIASPORA: diaspora,
         CONF_LOCATION: location,
         CONF_CANDLE_LIGHT_MINUTES: candle_lighting_offset,
         CONF_HAVDALAH_OFFSET_MINUTES: havdalah_offset,
-        "prefix": prefix,
     }
+
+    # Update unique ID to be unrelated to user defined options
+    old_prefix = get_unique_prefix(
+        location, language, candle_lighting_offset, havdalah_offset
+    )
+
+    ent_reg = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(ent_reg, config_entry.entry_id)
+    if not entries or any(entry.unique_id.startswith(old_prefix) for entry in entries):
+        async_update_unique_ids(ent_reg, config_entry.entry_id, old_prefix)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
@@ -157,3 +167,25 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
+
+
+@callback
+def async_update_unique_ids(
+    ent_reg: er.EntityRegistry, new_prefix: str, old_prefix: str
+) -> None:
+    """Update unique ID to be unrelated to user defined options.
+
+    Introduced with release 2024.6
+    """
+    platform_descriptions = {
+        Platform.BINARY_SENSOR: BINARY_SENSORS,
+        Platform.SENSOR: (*INFO_SENSORS, *TIME_SENSORS),
+    }
+    for platform, descriptions in platform_descriptions.items():
+        for description in descriptions:
+            new_unique_id = f"{new_prefix}-{description.key}"
+            old_unique_id = f"{old_prefix}_{description.key}"
+            if entity_id := ent_reg.async_get_entity_id(
+                platform, DOMAIN, old_unique_id
+            ):
+                ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)

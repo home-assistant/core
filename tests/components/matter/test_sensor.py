@@ -84,6 +84,16 @@ async def air_quality_sensor_node_fixture(
     )
 
 
+@pytest.fixture(name="air_purifier_node")
+async def air_purifier_node_fixture(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> MatterNode:
+    """Fixture for an air purifier node."""
+    return await setup_integration_with_node_fixture(
+        hass, "air-purifier", matter_client
+    )
+
+
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_sensor_null_value(
@@ -333,3 +343,110 @@ async def test_air_quality_sensor(
     state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_pm10")
     assert state
     assert state.state == "50.0"
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_air_purifier_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    air_purifier_node: MatterNode,
+) -> None:
+    """Test Air quality sensors are creayted for air purifier device."""
+    # Carbon Dioxide
+    state = hass.states.get("sensor.air_purifier_carbon_dioxide")
+    assert state
+    assert state.state == "2.0"
+
+    # PM1
+    state = hass.states.get("sensor.air_purifier_pm1")
+    assert state
+    assert state.state == "2.0"
+
+    # PM2.5
+    state = hass.states.get("sensor.air_purifier_pm2_5")
+    assert state
+    assert state.state == "2.0"
+
+    # PM10
+    state = hass.states.get("sensor.air_purifier_pm10")
+    assert state
+    assert state.state == "2.0"
+
+    # Temperature
+    state = hass.states.get("sensor.air_purifier_temperature")
+    assert state
+    assert state.state == "20.0"
+
+    # Humidity
+    state = hass.states.get("sensor.air_purifier_humidity")
+    assert state
+    assert state.state == "50.0"
+
+    # VOCS
+    state = hass.states.get("sensor.air_purifier_vocs")
+    assert state
+    assert state.state == "2.0"
+    assert state.attributes["state_class"] == "measurement"
+    assert state.attributes["unit_of_measurement"] == "ppm"
+    assert state.attributes["device_class"] == "volatile_organic_compounds_parts"
+    assert state.attributes["friendly_name"] == "Air Purifier VOCs"
+
+    # Air Quality
+    state = hass.states.get("sensor.air_purifier_air_quality")
+    assert state
+    assert state.state == "good"
+    expected_options = [
+        "extremely_poor",
+        "very_poor",
+        "poor",
+        "fair",
+        "good",
+        "moderate",
+        "unknown",
+    ]
+    assert set(state.attributes["options"]) == set(expected_options)
+    assert state.attributes["device_class"] == "enum"
+    assert state.attributes["friendly_name"] == "Air Purifier Air quality"
+
+    # Carbon MonoOxide
+    state = hass.states.get("sensor.air_purifier_carbon_monoxide")
+    assert state
+    assert state.state == "2.0"
+    assert state.attributes["state_class"] == "measurement"
+    assert state.attributes["unit_of_measurement"] == "ppm"
+    assert state.attributes["device_class"] == "carbon_monoxide"
+    assert state.attributes["friendly_name"] == "Air Purifier Carbon monoxide"
+
+    # Nitrogen Dioxide
+    state = hass.states.get("sensor.air_purifier_nitrogen_dioxide")
+    assert state
+    assert state.state == "2.0"
+    assert state.attributes["state_class"] == "measurement"
+    assert state.attributes["unit_of_measurement"] == "ppm"
+    assert state.attributes["device_class"] == "nitrogen_dioxide"
+    assert state.attributes["friendly_name"] == "Air Purifier Nitrogen dioxide"
+
+    # Ozone Concentration
+    state = hass.states.get("sensor.air_purifier_ozone")
+    assert state
+    assert state.state == "2.0"
+    assert state.attributes["state_class"] == "measurement"
+    assert state.attributes["unit_of_measurement"] == "ppm"
+    assert state.attributes["device_class"] == "ozone"
+    assert state.attributes["friendly_name"] == "Air Purifier Ozone"
+
+    # Hepa Filter Condition
+    state = hass.states.get("sensor.air_purifier_hepa_filter_condition")
+    assert state
+    assert state.state == "100"
+    assert state.attributes["state_class"] == "measurement"
+    assert state.attributes["unit_of_measurement"] == "%"
+    assert state.attributes["friendly_name"] == "Air Purifier Hepa filter condition"
+
+    # Activated Carbon Filter Condition
+    state = hass.states.get("sensor.air_purifier_activated_carbon_filter_condition")
+    assert state
+    assert state.state == "100"
+    assert state.attributes["state_class"] == "measurement"
+    assert state.attributes["unit_of_measurement"] == "%"

@@ -984,6 +984,7 @@ omit =
     homeassistant/components/orvibo/switch.py
     homeassistant/components/osoenergy/__init__.py
     homeassistant/components/osoenergy/binary_sensor.py
+    homeassistant/components/osoenergy/entity.py
     homeassistant/components/osoenergy/sensor.py
     homeassistant/components/osoenergy/water_heater.py
     homeassistant/components/osramlightify/light.py
@@ -1470,12 +1471,6 @@ omit =
     homeassistant/components/traccar_server/entity.py
     homeassistant/components/traccar_server/helpers.py
     homeassistant/components/traccar_server/sensor.py
-    homeassistant/components/tractive/__init__.py
-    homeassistant/components/tractive/binary_sensor.py
-    homeassistant/components/tractive/device_tracker.py
-    homeassistant/components/tractive/entity.py
-    homeassistant/components/tractive/sensor.py
-    homeassistant/components/tractive/switch.py
     homeassistant/components/tradfri/__init__.py
     homeassistant/components/tradfri/base_class.py
     homeassistant/components/tradfri/coordinator.py
@@ -1534,7 +1529,6 @@ omit =
     homeassistant/components/v2c/coordinator.py
     homeassistant/components/v2c/entity.py
     homeassistant/components/v2c/number.py
-    homeassistant/components/v2c/sensor.py
     homeassistant/components/v2c/switch.py
     homeassistant/components/vallox/__init__.py
     homeassistant/components/vallox/coordinator.py

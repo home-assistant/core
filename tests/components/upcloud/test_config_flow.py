@@ -110,7 +110,9 @@ async def test_options(hass: HomeAssistant) -> None:
     )
 
 
-async def test_already_configured(hass: HomeAssistant, requests_mock) -> None:
+async def test_already_configured(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Test duplicate entry aborts and updates data."""
 
     config_entry = MockConfigEntry(

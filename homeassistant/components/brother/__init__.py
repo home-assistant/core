@@ -3,16 +3,14 @@
 from __future__ import annotations
 
 from brother import Brother, SnmpError
-from pysnmp.hlapi.asyncio.cmdgen import lcd
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.components.snmp import async_get_snmp_engine
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN, SNMP_ENGINE
 from .coordinator import BrotherDataUpdateCoordinator
-from .utils import get_snmp_engine
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -24,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> b
     host = entry.data[CONF_HOST]
     printer_type = entry.data[CONF_TYPE]
 
-    snmp_engine = get_snmp_engine(hass)
+    snmp_engine = await async_get_snmp_engine(hass)
     try:
         brother = await Brother.create(
             host, printer_type=printer_type, snmp_engine=snmp_engine
@@ -44,16 +42,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    loaded_entries = [
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.state == ConfigEntryState.LOADED
-    ]
-    # We only want to remove the SNMP engine when unloading the last config entry
-    if unload_ok and len(loaded_entries) == 1:
-        lcd.unconfigure(hass.data[SNMP_ENGINE], None)
-        hass.data.pop(SNMP_ENGINE)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
