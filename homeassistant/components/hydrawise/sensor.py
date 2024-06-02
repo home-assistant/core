@@ -28,10 +28,6 @@ class HydrawiseSensorEntityDescription(SensorEntityDescription):
     """Describes Hydrawise binary sensor."""
 
     value_fn: Callable[[HydrawiseSensor], Any]
-    availability_fn: Callable[[HydrawiseSensor], Any] = (
-        lambda status_sensor: status_sensor.controller.online
-        and status_sensor.coordinator.last_update_success
-    )
 
 
 def _get_zone_watering_time(sensor: HydrawiseSensor) -> int:
@@ -182,8 +178,3 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     def _update_attrs(self) -> None:
         """Update state attributes."""
         self._attr_native_value = self.entity_description.value_fn(self)
-
-    @property
-    def available(self) -> bool:
-        """Set the entity availability."""
-        return self.entity_description.availability_fn(self)

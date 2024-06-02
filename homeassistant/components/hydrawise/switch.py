@@ -31,10 +31,6 @@ class HydrawiseSwitchEntityDescription(SwitchEntityDescription):
     turn_on_fn: Callable[[Hydrawise, Zone], Coroutine[Any, Any, None]]
     turn_off_fn: Callable[[Hydrawise, Zone], Coroutine[Any, Any, None]]
     value_fn: Callable[[Zone], bool]
-    availability_fn: Callable[[HydrawiseSwitch], Any] = (
-        lambda status_sensor: status_sensor.controller.online
-        and status_sensor.coordinator.last_update_success
-    )
 
 
 SWITCH_TYPES: tuple[HydrawiseSwitchEntityDescription, ...] = (
@@ -102,8 +98,3 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
     def _update_attrs(self) -> None:
         """Update state attributes."""
         self._attr_is_on = self.entity_description.value_fn(self.zone)
-
-    @property
-    def available(self) -> bool:
-        """Set the entity availability."""
-        return self.entity_description.availability_fn(self)

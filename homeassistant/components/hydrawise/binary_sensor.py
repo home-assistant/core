@@ -24,10 +24,7 @@ class HydrawiseBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Hydrawise binary sensor."""
 
     value_fn: Callable[[HydrawiseBinarySensor], bool | None]
-    availability_fn: Callable[[HydrawiseBinarySensor], bool] = (
-        lambda status_sensor: status_sensor.controller.online
-        and status_sensor.coordinator.last_update_success
-    )
+    availability_fn: Callable[[HydrawiseBinarySensor], bool] = None
 
 
 CONTROLLER_BINARY_SENSORS: tuple[HydrawiseBinarySensorEntityDescription, ...] = (
@@ -63,10 +60,6 @@ ZONE_BINARY_SENSORS: tuple[HydrawiseBinarySensorEntityDescription, ...] = (
         value_fn=(
             lambda watering_sensor: watering_sensor.zone.scheduled_runs.current_run
             is not None
-        ),
-        availability_fn=(
-            lambda status_sensor: status_sensor.controller.online
-            and status_sensor.coordinator.last_update_success
         ),
     ),
 )
@@ -118,4 +111,6 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
     @property
     def available(self) -> bool:
         """Set the entity availability."""
-        return self.entity_description.availability_fn(self)
+        if self.entity_description.availability_fn:
+            return self.entity_description.availability_fn(self)
+        return super().available
