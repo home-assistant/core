@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.tessie.const import DOMAIN
-from homeassistant.const import CONF_ACCESS_TOKEN, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -16,7 +16,6 @@ from .common import (
     ERROR_UNKNOWN,
     TEST_CONFIG,
     TEST_STATE_OF_ALL_VEHICLES,
-    setup_platform,
 )
 
 from tests.common import MockConfigEntry
