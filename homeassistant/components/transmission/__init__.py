@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import partial
 import logging
 import re
-from typing import Any
+from typing import Any, Literal
 
 import transmission_rpc
 from transmission_rpc.error import (
@@ -248,6 +248,7 @@ async def get_api(
     hass: HomeAssistant, entry: dict[str, Any]
 ) -> transmission_rpc.Client:
     """Get Transmission client."""
+    protocol: Literal["http", "https"]
     protocol = "https" if entry[CONF_SSL] else "http"
     host = entry[CONF_HOST]
     port = entry[CONF_PORT]
