@@ -14,6 +14,13 @@
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "Please reenter the password for: {username}",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     }
   },
