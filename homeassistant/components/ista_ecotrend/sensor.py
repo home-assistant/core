@@ -196,6 +196,13 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
             value_type=self.entity_description.value_type,
         )
 
+    async def async_added_to_hass(self) -> None:
+        """When added to hass."""
+        # perform initial statistics import, otherwise it would take
+        # 1 day when _handle_coordinator_update is triggered for the first time.
+        self.hass.async_create_task(self.update_statistics())
+        await super().async_added_to_hass()
+
     def _handle_coordinator_update(self) -> None:
         """Handle coordinator update."""
         self.hass.async_create_task(self.update_statistics())
@@ -216,6 +223,8 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
             False,
             {"sum"},
         )
+
+        _LOGGER.debug("Last statistics: %s", last_stats)
 
         if last_stats:
             statistics_sum = last_stats[statistic_id][0].get("sum") or 0.0
@@ -247,4 +256,6 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
                 "statistic_id": statistic_id,
                 "unit_of_measurement": self.entity_description.native_unit_of_measurement,
             }
-            async_add_external_statistics(self.hass, metadata, statistics)
+            if statistics:
+                _LOGGER.debug("Insert statistics: %s %s", metadata, statistics)
+                async_add_external_statistics(self.hass, metadata, statistics)
