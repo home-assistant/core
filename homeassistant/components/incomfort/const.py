@@ -1,3 +1,3 @@
-"""Constants for `InComfort` integration."""
+"""Constants for Intergas InComfort integration."""
 
 DOMAIN = "incomfort"
