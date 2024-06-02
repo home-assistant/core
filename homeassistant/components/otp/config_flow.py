@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_TOKEN): str,
+        vol.Required(CONF_TOKEN): str,
         vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
     }
 )
