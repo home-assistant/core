@@ -114,4 +114,4 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
             _LOGGER.warning("Update failed, message is: %s", err)
 
         else:
-            async_dispatcher_send(self.hass, DOMAIN)
+            async_dispatcher_send(self.hass, f"{DOMAIN}_{self.unique_id}")

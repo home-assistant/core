@@ -105,7 +105,11 @@ class IncomfortEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
-        self.async_on_remove(async_dispatcher_connect(self.hass, DOMAIN, self._refresh))
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, f"{DOMAIN}_{self.unique_id}", self._refresh
+            )
+        )
 
     @callback
     def _refresh(self) -> None:
