@@ -1,4 +1,4 @@
-"""Test Hydrawise binary_sensor."""
+"""Test entity availability."""
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
@@ -35,7 +35,7 @@ async def test_controller_offline(
     snapshot: SnapshotAssertion,
     platform: Platform,
 ) -> None:
-    """Test that all binary sensors are working."""
+    """Test availability for sensors when controller is offline."""
     with patch(
         "homeassistant.components.hydrawise.PLATFORMS",
         [platform],
@@ -65,7 +65,7 @@ async def test_api_offline(
     snapshot: SnapshotAssertion,
     platform: Platform,
 ) -> None:
-    """Test that all binary sensors are working."""
+    """Test availability of sensors when API call fails."""
     with patch(
         "homeassistant.components.hydrawise.PLATFORMS",
         [platform],
