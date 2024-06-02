@@ -1,7 +1,6 @@
 {
   "domain": "ista_ecotrend",
   "name": "ista Ecotrend",
-  "after_dependencies": ["recorder"],
   "codeowners": ["@tr4nt0r"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ista_ecotrend",
