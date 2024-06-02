@@ -195,9 +195,6 @@
       "total_pack_energy": {
         "name": "Total pack energy"
       },
-      "version": {
-        "name": "version"
-      },
       "vin": {
         "name": "Vehicle"
       },
