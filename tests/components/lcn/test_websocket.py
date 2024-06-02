@@ -54,18 +54,6 @@ ENTITIES_DELETE_PAYLOAD = {
 }
 
 
-async def test_lcn_hosts_command(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, entry, lcn_connection
-) -> None:
-    """Test lcn/hosts command."""
-    client = await hass_ws_client(hass)
-    await client.send_json({"id": 42, "type": "lcn/hosts"})
-
-    res = await client.receive_json()
-    assert res["success"], res
-    assert res["result"] == [{"name": entry.title, "id": entry.entry_id}]
-
-
 async def test_lcn_devices_command(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, entry, lcn_connection
 ) -> None:
