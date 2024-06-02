@@ -92,7 +92,6 @@ class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
 
     _attr_name = None
     _attr_supported_features = SUPPORT_STATE_SERVICES
-    coordinator: AutomowerDataUpdateCoordinator
 
     def __init__(
         self,
