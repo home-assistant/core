@@ -37,7 +37,6 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import ABCCachedProperties, Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-import homeassistant.helpers.issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -203,17 +202,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the weather component."""
     component = hass.data[DOMAIN] = EntityComponent[WeatherEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
-    )
-    component.async_register_legacy_entity_service(
-        LEGACY_SERVICE_GET_FORECAST,
-        {vol.Required("type"): vol.In(("daily", "hourly", "twice_daily"))},
-        async_get_forecast_service,
-        required_features=[
-            WeatherEntityFeature.FORECAST_DAILY,
-            WeatherEntityFeature.FORECAST_HOURLY,
-            WeatherEntityFeature.FORECAST_TWICE_DAILY,
-        ],
-        supports_response=SupportsResponse.ONLY,
     )
     component.async_register_entity_service(
         SERVICE_GET_FORECASTS,
@@ -1010,32 +998,6 @@ def raise_unsupported_forecast(entity_id: str, forecast_type: str) -> None:
     raise HomeAssistantError(
         f"Weather entity '{entity_id}' does not support '{forecast_type}' forecast"
     )
-
-
-async def async_get_forecast_service(
-    weather: WeatherEntity, service_call: ServiceCall
-) -> ServiceResponse:
-    """Get weather forecast.
-
-    Deprecated: please use async_get_forecasts_service.
-    """
-    _LOGGER.warning(
-        "Detected use of service 'weather.get_forecast'. "
-        "This is deprecated and will stop working in Home Assistant 2024.6. "
-        "Use 'weather.get_forecasts' instead which supports multiple entities",
-    )
-    ir.async_create_issue(
-        weather.hass,
-        DOMAIN,
-        "deprecated_service_weather_get_forecast",
-        breaks_in_ha_version="2024.6.0",
-        is_fixable=True,
-        is_persistent=False,
-        issue_domain=weather.platform.platform_name,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_service_weather_get_forecast",
-    )
-    return await async_get_forecasts_service(weather, service_call)
 
 
 async def async_get_forecasts_service(
