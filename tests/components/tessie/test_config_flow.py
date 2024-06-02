@@ -150,10 +150,15 @@ async def test_reauth_errors(
 ) -> None:
     """Test reauth flows that fail."""
 
-    mock_entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
     mock_config_flow_get_state_of_all_vehicles.side_effect = side_effect
 
-    result = await hass.config_entries.flow.async_init(
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=TEST_CONFIG,
+    )
+    mock_entry.add_to_hass(hass)
+
+    result1 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
@@ -164,7 +169,7 @@ async def test_reauth_errors(
     )
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
+        result1["flow_id"],
         TEST_CONFIG,
     )
     await hass.async_block_till_done()
