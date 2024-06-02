@@ -255,23 +255,17 @@
     }
   },
   "services": {
-    "park_for": {
-      "name": "Park for",
+    "override_schedule": {
+      "name": "Override schedule",
       "description": "Parks the mower for a given time. The schedule will be overriden during that time.",
       "fields": {
         "duration": {
           "name": "Duration",
           "description": "How long the override will last in minutes."
-        }
-      }
-    },
-    "start_for": {
-      "name": "Start for",
-      "description": "Starts the mower for a given time. The schedule will be overriden during that time.",
-      "fields": {
-        "duration": {
-          "name": "Duration",
-          "description": "How long the override will last in minutes."
+        },
+        "override_mode": {
+          "name": "Override mode",
+          "description": "Which mode."
         }
       }
     }

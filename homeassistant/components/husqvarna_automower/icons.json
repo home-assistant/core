@@ -34,7 +34,6 @@
     }
   },
   "services": {
-    "park_for": "mdi:parking",
-    "start_for": "mdi:clock-start"
+    "override_schedule": "mdi:debug-step-over"
   }
 }

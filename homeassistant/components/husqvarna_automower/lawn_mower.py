@@ -17,7 +17,7 @@ from homeassistant.components.lawn_mower import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -73,19 +73,12 @@ async def async_setup_entry(
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
-        "start_for",
+        "override_schedule",
         {
+            vol.Required("override_mode"): cv.string,
             vol.Required("duration"): vol.Coerce(int),
         },
-        "async_start_for",
-    )
-
-    platform.async_register_entity_service(
-        "park_for",
-        {
-            vol.Required("duration"): vol.Coerce(int),
-        },
-        "async_park_for",
+        "async_override_schedule",
     )
 
 
@@ -94,6 +87,7 @@ class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
 
     _attr_name = None
     _attr_supported_features = SUPPORT_STATE_SERVICES
+    coordinator: AutomowerDataUpdateCoordinator
 
     def __init__(
         self,
@@ -134,11 +128,9 @@ class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
         await self.coordinator.api.commands.park_until_next_schedule(self.mower_id)
 
     @handle_sending_exception
-    async def async_start_for(self, duration: int) -> None:
-        """Let the mower mow for a given time."""
-        await self.coordinator.api.commands.start_for(self.mower_id, duration)
-
-    @handle_sending_exception
-    async def async_park_for(self, duration: int) -> None:
-        """Let the mower park for a given time."""
-        await self.coordinator.api.commands.park_for(self.mower_id, duration)
+    async def async_override_schedule(self, override_mode: str, duration: int) -> None:
+        """Override the schedule with mowing or parking."""
+        if override_mode == "mowing":
+            await self.coordinator.api.commands.start_for(self.mower_id, duration)
+        if override_mode == "parking":
+            await self.coordinator.api.commands.park_for(self.mower_id, duration)

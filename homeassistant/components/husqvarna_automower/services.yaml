@@ -1,4 +1,4 @@
-start_for:
+override_schedule:
   target:
     entity:
       integration: "husqvarna_automower"
@@ -6,26 +6,13 @@ start_for:
   fields:
     duration:
       required: true
-      example: 60
-      default: 100
       selector:
         number:
-          min: 1
-          max: 60480
-          unit_of_measurement: "min"
-
-park_for:
-  target:
-    entity:
-      integration: "husqvarna_automower"
-      domain: "lawn_mower"
-  fields:
-    duration:
+    override_mode:
       required: true
-      example: 60
-      default: 100
+      example: "mowing"
       selector:
-        number:
-          min: 1
-          max: 60480
-          unit_of_measurement: "min"
+        select:
+          options:
+            - "mowing"
+            - "parking"

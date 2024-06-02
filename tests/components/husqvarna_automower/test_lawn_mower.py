@@ -60,8 +60,18 @@ async def test_lawn_mower_states(
         ("lawn_mower", "resume_schedule", "start_mowing", None),
         ("lawn_mower", "pause_mowing", "pause", None),
         ("lawn_mower", "park_until_next_schedule", "dock", None),
-        (DOMAIN, "start_for", "start_for", {"duration": 123}),
-        (DOMAIN, "park_for", "park_for", {"duration": "321"}),
+        (
+            DOMAIN,
+            "start_for",
+            "override_schedule",
+            {"duration": 123, "override_mode": "mowing"},
+        ),
+        (
+            DOMAIN,
+            "park_for",
+            "override_schedule",
+            {"duration": "321", "override_mode": "parking"},
+        ),
     ],
 )
 async def test_lawn_mower_commands(
