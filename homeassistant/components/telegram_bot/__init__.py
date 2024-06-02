@@ -288,7 +288,6 @@ def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
     """Read a file and return it as a BytesIO object."""
     with open(file_path, "rb") as file:
         data = io.BytesIO(file.read())
-        data.seek(0)
         data.name = file_path
         return data
 
