@@ -36,7 +36,7 @@ async def test_send_message(hass: HomeAssistant, webhook_platform) -> None:
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SEND_MESSAGE,
-        {ATTR_MESSAGE: "test_message"},
+        {ATTR_MESSAGE: "test_message", ATTR_MESSAGE_THREAD_ID: "123"},
         blocking=True,
         context=context,
     )
@@ -44,6 +44,8 @@ async def test_send_message(hass: HomeAssistant, webhook_platform) -> None:
 
     assert len(events) == 1
     assert events[0].context == context
+    assert events[0].data[ATTR_MESSAGE_THREAD_ID] == "123"
+
 
 
 async def test_send_message_thread(hass: HomeAssistant, webhook_platform) -> None:

@@ -702,6 +702,10 @@ class TelegramNotificationService:
                 }
                 if message_tag is not None:
                     event_data[ATTR_MESSAGE_TAG] = message_tag
+                if kwargs_msg[ATTR_MESSAGE_THREAD_ID] is not None:
+                    event_data[ATTR_MESSAGE_THREAD_ID] = kwargs_msg[
+                        ATTR_MESSAGE_THREAD_ID
+                    ]
                 self.hass.bus.async_fire(
                     EVENT_TELEGRAM_SENT, event_data, context=context
                 )
