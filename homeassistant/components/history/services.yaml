@@ -1,0 +1,13 @@
+retrieve:
+  fields:
+    entity_ids:
+      required: true
+      selector:
+        entity:
+          multiple: true
+    start_time:
+      selector:
+        datetime:
+    end_time:
+      selector:
+        datetime:

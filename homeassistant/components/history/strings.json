@@ -1,0 +1,22 @@
+{
+  "services": {
+    "retrieve": {
+      "name": "Retrieve History",
+      "description": "Get history for an entity",
+      "fields": {
+        "entity_ids": {
+          "name": "Entities",
+          "description": "The entities to get historic data for."
+        },
+        "start_time": {
+          "name": "Start time",
+          "description": "Start of the historic period to retrieve. Defaults to one day before end time."
+        },
+        "end_time": {
+          "name": "End time",
+          "description": "End of the historic period to retrieve. Defaults to now."
+        }
+      }
+    }
+  }
+}

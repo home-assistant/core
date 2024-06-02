@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime as dt, timedelta
 from http import HTTPStatus
-from typing import cast
+from typing import Any, cast
 
 from aiohttp import web
 import voluptuous as vol
@@ -14,8 +14,15 @@ from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
-from homeassistant.core import HomeAssistant, valid_entity_id
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    State,
+    SupportsResponse,
+    valid_entity_id,
+)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
@@ -48,6 +55,59 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(HistoryPeriodView())
     frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box")
     websocket_api.async_setup(hass)
+
+    def retrieve_history_job(
+        entity_ids: list[str],
+        start_time: dt,
+        end_time: dt,
+    ) -> dict[str, list[State | dict[str, Any]]]:
+        with session_scope(hass=hass, read_only=True) as session:
+            return history.get_significant_states_with_session(
+                hass=hass,
+                session=session,
+                start_time=start_time,
+                end_time=end_time,
+                entity_ids=entity_ids,
+                filters=None,
+                compressed_state_format=False,
+                include_start_time_state=True,
+                minimal_response=True,
+                no_attributes=True,
+                significant_changes_only=True,
+            )
+
+    async def retrieve_history_handler(call: ServiceCall) -> ServiceResponse:
+        entity_ids = call.data["entity_ids"]
+
+        end_time = dt_util.utcnow()
+        if "end_time" in call.data:
+            end_time = call.data["end_time"].astimezone()
+
+        start_time = end_time - _ONE_DAY
+        if "start_time" in call.data:
+            start_time = call.data["start_time"].astimezone()
+
+        return cast(
+            ServiceResponse,
+            await get_instance(hass).async_add_executor_job(
+                retrieve_history_job, entity_ids, start_time, end_time
+            ),
+        )
+
+    hass.services.async_register(
+        DOMAIN,
+        "retrieve",
+        retrieve_history_handler,
+        supports_response=SupportsResponse.ONLY,
+        schema=vol.Schema(
+            {
+                vol.Required("entity_ids"): cv.entity_ids,
+                vol.Optional("start_time"): cv.datetime,
+                vol.Optional("end_time"): cv.datetime,
+            }
+        ),
+    )
+
     return True
 
 
