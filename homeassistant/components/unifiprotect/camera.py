@@ -60,7 +60,7 @@ def _create_rtsp_repair(
         learn_more_url="https://www.home-assistant.io/integrations/unifiprotect/#camera-streams",
         severity=IssueSeverity.WARNING,
         translation_key=translation_key,
-        translation_placeholders={"camera": camera.display_name},
+        translation_placeholders={"camera": camera.device_name},
         data={"entry_id": entry.entry_id, "camera_id": camera.id},
     )
 
@@ -84,7 +84,7 @@ def _get_camera_channels(
                 # only warn on startup
                 _LOGGER.warning(
                     "Camera does not have any channels: %s (id: %s)",
-                    camera.display_name,
+                    camera.device_name,
                     camera.id,
                 )
             data.async_add_pending_camera_id(camera.id)
@@ -196,10 +196,10 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         camera_name = get_camera_base_name(channel)
         if self._secure:
             self._attr_unique_id = f"{device.mac}_{channel.id}"
-            self._attr_name = f"{device.display_name} {camera_name}"
+            self._attr_name = f"{device.device_name} {camera_name}"
         else:
             self._attr_unique_id = f"{device.mac}_{channel.id}_insecure"
-            self._attr_name = f"{device.display_name} {camera_name} (Insecure)"
+            self._attr_name = f"{device.device_name} {camera_name} (Insecure)"
         # only the default (first) channel is enabled by default
         self._attr_entity_registry_enabled_default = is_default and secure
 

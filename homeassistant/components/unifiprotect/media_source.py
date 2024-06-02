@@ -418,8 +418,8 @@ class ProtectMediaSource(MediaSource):
             title = f"{EVENT_NAME_MAP[event_type].title()} > {title}"
 
         if camera is not None:
-            title = f"{camera.display_name} > {title}"
-        return f"{data.api.bootstrap.nvr.display_name} > {title}"
+            title = f"{camera.device_name} > {title}"
+        return f"{data.api.bootstrap.nvr.device_name} > {title}"
 
     async def _build_event(
         self,

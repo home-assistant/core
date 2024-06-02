@@ -165,7 +165,7 @@ async def remove_privacy_zone(hass: HomeAssistant, call: ServiceCall) -> None:
 
     if remove_index is None:
         raise ServiceValidationError(
-            f"Could not find privacy zone with name {name} on camera {camera.display_name}."
+            f"Could not find privacy zone with name {name} on camera {camera.device_name}."
         )
 
     def remove_zone() -> None:

@@ -142,7 +142,7 @@ class RTSPRepair(ProtectRepair):
     def _async_get_placeholders(self) -> dict[str, str]:
         description_placeholders = super()._async_get_placeholders()
         if self._camera is not None:
-            description_placeholders["camera"] = self._camera.display_name
+            description_placeholders["camera"] = self._camera.device_name
 
         return description_placeholders
 

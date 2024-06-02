@@ -138,7 +138,7 @@ def _get_doorbell_options(api: ProtectApiClient) -> list[dict[str, Any]]:
 def _get_paired_camera_options(api: ProtectApiClient) -> list[dict[str, Any]]:
     options = [{"id": TYPE_EMPTY_VALUE, "name": "Not Paired"}]
     options.extend(
-        {"id": camera.id, "name": camera.display_name or camera.type}
+        {"id": camera.id, "name": camera.device_name or camera.type}
         for camera in api.bootstrap.cameras.values()
     )
 
@@ -373,7 +373,7 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         """Initialize the unifi protect select entity."""
         self._async_set_options(data, description)
         super().__init__(data, device, description)
-        self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
+        self._attr_name = f"{self.device.device_name} {self.entity_description.name}"
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:

@@ -654,7 +654,7 @@ def _async_event_entities(
             _LOGGER.debug(
                 "Adding binary sensor entity %s for %s",
                 description.name,
-                device.display_name,
+                device.device_name,
             )
 
     return entities
