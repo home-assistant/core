@@ -587,13 +587,6 @@ class MQTT:
 
         self._misc_timer = self.loop.call_at(self.loop.time() + 1, _async_misc)
 
-    @callback
-    def _async_cancel_misc_timer(self) -> None:
-        """Cancel the misc loop."""
-        if self._misc_timer:
-            self._misc_timer.cancel()
-            self._misc_timer = None
-
     def _increase_socket_buffer_size(self, sock: SocketType) -> None:
         """Increase the socket buffer size."""
         if not hasattr(sock, "setsockopt") and hasattr(sock, "_socket"):
@@ -661,7 +654,9 @@ class MQTT:
         self._async_connection_result(False)
         if fileno > -1:
             self.loop.remove_reader(sock)
-        self._async_cancel_misc_timer()
+        if self._misc_timer:
+            self._misc_timer.cancel()
+            self._misc_timer = None
 
     @callback
     def _async_writer_callback(self, client: mqtt.Client) -> None:
