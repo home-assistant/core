@@ -28,8 +28,8 @@
       "rain_sensor": {
         "name": "Rain sensor"
       },
-      "online": {
-        "name": "Online"
+      "controller": {
+        "name": "Controller"
       }
     },
     "sensor": {

@@ -74,4 +74,5 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
     @property
     def available(self) -> bool:
         """Set the entity availability."""
+        # Default availability is controller is online and last update was success
         return self.controller.online and self.coordinator.last_update_success

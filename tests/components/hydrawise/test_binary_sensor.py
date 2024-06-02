@@ -65,7 +65,7 @@ async def test_controller_online_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    connectivity = hass.states.get("binary_sensor.home_controller_online")
+    connectivity = hass.states.get("binary_sensor.home_controller_controller")
     assert connectivity is not None
     assert connectivity.state == "off"
 
@@ -74,6 +74,6 @@ async def test_controller_online_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    connectivity = hass.states.get("binary_sensor.home_controller_online")
+    connectivity = hass.states.get("binary_sensor.home_controller_controller")
     assert connectivity is not None
     assert connectivity.state == "on"
