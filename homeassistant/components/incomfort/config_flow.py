@@ -37,12 +37,10 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
                 TextSelectorConfig(type=TextSelectorType.PASSWORD)
             ),
         }
-        if (
-            user_input is not None
-            and await async_connect_gateway(self.hass, user_input, errors) is not None
-        ):
+        if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            return self.async_create_entry(title=TITLE, data=user_input)
+            if await async_connect_gateway(self.hass, user_input, errors):
+                return self.async_create_entry(title=TITLE, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=vol.Schema(data_schema), errors=errors
