@@ -80,6 +80,7 @@ async def async_setup_entry(
             vol.Required("duration"): vol.All(
                 cv.time_period,
                 cv.positive_timedelta,
+                vol.Range(min=timedelta(minutes=1), max=timedelta(days=42)),
             ),
         },
         "async_override_schedule",

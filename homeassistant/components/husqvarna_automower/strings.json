@@ -261,7 +261,7 @@
       "fields": {
         "duration": {
           "name": "Duration",
-          "description": "How long the override will last in minutes."
+          "description": "Minimum: 1 minute, maximum: 42 days, seconds will be ignored."
         },
         "override_mode": {
           "name": "Override mode",
