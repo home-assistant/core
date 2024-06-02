@@ -28,7 +28,7 @@ async def async_setup_entry(
     devices: list[LedSCLightEntity] = []
     for websc in client.devices.values():
         ledsc = LedSCLightEntity(
-            client_id=f"{config.data[CONF_HOST]}:{config.data[CONF_PORT]}",
+            client_id=config.entry_id,
             websc=websc,
             hass=hass,
         )
