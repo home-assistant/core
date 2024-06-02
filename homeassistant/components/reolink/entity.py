@@ -93,7 +93,7 @@ class ReolinkHostCoordinatorEntity(ReolinkBaseCoordinatorEntity[None]):
             self.entity_description.cmd_key is not None
             and self.entity_description.cmd_key not in self._host.update_cmd_list
         ):
-            self._host.update_cmd_list.append(self.entity_description.cmd_key)
+            self._host.update_cmd_list[self.entity_description.cmd_key] = []
 
 
 class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
@@ -128,3 +128,13 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
                 sw_version=self._host.api.camera_sw_version(dev_ch),
                 configuration_url=self._conf_url,
             )
+
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        await super().async_added_to_hass()
+        cmd_key = self.entity_description.cmd_key
+        if (
+            cmd_key is not None
+            and self._channel not in self._host.update_cmd_list[cmd_key]
+        ):
+            self._host.update_cmd_list[cmd_key].append(self._channel)
