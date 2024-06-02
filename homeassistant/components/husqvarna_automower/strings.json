@@ -257,7 +257,7 @@
   "services": {
     "override_schedule": {
       "name": "Override schedule",
-      "description": "Parks the mower for a given time. The schedule will be overriden during that time.",
+      "description": "Overrides the schedule by a duration of time either with mowing or parking.",
       "fields": {
         "duration": {
           "name": "Duration",
@@ -265,7 +265,7 @@
         },
         "override_mode": {
           "name": "Override mode",
-          "description": "Which mode."
+          "description": "With which action the schedule should be overridden."
         }
       }
     }

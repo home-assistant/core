@@ -1,6 +1,7 @@
 """Husqvarna Automower lawn mower entity."""
 
 from collections.abc import Awaitable, Callable, Coroutine
+from datetime import timedelta
 import functools
 import logging
 from typing import Any
@@ -76,7 +77,10 @@ async def async_setup_entry(
         "override_schedule",
         {
             vol.Required("override_mode"): cv.string,
-            vol.Required("duration"): vol.Coerce(int),
+            vol.Required("duration"): vol.All(
+                cv.time_period,
+                cv.positive_timedelta,
+            ),
         },
         "async_override_schedule",
     )
@@ -128,9 +132,14 @@ class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
         await self.coordinator.api.commands.park_until_next_schedule(self.mower_id)
 
     @handle_sending_exception
-    async def async_override_schedule(self, override_mode: str, duration: int) -> None:
+    async def async_override_schedule(
+        self, override_mode: str, duration: timedelta
+    ) -> None:
         """Override the schedule with mowing or parking."""
+        duration_in_min = int(duration.total_seconds() / 60)
         if override_mode == "mowing":
-            await self.coordinator.api.commands.start_for(self.mower_id, duration)
+            await self.coordinator.api.commands.start_for(
+                self.mower_id, duration_in_min
+            )
         if override_mode == "parking":
-            await self.coordinator.api.commands.park_for(self.mower_id, duration)
+            await self.coordinator.api.commands.park_for(self.mower_id, duration_in_min)

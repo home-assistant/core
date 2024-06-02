@@ -6,8 +6,10 @@ override_schedule:
   fields:
     duration:
       required: true
+      example: "{'days': 1, 'hours': 12, 'minutes': 30}"
       selector:
-        number:
+        duration:
+          enable_day: true
     override_mode:
       required: true
       example: "mowing"

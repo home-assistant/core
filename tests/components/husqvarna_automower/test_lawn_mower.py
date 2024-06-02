@@ -55,45 +55,31 @@ async def test_lawn_mower_states(
 
 
 @pytest.mark.parametrize(
-    ("domain", "aioautomower_command", "service", "service_data"),
+    ("aioautomower_command", "service"),
     [
-        ("lawn_mower", "resume_schedule", "start_mowing", None),
-        ("lawn_mower", "pause_mowing", "pause", None),
-        ("lawn_mower", "park_until_next_schedule", "dock", None),
-        (
-            DOMAIN,
-            "start_for",
-            "override_schedule",
-            {"duration": 123, "override_mode": "mowing"},
-        ),
-        (
-            DOMAIN,
-            "park_for",
-            "override_schedule",
-            {"duration": "321", "override_mode": "parking"},
-        ),
+        ("resume_schedule", "start_mowing"),
+        ("pause_mowing", "pause"),
+        ("park_until_next_schedule", "dock"),
     ],
 )
 async def test_lawn_mower_commands(
     hass: HomeAssistant,
-    domain: str,
     aioautomower_command: str,
     service: str,
-    service_data: dict[str, int] | None,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test lawn_mower commands."""
     await setup_integration(hass, mock_config_entry)
-    mocked_method = getattr(mock_automower_client.commands, aioautomower_command)
+    mocked_method = AsyncMock()
+    setattr(mock_automower_client.commands, aioautomower_command, mocked_method)
     await hass.services.async_call(
-        domain=domain,
+        domain="lawn_mower",
         service=service,
         target={"entity_id": "lawn_mower.test_mower_1"},
-        service_data=service_data,
         blocking=True,
     )
-    assert len(mocked_method.mock_calls) == 1
+    mocked_method.assert_called_once_with(TEST_MOWER_ID)
 
     getattr(
         mock_automower_client.commands, aioautomower_command
@@ -103,7 +89,67 @@ async def test_lawn_mower_commands(
         match=EXCEPTION_TEXT.format(exception="Test error"),
     ):
         await hass.services.async_call(
-            domain=domain,
+            domain="lawn_mower",
+            service=service,
+            target={"entity_id": "lawn_mower.test_mower_1"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("aioautomower_command", "extra_data", "service", "service_data"),
+    [
+        (
+            "start_for",
+            180,
+            "override_schedule",
+            {
+                "duration": {"days": 0, "hours": 3, "minutes": 0},
+                "override_mode": "mowing",
+            },
+        ),
+        (
+            "park_for",
+            2190,
+            "override_schedule",
+            {
+                "duration": {"days": 1, "hours": 12, "minutes": 30},
+                "override_mode": "parking",
+            },
+        ),
+    ],
+)
+async def test_lawn_mower_service_commands(
+    hass: HomeAssistant,
+    aioautomower_command: str,
+    extra_data: int | None,
+    service: str,
+    service_data: dict[str, int] | None,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test lawn_mower commands."""
+    await setup_integration(hass, mock_config_entry)
+    mocked_method = AsyncMock()
+    setattr(mock_automower_client.commands, aioautomower_command, mocked_method)
+    await hass.services.async_call(
+        domain=DOMAIN,
+        service=service,
+        target={"entity_id": "lawn_mower.test_mower_1"},
+        service_data=service_data,
+        blocking=True,
+    )
+    mocked_method.assert_called_once_with(TEST_MOWER_ID, extra_data)
+
+    getattr(
+        mock_automower_client.commands, aioautomower_command
+    ).side_effect = ApiException("Test error")
+    with pytest.raises(
+        HomeAssistantError,
+        match=EXCEPTION_TEXT.format(exception="Test error"),
+    ):
+        await hass.services.async_call(
+            domain=DOMAIN,
             service=service,
             target={"entity_id": "lawn_mower.test_mower_1"},
             service_data=service_data,
