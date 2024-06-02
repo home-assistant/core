@@ -1689,8 +1689,10 @@ def help_test_all(module: ModuleType) -> None:
 def extract_stack_to_frame(extract_stack: list[Mock]) -> FrameType:
     """Convert an extract stack to a frame list."""
     stack = list(extract_stack)
+    _globals = globals()
     for frame in stack:
         frame.f_back = None
+        frame.f_globals = _globals
         frame.f_code.co_filename = frame.filename
         frame.f_lineno = int(frame.lineno)
 

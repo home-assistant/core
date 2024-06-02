@@ -1271,7 +1271,7 @@ async def test_hass_components_use_reported(
     )
     integration_frame = frame.IntegrationFrame(
         custom_integration=True,
-        _frame=mock_integration_frame,
+        frame=mock_integration_frame,
         integration="test_integration_frame",
         module="custom_components.test_integration_frame",
         relative_filename="custom_components/test_integration_frame/__init__.py",
@@ -1969,7 +1969,7 @@ async def test_hass_helpers_use_reported(
     """Test that use of hass.components is reported."""
     integration_frame = frame.IntegrationFrame(
         custom_integration=True,
-        _frame=mock_integration_frame,
+        frame=mock_integration_frame,
         integration="test_integration_frame",
         module="custom_components.test_integration_frame",
         relative_filename="custom_components/test_integration_frame/__init__.py",
