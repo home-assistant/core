@@ -17,7 +17,7 @@ from requests.exceptions import RequestException
 
 from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -58,10 +58,8 @@ class IstaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "Unable to connect and retrieve data from ista EcoTrend, try again later"
                 ) from e
             except (LoginError, KeycloakError) as e:
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="authentication_exception",
-                    translation_placeholders={CONF_EMAIL: self.ista._email},  # noqa: SLF001
+                raise HomeAssistantError(
+                    f"Authentication failed for {self.ista._email}, check your login credentials"  # noqa: SLF001
                 ) from e
             else:
                 self.details = {

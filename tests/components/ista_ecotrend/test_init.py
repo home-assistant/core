@@ -4,13 +4,13 @@ from unittest.mock import MagicMock
 
 from pyecotrend_ista.exception_classes import (
     InternalServerError,
+    KeycloakError,
     LoginError,
     ServerError,
 )
 import pytest
 from requests.exceptions import RequestException
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -36,7 +36,14 @@ async def test_entry_setup_unload(
 
 @pytest.mark.parametrize(
     ("side_effect"),
-    [ServerError, InternalServerError, RequestException, TimeoutError],
+    [
+        ServerError,
+        InternalServerError,
+        RequestException,
+        TimeoutError,
+        LoginError(None),
+        KeycloakError,
+    ],
 )
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
@@ -51,20 +58,3 @@ async def test_config_entry_not_ready(
     await hass.async_block_till_done()
 
     assert ista_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_config_entry_auth_failed(
-    hass: HomeAssistant,
-    ista_config_entry: MockConfigEntry,
-    mock_ista: MagicMock,
-) -> None:
-    """Test config entry not ready."""
-    mock_ista.login.side_effect = LoginError(None)
-    ista_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(ista_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert ista_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert any(
-        ista_config_entry.async_get_active_flows(hass, {config_entries.SOURCE_REAUTH})
-    )
