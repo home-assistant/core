@@ -1,4 +1,4 @@
-"""Exceptions raised by `InComfort` integration."""
+"""Exceptions raised by Intergas InComfort integration."""
 
 from homeassistant.core import DOMAIN
 from homeassistant.exceptions import (

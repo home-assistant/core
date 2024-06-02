@@ -60,6 +60,7 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
         self._attr_name = None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
+            manufacturer="Intergas",
             name=f"Thermostat {room.room_no} ({heater.serial_no})",
         )
 

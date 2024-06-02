@@ -1,4 +1,4 @@
-"""Tests for the `InComfort` config flow."""
+"""Tests for the Intergas InComfort config flow."""
 
 from unittest.mock import AsyncMock, MagicMock
 

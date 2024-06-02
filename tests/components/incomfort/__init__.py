@@ -1,1 +1,1 @@
-"""Tests for the `InComfort` integration."""
+"""Tests for the Intergas InComfort integration."""

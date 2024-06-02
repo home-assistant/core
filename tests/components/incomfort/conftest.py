@@ -1,4 +1,4 @@
-"""Fixtures for `InComfort` integration."""
+"""Fixtures for Intergas InComfort integration."""
 
 from collections.abc import Generator
 from typing import Any
