@@ -45,6 +45,10 @@ def mock_ista() -> Generator[MagicMock, None, None]:
             "homeassistant.components.ista_ecotrend.config_flow.PyEcotrendIsta",
             new=mock_client,
         ),
+        patch(
+            "homeassistant.components.ista_ecotrend.coordinator.PyEcotrendIsta",
+            new=mock_client,
+        ),
     ):
         client = mock_client.return_value
         client._uuid = "26e93f1a-c828-11ea-87d0-0242ac130003"
@@ -60,6 +64,70 @@ def mock_ista() -> Generator[MagicMock, None, None]:
                     },
                 }
             ]
+        }
+        client.getUUIDs.return_value = ["26e93f1a-c828-11ea-87d0-0242ac130003"]
+        client.get_raw.return_value = {
+            "consumptionUnitId": "26e93f1a-c828-11ea-87d0-0242ac130003",
+            "consumptions": [
+                {
+                    "date": {"month": 5, "year": 2024},
+                    "readings": [
+                        {
+                            "type": "heating",
+                            "value": "35",
+                            "additionalValue": "38,0",
+                        },
+                        {
+                            "type": "warmwater",
+                            "value": "1,0",
+                            "additionalValue": "57,0",
+                        },
+                    ],
+                },
+                {
+                    "date": {"month": 4, "year": 2024},
+                    "readings": [
+                        {
+                            "type": "heating",
+                            "value": "104",
+                            "additionalValue": "113,0",
+                        },
+                        {
+                            "type": "warmwater",
+                            "value": "1,1",
+                            "additionalValue": "61,1",
+                        },
+                    ],
+                },
+            ],
+            "costs": [
+                {
+                    "date": {"month": 5, "year": 2024},
+                    "costsByEnergyType": [
+                        {
+                            "type": "heating",
+                            "value": 21,
+                        },
+                        {
+                            "type": "warmwater",
+                            "value": 7,
+                        },
+                    ],
+                },
+                {
+                    "date": {"month": 4, "year": 2024},
+                    "costsByEnergyType": [
+                        {
+                            "type": "heating",
+                            "value": 62,
+                        },
+                        {
+                            "type": "warmwater",
+                            "value": 7,
+                        },
+                    ],
+                },
+            ],
         }
 
         yield client
