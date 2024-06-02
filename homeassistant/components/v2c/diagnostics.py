@@ -29,7 +29,7 @@ async def async_get_config_entry_diagnostics(
     if TYPE_CHECKING:
         assert coordinator.evse
 
-    coordinator_data = coordinator.evse.data
+    coordinator_data = await coordinator.evse.get_data()
     evse_raw_data = coordinator.evse.raw_data
 
     return {
