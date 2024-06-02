@@ -537,6 +537,9 @@
       "record": {
         "name": "Record"
       },
+      "manual_record": {
+        "name": "Manual record"
+      },
       "buzzer": {
         "name": "Buzzer on event"
       },
