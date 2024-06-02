@@ -253,7 +253,7 @@ async def test_service_invalid_device_id(
 
 
 async def test_service_invalid_device_id2(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, config_entry: ConfigEntry
 ) -> None:
     """Test that service fails with ValueError if device_id not found in vehicles."""
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -261,7 +261,6 @@ async def test_service_invalid_device_id2(
 
     extra_vehicle = MOCK_VEHICLES["captur_phev"]["expected_device"]
 
-    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers=extra_vehicle[ATTR_IDENTIFIERS],

@@ -218,8 +218,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
-        """Handle re-authentication with Aladdin Connect."""
-
+        """Handle re-authentication with MQTT broker."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 

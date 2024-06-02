@@ -101,5 +101,10 @@
         "description": "Enter your access token from {url}"
       }
     }
+  },
+  "exceptions": {
+    "send_message_timeout": {
+      "message": "Timeout sending message with Tibber"
+    }
   }
 }

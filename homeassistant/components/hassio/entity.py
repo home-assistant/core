@@ -21,7 +21,7 @@ from .const import (
     KEY_TO_UPDATE_TYPES,
     SUPERVISOR_CONTAINER,
 )
-from .data import HassioDataUpdateCoordinator
+from .coordinator import HassioDataUpdateCoordinator
 
 
 class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):

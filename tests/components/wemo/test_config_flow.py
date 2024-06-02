@@ -3,7 +3,7 @@
 from dataclasses import asdict
 
 from homeassistant.components.wemo.const import DOMAIN
-from homeassistant.components.wemo.wemo_device import Options
+from homeassistant.components.wemo.coordinator import Options
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType

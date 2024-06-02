@@ -36,6 +36,7 @@ async def test_button_chime_remove(
 
 async def test_reboot_button(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     chime: Chime,
 ) -> None:
@@ -49,7 +50,6 @@ async def test_reboot_button(
     unique_id = f"{chime.mac}_reboot"
     entity_id = "button.test_chime_reboot_device"
 
-    entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(entity_id)
     assert entity
     assert entity.disabled
@@ -68,6 +68,7 @@ async def test_reboot_button(
 
 async def test_chime_button(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     chime: Chime,
 ) -> None:
@@ -81,7 +82,6 @@ async def test_chime_button(
     unique_id = f"{chime.mac}_play"
     entity_id = "button.test_chime_play_chime"
 
-    entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(entity_id)
     assert entity
     assert not entity.disabled
@@ -98,7 +98,11 @@ async def test_chime_button(
 
 
 async def test_adopt_button(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorlock: Doorlock, doorbell: Camera
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorlock: Doorlock,
+    doorbell: Camera,
 ) -> None:
     """Test button entity."""
 
@@ -122,7 +126,6 @@ async def test_adopt_button(
     unique_id = f"{doorlock.mac}_adopt"
     entity_id = "button.test_lock_adopt_device"
 
-    entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(entity_id)
     assert entity
     assert not entity.disabled
@@ -139,12 +142,15 @@ async def test_adopt_button(
 
 
 async def test_adopt_button_removed(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorlock: Doorlock, doorbell: Camera
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorlock: Doorlock,
+    doorbell: Camera,
 ) -> None:
     """Test button entity."""
 
     entity_id = "button.test_lock_adopt_device"
-    entity_registry = er.async_get(hass)
 
     doorlock._api = ufp.api
     doorlock.is_adopted = False

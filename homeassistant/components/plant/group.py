@@ -1,5 +1,7 @@
 """Describe group states."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from homeassistant.const import STATE_OK, STATE_PROBLEM
@@ -13,7 +15,7 @@ if TYPE_CHECKING:
 
 @callback
 def async_describe_on_off_states(
-    hass: HomeAssistant, registry: "GroupIntegrationRegistry"
+    hass: HomeAssistant, registry: GroupIntegrationRegistry
 ) -> None:
     """Describe group on off states."""
     registry.on_off_states(DOMAIN, {STATE_PROBLEM}, STATE_PROBLEM, STATE_OK)

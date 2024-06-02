@@ -24,11 +24,9 @@ from homeassistant.components.homeassistant.exposed_entities import (
     ExposedEntities,
     async_expose_entity,
 )
-from homeassistant.components.http.const import StrictConnectionMode
 from homeassistant.const import CONTENT_TYPE_JSON, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.issue_registry import IssueRegistry
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -388,7 +386,6 @@ async def test_cloud_connection_info(hass: HomeAssistant) -> None:
             "connected": False,
             "enabled": False,
             "instance_domain": None,
-            "strict_connection": StrictConnectionMode.DISABLED,
         },
         "version": HA_VERSION,
     }
@@ -401,7 +398,7 @@ async def test_cloud_connection_info(hass: HomeAssistant) -> None:
 async def test_async_create_repair_issue_known(
     cloud: MagicMock,
     mock_cloud_setup: None,
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
     translation_key: str,
 ) -> None:
     """Test create repair issue for known repairs."""
@@ -419,7 +416,7 @@ async def test_async_create_repair_issue_known(
 async def test_async_create_repair_issue_unknown(
     cloud: MagicMock,
     mock_cloud_setup: None,
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test not creating repair issue for unknown repairs."""
     identifier = "abc123"

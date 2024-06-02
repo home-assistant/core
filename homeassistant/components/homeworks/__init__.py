@@ -150,8 +150,7 @@ async def async_send_command(hass: HomeAssistant, data: Mapping[str, Any]) -> No
         else:
             _LOGGER.debug("Sending command '%s'", command)
             await hass.async_add_executor_job(
-                # pylint: disable-next=protected-access
-                homeworks_data.controller._send,
+                homeworks_data.controller._send,  # noqa: SLF001
                 command,
             )
 
@@ -312,8 +311,7 @@ class HomeworksKeypad:
 
     def _request_keypad_led_states(self) -> None:
         """Query keypad led state."""
-        # pylint: disable-next=protected-access
-        self._controller._send(f"RKLS, {self._addr}")
+        self._controller._send(f"RKLS, {self._addr}")  # noqa: SLF001
 
     async def request_keypad_led_states(self) -> None:
         """Query keypad led state.

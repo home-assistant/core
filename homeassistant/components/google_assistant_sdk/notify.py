@@ -15,7 +15,10 @@ from .helpers import async_send_text_commands, default_language_code
 # https://support.google.com/assistant/answer/9071582?hl=en
 LANG_TO_BROADCAST_COMMAND = {
     "en": ("broadcast {0}", "broadcast to {1} {0}"),
-    "de": ("Nachricht an alle {0}", "Nachricht an alle an {1} {0}"),
+    "de": (
+        "Nachricht an alle {0}",  # codespell:ignore alle
+        "Nachricht an alle an {1} {0}",  # codespell:ignore alle
+    ),
     "es": ("Anuncia {0}", "Anuncia en {1} {0}"),
     "fr": ("Diffuse {0}", "Diffuse dans {1} {0}"),
     "it": ("Trasmetti {0}", "Trasmetti in {1} {0}"),

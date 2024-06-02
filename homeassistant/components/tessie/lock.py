@@ -15,37 +15,39 @@ from tessie_api import (
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.lock import ATTR_CODE, LockEntity
 from homeassistant.components.script import scripts_with_entity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import TessieConfigEntry
 from .const import DOMAIN, TessieChargeCableLockStates
 from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TessieConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Tessie sensor platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     entities = [
-        klass(vehicle.state_coordinator)
+        klass(vehicle)
         for klass in (TessieLockEntity, TessieCableLockEntity)
-        for vehicle in data
+        for vehicle in data.vehicles
     ]
 
     ent_reg = er.async_get(hass)
 
-    for vehicle in data:
+    for vehicle in data.vehicles:
         entity_id = ent_reg.async_get_entity_id(
             Platform.LOCK,
             DOMAIN,
-            f"{vehicle.state_coordinator.vin}-vehicle_state_speed_limit_mode_active",
+            f"{vehicle.vin}-vehicle_state_speed_limit_mode_active",
         )
         if entity_id:
             entity_entry = ent_reg.async_get(entity_id)
@@ -53,7 +55,7 @@ async def async_setup_entry(
             if entity_entry.disabled:
                 ent_reg.async_remove(entity_id)
             else:
-                entities.append(TessieSpeedLimitEntity(vehicle.state_coordinator))
+                entities.append(TessieSpeedLimitEntity(vehicle))
 
                 entity_automations = automations_with_entity(hass, entity_id)
                 entity_scripts = scripts_with_entity(hass, entity_id)
