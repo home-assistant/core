@@ -3,7 +3,7 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
-from airgradient import AirGradientConnectionError
+from airgradient import AirGradientConnectionError, ConfigurationControl
 
 from homeassistant.components.airgradient import DOMAIN
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
@@ -55,6 +55,34 @@ async def test_full_flow(
         CONF_HOST: "10.0.0.131",
     }
     assert result["result"].unique_id == "84fce612f5b8"
+    mock_airgradient_client.set_configuration_control.assert_awaited_once_with(
+        ConfigurationControl.LOCAL
+    )
+
+
+async def test_flow_with_registered_device(
+    hass: HomeAssistant,
+    mock_airgradient_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test we don't revert the cloud setting."""
+    mock_airgradient_client.get_config.return_value.configuration_control = (
+        ConfigurationControl.CLOUD
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "10.0.0.131"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "84fce612f5b8"
+    mock_airgradient_client.set_configuration_control.assert_not_called()
 
 
 async def test_flow_errors(
@@ -147,3 +175,31 @@ async def test_zeroconf_flow(
         CONF_HOST: "10.0.0.131",
     }
     assert result["result"].unique_id == "84fce612f5b8"
+    mock_airgradient_client.set_configuration_control.assert_awaited_once_with(
+        ConfigurationControl.LOCAL
+    )
+
+
+async def test_zeroconf_flow_cloud_device(
+    hass: HomeAssistant,
+    mock_airgradient_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test zeroconf flow doesn't revert the cloud setting."""
+    mock_airgradient_client.get_config.return_value.configuration_control = (
+        ConfigurationControl.CLOUD
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_airgradient_client.set_configuration_control.assert_not_called()
