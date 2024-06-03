@@ -3,6 +3,8 @@
 from typing import Any
 
 from airgradient import AirGradientClient, AirGradientError, ConfigurationControl
+from awesomeversion import AwesomeVersion
+from mashumaro import MissingField
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
@@ -11,6 +13,8 @@ from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+
+MIN_VERSION = AwesomeVersion("3.1.1")
 
 
 class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -37,6 +41,9 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(discovery_info.properties["serialno"])
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+
+        if AwesomeVersion(discovery_info.properties["fw_ver"]) < MIN_VERSION:
+            return self.async_abort(reason="invalid_version")
 
         session = async_get_clientsession(self.hass)
         self.client = AirGradientClient(host, session=session)
@@ -78,6 +85,8 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
                 current_measures = await self.client.get_current_measures()
             except AirGradientError:
                 errors["base"] = "cannot_connect"
+            except MissingField:
+                return self.async_abort(reason="invalid_version")
             else:
                 await self.async_set_unique_id(current_measures.serial_number)
                 self._abort_if_unique_id_configured()
