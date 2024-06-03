@@ -30,5 +30,27 @@
       "timeout_error": "[%key:component::incomfort::config::abort::timeout_error%]",
       "unknown_error": "[%key:component::incomfort::config::abort::unknown_error%]"
     }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_unknown_error": {
+      "title": "YAML import failed with unknown error",
+      "description": "Configuring {integration_title} using YAML is being removed but there was an unknown error while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
+    },
+    "deprecated_yaml_import_issue_auth_error": {
+      "title": "YAML import failed due to an authentication error",
+      "description": "Configuring {integration_title} using YAML is being removed but there was an authentication error while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
+    },
+    "deprecated_yaml_import_issue_no_heaters": {
+      "title": "YAML import failed because no heaters were found",
+      "description": "Configuring {integration_title} using YAML is being removed but no heaters were found while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
+    },
+    "deprecated_yaml_import_issue_not_found": {
+      "title": "YAML import failed because no gateway was found",
+      "description": "Configuring {integration_title} using YAML is being removed but no Lan2RF gateway was found while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
+    },
+    "deprecated_yaml_import_issue_timeout_error": {
+      "title": "YAML import failed because of timeout issues",
+      "description": "Configuring {integration_title} using YAML is being removed but there was a timeout while connecting to your {integration_title} while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
+    }
   }
 }

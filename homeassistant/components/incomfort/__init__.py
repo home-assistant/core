@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from aiohttp import ClientResponseError
 from incomfortclient import IncomfortError, InvalidHeaterList
 import voluptuous as vol
@@ -11,6 +9,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -20,8 +19,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN
 from .errors import InConfortTimeout, InConfortUnknownError, NoHeaters, NotFound
 from .models import DATA_INCOMFORT, async_connect_gateway
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -43,36 +40,53 @@ PLATFORMS = (
     Platform.CLIMATE,
 )
 
+INTEGRATION_TITLE = "Intergas InComfort/Intouch Lan2RF gateway"
+
+
+async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
+    """Import config entry from configuration.yaml."""
+    if not hass.config_entries.async_entries(DOMAIN):
+        # Start import flow
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+        if result["type"] == FlowResultType.ABORT:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_yaml_import_issue_{result['reason']}",
+                breaks_in_ha_version="2025.1.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "integration_title": INTEGRATION_TITLE,
+                },
+            )
+            return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2025.1.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
+
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Create an Intergas InComfort/Intouch system."""
-
     if config := hass_config.get(DOMAIN):
-        ir.async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2025.1.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Intergas InComfort/Intouch Lan2RF gateway",
-            },
-        )
-
-    if hass.config_entries.async_entries(DOMAIN):
-        return True
-    # Start import flow
-    if config:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-            )
-        )
-
+        hass.async_create_task(_async_import(hass, config))
     return True
 
 
