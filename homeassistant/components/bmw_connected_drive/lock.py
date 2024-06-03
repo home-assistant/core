@@ -56,7 +56,6 @@ class BMWLock(BMWBaseEntity, LockEntity):
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the car."""
         _LOGGER.debug("%s: locking doors", self.vehicle.name)
-        prev_state = self._attr_is_locked
         # Only update the HA state machine if the vehicle reliably reports its lock state
         if self.door_lock_state_available:
             # Optimistic state set here because it takes some time before the
@@ -77,7 +76,6 @@ class BMWLock(BMWBaseEntity, LockEntity):
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the car."""
         _LOGGER.debug("%s: unlocking doors", self.vehicle.name)
-        prev_state = self._attr_is_locked
         # Only update the HA state machine if the vehicle reliably reports its lock state
         if self.door_lock_state_available:
             # Optimistic state set here because it takes some time before the
