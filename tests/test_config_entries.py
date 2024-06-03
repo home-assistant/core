@@ -2329,7 +2329,7 @@ async def test_entry_id_existing_entry(
         pytest.raises(HomeAssistantError),
         patch.dict(config_entries.HANDLERS, {"comp": TestFlow}),
         patch(
-            "homeassistant.config_entries.uuid_util.random_uuid_hex",
+            "homeassistant.config_entries.ulid_util.ulid_now",
             return_value=collide_entry_id,
         ),
     ):
