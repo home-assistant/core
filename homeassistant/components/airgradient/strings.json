@@ -29,7 +29,7 @@
         "state": {
           "cloud": "Cloud",
           "local": "Local",
-          "both": "Both"
+          "both": "Not setup"
         }
       },
       "display_temperature_unit": {
