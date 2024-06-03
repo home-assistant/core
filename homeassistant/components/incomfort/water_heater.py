@@ -12,6 +12,7 @@ from homeassistant.components.water_heater import WaterHeaterEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -39,7 +40,7 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
 
     _attr_min_temp = 30.0
     _attr_max_temp = 80.0
-    _attr_name = "Boiler"
+    _attr_name = None
     _attr_should_poll = True
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -51,6 +52,11 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
         self._heater = heater
 
         self._attr_unique_id = heater.serial_no
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, heater.serial_no)},
+            manufacturer="Intergas",
+            name="Boiler",
+        )
 
     @property
     def icon(self) -> str:
