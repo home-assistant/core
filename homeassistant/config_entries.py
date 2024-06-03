@@ -2125,6 +2125,7 @@ class ConfigEntries:
 
         # Check again after setup to make sure the lock
         # is still there because it could have been released
+        # unless we already reported it.
         if not non_locked_platform_forwards and not entry.setup_lock.locked():
             _report_non_locked_platform_forwards(entry)
         return True
