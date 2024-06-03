@@ -871,7 +871,7 @@ class DefaultAgent(ConversationEntity):
         if device_area is None:
             return None
 
-        return {"area": {"value": device_area.id, "text": device_area.name}}
+        return {"area": {"value": device_area.name, "text": device_area.name}}
 
     def _get_error_text(
         self,
