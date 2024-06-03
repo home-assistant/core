@@ -16,7 +16,7 @@ from homeassistant.components.mqtt.subscription import (
     async_unsubscribe_topics,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 from .discovery import PGLabDiscovery, create_discovery
 
@@ -35,7 +35,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PGLABConfigEntry) -> boo
     async def mqtt_subscribe(
         sub_state: PyPGLabSubState, topic: str, callback_func: PyPGLaSubscribeCallBack
     ) -> PyPGLabSubState:
-        async def discovery_message_received(msg: ReceiveMessage) -> None:
+        @callback
+        def discovery_message_received(msg: ReceiveMessage) -> None:
             callback_func(msg.topic, msg.payload)
 
         topics = {
