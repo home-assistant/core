@@ -34,9 +34,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             # Empty payload, Unexpected payload
             return self.async_abort(reason="invalid_discovery_info")
 
-        # "pglab/discovery/#" is hardcoded in manifest.json
-        assert discovery_info.subscribed_topic == "pglab/discovery/#"
-
         return await self.async_step_confirm()
 
     async def async_step_user(
