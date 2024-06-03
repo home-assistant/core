@@ -27,9 +27,6 @@
       },
       "rain_sensor": {
         "name": "Rain sensor"
-      },
-      "controller": {
-        "name": "Controller"
       }
     },
     "sensor": {
