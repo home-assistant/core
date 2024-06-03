@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any
@@ -18,6 +18,7 @@ from homeassistant.components.humidifier import (
     HumidifierEntity,
     HumidifierEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -83,6 +84,28 @@ async def async_setup_platform(
     """Set up the generic hygrostat platform."""
     if discovery_info:
         config = discovery_info
+    await _async_setup_config(
+        hass, config, config.get(CONF_UNIQUE_ID), async_add_entities
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    await _async_setup_config(
+        hass, config_entry.options, config_entry.entry_id, async_add_entities
+    )
+
+
+async def _async_setup_config(
+    hass: HomeAssistant,
+    config: Mapping[str, Any],
+    unique_id: str | None,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     name: str = config[CONF_NAME]
     switch_entity_id: str = config[CONF_HUMIDIFIER]
     sensor_entity_id: str = config[CONF_SENSOR]
@@ -98,7 +121,6 @@ async def async_setup_platform(
     initial_state: bool | None = config.get(CONF_INITIAL_STATE)
     away_humidity: int | None = config.get(CONF_AWAY_HUMIDITY)
     away_fixed: bool | None = config.get(CONF_AWAY_FIXED)
-    unique_id: str | None = config.get(CONF_UNIQUE_ID)
 
     async_add_entities(
         [
