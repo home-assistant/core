@@ -142,16 +142,16 @@ class PGLabDiscovery:
         # destroy all entities connected with the device
         entity_registry = er.async_get(hass)
         for platform, entityid in discovery_info.entities:
-            entity_id = entity_registry.async_get_entity_id(platform, DOMAIN, entityid)
-            if entity_id:
+            if entity_id := entity_registry.async_get_entity_id(
+                platform, DOMAIN, entityid
+            ):
                 entity_registry.async_remove(entity_id)
 
         # destroy the device
         device_registry = dr.async_get(hass)
-        device_entry = device_registry.async_get_device(
+        if device_entry := device_registry.async_get_device(
             identifiers={(DOMAIN, device_id)}
-        )
-        if device_entry:
+        ):
             device_registry.async_remove_device(device_entry.id)
 
         # clean the discovery info
