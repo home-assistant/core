@@ -71,7 +71,7 @@ class DiscoverDeviceInfo:
         self._hash = pglab_device.hash
         self._entities: list[tuple[str, str]] = []
 
-    def add_entity(self, entity: Entity) -> None:
+    def add_entity_id(self, entity: Entity) -> None:
         """Add the entity id."""
         if entity.unique_id:
             self._entities.append((entity.platform.domain, entity.unique_id))
@@ -260,7 +260,7 @@ class PGLabDiscovery:
         """Save a new PG LAB Device entity."""
         if device_id in self._discovered:
             discovery_info = self._discovered[device_id]
-            discovery_info.add_entity(entity)
+            discovery_info.add_entity_id(entity)
 
 
 # create an instance of the discovery PG LAB devices
