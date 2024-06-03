@@ -241,10 +241,10 @@ async def test_select_multiterm_zc0101_binary_output(
         assert state.state == attrs["enum"](1).name
 
 
-async def test_select(hass: HomeAssistant, siren) -> None:
+async def test_select(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, siren
+) -> None:
     """Test ZHA select platform."""
-
-    entity_registry = er.async_get(hass)
     zha_device, cluster = siren
     assert cluster is not None
     entity_id = find_entity_id(
