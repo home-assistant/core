@@ -53,11 +53,12 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm the setup."""
 
-        data = {
-            CONF_DISCOVERY_PREFIX: DISCOVERY_TOPIC,
-        }
-
         if user_input is not None:
-            return self.async_create_entry(title="PG LAB Electronics", data=data)
+            return self.async_create_entry(
+                title="PG LAB Electronics",
+                data={
+                    CONF_DISCOVERY_PREFIX: DISCOVERY_TOPIC,
+                },
+            )
 
         return self.async_show_form(step_id="confirm")
