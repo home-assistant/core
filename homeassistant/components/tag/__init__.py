@@ -413,4 +413,8 @@ class TagEntity(Entity):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self._entity_update_handlers[self._tag_id] = self.async_handle_event
-        self.async_on_remove(lambda: self._entity_update_handlers.pop(self._tag_id))
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle entity being removed."""
+        await super().async_will_remove_from_hass()
+        self._entity_update_handlers.pop(self._tag_id)
