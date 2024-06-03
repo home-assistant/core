@@ -16,6 +16,106 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "backup_capable": {
+        "name": "Backup capable"
+      },
+      "charge_state_battery_heater_on": {
+        "name": "Battery heater"
+      },
+      "charge_state_charger_phases": {
+        "name": "Charger has multiple phases"
+      },
+      "charge_state_conn_charge_cable": {
+        "name": "Charge cable"
+      },
+      "charge_state_preconditioning_enabled": {
+        "name": "Preconditioning enabled"
+      },
+      "charge_state_scheduled_charging_pending": {
+        "name": "Scheduled charging pending"
+      },
+      "charge_state_trip_charging": {
+        "name": "Trip charging"
+      },
+      "climate_state_cabin_overheat_protection_actively_cooling": {
+        "name": "Cabin overheat protection actively cooling"
+      },
+      "climate_state_is_preconditioning": {
+        "name": "Preconditioning"
+      },
+      "components_grid_services_enabled": {
+        "name": "Grid services enabled"
+      },
+      "grid_services_active": {
+        "name": "Grid services active"
+      },
+      "state": {
+        "name": "Status"
+      },
+      "vehicle_state_dashcam_state": {
+        "name": "Dashcam"
+      },
+      "vehicle_state_df": {
+        "name": "Front driver door"
+      },
+      "vehicle_state_dr": {
+        "name": "Rear driver door"
+      },
+      "vehicle_state_fd_window": {
+        "name": "Front driver window"
+      },
+      "vehicle_state_fp_window": {
+        "name": "Front passenger window"
+      },
+      "vehicle_state_is_user_present": {
+        "name": "User present"
+      },
+      "vehicle_state_pf": {
+        "name": "Front passenger door"
+      },
+      "vehicle_state_pr": {
+        "name": "Rear passenger door"
+      },
+      "vehicle_state_rd_window": {
+        "name": "Rear driver window"
+      },
+      "vehicle_state_rp_window": {
+        "name": "Rear passenger window"
+      },
+      "vehicle_state_tpms_soft_warning_fl": {
+        "name": "Tire pressure warning front left"
+      },
+      "vehicle_state_tpms_soft_warning_fr": {
+        "name": "Tire pressure warning front right"
+      },
+      "vehicle_state_tpms_soft_warning_rl": {
+        "name": "Tire pressure warning rear left"
+      },
+      "vehicle_state_tpms_soft_warning_rr": {
+        "name": "Tire pressure warning rear right"
+      }
+    },
+    "button": {
+      "boombox": {
+        "name": "Play fart"
+      },
+      "enable_keyless_driving": {
+        "name": "Keyless driving"
+      },
+      "flash_lights": {
+        "name": "Flash lights"
+      },
+      "homelink": {
+        "name": "Homelink"
+      },
+      "honk": {
+        "name": "Honk horn"
+      },
+      "wake": {
+        "name": "Wake"
+      }
+    },
     "climate": {
       "driver_temp": {
         "name": "[%key:component::climate::title%]",
@@ -29,6 +129,147 @@
             }
           }
         }
+      }
+    },
+    "device_tracker": {
+      "location": {
+        "name": "Location"
+      },
+      "route": {
+        "name": "Route"
+      }
+    },
+    "lock": {
+      "charge_state_charge_port_latch": {
+        "name": "Charge cable lock"
+      },
+      "vehicle_state_locked": {
+        "name": "[%key:component::lock::title%]"
+      },
+      "vehicle_state_speed_limit_mode_active": {
+        "name": "Speed limit"
+      }
+    },
+    "select": {
+      "climate_state_seat_heater_left": {
+        "name": "Seat heater front left",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium",
+          "off": "Off"
+        }
+      },
+      "climate_state_seat_heater_rear_center": {
+        "name": "Seat heater rear center",
+        "state": {
+          "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_seat_heater_rear_left": {
+        "name": "Seat heater rear left",
+        "state": {
+          "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_seat_heater_rear_right": {
+        "name": "Seat heater rear right",
+        "state": {
+          "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_seat_heater_right": {
+        "name": "Seat heater front right",
+        "state": {
+          "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_seat_heater_third_row_left": {
+        "name": "Seat heater third row left",
+        "state": {
+          "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_seat_heater_third_row_right": {
+        "name": "Seat heater third row right",
+        "state": {
+          "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_steering_wheel_heat_level": {
+        "name": "Steering wheel heater",
+        "state": {
+          "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
+          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "components_customer_preferred_export_rule": {
+        "name": "Allow export",
+        "state": {
+          "battery_ok": "Battery",
+          "never": "Never",
+          "pv_only": "Solar only"
+        }
+      },
+      "default_real_mode": {
+        "name": "Operation mode",
+        "state": {
+          "autonomous": "Autonomous",
+          "backup": "Backup",
+          "self_consumption": "Self consumption"
+        }
+      }
+    },
+    "media_player": {
+      "media": {
+        "name": "[%key:component::media_player::title%]"
+      }
+    },
+    "number": {
+      "backup_reserve_percent": {
+        "name": "Backup reserve"
+      },
+      "charge_state_charge_current_request": {
+        "name": "Charge current"
+      },
+      "charge_state_charge_limit_soc": {
+        "name": "Charge limit"
+      },
+      "off_grid_vehicle_charging_reserve_percent": {
+        "name": "Off grid reserve"
+      }
+    },
+    "cover": {
+      "charge_state_charge_port_door_open": {
+        "name": "Charge port door"
+      },
+      "vehicle_state_ft": {
+        "name": "Frunk"
+      },
+      "vehicle_state_rt": {
+        "name": "Trunk"
+      },
+      "windows": {
+        "name": "Windows"
       }
     },
     "sensor": {
@@ -166,8 +407,14 @@
       "vehicle_state_tpms_pressure_rr": {
         "name": "Tire pressure rear right"
       },
+      "version": {
+        "name": "version"
+      },
       "vin": {
         "name": "Vehicle"
+      },
+      "vpp_backup_reserve_percent": {
+        "name": "VPP backup reserve"
       },
       "wall_connector_fault_state": {
         "name": "Fault state code"
@@ -178,6 +425,45 @@
       "wall_connector_state": {
         "name": "State code"
       }
+    },
+    "switch": {
+      "charge_state_user_charge_enable_request": {
+        "name": "Charge"
+      },
+      "climate_state_auto_seat_climate_left": {
+        "name": "Auto seat climate left"
+      },
+      "climate_state_auto_seat_climate_right": {
+        "name": "Auto seat climate right"
+      },
+      "climate_state_auto_steering_wheel_heat": {
+        "name": "Auto steering wheel heater"
+      },
+      "climate_state_defrost_mode": {
+        "name": "Defrost"
+      },
+      "components_disallow_charge_from_grid_with_solar_installed": {
+        "name": "Allow charging from grid"
+      },
+      "user_settings_storm_mode_enabled": {
+        "name": "Storm watch"
+      },
+      "vehicle_state_sentry_mode": {
+        "name": "Sentry mode"
+      },
+      "vehicle_state_valet_mode": {
+        "name": "Valet mode"
+      }
+    },
+    "update": {
+      "vehicle_state_software_update_status": {
+        "name": "[%key:component::update::title%]"
+      }
+    }
+  },
+  "exceptions": {
+    "no_cable": {
+      "message": "Charge cable will lock automatically when connected"
     }
   }
 }

@@ -46,7 +46,7 @@ async def test_select_states(
         (HeadlightModes.ALWAYS_ON, "always_on"),
         (HeadlightModes.EVENING_AND_NIGHT, "evening_and_night"),
     ]:
-        values[TEST_MOWER_ID].headlight.mode = state
+        values[TEST_MOWER_ID].settings.headlight.mode = state
         mock_automower_client.get_status.return_value = values
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
@@ -81,11 +81,15 @@ async def test_select_commands(
         },
         blocking=True,
     )
-    mocked_method = mock_automower_client.set_headlight_mode
+    mocked_method = mock_automower_client.commands.set_headlight_mode
+    mocked_method.assert_called_once_with(TEST_MOWER_ID, service.upper())
     assert len(mocked_method.mock_calls) == 1
 
     mocked_method.side_effect = ApiException("Test error")
-    with pytest.raises(HomeAssistantError) as exc_info:
+    with pytest.raises(
+        HomeAssistantError,
+        match="Command couldn't be sent to the command queue: Test error",
+    ):
         await hass.services.async_call(
             domain="select",
             service="select_option",
@@ -95,8 +99,4 @@ async def test_select_commands(
             },
             blocking=True,
         )
-    assert (
-        str(exc_info.value)
-        == "Command couldn't be sent to the command queue: Test error"
-    )
     assert len(mocked_method.mock_calls) == 2

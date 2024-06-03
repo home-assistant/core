@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor[sensor.test_mower_1_battery-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -34,7 +34,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_battery-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -50,7 +50,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_cutting_blade_usage_time-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_cutting_blade_usage_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -88,7 +88,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_cutting_blade_usage_time-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_cutting_blade_usage_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -104,7 +104,7 @@
     'state': '0.034',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_error-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -283,7 +283,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_error-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -442,7 +442,7 @@
     'state': 'no_error',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_mode-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -483,7 +483,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_mode-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -504,7 +504,7 @@
     'state': 'main_area',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_next_start-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_next_start-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -537,7 +537,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_next_start-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_next_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -551,7 +551,7 @@
     'state': '2023-06-05T19:00:00+00:00',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_number_of_charging_cycles-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_number_of_charging_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -586,7 +586,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_number_of_charging_cycles-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_number_of_charging_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Number of charging cycles',
@@ -600,7 +600,7 @@
     'state': '1380',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_number_of_collisions-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_number_of_collisions-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -635,7 +635,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_number_of_collisions-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_number_of_collisions-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Number of collisions',
@@ -649,7 +649,7 @@
     'state': '11396',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_restricted_reason-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_restricted_reason-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -695,7 +695,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_restricted_reason-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_restricted_reason-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -721,7 +721,7 @@
     'state': 'week_schedule',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_total_charging_time-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_total_charging_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -759,7 +759,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_total_charging_time-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_total_charging_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -775,7 +775,7 @@
     'state': '1204.000',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_total_cutting_time-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_total_cutting_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -813,7 +813,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_total_cutting_time-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_total_cutting_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -829,7 +829,7 @@
     'state': '1165.000',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_total_drive_distance-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_total_drive_distance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -867,7 +867,7 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_total_drive_distance-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_total_drive_distance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
@@ -883,7 +883,7 @@
     'state': '1780.272',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_total_running_time-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_total_running_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -921,7 +921,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_total_running_time-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_total_running_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -937,7 +937,7 @@
     'state': '1268.000',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_total_searching_time-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_total_searching_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -975,7 +975,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_total_searching_time-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_total_searching_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',

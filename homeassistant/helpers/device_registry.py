@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Mapping
 from enum import StrEnum
 from functools import cached_property, lru_cache, partial
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
 import attr
 from yarl import URL
@@ -23,6 +24,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util.event_type import EventType
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
 import homeassistant.util.uuid as uuid_util
 
@@ -36,7 +38,8 @@ from .deprecation import (
 )
 from .frame import report
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
-from .registry import BaseRegistry, BaseRegistryItems
+from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
+from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -46,7 +49,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_REGISTRY = "device_registry"
+DATA_REGISTRY: HassKey[DeviceRegistry] = HassKey("device_registry")
 EVENT_DEVICE_REGISTRY_UPDATED: EventType[EventDeviceRegistryUpdatedData] = EventType(
     "device_registry_updated"
 )
@@ -158,7 +161,7 @@ class _EventDeviceRegistryUpdatedData_Update(TypedDict):
     changes: dict[str, Any]
 
 
-EventDeviceRegistryUpdatedData = (
+type EventDeviceRegistryUpdatedData = (
     _EventDeviceRegistryUpdatedData_CreateRemove
     | _EventDeviceRegistryUpdatedData_Update
 )
@@ -447,10 +450,9 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
         return old_data
 
 
-_EntryTypeT = TypeVar("_EntryTypeT", DeviceEntry, DeletedDeviceEntry)
-
-
-class DeviceRegistryItems(BaseRegistryItems[_EntryTypeT]):
+class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
+    BaseRegistryItems[_EntryTypeT]
+):
     """Container for device registry items, maps device id -> entry.
 
     Maintains two additional indexes:
@@ -512,19 +514,19 @@ class ActiveDeviceRegistryItems(DeviceRegistryItems[DeviceEntry]):
         - label -> dict[key, True]
         """
         super().__init__()
-        self._area_id_index: dict[str, dict[str, Literal[True]]] = {}
-        self._config_entry_id_index: dict[str, dict[str, Literal[True]]] = {}
-        self._labels_index: dict[str, dict[str, Literal[True]]] = {}
+        self._area_id_index: RegistryIndexType = defaultdict(dict)
+        self._config_entry_id_index: RegistryIndexType = defaultdict(dict)
+        self._labels_index: RegistryIndexType = defaultdict(dict)
 
     def _index_entry(self, key: str, entry: DeviceEntry) -> None:
         """Index an entry."""
         super()._index_entry(key, entry)
         if (area_id := entry.area_id) is not None:
-            self._area_id_index.setdefault(area_id, {})[key] = True
+            self._area_id_index[area_id][key] = True
         for label in entry.labels:
-            self._labels_index.setdefault(label, {})[key] = True
+            self._labels_index[label][key] = True
         for config_entry_id in entry.config_entries:
-            self._config_entry_id_index.setdefault(config_entry_id, {})[key] = True
+            self._config_entry_id_index[config_entry_id][key] = True
 
     def _unindex_entry(
         self, key: str, replacement_entry: DeviceEntry | None = None
@@ -615,7 +617,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             return name.format(**translation_placeholders)
         except KeyError as err:
             if get_release_channel() is not ReleaseChannel.STABLE:
-                raise HomeAssistantError("Missing placeholder %s" % err) from err
+                raise HomeAssistantError(f"Missing placeholder {err}") from err
             report_issue = async_suggest_report_issue(
                 self.hass, integration_domain=domain
             )
@@ -681,27 +683,27 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # Reconstruct a DeviceInfo dict from the arguments.
         # When we upgrade to Python 3.12, we can change this method to instead
         # accept kwargs typed as a DeviceInfo dict (PEP 692)
-        device_info: DeviceInfo = {}
-        for key, val in (
-            ("configuration_url", configuration_url),
-            ("connections", connections),
-            ("default_manufacturer", default_manufacturer),
-            ("default_model", default_model),
-            ("default_name", default_name),
-            ("entry_type", entry_type),
-            ("hw_version", hw_version),
-            ("identifiers", identifiers),
-            ("manufacturer", manufacturer),
-            ("model", model),
-            ("name", name),
-            ("serial_number", serial_number),
-            ("suggested_area", suggested_area),
-            ("sw_version", sw_version),
-            ("via_device", via_device),
-        ):
-            if val is UNDEFINED:
-                continue
-            device_info[key] = val  # type: ignore[literal-required]
+        device_info: DeviceInfo = {  # type: ignore[assignment]
+            key: val
+            for key, val in (
+                ("configuration_url", configuration_url),
+                ("connections", connections),
+                ("default_manufacturer", default_manufacturer),
+                ("default_model", default_model),
+                ("default_name", default_name),
+                ("entry_type", entry_type),
+                ("hw_version", hw_version),
+                ("identifiers", identifiers),
+                ("manufacturer", manufacturer),
+                ("model", model),
+                ("name", name),
+                ("serial_number", serial_number),
+                ("suggested_area", suggested_area),
+                ("sw_version", sw_version),
+                ("via_device", via_device),
+            )
+            if val is not UNDEFINED
+        }
 
         device_info_type = _validate_device_info(config_entry, device_info)
 
@@ -796,6 +798,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         model: str | None | UndefinedType = UNDEFINED,
         name_by_user: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
+        new_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
         serial_number: str | None | UndefinedType = UNDEFINED,
@@ -811,8 +814,15 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         config_entries = old.config_entries
 
+        if merge_connections is not UNDEFINED and new_connections is not UNDEFINED:
+            raise HomeAssistantError(
+                "Cannot define both merge_connections and new_connections"
+            )
+
         if merge_identifiers is not UNDEFINED and new_identifiers is not UNDEFINED:
-            raise HomeAssistantError
+            raise HomeAssistantError(
+                "Cannot define both merge_identifiers and new_identifiers"
+            )
 
         if isinstance(disabled_by, str) and not isinstance(
             disabled_by, DeviceEntryDisabler
@@ -871,6 +881,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 new_values[attr_name] = old_value | setvalue
                 old_values[attr_name] = old_value
 
+        if new_connections is not UNDEFINED:
+            new_values["connections"] = _normalize_connections(new_connections)
+            old_values["connections"] = old.connections
+
         if new_identifiers is not UNDEFINED:
             new_values["identifiers"] = new_identifiers
             old_values["identifiers"] = old.identifiers
@@ -904,6 +918,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if not new_values:
             return old
 
+        self.hass.verify_event_loop_thread("device_registry.async_update_device")
         new = attr.evolve(old, **new_values)
         self.devices[device_id] = new
 
@@ -923,13 +938,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         else:
             data = {"action": "update", "device_id": new.id, "changes": old_values}
 
-        self.hass.bus.async_fire(EVENT_DEVICE_REGISTRY_UPDATED, data)
+        self.hass.bus.async_fire_internal(EVENT_DEVICE_REGISTRY_UPDATED, data)
 
         return new
 
     @callback
     def async_remove_device(self, device_id: str) -> None:
         """Remove a device from the device registry."""
+        self.hass.verify_event_loop_thread("device_registry.async_remove_device")
         device = self.devices.pop(device_id)
         self.deleted_devices[device_id] = DeletedDeviceEntry(
             config_entries=device.config_entries,
@@ -941,7 +957,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         for other_device in list(self.devices.values()):
             if other_device.via_device_id == device_id:
                 self.async_update_device(other_device.id, via_device_id=None)
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_DEVICE_REGISTRY_UPDATED,
             _EventDeviceRegistryUpdatedData_CreateRemove(
                 action="remove", device_id=device_id
@@ -1074,16 +1090,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
 
 @callback
+@singleton(DATA_REGISTRY)
 def async_get(hass: HomeAssistant) -> DeviceRegistry:
     """Get device registry."""
-    return cast(DeviceRegistry, hass.data[DATA_REGISTRY])
+    return DeviceRegistry(hass)
 
 
 async def async_load(hass: HomeAssistant) -> None:
     """Load device registry."""
     assert DATA_REGISTRY not in hass.data
-    hass.data[DATA_REGISTRY] = DeviceRegistry(hass)
-    await hass.data[DATA_REGISTRY].async_load()
+    await async_get(hass).async_load()
 
 
 @callback

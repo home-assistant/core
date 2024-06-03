@@ -137,4 +137,4 @@ class RoborockCoordinatedEntity(
         else:
             self.coordinator.roborock_device_info.props.consumable = value
         self.coordinator.data = self.coordinator.roborock_device_info.props
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()

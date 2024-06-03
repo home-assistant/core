@@ -13,8 +13,10 @@ from .hub import AxisHub, get_axis_api
 
 _LOGGER = logging.getLogger(__name__)
 
+type AxisConfigEntry = ConfigEntry[AxisHub]
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: AxisConfigEntry) -> bool:
     """Set up the Axis integration."""
     hass.data.setdefault(AXIS_DOMAIN, {})
 
@@ -25,8 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     except AuthenticationRequired as err:
         raise ConfigEntryAuthFailed from err
 
-    hub = AxisHub(hass, config_entry, api)
-    hass.data[AXIS_DOMAIN][config_entry.entry_id] = hub
+    hub = config_entry.runtime_data = AxisHub(hass, config_entry, api)
     await hub.async_update_device_registry()
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     hub.setup()
@@ -42,7 +43,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Axis device config entry."""
-    hass.data[AXIS_DOMAIN].pop(config_entry.entry_id)
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 

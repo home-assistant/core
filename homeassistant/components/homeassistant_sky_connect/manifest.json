@@ -5,7 +5,7 @@
   "config_flow": true,
   "dependencies": ["hardware", "usb", "homeassistant_hardware"],
   "documentation": "https://www.home-assistant.io/integrations/homeassistant_sky_connect",
-  "integration_type": "device",
+  "integration_type": "hardware",
   "usb": [
     {
       "vid": "10C4",

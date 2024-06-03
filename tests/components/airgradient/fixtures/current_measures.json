@@ -1,0 +1,21 @@
+{
+  "wifi": -52,
+  "serialno": "84fce612f5b8",
+  "rco2": 778,
+  "pm01": 22,
+  "pm02": 34,
+  "pm10": 41,
+  "pm003Count": 270,
+  "tvocIndex": 99,
+  "tvocRaw": 31792,
+  "noxIndex": 1,
+  "noxRaw": 16931,
+  "atmp": 27.96,
+  "rhum": 48,
+  "atmpCompensated": 22.17,
+  "rhumCompensated": 47,
+  "bootCount": 28,
+  "ledMode": "co2",
+  "firmware": "3.1.1",
+  "model": "I-9PSL"
+}

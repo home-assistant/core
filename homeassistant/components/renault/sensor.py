@@ -21,7 +21,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfEnergy,
@@ -36,10 +35,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import as_utc, parse_datetime
 
-from .const import DOMAIN
+from . import RenaultConfigEntry
 from .coordinator import T
 from .entity import RenaultDataEntity, RenaultDataEntityDescription
-from .renault_hub import RenaultHub
 from .renault_vehicle import RenaultVehicleProxy
 
 
@@ -58,14 +56,13 @@ class RenaultSensorEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RenaultConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
-    proxy: RenaultHub = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[RenaultSensor[Any]] = [
         description.entity_class(vehicle, description)
-        for vehicle in proxy.vehicles.values()
+        for vehicle in config_entry.runtime_data.vehicles.values()
         for description in SENSOR_TYPES
         if description.coordinator in vehicle.coordinators
         and (not description.requires_fuel or vehicle.details.uses_fuel())

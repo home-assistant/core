@@ -7,7 +7,6 @@ from typing import Any
 import urllib
 from zoneinfo import ZoneInfo
 
-from aiohttp import ClientSession
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -20,9 +19,10 @@ from .conftest import CONFIG_ENTRY_DATA_OLD_FORMAT, mock_response, mock_response
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMockResponse
+from tests.typing import ClientSessionGenerator
 
 TEST_ENTITY = "calendar.rain_bird_controller"
-GetEventsFn = Callable[[str, str], Awaitable[dict[str, Any]]]
+type GetEventsFn = Callable[[str, str], Awaitable[dict[str, Any]]]
 
 SCHEDULE_RESPONSES = [
     # Current controller status
@@ -91,9 +91,9 @@ async def setup_config_entry(
 
 
 @pytest.fixture(autouse=True)
-def set_time_zone(hass: HomeAssistant):
+async def set_time_zone(hass: HomeAssistant):
     """Set the time zone for the tests."""
-    hass.config.set_time_zone("America/Regina")
+    await hass.config.async_set_time_zone("America/Regina")
 
 
 @pytest.fixture(autouse=True)
@@ -114,7 +114,7 @@ def mock_insert_schedule_response(
 
 @pytest.fixture(name="get_events")
 def get_events_fixture(
-    hass_client: Callable[..., Awaitable[ClientSession]],
+    hass_client: ClientSessionGenerator,
 ) -> GetEventsFn:
     """Fetch calendar events from the HTTP API."""
 
@@ -237,7 +237,7 @@ async def test_no_schedule(
     hass: HomeAssistant,
     get_events: GetEventsFn,
     responses: list[AiohttpClientMockResponse],
-    hass_client: Callable[..., Awaitable[ClientSession]],
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test calendar error when fetching the calendar."""
     responses.extend([mock_response_error(HTTPStatus.BAD_GATEWAY)])  # Arbitrary error

@@ -25,6 +25,17 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "power_save": {
+        "name": "Power save"
+      },
+      "extra_energy": {
+        "name": "Extra energy"
+      },
+      "heating": {
+        "name": "Heating"
+      }
+    },
     "sensor": {
       "tapping_capacity": {
         "name": "Tapping capacity"

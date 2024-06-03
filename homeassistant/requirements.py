@@ -12,6 +12,7 @@ from packaging.requirements import Requirement
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
+from .helpers import singleton
 from .helpers.typing import UNDEFINED, UndefinedType
 from .loader import Integration, IntegrationNotFound, async_get_integration
 from .util import package as pkg_util
@@ -72,14 +73,10 @@ async def async_load_installed_versions(
 
 
 @callback
+@singleton.singleton(DATA_REQUIREMENTS_MANAGER)
 def _async_get_manager(hass: HomeAssistant) -> RequirementsManager:
     """Get the requirements manager."""
-    if DATA_REQUIREMENTS_MANAGER in hass.data:
-        manager: RequirementsManager = hass.data[DATA_REQUIREMENTS_MANAGER]
-        return manager
-
-    manager = hass.data[DATA_REQUIREMENTS_MANAGER] = RequirementsManager(hass)
-    return manager
+    return RequirementsManager(hass)
 
 
 @callback
@@ -246,7 +243,7 @@ class RequirementsManager:
                     or ex.domain not in integration.after_dependencies
                 ):
                     exceptions.append(ex)
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception as ex:  # noqa: BLE001
                 exceptions.insert(0, ex)
 
         if exceptions:

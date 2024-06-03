@@ -64,6 +64,7 @@ from tests.common import MockConfigEntry
 )
 async def test_migrate_unique_ids(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_zamg_coordinator: MagicMock,
     entitydata: dict,
     old_unique_id: str,
@@ -75,7 +76,6 @@ async def test_migrate_unique_ids(
     mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
     mock_config_entry.add_to_hass(hass)
 
-    entity_registry = er.async_get(hass)
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
         **entitydata,
         config_entry=mock_config_entry,
@@ -110,6 +110,7 @@ async def test_migrate_unique_ids(
 )
 async def test_dont_migrate_unique_ids(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_zamg_coordinator: MagicMock,
     entitydata: dict,
     old_unique_id: str,
@@ -120,8 +121,6 @@ async def test_dont_migrate_unique_ids(
     FIXTURE_CONFIG_ENTRY["data"][CONF_STATION_ID] = station_id
     mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
     mock_config_entry.add_to_hass(hass)
-
-    entity_registry = er.async_get(hass)
 
     # create existing entry with new_unique_id
     existing_entity = entity_registry.async_get_or_create(
@@ -170,6 +169,7 @@ async def test_dont_migrate_unique_ids(
 )
 async def test_unload_entry(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_zamg_coordinator: MagicMock,
     entitydata: dict,
     unique_id: str,
@@ -177,8 +177,6 @@ async def test_unload_entry(
     """Test unload entity unique_ids."""
     mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
     mock_config_entry.add_to_hass(hass)
-
-    entity_registry = er.async_get(hass)
 
     entity_registry.async_get_or_create(
         WEATHER_DOMAIN,

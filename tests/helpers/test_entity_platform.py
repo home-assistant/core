@@ -120,7 +120,7 @@ async def test_polling_disabled_by_config_entry(hass: HomeAssistant) -> None:
     poll_ent = MockEntity(should_poll=True)
 
     await entity_platform.async_add_entities([poll_ent])
-    assert entity_platform._async_unsub_polling is None
+    assert entity_platform._async_polling_timer is None
 
 
 async def test_polling_updates_entities_with_exception(hass: HomeAssistant) -> None:
@@ -213,10 +213,8 @@ async def test_update_state_adds_entities_with_update_before_add_false(
     assert not ent.update.called
 
 
-@patch("homeassistant.helpers.entity_platform.async_track_time_interval")
-async def test_set_scan_interval_via_platform(
-    mock_track: Mock, hass: HomeAssistant
-) -> None:
+@pytest.mark.usefixtures("disable_translations_once")
+async def test_set_scan_interval_via_platform(hass: HomeAssistant) -> None:
     """Test the setting of the scan interval via platform."""
 
     def platform_setup(
@@ -235,11 +233,12 @@ async def test_set_scan_interval_via_platform(
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    await component.async_setup({DOMAIN: {"platform": "platform"}})
+    with patch.object(hass.loop, "call_later") as mock_track:
+        await component.async_setup({DOMAIN: {"platform": "platform"}})
 
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
     assert mock_track.called
-    assert timedelta(seconds=30) == mock_track.call_args[0][2]
+    assert mock_track.call_args[0][0] == 30.0
 
 
 async def test_adding_entities_with_generator_and_thread_callback(
@@ -262,6 +261,7 @@ async def test_adding_entities_with_generator_and_thread_callback(
     await component.async_add_entities(create_entity(i) for i in range(2))
 
 
+@pytest.mark.usefixtures("disable_translations_once")
 async def test_platform_warn_slow_setup(hass: HomeAssistant) -> None:
     """Warn we log when platform setup takes a long time."""
     platform = MockPlatform()
@@ -505,7 +505,7 @@ async def test_parallel_updates_async_platform_updates_in_parallel(
 
     assert handle._update_in_sequence is False
 
-    await handle._update_entity_states(dt_util.utcnow())
+    await handle._async_update_entity_states()
     assert peak_update_count > 1
 
 
@@ -555,7 +555,7 @@ async def test_parallel_updates_sync_platform_updates_in_sequence(
 
     assert handle._update_in_sequence is True
 
-    await handle._update_entity_states(dt_util.utcnow())
+    await handle._async_update_entity_states()
     assert peak_update_count == 1
 
 
@@ -1017,7 +1017,7 @@ async def test_stop_shutdown_cancels_retry_setup_and_interval_listener(
     ent_platform.async_shutdown()
 
     assert len(mock_call_later.return_value.mock_calls) == 1
-    assert ent_platform._async_unsub_polling is None
+    assert ent_platform._async_polling_timer is None
     assert ent_platform._async_cancel_retry_setup is None
 
 

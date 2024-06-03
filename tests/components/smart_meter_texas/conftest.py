@@ -58,7 +58,7 @@ def mock_connection(
     """Mock all calls to the API."""
     aioclient_mock.get(BASE_URL)
 
-    auth_endpoint = f"{BASE_ENDPOINT}{AUTH_ENDPOINT}"
+    auth_endpoint = AUTH_ENDPOINT
     if not auth_fail and not auth_timeout:
         aioclient_mock.post(
             auth_endpoint,

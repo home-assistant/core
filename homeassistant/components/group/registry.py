@@ -1,8 +1,11 @@
-"""Provide the functionality to group entities."""
+"""Provide the functionality to group entities.
+
+Legacy group support will not be extended for new domains.
+"""
 
 from __future__ import annotations
 
-from contextvars import ContextVar
+from dataclasses import dataclass
 from typing import Protocol
 
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -13,12 +16,10 @@ from homeassistant.helpers.integration_platform import (
 
 from .const import DOMAIN, REG_KEY
 
-current_domain: ContextVar[str] = ContextVar("current_domain")
-
 
 async def async_setup(hass: HomeAssistant) -> None:
     """Set up the Group integration registry of integration platforms."""
-    hass.data[REG_KEY] = GroupIntegrationRegistry()
+    hass.data[REG_KEY] = GroupIntegrationRegistry(hass)
 
     await async_process_integration_platforms(
         hass, DOMAIN, _process_group_platform, wait_for_platforms=True
@@ -39,38 +40,49 @@ def _process_group_platform(
     hass: HomeAssistant, domain: str, platform: GroupProtocol
 ) -> None:
     """Process a group platform."""
-    current_domain.set(domain)
     registry: GroupIntegrationRegistry = hass.data[REG_KEY]
     platform.async_describe_on_off_states(hass, registry)
+
+
+@dataclass(frozen=True, slots=True)
+class SingleStateType:
+    """Dataclass to store a single state type."""
+
+    on_state: str
+    off_state: str
 
 
 class GroupIntegrationRegistry:
     """Class to hold a registry of integrations."""
 
-    def __init__(self) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Imitialize registry."""
-        self.on_off_mapping: dict[str, dict[str | None, str]] = {
-            STATE_ON: {None: STATE_OFF}
-        }
+        self.hass = hass
+        self.on_off_mapping: dict[str, str] = {STATE_ON: STATE_OFF}
         self.off_on_mapping: dict[str, str] = {STATE_OFF: STATE_ON}
         self.on_states_by_domain: dict[str, set[str]] = {}
-        self.off_state_by_domain: dict[str, str] = {}
         self.exclude_domains: set[str] = set()
+        self.state_group_mapping: dict[str, SingleStateType] = {}
 
-    def exclude_domain(self) -> None:
+    @callback
+    def exclude_domain(self, domain: str) -> None:
         """Exclude the current domain."""
-        self.exclude_domains.add(current_domain.get())
+        self.exclude_domains.add(domain)
 
-    def on_off_states(self, on_states: set, off_state: str) -> None:
-        """Register on and off states for the current domain."""
-        domain = current_domain.get()
+    @callback
+    def on_off_states(
+        self, domain: str, on_states: set[str], default_on_state: str, off_state: str
+    ) -> None:
+        """Register on and off states for the current domain.
+
+        Legacy group support will not be extended for new domains.
+        """
         for on_state in on_states:
             if on_state not in self.on_off_mapping:
-                self.on_off_mapping[on_state] = {domain: off_state}
-            else:
-                self.on_off_mapping[on_state][domain] = off_state
-        if len(on_states) == 1 and off_state not in self.off_on_mapping:
-            self.off_on_mapping[off_state] = list(on_states)[0]
+                self.on_off_mapping[on_state] = off_state
 
-        self.on_states_by_domain[domain] = set(on_states)
-        self.off_state_by_domain[domain] = off_state
+        if off_state not in self.off_on_mapping:
+            self.off_on_mapping[off_state] = default_on_state
+        self.state_group_mapping[domain] = SingleStateType(default_on_state, off_state)
+
+        self.on_states_by_domain[domain] = on_states

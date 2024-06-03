@@ -20,21 +20,34 @@ from .const import IMPORT_DATA
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures(
+    "mock_authenticator", "mock_mqtt_client", "mock_device_execute"
+)
 async def test_load_unload_config_entry(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test loading and unloading the integration."""
-    mock_config_entry = init_integration
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert DOMAIN in hass.data
+    with patch(
+        "homeassistant.components.ecovacs.EcovacsController",
+        autospec=True,
+    ):
+        mock_config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    assert DOMAIN not in hass.data
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+        assert DOMAIN not in hass.data
+        controller = mock_config_entry.runtime_data
+        assert isinstance(controller, EcovacsController)
+        controller.initialize.assert_called_once()
+
+        await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        controller.teardown.assert_called_once()
+
+        assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.fixture

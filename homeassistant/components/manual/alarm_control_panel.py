@@ -8,8 +8,11 @@ from typing import Any
 
 import voluptuous as vol
 
-import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
+    CodeFormat,
+)
 from homeassistant.const import (
     CONF_ARMING_TIME,
     CONF_CODE,
@@ -174,7 +177,7 @@ def setup_platform(
     )
 
 
-class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
+class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
     """Representation of an alarm status.
 
     When armed, will be arming for 'arming_time', after that armed.
@@ -276,13 +279,13 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         return self._state_ts + self._pending_time(state) > dt_util.utcnow()
 
     @property
-    def code_format(self) -> alarm.CodeFormat | None:
+    def code_format(self) -> CodeFormat | None:
         """Return one or more digits/characters."""
         if self._code is None:
             return None
         if isinstance(self._code, str) and self._code.isdigit():
-            return alarm.CodeFormat.NUMBER
-        return alarm.CodeFormat.TEXT
+            return CodeFormat.NUMBER
+        return CodeFormat.TEXT
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""

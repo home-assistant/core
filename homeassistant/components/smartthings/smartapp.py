@@ -326,7 +326,7 @@ async def smartapp_sync_subscriptions(
             _LOGGER.debug(
                 "Created subscription for '%s' under app '%s'", target, installed_app_id
             )
-        except Exception as error:  # pylint:disable=broad-except
+        except Exception as error:  # noqa: BLE001
             _LOGGER.error(
                 "Failed to create subscription for '%s' under app '%s': %s",
                 target,
@@ -345,7 +345,7 @@ async def smartapp_sync_subscriptions(
                 sub.capability,
                 installed_app_id,
             )
-        except Exception as error:  # pylint:disable=broad-except
+        except Exception as error:  # noqa: BLE001
             _LOGGER.error(
                 "Failed to remove subscription for '%s' under app '%s': %s",
                 sub.capability,

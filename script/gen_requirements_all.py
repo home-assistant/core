@@ -155,7 +155,7 @@ backoff>=2.0
 
 # Required to avoid breaking (#101042).
 # v2 has breaking changes (#99218).
-pydantic==1.10.12
+pydantic==1.10.15
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
@@ -214,6 +214,11 @@ pycountry>=23.12.11
 
 # scapy<2.5.0 will not work with python3.12
 scapy>=2.5.0
+
+# tuf isn't updated to deal with breaking changes in securesystemslib==1.0.
+# Only tuf>=4 includes a constraint to <1.0.
+# https://github.com/theupdateframework/python-tuf/releases/tag/v4.0.0
+tuf>=4.0.0
 """
 
 GENERATED_MESSAGE = (

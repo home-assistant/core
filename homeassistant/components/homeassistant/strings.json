@@ -56,10 +56,6 @@
     "config_entry_reauth": {
       "title": "[%key:common::config_flow::title::reauth%]",
       "description": "Reauthentication is needed"
-    },
-    "template_function_relative_time_deprecated": {
-      "title": "The {relative_time} template function is deprecated",
-      "description": "The {relative_time} template function is deprecated in Home Assistant. Please use the {time_since} or {time_until} template functions instead."
     }
   },
   "system_health": {

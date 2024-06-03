@@ -8,6 +8,12 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
         "test_unhandled_exception_traceback",
     ),
     (
+        # This test explicitly throws an uncaught exception
+        # and should not be removed.
+        "tests.helpers.test_event",
+        "test_track_point_in_time_repr",
+    ),
+    (
         "test_homeassistant_bridge",
         "test_homeassistant_bridge_fan_setup",
     ),

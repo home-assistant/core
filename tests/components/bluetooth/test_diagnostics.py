@@ -335,6 +335,7 @@ async def test_diagnostics_macos(
                         "service_uuids": [],
                         "source": "local",
                         "time": ANY,
+                        "tx_power": -127,
                     }
                 ],
                 "connectable_history": [
@@ -363,6 +364,7 @@ async def test_diagnostics_macos(
                         "service_uuids": [],
                         "source": "local",
                         "time": ANY,
+                        "tx_power": -127,
                     }
                 ],
                 "scanners": [
@@ -526,6 +528,7 @@ async def test_diagnostics_remote_adapter(
                         "service_uuids": [],
                         "source": "esp32",
                         "time": ANY,
+                        "tx_power": -127,
                     }
                 ],
                 "connectable_history": [
@@ -554,6 +557,7 @@ async def test_diagnostics_remote_adapter(
                         "service_uuids": [],
                         "source": "esp32",
                         "time": ANY,
+                        "tx_power": -127,
                     }
                 ],
                 "scanners": [
