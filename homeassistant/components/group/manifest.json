@@ -5,8 +5,10 @@
     "alarm_control_panel",
     "climate",
     "device_tracker",
+    "integration",
     "person",
     "plant",
+    "utility_meter",
     "vacuum",
     "water_heater"
   ],
