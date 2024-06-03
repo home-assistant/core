@@ -127,7 +127,6 @@ class IncomfortEntity(Entity):
     """Base class for all InComfort entities."""
 
     _attr_should_poll = False
-    _attr_has_entity_name = True
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""

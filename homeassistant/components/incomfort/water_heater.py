@@ -52,11 +52,6 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
         self._heater = heater
 
         self._attr_unique_id = heater.serial_no
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, heater.serial_no)},
-            manufacturer="Intergas",
-            name="Boiler",
-        )
 
     @property
     def icon(self) -> str:
