@@ -46,8 +46,8 @@ CREATE_NEW_ENTITY = {
 def get_device_id_from_discovery_topic(topic: str) -> str | None:
     """From the discovery topic get the PG LAB Electronics device id."""
 
-    # the discovery topi has the following format "pglab/discovery/[Device ID]/config"
-    split_topic = topic.split("/")
+    # the discovery topic has the following format "pglab/discovery/[Device ID]/config"
+    split_topic = topic.split("/", 5)
 
     # do a sanity check on the string
     if len(split_topic) != 4:
