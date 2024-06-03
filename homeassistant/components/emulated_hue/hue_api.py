@@ -65,11 +65,8 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import Event, State
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.core import Event, EventStateChangedData, State
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.json import json_loads
 from homeassistant.util.network import is_local
 

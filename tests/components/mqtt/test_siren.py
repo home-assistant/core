@@ -832,7 +832,7 @@ async def test_command_templates(
     mqtt_mock.async_publish.assert_any_call(
         "test-topic", "CMD: ON, DURATION: 22, TONE: ping, VOLUME: 0.88", 0, False
     )
-    mqtt_mock.async_publish.call_count == 1
+    assert mqtt_mock.async_publish.call_count == 1
     mqtt_mock.reset_mock()
     await async_turn_off(
         hass,
@@ -841,7 +841,7 @@ async def test_command_templates(
     mqtt_mock.async_publish.assert_any_call(
         "test-topic", "CMD: OFF, DURATION: , TONE: , VOLUME:", 0, False
     )
-    mqtt_mock.async_publish.call_count == 1
+    assert mqtt_mock.async_publish.call_count == 1
     mqtt_mock.reset_mock()
 
     await async_turn_on(
@@ -862,7 +862,7 @@ async def test_command_templates(
         entity_id="siren.milk",
     )
     mqtt_mock.async_publish.assert_any_call("test-topic", "CMD_OFF: OFF", 0, False)
-    mqtt_mock.async_publish.call_count == 1
+    assert mqtt_mock.async_publish.call_count == 2
     mqtt_mock.reset_mock()
 
 
@@ -1118,7 +1118,7 @@ async def test_unload_entry(
             '{"state":"ON","tone":"siren"}',
             '{"state":"OFF","tone":"siren"}',
         ),
-        # Attriute volume_level 2 is invalid, but the state is valid and should update
+        # Attribute volume_level 2 is invalid, but the state is valid and should update
         (
             "test-topic",
             '{"state":"ON","volume_level":0.5}',

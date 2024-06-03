@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/sunweg/",
   "iot_class": "cloud_polling",
   "loggers": ["sunweg"],
-  "requirements": ["sunweg==2.1.0"]
+  "requirements": ["sunweg==2.1.1"]
 }

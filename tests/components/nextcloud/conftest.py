@@ -9,11 +9,9 @@ import pytest
 @pytest.fixture
 def mock_nextcloud_monitor() -> Mock:
     """Mock of NextcloudMonitor."""
-    ncm = Mock(
+    return Mock(
         update=Mock(return_value=True),
     )
-
-    return ncm
 
 
 @pytest.fixture

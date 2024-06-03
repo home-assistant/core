@@ -349,7 +349,6 @@ async def async_setup_entry(
 
 async def async_setup_coordinated_entry(hass, config_entry, async_add_entities):
     """Set up the coordinated switch from a config entry."""
-    entities = []
     model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
@@ -371,19 +370,17 @@ async def async_setup_coordinated_entry(hass, config_entry, async_add_entities):
     elif model in MODELS_PURIFIER_MIOT:
         device_features = FEATURE_FLAGS_AIRPURIFIER_MIOT
 
-    for description in SWITCH_TYPES:
-        if description.feature & device_features:
-            entities.append(
-                XiaomiGenericCoordinatedSwitch(
-                    device,
-                    config_entry,
-                    f"{description.key}_{unique_id}",
-                    coordinator,
-                    description,
-                )
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        XiaomiGenericCoordinatedSwitch(
+            device,
+            config_entry,
+            f"{description.key}_{unique_id}",
+            coordinator,
+            description,
+        )
+        for description in SWITCH_TYPES
+        if description.feature & device_features
+    )
 
 
 async def async_setup_other_entry(hass, config_entry, async_add_entities):
@@ -808,20 +805,20 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
             result = await self.hass.async_add_executor_job(
                 partial(func, *args, **kwargs)
             )
-
-            _LOGGER.debug("Response received from plug: %s", result)
-
-            # The Chuangmi Plug V3 returns 0 on success on usb_on/usb_off.
-            if func in ["usb_on", "usb_off"] and result == 0:
-                return True
-
-            return result == SUCCESS
         except DeviceException as exc:
             if self._available:
                 _LOGGER.error(mask_error, exc)
                 self._available = False
 
             return False
+
+        _LOGGER.debug("Response received from plug: %s", result)
+
+        # The Chuangmi Plug V3 returns 0 on success on usb_on/usb_off.
+        if func in ["usb_on", "usb_off"] and result == 0:
+            return True
+
+        return result == SUCCESS
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the plug on."""

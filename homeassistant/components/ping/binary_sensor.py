@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import PingDomainData
+from . import PingConfigEntry
 from .const import CONF_IMPORTED_BY, CONF_PING_COUNT, DEFAULT_PING_COUNT, DOMAIN
 from .coordinator import PingUpdateCoordinator
 from .entity import PingEntity
@@ -76,13 +76,10 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: PingConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a Ping config entry."""
-
-    data: PingDomainData = hass.data[DOMAIN]
-
-    async_add_entities([PingBinarySensor(entry, data.coordinators[entry.entry_id])])
+    async_add_entities([PingBinarySensor(entry, entry.runtime_data)])
 
 
 class PingBinarySensor(PingEntity, BinarySensorEntity):

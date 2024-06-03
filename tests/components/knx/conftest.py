@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, Mock, patch
 
 import pytest
@@ -162,7 +163,7 @@ class KNXTestKit:
 
         if payload is not None:
             assert (
-                telegram.payload.value.value == payload  # type: ignore
+                telegram.payload.value.value == payload  # type: ignore[attr-defined]
             ), f"Payload mismatch in {telegram} - Expected: {payload}"
 
     async def assert_read(self, group_address: str) -> None:
@@ -273,10 +274,9 @@ async def knx(request, hass, mock_config_entry: MockConfigEntry):
 
 
 @pytest.fixture
-def load_knxproj(hass_storage):
+def load_knxproj(hass_storage: dict[str, Any]) -> None:
     """Mock KNX project data."""
     hass_storage[KNX_PROJECT_STORAGE_KEY] = {
         "version": 1,
         "data": FIXTURE_PROJECT_DATA,
     }
-    return

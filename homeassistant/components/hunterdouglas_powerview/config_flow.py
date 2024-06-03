@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -38,10 +37,9 @@ async def validate_input(hass: HomeAssistant, hub_address: str) -> dict[str, str
     pv_request = AioRequest(hub_address, loop=hass.loop, websession=websession)
 
     try:
-        async with asyncio.timeout(10):
-            hub = Hub(pv_request)
-            await hub.query_firmware()
-            device_info = await async_get_device_info(hub)
+        hub = Hub(pv_request)
+        await hub.query_firmware()
+        device_info = await async_get_device_info(hub)
     except HUB_EXCEPTIONS as err:
         raise CannotConnect from err
 
@@ -116,7 +114,7 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
             return None, "cannot_connect"
         except UnsupportedDevice:
             return None, "unsupported_device"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return None, "unknown"
 

@@ -11,7 +11,7 @@ from homeassistant.util.dt import utcnow
 
 from .conftest import get_states_response_for_uid
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -37,13 +37,12 @@ from tests.common import async_fire_time_changed
 async def test_sensor_get_state(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    init_integration,
+    init_integration: MockConfigEntry,
     entity_id: str,
     uid: str,
     name: str,
 ) -> None:
     """Test states of the sensor."""
-    init_integration
 
     state = hass.states.get(entity_id)
     assert state

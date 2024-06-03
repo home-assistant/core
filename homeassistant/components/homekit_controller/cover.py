@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from functools import cached_property
+from typing import Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
@@ -28,12 +29,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import HomeKitEntity
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 STATE_STOPPED = "stopped"
 
@@ -217,13 +212,15 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         )
 
     @property
-    def current_cover_tilt_position(self) -> int:
+    def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt."""
         tilt_position = self.service.value(CharacteristicsTypes.VERTICAL_TILT_CURRENT)
         if not tilt_position:
             tilt_position = self.service.value(
                 CharacteristicsTypes.HORIZONTAL_TILT_CURRENT
             )
+        if tilt_position is None:
+            return None
         # Recalculate to convert from arcdegree scale to percentage scale.
         if self.is_vertical_tilt:
             scale = 0.9

@@ -9,7 +9,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize("platform", ("sensor",))
+@pytest.mark.parametrize("platform", ["sensor"])
 async def test_setup_and_remove_config_entry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -30,6 +30,7 @@ async def test_setup_and_remove_config_entry(
             "source": "sensor.input",
             "unit_prefix": "k",
             "unit_time": "min",
+            "max_sub_interval": {"minutes": 1},
         },
         title="My integration",
     )

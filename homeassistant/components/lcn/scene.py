@@ -43,13 +43,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LCN switch entities from a config entry."""
-    entities = []
 
-    for entity_config in config_entry.data[CONF_ENTITIES]:
-        if entity_config[CONF_DOMAIN] == DOMAIN_SCENE:
-            entities.append(create_lcn_scene_entity(hass, entity_config, config_entry))
-
-    async_add_entities(entities)
+    async_add_entities(
+        create_lcn_scene_entity(hass, entity_config, config_entry)
+        for entity_config in config_entry.data[CONF_ENTITIES]
+        if entity_config[CONF_DOMAIN] == DOMAIN_SCENE
+    )
 
 
 class LcnScene(LcnEntity, Scene):

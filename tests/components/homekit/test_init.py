@@ -26,9 +26,7 @@ from tests.common import MockConfigEntry
 from tests.components.logbook.common import MockRow, mock_humanify
 
 
-async def test_humanify_homekit_changed_event(
-    hass: HomeAssistant, hk_driver, mock_get_source_ip
-) -> None:
+async def test_humanify_homekit_changed_event(hass: HomeAssistant, hk_driver) -> None:
     """Test humanifying HomeKit changed event."""
     hass.config.components.add("recorder")
     with patch("homeassistant.components.homekit.HomeKit") as mock_homekit:
@@ -114,15 +112,19 @@ async def test_bridge_with_triggers(
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.network.async_get_source_ip", return_value="1.2.3.4"
-    ), patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True):
+    with (
+        patch(
+            "homeassistant.components.network.async_get_source_ip",
+            return_value="1.2.3.4",
+        ),
+        patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True),
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-        assert entry.state == ConfigEntryState.LOADED
+        assert entry.state is ConfigEntryState.LOADED
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 

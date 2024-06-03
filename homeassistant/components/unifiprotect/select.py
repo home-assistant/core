@@ -42,10 +42,17 @@ from .utils import async_dispatch_id as _ufpd, async_get_light_motion_current
 _LOGGER = logging.getLogger(__name__)
 _KEY_LIGHT_MOTION = "light_motion"
 
+HDR_MODES = [
+    {"id": "always", "name": "Always On"},
+    {"id": "off", "name": "Always Off"},
+    {"id": "auto", "name": "Auto"},
+]
+
 INFRARED_MODES = [
     {"id": IRLEDMode.AUTO.value, "name": "Auto"},
     {"id": IRLEDMode.ON.value, "name": "Always Enable"},
     {"id": IRLEDMode.AUTO_NO_LED.value, "name": "Auto (Filter Only, no LED's)"},
+    {"id": IRLEDMode.CUSTOM.value, "name": "Auto (Custom Lux)"},
     {"id": IRLEDMode.OFF.value, "name": "Always Disable"},
 ]
 
@@ -225,6 +232,17 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_enum_type=ChimeType,
         ufp_value="chime_type",
         ufp_set_method="set_chime_type",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSelectEntityDescription(
+        key="hdr_mode",
+        name="HDR Mode",
+        icon="mdi:brightness-7",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="feature_flags.has_hdr",
+        ufp_options=HDR_MODES,
+        ufp_value="hdr_mode_display",
+        ufp_set_method="set_hdr_mode",
         ufp_perm=PermRequired.WRITE,
     ),
 )

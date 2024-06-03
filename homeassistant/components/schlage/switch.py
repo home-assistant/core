@@ -62,17 +62,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches based on a config entry."""
     coordinator: SchlageDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    entities = []
-    for device_id in coordinator.data.locks:
-        for description in SWITCHES:
-            entities.append(
-                SchlageSwitch(
-                    coordinator=coordinator,
-                    description=description,
-                    device_id=device_id,
-                )
-            )
-    async_add_entities(entities)
+    async_add_entities(
+        SchlageSwitch(
+            coordinator=coordinator,
+            description=description,
+            device_id=device_id,
+        )
+        for device_id in coordinator.data.locks
+        for description in SWITCHES
+    )
 
 
 class SchlageSwitch(SchlageEntity, SwitchEntity):

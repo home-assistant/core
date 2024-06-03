@@ -121,6 +121,7 @@ async def async_setup_entry(
             Platform.COVER,
             Platform.LIGHT,
             Platform.LOCK,
+            Platform.SENSOR,
             Platform.SWITCH,
         )
         for device in controller.fibaro_devices[platform]

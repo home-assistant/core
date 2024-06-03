@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.microsoft.tts import SUPPORTED_LANGUAGES
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceNotFound
 from homeassistant.setup import async_setup_component
 
@@ -30,7 +30,7 @@ def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
 
 
 @pytest.fixture
-async def calls(hass: HomeAssistant):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Mock media player calls."""
     return async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -54,13 +54,17 @@ def mock_tts():
 
 
 async def test_service_say(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_tts, calls
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts,
+    calls: list[ServiceCall],
 ) -> None:
     """Test service call say."""
 
     await async_setup_component(
         hass, tts.DOMAIN, {tts.DOMAIN: {"platform": "microsoft", "api_key": ""}}
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -94,7 +98,10 @@ async def test_service_say(
 
 
 async def test_service_say_en_gb_config(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_tts, calls
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts,
+    calls: list[ServiceCall],
 ) -> None:
     """Test service call say with en-gb code in the config."""
 
@@ -110,6 +117,7 @@ async def test_service_say_en_gb_config(
             }
         },
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -142,7 +150,10 @@ async def test_service_say_en_gb_config(
 
 
 async def test_service_say_en_gb_service(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_tts, calls
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts,
+    calls: list[ServiceCall],
 ) -> None:
     """Test service call say with en-gb code in the service."""
 
@@ -151,6 +162,7 @@ async def test_service_say_en_gb_service(
         tts.DOMAIN,
         {tts.DOMAIN: {"platform": "microsoft", "api_key": ""}},
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -185,7 +197,10 @@ async def test_service_say_en_gb_service(
 
 
 async def test_service_say_fa_ir_config(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_tts, calls
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts,
+    calls: list[ServiceCall],
 ) -> None:
     """Test service call say with fa-ir code in the config."""
 
@@ -201,6 +216,7 @@ async def test_service_say_fa_ir_config(
             }
         },
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -233,7 +249,10 @@ async def test_service_say_fa_ir_config(
 
 
 async def test_service_say_fa_ir_service(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_tts, calls
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts,
+    calls: list[ServiceCall],
 ) -> None:
     """Test service call say with fa-ir code in the service."""
 
@@ -246,6 +265,7 @@ async def test_service_say_fa_ir_service(
     }
 
     await async_setup_component(hass, tts.DOMAIN, config)
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -296,13 +316,16 @@ def test_supported_languages() -> None:
     assert len(SUPPORTED_LANGUAGES) > 100
 
 
-async def test_invalid_language(hass: HomeAssistant, mock_tts, calls) -> None:
+async def test_invalid_language(
+    hass: HomeAssistant, mock_tts, calls: list[ServiceCall]
+) -> None:
     """Test setup component with invalid language."""
     await async_setup_component(
         hass,
         tts.DOMAIN,
         {tts.DOMAIN: {"platform": "microsoft", "api_key": "", "language": "en"}},
     )
+    await hass.async_block_till_done()
 
     with pytest.raises(ServiceNotFound):
         await hass.services.async_call(
@@ -320,13 +343,17 @@ async def test_invalid_language(hass: HomeAssistant, mock_tts, calls) -> None:
 
 
 async def test_service_say_error(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_tts, calls
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts,
+    calls: list[ServiceCall],
 ) -> None:
     """Test service call say with http error."""
     mock_tts.return_value.speak.side_effect = pycsspeechtts.requests.HTTPError
     await async_setup_component(
         hass, tts.DOMAIN, {tts.DOMAIN: {"platform": "microsoft", "api_key": ""}}
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,

@@ -449,7 +449,7 @@ async def test_image_from_url_fails(
 
     state = hass.states.get("image.test")
 
-    # The image failed to load, the the last image update is registered
+    # The image failed to load, the last image update is registered
     # but _last_image was set to `None`
     assert state.state == "2023-04-01T00:00:00+00:00"
     client = await hass_client_no_auth()

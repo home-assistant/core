@@ -67,5 +67,17 @@ SWITCHES = [
         value_fn=lambda data: data.status["state"] == "STOWED",
         turn_on_fn=lambda coordinator: coordinator.async_stow_starlink(True),
         turn_off_fn=lambda coordinator: coordinator.async_stow_starlink(False),
-    )
+    ),
+    StarlinkSwitchEntityDescription(
+        key="sleep_schedule",
+        translation_key="sleep_schedule",
+        device_class=SwitchDeviceClass.SWITCH,
+        value_fn=lambda data: data.sleep[2],
+        turn_on_fn=lambda coordinator: coordinator.async_set_sleep_schedule_enabled(
+            True
+        ),
+        turn_off_fn=lambda coordinator: coordinator.async_set_sleep_schedule_enabled(
+            False
+        ),
+    ),
 ]

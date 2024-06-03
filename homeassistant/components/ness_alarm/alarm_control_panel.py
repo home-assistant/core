@@ -6,8 +6,11 @@ import logging
 
 from nessclient import ArmingMode, ArmingState, Client
 
-import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
+    CodeFormat,
+)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -51,10 +54,10 @@ async def async_setup_platform(
     async_add_entities([device])
 
 
-class NessAlarmPanel(alarm.AlarmControlPanelEntity):
+class NessAlarmPanel(AlarmControlPanelEntity):
     """Representation of a Ness alarm panel."""
 
-    _attr_code_format = alarm.CodeFormat.NUMBER
+    _attr_code_format = CodeFormat.NUMBER
     _attr_should_poll = False
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME

@@ -23,8 +23,8 @@ _LOGGER = logging.getLogger(__name__)
 
 _DEVICES_REGEX = re.compile(
     r"(?P<name>([^\s]+)?)\s+"
-    + r"(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s+"
-    + r"(?P<mac>([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))\s+"
+    r"(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s+"
+    r"(?P<mac>([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))\s+"
 )
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(

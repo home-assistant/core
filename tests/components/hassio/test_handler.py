@@ -315,15 +315,15 @@ async def test_api_ingress_panels(
 @pytest.mark.parametrize(
     ("api_call", "method", "payload"),
     [
-        ["retrieve_discovery_messages", "GET", None],
-        ["refresh_updates", "POST", None],
-        ["update_diagnostics", "POST", True],
+        ("retrieve_discovery_messages", "GET", None),
+        ("refresh_updates", "POST", None),
+        ("update_diagnostics", "POST", True),
     ],
 )
 async def test_api_headers(
     aiohttp_raw_server,  # 'aiohttp_raw_server' must be before 'hass'!
-    hass,
-    socket_enabled,
+    hass: HomeAssistant,
+    socket_enabled: None,
     api_call: str,
     method: Literal["GET", "POST"],
     payload: Any,

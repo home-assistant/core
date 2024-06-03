@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any, TypedDict
 from plexapi.gdm import GDM
 from plexwebsocket import PlexWebsocket
 
-from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 
 from .const import DOMAIN, SERVERS
@@ -23,7 +22,6 @@ class PlexData(TypedDict):
     servers: dict[str, PlexServer]
     dispatchers: dict[str, list[CALLBACK_TYPE]]
     websockets: dict[str, PlexWebsocket]
-    platforms_completed: dict[str, set[Platform]]
     gdm_scanner: GDM
     gdm_debouncer: Callable[[], Coroutine[Any, Any, None]]
 

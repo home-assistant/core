@@ -5,7 +5,7 @@ from __future__ import annotations
 from http import HTTPStatus
 
 from aiohttp import ClientError, ClientResponseError
-from myuplink import MyUplinkAPI
+from myuplink import MyUplinkAPI, get_manufacturer, get_model, get_system_name
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -16,6 +16,7 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
 )
+from homeassistant.helpers.device_registry import DeviceEntry
 
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN, OAUTH2_SCOPES
@@ -83,12 +84,27 @@ def create_devices(
     """Update all devices."""
     device_registry = dr.async_get(hass)
 
-    for device_id, device in coordinator.data.devices.items():
-        device_registry.async_get_or_create(
-            config_entry_id=config_entry.entry_id,
-            identifiers={(DOMAIN, device_id)},
-            name=device.productName,
-            manufacturer=device.productName.split(" ")[0],
-            model=device.productName,
-            sw_version=device.firmwareCurrent,
-        )
+    for system in coordinator.data.systems:
+        devices_in_system = [x.id for x in system.devices]
+        for device_id, device in coordinator.data.devices.items():
+            if device_id in devices_in_system:
+                device_registry.async_get_or_create(
+                    config_entry_id=config_entry.entry_id,
+                    identifiers={(DOMAIN, device_id)},
+                    name=get_system_name(system),
+                    manufacturer=get_manufacturer(device),
+                    model=get_model(device),
+                    sw_version=device.firmwareCurrent,
+                    serial_number=device.product_serial_number,
+                )
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove myuplink config entry from a device."""
+
+    myuplink_data: MyUplinkDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    return not device_entry.identifiers.intersection(
+        (DOMAIN, device_id) for device_id in myuplink_data.data.devices
+    )

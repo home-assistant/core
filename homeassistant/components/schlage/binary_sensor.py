@@ -45,17 +45,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary_sensors based on a config entry."""
     coordinator: SchlageDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    entities = []
-    for device_id in coordinator.data.locks:
-        for description in _DESCRIPTIONS:
-            entities.append(
-                SchlageBinarySensor(
-                    coordinator=coordinator,
-                    description=description,
-                    device_id=device_id,
-                )
-            )
-    async_add_entities(entities)
+    async_add_entities(
+        SchlageBinarySensor(
+            coordinator=coordinator,
+            description=description,
+            device_id=device_id,
+        )
+        for device_id in coordinator.data.locks
+        for description in _DESCRIPTIONS
+    )
 
 
 class SchlageBinarySensor(SchlageEntity, BinarySensorEntity):

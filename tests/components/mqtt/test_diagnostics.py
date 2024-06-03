@@ -6,6 +6,7 @@ from unittest.mock import ANY
 import pytest
 
 from homeassistant.components import mqtt
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -108,6 +109,7 @@ async def test_entry_diagnostics(
                     "attributes": {"friendly_name": "MQTT Sensor"},
                     "entity_id": "sensor.none_mqtt_sensor",
                     "last_changed": ANY,
+                    "last_reported": ANY,
                     "last_updated": ANY,
                     "state": "unknown",
                 },
@@ -142,14 +144,15 @@ async def test_entry_diagnostics(
         {
             mqtt.CONF_BROKER: "mock-broker",
             mqtt.CONF_BIRTH_MESSAGE: {},
-            mqtt.CONF_PASSWORD: "hunter2",
-            mqtt.CONF_USERNAME: "my_user",
+            CONF_PASSWORD: "hunter2",
+            CONF_USERNAME: "my_user",
         }
     ],
 )
 async def test_redact_diagnostics(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hass_client: ClientSessionGenerator,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
@@ -234,6 +237,7 @@ async def test_redact_diagnostics(
                     },
                     "entity_id": "device_tracker.mqtt_unique",
                     "last_changed": ANY,
+                    "last_reported": ANY,
                     "last_updated": ANY,
                     "state": "home",
                 },
@@ -263,9 +267,10 @@ async def test_redact_diagnostics(
     }
 
     # Disable the entity and remove the state
-    ent_registry = er.async_get(hass)
-    device_tracker_entry = er.async_entries_for_device(ent_registry, device_entry.id)[0]
-    ent_registry.async_update_entity(
+    device_tracker_entry = er.async_entries_for_device(
+        entity_registry, device_entry.id
+    )[0]
+    entity_registry.async_update_entity(
         device_tracker_entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
     )
     hass.states.async_remove(device_tracker_entry.entity_id)

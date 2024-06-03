@@ -65,6 +65,17 @@ async def setup_component(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, MEDIA_STREAM_DOMAIN, {})
 
 
+async def test_platform_loads_before_config_entry(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test that the platform can be loaded before the config entry."""
+    # Fake that the config entry is not loaded before the media_source platform
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert mock_setup_entry.call_count == 0
+
+
 async def test_resolve(
     hass: HomeAssistant,
     reolink_connect: MagicMock,

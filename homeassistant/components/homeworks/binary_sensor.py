@@ -1,4 +1,5 @@
 """Support for Lutron Homeworks binary sensors."""
+
 from __future__ import annotations
 
 import logging
@@ -35,12 +36,12 @@ async def async_setup_entry(
     data: HomeworksData = hass.data[DOMAIN][entry.entry_id]
     controller = data.controller
     controller_id = entry.options[CONF_CONTROLLER_ID]
-    devs = []
+    entities = []
     for keypad in entry.options.get(CONF_KEYPADS, []):
         for button in keypad[CONF_BUTTONS]:
             if not button[CONF_LED]:
                 continue
-            dev = HomeworksBinarySensor(
+            entity = HomeworksBinarySensor(
                 controller,
                 data.keypads[keypad[CONF_ADDR]],
                 controller_id,
@@ -49,8 +50,8 @@ async def async_setup_entry(
                 button[CONF_NAME],
                 button[CONF_NUMBER],
             )
-            devs.append(dev)
-    async_add_entities(devs, True)
+            entities.append(entity)
+    async_add_entities(entities, True)
 
 
 class HomeworksBinarySensor(HomeworksEntity, BinarySensorEntity):

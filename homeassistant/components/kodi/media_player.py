@@ -7,7 +7,7 @@ from datetime import timedelta
 from functools import wraps
 import logging
 import re
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from jsonrpc_base.jsonrpc import ProtocolError, TransportError
 from pykodi import CannotConnectError
@@ -70,9 +70,6 @@ from .const import (
     EVENT_TURN_OFF,
     EVENT_TURN_ON,
 )
-
-_KodiEntityT = TypeVar("_KodiEntityT", bound="KodiEntity")
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -231,7 +228,7 @@ async def async_setup_entry(
     async_add_entities([entity])
 
 
-def cmd(
+def cmd[_KodiEntityT: KodiEntity, **_P](
     func: Callable[Concatenate[_KodiEntityT, _P], Awaitable[Any]],
 ) -> Callable[Concatenate[_KodiEntityT, _P], Coroutine[Any, Any, None]]:
     """Catch command exceptions."""
@@ -262,6 +259,7 @@ class KodiEntity(MediaPlayerEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "media_player"
     _attr_supported_features = (
         MediaPlayerEntityFeature.BROWSE_MEDIA
         | MediaPlayerEntityFeature.NEXT_TRACK
@@ -480,7 +478,13 @@ class KodiEntity(MediaPlayerEntity):
             self._reset_state()
             return
 
-        self._players = await self._kodi.get_players()
+        try:
+            self._players = await self._kodi.get_players()
+        except (TransportError, ProtocolError):
+            if not self._connection.can_subscribe:
+                self._reset_state()
+                return
+            raise
 
         if self._kodi_is_off:
             self._reset_state()
@@ -513,6 +517,7 @@ class KodiEntity(MediaPlayerEntity):
                     "album",
                     "season",
                     "episode",
+                    "streamdetails",
                 ],
             )
         else:
@@ -628,6 +633,23 @@ class KodiEntity(MediaPlayerEntity):
             return artists[0]
 
         return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str | None]:
+        """Return the state attributes."""
+        state_attr: dict[str, str | None] = {}
+        if self.state == MediaPlayerState.OFF:
+            return state_attr
+
+        hdr_type = (
+            self._item.get("streamdetails", {}).get("video", [{}])[0].get("hdrtype")
+        )
+        if hdr_type == "":
+            state_attr["dynamic_range"] = "sdr"
+        else:
+            state_attr["dynamic_range"] = hdr_type
+
+        return state_attr
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""

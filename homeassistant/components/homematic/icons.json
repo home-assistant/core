@@ -1,0 +1,10 @@
+{
+  "services": {
+    "virtualkey": "mdi:keyboard",
+    "set_variable_value": "mdi:console",
+    "set_device_value": "mdi:television",
+    "reconnect": "mdi:wifi-refresh",
+    "set_install_mode": "mdi:cog",
+    "put_paramset": "mdi:cog"
+  }
+}
