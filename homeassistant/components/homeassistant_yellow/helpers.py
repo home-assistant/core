@@ -105,7 +105,7 @@ def validate_usb_hub_present() -> bool:
 
 async def async_validate_hardware_consistent(hass: HomeAssistant) -> bool:
     """Validate the hardware is consistent with a properly installed CM4."""
-    if not validate_usb_hub_present():
+    if not await hass.async_add_executor_job(validate_usb_hub_present):
         return False
 
     if not await async_validate_gpio_states(hass):
