@@ -53,6 +53,7 @@ class TOTPSensor(SensorEntity):
         """Initialize the sensor."""
         self._attr_name = name
         self._otp = pyotp.TOTP(token)
+        self._attr_unique_id = token
 
     async def async_added_to_hass(self) -> None:
         """Handle when an entity is about to be added to Home Assistant."""
