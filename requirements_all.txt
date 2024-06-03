@@ -2209,7 +2209,7 @@ pytfiac==0.4
 pythinkingcleaner==0.0.3
 
 # homeassistant.components.motionmount
-python-MotionMount==1.0.0
+python-MotionMount==2.0.0
 
 # homeassistant.components.awair
 python-awair==0.2.4
