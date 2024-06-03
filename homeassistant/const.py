@@ -1129,8 +1129,21 @@ _DEPRECATED_MASS_POUNDS: Final = DeprecatedConstantEnum(
 )
 """Deprecated: please use UnitOfMass.POUNDS"""
 
+
 # Conductivity units
-CONDUCTIVITY: Final = "µS/cm"
+class UnitOfConductivity(StrEnum):
+    """Conductivity units."""
+
+    SIEMENS = "S/cm"
+    MICROSIEMENS = "µS/cm"
+    MILLISIEMENS = "mS/cm"
+
+
+_DEPRECATED_CONDUCTIVITY: Final = DeprecatedConstantEnum(
+    UnitOfConductivity.MICROSIEMENS,
+    "2025.6",
+)
+"""Deprecated: please use UnitOfConductivity.MICROSIEMENS"""
 
 # Light units
 LIGHT_LUX: Final = "lx"
