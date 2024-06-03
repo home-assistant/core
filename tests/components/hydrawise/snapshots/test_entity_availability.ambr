@@ -47,7 +47,7 @@
     'state': 'off',
   })
 # ---
-# name: test_api_offline[binary_sensor][binary_sensor.home_controller_online-entry]
+# name: test_api_offline[binary_sensor][binary_sensor.home_controller_controller-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -59,7 +59,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.home_controller_online',
+    'entity_id': 'binary_sensor.home_controller_controller',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -71,24 +71,24 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': 'Online',
+    'original_name': 'Controller',
     'platform': 'hydrawise',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'online',
-    'unique_id': '52496_online',
+    'translation_key': 'controller',
+    'unique_id': '52496_controller',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_api_offline[binary_sensor][binary_sensor.home_controller_online-state]
+# name: test_api_offline[binary_sensor][binary_sensor.home_controller_controller-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by hydrawise.com',
       'device_class': 'connectivity',
-      'friendly_name': 'Home Controller Online',
+      'friendly_name': 'Home Controller Controller',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.home_controller_online',
+    'entity_id': 'binary_sensor.home_controller_controller',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -947,7 +947,7 @@
     'state': 'on',
   })
 # ---
-# name: test_controller_offline[binary_sensor][binary_sensor.home_controller_online-entry]
+# name: test_controller_offline[binary_sensor][binary_sensor.home_controller_controller-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -959,7 +959,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.home_controller_online',
+    'entity_id': 'binary_sensor.home_controller_controller',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -971,24 +971,24 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': 'Online',
+    'original_name': 'Controller',
     'platform': 'hydrawise',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'online',
-    'unique_id': '52496_online',
+    'translation_key': 'controller',
+    'unique_id': '52496_controller',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_controller_offline[binary_sensor][binary_sensor.home_controller_online-state]
+# name: test_controller_offline[binary_sensor][binary_sensor.home_controller_controller-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by hydrawise.com',
       'device_class': 'connectivity',
-      'friendly_name': 'Home Controller Online',
+      'friendly_name': 'Home Controller Controller',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.home_controller_online',
+    'entity_id': 'binary_sensor.home_controller_controller',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
