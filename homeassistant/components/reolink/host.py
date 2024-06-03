@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import defaultdict
 from collections.abc import Mapping
 import logging
 from typing import Any, Literal
@@ -68,7 +69,9 @@ class ReolinkHost:
         )
 
         self.update_cmd_list: dict[str, list[int]] = {}
-        self.update_cmd_list_count: dict[str, dict[int | str, int]] = {}
+        self.update_cmd_list_count: defaultdict[str, dict[int | str, int]] = (
+            defaultdict(dict)
+        )
 
         self.webhook_id: str | None = None
         self._onvif_push_supported: bool = True

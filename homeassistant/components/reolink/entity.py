@@ -91,7 +91,6 @@ class ReolinkHostCoordinatorEntity(ReolinkBaseCoordinatorEntity[None]):
         await super().async_added_to_hass()
         cmd_key = self.entity_description.cmd_key
         if cmd_key is not None:
-            self._host.update_cmd_list_count.setdefault(cmd_key, {})
             self._host.update_cmd_list_count[cmd_key].setdefault("host", 0)
             self._host.update_cmd_list_count[cmd_key]["host"] += 1
             self._host.update_cmd_list.setdefault(cmd_key, [])
