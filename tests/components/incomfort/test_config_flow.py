@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientResponseError
-from incomfortclient import IncomfortError
+from incomfortclient import IncomfortError, InvalidHeaterList
 import pytest
 
 from homeassistant.components.incomfort import DOMAIN
@@ -31,14 +31,14 @@ async def test_form(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], MOCK_CONFIG
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Intergas InComfort/Intouch Lan2RF gateway"
-    assert result2["data"] == MOCK_CONFIG
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Intergas InComfort/Intouch Lan2RF gateway"
+    assert result["data"] == MOCK_CONFIG
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -62,6 +62,8 @@ async def test_import(
         (IncomfortError(ClientResponseError(None, None, status=401)), "auth_error"),
         (IncomfortError(ClientResponseError(None, None, status=404)), "not_found"),
         (IncomfortError(ClientResponseError(None, None, status=500)), "unknown"),
+        (IncomfortError, "unknown"),
+        (InvalidHeaterList, "no_heaters"),
         (ValueError, "unknown"),
         (TimeoutError, "timeout_error"),
     ],
@@ -94,7 +96,7 @@ async def test_entry_already_configured(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_HOST: MOCK_CONFIG[CONF_HOST],
@@ -102,8 +104,8 @@ async def test_entry_already_configured(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
@@ -124,8 +126,10 @@ async def test_entry_already_configured(hass: HomeAssistant) -> None:
             "unknown",
             "base",
         ),
+        (IncomfortError, "unknown", "base"),
         (ValueError, "unknown", "base"),
         (TimeoutError, "timeout_error", "base"),
+        (InvalidHeaterList, "no_heaters", "base"),
     ],
 )
 async def test_form_validation(
@@ -142,18 +146,18 @@ async def test_form_validation(
 
     # Simulate issue and retry
     mock_incomfort().heaters.side_effect = exc
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], MOCK_CONFIG
     )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {
         base: error,
     }
 
     # Fix the issue and retry
     mock_incomfort().heaters.side_effect = None
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], MOCK_CONFIG
     )
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert "errors" not in result2
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert "errors" not in result
