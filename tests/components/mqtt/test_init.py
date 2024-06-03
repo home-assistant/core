@@ -193,10 +193,15 @@ async def test_mqtt_await_ack_at_disconnect(
         mqtt_client.publish = MagicMock(return_value=FakeInfo())
         entry = MockConfigEntry(
             domain=mqtt.DOMAIN,
-            data={"certificate": "auto", mqtt.CONF_BROKER: "test-broker"},
+            data={
+                "certificate": "auto",
+                mqtt.CONF_BROKER: "test-broker",
+                mqtt.CONF_DISCOVERY: False,
+            },
         )
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
+
         mqtt_client = mock_client.return_value
 
         # publish from MQTT client without awaiting
