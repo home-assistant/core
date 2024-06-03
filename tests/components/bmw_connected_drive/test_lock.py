@@ -1,6 +1,6 @@
 """Test BMW locks."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from bimmer_connected.models import MyBMWRemoteServiceError
 from bimmer_connected.vehicle.remote_services import RemoteServices
@@ -10,13 +10,15 @@ import respx
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import check_remote_service_call, setup_mocked_integration
 
+from tests.common import snapshot_platform
 from tests.components.recorder.common import async_wait_recording_done
 
 
@@ -26,14 +28,18 @@ from tests.components.recorder.common import async_wait_recording_done
 async def test_entity_state_attrs(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test lock states and attributes."""
 
     # Setup component
-    assert await setup_mocked_integration(hass)
+    with patch(
+        "homeassistant.components.bmw_connected_drive.PLATFORMS", [Platform.LOCK]
+    ):
+        mock_config_entry = await setup_mocked_integration(hass)
 
     # Get all lock entities
-    assert hass.states.async_all("lock") == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("recorder_mock")
