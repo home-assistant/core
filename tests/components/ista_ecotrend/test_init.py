@@ -10,9 +10,11 @@ from pyecotrend_ista.exception_classes import (
 )
 import pytest
 from requests.exceptions import RequestException
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -75,3 +77,23 @@ async def test_config_entry_error(
     await hass.async_block_till_done()
 
     assert ista_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_device_registry(
+    hass: HomeAssistant,
+    ista_config_entry: MockConfigEntry,
+    mock_ista: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test device registry."""
+    ista_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(ista_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert ista_config_entry.state is ConfigEntryState.LOADED
+
+    for device in dr.async_entries_for_config_entry(
+        device_registry, ista_config_entry.entry_id
+    ):
+        assert device == snapshot

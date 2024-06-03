@@ -7,7 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -18,7 +18,6 @@ async def test_setup(
     ista_config_entry: MockConfigEntry,
     mock_ista: MagicMock,
     entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test setup of ista EcoTrend sensor platform."""
@@ -30,8 +29,3 @@ async def test_setup(
     assert ista_config_entry.state is ConfigEntryState.LOADED
 
     await snapshot_platform(hass, entity_registry, snapshot, ista_config_entry.entry_id)
-
-    for device in dr.async_entries_for_config_entry(
-        device_registry, ista_config_entry.entry_id
-    ):
-        assert device == snapshot
