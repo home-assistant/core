@@ -9,9 +9,11 @@ from incomfortclient import Gateway as InComfortGateway, Heater as InComfortHeat
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DATA_INCOMFORT, IncomfortEntity
+from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -39,6 +41,9 @@ class IncomfortFailed(IncomfortEntity, BinarySensorEntity):
         self._heater = heater
 
         self._attr_unique_id = f"{heater.serial_no}_failed"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, heater.serial_no)},
+        )
 
     @property
     def is_on(self) -> bool:
