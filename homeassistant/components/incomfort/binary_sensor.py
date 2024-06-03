@@ -33,6 +33,8 @@ async def async_setup_platform(
 class IncomfortFailed(IncomfortEntity, BinarySensorEntity):
     """Representation of an InComfort Failed sensor."""
 
+    _attr_name = "Fault"
+
     def __init__(self, client: InComfortGateway, heater: InComfortHeater) -> None:
         """Initialize the binary sensor."""
         super().__init__()
@@ -41,7 +43,6 @@ class IncomfortFailed(IncomfortEntity, BinarySensorEntity):
         self._heater = heater
 
         self._attr_unique_id = f"{heater.serial_no}_failed"
-        self._attr_name = "Fault"
 
     @property
     def is_on(self) -> bool:

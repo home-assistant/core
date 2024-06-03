@@ -44,6 +44,8 @@ async def async_setup_platform(
 class InComfortClimate(IncomfortEntity, ClimateEntity):
     """Representation of an InComfort/InTouch climate device."""
 
+    _attr_min_temp = 5.0
+    _attr_max_temp = 30.0
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
@@ -61,8 +63,6 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
 
         self._attr_unique_id = f"{heater.serial_no}_{room.room_no}"
         self._attr_name = f"Thermostat {room.room_no}"
-        self._attr_min_temp = 5.0
-        self._attr_max_temp = 30.0
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

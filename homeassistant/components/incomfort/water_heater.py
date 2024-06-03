@@ -41,6 +41,12 @@ async def async_setup_platform(
 class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
     """Representation of an InComfort/Intouch water_heater device."""
 
+    _attr_min_temp = 30.0
+    _attr_max_temp = 80.0
+    _attr_name = "Boiler"
+    _attr_should_poll = True
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+
     def __init__(self, client: InComfortGateway, heater: InComfortHeater) -> None:
         """Initialize the water_heater device."""
         super().__init__()
@@ -49,11 +55,6 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
         self._heater = heater
 
         self._attr_unique_id = heater.serial_no
-        self._attr_name = "Boiler"
-        self._attr_should_poll = True
-        self._attr_min_temp = 30.0
-        self._attr_min_temp = 80.0
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
     def icon(self) -> str:
