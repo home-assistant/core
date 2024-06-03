@@ -9,33 +9,29 @@ from aiohttp import ClientResponseError
 from incomfortclient import Gateway as InComfortGateway, Heater as InComfortHeater
 
 from homeassistant.components.water_heater import WaterHeaterEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, IncomfortEntity
+from . import DATA_INCOMFORT, DOMAIN, IncomfortEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 HEATER_ATTRS = ["display_code", "display_text", "is_burning"]
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up an InComfort/Intouch water_heater device."""
-    if discovery_info is None:
-        return
-
-    client = hass.data[DOMAIN]["client"]
-    heaters = hass.data[DOMAIN]["heaters"]
-
-    async_add_entities([IncomfortWaterHeater(client, h) for h in heaters])
+    """Set up an InComfort/InTouch water_heater device."""
+    incomfort_data = hass.data[DATA_INCOMFORT][entry.entry_id]
+    async_add_entities(
+        IncomfortWaterHeater(incomfort_data.client, h) for h in incomfort_data.heaters
+    )
 
 
 class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
@@ -92,4 +88,4 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
             _LOGGER.warning("Update failed, message is: %s", err)
 
         else:
-            async_dispatcher_send(self.hass, DOMAIN)
+            async_dispatcher_send(self.hass, f"{DOMAIN}_{self.unique_id}")
