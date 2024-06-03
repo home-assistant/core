@@ -52,7 +52,7 @@ def os_info(extra_os_info):
 
 
 @pytest.fixture(autouse=True)
-def mock_all(aioclient_mock, request, os_info):
+def mock_all(aioclient_mock: AiohttpClientMocker, os_info) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
