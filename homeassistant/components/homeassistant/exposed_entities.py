@@ -35,6 +35,7 @@ DEFAULT_EXPOSED_DOMAINS = {
     "fan",
     "humidifier",
     "light",
+    "media_player",
     "scene",
     "switch",
     "todo",
