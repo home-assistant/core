@@ -4,6 +4,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
+        'device_class': 'current',
         'friendly_name': 'iX xDrive50 AC current limit',
         'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
       }),
@@ -163,6 +164,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
+        'device_class': 'current',
         'friendly_name': 'i4 eDrive40 AC current limit',
         'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
       }),
@@ -415,6 +417,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
+        'device_class': 'current',
         'friendly_name': 'i3 (+ REX) AC current limit',
         'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
       }),
