@@ -62,7 +62,7 @@ def mock_new_airgradient_client(
 def mock_cloud_airgradient_client(
     mock_airgradient_client: AsyncMock,
 ) -> Generator[AsyncMock, None, None]:
-    """Mock a new AirGradient client."""
+    """Mock a cloud AirGradient client."""
     mock_airgradient_client.get_config.return_value = Config.from_json(
         load_fixture("get_config_cloud.json", DOMAIN)
     )
