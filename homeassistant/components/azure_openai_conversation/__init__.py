@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import openai
 
+from homeassistant.components.openai_conversation import OpenAIConfigEntry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
@@ -12,14 +13,11 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import AZURE_OPEN_API_VERSION, CONF_AZURE_OPENAI_RESOURCE, DOMAIN, LOGGER
 
-SERVICE_GENERATE_IMAGE = "generate_image"
 PLATFORMS = (Platform.CONVERSATION,)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-type AzureOpenAIConfigEntry = ConfigEntry[openai.AsyncAzureOpenAI]
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: AzureOpenAIConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bool:
     """Set up Azure OpenAI Conversation from a config entry."""
     client = openai.AsyncAzureOpenAI(
         azure_endpoint=f"https://{entry.data[CONF_AZURE_OPENAI_RESOURCE]}.openai.azure.com",

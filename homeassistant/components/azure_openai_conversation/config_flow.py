@@ -3,39 +3,25 @@
 from __future__ import annotations
 
 import logging
-from types import MappingProxyType
-from typing import Any
+from typing import Any, override
 
 import openai
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
+from homeassistant.components.openai_conversation.config_flow import (
+    OpenAIConfigFlow,
+    OpenAIOptionsFlow,
 )
+from homeassistant.config_entries import ConfigEntry, OptionsFlow
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
-from homeassistant.helpers.selector import (
-    NumberSelector,
-    NumberSelectorConfig,
-    SelectOptionDict,
-    SelectSelector,
-    SelectSelectorConfig,
-    TemplateSelector,
-)
 
 from .const import (
     AZURE_OPEN_API_VERSION,
     CONF_AZURE_OPENAI_RESOURCE,
-    CONF_CHAT_MODEL,
-    CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_RECOMMENDED,
-    CONF_TEMPERATURE,
-    CONF_TOP_P,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
@@ -59,53 +45,25 @@ RECOMMENDED_OPTIONS = {
 }
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-
-
-class AzureOpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
+class AzureOpenAIConfigFlow(OpenAIConfigFlow, domain=DOMAIN):
     """Handle a config flow for Azure OpenAI Conversation."""
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the initial step."""
-        errors = {}
+    step_user_data_schema = STEP_USER_DATA_SCHEMA
 
-        if user_input is not None:
-            client = openai.AsyncAzureOpenAI(
-                azure_endpoint=f"https://{user_input[CONF_AZURE_OPENAI_RESOURCE]}.openai.azure.com",
-                api_key=str(user_input[CONF_API_KEY]),
-                api_version=AZURE_OPEN_API_VERSION,
-            )
-            try:
-                await self.hass.async_add_executor_job(
-                    client.with_options(timeout=10.0).models.list
-                )
-            except openai.APIConnectionError:
-                errors["base"] = "cannot_connect"
-            except openai.AuthenticationError:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                await self.async_set_unique_id(user_input[CONF_AZURE_OPENAI_RESOURCE])
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title="Azure OpenAI",
-                    data=user_input,
-                    options=RECOMMENDED_OPTIONS,
-                )
-
-        return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+    @override
+    async def validate_input(self, hass: HomeAssistant, data: dict[str, Any]) -> None:
+        """Validate the user input allows us to connect."""
+        client = openai.AsyncAzureOpenAI(
+            azure_endpoint=f"https://{data[CONF_AZURE_OPENAI_RESOURCE]}.openai.azure.com",
+            api_key=str(data[CONF_API_KEY]),
+            api_version=AZURE_OPEN_API_VERSION,
+        )
+        await self.hass.async_add_executor_job(
+            client.with_options(timeout=10.0).models.list
         )
 
     @staticmethod
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
@@ -113,107 +71,10 @@ class AzureOpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         return AzureOpenAIOptionsFlow(config_entry)
 
 
-class AzureOpenAIOptionsFlow(OptionsFlow):
-    """OpenAI config flow options handler."""
+class AzureOpenAIOptionsFlow(OpenAIOptionsFlow):
+    """Options flow based on Open AI."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-        self.last_rendered_recommended = config_entry.options.get(
-            CONF_RECOMMENDED, False
-        )
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        options: dict[str, Any] | MappingProxyType[str, Any] = self.config_entry.options
-
-        if user_input is not None:
-            if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
-                if user_input[CONF_LLM_HASS_API] == "none":
-                    user_input.pop(CONF_LLM_HASS_API)
-                return self.async_create_entry(title="", data=user_input)
-
-            # Re-render the options again, now with the recommended options shown/hidden
-            self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
-
-            options = {
-                CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
-                CONF_PROMPT: user_input[CONF_PROMPT],
-                CONF_LLM_HASS_API: user_input[CONF_LLM_HASS_API],
-            }
-
-        schema = openai_config_option_schema(self.hass, options)
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(schema),
-        )
-
-
-def openai_config_option_schema(
-    hass: HomeAssistant,
-    options: dict[str, Any] | MappingProxyType[str, Any],
-) -> dict:
-    """Return a schema for OpenAI completion options."""
-    hass_apis: list[SelectOptionDict] = [
-        SelectOptionDict(
-            label="No control",
-            value="none",
-        )
-    ]
-    hass_apis.extend(
-        SelectOptionDict(
-            label=api.name,
-            value=api.id,
-        )
-        for api in llm.async_get_apis(hass)
-    )
-
-    schema = {
-        vol.Optional(
-            CONF_PROMPT,
-            description={
-                "suggested_value": options.get(
-                    CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
-                )
-            },
-        ): TemplateSelector(),
-        vol.Optional(
-            CONF_LLM_HASS_API,
-            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
-            default="none",
-        ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
-        vol.Required(
-            CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
-        ): bool,
-    }
-
-    if options.get(CONF_RECOMMENDED):
-        return schema
-
-    schema.update(
-        {
-            vol.Optional(
-                CONF_CHAT_MODEL,
-                description={"suggested_value": options.get(CONF_CHAT_MODEL)},
-                default=RECOMMENDED_CHAT_MODEL,
-            ): str,
-            vol.Optional(
-                CONF_MAX_TOKENS,
-                description={"suggested_value": options.get(CONF_MAX_TOKENS)},
-                default=RECOMMENDED_MAX_TOKENS,
-            ): int,
-            vol.Optional(
-                CONF_TOP_P,
-                description={"suggested_value": options.get(CONF_TOP_P)},
-                default=RECOMMENDED_TOP_P,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Optional(
-                CONF_TEMPERATURE,
-                description={"suggested_value": options.get(CONF_TEMPERATURE)},
-                default=RECOMMENDED_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
-        }
-    )
-    return schema
+    default_recommended_chat_model = RECOMMENDED_CHAT_MODEL
+    default_recommended_max_tokens = RECOMMENDED_MAX_TOKENS
+    default_recommended_top_p = RECOMMENDED_TOP_P
+    default_recommended_temperature = RECOMMENDED_TEMPERATURE

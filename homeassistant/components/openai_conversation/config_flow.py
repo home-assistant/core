@@ -56,19 +56,19 @@ RECOMMENDED_OPTIONS = {
 }
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    client = openai.AsyncOpenAI(api_key=data[CONF_API_KEY])
-    await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
-
-
 class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenAI Conversation."""
 
     VERSION = 1
+    step_user_data_schema = STEP_USER_DATA_SCHEMA
+
+    async def validate_input(self, hass: HomeAssistant, data: dict[str, Any]) -> None:
+        """Validate the user input allows us to connect.
+
+        Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+        """
+        client = openai.AsyncOpenAI(api_key=data[CONF_API_KEY])
+        await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -76,13 +76,13 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="user", data_schema=self.step_user_data_schema
             )
 
         errors = {}
 
         try:
-            await validate_input(self.hass, user_input)
+            await self.validate_input(self.hass, user_input)
         except openai.APIConnectionError:
             errors["base"] = "cannot_connect"
         except openai.AuthenticationError:
@@ -112,6 +112,11 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
 class OpenAIOptionsFlow(OptionsFlow):
     """OpenAI config flow options handler."""
 
+    default_recommended_chat_model = RECOMMENDED_CHAT_MODEL
+    default_recommended_max_tokens = RECOMMENDED_MAX_TOKENS
+    default_recommended_top_p = RECOMMENDED_TOP_P
+    default_recommended_temperature = RECOMMENDED_TEMPERATURE
+
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
@@ -140,76 +145,76 @@ class OpenAIOptionsFlow(OptionsFlow):
                 CONF_LLM_HASS_API: user_input[CONF_LLM_HASS_API],
             }
 
-        schema = openai_config_option_schema(self.hass, options)
+        schema = self.openai_config_option_schema(self.hass, options)
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(schema),
         )
 
-
-def openai_config_option_schema(
-    hass: HomeAssistant,
-    options: dict[str, Any] | MappingProxyType[str, Any],
-) -> dict:
-    """Return a schema for OpenAI completion options."""
-    hass_apis: list[SelectOptionDict] = [
-        SelectOptionDict(
-            label="No control",
-            value="none",
+    def openai_config_option_schema(
+        self,
+        hass: HomeAssistant,
+        options: dict[str, Any] | MappingProxyType[str, Any],
+    ) -> dict:
+        """Return a schema for OpenAI completion options."""
+        hass_apis: list[SelectOptionDict] = [
+            SelectOptionDict(
+                label="No control",
+                value="none",
+            )
+        ]
+        hass_apis.extend(
+            SelectOptionDict(
+                label=api.name,
+                value=api.id,
+            )
+            for api in llm.async_get_apis(hass)
         )
-    ]
-    hass_apis.extend(
-        SelectOptionDict(
-            label=api.name,
-            value=api.id,
-        )
-        for api in llm.async_get_apis(hass)
-    )
 
-    schema = {
-        vol.Optional(
-            CONF_PROMPT,
-            description={
-                "suggested_value": options.get(
-                    CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
-                )
-            },
-        ): TemplateSelector(),
-        vol.Optional(
-            CONF_LLM_HASS_API,
-            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
-            default="none",
-        ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
-        vol.Required(
-            CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
-        ): bool,
-    }
-
-    if options.get(CONF_RECOMMENDED):
-        return schema
-
-    schema.update(
-        {
+        schema = {
             vol.Optional(
-                CONF_CHAT_MODEL,
-                description={"suggested_value": options.get(CONF_CHAT_MODEL)},
-                default=RECOMMENDED_CHAT_MODEL,
-            ): str,
+                CONF_PROMPT,
+                description={
+                    "suggested_value": options.get(
+                        CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                    )
+                },
+            ): TemplateSelector(),
             vol.Optional(
-                CONF_MAX_TOKENS,
-                description={"suggested_value": options.get(CONF_MAX_TOKENS)},
-                default=RECOMMENDED_MAX_TOKENS,
-            ): int,
-            vol.Optional(
-                CONF_TOP_P,
-                description={"suggested_value": options.get(CONF_TOP_P)},
-                default=RECOMMENDED_TOP_P,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Optional(
-                CONF_TEMPERATURE,
-                description={"suggested_value": options.get(CONF_TEMPERATURE)},
-                default=RECOMMENDED_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
+                CONF_LLM_HASS_API,
+                description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+                default="none",
+            ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
+            vol.Required(
+                CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
+            ): bool,
         }
-    )
-    return schema
+
+        if options.get(CONF_RECOMMENDED):
+            return schema
+
+        schema.update(
+            {
+                vol.Optional(
+                    CONF_CHAT_MODEL,
+                    description={"suggested_value": options.get(CONF_CHAT_MODEL)},
+                    default=self.default_recommended_chat_model,
+                ): str,
+                vol.Optional(
+                    CONF_MAX_TOKENS,
+                    description={"suggested_value": options.get(CONF_MAX_TOKENS)},
+                    default=self.default_recommended_max_tokens,
+                ): int,
+                vol.Optional(
+                    CONF_TOP_P,
+                    description={"suggested_value": options.get(CONF_TOP_P)},
+                    default=self.default_recommended_top_p,
+                ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+                vol.Optional(
+                    CONF_TEMPERATURE,
+                    description={"suggested_value": options.get(CONF_TEMPERATURE)},
+                    default=self.default_recommended_temperature,
+                ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
+            }
+        )
+        return schema

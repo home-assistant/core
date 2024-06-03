@@ -15,7 +15,6 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import conversation
-from homeassistant.components.azure_openai_conversation import DOMAIN
 from homeassistant.components.conversation import trace
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
@@ -134,7 +133,7 @@ async def test_conversation_agent(
 
 
 @patch(
-    "homeassistant.components.azure_openai_conversation.conversation.llm.AssistAPI._async_get_tools"
+    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI._async_get_tools"
 )
 async def test_function_call(
     mock_get_tools,
@@ -241,7 +240,7 @@ async def test_function_call(
             tool_args={"param1": "test_value"},
         ),
         llm.LLMContext(
-            platform=DOMAIN,
+            platform="openai_conversation",
             context=context,
             user_prompt="Please call the test function",
             language="en",
@@ -266,7 +265,7 @@ async def test_function_call(
 
 
 @patch(
-    "homeassistant.components.azure_openai_conversation.conversation.llm.AssistAPI._async_get_tools"
+    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI._async_get_tools"
 )
 async def test_function_exception(
     mock_get_tools,
@@ -373,7 +372,7 @@ async def test_function_exception(
             tool_args={"param1": "test_value"},
         ),
         llm.LLMContext(
-            platform=DOMAIN,
+            platform="openai_conversation",
             context=context,
             user_prompt="Please call the test function",
             language="en",
