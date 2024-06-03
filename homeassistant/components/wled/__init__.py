@@ -20,7 +20,7 @@ PLATFORMS = (
     Platform.UPDATE,
 )
 
-WLEDConfigEntry = ConfigEntry[WLEDDataUpdateCoordinator]
+type WLEDConfigEntry = ConfigEntry[WLEDDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> bool:

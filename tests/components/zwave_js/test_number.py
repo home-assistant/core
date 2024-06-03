@@ -219,20 +219,22 @@ async def test_volume_number(
 
 
 async def test_config_parameter_number(
-    hass: HomeAssistant, climate_adc_t3000, integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    climate_adc_t3000,
+    integration,
 ) -> None:
     """Test config parameter number is created."""
     number_entity_id = "number.adc_t3000_heat_staging_delay"
     number_with_states_entity_id = "number.adc_t3000_calibration_temperature"
-    ent_reg = er.async_get(hass)
     for entity_id in (number_entity_id, number_with_states_entity_id):
-        entity_entry = ent_reg.async_get(entity_id)
+        entity_entry = entity_registry.async_get(entity_id)
         assert entity_entry
         assert entity_entry.disabled
         assert entity_entry.entity_category == EntityCategory.CONFIG
 
     for entity_id in (number_entity_id, number_with_states_entity_id):
-        updated_entry = ent_reg.async_update_entity(entity_id, disabled_by=None)
+        updated_entry = entity_registry.async_update_entity(entity_id, disabled_by=None)
         assert updated_entry != entity_entry
         assert updated_entry.disabled is False
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, cast
 
 import voluptuous as vol
 from zha.application.const import (
@@ -128,11 +128,8 @@ IEEE_SERVICE = "ieee_based_service"
 
 IEEE_SCHEMA = vol.All(cv.string, EUI64.convert)
 
-# typing typevar
-_T = TypeVar("_T")
 
-
-def _ensure_list_if_present(value: _T | None) -> list[_T] | list[Any] | None:
+def _ensure_list_if_present[_T](value: _T | None) -> list[_T] | list[Any] | None:
     """Wrap value in list if it is provided and not one."""
     if value is None:
         return None
@@ -1336,7 +1333,7 @@ def async_load_api(hass: HomeAssistant) -> None:
                 manufacturer=manufacturer,
             )
         else:
-            raise ValueError(f"Device with IEEE {str(ieee)} not found")
+            raise ValueError(f"Device with IEEE {ieee!s} not found")
 
         _LOGGER.debug(
             (
@@ -1416,7 +1413,7 @@ def async_load_api(hass: HomeAssistant) -> None:
                 manufacturer,
             )
         else:
-            raise ValueError(f"Device with IEEE {str(ieee)} not found")
+            raise ValueError(f"Device with IEEE {ieee!s} not found")
 
     async_register_admin_service(
         hass,

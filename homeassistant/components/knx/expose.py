@@ -13,6 +13,7 @@ from xknx.remote_value import RemoteValueSensor
 
 from homeassistant.const import (
     CONF_ENTITY_ID,
+    CONF_VALUE_TEMPLATE,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -25,7 +26,9 @@ from homeassistant.core import (
     State,
     callback,
 )
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, StateType
 
 from .const import CONF_RESPOND_TO_READ, KNX_ADDRESS
@@ -79,6 +82,9 @@ class KNXExposeSensor:
         )
         self.expose_default = config.get(ExposeSchema.CONF_KNX_EXPOSE_DEFAULT)
         self.expose_type: int | str = config[ExposeSchema.CONF_KNX_EXPOSE_TYPE]
+        self.value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
+        if self.value_template is not None:
+            self.value_template.hass = hass
 
         self._remove_listener: Callable[[], None] | None = None
         self.device: ExposeSensor = self.async_register(config)
@@ -87,13 +93,10 @@ class KNXExposeSensor:
     @callback
     def async_register(self, config: ConfigType) -> ExposeSensor:
         """Register listener."""
-        if self.expose_attribute is not None:
-            _name = self.entity_id + "__" + self.expose_attribute
-        else:
-            _name = self.entity_id
+        name = f"{self.entity_id}__{self.expose_attribute or "state"}"
         device = ExposeSensor(
             xknx=self.xknx,
-            name=_name,
+            name=name,
             group_address=config[KNX_ADDRESS],
             respond_to_read=config[CONF_RESPOND_TO_READ],
             value_type=self.expose_type,
@@ -132,24 +135,33 @@ class KNXExposeSensor:
         else:
             value = state.state
 
+        if self.value_template is not None:
+            try:
+                value = self.value_template.async_render_with_possible_json_value(
+                    value, error_value=None
+                )
+            except (TemplateError, TypeError, ValueError) as err:
+                _LOGGER.warning(
+                    "Error rendering value template for KNX expose %s %s: %s",
+                    self.device.name,
+                    self.value_template.template,
+                    err,
+                )
+                return None
+
         if self.expose_type == "binary":
             if value in (1, STATE_ON, "True"):
                 return True
             if value in (0, STATE_OFF, "False"):
                 return False
-        if (
-            value is not None
-            and isinstance(self.device.sensor_value, RemoteValueSensor)
-            and issubclass(self.device.sensor_value.dpt_class, DPTNumeric)
+        if value is not None and (
+            isinstance(self.device.sensor_value, RemoteValueSensor)
         ):
-            return float(value)
-        if (
-            value is not None
-            and isinstance(self.device.sensor_value, RemoteValueSensor)
-            and issubclass(self.device.sensor_value.dpt_class, DPTString)
-        ):
-            # DPT 16.000 only allows up to 14 Bytes
-            return str(value)[:14]
+            if issubclass(self.device.sensor_value.dpt_class, DPTNumeric):
+                return float(value)
+            if issubclass(self.device.sensor_value.dpt_class, DPTString):
+                # DPT 16.000 only allows up to 14 Bytes
+                return str(value)[:14]
         return value
 
     async def _async_entity_changed(self, event: Event[EventStateChangedData]) -> None:

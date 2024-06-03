@@ -38,14 +38,12 @@ async def setup_enphase_envoy_sensor_fixture(hass, config, mock_envoy):
 
 async def test_sensor(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     setup_enphase_envoy_sensor,
 ) -> None:
     """Test enphase_envoy sensor entities."""
-    entity_registry = er.async_get(hass)
-    assert entity_registry
-
     # compare registered entities against snapshot of prior run
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id

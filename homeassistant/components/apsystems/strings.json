@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "total_power": { "name": "Total power" },
+      "total_power_p1": { "name": "Power of P1" },
+      "total_power_p2": { "name": "Power of P2" },
+      "lifetime_production": { "name": "Total lifetime production" },
+      "lifetime_production_p1": { "name": "Lifetime production of P1" },
+      "lifetime_production_p2": { "name": "Lifetime production of P2" },
+      "today_production": { "name": "Production of today" },
+      "today_production_p1": { "name": "Production of today from P1" },
+      "today_production_p2": { "name": "Production of today from P2" }
+    }
+  }
+}

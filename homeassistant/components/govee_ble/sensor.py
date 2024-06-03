@@ -5,12 +5,10 @@ from __future__ import annotations
 from govee_ble import DeviceClass, DeviceKey, SensorUpdate, Units
 from govee_ble.parser import ERROR
 
-from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
     PassiveBluetoothEntityKey,
-    PassiveBluetoothProcessorCoordinator,
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import (
@@ -29,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
-from .const import DOMAIN
+from . import GoveeBLEConfigEntry
 
 SENSOR_DESCRIPTIONS = {
     (DeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
@@ -108,13 +106,11 @@ def sensor_update_to_bluetooth_data_update(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: GoveeBLEConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Govee BLE sensors."""
-    coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator = entry.runtime_data
     processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
     entry.async_on_unload(
         processor.async_add_entities_listener(
@@ -128,7 +124,7 @@ async def async_setup_entry(
 
 class GoveeBluetoothSensorEntity(
     PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[float | int | str | None]
+        PassiveBluetoothDataProcessor[float | int | str | None, SensorUpdate]
     ],
     SensorEntity,
 ):
