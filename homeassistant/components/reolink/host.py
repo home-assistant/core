@@ -96,7 +96,7 @@ class ReolinkHost:
     def async_unregister_update_cmd(self, cmd: str, channel: int | None = None) -> None:
         """Unregister the command to update the state."""
         self._update_cmd[cmd][channel] -= 1
-        if self._update_cmd[cmd][channel] <= 0:
+        if not self._update_cmd[cmd][channel]:
             del self._update_cmd[cmd][channel]
         if not self._update_cmd[cmd]:
             del self._update_cmd[cmd]
