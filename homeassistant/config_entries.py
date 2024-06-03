@@ -1191,8 +1191,8 @@ def _report_non_locked_platform_forwards(entry: ConfigEntry) -> None:
         "hass.config_entries.async_late_forward_entry_setups "
         "in a tracked task. "
         "This will stop working in Home Assistant 2025.1",
-        error_if_integration=False,
-        error_if_core=False,
+        error_if_integration=True,
+        error_if_core=True,
     )
 
 
