@@ -13,8 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LaMarzoccoConfigEntry
-from .coordinator import LaMarzoccoUpdateCoordinator
-from .entity import LaMarzoccoBaseEntity, LaMarzoccoEntity, LaMarzoccoEntityDescription
+from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -53,19 +52,11 @@ async def async_setup_entry(
     """Set up switch entities and services."""
 
     coordinator = entry.runtime_data
-    entities: list[SwitchEntity] = []
-    entities.extend(
+    async_add_entities(
         LaMarzoccoSwitchEntity(coordinator, description)
         for description in ENTITIES
         if description.supported_fn(coordinator)
     )
-
-    entities.extend(
-        LaMarzoccoAutoOnOffSwitchEntity(coordinator, wake_up_sleep_entry_id)
-        for wake_up_sleep_entry_id in coordinator.device.config.wake_up_sleep_entries
-    )
-
-    async_add_entities(entities)
 
 
 class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
@@ -87,46 +78,3 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self.entity_description.is_on_fn(self.coordinator.device.config)
-
-
-class LaMarzoccoAutoOnOffSwitchEntity(LaMarzoccoBaseEntity, SwitchEntity):
-    """Switch representing espresso machine auto on/off."""
-
-    coordinator: LaMarzoccoUpdateCoordinator
-    _attr_translation_key = "auto_on_off"
-
-    def __init__(
-        self,
-        coordinator: LaMarzoccoUpdateCoordinator,
-        identifier: str,
-    ) -> None:
-        """Initialize the switch."""
-        super().__init__(coordinator, f"auto_on_off_{identifier}")
-        self._identifier = identifier
-        self._attr_translation_placeholders = {"id": identifier}
-
-    async def _async_enable(self, state: bool) -> None:
-        """Enable or disable the auto on/off schedule."""
-        wake_up_sleep_entry = self.coordinator.device.config.wake_up_sleep_entries[
-            self._identifier
-        ]
-        wake_up_sleep_entry.enabled = state
-        await self.coordinator.device.set_wake_up_sleep(wake_up_sleep_entry)
-        self.async_write_ha_state()
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn switch on."""
-        await self._async_enable(True)
-        self.async_write_ha_state()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn switch off."""
-        await self._async_enable(False)
-        self.async_write_ha_state()
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if switch is on."""
-        return self.coordinator.device.config.wake_up_sleep_entries[
-            self._identifier
-        ].enabled
