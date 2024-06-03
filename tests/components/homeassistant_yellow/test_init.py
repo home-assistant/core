@@ -413,7 +413,15 @@ async def test_unseated_repair(hass: HomeAssistant) -> None:
 
         # The integration is loaded but the issue is present
         assert config_entry.state == ConfigEntryState.LOADED
-        assert issue_registry.async_get_issue(DOMAIN, ISSUE_CM4_UNSEATED) is not None
+
+        issue = issue_registry.async_get_issue(DOMAIN, ISSUE_CM4_UNSEATED)
+        assert issue.is_fixable is False
+        assert issue.is_persistent is True
+        assert (
+            issue.learn_more_url
+            == "https://yellow.home-assistant.io/guides/remove-cm4/"
+        )
+        assert issue.severity == ir.IssueSeverity.ERROR
 
         # The issue will be cleared once pins are consistent
         with patch(
