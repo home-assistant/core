@@ -68,6 +68,7 @@ class ReolinkHost:
         )
 
         self.update_cmd_list: dict[str, list[int]] = {}
+        self.update_cmd_list_count: dict[str, dict[int | str, int]] = {}
 
         self.webhook_id: str | None = None
         self._onvif_push_supported: bool = True
