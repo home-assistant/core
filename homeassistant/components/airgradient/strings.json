@@ -28,8 +28,7 @@
         "name": "Configuration source",
         "state": {
           "cloud": "Cloud",
-          "local": "Local",
-          "both": "Not setup"
+          "local": "Local"
         }
       },
       "display_temperature_unit": {
