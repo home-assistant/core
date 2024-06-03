@@ -1,4 +1,5 @@
 """Test the Home Assistant Yellow integration helpers."""
+
 from __future__ import annotations
 
 import contextlib
@@ -88,7 +89,7 @@ async def test_validate_gpio_pins(
 ) -> None:
     """Test validating GPIO pin states, success."""
     with mock_gpio_pin_states(states):
-        assert (await async_validate_gpio_states(hass)) is result
+        assert (await async_validate_gpio_states(hass)) == result
 
 
 @pytest.mark.parametrize(
@@ -121,11 +122,14 @@ async def test_async_validate_hardware_consistent(
     hub_present: bool, gpio_valid: bool, result: bool, hass: HomeAssistant
 ) -> None:
     """Test validating hardware consistency."""
-    with patch(
-        "homeassistant.components.homeassistant_yellow.helpers.validate_usb_hub_present",
-        return_value=hub_present,
-    ), patch(
-        "homeassistant.components.homeassistant_yellow.helpers.async_validate_gpio_states",
-        return_value=gpio_valid,
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.helpers.validate_usb_hub_present",
+            return_value=hub_present,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_yellow.helpers.async_validate_gpio_states",
+            return_value=gpio_valid,
+        ),
     ):
         assert (await async_validate_hardware_consistent(hass)) is result

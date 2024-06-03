@@ -13,10 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import discovery_flow, issue_registry as ir
 
-from .const import DOMAIN, RADIO_DEVICE, ZHA_HW_DISCOVERY_DATA
+from .const import DOMAIN, ISSUE_CM4_UNSEATED, RADIO_DEVICE, ZHA_HW_DISCOVERY_DATA
 from .helpers import async_validate_hardware_consistent
-
-ISSUE_CM4_UNSEATED = "cm4_unseated"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -1,16 +1,19 @@
 """Test the Home Assistant Yellow integration."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import zha
 from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN
 from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.components.homeassistant_yellow.const import DOMAIN
+from homeassistant.components.homeassistant_yellow.const import (
+    DOMAIN,
+    ISSUE_CM4_UNSEATED,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
@@ -370,47 +373,12 @@ async def test_setup_entry_addon_not_running(
     start_addon.assert_called_once()
 
 
-async def test_create_unseated_repair(hass: HomeAssistant) -> None:
-    """Test that a repair is created when hardware is inconsistent."""
-    mock_integration(hass, MockModule("hassio"))
-
-    # Setup the config entry
-    config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options={},
-        title="Home Assistant Yellow",
-    )
-    config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.homeassistant_yellow.get_os_info",
-        return_value={"board": "yellow"},
-    ), patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=True
-    ), patch(
-        "homeassistant.components.homeassistant_yellow.check_multi_pan_addon",
-        side_effect=HomeAssistantError(),
-    ), patch(
-        "homeassistant.components.homeassistant_yellow.async_validate_hardware_consistent",
-        return_value=False,
-    ), patch("homeassistant.components.homeassistant_yellow.ir") as ir:
-        assert not await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
-
-    assert len(ir.async_create_issue.mock_calls) == 1
-    assert (
-        ir.async_create_issue.mock_calls[0].kwargs["domain"] == "homeassistant_yellow"
-    )
-    assert ir.async_create_issue.mock_calls[0].kwargs["issue_id"] == "cm4_unseated"
-
-
-async def test_clear_unseated_repair(hass: HomeAssistant) -> None:
+async def test_unseated_repair(hass: HomeAssistant) -> None:
     """Test that a repair is cleared when hardware is consistent."""
     mock_integration(hass, MockModule("hassio"))
 
+    issue_registry = ir.async_get(hass)
+
     # Setup the config entry
     config_entry = MockConfigEntry(
         data={},
@@ -420,21 +388,39 @@ async def test_clear_unseated_repair(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.homeassistant_yellow.get_os_info",
-        return_value={"board": "yellow"},
-    ), patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=True
-    ), patch(
-        "homeassistant.components.homeassistant_yellow.check_multi_pan_addon",
-        side_effect=HomeAssistantError(),
-    ), patch(
-        "homeassistant.components.homeassistant_yellow.async_validate_hardware_consistent",
-        return_value=True,
-    ), patch("homeassistant.components.homeassistant_yellow.ir") as ir:
-        assert not await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.is_hassio", return_value=True
+        ),
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ),
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=True
+        ),
+        patch(
+            "homeassistant.components.homeassistant_yellow.check_multi_pan_addon",
+            return_value=None,
+        ),
+    ):
+        # Cause an issue to be created
+        with patch(
+            "homeassistant.components.homeassistant_yellow.async_validate_hardware_consistent",
+            return_value=False,
+        ):
+            await hass.config_entries.async_setup(config_entry.entry_id)
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+        # The integration is loaded but the issue is present
+        assert config_entry.state == ConfigEntryState.LOADED
+        assert issue_registry.async_get_issue(DOMAIN, ISSUE_CM4_UNSEATED) is not None
 
-    assert ir.async_delete_issue.mock_calls == [call(hass, DOMAIN, "cm4_unseated")]
+        # The issue will be cleared once pins are consistent
+        with patch(
+            "homeassistant.components.homeassistant_yellow.async_validate_hardware_consistent",
+            return_value=True,
+        ):
+            await hass.config_entries.async_reload(config_entry.entry_id)
+
+        assert config_entry.state == ConfigEntryState.LOADED
+        assert issue_registry.async_get_issue(DOMAIN, ISSUE_CM4_UNSEATED) is None
