@@ -51,7 +51,7 @@ async def test_update_data_fails(
     assert connectivity.state == "off"
 
 
-async def test_controller_online_sensor(
+async def test_controller_offline(
     hass: HomeAssistant,
     mock_added_config_entry: MockConfigEntry,
     mock_pydrawise: AsyncMock,
@@ -65,7 +65,7 @@ async def test_controller_online_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    connectivity = hass.states.get("binary_sensor.home_controller_controller")
+    connectivity = hass.states.get("binary_sensor.home_controller_connectivity")
     assert connectivity is not None
     assert connectivity.state == "off"
 
@@ -74,6 +74,6 @@ async def test_controller_online_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    connectivity = hass.states.get("binary_sensor.home_controller_controller")
+    connectivity = hass.states.get("binary_sensor.home_controller_connectivity")
     assert connectivity is not None
     assert connectivity.state == "on"
