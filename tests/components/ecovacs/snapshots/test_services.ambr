@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_send_custom_command_service[yna5x1][vacuum.ozmo_950:custom-command-response]
+# name: test_send_custom_command_service[yna5x1-test_command_dict-params1][vacuum.ozmo_950:custom-command-response]
   dict({
     'vacuum.ozmo_950': dict({
       'id': 'xRV3',
@@ -8,7 +8,68 @@
         'body': dict({
           'code': 0,
           'data': dict({
-            'result': 'test string success',
+            'command': 'test_command_dict',
+            'params': dict({
+              'key1': 'value1',
+              'key2': 'value2',
+            }),
+          }),
+          'msg': 'ok',
+        }),
+        'header': dict({
+          'fwVer': '1.2.0',
+          'hwVer': '0.1.0',
+          'pri': 1,
+          'ts': '1717113600000',
+          'tzm': 480,
+          'ver': '0.0.1',
+        }),
+      }),
+      'ret': 'ok',
+    }),
+  })
+# ---
+# name: test_send_custom_command_service[yna5x1-test_command_list-params0][vacuum.ozmo_950:custom-command-response]
+  dict({
+    'vacuum.ozmo_950': dict({
+      'id': 'xRV3',
+      'payloadType': 'j',
+      'resp': dict({
+        'body': dict({
+          'code': 0,
+          'data': dict({
+            'command': 'test_command_list',
+            'params': list([
+              'param1',
+              'param2',
+            ]),
+          }),
+          'msg': 'ok',
+        }),
+        'header': dict({
+          'fwVer': '1.2.0',
+          'hwVer': '0.1.0',
+          'pri': 1,
+          'ts': '1717113600000',
+          'tzm': 480,
+          'ver': '0.0.1',
+        }),
+      }),
+      'ret': 'ok',
+    }),
+  })
+# ---
+# name: test_send_custom_command_service[yna5x1-test_command_none-None][vacuum.ozmo_950:custom-command-response]
+  dict({
+    'vacuum.ozmo_950': dict({
+      'id': 'xRV3',
+      'payloadType': 'j',
+      'resp': dict({
+        'body': dict({
+          'code': 0,
+          'data': dict({
+            'command': 'test_command_none',
+            'params': None,
           }),
           'msg': 'ok',
         }),
