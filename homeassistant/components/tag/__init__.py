@@ -110,7 +110,6 @@ class TagStore(Store[collection.SerializedStorageCollection]):
                 _create_entry(entity_registry, tag[CONF_ID], tag.get(CONF_NAME))
                 tag["migrated"] = True
         if old_major_version == 1 and old_minor_version < 3:
-            entity_registry = er.async_get(self.hass)
             # Version 1.3 removes tag_id from the store
             for tag in data["items"]:
                 if TAG_ID not in tag:
