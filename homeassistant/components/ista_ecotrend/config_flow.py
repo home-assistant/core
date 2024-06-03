@@ -14,7 +14,7 @@ from pyecotrend_ista.exception_classes import (
 from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 from .const import DOMAIN
@@ -28,17 +28,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PASSWORD): str,
-    }
-)
-
 
 class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ista Ecotrend."""
-
-    reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

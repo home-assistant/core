@@ -49,8 +49,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: IstaConfigEntry) -> bool
             translation_placeholders={CONF_EMAIL: entry.data[CONF_EMAIL]},
         ) from e
 
-    entry.runtime_data = IstaCoordinator(hass, ista)
-    await entry.runtime_data.async_config_entry_first_refresh()
+    coordinator = IstaCoordinator(hass, ista)
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
-import logging
-from typing import Literal
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -23,17 +21,15 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import IstaConfigEntry
 from .const import DOMAIN
 from .coordinator import IstaCoordinator
-from .util import get_native_value
-
-_LOGGER = logging.getLogger(__name__)
+from .util import IstaConsumptionType, IstaValueType, get_native_value
 
 
 @dataclass(kw_only=True, frozen=True)
 class IstaSensorEntityDescription(SensorEntityDescription):
     """Ista EcoTrend Sensor Description."""
 
-    consumption_type: Literal["heating", "warmwater", "water"]
-    value_type: Literal["costs", "energy"] | None = None
+    consumption_type: IstaConsumptionType
+    value_type: IstaValueType | None = None
 
 
 class IstaSensorEntity(StrEnum):
@@ -51,24 +47,24 @@ class IstaSensorEntity(StrEnum):
     WATER_COST = "water_cost"
 
 
-SENSOR_DESCRIPTIONS: dict[str, IstaSensorEntityDescription] = {
-    IstaSensorEntity.HEATING: IstaSensorEntityDescription(
+SENSOR_DESCRIPTIONS: tuple[IstaSensorEntityDescription, ...] = (
+    IstaSensorEntityDescription(
         key=IstaSensorEntity.HEATING,
         translation_key=IstaSensorEntity.HEATING,
         suggested_display_precision=0,
-        consumption_type="heating",
+        consumption_type=IstaConsumptionType.HEATING,
     ),
-    IstaSensorEntity.HEATING_ENERGY: IstaSensorEntityDescription(
+    IstaSensorEntityDescription(
         key=IstaSensorEntity.HEATING_ENERGY,
         translation_key=IstaSensorEntity.HEATING_ENERGY,
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=1,
-        consumption_type="heating",
-        value_type="energy",
+        consumption_type=IstaConsumptionType.HEATING,
+        value_type=IstaValueType.ENERGY,
     ),
-    IstaSensorEntity.HEATING_COST: IstaSensorEntityDescription(
+    IstaSensorEntityDescription(
         key=IstaSensorEntity.HEATING_COST,
         translation_key=IstaSensorEntity.HEATING_COST,
         device_class=SensorDeviceClass.MONETARY,
@@ -76,29 +72,29 @@ SENSOR_DESCRIPTIONS: dict[str, IstaSensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
         entity_registry_enabled_default=False,
-        consumption_type="heating",
-        value_type="costs",
+        consumption_type=IstaConsumptionType.HEATING,
+        value_type=IstaValueType.COSTS,
     ),
-    IstaSensorEntity.HOT_WATER: IstaSensorEntityDescription(
+    IstaSensorEntityDescription(
         key=IstaSensorEntity.HOT_WATER,
         translation_key=IstaSensorEntity.HOT_WATER,
         device_class=SensorDeviceClass.WATER,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=1,
-        consumption_type="warmwater",
+        consumption_type=IstaConsumptionType.HOT_WATER,
     ),
-    IstaSensorEntity.HOT_WATER_ENERGY: IstaSensorEntityDescription(
+    IstaSensorEntityDescription(
         key=IstaSensorEntity.HOT_WATER_ENERGY,
         translation_key=IstaSensorEntity.HOT_WATER_ENERGY,
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=1,
-        consumption_type="warmwater",
-        value_type="energy",
+        consumption_type=IstaConsumptionType.HOT_WATER,
+        value_type=IstaValueType.ENERGY,
     ),
-    IstaSensorEntity.HOT_WATER_COST: IstaSensorEntityDescription(
+    IstaSensorEntityDescription(
         key=IstaSensorEntity.HOT_WATER_COST,
         translation_key=IstaSensorEntity.HOT_WATER_COST,
         device_class=SensorDeviceClass.MONETARY,
@@ -106,10 +102,10 @@ SENSOR_DESCRIPTIONS: dict[str, IstaSensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
         entity_registry_enabled_default=False,
-        consumption_type="warmwater",
-        value_type="costs",
+        consumption_type=IstaConsumptionType.HOT_WATER,
+        value_type=IstaValueType.COSTS,
     ),
-    IstaSensorEntity.WATER: IstaSensorEntityDescription(
+    IstaSensorEntityDescription(
         key=IstaSensorEntity.WATER,
         translation_key=IstaSensorEntity.WATER,
         device_class=SensorDeviceClass.WATER,
@@ -117,9 +113,9 @@ SENSOR_DESCRIPTIONS: dict[str, IstaSensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=1,
         entity_registry_enabled_default=False,
-        consumption_type="water",
+        consumption_type=IstaConsumptionType.WATER,
     ),
-    IstaSensorEntity.WATER_COST: IstaSensorEntityDescription(
+    IstaSensorEntityDescription(
         key=IstaSensorEntity.WATER_COST,
         translation_key=IstaSensorEntity.WATER_COST,
         device_class=SensorDeviceClass.MONETARY,
@@ -127,10 +123,10 @@ SENSOR_DESCRIPTIONS: dict[str, IstaSensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
         entity_registry_enabled_default=False,
-        consumption_type="water",
-        value_type="costs",
+        consumption_type=IstaConsumptionType.WATER,
+        value_type=IstaValueType.COSTS,
     ),
-}
+)
 
 
 async def async_setup_entry(
@@ -144,7 +140,7 @@ async def async_setup_entry(
 
     async_add_entities(
         IstaSensor(coordinator, description, consumption_unit)
-        for description in SENSOR_DESCRIPTIONS.values()
+        for description in SENSOR_DESCRIPTIONS
         for consumption_unit in coordinator.data
     )
 

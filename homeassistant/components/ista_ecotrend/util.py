@@ -3,20 +3,40 @@
 from __future__ import annotations
 
 import datetime
-from typing import Any, Literal
+from enum import StrEnum
+from typing import Any
 
 from homeassistant.util import dt as dt_util
 
 
+class IstaConsumptionType(StrEnum):
+    """Types of consumptions from ista."""
+
+    HEATING = "heating"
+    HOT_WATER = "warmwater"
+    WATER = "water"
+
+
+class IstaValueType(StrEnum):
+    """Values type Costs or energy."""
+
+    COSTS = "costs"
+    ENERGY = "energy"
+
+
 def get_consumptions(
-    data: dict[str, Any], is_costs: bool = False
+    data: dict[str, Any], value_type: IstaValueType | None = None
 ) -> list[dict[str, Any]]:
     """Get consumption readings and sort in ascending order by date."""
     result: list = []
-    if consumptions := data.get("costs" if is_costs else "consumptions", []):
+    if consumptions := data.get(
+        "costs" if value_type == IstaValueType.COSTS else "consumptions", []
+    ):
         result = [
             {
-                "readings": readings["readings"],
+                "readings": readings.get("costsByEnergyType")
+                if value_type == IstaValueType.COSTS
+                else readings.get("readings"),
                 "date": last_day_of_month(**readings["date"]),
             }
             for readings in consumptions
@@ -26,7 +46,7 @@ def get_consumptions(
 
 
 def get_values_by_type(
-    consumptions: dict[str, Any], type: Literal["heating", "warmwater", "water"]
+    consumptions: dict[str, Any], consumption_type: IstaConsumptionType
 ) -> dict[str, Any]:
     """Get the readings of a certain type."""
 
@@ -34,18 +54,22 @@ def get_values_by_type(
         "costsByEnergyType", []
     )
 
-    return next((values for values in readings if values.get("type") == type), {})
+    return next(
+        (values for values in readings if values.get("type") == consumption_type.value),
+        {},
+    )
 
 
-def as_number(value: str | None) -> float | int | None:
+def as_number(value: str | float | None) -> float | int | None:
     """Convert readings to float or int.
 
     Readings in the json response are returned as strings,
     float values have comma as decimal separator
     """
-    if value is None:
-        return None
-    return int(value) if value.isdigit() else float(value.replace(",", "."))
+    if isinstance(value, str):
+        return int(value) if value.isdigit() else float(value.replace(",", "."))
+
+    return value
 
 
 def last_day_of_month(month: int, year: int) -> datetime.datetime:
@@ -64,8 +88,8 @@ def last_day_of_month(month: int, year: int) -> datetime.datetime:
 
 def get_native_value(
     data,
-    consumption_type: Literal["heating", "warmwater", "water"],
-    value_type: Literal["costs", "energy"] | None = None,
+    consumption_type: IstaConsumptionType,
+    value_type: IstaValueType | None = None,
 ) -> int | float | None:
     """Determine the latest value for the sensor."""
 
@@ -76,26 +100,30 @@ def get_native_value(
 
 def get_statistics(
     data,
-    consumption_type: Literal["heating", "warmwater", "water"],
-    value_type: Literal["costs", "energy"] | None = None,
+    consumption_type: IstaConsumptionType,
+    value_type: IstaValueType | None = None,
 ) -> list[dict[str, Any]] | None:
     """Determine the latest value for the sensor."""
 
-    if monthly_consumptions := get_consumptions(data, bool(value_type == "costs")):
+    if monthly_consumptions := get_consumptions(data, value_type):
         return [
             {
                 "value": as_number(
                     get_values_by_type(
                         consumptions=consumptions,
-                        type=consumption_type,
-                    ).get("additionalValue" if value_type == "energy" else "value")
+                        consumption_type=consumption_type,
+                    ).get(
+                        "additionalValue"
+                        if value_type == IstaValueType.ENERGY
+                        else "value"
+                    )
                 ),
                 "date": consumptions["date"],
             }
             for consumptions in monthly_consumptions
             if get_values_by_type(
                 consumptions=consumptions,
-                type=consumption_type,
-            ).get("additionalValue" if value_type == "energy" else "value")
+                consumption_type=consumption_type,
+            ).get("additionalValue" if value_type == IstaValueType.ENERGY else "value")
         ]
     return None

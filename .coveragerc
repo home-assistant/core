@@ -623,7 +623,6 @@ omit =
     homeassistant/components/iss/__init__.py
     homeassistant/components/iss/sensor.py
     homeassistant/components/ista_ecotrend/coordinator.py
-    homeassistant/components/ista_ecotrend/util.py
     homeassistant/components/isy994/__init__.py
     homeassistant/components/isy994/binary_sensor.py
     homeassistant/components/isy994/button.py
