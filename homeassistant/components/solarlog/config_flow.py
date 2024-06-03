@@ -42,6 +42,14 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
             return True
         return False
 
+    def _parse_url(self, host: str) -> str:
+        """Return parsed host url."""
+        url = urlparse(host, "http")
+        netloc = url.netloc or url.path
+        path = url.path if url.netloc else ""
+        url = ParseResult("http", netloc, path, *url[3:])
+        return url.geturl()
+
     async def _test_connection(self, host):
         """Check if we can connect to the Solar-Log device."""
         solarlog = SolarLogConnector(host)
@@ -64,12 +72,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # set some defaults in case we need to return to the form
             user_input[CONF_NAME] = slugify(user_input[CONF_NAME])
-
-            url = urlparse(user_input[CONF_HOST], "http")
-            netloc = url.netloc or url.path
-            path = url.path if url.netloc else ""
-            url = ParseResult("http", netloc, path, *url[3:])
-            user_input[CONF_HOST] = url.geturl()
+            user_input[CONF_HOST] = self._parse_url(user_input[CONF_HOST])
 
             if self._host_in_configuration_exists(user_input[CONF_HOST]):
                 self._errors[CONF_HOST] = "already_configured"
@@ -108,11 +111,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
             **user_input,
         }
 
-        url = urlparse(user_input[CONF_HOST], "http")
-        netloc = url.netloc or url.path
-        path = url.path if url.netloc else ""
-        url = ParseResult("http", netloc, path, *url[3:])
-        user_input[CONF_HOST] = url.geturl()
+        user_input[CONF_HOST] = self._parse_url(user_input[CONF_HOST])
 
         if self._host_in_configuration_exists(user_input[CONF_HOST]):
             return self.async_abort(reason="already_configured")
