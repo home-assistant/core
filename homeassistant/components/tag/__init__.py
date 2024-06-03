@@ -417,4 +417,4 @@ class TagEntity(Entity):
     async def async_will_remove_from_hass(self) -> None:
         """Handle entity being removed."""
         await super().async_will_remove_from_hass()
-        self._entity_update_handlers.pop(self._tag_id)
+        del self._entity_update_handlers[self._tag_id]
