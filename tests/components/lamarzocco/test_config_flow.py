@@ -170,7 +170,7 @@ async def test_form_invalid_host(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "machine_selection"
 
     with patch(
