@@ -9,8 +9,8 @@ from bring_api.exceptions import (
 )
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.bring.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -30,7 +30,7 @@ async def test_form(
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -66,7 +66,7 @@ async def test_flow_user_init_data_unknown_error_and_recover(
     mock_bring_client.login.side_effect = raise_error
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -126,7 +126,7 @@ async def test_flow_reauth(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
-            "source": config_entries.SOURCE_REAUTH,
+            "source": SOURCE_REAUTH,
             "entry_id": bring_config_entry.entry_id,
             "unique_id": bring_config_entry.unique_id,
         },
@@ -144,7 +144,10 @@ async def test_flow_reauth(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-
+    assert bring_config_entry.data == {
+        CONF_EMAIL: "new-email",
+        CONF_PASSWORD: "new-password",
+    }
     assert len(hass.config_entries.async_entries()) == 1
 
 
@@ -171,7 +174,7 @@ async def test_flow_reauth_error_and_recover(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
-            "source": config_entries.SOURCE_REAUTH,
+            "source": SOURCE_REAUTH,
             "entry_id": bring_config_entry.entry_id,
             "unique_id": bring_config_entry.unique_id,
         },
