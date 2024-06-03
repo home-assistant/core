@@ -26,7 +26,7 @@ async def test_sensor(
         await init_integration(hass, mock_config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    from homeassistant.components.v2c.sensor import _SLAVE_ERROR_OPTIONS
+    from homeassistant.components.v2c.sensor import _METER_ERROR_OPTIONS
 
     assert [
         "no_error",
@@ -64,4 +64,4 @@ async def test_sensor(
         "tcp_head_mismatch",
         "empty_message",
         "undefined_error",
-    ] == _SLAVE_ERROR_OPTIONS
+    ] == _METER_ERROR_OPTIONS
