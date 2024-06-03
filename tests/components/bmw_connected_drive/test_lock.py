@@ -10,6 +10,7 @@ import respx
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.recorder.history import get_significant_states
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
@@ -31,7 +32,7 @@ async def test_entity_state_attrs(
     # Setup component
     assert await setup_mocked_integration(hass)
 
-    # Get all select entities
+    # Get all lock entities
     assert hass.states.async_all("lock") == snapshot
 
 
@@ -58,7 +59,7 @@ async def test_service_call_success(
     remote_service: str,
     bmw_fixture: respx.Router,
 ) -> None:
-    """Test successful input change."""
+    """Test successful service call."""
 
     # Setup component
     assert await setup_mocked_integration(hass)
@@ -82,7 +83,7 @@ async def test_service_call_success(
     states = await hass.async_add_executor_job(
         get_significant_states, hass, now, None, [entity_id]
     )
-    assert any(s for s in states[entity_id] if s.state == "unknown") is False
+    assert any(s for s in states[entity_id] if s.state == STATE_UNKNOWN) is False
 
 
 @pytest.mark.usefixtures("bmw_fixture")
@@ -100,7 +101,7 @@ async def test_service_call_fail(
     service: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test failed button press."""
+    """Test failed service call."""
 
     # Setup component
     assert await setup_mocked_integration(hass)
@@ -130,4 +131,4 @@ async def test_service_call_fail(
     states = await hass.async_add_executor_job(
         get_significant_states, hass, now, None, [entity_id]
     )
-    assert states[entity_id][-2].state == "unknown"
+    assert states[entity_id][-2].state == STATE_UNKNOWN

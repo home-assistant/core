@@ -21,5 +21,5 @@ async def test_entity_state_attrs(
     # Setup component
     assert await setup_mocked_integration(hass)
 
-    # Get all select entities
+    # Get all binary_sensor entities
     assert hass.states.async_all("binary_sensor") == snapshot
