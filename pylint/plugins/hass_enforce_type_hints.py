@@ -147,7 +147,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "mqtt_mock_entry": "MqttMockHAClientGenerator",
     "recorder_db_url": "str",
     "recorder_mock": "Recorder",
-    "requests_mock": "requests_mock.Mocker",
+    "requests_mock": "Mocker",
     "service_calls": "list[ServiceCall]",
     "snapshot": "SnapshotAssertion",
     "socket_enabled": "None",
