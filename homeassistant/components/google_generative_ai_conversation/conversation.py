@@ -225,7 +225,7 @@ class GoogleGenerativeAIConversationEntity(
             messages = self.history[conversation_id]
         else:
             conversation_id = ulid.ulid_now()
-            messages = [{}, {}]
+            messages = [{}, {"role": "model", "parts": "Ok"}]
 
         if (
             user_input.context
@@ -272,8 +272,11 @@ class GoogleGenerativeAIConversationEntity(
                 response=intent_response, conversation_id=conversation_id
             )
 
-        messages[0] = {"role": "user", "parts": prompt}
-        messages[1] = {"role": "model", "parts": "Ok"}
+        # Make a copy, because we attach it to the trace event.
+        messages = [
+            {"role": "user", "parts": prompt},
+            *messages[1:],
+        ]
 
         LOGGER.debug("Input: '%s' with history: %s", user_input.text, messages)
         trace.async_conversation_trace_append(
