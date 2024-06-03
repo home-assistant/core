@@ -25,7 +25,7 @@ async def test_entity_state_attrs(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test number states and attributes."""
+    """Test number options and values."""
 
     # Setup component
     with patch(
@@ -34,7 +34,6 @@ async def test_entity_state_attrs(
     ):
         mock_config_entry = await setup_mocked_integration(hass)
 
-    # Get all lock entities
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
