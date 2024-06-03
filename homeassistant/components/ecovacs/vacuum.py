@@ -406,11 +406,7 @@ class EcovacsVacuum(
                         params.get("cleanings", 1),
                     )
                 )
-        else:
-            return await self._device.execute_command(
-                self._capability.custom.set(
-                    command, params if params is not None else {}
-                )
-            )
 
-        return None
+        return await self._device.execute_command(
+            self._capability.custom.set(command, params if params is not None else {})
+        )
