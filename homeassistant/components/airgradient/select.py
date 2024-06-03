@@ -22,7 +22,7 @@ from .entity import AirGradientEntity
 class AirGradientSelectEntityDescription(SelectEntityDescription):
     """Describes AirGradient select entity."""
 
-    value_fn: Callable[[Config], str]
+    value_fn: Callable[[Config], str | None]
     set_value_fn: Callable[[AirGradientClient, str], Awaitable[None]]
     requires_display: bool = False
 
