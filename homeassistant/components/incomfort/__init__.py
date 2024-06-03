@@ -80,6 +80,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     try:
         data = await async_connect_gateway(hass, dict(entry.data))
+        for heater in data.heaters:
+            await heater.update()
     except InvalidHeaterList as exc:
         raise NoHeaters from exc
     except IncomfortError as exc:
@@ -95,8 +97,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise InConfortUnknownError from exc
 
     hass.data.setdefault(DATA_INCOMFORT, {entry.entry_id: data})
-    for heater in data.heaters:
-        await heater.update()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
