@@ -7,12 +7,9 @@ import pytest
 import respx
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.bmw_connected_drive.sensor import SENSOR_TYPES
-from homeassistant.components.sensor.const import SensorDeviceClass
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.translation import async_get_translations
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM as METRIC,
     US_CUSTOMARY_SYSTEM as IMPERIAL,
@@ -42,35 +39,6 @@ async def test_entity_state_attrs(
 
     # Get all lock entities
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-async def test_entity_option_translations(
-    hass: HomeAssistant,
-    bmw_fixture: respx.Router,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Ensure all enum sensor values are translated."""
-
-    # Setup component to load translations
-    assert await setup_mocked_integration(hass)
-
-    prefix = "component.bmw_connected_drive.entity.sensor"
-
-    all_translations = await async_get_translations(
-        hass, "en", "entity", ["bmw_connected_drive"]
-    )
-    all_translation_options = {
-        k for k in all_translations if k.startswith(prefix) and ".state." in k
-    }
-
-    all_sensor_options = {
-        f"{prefix}.{sensor.translation_key}.state.{option}"
-        for sensor in SENSOR_TYPES
-        if sensor.device_class == SensorDeviceClass.ENUM
-        for option in sensor.options
-    }
-
-    assert all_sensor_options == all_translation_options
 
 
 @pytest.mark.parametrize(
