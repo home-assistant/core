@@ -20,6 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
 from . import DATA_INCOMFORT, IncomfortEntity
+from .const import DOMAIN
 
 INCOMFORT_HEATER_TEMP = "CV Temp"
 INCOMFORT_PRESSURE = "CV Pressure"

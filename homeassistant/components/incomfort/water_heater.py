@@ -16,7 +16,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DATA_INCOMFORT, DOMAIN, IncomfortEntity
+from . import DATA_INCOMFORT, IncomfortEntity
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
