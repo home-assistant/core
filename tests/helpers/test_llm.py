@@ -77,7 +77,11 @@ async def test_call_tool_no_existing(
 
 
 async def test_assist_api(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
 ) -> None:
     """Test Assist API."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -97,11 +101,13 @@ async def test_assist_api(
         user_prompt="test_text",
         language="*",
         assistant="conversation",
-        device_id="test_device",
+        device_id=None,
     )
     schema = {
         vol.Optional("area"): cv.string,
         vol.Optional("floor"): cv.string,
+        vol.Optional("preferred_area_id"): cv.string,
+        vol.Optional("preferred_floor_id"): cv.string,
     }
 
     class MyIntentHandler(intent.IntentHandler):
@@ -131,7 +137,13 @@ async def test_assist_api(
     tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
-    assert tool.parameters == vol.Schema(intent_handler.slot_schema)
+    assert tool.parameters == vol.Schema(
+        {
+            vol.Optional("area"): cv.string,
+            vol.Optional("floor"): cv.string,
+            # No preferred_area_id, preferred_floor_id
+        }
+    )
     assert str(tool) == "<IntentTool - test_intent>"
 
     assert test_context.json_fragment  # To reproduce an error case in tracing
@@ -160,7 +172,52 @@ async def test_assist_api(
         context=test_context,
         language="*",
         assistant="conversation",
-        device_id="test_device",
+        device_id=None,
+    )
+    assert response == {
+        "data": {
+            "failed": [],
+            "success": [],
+            "targets": [],
+        },
+        "response_type": "action_done",
+        "speech": {},
+    }
+
+    # Call with a device/area/floor
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={("test", "1234")},
+        suggested_area="Test Area",
+    )
+    area = area_registry.async_get_area_by_name("Test Area")
+    floor = floor_registry.async_create("2")
+    area_registry.async_update(area.id, floor_id=floor.floor_id)
+    llm_context.device_id = device.id
+
+    with patch(
+        "homeassistant.helpers.intent.async_handle", return_value=intent_response
+    ) as mock_intent_handle:
+        response = await api.async_call_tool(tool_input)
+
+    mock_intent_handle.assert_awaited_once_with(
+        hass=hass,
+        platform="test_platform",
+        intent_type="test_intent",
+        slots={
+            "area": {"value": "kitchen"},
+            "floor": {"value": "ground_floor"},
+            "preferred_area_id": {"value": area.id},
+            "preferred_floor_id": {"value": floor.floor_id},
+        },
+        text_input="test_text",
+        context=test_context,
+        language="*",
+        assistant="conversation",
+        device_id=device.id,
     )
     assert response == {
         "data": {
