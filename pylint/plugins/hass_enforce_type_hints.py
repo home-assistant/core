@@ -138,6 +138,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "mock_bleak_scanner_start": "MagicMock",
     "mock_bluetooth": "None",
     "mock_bluetooth_adapters": "None",
+    "mock_conversation_agent": "MockAgent",
     "mock_device_tracker_conf": "list[Device]",
     "mock_get_source_ip": "_patch",
     "mock_hass_config": "None",
