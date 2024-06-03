@@ -199,7 +199,7 @@ async def async_setup_entry(
 
     for description in KEY_ENTITIES:
         if description.supported_fn(coordinator):
-            num_keys = KEYS_PER_MODEL[coordinator.device.model]
+            num_keys = KEYS_PER_MODEL[MachineModel(coordinator.device.model)]
             entities.extend(
                 LaMarzoccoKeyNumberEntity(coordinator, description, key)
                 for key in range(min(num_keys, 1), num_keys + 1)

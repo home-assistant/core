@@ -72,7 +72,8 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
             async def websocket_close(_: Any | None = None) -> None:
                 if (
-                    self._local_client.websocket is not None
+                    self._local_client is not None
+                    and self._local_client.websocket is not None
                     and self._local_client.websocket.open
                 ):
                     self._local_client.terminating = True
