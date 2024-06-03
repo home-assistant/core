@@ -15,6 +15,13 @@
         },
         "title": "Stop Points",
         "description": "Add your Stop Points"
+      },
+      "reconfigure": {
+        "data": {
+          "app_key": "Application Key"
+        },
+        "title": "Authentication",
+        "description": "Enter your TfL Application Key"
       }
     },
     "error": {
@@ -24,7 +31,8 @@
       "invalid_stop_point": "The Stop Point {stop_point} is invalid"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "options": {

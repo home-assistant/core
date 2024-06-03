@@ -1,4 +1,5 @@
 """The Transport for London integration."""
+
 from __future__ import annotations
 
 import logging
@@ -23,9 +24,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
 
-    conf = entry.options
-
-    stop_point_api = stopPoint(conf[CONF_API_APP_KEY])
+    app_key = entry.data[CONF_API_APP_KEY]
+    stop_point_api = stopPoint(app_key)
     try:
         categories = await hass.async_add_executor_job(
             stop_point_api.getCategories
@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         error_code = exception.code
         if error_code in (429, 401, 403):
             raise ConfigEntryAuthFailed(
-                "Authentication failure for app_key=" + conf[CONF_API_APP_KEY]
+                "Authentication failure for app_key=" + app_key
             ) from exception
 
         raise ConfigEntryNotReady(
@@ -68,6 +68,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+        if DOMAIN in hass.data:
+            hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
