@@ -14,10 +14,10 @@ from homeassistant.exceptions import HomeAssistantError
 from . import check_remote_service_call, setup_mocked_integration
 
 
+@pytest.mark.usefixtures("bmw_fixture")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entity_state_attrs(
     hass: HomeAssistant,
-    bmw_fixture: respx.Router,
-    entity_registry_enabled_by_default: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test button options and values."""
@@ -57,9 +57,9 @@ async def test_service_call_success(
     check_remote_service_call(bmw_fixture, remote_service)
 
 
+@pytest.mark.usefixtures("bmw_fixture")
 async def test_service_call_fail(
     hass: HomeAssistant,
-    bmw_fixture: respx.Router,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test failed button press."""
