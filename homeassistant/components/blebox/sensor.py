@@ -13,9 +13,16 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
+    LIGHT_LUX,
+    POWER_VOLT_AMPERE_REACTIVE,
     UnitOfEnergy,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfPower,
+    UnitOfApparentPower,
+    UnitOfElectricPotential,
+    UnitOfElectricCurrent,
+    UnitOfFrequency,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -51,12 +58,6 @@ SENSOR_TYPES = (
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
-        key="powerMeasurement",  # deprecated
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL,
-    ),
-    SensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
@@ -67,9 +68,49 @@ SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
     ),
     SensorEntityDescription(
-        key="wind_speed",  # deprecated
-        device_class=SensorDeviceClass.WIND_SPEED,
-        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        key="illuminance",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        native_unit_of_measurement=LIGHT_LUX,
+    ),
+    SensorEntityDescription(
+        key="forwardActiveEnergy",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    ),
+    SensorEntityDescription(
+        key="reverseActiveEnergy",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    ),
+    SensorEntityDescription(
+        key="reactivePower",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+    ),
+    SensorEntityDescription(
+        key="activePower",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+    ),
+    SensorEntityDescription(
+        key="apparentPower",
+        device_class=SensorDeviceClass.APPARENT_POWER,
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+    ),
+    SensorEntityDescription(
+        key="voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+    ),
+    SensorEntityDescription(
+        key="current",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+    ),
+    SensorEntityDescription(
+        key="frequency",
+        device_class=SensorDeviceClass.FREQUENCY,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
     ),
 )
 
