@@ -24,7 +24,7 @@ class HydrawiseBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Hydrawise binary sensor."""
 
     value_fn: Callable[[HydrawiseBinarySensor], bool | None]
-    availability_fn: Callable[[HydrawiseBinarySensor], bool | None] | None = None
+    availability_fn: Callable[[HydrawiseBinarySensor], bool] | None = None
 
 
 CONTROLLER_BINARY_SENSORS: tuple[HydrawiseBinarySensorEntityDescription, ...] = (
