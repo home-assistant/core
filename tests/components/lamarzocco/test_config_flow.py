@@ -5,9 +5,14 @@ from unittest.mock import MagicMock, patch
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 from lmcloud.models import LaMarzoccoDeviceInfo
 
-from homeassistant import config_entries
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
 from homeassistant.components.lamarzocco.const import CONF_USE_BLUETOOTH, DOMAIN
+from homeassistant.config_entries import (
+    SOURCE_BLUETOOTH,
+    SOURCE_REAUTH,
+    SOURCE_USER,
+    ConfigEntryState,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -76,7 +81,7 @@ async def test_form(
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -96,7 +101,7 @@ async def test_form_abort_already_configured(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -132,7 +137,7 @@ async def test_form_invalid_auth(
 
     mock_cloud_client.get_customer_fleet.side_effect = AuthFail("")
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -157,7 +162,7 @@ async def test_form_invalid_host(
 ) -> None:
     """Test invalid auth error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -202,7 +207,7 @@ async def test_form_cannot_connect(
     mock_cloud_client.get_customer_fleet.return_value = {}
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -245,7 +250,7 @@ async def test_reauth_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
-            "source": config_entries.SOURCE_REAUTH,
+            "source": SOURCE_REAUTH,
             "unique_id": mock_config_entry.unique_id,
             "entry_id": mock_config_entry.entry_id,
         },
@@ -277,7 +282,7 @@ async def test_bluetooth_discovery(
         mock_lamarzocco.model, mock_lamarzocco.serial_number
     )
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_BLUETOOTH}, data=service_info
+        DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=service_info
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -329,7 +334,7 @@ async def test_bluetooth_discovery_errors(
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_BLUETOOTH},
+        context={"source": SOURCE_BLUETOOTH},
         data=service_info,
     )
 
@@ -389,7 +394,7 @@ async def test_options_flow(
 ) -> None:
     """Test options flow."""
     await async_init_integration(hass, mock_config_entry)
-    assert mock_config_entry.state is config_entries.ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
