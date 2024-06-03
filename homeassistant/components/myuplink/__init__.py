@@ -104,4 +104,7 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove myuplink config entry from a device."""
 
-    return True
+    myuplink_data: MyUplinkDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    return not device_entry.identifiers.intersection(
+        (DOMAIN, device_id) for device_id in myuplink_data.data.devices
+    )
