@@ -91,18 +91,14 @@ class ReolinkHostCoordinatorEntity(ReolinkBaseCoordinatorEntity[None]):
         await super().async_added_to_hass()
         cmd_key = self.entity_description.cmd_key
         if cmd_key is not None:
-            self._host.update_cmd_list_count[cmd_key].setdefault("host", 0)
-            self._host.update_cmd_list_count[cmd_key]["host"] += 1
-            self._host.update_cmd_list.setdefault(cmd_key, [])
+            self._host.async_register_update_cmd(cmd_key)
 
     async def async_will_remove_from_hass(self) -> None:
         """Entity removed."""
         cmd_key = self.entity_description.cmd_key
         if cmd_key is not None:
-            self._host.update_cmd_list_count[cmd_key]["host"] -= 1
-            if self._host.update_cmd_list_count[cmd_key]["host"] <= 0:
-                self._host.update_cmd_list_count.pop(cmd_key)
-                self._host.update_cmd_list.pop(cmd_key)
+            self._host.async_unregister_update_cmd(cmd_key)
+
         await super().async_will_remove_from_hass()
 
 
@@ -144,17 +140,12 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
         await super().async_added_to_hass()
         cmd_key = self.entity_description.cmd_key
         if cmd_key is not None:
-            self._host.update_cmd_list_count[cmd_key].setdefault(self._channel, 0)
-            self._host.update_cmd_list_count[cmd_key][self._channel] += 1
-            if self._channel not in self._host.update_cmd_list[cmd_key]:
-                self._host.update_cmd_list[cmd_key].append(self._channel)
+            self._host.async_register_update_cmd(cmd_key, self._channel)
 
     async def async_will_remove_from_hass(self) -> None:
         """Entity removed."""
         cmd_key = self.entity_description.cmd_key
         if cmd_key is not None:
-            self._host.update_cmd_list_count[cmd_key][self._channel] -= 1
-            if self._host.update_cmd_list_count[cmd_key][self._channel] <= 0:
-                self._host.update_cmd_list_count[cmd_key].pop(self._channel)
-                self._host.update_cmd_list[cmd_key].remove(self._channel)
+            self._host.async_unregister_update_cmd(cmd_key, self._channel)
+
         await super().async_will_remove_from_hass()
