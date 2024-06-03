@@ -203,17 +203,17 @@ class IntentTool(Tool):
         """Handle the intent."""
         slots = {key: {"value": val} for key, val in tool_input.tool_args.items()}
 
-        area: ar.AreaEntry | None = None
-        floor: fr.FloorEntry | None = None
         if self.extra_slots and llm_context.device_id:
             device_reg = dr.async_get(hass)
             device = device_reg.async_get(llm_context.device_id)
 
+            area: ar.AreaEntry | None = None
+            floor: fr.FloorEntry | None = None
             if device:
                 area_reg = ar.async_get(hass)
                 if device.area_id and (area := area_reg.async_get_area(device.area_id)):
-                    floor_reg = fr.async_get(hass)
                     if area.floor_id:
+                        floor_reg = fr.async_get(hass)
                         floor = floor_reg.async_get_floor(area.floor_id)
 
             for slot_name, slot_value in (
