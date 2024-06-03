@@ -1,9 +1,11 @@
 """Discovery a PG LAB Electronics devices."""
 
+from __future__ import annotations
+
 from collections.abc import Callable
 from dataclasses import dataclass
 import json
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pypglab.device import Device as PyPGLabDevice
 from pypglab.mqtt import Client as PyPGLabMqttClient
@@ -15,7 +17,6 @@ from homeassistant.components.mqtt.subscription import (
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -28,6 +29,9 @@ from homeassistant.helpers.entity import Entity
 
 from .const import _LOGGER, DISCOVERY_TOPIC, DOMAIN
 
+if TYPE_CHECKING:
+    from . import PGLABConfigEntry
+
 # Supported platforms
 PLATFORMS = [
     Platform.SWITCH,
@@ -37,9 +41,6 @@ PLATFORMS = [
 CREATE_NEW_ENTITY = {
     Platform.SWITCH: "pglab_create_new_entity_switch",
 }
-
-# Define custom PG LAB Config entry
-PGLABConfigEntry = ConfigEntry["PGLabDiscovery"]
 
 
 def get_device_id_from_discovery_topic(topic: str) -> str | None:

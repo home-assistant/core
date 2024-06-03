@@ -15,9 +15,13 @@ from homeassistant.components.mqtt.subscription import (
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .discovery import PGLABConfigEntry, create_discovery
+from .discovery import PGLabDiscovery, create_discovery
+
+# Define custom PG LAB Config entry
+type PGLABConfigEntry = ConfigEntry[PGLabDiscovery]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PGLABConfigEntry) -> bool:

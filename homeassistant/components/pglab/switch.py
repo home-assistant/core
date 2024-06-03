@@ -12,7 +12,8 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .discovery import PGLABConfigEntry, PGLabDiscovery
+from . import PGLABConfigEntry
+from .discovery import PGLabDiscovery
 from .entity import PgLabEntity
 
 
