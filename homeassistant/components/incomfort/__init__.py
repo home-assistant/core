@@ -107,8 +107,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise InConfortUnknownError from exc
     except TimeoutError as exc:
         raise InConfortTimeout from exc
-    except Exception as exc:  # noqa: BLE001
-        raise InConfortUnknownError from exc
 
     hass.data.setdefault(DATA_INCOMFORT, {entry.entry_id: data})
 

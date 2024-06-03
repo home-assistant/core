@@ -62,6 +62,7 @@ async def test_import(
         (IncomfortError(ClientResponseError(None, None, status=401)), "auth_error"),
         (IncomfortError(ClientResponseError(None, None, status=404)), "not_found"),
         (IncomfortError(ClientResponseError(None, None, status=500)), "unknown"),
+        (ValueError, "unknown"),
         (TimeoutError, "timeout_error"),
     ],
 )
@@ -123,6 +124,7 @@ async def test_entry_already_configured(hass: HomeAssistant) -> None:
             "unknown",
             "base",
         ),
+        (ValueError, "unknown", "base"),
         (TimeoutError, "timeout_error", "base"),
     ],
 )

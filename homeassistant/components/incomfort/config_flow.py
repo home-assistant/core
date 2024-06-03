@@ -57,6 +57,8 @@ async def async_try_connect_gateway(
         return {"base": "unknown"}
     except TimeoutError:
         return {"base": "timeout_error"}
+    except Exception:  # noqa: BLE001
+        return {"base": "unknown"}
 
     return None
 
