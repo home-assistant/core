@@ -100,10 +100,11 @@ class ReolinkHostCoordinatorEntity(ReolinkBaseCoordinatorEntity[None]):
     async def async_will_remove_from_hass(self) -> None:
         """Entity removed."""
         cmd_key = self.entity_description.cmd_key
-        self._update_cmd_list_count[cmd_key]["host"] -= 1
-        if self._update_cmd_list_count[cmd_key]["host"] <= 0:
-            self._update_cmd_list_count.pop(cmd_key)
-            self._host.update_cmd_list.pop(cmd_key)
+        if cmd_key is not None:
+            self._update_cmd_list_count[cmd_key]["host"] -= 1
+            if self._update_cmd_list_count[cmd_key]["host"] <= 0:
+                self._update_cmd_list_count.pop(cmd_key)
+                self._host.update_cmd_list.pop(cmd_key)
         await super().async_will_remove_from_hass()
 
 
@@ -153,8 +154,9 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Entity removed."""
         cmd_key = self.entity_description.cmd_key
-        self._update_cmd_list_count[cmd_key][self._channel] -= 1
-        if self._update_cmd_list_count[cmd_key][self._channel] <= 0:
-            self._update_cmd_list_count[cmd_key].pop(self._channel)
-            self._host.update_cmd_list[cmd_key].remove(self._channel)
+        if cmd_key is not None:
+            self._update_cmd_list_count[cmd_key][self._channel] -= 1
+            if self._update_cmd_list_count[cmd_key][self._channel] <= 0:
+                self._update_cmd_list_count[cmd_key].pop(self._channel)
+                self._host.update_cmd_list[cmd_key].remove(self._channel)
         await super().async_will_remove_from_hass()
