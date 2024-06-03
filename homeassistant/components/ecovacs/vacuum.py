@@ -360,21 +360,26 @@ class EcovacsVacuum(
         **kwargs: Any,
     ) -> None:
         """Send a command to a vacuum cleaner."""
-        _LOGGER.debug("async_send_command %s with %s", command, params)
-        if params is None:
-            params = {}
-        elif isinstance(params, list):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="vacuum_send_command_params_dict",
-            )
+        await self.async_send_custom_command(command, params)
 
+    async def async_send_custom_command(
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+    ) -> dict[str, Any] | None:
+        """Send a custom command to a vacumm cleaner and optionally return the response."""
+        _LOGGER.debug("async_send_custom_command %s with %s", command, params)
         if command in ["spot_area", "custom_area"]:
             if params is None:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="vacuum_send_command_params_required",
                     translation_placeholders={"command": command},
+                )
+            if isinstance(params, list):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="vacuum_send_command_params_dict",
                 )
             if self._capability.clean.action.area is None:
                 info = self._device.device_info
@@ -386,15 +391,15 @@ class EcovacsVacuum(
                 )
 
             if command in "spot_area":
-                await self._device.execute_command(
+                return await self._device.execute_command(
                     self._capability.clean.action.area(
                         CleanMode.SPOT_AREA,
                         str(params["rooms"]),
                         params.get("cleanings", 1),
                     )
                 )
-            elif command == "custom_area":
-                await self._device.execute_command(
+            if command == "custom_area":
+                return await self._device.execute_command(
                     self._capability.clean.action.area(
                         CleanMode.CUSTOM_AREA,
                         str(params["coordinates"]),
@@ -402,20 +407,10 @@ class EcovacsVacuum(
                     )
                 )
         else:
-            await self._device.execute_command(
-                self._capability.custom.set(command, params)
+            return await self._device.execute_command(
+                self._capability.custom.set(
+                    command, params if params is not None else {}
+                )
             )
 
-    async def async_send_custom_command(
-        self,
-        command: str,
-        params: dict[str, Any] | list[Any] | None = None,
-    ) -> dict[str, Any] | None:
-        """Send a custom command to a vacumm cleaner and optionally return the response."""
-        _LOGGER.debug("async_send_custom_command %s with %s", command, params)
-        if params is None:
-            params = {}
-
-        return await self._device.execute_command(
-            self._capability.custom.set(command, params)
-        )
+        return None
