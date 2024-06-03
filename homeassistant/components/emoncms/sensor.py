@@ -194,6 +194,35 @@ class EmonCmsSensor(SensorEntity):
         elif unit_of_measurement == "hPa":
             self._attr_device_class = SensorDeviceClass.PRESSURE
             self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._update_attributes(elem)
+        self._update_value(elem)
+
+    def _update_attributes(self, elem: dict[str, Any]) -> None:
+        """Update extra attributes."""
+        self._attr_extra_state_attributes = {
+            ATTR_FEEDID: elem["id"],
+            ATTR_TAG: elem["tag"],
+            ATTR_FEEDNAME: elem["name"],
+        }
+        if elem["value"] is not None:
+            self._attr_extra_state_attributes[ATTR_SIZE] = elem["size"]
+            self._attr_extra_state_attributes[ATTR_USERID] = elem["userid"]
+            self._attr_extra_state_attributes[ATTR_LASTUPDATETIME] = elem["time"]
+            self._attr_extra_state_attributes[ATTR_LASTUPDATETIMESTR] = (
+                template.timestamp_local(float(elem["time"]))
+            )
+
+    def _update_value(self, elem: dict[str, Any]) -> None:
+        """Update sensor value."""
+        self._attr_native_value = None
+        if self._value_template is not None:
+            self._attr_native_value = (
+                self._value_template.render_with_possible_json_value(
+                    elem["value"], STATE_UNKNOWN
+                )
+            )
+        if elem["value"] is not None:
+            self._attr_native_value = round(float(elem["value"]), DECIMALS)
 
     def update(self) -> None:
         """Get the latest data and updates the state."""
@@ -221,29 +250,8 @@ class EmonCmsSensor(SensorEntity):
         if elem is None:
             return
 
-        self._attr_extra_state_attributes = {
-            ATTR_FEEDID: elem["id"],
-            ATTR_TAG: elem["tag"],
-            ATTR_FEEDNAME: elem["name"],
-        }
-        if elem["value"] is not None:
-            self._attr_extra_state_attributes[ATTR_SIZE] = elem["size"]
-            self._attr_extra_state_attributes[ATTR_USERID] = elem["userid"]
-            self._attr_extra_state_attributes[ATTR_LASTUPDATETIME] = elem["time"]
-            self._attr_extra_state_attributes[ATTR_LASTUPDATETIMESTR] = (
-                template.timestamp_local(float(elem["time"]))
-            )
-
-        if self._value_template is not None:
-            self._attr_native_value = (
-                self._value_template.render_with_possible_json_value(
-                    elem["value"], STATE_UNKNOWN
-                )
-            )
-        elif elem["value"] is not None:
-            self._attr_native_value = round(float(elem["value"]), DECIMALS)
-        else:
-            self._attr_native_value = None
+        self._update_attributes(elem)
+        self._update_value(elem)
 
 
 class EmonCmsData:
