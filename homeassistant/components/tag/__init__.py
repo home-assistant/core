@@ -234,7 +234,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ).async_setup(hass)
 
     entity_registry = er.async_get(hass)
-    entity_update_handlers: dict[str, Callable[[str | None, str | None]]] = {}
+    entity_update_handlers: dict[str, Callable[[str | None, str | None], None]] = {}
 
     async def tag_change_listener(
         change_type: str, item_id: str, updated_config: dict
@@ -362,7 +362,7 @@ class TagEntity(Entity):
 
     def __init__(
         self,
-        entity_update_handlers: dict[str, Callable[[str | None, str | None]]],
+        entity_update_handlers: dict[str, Callable[[str | None, str | None], None]],
         name: str,
         tag_id: str,
         last_scanned: str | None,
