@@ -1,11 +1,7 @@
 """Exceptions raised by Intergas InComfort integration."""
 
 from homeassistant.core import DOMAIN
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-)
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 
 
 class NotFound(HomeAssistantError):
@@ -34,17 +30,3 @@ class InConfortUnknownError(ConfigEntryNotReady):
 
     translation_domain = DOMAIN
     translation_key = "unknown_error"
-
-
-def raise_from_error_code(errors: dict[str, str]) -> None:
-    """Raise an error by error code."""
-    code = next(iter(errors.items()))[1]
-    if code == "auth_error":
-        raise ConfigEntryAuthFailed("Incorrect credentials")
-    if code == "not_found":
-        raise NotFound
-    if code == "no_heaters":
-        raise NoHeaters
-    if code == "timeout_error":
-        raise InConfortTimeout
-    raise InConfortUnknownError

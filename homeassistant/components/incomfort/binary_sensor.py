@@ -38,11 +38,10 @@ class IncomfortFailed(IncomfortEntity, BinarySensorEntity):
 
         self._client = client
         self._heater = heater
+        self._attr_unique_id = f"{heater.serial_no}_failed"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, heater.serial_no)},
         )
-
-        self._attr_unique_id = f"{heater.serial_no}_failed"
 
     @property
     def is_on(self) -> bool:

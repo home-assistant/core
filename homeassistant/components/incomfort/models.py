@@ -3,13 +3,7 @@
 from dataclasses import dataclass, field
 from typing import Any
 
-from aiohttp import ClientResponseError
-from incomfortclient import (
-    Gateway as InComfortGateway,
-    Heater as InComfortHeater,
-    IncomfortError,
-    InvalidHeaterList,
-)
+from incomfortclient import Gateway as InComfortGateway, Heater as InComfortHeater
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -39,8 +33,7 @@ ERROR_STATUS_MAPPING: dict[int, tuple[str, str]] = {
 async def async_connect_gateway(
     hass: HomeAssistant,
     entry_data: dict[str, Any],
-    errors: dict[str, str],
-) -> InComfortData | None:
+) -> InComfortData:
     """Validate the configuration."""
     credentials = dict(entry_data)
     hostname = credentials.pop(CONF_HOST)
@@ -48,25 +41,6 @@ async def async_connect_gateway(
     client = InComfortGateway(
         hostname, **credentials, session=async_get_clientsession(hass)
     )
-    try:
-        heaters = await client.heaters()
-    except InvalidHeaterList:
-        errors["base"] = "no_heaters"
-        return None
-    except IncomfortError as exc:
-        if isinstance(exc.message, ClientResponseError):
-            scope, error = ERROR_STATUS_MAPPING.get(
-                exc.message.status, ("base", "unknown_error")
-            )
-            errors[scope] = error
-            return None
-        errors["base"] = "unknown_error"
-        return None
-    except TimeoutError:
-        errors["base"] = "timeout_error"
-        return None
-    except Exception:  # noqa: BLE001
-        errors["base"] = "unknown_error"
-        return None
+    heaters = await client.heaters()
 
     return InComfortData(client=client, heaters=heaters)

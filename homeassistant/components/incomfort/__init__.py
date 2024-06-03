@@ -3,21 +3,23 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
 
+from aiohttp import ClientResponseError
+from incomfortclient import IncomfortError, InvalidHeaterList
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .errors import raise_from_error_code
-from .models import DATA_INCOMFORT, InComfortData, async_connect_gateway
+from .errors import InConfortTimeout, InConfortUnknownError, NoHeaters, NotFound
+from .models import DATA_INCOMFORT, async_connect_gateway
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,11 +78,21 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    errors: dict[str, str] = {}
-    if (data := await async_connect_gateway(hass, dict(entry.data), errors)) is None:
-        raise_from_error_code(errors)
-    if TYPE_CHECKING:
-        assert isinstance(data, InComfortData)
+    try:
+        data = await async_connect_gateway(hass, dict(entry.data))
+    except InvalidHeaterList as exc:
+        raise NoHeaters from exc
+    except IncomfortError as exc:
+        if isinstance(exc.message, ClientResponseError):
+            if exc.message.status == 401:
+                raise ConfigEntryAuthFailed("Incorrect credentials") from exc
+            if exc.message.status == 404:
+                raise NotFound from exc
+        raise InConfortUnknownError from exc
+    except TimeoutError as exc:
+        raise InConfortTimeout from exc
+    except Exception as exc:  # noqa: BLE001
+        raise InConfortUnknownError from exc
 
     hass.data.setdefault(DATA_INCOMFORT, {entry.entry_id: data})
     for heater in data.heaters:

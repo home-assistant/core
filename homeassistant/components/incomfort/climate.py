@@ -58,14 +58,13 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
         self._client = client
         self._room = room
         self._attr_name = None
+        self._attr_unique_id = f"{heater.serial_no}_{room.room_no}"
+        self._attr_name = f"Thermostat {room.room_no}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="Intergas",
-            name=f"Thermostat {room.room_no} ({heater.serial_no})",
+            name=f"Thermostat {room.room_no}",
         )
-
-        self._attr_unique_id = f"{heater.serial_no}_{room.room_no}"
-        self._attr_name = f"Thermostat {room.room_no}"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
