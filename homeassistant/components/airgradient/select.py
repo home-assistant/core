@@ -30,9 +30,11 @@ class AirGradientSelectEntityDescription(SelectEntityDescription):
 CONFIG_CONTROL_ENTITY = AirGradientSelectEntityDescription(
     key="configuration_control",
     translation_key="configuration_control",
-    options=[x.value for x in ConfigurationControl],
+    options=[ConfigurationControl.CLOUD.value, ConfigurationControl.LOCAL.value],
     entity_category=EntityCategory.CONFIG,
-    value_fn=lambda config: config.configuration_control,
+    value_fn=lambda config: config.configuration_control
+    if config.configuration_control is not ConfigurationControl.BOTH
+    else None,
     set_value_fn=lambda client, value: client.set_configuration_control(
         ConfigurationControl(value)
     ),
