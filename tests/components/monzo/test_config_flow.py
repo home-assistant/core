@@ -266,7 +266,7 @@ async def test_config_reauth_wrong_account(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_account"
 
 
