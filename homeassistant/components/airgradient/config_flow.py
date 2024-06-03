@@ -23,6 +23,7 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def set_configuration_source(self) -> None:
         """Set configuration source to local if it hasn't been set yet."""
+        assert self.client
         config = await self.client.get_config()
         if config.configuration_control is ConfigurationControl.BOTH:
             await self.client.set_configuration_control(ConfigurationControl.LOCAL)
