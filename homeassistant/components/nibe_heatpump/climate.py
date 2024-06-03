@@ -26,6 +26,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -112,7 +113,7 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
 
         self._coil_current = _get(climate.current)
         self._coil_setpoint_heat = _get(climate.setpoint_heat)
-        self._coil_setpoint_cool: None | Coil
+        self._coil_setpoint_cool: Coil | None
         try:
             self._coil_setpoint_cool = _get(climate.setpoint_cool)
         except CoilNotFoundException:
@@ -219,9 +220,11 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
                         self._coil_setpoint_cool, temperature
                     )
                 else:
-                    raise ValueError(f"{hvac_mode} mode not supported for {self.name}")
+                    raise ServiceValidationError(
+                        f"{hvac_mode} mode not supported for {self.name}"
+                    )
             else:
-                raise ValueError(
+                raise ServiceValidationError(
                     "'set_temperature' requires 'hvac_mode' when passing"
                     " 'temperature' and 'hvac_mode' is not already set to"
                     " 'heat' or 'cool'"
@@ -256,4 +259,6 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
             )
             await coordinator.async_write_coil(self._coil_use_room_sensor, "OFF")
         else:
-            raise ValueError(f"{hvac_mode} mode not supported for {self.name}")
+            raise ServiceValidationError(
+                f"{hvac_mode} mode not supported for {self.name}"
+            )

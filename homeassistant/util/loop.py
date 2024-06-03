@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
-from asyncio import get_running_loop
 from collections.abc import Callable
-from contextlib import suppress
 import functools
 import linecache
 import logging
-from typing import Any, ParamSpec, TypeVar
+import threading
+import traceback
+from typing import Any
 
-from homeassistant.core import HomeAssistant, async_get_hass
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import async_get_hass_or_none
 from homeassistant.helpers.frame import (
     MissingIntegrationFrame,
     get_current_frame,
@@ -22,16 +21,12 @@ from homeassistant.loader import async_suggest_report_issue
 _LOGGER = logging.getLogger(__name__)
 
 
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-
-
 def _get_line_from_cache(filename: str, lineno: int) -> str:
     """Get line from cache or read from file."""
     return (linecache.getline(filename, lineno) or "?").strip()
 
 
-def check_loop(
+def raise_for_blocking_call(
     func: Callable[..., Any],
     check_allowed: Callable[[dict[str, Any]], bool] | None = None,
     strict: bool = True,
@@ -44,15 +39,6 @@ def check_loop(
     The default advisory message is 'Use `await hass.async_add_executor_job()'
     Set `advise_msg` to an alternate message if the solution differs.
     """
-    try:
-        get_running_loop()
-        in_loop = True
-    except RuntimeError:
-        in_loop = False
-
-    if not in_loop:
-        return
-
     if check_allowed is not None and check_allowed(mapped_args):
         return
 
@@ -69,12 +55,14 @@ def check_loop(
         if not strict_core:
             _LOGGER.warning(
                 "Detected blocking call to %s with args %s in %s, "
-                "line %s: %s inside the event loop",
+                "line %s: %s inside the event loop\n"
+                "Traceback (most recent call last):\n%s",
                 func.__name__,
                 mapped_args.get("args"),
                 offender_filename,
                 offender_lineno,
                 offender_line,
+                "".join(traceback.format_stack(f=offender_frame)),
             )
             return
 
@@ -87,20 +75,16 @@ def check_loop(
                 f"https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
             )
 
-    hass: HomeAssistant | None = None
-    with suppress(HomeAssistantError):
-        hass = async_get_hass()
     report_issue = async_suggest_report_issue(
-        hass,
+        async_get_hass_or_none(),
         integration_domain=integration_frame.integration,
         module=integration_frame.module,
     )
 
     _LOGGER.warning(
-        (
-            "Detected blocking call to %s inside the event loop by %sintegration '%s' "
-            "at %s, line %s: %s (offender: %s, line %s: %s), please %s"
-        ),
+        "Detected blocking call to %s inside the event loop by %sintegration '%s' "
+        "at %s, line %s: %s (offender: %s, line %s: %s), please %s\n"
+        "Traceback (most recent call last):\n%s",
         func.__name__,
         "custom " if integration_frame.custom_integration else "",
         integration_frame.integration,
@@ -111,6 +95,7 @@ def check_loop(
         offender_lineno,
         offender_line,
         report_issue,
+        "".join(traceback.format_stack(f=integration_frame.frame)),
     )
 
     if strict:
@@ -123,8 +108,9 @@ def check_loop(
         )
 
 
-def protect_loop(
+def protect_loop[**_P, _R](
     func: Callable[_P, _R],
+    loop_thread_id: int,
     strict: bool = True,
     strict_core: bool = True,
     check_allowed: Callable[[dict[str, Any]], bool] | None = None,
@@ -133,14 +119,15 @@ def protect_loop(
 
     @functools.wraps(func)
     def protected_loop_func(*args: _P.args, **kwargs: _P.kwargs) -> _R:
-        check_loop(
-            func,
-            strict=strict,
-            strict_core=strict_core,
-            check_allowed=check_allowed,
-            args=args,
-            kwargs=kwargs,
-        )
+        if threading.get_ident() == loop_thread_id:
+            raise_for_blocking_call(
+                func,
+                strict=strict,
+                strict_core=strict_core,
+                check_allowed=check_allowed,
+                args=args,
+                kwargs=kwargs,
+            )
         return func(*args, **kwargs)
 
     return protected_loop_func

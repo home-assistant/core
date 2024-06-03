@@ -14,8 +14,8 @@ import reprlib
 import sqlite3
 import ssl
 import threading
-from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, cast
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from typing import TYPE_CHECKING, Any, cast
+from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
 
 from aiohttp import client
 from aiohttp.test_utils import (
@@ -204,11 +204,7 @@ class HAFakeDatetime(freezegun.api.FakeDatetime):  # type: ignore[name-defined]
         return ha_datetime_to_fakedatetime(result)
 
 
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-
-
-def check_real(func: Callable[_P, Coroutine[Any, Any, _R]]):
+def check_real[**_P, _R](func: Callable[_P, Coroutine[Any, Any, _R]]):
     """Force a function to require a keyword _test_real to be passed in."""
 
     @functools.wraps(func)
@@ -566,7 +562,10 @@ async def hass(
         if loaded_entries:
             await asyncio.gather(
                 *(
-                    create_eager_task(config_entry.async_unload(hass))
+                    create_eager_task(
+                        hass.config_entries.async_unload(config_entry.entry_id),
+                        loop=hass.loop,
+                    )
                     for config_entry in loaded_entries
                 )
             )
@@ -928,7 +927,7 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient, None,
 
         @ha.callback
         def _async_fire_mqtt_message(topic, payload, qos, retain):
-            async_fire_mqtt_message(hass, topic, payload, qos, retain)
+            async_fire_mqtt_message(hass, topic, payload or b"", qos, retain)
             mid = get_mid()
             hass.loop.call_soon(mock_client.on_publish, 0, 0, mid)
             return FakeInfo(mid)
@@ -1024,7 +1023,7 @@ async def _mqtt_mock_entry(
         mock_mqtt_instance.connected = True
         mqtt_client_mock.on_connect(mqtt_client_mock, None, 0, 0, 0)
 
-        async_dispatcher_send(hass, mqtt.MQTT_CONNECTED)
+        async_dispatcher_send(hass, mqtt.MQTT_CONNECTION_STATE, True)
         await hass.async_block_till_done()
 
         return mock_mqtt_instance
@@ -1035,7 +1034,7 @@ async def _mqtt_mock_entry(
         nonlocal real_mqtt_instance
         real_mqtt_instance = real_mqtt(*args, **kwargs)
         spec = [*dir(real_mqtt_instance), "_mqttc"]
-        mock_mqtt_instance = MqttMockHAClient(
+        mock_mqtt_instance = MagicMock(
             return_value=real_mqtt_instance,
             spec_set=spec,
             wraps=real_mqtt_instance,
@@ -1152,7 +1151,7 @@ def mock_network() -> Generator[None, None, None]:
 
 
 @pytest.fixture(autouse=True, scope="session")
-def mock_get_source_ip() -> Generator[patch, None, None]:
+def mock_get_source_ip() -> Generator[_patch, None, None]:
     """Mock network util's async_get_source_ip."""
     patcher = patch(
         "homeassistant.components.network.util.async_get_source_ip",
@@ -1165,8 +1164,35 @@ def mock_get_source_ip() -> Generator[patch, None, None]:
         patcher.stop()
 
 
+@pytest.fixture(autouse=True, scope="session")
+def translations_once() -> Generator[_patch, None, None]:
+    """Only load translations once per session."""
+    from homeassistant.helpers.translation import _TranslationsCacheData
+
+    cache = _TranslationsCacheData({}, {})
+    patcher = patch(
+        "homeassistant.helpers.translation._TranslationsCacheData",
+        return_value=cache,
+    )
+    patcher.start()
+    try:
+        yield patcher
+    finally:
+        patcher.stop()
+
+
 @pytest.fixture
-def mock_zeroconf() -> Generator[None, None, None]:
+def disable_translations_once(
+    translations_once: _patch,
+) -> Generator[None, None, None]:
+    """Override loading translations once."""
+    translations_once.stop()
+    yield
+    translations_once.start()
+
+
+@pytest.fixture
+def mock_zeroconf() -> Generator[MagicMock, None, None]:
     """Mock zeroconf."""
     from zeroconf import DNSCache  # pylint: disable=import-outside-toplevel
 
@@ -1182,7 +1208,7 @@ def mock_zeroconf() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def mock_async_zeroconf(mock_zeroconf: None) -> Generator[None, None, None]:
+def mock_async_zeroconf(mock_zeroconf: MagicMock) -> Generator[MagicMock, None, None]:
     """Mock AsyncZeroconf."""
     from zeroconf import DNSCache, Zeroconf  # pylint: disable=import-outside-toplevel
     from zeroconf.asyncio import (  # pylint: disable=import-outside-toplevel
@@ -1431,7 +1457,9 @@ def hass_recorder(
             ) -> HomeAssistant:
                 """Set up with params."""
                 if timezone is not None:
-                    hass.config.set_time_zone(timezone)
+                    asyncio.run_coroutine_threadsafe(
+                        hass.config.async_set_time_zone(timezone), hass.loop
+                    ).result()
                 init_recorder_component(hass, config, recorder_db_url)
                 hass.start()
                 hass.block_till_done()

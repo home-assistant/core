@@ -364,7 +364,7 @@ async def test_light_unloaded_removed(hass: HomeAssistant) -> None:
     state = await helper.poll_and_get_state()
     assert state.state == "off"
 
-    unload_result = await helper.config_entry.async_unload(hass)
+    unload_result = await hass.config_entries.async_unload(helper.config_entry.entry_id)
     assert unload_result is True
 
     # Make sure entity is set to unavailable state
@@ -374,11 +374,11 @@ async def test_light_unloaded_removed(hass: HomeAssistant) -> None:
     conn = hass.data[KNOWN_DEVICES]["00:00:00:00:00:00"]
     assert not conn.pollable_characteristics
 
-    await helper.config_entry.async_remove(hass)
+    await hass.config_entries.async_remove(helper.config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Make sure entity is removed
-    assert hass.states.get(helper.entity_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(helper.entity_id) is None
 
 
 async def test_migrate_unique_id(

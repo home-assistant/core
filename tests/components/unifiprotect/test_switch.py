@@ -123,6 +123,7 @@ async def test_switch_setup_no_perm(
 
 async def test_switch_setup_light(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     light: Light,
 ) -> None:
@@ -130,8 +131,6 @@ async def test_switch_setup_light(
 
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.SWITCH, 4, 3)
-
-    entity_registry = er.async_get(hass)
 
     description = LIGHT_SWITCHES[1]
 
@@ -168,6 +167,7 @@ async def test_switch_setup_light(
 
 async def test_switch_setup_camera_all(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     doorbell: Camera,
 ) -> None:
@@ -175,8 +175,6 @@ async def test_switch_setup_camera_all(
 
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SWITCH, 15, 13)
-
-    entity_registry = er.async_get(hass)
 
     for description in CAMERA_SWITCHES_BASIC:
         unique_id, entity_id = ids_from_device_description(
@@ -215,6 +213,7 @@ async def test_switch_setup_camera_all(
 
 async def test_switch_setup_camera_none(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     camera: Camera,
 ) -> None:
@@ -222,8 +221,6 @@ async def test_switch_setup_camera_none(
 
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.SWITCH, 8, 7)
-
-    entity_registry = er.async_get(hass)
 
     for description in CAMERA_SWITCHES_BASIC:
         if description.ufp_required_field is not None:

@@ -378,13 +378,14 @@ async def init_components(hass: HomeAssistant, init_supporting_components):
 
 
 @pytest.fixture
-async def assist_device(hass: HomeAssistant, init_components) -> dr.DeviceEntry:
+async def assist_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, init_components
+) -> dr.DeviceEntry:
     """Create an assist device."""
     config_entry = MockConfigEntry(domain="test_assist_device")
     config_entry.add_to_hass(hass)
 
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_or_create(
+    device = device_registry.async_get_or_create(
         name="Test Device",
         config_entry_id=config_entry.entry_id,
         identifiers={("test_assist_device", "test")},
