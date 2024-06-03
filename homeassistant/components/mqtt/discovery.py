@@ -247,10 +247,11 @@ async def async_start(  # noqa: C901
                 return
         else:
             discovery_payload = MQTTDiscoveryPayload({})
-
         _replace_all_abbreviations(discovery_payload)
         if not _valid_origin_info(discovery_payload):
             return
+        if TOPIC_BASE in discovery_payload:
+            _replace_topic_base(discovery_payload)
 
         # If present, the node_id will be included in the discovered object id
         discovery_id = f"{node_id} {object_id}" if node_id else object_id
