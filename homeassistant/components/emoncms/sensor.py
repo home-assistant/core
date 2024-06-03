@@ -221,7 +221,7 @@ class EmonCmsSensor(SensorEntity):
                     elem["value"], STATE_UNKNOWN
                 )
             )
-        if elem["value"] is not None:
+        elif elem["value"] is not None:
             self._attr_native_value = round(float(elem["value"]), DECIMALS)
 
     def update(self) -> None:
