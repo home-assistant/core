@@ -90,8 +90,8 @@
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'off_grid_vehicle_charging_reserve',
-    'unique_id': '123456-off_grid_vehicle_charging_reserve',
+    'translation_key': 'off_grid_vehicle_charging_reserve_percent',
+    'unique_id': '123456-off_grid_vehicle_charging_reserve_percent',
     'unit_of_measurement': '%',
   })
 # ---
@@ -149,7 +149,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_current_request',
-    'unique_id': 'VINVINVIN-charge_state_charge_current_request',
+    'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_current_request',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -206,7 +206,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_limit_soc',
-    'unique_id': 'VINVINVIN-charge_state_charge_limit_soc',
+    'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_limit_soc',
     'unit_of_measurement': '%',
   })
 # ---

@@ -175,7 +175,7 @@ class OAuthFixture:
 async def oauth_fixture(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: Any,
+    aioclient_mock: AiohttpClientMocker,
 ) -> OAuthFixture:
     """Fixture for testing the OAuth flow."""
     return OAuthFixture(hass, hass_client_no_auth, aioclient_mock)

@@ -252,3 +252,60 @@ def test_bad_root_import(
             imports_checker.visit_import(node)
         if import_node.startswith("from"):
             imports_checker.visit_importfrom(node)
+
+
+@pytest.mark.parametrize(
+    ("import_node", "module_name", "expected_args"),
+    [
+        (
+            "from homeassistant.helpers.issue_registry import async_get",
+            "tests.components.pylint_test.climate",
+            (
+                "async_get",
+                "homeassistant.helpers.issue_registry",
+                "ir",
+                "ir",
+                "async_get",
+            ),
+        ),
+        (
+            "from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry",
+            "tests.components.pylint_test.climate",
+            (
+                "async_get",
+                "homeassistant.helpers.issue_registry",
+                "ir",
+                "ir",
+                "async_get",
+            ),
+        ),
+    ],
+)
+def test_bad_namespace_import(
+    linter: UnittestLinter,
+    imports_checker: BaseChecker,
+    import_node: str,
+    module_name: str,
+    expected_args: tuple[str, ...],
+) -> None:
+    """Ensure bad namespace imports are rejected."""
+
+    node = astroid.extract_node(
+        f"{import_node} #@",
+        module_name,
+    )
+    imports_checker.visit_module(node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-helper-namespace-import",
+            node=node,
+            args=expected_args,
+            line=1,
+            col_offset=0,
+            end_line=1,
+            end_col_offset=len(import_node),
+        ),
+    ):
+        imports_checker.visit_importfrom(node)

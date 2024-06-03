@@ -28,7 +28,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'location',
-    'unique_id': 'VINVINVIN-location',
+    'unique_id': 'LRWXF7EK4KC700000-location',
     'unit_of_measurement': None,
   })
 # ---
@@ -78,7 +78,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'route',
-    'unique_id': 'VINVINVIN-route',
+    'unique_id': 'LRWXF7EK4KC700000-route',
     'unit_of_measurement': None,
   })
 # ---

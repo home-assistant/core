@@ -9,10 +9,10 @@ from itertools import chain
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode, Scope, Seat
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import TeslemetryConfigEntry
 from .entity import TeslemetryEnergyInfoEntity, TeslemetryVehicleEntity
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
@@ -73,7 +73,9 @@ SEAT_HEATER_DESCRIPTIONS: tuple[SeatHeaterDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Teslemetry select platform from a config entry."""
 

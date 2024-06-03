@@ -4,6 +4,32 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
+        'friendly_name': 'iX xDrive50 AC current limit',
+        'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.ix_xdrive50_ac_current_limit',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '16',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
+        'device_class': 'timestamp',
+        'friendly_name': 'iX xDrive50 Charging start time',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.ix_xdrive50_charging_start_time',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
         'device_class': 'timestamp',
         'friendly_name': 'iX xDrive50 Charging end time',
       }),
@@ -114,6 +140,32 @@
       'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'inactive',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
+        'friendly_name': 'i4 eDrive40 AC current limit',
+        'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.i4_edrive40_ac_current_limit',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '16',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
+        'device_class': 'timestamp',
+        'friendly_name': 'i4 eDrive40 Charging start time',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.i4_edrive40_charging_start_time',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -317,6 +369,32 @@
       'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'inactive',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
+        'friendly_name': 'i3 (+ REX) AC current limit',
+        'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.i3_rex_ac_current_limit',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
+        'device_class': 'timestamp',
+        'friendly_name': 'i3 (+ REX) Charging start time',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.i3_rex_charging_start_time',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '2023-06-23T01:01:00+00:00',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
