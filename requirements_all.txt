@@ -1087,7 +1087,7 @@ hole==0.8.0
 holidays==0.49
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240530.0
+home-assistant-frontend==20240603.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.5.28
@@ -1794,7 +1794,7 @@ pydiscovergy==3.0.1
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2024.4.1
+pydrawise==2024.6.2
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
