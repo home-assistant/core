@@ -76,23 +76,7 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         translation_key="charging_status",
         key_class="fuel_and_battery",
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            s.value.lower()
-            for s in (
-                ChargingState.DEFAULT,
-                ChargingState.CHARGING,
-                ChargingState.ERROR,
-                ChargingState.COMPLETE,
-                ChargingState.FULLY_CHARGED,
-                ChargingState.FINISHED_FULLY_CHARGED,
-                ChargingState.FINISHED_NOT_FULL,
-                ChargingState.INVALID,
-                ChargingState.NOT_CHARGING,
-                ChargingState.PLUGGED_IN,
-                ChargingState.WAITING_FOR_CHARGING,
-                ChargingState.TARGET_REACHED,
-            )
-        ],
+        options=[s.value.lower() for s in ChargingState if s != ChargingState.UNKNOWN],
         is_available=lambda v: v.is_lsc_enabled and v.has_electric_drivetrain,
     ),
     BMWSensorEntityDescription(
@@ -178,12 +162,8 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         device_class=SensorDeviceClass.ENUM,
         options=[
             s.value.lower()
-            for s in (
-                ClimateActivityState.COOLING,
-                ClimateActivityState.HEATING,
-                ClimateActivityState.INACTIVE,
-                ClimateActivityState.STANDBY,
-            )
+            for s in ClimateActivityState
+            if s != ClimateActivityState.UNKNOWN
         ],
         is_available=lambda v: v.is_remote_climate_stop_enabled,
     ),
