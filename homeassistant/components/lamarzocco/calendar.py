@@ -122,36 +122,26 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
         hour_on, minute_on = self.wake_up_sleep_entry.time_on.split(":")
         hour_off, minute_off = self.wake_up_sleep_entry.time_off.split(":")
 
-        # convert 24:00 to 23:59:59.999999
-        second_on = 0
-        second_off = 0
-        microsecond_on = 0
-        microsecond_off = 0
-
+        # offset date at 24 o'clock
+        day_offset = 0
         if hour_on == "24":
-            hour_on = "23"
-            minute_on = "59"
-            second_off = 59
-            microsecond_on = 999999
+            hour_on = "0"
         if hour_off == "24":
-            hour_off = "23"
-            minute_off = "59"
-            second_off = 59
-            microsecond_off = 999999
+            hour_off = "0"
+            day_offset = 1
+
+        end_date = date.replace(
+            hour=int(hour_off),
+            minute=int(minute_off),
+        )
+        end_date += timedelta(days=day_offset)
 
         return CalendarEvent(
             start=date.replace(
                 hour=int(hour_on),
                 minute=int(minute_on),
-                second=second_on,
-                microsecond=microsecond_on,
             ),
-            end=date.replace(
-                hour=int(hour_off),
-                minute=int(minute_off),
-                second=second_off,
-                microsecond=microsecond_off,
-            ),
+            end=end_date,
             summary=f"Machine {self.coordinator.config_entry.title} on",
             description="Machine is scheduled to turn on at the start time and off at the end time",
         )
