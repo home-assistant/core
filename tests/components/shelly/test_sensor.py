@@ -618,7 +618,6 @@ async def test_rpc_sleeping_update_entity_service(
         service_data={ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Entity should be available after update_entity service call
     state = hass.states.get(entity_id)
@@ -667,7 +666,6 @@ async def test_block_sleeping_update_entity_service(
         service_data={ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Entity should be available after update_entity service call
     state = hass.states.get(entity_id)

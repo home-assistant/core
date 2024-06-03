@@ -20,7 +20,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .dashboard import ESPHomeDashboard, async_get_dashboard
+from .coordinator import ESPHomeDashboardCoordinator
+from .dashboard import async_get_dashboard
 from .domain_data import DomainData
 from .entry_data import RuntimeEntryData
 
@@ -65,7 +66,7 @@ async def async_setup_entry(
     ]
 
 
-class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
+class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboardCoordinator], UpdateEntity):
     """Defines an ESPHome update entity."""
 
     _attr_has_entity_name = True
@@ -75,7 +76,7 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
     _attr_release_url = "https://esphome.io/changelog/"
 
     def __init__(
-        self, entry_data: RuntimeEntryData, coordinator: ESPHomeDashboard
+        self, entry_data: RuntimeEntryData, coordinator: ESPHomeDashboardCoordinator
     ) -> None:
         """Initialize the update entity."""
         super().__init__(coordinator=coordinator)

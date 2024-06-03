@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDeviceCla
 from homeassistant.components.binary_sensor.device_condition import ENTITY_CONDITIONS
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -33,7 +33,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -239,7 +239,7 @@ async def test_if_state(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
     mock_binary_sensor_entities: dict[str, MockBinarySensor],
 ) -> None:
     """Test for turn_on and turn_off conditions."""
@@ -327,7 +327,7 @@ async def test_if_state_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
     mock_binary_sensor_entities: dict[str, MockBinarySensor],
 ) -> None:
     """Test for turn_on and turn_off conditions."""
@@ -387,7 +387,7 @@ async def test_if_fires_on_for_condition(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
     mock_binary_sensor_entities: dict[str, MockBinarySensor],
 ) -> None:
     """Test for firing if condition is on with delay."""

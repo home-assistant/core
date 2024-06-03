@@ -17,6 +17,7 @@ from mozart_api.mozart_client import MozartClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -62,7 +63,8 @@ class BangOlufsenEntity(Entity, BangOlufsenBase):
 
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
 
-    async def _update_connection_state(self, connection_state: bool) -> None:
+    @callback
+    def _async_update_connection_state(self, connection_state: bool) -> None:
         """Update entity connection state."""
         self._attr_available = connection_state
 

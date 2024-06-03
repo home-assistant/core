@@ -3,11 +3,11 @@
 from typing import Any
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import AdvantageAirDataConfigEntry
 from .const import ADVANTAGE_AIR_STATE_ON, DOMAIN as ADVANTAGE_AIR_DOMAIN
 from .entity import AdvantageAirEntity, AdvantageAirThingEntity
 from .models import AdvantageAirData
@@ -15,12 +15,12 @@ from .models import AdvantageAirData
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AdvantageAirDataConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AdvantageAir light platform."""
 
-    instance: AdvantageAirData = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
+    instance = config_entry.runtime_data
 
     entities: list[LightEntity] = []
     if my_lights := instance.coordinator.data.get("myLights"):

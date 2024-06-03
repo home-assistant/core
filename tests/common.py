@@ -17,7 +17,7 @@ import pathlib
 import threading
 import time
 from types import FrameType, ModuleType
-from typing import Any, NoReturn, TypeVar
+from typing import Any, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
@@ -38,7 +38,7 @@ from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
 from homeassistant.config import async_process_component_config
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, _DataT
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -174,6 +174,7 @@ def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
         """Run event loop."""
 
         loop._thread_ident = threading.get_ident()
+        hass._loop_thread_id = loop._thread_ident
         loop.run_forever()
         loop_stop_event.set()
 
@@ -199,10 +200,7 @@ def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
     loop.close()
 
 
-_T = TypeVar("_T", bound=Mapping[str, Any] | Sequence[Any])
-
-
-class StoreWithoutWriteLoad(storage.Store[_T]):
+class StoreWithoutWriteLoad[_T: (Mapping[str, Any] | Sequence[Any])](storage.Store[_T]):
     """Fake store that does not write or load. Used for testing."""
 
     async def async_save(self, *args: Any, **kwargs: Any) -> None:
@@ -235,7 +233,7 @@ async def async_test_home_assistant(
     orig_async_add_job = hass.async_add_job
     orig_async_add_executor_job = hass.async_add_executor_job
     orig_async_create_task_internal = hass.async_create_task_internal
-    orig_tz = dt_util.DEFAULT_TIME_ZONE
+    orig_tz = dt_util.get_default_time_zone()
 
     def async_add_job(target, *args, eager_start: bool = False):
         """Add job."""
@@ -282,7 +280,7 @@ async def async_test_home_assistant(
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
     hass.config.elevation = 0
-    hass.config.set_time_zone("US/Pacific")
+    await hass.config.async_set_time_zone("US/Pacific")
     hass.config.units = METRIC_SYSTEM
     hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
@@ -364,7 +362,7 @@ async def async_test_home_assistant(
     yield hass
 
     # Restore timezone, it is set when creating the hass object
-    dt_util.DEFAULT_TIME_ZONE = orig_tz
+    dt_util.set_default_time_zone(orig_tz)
 
 
 def async_mock_service(
@@ -973,8 +971,10 @@ class MockToggleEntity(entity.ToggleEntity):
             return None
 
 
-class MockConfigEntry(config_entries.ConfigEntry):
+class MockConfigEntry(config_entries.ConfigEntry[_DataT]):
     """Helper for creating config entries that adds some defaults."""
+
+    runtime_data: _DataT
 
     def __init__(
         self,
@@ -1175,6 +1175,7 @@ def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
     _LOGGER.debug("Restore cache: %s", data.last_states)
     assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
 
+    restore_state.async_get.cache_clear()
     hass.data[key] = data
 
 
@@ -1202,6 +1203,7 @@ def mock_restore_cache_with_extra_data(
     _LOGGER.debug("Restore cache: %s", data.last_states)
     assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
 
+    restore_state.async_get.cache_clear()
     hass.data[key] = data
 
 
@@ -1687,8 +1689,10 @@ def help_test_all(module: ModuleType) -> None:
 def extract_stack_to_frame(extract_stack: list[Mock]) -> FrameType:
     """Convert an extract stack to a frame list."""
     stack = list(extract_stack)
+    _globals = globals()
     for frame in stack:
         frame.f_back = None
+        frame.f_globals = _globals
         frame.f_code.co_filename = frame.filename
         frame.f_lineno = int(frame.lineno)
 
@@ -1756,5 +1760,6 @@ async def snapshot_platform(
     for entity_entry in entity_entries:
         assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
         assert entity_entry.disabled_by is None, "Please enable all entities."
-        assert (state := hass.states.get(entity_entry.entity_id))
+        state = hass.states.get(entity_entry.entity_id)
+        assert state, f"State not found for {entity_entry.entity_id}"
         assert state == snapshot(name=f"{entity_entry.entity_id}-state")

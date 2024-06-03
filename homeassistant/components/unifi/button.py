@@ -29,11 +29,11 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import UnifiConfigEntry
 from .entity import (
     HandlerT,
     UnifiEntity,
@@ -43,7 +43,6 @@ from .entity import (
     async_wlan_available_fn,
     async_wlan_device_info_fn,
 )
-from .hub import UnifiHub
 
 
 async def async_restart_device_control_fn(
@@ -123,15 +122,12 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: UnifiConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up button platform for UniFi Network integration."""
-    UnifiHub.get_hub(hass, config_entry).entity_loader.register_platform(
-        async_add_entities,
-        UnifiButtonEntity,
-        ENTITY_DESCRIPTIONS,
-        requires_admin=True,
+    config_entry.runtime_data.entity_loader.register_platform(
+        async_add_entities, UnifiButtonEntity, ENTITY_DESCRIPTIONS, requires_admin=True
     )
 
 

@@ -4,15 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR_DOMAIN,
-    BinarySensorEntity,
-)
+from incomfortclient import Gateway as InComfortGateway, Heater as InComfortHeater
+
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, IncomfortChild
+from . import DOMAIN, IncomfortEntity
 
 
 async def async_setup_platform(
@@ -31,19 +30,19 @@ async def async_setup_platform(
     async_add_entities([IncomfortFailed(client, h) for h in heaters])
 
 
-class IncomfortFailed(IncomfortChild, BinarySensorEntity):
+class IncomfortFailed(IncomfortEntity, BinarySensorEntity):
     """Representation of an InComfort Failed sensor."""
 
-    def __init__(self, client, heater) -> None:
+    _attr_name = "Fault"
+
+    def __init__(self, client: InComfortGateway, heater: InComfortHeater) -> None:
         """Initialize the binary sensor."""
         super().__init__()
 
-        self._unique_id = f"{heater.serial_no}_failed"
-        self.entity_id = f"{BINARY_SENSOR_DOMAIN}.{DOMAIN}_failed"
-        self._name = "Boiler Fault"
-
         self._client = client
         self._heater = heater
+
+        self._attr_unique_id = f"{heater.serial_no}_failed"
 
     @property
     def is_on(self) -> bool:
