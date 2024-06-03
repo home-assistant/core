@@ -266,7 +266,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         elif change_type == collection.CHANGE_UPDATED:
             # When tags are changed or updated in storage
-            if handler := entity_update_handlers.get(updated_config[TAG_ID]):
+            if handler := entity_update_handlers.get(updated_config[CONF_ID]):
                 handler(
                     updated_config.get(DEVICE_ID),
                     updated_config.get(LAST_SCANNED),
