@@ -151,5 +151,11 @@
         "name": "Gateway firmware"
       }
     }
+  },
+  "issues": {
+    "unsupported_gateway_firmware": {
+      "title": "Unsupported gateway firmware",
+      "description": "Gateway firmware {gateway_version} is no longer supported by this integration, please update."
+    }
   }
 }

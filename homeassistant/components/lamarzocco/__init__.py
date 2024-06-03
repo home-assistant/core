@@ -5,8 +5,9 @@ import logging
 from lmcloud.client_bluetooth import LaMarzoccoBluetoothClient
 from lmcloud.client_cloud import LaMarzoccoCloudClient
 from lmcloud.client_local import LaMarzoccoLocalClient
-from lmcloud.const import BT_MODEL_PREFIXES
+from lmcloud.const import BT_MODEL_PREFIXES, FirmwareType
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
+from packaging import version
 
 from homeassistant.components.bluetooth import async_discovered_service_info
 from homeassistant.config_entries import ConfigEntry
@@ -21,9 +22,10 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import CONF_USE_BLUETOOTH
+from .const import CONF_USE_BLUETOOTH, DOMAIN
 from .coordinator import LaMarzoccoUpdateCoordinator
 
 PLATFORMS = [
@@ -108,6 +110,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     await coordinator.async_setup()
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
+
+    gateway_version = coordinator.device.firmware[FirmwareType.GATEWAY].current_version
+    if version.parse(gateway_version) < version.parse("v3.5-rc5"):
+        # incompatible gateway firmware, create an issue
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "unsupported_gateway_firmware",
+            is_fixable=False,
+            breaks_in_ha_version="2024.6.0",
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="unsupported_gateway_firmware",
+            translation_placeholders={"gateway_version": gateway_version},
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from lmcloud.const import FirmwareType
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
@@ -9,6 +10,7 @@ from homeassistant.components.lamarzocco.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
 from . import USER_INPUT, async_init_integration, get_bluetooth_service_info
 
@@ -174,3 +176,33 @@ async def test_websocket_closed_on_unload(
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
         client.websocket.close.assert_called_once()
+
+
+async def test_gateway_version_too_low_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lamarzocco: MagicMock,
+) -> None:
+    """Make sure we get an issue with an older gateway firmware version."""
+    mock_lamarzocco.firmware[FirmwareType.GATEWAY].current_version = "v3.3-rc4"
+
+    await async_init_integration(hass, mock_config_entry)
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(DOMAIN, "unsupported_gateway_firmware")
+    assert issue
+    assert issue.translation_placeholders == {"gateway_version": "v3.3-rc4"}
+
+
+async def test_gateway_version_ok_no_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lamarzocco: MagicMock,
+) -> None:
+    """Make sure we get no issue with an ok gateway firmware version."""
+    mock_lamarzocco.firmware[FirmwareType.GATEWAY].current_version = "v3.5-rc6"
+
+    await async_init_integration(hass, mock_config_entry)
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(DOMAIN, "unsupported_gateway_firmware")
+    assert issue is None
