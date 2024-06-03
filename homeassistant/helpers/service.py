@@ -655,6 +655,14 @@ def _load_services_files(
     return [_load_services_file(hass, integration) for integration in integrations]
 
 
+@callback
+def async_get_cached_service_description(
+    hass: HomeAssistant, domain: str, service: str
+) -> dict[str, Any] | None:
+    """Return the cached description for a service."""
+    return hass.data.get(SERVICE_DESCRIPTION_CACHE, {}).get((domain, service))
+
+
 @bind_hass
 async def async_get_all_descriptions(
     hass: HomeAssistant,

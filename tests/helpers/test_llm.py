@@ -415,6 +415,20 @@ async def test_assist_api_prompt(
         )
     )
 
+    # Create a script with a unique ID
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "test_script": {
+                    "description": "This is a test script",
+                    "sequence": [],
+                }
+            }
+        },
+    )
+
     exposed_entities = llm._get_exposed_entities(hass, llm_context.assistant)
     assert exposed_entities == {
         "light.1": {
@@ -470,6 +484,11 @@ async def test_assist_api_prompt(
             "areas": "Test Area 2",
             "names": "Unnamed Device",
             "state": "unavailable",
+        },
+        "script.test_script": {
+            "description": "This is a test script",
+            "names": "test_script",
+            "state": "off",
         },
     }
     exposed_entities_prompt = (
