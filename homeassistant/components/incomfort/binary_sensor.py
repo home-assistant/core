@@ -9,10 +9,9 @@ from incomfortclient import Gateway as InComfortGateway, Heater as InComfortHeat
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DATA_INCOMFORT, DOMAIN, IncomfortEntity
+from . import DATA_INCOMFORT, IncomfortEntity
 
 
 async def async_setup_entry(
