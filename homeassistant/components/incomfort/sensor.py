@@ -15,10 +15,12 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPressure, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
 from . import DATA_INCOMFORT, IncomfortEntity
+from .const import DOMAIN
 
 INCOMFORT_HEATER_TEMP = "CV Temp"
 INCOMFORT_PRESSURE = "CV Pressure"
@@ -92,6 +94,9 @@ class IncomfortSensor(IncomfortEntity, SensorEntity):
         self._heater = heater
 
         self._attr_unique_id = f"{heater.serial_no}_{slugify(description.name)}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, heater.serial_no)},
+        )
 
     @property
     def native_value(self) -> str | None:
