@@ -2072,6 +2072,12 @@ class ConfigEntries:
     ) -> None:
         """Forward the setup of an entry to platforms after setup."""
         async with entry.setup_lock:
+            if entry.state is not ConfigEntryState.LOADED:
+                raise OperationNotAllowed(
+                    f"The config entry {entry.title} ({entry.domain}) with entry_id"
+                    f" {entry.entry_id} cannot forward setup for {platforms} "
+                    f"because it is not loaded in the {entry.state} state"
+                )
             await self.async_forward_entry_setups(entry, platforms)
 
     async def async_forward_entry_setup(
