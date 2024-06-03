@@ -2,7 +2,6 @@
 
 import datetime
 
-from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -19,7 +18,7 @@ from tests.components.diagnostics import (
 from tests.typing import ClientSessionGenerator
 
 
-@freeze_time(datetime.datetime(2022, 7, 10, 11, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11, tzinfo=datetime.UTC))
 @pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_config_entry_diagnostics(
@@ -38,7 +37,7 @@ async def test_config_entry_diagnostics(
     assert diagnostics == snapshot
 
 
-@freeze_time(datetime.datetime(2022, 7, 10, 11, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11, tzinfo=datetime.UTC))
 @pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_device_diagnostics(
