@@ -9,8 +9,6 @@ import logging
 
 from bimmer_connected.models import StrEnum, ValueWithUnit
 from bimmer_connected.vehicle import MyBMWVehicle
-from bimmer_connected.vehicle.climate import ClimateActivityState
-from bimmer_connected.vehicle.fuel_and_battery import ChargingState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -31,7 +29,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import BMWBaseEntity
-from .const import DOMAIN
+from .const import CLIMATE_ACTIVITY_STATE, DOMAIN
 from .coordinator import BMWDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,8 +73,6 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         key="charging_status",
         translation_key="charging_status",
         key_class="fuel_and_battery",
-        device_class=SensorDeviceClass.ENUM,
-        options=[s.value.lower() for s in ChargingState if s != ChargingState.UNKNOWN],
         is_available=lambda v: v.is_lsc_enabled and v.has_electric_drivetrain,
     ),
     BMWSensorEntityDescription(
@@ -98,7 +94,6 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         suggested_display_precision=0,
         is_available=lambda v: v.is_lsc_enabled and v.has_electric_drivetrain,
     ),
-    # --- Specific ---
     BMWSensorEntityDescription(
         key="mileage",
         translation_key="mileage",
@@ -160,11 +155,7 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         translation_key="climate_status",
         key_class="climate",
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            s.value.lower()
-            for s in ClimateActivityState
-            if s != ClimateActivityState.UNKNOWN
-        ],
+        options=CLIMATE_ACTIVITY_STATE,
         is_available=lambda v: v.is_remote_climate_stop_enabled,
     ),
 ]
@@ -224,11 +215,15 @@ class BMWSensor(BMWBaseEntity, SensorEntity):
         # For enum types, we only want the value
         elif isinstance(state, ValueWithUnit):
             state = state.value
-        # Special handling for string enums
+        # Get lowercase values from StrEnum
         elif isinstance(state, StrEnum):
             state = state.value.lower()
             if state == STATE_UNKNOWN:
                 state = None
+
+            # special handling for charging_status to avoid a breaking change
+            if self.entity_description.key == "charging_status" and state:
+                state = state.upper()
 
         self._attr_native_value = state
         super()._handle_coordinator_update()

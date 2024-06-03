@@ -152,22 +152,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'default',
-        'charging',
-        'error',
-        'complete',
-        'fully_charged',
-        'finished_fully_charged',
-        'finished_not_full',
-        'invalid',
-        'not_charging',
-        'plugged_in',
-        'waiting_for_charging',
-        'target_reached',
-      ]),
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -184,7 +169,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charging status',
     'platform': 'bmw_connected_drive',
@@ -199,29 +184,14 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
-      'device_class': 'enum',
       'friendly_name': 'i3 (+ REX) Charging status',
-      'options': list([
-        'default',
-        'charging',
-        'error',
-        'complete',
-        'fully_charged',
-        'finished_fully_charged',
-        'finished_not_full',
-        'invalid',
-        'not_charging',
-        'plugged_in',
-        'waiting_for_charging',
-        'target_reached',
-      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.i3_rex_charging_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'waiting_for_charging',
+    'state': 'WAITING_FOR_CHARGING',
   })
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_charging_target-entry]
@@ -813,22 +783,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'default',
-        'charging',
-        'error',
-        'complete',
-        'fully_charged',
-        'finished_fully_charged',
-        'finished_not_full',
-        'invalid',
-        'not_charging',
-        'plugged_in',
-        'waiting_for_charging',
-        'target_reached',
-      ]),
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -845,7 +800,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charging status',
     'platform': 'bmw_connected_drive',
@@ -860,29 +815,14 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
-      'device_class': 'enum',
       'friendly_name': 'i4 eDrive40 Charging status',
-      'options': list([
-        'default',
-        'charging',
-        'error',
-        'complete',
-        'fully_charged',
-        'finished_fully_charged',
-        'finished_not_full',
-        'invalid',
-        'not_charging',
-        'plugged_in',
-        'waiting_for_charging',
-        'target_reached',
-      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.i4_edrive40_charging_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'not_charging',
+    'state': 'NOT_CHARGING',
   })
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_charging_target-entry]
@@ -1371,22 +1311,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'default',
-        'charging',
-        'error',
-        'complete',
-        'fully_charged',
-        'finished_fully_charged',
-        'finished_not_full',
-        'invalid',
-        'not_charging',
-        'plugged_in',
-        'waiting_for_charging',
-        'target_reached',
-      ]),
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -1403,7 +1328,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charging status',
     'platform': 'bmw_connected_drive',
@@ -1418,29 +1343,14 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
-      'device_class': 'enum',
       'friendly_name': 'iX xDrive50 Charging status',
-      'options': list([
-        'default',
-        'charging',
-        'error',
-        'complete',
-        'fully_charged',
-        'finished_fully_charged',
-        'finished_not_full',
-        'invalid',
-        'not_charging',
-        'plugged_in',
-        'waiting_for_charging',
-        'target_reached',
-      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ix_xdrive50_charging_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'charging',
+    'state': 'CHARGING',
   })
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_charging_target-entry]
