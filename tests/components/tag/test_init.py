@@ -34,11 +34,9 @@ def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
                     "items": [
                         {
                             "id": TEST_TAG_ID,
-                            "tag_id": TEST_TAG_ID,
                         },
                         {
                             "id": TEST_TAG_ID_2,
-                            "tag_id": TEST_TAG_ID_2,
                         },
                     ]
                 },
@@ -55,7 +53,7 @@ def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
 
 
 @pytest.fixture
-def storage_setup_1_1(hass: HomeAssistant, hass_storage):
+def storage_setup_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage version 1.1 setup."""
 
     async def _storage(items=None):
@@ -87,7 +85,7 @@ async def test_migration(
     hass_ws_client: WebSocketGenerator,
     storage_setup_1_1,
     freezer: FrozenDateTimeFactory,
-    hass_storage,
+    hass_storage: dict[str, Any],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test migrating tag store."""
@@ -117,6 +115,7 @@ async def test_migration(
     )
     resp = await client.receive_json()
     assert resp["success"]
+    assert resp["result"] == {"id": "1234567890", "name": "Kitchen tag"}
 
     # Trigger store
     freezer.tick(11)
@@ -137,8 +136,8 @@ async def test_ws_list(
     resp = await client.receive_json()
     assert resp["success"]
     assert resp["result"] == [
-        {"id": TEST_TAG_ID, "name": "test tag name", "tag_id": TEST_TAG_ID},
-        {"id": TEST_TAG_ID_2, "name": "test tag name 2", "tag_id": TEST_TAG_ID_2},
+        {"id": TEST_TAG_ID, "name": "test tag name"},
+        {"id": TEST_TAG_ID_2, "name": "test tag name 2"},
     ]
 
 
@@ -161,7 +160,7 @@ async def test_ws_update(
     resp = await client.receive_json()
     assert resp["success"]
     item = resp["result"]
-    assert item == {"id": TEST_TAG_ID, "name": "New name", "tag_id": TEST_TAG_ID}
+    assert item == {"id": TEST_TAG_ID, "name": "New name"}
 
 
 async def test_tag_scanned(
@@ -182,8 +181,8 @@ async def test_tag_scanned(
     result = {item["id"]: item for item in resp["result"]}
 
     assert resp["result"] == [
-        {"id": TEST_TAG_ID, "name": "test tag name", "tag_id": TEST_TAG_ID},
-        {"id": TEST_TAG_ID_2, "name": "test tag name 2", "tag_id": TEST_TAG_ID_2},
+        {"id": TEST_TAG_ID, "name": "test tag name"},
+        {"id": TEST_TAG_ID_2, "name": "test tag name 2"},
     ]
 
     now = dt_util.utcnow()
@@ -198,14 +197,13 @@ async def test_tag_scanned(
 
     assert len(result) == 3
     assert resp["result"] == [
-        {"id": TEST_TAG_ID, "name": "test tag name", "tag_id": TEST_TAG_ID},
-        {"id": TEST_TAG_ID_2, "name": "test tag name 2", "tag_id": TEST_TAG_ID_2},
+        {"id": TEST_TAG_ID, "name": "test tag name"},
+        {"id": TEST_TAG_ID_2, "name": "test tag name 2"},
         {
             "device_id": "some_scanner",
             "id": "new tag",
             "last_scanned": now.isoformat(),
             "name": "Tag new tag",
-            "tag_id": "new tag",
         },
     ]
 

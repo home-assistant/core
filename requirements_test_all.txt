@@ -1617,7 +1617,7 @@ pyotgw==2.2.0
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.13.10
+pyoverkiz==1.13.11
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -1794,7 +1794,7 @@ python-qbittorrent==0.4.3
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.1.1
+python-roborock==2.2.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
