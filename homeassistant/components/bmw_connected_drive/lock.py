@@ -65,11 +65,13 @@ class BMWLock(BMWBaseEntity, LockEntity):
         try:
             await self.vehicle.remote_services.trigger_remote_door_lock()
         except MyBMWAPIError as ex:
-            self._attr_is_locked = False
+            # Set the state to unknown if the command fails
+            self._attr_is_locked = None
             self.async_write_ha_state()
             raise HomeAssistantError(ex) from ex
-
-        self.coordinator.async_update_listeners()
+        finally:
+            # Always update the listeners to get the latest state
+            self.coordinator.async_update_listeners()
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the car."""
@@ -83,11 +85,13 @@ class BMWLock(BMWBaseEntity, LockEntity):
         try:
             await self.vehicle.remote_services.trigger_remote_door_unlock()
         except MyBMWAPIError as ex:
-            self._attr_is_locked = True
+            # Set the state to unknown if the command fails
+            self._attr_is_locked = None
             self.async_write_ha_state()
             raise HomeAssistantError(ex) from ex
-
-        self.coordinator.async_update_listeners()
+        finally:
+            # Always update the listeners to get the latest state
+            self.coordinator.async_update_listeners()
 
     @callback
     def _handle_coordinator_update(self) -> None:
