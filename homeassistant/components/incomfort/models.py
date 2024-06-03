@@ -5,7 +5,7 @@ from typing import Any
 
 from incomfortclient import Gateway as InComfortGateway, Heater as InComfortHeater
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.hass_dict import HassKey
@@ -22,12 +22,6 @@ class InComfortData:
 
 
 DATA_INCOMFORT: HassKey[dict[str, InComfortData]] = HassKey(DOMAIN)
-
-
-ERROR_STATUS_MAPPING: dict[int, tuple[str, str]] = {
-    401: (CONF_PASSWORD, "auth_error"),
-    404: ("base", "not_found"),
-}
 
 
 async def async_connect_gateway(

@@ -41,31 +41,24 @@ ERROR_STATUS_MAPPING: dict[int, tuple[str, str]] = {
 
 
 async def async_try_connect_gateway(
-    hass: HomeAssistant, config: dict[str, Any], errors: dict[str, str]
-) -> bool:
+    hass: HomeAssistant, config: dict[str, Any]
+) -> dict[str, str] | None:
     """Try to connect to the Lan2RF gateway."""
     try:
         await async_connect_gateway(hass, config)
     except InvalidHeaterList:
-        errors["base"] = "no_heaters"
-        return False
+        return {"base": "no_heaters"}
     except IncomfortError as exc:
         if isinstance(exc.message, ClientResponseError):
             scope, error = ERROR_STATUS_MAPPING.get(
-                exc.message.status, ("base", "unknown_error")
+                exc.message.status, ("base", "unknown")
             )
-            errors[scope] = error
-            return False
-        errors["base"] = "unknown_error"
-        return False
+            return {scope: error}
+        return {"base": "unknown"}
     except TimeoutError:
-        errors["base"] = "timeout_error"
-        return False
-    except Exception:  # noqa: BLE001
-        errors["base"] = "unknown_error"
-        return False
+        return {"base": "timeout_error"}
 
-    return True
+    return None
 
 
 class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -75,10 +68,12 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors: dict[str, str] = {}
+        errors: dict[str, str] | None = None
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            if await async_try_connect_gateway(self.hass, user_input, errors):
+            if (
+                errors := await async_try_connect_gateway(self.hass, user_input)
+            ) is None:
                 return self.async_create_entry(title=TITLE, data=user_input)
 
         return self.async_show_form(
@@ -87,8 +82,8 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import `incomfort` config entry from configuration.yaml."""
-        errors: dict[str, str] = {}
-        if await async_try_connect_gateway(self.hass, import_data, errors):
+        errors: dict[str, str] | None = None
+        if (errors := await async_try_connect_gateway(self.hass, import_data)) is None:
             return self.async_create_entry(title=TITLE, data=import_data)
         reason = next(iter(errors.items()))[1]
         return self.async_abort(reason=reason)

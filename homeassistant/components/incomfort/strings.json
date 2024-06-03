@@ -21,18 +21,18 @@
       "no_heaters": "No heaters found.",
       "not_found": "No Lan2RF gateway found.",
       "timeout_error": "Time out when connection to Lan2RF gateway.",
-      "unknown_error": "Unknown error when connection to Lan2RF gateway."
+      "unknown": "Unknown error when connection to Lan2RF gateway."
     },
     "error": {
       "auth_error": "[%key:component::incomfort::config::abort::auth_error%]",
       "no_heaters": "[%key:component::incomfort::config::abort::no_heaters%]",
       "not_found": "[%key:component::incomfort::config::abort::not_found%]",
       "timeout_error": "[%key:component::incomfort::config::abort::timeout_error%]",
-      "unknown_error": "[%key:component::incomfort::config::abort::unknown_error%]"
+      "unknown": "[%key:component::incomfort::config::abort::unknown%]"
     }
   },
   "issues": {
-    "deprecated_yaml_import_issue_unknown_error": {
+    "deprecated_yaml_import_issue_unknown": {
       "title": "YAML import failed with unknown error",
       "description": "Configuring {integration_title} using YAML is being removed but there was an unknown error while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
     },

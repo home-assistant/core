@@ -29,4 +29,4 @@ class InConfortUnknownError(ConfigEntryNotReady):
     """Raise exception if no heaters are found."""
 
     translation_domain = DOMAIN
-    translation_key = "unknown_error"
+    translation_key = "unknown"
