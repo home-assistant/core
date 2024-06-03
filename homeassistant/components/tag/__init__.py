@@ -31,7 +31,7 @@ LAST_SCANNED = "last_scanned"
 LAST_SCANNED_BY_DEVICE_ID = "last_scanned_by_device_id"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 3
 
 TAG_DATA: HassKey[TagStorageCollection] = HassKey(DOMAIN)
 SIGNAL_TAG_CHANGED = "signal_tag_changed"
@@ -106,6 +106,12 @@ class TagStore(Store[collection.SerializedStorageCollection]):
                 # Copy name in tag store to the entity registry
                 _create_entry(entity_registry, tag[CONF_ID], tag.get(CONF_NAME))
                 tag["migrated"] = True
+        if old_major_version == 1 and old_minor_version < 3:
+            # Version 1.3 removes tag_id from the store
+            for tag in data["items"]:
+                if TAG_ID not in tag:
+                    continue
+                del tag[TAG_ID]
 
         if old_major_version > 1:
             raise NotImplementedError
