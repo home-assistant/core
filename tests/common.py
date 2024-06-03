@@ -95,8 +95,8 @@ from homeassistant.util.json import (
     json_loads_object,
 )
 from homeassistant.util.signal_type import SignalType
+import homeassistant.util.ulid as ulid_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
-import homeassistant.util.uuid as uuid_util
 import homeassistant.util.yaml.loader as yaml_loader
 
 from tests.testing_config.custom_components.test_constant_deprecation import (
@@ -999,7 +999,7 @@ class MockConfigEntry(config_entries.ConfigEntry[_DataT]):
             "data": data or {},
             "disabled_by": disabled_by,
             "domain": domain,
-            "entry_id": entry_id or uuid_util.random_uuid_hex(),
+            "entry_id": entry_id or ulid_util.ulid_now(),
             "minor_version": minor_version,
             "options": options or {},
             "pref_disable_new_entities": pref_disable_new_entities,

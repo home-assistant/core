@@ -2060,7 +2060,7 @@ pyotgw==2.2.0
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.13.10
+pyoverkiz==1.13.11
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -2209,7 +2209,7 @@ pytfiac==0.4
 pythinkingcleaner==0.0.3
 
 # homeassistant.components.motionmount
-python-MotionMount==1.0.0
+python-MotionMount==2.0.0
 
 # homeassistant.components.awair
 python-awair==0.2.4
@@ -2306,7 +2306,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.1.1
+python-roborock==2.2.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -2448,7 +2448,7 @@ refoss-ha==1.2.1
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.2.2
+renault-api==0.2.3
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.1

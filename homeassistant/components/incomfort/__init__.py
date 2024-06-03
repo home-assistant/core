@@ -73,25 +73,6 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
 class IncomfortEntity(Entity):
     """Base class for all InComfort entities."""
 
-    def __init__(self) -> None:
-        """Initialize the class."""
-        self._name: str | None = None
-        self._unique_id: str | None = None
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the sensor."""
-        return self._name
-
-
-class IncomfortChild(IncomfortEntity):
-    """Base class for all InComfort entities (excluding the boiler)."""
-
     _attr_should_poll = False
 
     async def async_added_to_hass(self) -> None:

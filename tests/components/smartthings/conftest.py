@@ -1,6 +1,7 @@
 """Test configuration and mocks for the SmartThings component."""
 
 import secrets
+from typing import Any
 from unittest.mock import Mock, patch
 from uuid import uuid4
 
@@ -45,6 +46,7 @@ from homeassistant.const import (
     CONF_CLIENT_SECRET,
     CONF_WEBHOOK_ID,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -74,7 +76,9 @@ async def setup_platform(hass, platform: str, *, devices=None, scenes=None):
 
 
 @pytest.fixture(autouse=True)
-async def setup_component(hass, config_file, hass_storage):
+async def setup_component(
+    hass: HomeAssistant, config_file: dict[str, str], hass_storage: dict[str, Any]
+) -> None:
     """Load the SmartThing component."""
     hass_storage[STORAGE_KEY] = {"data": config_file, "version": STORAGE_VERSION}
     await async_process_ha_core_config(
@@ -166,7 +170,7 @@ def installed_apps_fixture(installed_app, locations, app):
 
 
 @pytest.fixture(name="config_file")
-def config_file_fixture():
+def config_file_fixture() -> dict[str, str]:
     """Fixture representing the local config file contents."""
     return {CONF_INSTANCE_ID: str(uuid4()), CONF_WEBHOOK_ID: secrets.token_hex()}
 
