@@ -175,9 +175,9 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'MR01234 Steam level',
       'options': list([
-        '126',
-        '128',
-        '131',
+        '1',
+        '2',
+        '3',
       ]),
     }),
     'context': <ANY>,
@@ -185,7 +185,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '126',
+    'state': '1',
   })
 # ---
 # name: test_steam_boiler_level[Micra].1
@@ -195,9 +195,9 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '126',
-        '128',
-        '131',
+        '1',
+        '2',
+        '3',
       ]),
     }),
     'config_entry_id': <ANY>,

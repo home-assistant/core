@@ -16,7 +16,19 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import LaMarzoccoConfigEntry
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
-PBREWBREW_MODE_HA_TO_LM = {
+STEAM_LEVEL_HA_TO_LM = {
+    "1": SteamLevel.LEVEL_1,
+    "2": SteamLevel.LEVEL_2,
+    "3": SteamLevel.LEVEL_3,
+}
+
+STEAM_LEVEL_LM_TO_HA = {
+    SteamLevel.LEVEL_1: "1",
+    SteamLevel.LEVEL_2: "2",
+    SteamLevel.LEVEL_3: "3",
+}
+
+PREBREW_MODE_HA_TO_LM = {
     "disabled": PrebrewMode.DISABLED,
     "prebrew": PrebrewMode.PREBREW,
     "typeb": PrebrewMode.PREINFUSION,
@@ -38,11 +50,11 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
     LaMarzoccoSelectEntityDescription(
         key="steam_temp_select",
         translation_key="steam_temp_select",
-        options=["126", "128", "131"],
+        options=["1", "2", "3"],
         select_option_fn=lambda machine, option: machine.set_steam_level(
-            SteamLevel(int(option))
+            STEAM_LEVEL_HA_TO_LM[option]
         ),
-        current_option_fn=lambda config: str(config.steam_level),
+        current_option_fn=lambda config: STEAM_LEVEL_LM_TO_HA[config.steam_level],
         supported_fn=lambda coordinator: coordinator.device.model
         == MachineModel.LINEA_MICRA,
     ),
@@ -52,7 +64,7 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         options=["disabled", "prebrew", "typeb"],
         select_option_fn=lambda machine, option: machine.set_prebrew_mode(
-            PBREWBREW_MODE_HA_TO_LM[option]
+            PREBREW_MODE_HA_TO_LM[option]
         ),
         current_option_fn=lambda config: config.prebrew_mode.lower(),
         supported_fn=lambda coordinator: coordinator.device.model

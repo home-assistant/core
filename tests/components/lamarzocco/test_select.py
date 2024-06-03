@@ -44,7 +44,7 @@ async def test_steam_boiler_level(
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: f"select.{serial_number}_steam_level",
-            ATTR_OPTION: "128",
+            ATTR_OPTION: "2",
         },
         blocking=True,
     )
