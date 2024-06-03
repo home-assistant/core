@@ -35,8 +35,8 @@ from .singleton import singleton
 LLM_API_ASSIST = "assist"
 
 BASE_PROMPT = (
-    'Current time is {{ now().strftime("%X") }}. '
-    'Today\'s date is {{ now().strftime("%x") }}.\n'
+    'Current time is {{ now().strftime("%H:%M:%S") }}. '
+    'Today\'s date is {{ now().strftime("%Y-%m-%d") }}.\n'
 )
 
 DEFAULT_INSTRUCTIONS_PROMPT = """You are a voice assistant for Home Assistant.
