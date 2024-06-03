@@ -184,8 +184,8 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
 
     async def _async_get_events(self, _date: date) -> None:
         """Return events from specified date."""
-        info = await dt_util.async_get_time_zone(self.hass.config.time_zone)
-        offset = info and info.utcoffset(dt_util.now())
+        info = dt_util.get_default_time_zone()
+        offset = info.utcoffset(dt_util.now())
         days = timedelta(days=0 if offset and offset < timedelta() else 1)
         self._events.extend(
             _get_calendar_event(days, evt)
@@ -199,11 +199,11 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
 def _get_calendar_event(offset: timedelta, event: RadarrCalendarItem) -> RadarrEvent:
     """Return a RadarrEvent from an API event."""
     _date, _type = event.releaseDateType()
-    _date = _date + offset
+    _dt = dt_util.start_of_local_day(_date) + offset
     return RadarrEvent(
         summary=event.title,
-        start=_date - timedelta(days=1),
-        end=_date,
+        start=_dt.date() - timedelta(days=1),
+        end=_dt.date(),
         description=event.overview.replace(":", ";"),
         release_type=_type,
     )
