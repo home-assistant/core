@@ -126,7 +126,7 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
         second_on = 0
         second_off = 0
         microsecond_on = 0
-        microsocond_off = 0
+        microsecond_off = 0
 
         if hour_on == "24":
             hour_on = "23"
@@ -137,7 +137,7 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
             hour_off = "23"
             minute_off = "59"
             second_off = 59
-            microsocond_off = 999999
+            microsecond_off = 999999
 
         return CalendarEvent(
             start=date.replace(
@@ -150,7 +150,7 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
                 hour=int(hour_off),
                 minute=int(minute_off),
                 second=second_off,
-                microsecond=microsocond_off,
+                microsecond=microsecond_off,
             ),
             summary=f"Machine {self.coordinator.config_entry.title} on",
             description="Machine is scheduled to turn on at the start time and off at the end time",
