@@ -63,10 +63,7 @@ async def async_setup_entry(
     )
 
 
-class LaMarzoccoUpdateEntity(
-    LaMarzoccoEntity,
-    UpdateEntity,
-):
+class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
     """Entity representing the update state."""
 
     entity_description: LaMarzoccoUpdateEntityDescription
