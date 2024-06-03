@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -29,11 +29,7 @@ async def test_setup(
 
     assert ista_config_entry.state is ConfigEntryState.LOADED
 
-    for entity in er.async_entries_for_config_entry(
-        entity_registry, ista_config_entry.entry_id
-    ):
-        assert entity == snapshot
-        assert hass.states.get(entity.entity_id) == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, ista_config_entry.entry_id)
 
     for device in dr.async_entries_for_config_entry(
         device_registry, ista_config_entry.entry_id

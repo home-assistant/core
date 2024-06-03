@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, MagicMock
 from pyecotrend_ista.exception_classes import LoginError, ServerError
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.ista_ecotrend.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -17,9 +17,9 @@ async def test_form(
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
@@ -31,7 +31,7 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Max Istamann"
     assert result["data"] == {
         CONF_EMAIL: "test@example.com",
@@ -57,7 +57,7 @@ async def test_form_invalid_auth(
 ) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     mock_ista.login.side_effect = side_effect
     result = await hass.config_entries.flow.async_configure(
@@ -68,7 +68,7 @@ async def test_form_invalid_auth(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error_text}
 
     mock_ista.login.side_effect = None
@@ -81,7 +81,7 @@ async def test_form_invalid_auth(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Max Istamann"
     assert result["data"] == {
         CONF_EMAIL: "test@example.com",
