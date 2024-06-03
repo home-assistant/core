@@ -47,9 +47,8 @@ async def async_update(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     device: LinknLinkCoordinator = hass.data[DOMAIN][entry.entry_id]
-    unload_ok = await hass.config_entries.async_unload_platforms(
+    if unload_ok := await hass.config_entries.async_unload_platforms(
         entry, get_domains(device.api.type)
-    )
-    if unload_ok:
+    ):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok

@@ -66,7 +66,7 @@ class LinknLinkDevice:
 
     def __init__(
         self, name, host, mac, model, manufacturer, type_, devtype, fwversion, timeout
-    ):
+    ) -> None:
         """Initialize the device."""
         self.name: str = name
         self.host: str = host
@@ -78,7 +78,9 @@ class LinknLinkDevice:
         self.timeout: int = timeout
         self.fwversion: int = fwversion
 
-    async def setup_entry(self, hass: HomeAssistant, mock_api=None, mock_entry=None):
+    async def setup_entry(
+        self, hass: HomeAssistant, mock_api=None, mock_entry=None
+    ) -> MockSetup:
         """Set up the device."""
         mock_api = mock_api or self.get_mock_api()
         mock_entry = mock_entry or self.get_mock_entry()
@@ -93,7 +95,7 @@ class LinknLinkDevice:
 
         return MockSetup(mock_api, mock_entry, mock_factory)
 
-    def get_mock_api(self):
+    def get_mock_api(self) -> MagicMock:
         """Return a mock device (API)."""
         mock_api = MagicMock()
         mock_api.name = self.name

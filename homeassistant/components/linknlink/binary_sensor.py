@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -59,13 +59,7 @@ class LinknLinkBinarySensor(LinknLinkEntity, BinarySensorEntity):
             self._attr_is_on = bool(self.coordinator.data[description.key])
             self._attr_unique_id = f"{coordinator.api.mac.hex()}-{description.key}"
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
+    @property
+    def is_on(self) -> bool:
         """Handle coordinator update."""
-        self._update_attr()
-        super()._handle_coordinator_update()
-
-    @callback
-    def _update_attr(self) -> None:
-        """Update attributes for sensor."""
-        self._attr_is_on = bool(self.coordinator.data[self.entity_description.key])
+        return bool(self.coordinator.data[self.entity_description.key])
