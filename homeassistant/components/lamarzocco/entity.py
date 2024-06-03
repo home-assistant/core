@@ -56,9 +56,9 @@ class LaMarzoccoEntity(LaMarzoccoBaseEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self.entity_description.available_fn(
-            self.coordinator.device
-        )
+        if super().available:
+            return self.entity_description.available_fn(self.coordinator.device)
+        return False
 
     def __init__(
         self,
