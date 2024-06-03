@@ -1,9 +1,13 @@
 """Test BMW sensors."""
 
+from unittest.mock import patch
+
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM as METRIC,
     US_CUSTOMARY_SYSTEM as IMPERIAL,
@@ -12,6 +16,8 @@ from homeassistant.util.unit_system import (
 
 from . import setup_mocked_integration
 
+from tests.common import snapshot_platform
+
 
 @pytest.mark.freeze_time("2023-06-22 10:30:00+00:00")
 @pytest.mark.usefixtures("bmw_fixture")
@@ -19,14 +25,17 @@ from . import setup_mocked_integration
 async def test_entity_state_attrs(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor options and values.."""
 
     # Setup component
-    assert await setup_mocked_integration(hass)
+    with patch(
+        "homeassistant.components.bmw_connected_drive.PLATFORMS", [Platform.SENSOR]
+    ):
+        mock_config_entry = await setup_mocked_integration(hass)
 
-    # Get all select entities
-    assert hass.states.async_all("sensor") == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("bmw_fixture")
