@@ -98,7 +98,7 @@ class AirGradientSelect(AirGradientEntity, SelectEntity):
         self._attr_unique_id = f"{coordinator.serial_number}-{description.key}"
 
     @property
-    def current_option(self) -> str:
+    def current_option(self) -> str | None:
         """Return the state of the select."""
         return self.entity_description.value_fn(self.coordinator.data)
 
