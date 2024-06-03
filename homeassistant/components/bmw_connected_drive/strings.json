@@ -104,7 +104,7 @@
           "error": "Error",
           "complete": "Complete",
           "fully_charged": "Fully charged",
-          "finished_fully_charged": "Fully charged",
+          "finished_fully_charged": "Finished, fully charged",
           "finished_not_full": "Finished, not full",
           "invalid": "Invalid",
           "not_charging": "Not charging",
