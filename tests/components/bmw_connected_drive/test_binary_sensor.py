@@ -23,7 +23,7 @@ async def test_entity_state_attrs(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test lock states and attributes."""
+    """Test binary sensor states and attributes."""
 
     # Setup component
     with patch(
