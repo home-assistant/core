@@ -31,17 +31,10 @@ CONTROLLER_BINARY_SENSORS: tuple[HydrawiseBinarySensorEntityDescription, ...] = 
     HydrawiseBinarySensorEntityDescription(
         key="status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        value_fn=lambda status_sensor: status_sensor.coordinator.last_update_success,
+        value_fn=lambda status_sensor: status_sensor.coordinator.last_update_success
+        and status_sensor.controller.online,
         # Connectivtiy sensor is always available
         availability_fn=lambda _: True,
-    ),
-    HydrawiseBinarySensorEntityDescription(
-        key="controller",
-        translation_key="controller",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        value_fn=lambda status_sensor: status_sensor.controller.online,
-        # If api call is successful, controller status is available
-        availability_fn=lambda status_sensor: status_sensor.coordinator.last_update_success,
     ),
 )
 
