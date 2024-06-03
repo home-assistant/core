@@ -15,7 +15,7 @@ import sqlite3
 import ssl
 import threading
 from typing import TYPE_CHECKING, Any, cast
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
 
 from aiohttp import client
 from aiohttp.test_utils import (
@@ -927,7 +927,7 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient, None,
 
         @ha.callback
         def _async_fire_mqtt_message(topic, payload, qos, retain):
-            async_fire_mqtt_message(hass, topic, payload, qos, retain)
+            async_fire_mqtt_message(hass, topic, payload or b"", qos, retain)
             mid = get_mid()
             hass.loop.call_soon(mock_client.on_publish, 0, 0, mid)
             return FakeInfo(mid)
@@ -1023,7 +1023,7 @@ async def _mqtt_mock_entry(
         mock_mqtt_instance.connected = True
         mqtt_client_mock.on_connect(mqtt_client_mock, None, 0, 0, 0)
 
-        async_dispatcher_send(hass, mqtt.MQTT_CONNECTED)
+        async_dispatcher_send(hass, mqtt.MQTT_CONNECTION_STATE, True)
         await hass.async_block_till_done()
 
         return mock_mqtt_instance
@@ -1151,7 +1151,7 @@ def mock_network() -> Generator[None, None, None]:
 
 
 @pytest.fixture(autouse=True, scope="session")
-def mock_get_source_ip() -> Generator[patch, None, None]:
+def mock_get_source_ip() -> Generator[_patch, None, None]:
     """Mock network util's async_get_source_ip."""
     patcher = patch(
         "homeassistant.components.network.util.async_get_source_ip",
@@ -1165,7 +1165,7 @@ def mock_get_source_ip() -> Generator[patch, None, None]:
 
 
 @pytest.fixture(autouse=True, scope="session")
-def translations_once() -> Generator[patch, None, None]:
+def translations_once() -> Generator[_patch, None, None]:
     """Only load translations once per session."""
     from homeassistant.helpers.translation import _TranslationsCacheData
 
@@ -1182,7 +1182,9 @@ def translations_once() -> Generator[patch, None, None]:
 
 
 @pytest.fixture
-def disable_translations_once(translations_once):
+def disable_translations_once(
+    translations_once: _patch,
+) -> Generator[None, None, None]:
     """Override loading translations once."""
     translations_once.stop()
     yield
@@ -1190,7 +1192,7 @@ def disable_translations_once(translations_once):
 
 
 @pytest.fixture
-def mock_zeroconf() -> Generator[None, None, None]:
+def mock_zeroconf() -> Generator[MagicMock, None, None]:
     """Mock zeroconf."""
     from zeroconf import DNSCache  # pylint: disable=import-outside-toplevel
 
@@ -1206,7 +1208,7 @@ def mock_zeroconf() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def mock_async_zeroconf(mock_zeroconf: None) -> Generator[None, None, None]:
+def mock_async_zeroconf(mock_zeroconf: MagicMock) -> Generator[MagicMock, None, None]:
     """Mock AsyncZeroconf."""
     from zeroconf import DNSCache, Zeroconf  # pylint: disable=import-outside-toplevel
     from zeroconf.asyncio import (  # pylint: disable=import-outside-toplevel

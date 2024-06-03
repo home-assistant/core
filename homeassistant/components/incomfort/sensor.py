@@ -5,19 +5,22 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from incomfortclient import Gateway as InComfortGateway, Heater as InComfortHeater
+
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPressure, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
-from . import DOMAIN, IncomfortChild
+from . import DATA_INCOMFORT, IncomfortEntity
+from .const import DOMAIN
 
 INCOMFORT_HEATER_TEMP = "CV Temp"
 INCOMFORT_PRESSURE = "CV Pressure"
@@ -58,35 +61,30 @@ SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up an InComfort/InTouch sensor device."""
-    if discovery_info is None:
-        return
-
-    client = hass.data[DOMAIN]["client"]
-    heaters = hass.data[DOMAIN]["heaters"]
-
-    entities = [
-        IncomfortSensor(client, heater, description)
-        for heater in heaters
+    """Set up InComfort/InTouch sensor entities."""
+    incomfort_data = hass.data[DATA_INCOMFORT][entry.entry_id]
+    async_add_entities(
+        IncomfortSensor(incomfort_data.client, heater, description)
+        for heater in incomfort_data.heaters
         for description in SENSOR_TYPES
-    ]
-
-    async_add_entities(entities)
+    )
 
 
-class IncomfortSensor(IncomfortChild, SensorEntity):
+class IncomfortSensor(IncomfortEntity, SensorEntity):
     """Representation of an InComfort/InTouch sensor device."""
 
     entity_description: IncomfortSensorEntityDescription
 
     def __init__(
-        self, client, heater, description: IncomfortSensorEntityDescription
+        self,
+        client: InComfortGateway,
+        heater: InComfortHeater,
+        description: IncomfortSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__()
@@ -95,9 +93,10 @@ class IncomfortSensor(IncomfortChild, SensorEntity):
         self._client = client
         self._heater = heater
 
-        self._unique_id = f"{heater.serial_no}_{slugify(description.name)}"
-        self.entity_id = f"{SENSOR_DOMAIN}.{DOMAIN}_{slugify(description.name)}"
-        self._name = f"Boiler {description.name}"
+        self._attr_unique_id = f"{heater.serial_no}_{slugify(description.name)}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, heater.serial_no)},
+        )
 
     @property
     def native_value(self) -> str | None:

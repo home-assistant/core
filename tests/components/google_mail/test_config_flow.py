@@ -76,7 +76,7 @@ async def test_full_flow(
 
 
 @pytest.mark.parametrize(
-    ("fixture", "abort_reason", "placeholders", "calls", "access_token"),
+    ("fixture", "abort_reason", "placeholders", "call_count", "access_token"),
     [
         ("get_profile", "reauth_successful", None, 1, "updated-access-token"),
         (
@@ -90,14 +90,14 @@ async def test_full_flow(
 )
 async def test_reauth(
     hass: HomeAssistant,
-    hass_client_no_auth,
+    hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host,
+    current_request_with_host: None,
     config_entry: MockConfigEntry,
     fixture: str,
     abort_reason: str,
     placeholders: dict[str, str],
-    calls: int,
+    call_count: int,
     access_token: str,
 ) -> None:
     """Test the re-authentication case updates the correct config entry.
@@ -164,7 +164,7 @@ async def test_reauth(
     assert result.get("type") is FlowResultType.ABORT
     assert result["reason"] == abort_reason
     assert result["description_placeholders"] == placeholders
-    assert len(mock_setup.mock_calls) == calls
+    assert len(mock_setup.mock_calls) == call_count
 
     assert config_entry.unique_id == TITLE
     assert "token" in config_entry.data

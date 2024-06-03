@@ -80,8 +80,8 @@ build.json @home-assistant/supervisor
 /tests/components/airzone/ @Noltari
 /homeassistant/components/airzone_cloud/ @Noltari
 /tests/components/airzone_cloud/ @Noltari
-/homeassistant/components/aladdin_connect/ @mkmer
-/tests/components/aladdin_connect/ @mkmer
+/homeassistant/components/aladdin_connect/ @swcloudgenie
+/tests/components/aladdin_connect/ @swcloudgenie
 /homeassistant/components/alarm_control_panel/ @home-assistant/core
 /tests/components/alarm_control_panel/ @home-assistant/core
 /homeassistant/components/alert/ @home-assistant/core @frenck
@@ -342,8 +342,8 @@ build.json @home-assistant/supervisor
 /tests/components/drop_connect/ @ChandlerSystems @pfrazer
 /homeassistant/components/dsmr/ @Robbie1221 @frenck
 /tests/components/dsmr/ @Robbie1221 @frenck
-/homeassistant/components/dsmr_reader/ @sorted-bits @glodenox
-/tests/components/dsmr_reader/ @sorted-bits @glodenox
+/homeassistant/components/dsmr_reader/ @sorted-bits @glodenox @erwindouna
+/tests/components/dsmr_reader/ @sorted-bits @glodenox @erwindouna
 /homeassistant/components/duotecno/ @cereal2nd
 /tests/components/duotecno/ @cereal2nd
 /homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192 @andarotajo
@@ -379,7 +379,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/elvia/ @ludeeus
 /tests/components/elvia/ @ludeeus
 /homeassistant/components/emby/ @mezz64
-/homeassistant/components/emoncms/ @borpin
+/homeassistant/components/emoncms/ @borpin @alexandrecuer
 /homeassistant/components/emonitor/ @bdraco
 /tests/components/emonitor/ @bdraco
 /homeassistant/components/emulated_hue/ @bdraco @Tho85
@@ -658,7 +658,8 @@ build.json @home-assistant/supervisor
 /tests/components/imgw_pib/ @bieniu
 /homeassistant/components/improv_ble/ @emontnemery
 /tests/components/improv_ble/ @emontnemery
-/homeassistant/components/incomfort/ @zxdavb
+/homeassistant/components/incomfort/ @jbouwh
+/tests/components/incomfort/ @jbouwh
 /homeassistant/components/influxdb/ @mdegat01
 /tests/components/influxdb/ @mdegat01
 /homeassistant/components/inkbird/ @bdraco
@@ -1423,7 +1424,8 @@ build.json @home-assistant/supervisor
 /tests/components/thermobeacon/ @bdraco
 /homeassistant/components/thermopro/ @bdraco @h3ss
 /tests/components/thermopro/ @bdraco @h3ss
-/homeassistant/components/thethingsnetwork/ @fabaff
+/homeassistant/components/thethingsnetwork/ @angelnu
+/tests/components/thethingsnetwork/ @angelnu
 /homeassistant/components/thread/ @home-assistant/core
 /tests/components/thread/ @home-assistant/core
 /homeassistant/components/tibber/ @danielhiversen

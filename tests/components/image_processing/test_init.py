@@ -1,5 +1,7 @@
 """The tests for the image_processing component."""
 
+from asyncio import AbstractEventLoop
+from collections.abc import Callable
 from unittest.mock import PropertyMock, patch
 
 import pytest
@@ -24,7 +26,11 @@ async def setup_homeassistant(hass: HomeAssistant):
 
 
 @pytest.fixture
-def aiohttp_unused_port_factory(event_loop, unused_tcp_port_factory, socket_enabled):
+def aiohttp_unused_port_factory(
+    event_loop: AbstractEventLoop,
+    unused_tcp_port_factory: Callable[[], int],
+    socket_enabled: None,
+) -> Callable[[], int]:
     """Return aiohttp_unused_port and allow opening sockets."""
     return unused_tcp_port_factory
 

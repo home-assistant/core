@@ -16,13 +16,18 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_LANGUAGE, CONF_LOCATION
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from . import DEFAULT_NAME, DOMAIN
+from .const import (
+    CONF_CANDLE_LIGHT_MINUTES,
+    CONF_HAVDALAH_OFFSET_MINUTES,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 
 
 @dataclass(frozen=True)
@@ -59,30 +64,16 @@ BINARY_SENSORS: tuple[JewishCalendarBinarySensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Jewish calendar binary sensors from YAML.
-
-    The YAML platform config is automatically
-    imported to a config entry, this method can be removed
-    when YAML support is removed.
-    """
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Jewish Calendar binary sensors."""
+    entry = hass.data[DOMAIN][config_entry.entry_id]
+
     async_add_entities(
-        JewishCalendarBinarySensor(
-            hass.data[DOMAIN][config_entry.entry_id], description
-        )
+        JewishCalendarBinarySensor(config_entry.entry_id, entry, description)
         for description in BINARY_SENSORS
     )
 
@@ -95,17 +86,18 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
 
     def __init__(
         self,
+        entry_id: str,
         data: dict[str, Any],
         description: JewishCalendarBinarySensorEntityDescription,
     ) -> None:
         """Initialize the binary sensor."""
         self.entity_description = description
         self._attr_name = f"{DEFAULT_NAME} {description.name}"
-        self._attr_unique_id = f'{data["prefix"]}_{description.key}'
-        self._location = data["location"]
-        self._hebrew = data["language"] == "hebrew"
-        self._candle_lighting_offset = data["candle_lighting_offset"]
-        self._havdalah_offset = data["havdalah_offset"]
+        self._attr_unique_id = f"{entry_id}-{description.key}"
+        self._location = data[CONF_LOCATION]
+        self._hebrew = data[CONF_LANGUAGE] == "hebrew"
+        self._candle_lighting_offset = data[CONF_CANDLE_LIGHT_MINUTES]
+        self._havdalah_offset = data[CONF_HAVDALAH_OFFSET_MINUTES]
         self._update_unsub: CALLBACK_TYPE | None = None
 
     @property

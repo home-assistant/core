@@ -1,6 +1,6 @@
 """IKEA Idasen Desk fixtures."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock
 
@@ -8,12 +8,12 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth):
+def mock_bluetooth(enable_bluetooth: None) -> Generator[None, None, None]:
     """Auto mock bluetooth."""
     with mock.patch(
         "homeassistant.components.idasen_desk.bluetooth.async_ble_device_from_address"
     ):
-        yield MagicMock()
+        yield
 
 
 @pytest.fixture(autouse=False)
