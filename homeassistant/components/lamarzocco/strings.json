@@ -109,7 +109,7 @@
         "state": {
           "disabled": "Disabled",
           "prebrew": "Prebrew",
-          "typeb": "Preinfusion"
+          "preinfusion": "Preinfusion"
         }
       },
       "steam_temp_select": {

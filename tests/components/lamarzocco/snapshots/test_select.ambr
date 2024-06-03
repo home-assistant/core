@@ -6,7 +6,7 @@
       'options': list([
         'disabled',
         'prebrew',
-        'typeb',
+        'preinfusion',
       ]),
     }),
     'context': <ANY>,
@@ -14,7 +14,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'typeb',
+    'state': 'preinfusion',
   })
 # ---
 # name: test_pre_brew_infusion_select[GS3 AV].1
@@ -26,7 +26,7 @@
       'options': list([
         'disabled',
         'prebrew',
-        'typeb',
+        'preinfusion',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -63,7 +63,7 @@
       'options': list([
         'disabled',
         'prebrew',
-        'typeb',
+        'preinfusion',
       ]),
     }),
     'context': <ANY>,
@@ -71,7 +71,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'typeb',
+    'state': 'preinfusion',
   })
 # ---
 # name: test_pre_brew_infusion_select[Linea Mini].1
@@ -83,7 +83,7 @@
       'options': list([
         'disabled',
         'prebrew',
-        'typeb',
+        'preinfusion',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -120,7 +120,7 @@
       'options': list([
         'disabled',
         'prebrew',
-        'typeb',
+        'preinfusion',
       ]),
     }),
     'context': <ANY>,
@@ -128,7 +128,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'typeb',
+    'state': 'preinfusion',
   })
 # ---
 # name: test_pre_brew_infusion_select[Micra].1
@@ -140,7 +140,7 @@
       'options': list([
         'disabled',
         'prebrew',
-        'typeb',
+        'preinfusion',
       ]),
     }),
     'config_entry_id': <ANY>,

@@ -31,7 +31,13 @@ STEAM_LEVEL_LM_TO_HA = {
 PREBREW_MODE_HA_TO_LM = {
     "disabled": PrebrewMode.DISABLED,
     "prebrew": PrebrewMode.PREBREW,
-    "typeb": PrebrewMode.PREINFUSION,
+    "preinfusion": PrebrewMode.PREINFUSION,
+}
+
+PREBREW_MODE_LM_TO_HA = {
+    PrebrewMode.DISABLED: "disabled",
+    PrebrewMode.PREBREW: "prebrew",
+    PrebrewMode.PREINFUSION: "preinfusion",
 }
 
 
@@ -62,11 +68,11 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
         key="prebrew_infusion_select",
         translation_key="prebrew_infusion_select",
         entity_category=EntityCategory.CONFIG,
-        options=["disabled", "prebrew", "typeb"],
+        options=["disabled", "prebrew", "preinfusion"],
         select_option_fn=lambda machine, option: machine.set_prebrew_mode(
             PREBREW_MODE_HA_TO_LM[option]
         ),
-        current_option_fn=lambda config: config.prebrew_mode.lower(),
+        current_option_fn=lambda config: PREBREW_MODE_LM_TO_HA[config.prebrew_mode],
         supported_fn=lambda coordinator: coordinator.device.model
         in (
             MachineModel.GS3_AV,
