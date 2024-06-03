@@ -116,6 +116,39 @@
     'unit_of_measurement': None,
   })
 # ---
+# name: test_calendar_events[entry.GS01234_auto_on_off_schedule_lfb3gfh]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.gs01234_auto_on_off_schedule_lfb3gfh',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Auto on/off schedule (lFb3gfH)',
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_on_off_schedule',
+    'unique_id': 'GS01234_auto_on_off_schedule_lFb3gfH',
+    'unit_of_measurement': None,
+  })
+# ---
 # name: test_calendar_events[entry.GS01234_auto_on_off_schedule_os2oswx]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -175,6 +208,32 @@
           'description': 'Machine is scheduled to turn on at the start time and off at the end time',
           'end': '2024-02-04T07:30:00-08:00',
           'start': '2024-02-04T07:00:00-08:00',
+          'summary': 'Machine My LaMarzocco on',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_calendar_events[events.GS01234_auto_on_off_schedule_lfb3gfh]
+  dict({
+    'calendar.gs01234_auto_on_off_schedule_lfb3gfh': dict({
+      'events': list([
+        dict({
+          'description': 'Machine is scheduled to turn on at the start time and off at the end time',
+          'end': '2024-01-16T07:30:00-08:00',
+          'start': '2024-01-16T00:00:00-08:00',
+          'summary': 'Machine My LaMarzocco on',
+        }),
+        dict({
+          'description': 'Machine is scheduled to turn on at the start time and off at the end time',
+          'end': '2024-01-23T07:30:00-08:00',
+          'start': '2024-01-23T00:00:00-08:00',
+          'summary': 'Machine My LaMarzocco on',
+        }),
+        dict({
+          'description': 'Machine is scheduled to turn on at the start time and off at the end time',
+          'end': '2024-01-30T07:30:00-08:00',
+          'start': '2024-01-30T00:00:00-08:00',
           'summary': 'Machine My LaMarzocco on',
         }),
       ]),
@@ -340,6 +399,25 @@
     }),
     'context': <ANY>,
     'entity_id': 'calendar.gs01234_auto_on_off_schedule_axfz5bj',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_calendar_events[state.GS01234_auto_on_off_schedule_lfb3gfh]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'all_day': False,
+      'description': 'Machine is scheduled to turn on at the start time and off at the end time',
+      'end_time': '2024-01-16 07:30:00',
+      'friendly_name': 'GS01234 Auto on/off schedule (lFb3gfH)',
+      'location': '',
+      'message': 'Machine My LaMarzocco on',
+      'start_time': '2024-01-16 00:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.gs01234_auto_on_off_schedule_lfb3gfh',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

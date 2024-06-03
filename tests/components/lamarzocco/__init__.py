@@ -25,7 +25,7 @@ SERIAL_DICT = {
     MachineModel.LINEA_MINI: "LM01234",
 }
 
-WAKE_UP_SLEEP_ENTRY_IDS = ["Os2OswX", "aXFz5bJ"]
+WAKE_UP_SLEEP_ENTRY_IDS = ["Os2OswX", "aXFz5bJ", "lFb3gfH"]
 
 
 async def async_init_integration(

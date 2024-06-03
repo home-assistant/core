@@ -150,6 +150,14 @@
       "steam": true,
       "timeOff": "7:30",
       "timeOn": "7:0"
+    },
+    {
+      "days": ["tuesday"],
+      "enabled": true,
+      "id": "lFb3gfH",
+      "steam": true,
+      "timeOff": "7:30",
+      "timeOn": "24:0"
     }
   ],
   "clock": "1901-07-08T10:29:00",
