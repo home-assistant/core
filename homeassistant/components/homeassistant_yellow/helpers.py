@@ -1,16 +1,13 @@
 """Helper functions for the Yellow."""
+
 from __future__ import annotations
 
+import asyncio
 import enum
-import time
 
 import usb
 
 from homeassistant.core import HomeAssistant
-
-
-class PinStatesUnstable(Exception):
-    """The state of the GPIO pins is unstable."""
 
 
 class YellowGPIO(enum.IntEnum):
@@ -30,8 +27,8 @@ class YellowGPIO(enum.IntEnum):
 
 # Pin states on a properly installed CM4
 RUNNING_PIN_STATES = {
-    YellowGPIO.RADIO_BOOT: 1,
-    YellowGPIO.RADIO_RESET: 1,
+    YellowGPIO.RADIO_BOOT: True,
+    YellowGPIO.RADIO_RESET: True,
 }
 
 GPIO_READ_ATTEMPTS = 5
@@ -47,7 +44,7 @@ YELLOW_USB_HUB_VENDOR = 0x1A40
 YELLOW_USB_HUB_PRODUCT = 0x0101
 
 
-def _read_gpio_pins(pins: list[int]) -> dict[int, bool]:
+def _read_gpio_pins[_PinsT: int](pins: list[_PinsT]) -> dict[_PinsT, bool]:
     """Read the state of the given GPIO pins."""
     # pylint: disable-next=import-outside-toplevel
     import gpiod
@@ -61,36 +58,26 @@ def _read_gpio_pins(pins: list[int]) -> dict[int, bool]:
 
     try:
         lines.request(config)
-        return {p: bool(v) for p, v in zip(pins, lines.get_values())}
+        return {p: bool(v) for p, v in zip(pins, lines.get_values(), strict=True)}
     finally:
         lines.release()
 
 
-def _read_gpio_pins_stable(pins: list[int]) -> dict[int, bool]:
-    """Read the state of the given GPIO pins and ensure the states are stable."""
-
-    values = _read_gpio_pins(pins)
-
-    for _ in range(GPIO_READ_ATTEMPTS - 1):
-        time.sleep(GPIO_READ_DELAY_S)
-        new_values = _read_gpio_pins(pins)
-
-        if new_values != values:
-            raise PinStatesUnstable()
-
-    return values
-
-
 async def async_validate_gpio_states(hass: HomeAssistant) -> bool:
     """Validate the state of the GPIO pins."""
-    try:
-        pin_states = await hass.async_add_executor_job(
-            _read_gpio_pins_stable, list(RUNNING_PIN_STATES)
-        )
-    except PinStatesUnstable:
-        return False
+    # We read multiple times in a row to make sure the GPIO state isn't fluctuating
+    for attempt in range(GPIO_READ_ATTEMPTS):
+        if attempt > 0:
+            await asyncio.sleep(GPIO_READ_DELAY_S)
 
-    return pin_states == RUNNING_PIN_STATES
+        pin_states = await hass.async_add_executor_job(
+            _read_gpio_pins, list(RUNNING_PIN_STATES)
+        )
+
+        if pin_states != RUNNING_PIN_STATES:
+            return False
+
+    return True
 
 
 def validate_usb_hub_present() -> bool:
