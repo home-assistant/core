@@ -472,7 +472,7 @@ base36==0.1.1
 beautifulsoup4==4.12.3
 
 # homeassistant.components.zha
-bellows==0.38.4
+bellows==0.39.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.15.3
@@ -1122,7 +1122,7 @@ nessclient==1.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==3.1.0
+nettigo-air-monitor==3.2.0
 
 # homeassistant.components.nexia
 nexia==2.0.8
@@ -1617,7 +1617,7 @@ pyotgw==2.2.0
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.13.10
+pyoverkiz==1.13.11
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -1794,7 +1794,7 @@ python-qbittorrent==0.4.3
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.1.1
+python-roborock==2.2.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -2162,7 +2162,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.1.8
 
 # homeassistant.components.zha
-universal-silabs-flasher==0.0.18
+universal-silabs-flasher==0.0.20
 
 # homeassistant.components.upb
 upb-lib==0.5.6

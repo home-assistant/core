@@ -18,6 +18,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
+
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
@@ -33,12 +36,11 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
 async def test_full_flow(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
-    setup_credentials,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(

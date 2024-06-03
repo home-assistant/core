@@ -34,10 +34,13 @@ from .singleton import singleton
 
 LLM_API_ASSIST = "assist"
 
+BASE_PROMPT = (
+    'Current time is {{ now().strftime("%X") }}. '
+    'Today\'s date is {{ now().strftime("%x") }}.\n'
+)
+
 DEFAULT_INSTRUCTIONS_PROMPT = """You are a voice assistant for Home Assistant.
 Answer in plain text. Keep it simple and to the point.
-The current time is {{ now().strftime("%X") }}.
-Today's date is {{ now().strftime("%x") }}.
 """
 
 
@@ -254,7 +257,6 @@ class AssistAPI(API):
         prompt = [
             (
                 "When controlling Home Assistant always call the intent tools. "
-                "Do not pass the domain to the intent tools as a list. "
                 "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
                 "When controlling a device, prefer passing just its name and its domain "
                 "(what comes before the dot in its entity id). "

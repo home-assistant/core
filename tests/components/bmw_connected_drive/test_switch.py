@@ -14,10 +14,9 @@ from homeassistant.exceptions import HomeAssistantError
 from . import check_remote_service_call, setup_mocked_integration
 
 
+@pytest.mark.usefixtures("bmw_fixture")
 async def test_entity_state_attrs(
     hass: HomeAssistant,
-    bmw_fixture: respx.Router,
-    entity_registry_enabled_by_default: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test switch options and values.."""
@@ -65,6 +64,7 @@ async def test_service_call_success(
     assert hass.states.get(entity_id).state == new_value
 
 
+@pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.parametrize(
     ("raised", "expected"),
     [
@@ -77,7 +77,6 @@ async def test_service_call_fail(
     hass: HomeAssistant,
     raised: Exception,
     expected: Exception,
-    bmw_fixture: respx.Router,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test exception handling."""
