@@ -14,7 +14,7 @@ from homeassistant.helpers import collection, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import TEST_DEVICE_ID, TEST_TAG_ID, TEST_TAG_NAME
+from . import TEST_DEVICE_ID, TEST_TAG_ID, TEST_TAG_ID_2, TEST_TAG_NAME, TEST_TAG_NAME_2
 
 from tests.common import async_fire_time_changed
 from tests.typing import WebSocketGenerator
@@ -35,7 +35,11 @@ def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
                         {
                             "id": TEST_TAG_ID,
                             "tag_id": TEST_TAG_ID,
-                        }
+                        },
+                        {
+                            "id": TEST_TAG_ID_2,
+                            "tag_id": TEST_TAG_ID_2,
+                        },
                     ]
                 },
             }
@@ -43,6 +47,7 @@ def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
             hass_storage[DOMAIN] = items
         entity_registry = er.async_get(hass)
         _create_entry(entity_registry, TEST_TAG_ID, TEST_TAG_NAME)
+        _create_entry(entity_registry, TEST_TAG_ID_2, TEST_TAG_NAME_2)
         config = {DOMAIN: {}}
         return await async_setup_component(hass, DOMAIN, config)
 
@@ -132,7 +137,8 @@ async def test_ws_list(
     resp = await client.receive_json()
     assert resp["success"]
     assert resp["result"] == [
-        {"id": TEST_TAG_ID, "name": "test tag name", "tag_id": TEST_TAG_ID}
+        {"id": TEST_TAG_ID, "name": "test tag name", "tag_id": TEST_TAG_ID},
+        {"id": TEST_TAG_ID_2, "name": "test tag name 2", "tag_id": TEST_TAG_ID_2},
     ]
 
 
@@ -176,7 +182,8 @@ async def test_tag_scanned(
     result = {item["id"]: item for item in resp["result"]}
 
     assert resp["result"] == [
-        {"id": TEST_TAG_ID, "name": "test tag name", "tag_id": TEST_TAG_ID}
+        {"id": TEST_TAG_ID, "name": "test tag name", "tag_id": TEST_TAG_ID},
+        {"id": TEST_TAG_ID_2, "name": "test tag name 2", "tag_id": TEST_TAG_ID_2},
     ]
 
     now = dt_util.utcnow()
@@ -189,9 +196,10 @@ async def test_tag_scanned(
 
     result = {item["id"]: item for item in resp["result"]}
 
-    assert len(result) == 2
+    assert len(result) == 3
     assert resp["result"] == [
         {"id": TEST_TAG_ID, "name": "test tag name", "tag_id": TEST_TAG_ID},
+        {"id": TEST_TAG_ID_2, "name": "test tag name 2", "tag_id": TEST_TAG_ID_2},
         {
             "device_id": "some_scanner",
             "id": "new tag",
@@ -256,6 +264,10 @@ async def test_entity(
         "last_scanned_by_device_id": "device id",
         "friendly_name": "test tag name",
     }
+
+    entity = hass.states.get("tag.test_tag_name_2")
+    assert entity
+    assert entity.state == STATE_UNKNOWN
 
 
 async def test_entity_created_and_removed(
