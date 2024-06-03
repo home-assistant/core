@@ -119,7 +119,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
             DOMAIN,
             "unsupported_gateway_firmware",
             is_fixable=False,
-            breaks_in_ha_version="2024.6.0",
             severity=ir.IssueSeverity.ERROR,
             translation_key="unsupported_gateway_firmware",
             translation_placeholders={"gateway_version": gateway_version},
