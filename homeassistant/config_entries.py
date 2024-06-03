@@ -2047,15 +2047,13 @@ class ConfigEntries:
         if not integration.platforms_are_loaded(platforms):
             with async_pause_setup(self.hass, SetupPhases.WAIT_IMPORT_PLATFORMS):
                 await integration.async_get_platforms(platforms)
-        reported_non_locked_platform_forwards = False
-        if not entry.setup_lock.locked():
-            reported_non_locked_platform_forwards = True
+        if non_locked_platform_forwards := not entry.setup_lock.locked():
             _report_non_locked_platform_forwards(entry)
         await asyncio.gather(
             *(
                 create_eager_task(
                     self._async_forward_entry_setup(
-                        entry, platform, False, reported_non_locked_platform_forwards
+                        entry, platform, False, non_locked_platform_forwards
                     ),
                     name=(
                         f"config entry forward setup {entry.title} "
@@ -2089,12 +2087,10 @@ class ConfigEntries:
         component also has related platforms, the component will have to
         forward the entry to be setup by that component.
         """
-        reported_non_locked_platform_forwards = False
-        if not entry.setup_lock.locked():
-            reported_non_locked_platform_forwards = True
+        if non_locked_platform_forwards := not entry.setup_lock.locked():
             _report_non_locked_platform_forwards(entry)
         return await self._async_forward_entry_setup(
-            entry, domain, True, reported_non_locked_platform_forwards
+            entry, domain, True, non_locked_platform_forwards
         )
 
     async def _async_forward_entry_setup(
@@ -2102,7 +2098,7 @@ class ConfigEntries:
         entry: ConfigEntry,
         domain: Platform | str,
         preload_platform: bool,
-        reported_non_locked_platform_forwards: bool,
+        non_locked_platform_forwards: bool,
     ) -> bool:
         """Forward the setup of an entry to a different component."""
         # Setup Component if not set up yet
@@ -2129,7 +2125,7 @@ class ConfigEntries:
 
         # Check again after setup to make sure the lock
         # is still there because it could have been released
-        if not reported_non_locked_platform_forwards and not entry.setup_lock.locked():
+        if not non_locked_platform_forwards and not entry.setup_lock.locked():
             _report_non_locked_platform_forwards(entry)
         return True
 
