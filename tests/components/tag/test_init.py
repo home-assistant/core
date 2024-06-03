@@ -55,7 +55,7 @@ def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
 
 
 @pytest.fixture
-def storage_setup_1_1(hass: HomeAssistant, hass_storage):
+def storage_setup_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage version 1.1 setup."""
 
     async def _storage(items=None):
@@ -87,7 +87,7 @@ async def test_migration(
     hass_ws_client: WebSocketGenerator,
     storage_setup_1_1,
     freezer: FrozenDateTimeFactory,
-    hass_storage,
+    hass_storage: dict[str, Any],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test migrating tag store."""
