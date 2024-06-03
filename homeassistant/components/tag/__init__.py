@@ -9,7 +9,7 @@ import uuid
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_ID, CONF_NAME
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, entity_registry as er
@@ -34,7 +34,7 @@ LAST_SCANNED = "last_scanned"
 LAST_SCANNED_BY_DEVICE_ID = "last_scanned_by_device_id"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 3
 
 TAG_DATA: HassKey[TagStorageCollection] = HassKey(DOMAIN)
 SIGNAL_TAG_CHANGED = "signal_tag_changed"
@@ -107,8 +107,14 @@ class TagStore(Store[collection.SerializedStorageCollection]):
             # Version 1.2 moves name to entity registry
             for tag in data["items"]:
                 # Copy name in tag store to the entity registry
-                _create_entry(entity_registry, tag[TAG_ID], tag.get(CONF_NAME))
+                _create_entry(entity_registry, tag[CONF_ID], tag.get(CONF_NAME))
                 tag["migrated"] = True
+        if old_major_version == 1 and old_minor_version < 3:
+            # Version 1.3 removes tag_id from the store
+            for tag in data["items"]:
+                if TAG_ID not in tag:
+                    continue
+                del tag[TAG_ID]
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -136,24 +142,26 @@ class TagStorageCollection(collection.DictStorageCollection):
         data = self.CREATE_SCHEMA(data)
         if not data[TAG_ID]:
             data[TAG_ID] = str(uuid.uuid4())
+        # Move tag id to id
+        data[CONF_ID] = data.pop(TAG_ID)
         # make last_scanned JSON serializeable
         if LAST_SCANNED in data:
             data[LAST_SCANNED] = data[LAST_SCANNED].isoformat()
 
         # Create entity in entity_registry when creating the tag
         # This is done early to store name only once in entity registry
-        _create_entry(self.entity_registry, data[TAG_ID], data.get(CONF_NAME))
+        _create_entry(self.entity_registry, data[CONF_ID], data.get(CONF_NAME))
         return data
 
     @callback
     def _get_suggested_id(self, info: dict[str, str]) -> str:
         """Suggest an ID based on the config."""
-        return info[TAG_ID]
+        return info[CONF_ID]
 
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         data = {**item, **self.UPDATE_SCHEMA(update_data)}
-        tag_id = data[TAG_ID]
+        tag_id = item[CONF_ID]
         # make last_scanned JSON serializeable
         if LAST_SCANNED in update_data:
             data[LAST_SCANNED] = data[LAST_SCANNED].isoformat()
@@ -211,7 +219,7 @@ class TagDictStorageCollectionWebsocket(
             item = {k: v for k, v in item.items() if k != "migrated"}
             if (
                 entity_id := self.entity_registry.async_get_entity_id(
-                    DOMAIN, DOMAIN, item[TAG_ID]
+                    DOMAIN, DOMAIN, item[CONF_ID]
                 )
             ) and (entity := self.entity_registry.async_get(entity_id)):
                 item[CONF_NAME] = entity.name or entity.original_name
@@ -249,14 +257,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         if change_type == collection.CHANGE_ADDED:
             # When tags are added to storage
-            entity = _create_entry(entity_registry, updated_config[TAG_ID], None)
+            entity = _create_entry(entity_registry, updated_config[CONF_ID], None)
             if TYPE_CHECKING:
                 assert entity.original_name
             await component.async_add_entities(
                 [
                     TagEntity(
                         entity.name or entity.original_name,
-                        updated_config[TAG_ID],
+                        updated_config[CONF_ID],
                         updated_config.get(LAST_SCANNED),
                         updated_config.get(DEVICE_ID),
                     )
@@ -267,7 +275,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             # When tags are changed or updated in storage
             async_dispatcher_send(
                 hass,
-                f"{SIGNAL_TAG_CHANGED}-{updated_config[TAG_ID]}",
+                f"{SIGNAL_TAG_CHANGED}-{updated_config[CONF_ID]}",
                 updated_config.get(DEVICE_ID),
                 updated_config.get(LAST_SCANNED),
             )
@@ -276,7 +284,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         elif change_type == collection.CHANGE_REMOVED:
             # When tags are removed from storage
             entity_id = entity_registry.async_get_entity_id(
-                DOMAIN, DOMAIN, updated_config[TAG_ID]
+                DOMAIN, DOMAIN, updated_config[CONF_ID]
             )
             if entity_id:
                 entity_registry.async_remove(entity_id)
@@ -287,13 +295,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for tag in storage_collection.async_items():
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug("Adding tag: %s", tag)
-        entity_id = entity_registry.async_get_entity_id(DOMAIN, DOMAIN, tag[TAG_ID])
+        entity_id = entity_registry.async_get_entity_id(DOMAIN, DOMAIN, tag[CONF_ID])
         if entity_id := entity_registry.async_get_entity_id(
-            DOMAIN, DOMAIN, tag[TAG_ID]
+            DOMAIN, DOMAIN, tag[CONF_ID]
         ):
             entity = entity_registry.async_get(entity_id)
         else:
-            entity = _create_entry(entity_registry, tag[TAG_ID], None)
+            entity = _create_entry(entity_registry, tag[CONF_ID], None)
         if TYPE_CHECKING:
             assert entity
             assert entity.original_name
@@ -301,7 +309,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         entities.append(
             TagEntity(
                 name,
-                tag[TAG_ID],
+                tag[CONF_ID],
                 tag.get(LAST_SCANNED),
                 tag.get(DEVICE_ID),
             )

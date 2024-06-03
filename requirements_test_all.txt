@@ -1733,7 +1733,7 @@ pytautulli==23.1.1
 pytedee-async==0.2.17
 
 # homeassistant.components.motionmount
-python-MotionMount==1.0.0
+python-MotionMount==2.0.0
 
 # homeassistant.components.awair
 python-awair==0.2.4
@@ -1794,7 +1794,7 @@ python-qbittorrent==0.4.3
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.1.1
+python-roborock==2.2.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -1831,7 +1831,7 @@ pytradfri[async]==9.0.1
 pytrafikverket==0.3.10
 
 # homeassistant.components.v2c
-pytrydan==0.6.1
+pytrydan==0.7.0
 
 # homeassistant.components.usb
 pyudev==0.24.1
@@ -1906,7 +1906,7 @@ refoss-ha==1.2.1
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.2.2
+renault-api==0.2.3
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.1

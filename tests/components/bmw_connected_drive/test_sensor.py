@@ -1,10 +1,7 @@
 """Test BMW sensors."""
 
 from unittest.mock import patch
-
-from freezegun import freeze_time
 import pytest
-import respx
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -21,11 +18,11 @@ from . import setup_mocked_integration
 from tests.common import snapshot_platform
 
 
-@freeze_time("2023-06-22 10:30:00+00:00")
+@pytest.mark.freeze_time("2023-06-22 10:30:00+00:00")
+@pytest.mark.usefixtures("bmw_fixture")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entity_state_attrs(
     hass: HomeAssistant,
-    bmw_fixture: respx.Router,
-    entity_registry_enabled_by_default: None,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -41,6 +38,7 @@ async def test_entity_state_attrs(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.parametrize(
     ("entity_id", "unit_system", "value", "unit_of_measurement"),
     [
@@ -66,7 +64,6 @@ async def test_unit_conversion(
     unit_system: UnitSystem,
     value: str,
     unit_of_measurement: str,
-    bmw_fixture,
 ) -> None:
     """Test conversion between metric and imperial units for sensors."""
 
