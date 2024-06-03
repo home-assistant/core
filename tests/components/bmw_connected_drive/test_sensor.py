@@ -1,5 +1,7 @@
 """Test BMW sensors."""
 
+from unittest.mock import patch
+
 from freezegun import freeze_time
 import pytest
 import respx
@@ -7,7 +9,9 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bmw_connected_drive.sensor import SENSOR_TYPES
 from homeassistant.components.sensor.const import SensorDeviceClass
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM as METRIC,
@@ -17,6 +21,8 @@ from homeassistant.util.unit_system import (
 
 from . import setup_mocked_integration
 
+from tests.common import snapshot_platform
+
 
 @freeze_time("2023-06-22 10:30:00+00:00")
 async def test_entity_state_attrs(
@@ -24,14 +30,18 @@ async def test_entity_state_attrs(
     bmw_fixture: respx.Router,
     entity_registry_enabled_by_default: None,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor options and values.."""
 
     # Setup component
-    assert await setup_mocked_integration(hass)
+    with patch(
+        "homeassistant.components.bmw_connected_drive.PLATFORMS", [Platform.SENSOR]
+    ):
+        mock_config_entry = await setup_mocked_integration(hass)
 
-    # Get all select entities
-    assert hass.states.async_all("sensor") == snapshot
+    # Get all lock entities
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_entity_option_translations(
