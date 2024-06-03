@@ -85,8 +85,6 @@ async def test_form(
     result2 = await __do_successful_user_step(hass, result, mock_cloud_client)
     await __do_sucessful_machine_selection_step(hass, result2, mock_device_info)
 
-    # assert len(mock_cloud_client.check_local_connection.mock_calls) == 1
-
 
 async def test_form_abort_already_configured(
     hass: HomeAssistant,
