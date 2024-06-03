@@ -267,7 +267,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             # When tags are changed or updated in storage
             async_dispatcher_send(
                 hass,
-                SIGNAL_TAG_CHANGED,
+                f"{SIGNAL_TAG_CHANGED}-{updated_config[TAG_ID]}",
                 updated_config.get(DEVICE_ID),
                 updated_config.get(LAST_SCANNED),
             )
@@ -414,7 +414,7 @@ class TagEntity(Entity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_TAG_CHANGED,
+                f"{SIGNAL_TAG_CHANGED}-{self._tag_id}",
                 self.async_handle_event,
             )
         )
