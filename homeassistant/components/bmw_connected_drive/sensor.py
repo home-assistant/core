@@ -21,6 +21,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    STATE_UNKNOWN,
     UnitOfElectricCurrent,
     UnitOfLength,
     UnitOfVolume,
@@ -246,7 +247,8 @@ class BMWSensor(BMWBaseEntity, SensorEntity):
         # Special handling for string enums
         elif isinstance(state, StrEnum):
             state = state.value.lower()
-            if state == "unknown":
+            if state == STATE_UNKNOWN:
                 state = None
+
         self._attr_native_value = state
         super()._handle_coordinator_update()
