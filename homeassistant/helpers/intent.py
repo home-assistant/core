@@ -1353,6 +1353,7 @@ class IntentResponse:
         """Return a dictionary representation of an intent response."""
         response_dict: dict[str, Any] = {
             "speech": self.speech,
+            "speech_slots": self.speech_slots,
             "card": self.card,
             "language": self.language,
             "response_type": self.response_type.value,
