@@ -87,4 +87,8 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import `incomfort` config entry from configuration.yaml."""
-        return self.async_create_entry(title=TITLE, data=import_data)
+        errors: dict[str, str] = {}
+        if await async_try_connect_gateway(self.hass, import_data, errors):
+            return self.async_create_entry(title=TITLE, data=import_data)
+        reason = next(iter(errors.items()))[1]
+        return self.async_abort(reason=reason)

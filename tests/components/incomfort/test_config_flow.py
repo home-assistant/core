@@ -55,6 +55,62 @@ async def test_import(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("status_code", "abort_reason"),
+    [
+        (401, "auth_error"),
+        (404, "not_found"),
+        (500, "unknown_error"),
+    ],
+)
+async def test_import_client_response_fails(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_incomfort: MagicMock,
+    status_code: str,
+    abort_reason: str,
+) -> None:
+    """Test we get the form."""
+    # pylint: disable-next=import-outside-toplevel
+    from incomfortclient import IncomfortError
+
+    mock_incomfort().heaters.side_effect = IncomfortError(
+        ClientResponseError(None, None, status=status_code)
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=MOCK_CONFIG
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == abort_reason
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
+@pytest.mark.parametrize(
+    ("exc", "abort_reason"),
+    [
+        (TimeoutError, "timeout_error"),
+        (ValueError("some value error"), "unknown_error"),
+    ],
+)
+async def test_import_data_fails(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_incomfort: MagicMock,
+    exc: Exception,
+    abort_reason: str,
+) -> None:
+    """Test we get the form."""
+    mock_incomfort().heaters.side_effect = exc
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=MOCK_CONFIG
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == abort_reason
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
 async def test_entry_already_configured(hass: HomeAssistant) -> None:
     """Test aborting if the entry is already configured."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
