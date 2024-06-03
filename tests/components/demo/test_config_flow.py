@@ -1,6 +1,6 @@
 """Test the Demo config flow."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
