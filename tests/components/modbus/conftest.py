@@ -117,7 +117,12 @@ def mock_pymodbus_fixture(do_exception, register_words):
 
 @pytest.fixture(name="mock_modbus")
 async def mock_modbus_fixture(
-    hass, caplog, check_config_loaded, config_addon, do_config, mock_pymodbus
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    check_config_loaded,
+    config_addon,
+    do_config,
+    mock_pymodbus,
 ):
     """Load integration modbus using mocked pymodbus."""
     conf = copy.deepcopy(do_config)
@@ -192,6 +197,6 @@ async def mock_modbus_ha_fixture(hass, mock_modbus):
 
 
 @pytest.fixture(name="caplog_setup_text")
-async def caplog_setup_text_fixture(caplog):
+async def caplog_setup_text_fixture(caplog: pytest.LogCaptureFixture) -> str:
     """Return setup log of integration."""
     return caplog.text

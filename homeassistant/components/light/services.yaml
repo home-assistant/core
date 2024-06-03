@@ -23,6 +23,7 @@ turn_on:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
+      example: "[255, 100, 100]"
       selector:
         color_rgb:
     rgbw_color:
@@ -250,6 +251,7 @@ turn_on:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
+      advanced: true
       selector:
         color_temp:
           unit: "mired"
@@ -265,7 +267,6 @@ turn_on:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
-      advanced: true
       selector:
         color_temp:
           unit: "kelvin"
@@ -419,10 +420,35 @@ toggle:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
-      advanced: true
       example: "[255, 100, 100]"
       selector:
         color_rgb:
+    rgbw_color:
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
+      advanced: true
+      example: "[255, 100, 100, 50]"
+      selector:
+        object:
+    rgbww_color:
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
+      advanced: true
+      example: "[255, 100, 100, 50, 70]"
+      selector:
+        object:
     color_name:
       filter:
         attribute:
@@ -625,6 +651,9 @@ toggle:
       advanced: true
       selector:
         color_temp:
+          unit: "mired"
+          min: 153
+          max: 500
     kelvin:
       filter:
         attribute:
@@ -635,7 +664,6 @@ toggle:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
-      advanced: true
       selector:
         color_temp:
           unit: "kelvin"
