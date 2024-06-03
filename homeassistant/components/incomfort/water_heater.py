@@ -6,11 +6,9 @@ import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
+from incomfortclient import Gateway as InComfortGateway, Heater as InComfortHeater
 
-from homeassistant.components.water_heater import (
-    DOMAIN as WATER_HEATER_DOMAIN,
-    WaterHeaterEntity,
-)
+from homeassistant.components.water_heater import WaterHeaterEntity
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -43,16 +41,20 @@ async def async_setup_platform(
 class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
     """Representation of an InComfort/Intouch water_heater device."""
 
-    def __init__(self, client, heater) -> None:
+    _attr_min_temp = 30.0
+    _attr_max_temp = 80.0
+    _attr_name = "Boiler"
+    _attr_should_poll = True
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+
+    def __init__(self, client: InComfortGateway, heater: InComfortHeater) -> None:
         """Initialize the water_heater device."""
         super().__init__()
 
-        self._unique_id = f"{heater.serial_no}"
-        self.entity_id = f"{WATER_HEATER_DOMAIN}.{DOMAIN}"
-        self._name = "Boiler"
-
         self._client = client
         self._heater = heater
+
+        self._attr_unique_id = heater.serial_no
 
     @property
     def icon(self) -> str:
@@ -72,21 +74,6 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
         if self._heater.is_pumping:
             return self._heater.heater_temp
         return max(self._heater.heater_temp, self._heater.tap_temp)
-
-    @property
-    def min_temp(self) -> float:
-        """Return min valid temperature that can be set."""
-        return 30.0
-
-    @property
-    def max_temp(self) -> float:
-        """Return max valid temperature that can be set."""
-        return 80.0
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return UnitOfTemperature.CELSIUS
 
     @property
     def current_operation(self) -> str:
