@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 import re
 import tempfile
 from unittest.mock import patch
@@ -281,6 +282,9 @@ async def matrix_bot(
     assert await async_setup_component(hass, MATRIX_DOMAIN, MOCK_CONFIG_DATA)
     assert await async_setup_component(hass, NOTIFY_DOMAIN, MOCK_CONFIG_DATA)
     await hass.async_block_till_done()
+
+    # Accessing hass.data in tests is not desirable, but all the tests here
+    # currently do this.
     assert isinstance(matrix_bot := hass.data[MATRIX_DOMAIN], MatrixBot)
 
     await hass.async_start()
@@ -301,7 +305,7 @@ def command_events(hass: HomeAssistant):
 
 
 @pytest.fixture
-def image_path(tmp_path):
+def image_path(tmp_path: Path):
     """Provide the Path to a mock image."""
     image = Image.new("RGBA", size=(50, 50), color=(256, 0, 0))
     image_file = tempfile.NamedTemporaryFile(dir=tmp_path)

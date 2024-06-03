@@ -1,5 +1,6 @@
 """Session fixtures."""
 
+from collections.abc import Generator
 from unittest import mock
 
 import pytest
@@ -44,7 +45,7 @@ class MockBleakClientBattery5(MockBleakClient):
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth):
+def mock_bluetooth(enable_bluetooth: None) -> Generator[None, None, None]:
     """Auto mock bluetooth."""
 
     with mock.patch("xiaomi_ble.parser.BleakClient", MockBleakClientBattery5):

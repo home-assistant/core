@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock
 
 from homeassistant.components.plugwise.const import DOMAIN
-from homeassistant.components.plugwise.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.entity_registry import async_get
@@ -58,7 +58,7 @@ async def test_unique_id_migration_humidity(
     entity_registry = async_get(hass)
     # Entry to migrate
     entity_registry.async_get_or_create(
-        SENSOR_DOMAIN,
+        Platform.SENSOR,
         DOMAIN,
         "f61f1a2535f54f52ad006a3d18e459ca-relative_humidity",
         config_entry=mock_config_entry,
@@ -67,7 +67,7 @@ async def test_unique_id_migration_humidity(
     )
     # Entry not needing migration
     entity_registry.async_get_or_create(
-        SENSOR_DOMAIN,
+        Platform.SENSOR,
         DOMAIN,
         "f61f1a2535f54f52ad006a3d18e459ca-battery",
         config_entry=mock_config_entry,

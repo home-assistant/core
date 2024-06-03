@@ -32,11 +32,12 @@ from .conftest import (
 
 
 async def test_split_foundation_preset(
-    hass: HomeAssistant, mock_asyncsleepiq: MagicMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_asyncsleepiq: MagicMock,
 ) -> None:
     """Test the SleepIQ select entity for split foundation presets."""
     entry = await setup_platform(hass, DOMAIN)
-    entity_registry = er.async_get(hass)
 
     state = hass.states.get(
         f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset_right"
@@ -88,11 +89,12 @@ async def test_split_foundation_preset(
 
 
 async def test_single_foundation_preset(
-    hass: HomeAssistant, mock_asyncsleepiq_single_foundation: MagicMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_asyncsleepiq_single_foundation: MagicMock,
 ) -> None:
     """Test the SleepIQ select entity for single foundation presets."""
     entry = await setup_platform(hass, DOMAIN)
-    entity_registry = er.async_get(hass)
 
     state = hass.states.get(f"select.sleepnumber_{BED_NAME_LOWER}_foundation_preset")
     assert state.state == PRESET_R_STATE
@@ -127,10 +129,13 @@ async def test_single_foundation_preset(
     ].set_preset.assert_called_with("Zero G")
 
 
-async def test_foot_warmer(hass: HomeAssistant, mock_asyncsleepiq: MagicMock) -> None:
+async def test_foot_warmer(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_asyncsleepiq: MagicMock,
+) -> None:
     """Test the SleepIQ select entity for foot warmers."""
     entry = await setup_platform(hass, DOMAIN)
-    entity_registry = er.async_get(hass)
 
     state = hass.states.get(
         f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_foot_warmer"

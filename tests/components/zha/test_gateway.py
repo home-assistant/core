@@ -60,8 +60,7 @@ def required_platform_only():
 async def zha_dev_basic(hass, zha_device_restored, zigpy_dev_basic):
     """ZHA device with just a basic cluster."""
 
-    zha_device = await zha_device_restored(zigpy_dev_basic)
-    return zha_device
+    return await zha_device_restored(zigpy_dev_basic)
 
 
 @pytest.fixture

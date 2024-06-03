@@ -6,6 +6,7 @@ from collections.abc import Callable
 from contextlib import suppress
 import dataclasses
 from datetime import timedelta
+from functools import cached_property
 import logging
 from math import ceil, floor
 from typing import TYPE_CHECKING, Any, Self, final
@@ -14,8 +15,13 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
-from homeassistant.core import HomeAssistant, ServiceCall, async_get_hass, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    async_get_hass_or_none,
+    callback,
+)
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -43,11 +49,6 @@ from .const import (  # noqa: F401
     NumberMode,
 )
 from .websocket_api import async_setup as async_setup_ws_api
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -217,10 +218,9 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 "value",
             )
         ):
-            hass: HomeAssistant | None = None
-            with suppress(HomeAssistantError):
-                hass = async_get_hass()
-            report_issue = async_suggest_report_issue(hass, module=cls.__module__)
+            report_issue = async_suggest_report_issue(
+                async_get_hass_or_none(), module=cls.__module__
+            )
             _LOGGER.warning(
                 (
                     "%s::%s is overriding deprecated methods on an instance of "

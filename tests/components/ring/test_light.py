@@ -18,17 +18,18 @@ from tests.common import load_fixture
 
 
 async def test_entity_registry(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    requests_mock: requests_mock.Mocker,
 ) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, Platform.LIGHT)
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get("light.front_light")
-    assert entry.unique_id == 765432
+    assert entry.unique_id == "765432"
 
     entry = entity_registry.async_get("light.internal_light")
-    assert entry.unique_id == 345678
+    assert entry.unique_id == "345678"
 
 
 async def test_light_off_reports_correctly(

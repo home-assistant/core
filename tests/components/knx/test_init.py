@@ -11,7 +11,6 @@ from xknx.io import (
     SecureConfig,
 )
 
-from homeassistant import config_entries
 from homeassistant.components.knx.config_flow import DEFAULT_ROUTING_IA
 from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
@@ -40,6 +39,7 @@ from homeassistant.components.knx.const import (
     DOMAIN as KNX_DOMAIN,
     KNXConfigEntryData,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -287,4 +287,4 @@ async def test_async_remove_entry(
     await hass.async_block_till_done()
 
     assert hass.config_entries.async_entries() == []
-    assert config_entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED

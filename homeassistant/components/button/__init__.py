@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from datetime import timedelta
 from enum import StrEnum
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, final
+from typing import final
 
 import voluptuous as vol
 
@@ -23,11 +24,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, SERVICE_PRESS
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 SCAN_INTERVAL = timedelta(seconds=30)
 

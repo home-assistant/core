@@ -55,7 +55,7 @@ async def test_full_flow(
         },
     )
 
-    scope = "+".join(["Xboxlive.signin", "Xboxlive.offline_access"])
+    scope = "Xboxlive.signin+Xboxlive.offline_access"
 
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"

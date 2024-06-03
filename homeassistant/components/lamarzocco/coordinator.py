@@ -97,8 +97,12 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
         _LOGGER.debug("Current status: %s", str(self.device.config))
 
-    async def _async_handle_request(
-        self, func: Callable[[], Coroutine[None, None, None]]
+
+    async def _async_handle_request[**_P](
+        self,
+        func: Callable[_P, Coroutine[None, None, None]],
+        *args: _P.args,
+        **kwargs: _P.kwargs,
     ) -> None:
         try:
             await func()
@@ -108,4 +112,4 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             raise ConfigEntryAuthFailed(msg) from ex
         except RequestNotSuccessful as ex:
             _LOGGER.debug(ex, exc_info=True)
-            raise UpdateFailed("Querying API failed. Error: %s" % ex) from ex
+            raise UpdateFailed(f"Querying API failed. Error: {ex}") from ex

@@ -21,7 +21,9 @@ class ListAddItemIntent(intent.IntentHandler):
     """Handle ListAddItem intents."""
 
     intent_type = INTENT_LIST_ADD_ITEM
+    description = "Add item to a todo list"
     slot_schema = {"item": cv.string, "name": cv.string}
+    platforms = {DOMAIN}
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""

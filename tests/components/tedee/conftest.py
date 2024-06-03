@@ -11,10 +11,12 @@ from pytedee_async.lock import TedeeLock
 import pytest
 
 from homeassistant.components.tedee.const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
+
+WEBHOOK_ID = "bq33efxmdi3vxy55q2wbnudbra7iv8mjrq9x0gea33g4zqtd87093pwveg8xcb33"
 
 
 @pytest.fixture
@@ -26,8 +28,11 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_LOCAL_ACCESS_TOKEN: "api_token",
             CONF_HOST: "192.168.1.42",
+            CONF_WEBHOOK_ID: WEBHOOK_ID,
         },
         unique_id="0000-0000",
+        version=1,
+        minor_version=2,
     )
 
 
@@ -63,6 +68,8 @@ def mock_tedee(request) -> Generator[MagicMock, None, None]:
         tedee.get_local_bridge.return_value = TedeeBridge(0, "0000-0000", "Bridge-AB1C")
 
         tedee.parse_webhook_message.return_value = None
+        tedee.register_webhook.return_value = 1
+        tedee.delete_webhooks.return_value = None
 
         locks_json = json.loads(load_fixture("locks.json", DOMAIN))
 
@@ -78,7 +85,6 @@ async def init_integration(
 ) -> MockConfigEntry:
     """Set up the Tedee integration for testing."""
     mock_config_entry.add_to_hass(hass)
-
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 

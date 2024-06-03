@@ -47,9 +47,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def reolink_connect_class(
-    mock_get_source_ip: None,
-) -> Generator[MagicMock, None, None]:
+def reolink_connect_class() -> Generator[MagicMock, None, None]:
     """Mock reolink connection and return both the host_mock and host_mock_class."""
     with (
         patch(
@@ -112,7 +110,7 @@ def reolink_connect(
 
 
 @pytest.fixture
-def reolink_platforms(mock_get_source_ip: None) -> Generator[None, None, None]:
+def reolink_platforms() -> Generator[None, None, None]:
     """Mock reolink entry setup."""
     with patch("homeassistant.components.reolink.PLATFORMS", return_value=[]):
         yield

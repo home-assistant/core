@@ -397,7 +397,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> No
             None,
             None,
             TEST_HOST2,
-            [TEST_HOST, TEST_HOST2],
+            [TEST_HOST, TEST_HOST2, TEST_HOST2],
         ),
         (
             True,
@@ -452,7 +452,7 @@ async def test_dhcp_ip_update(
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     if not last_update_success:
         # ensure the last_update_succes is False for the device_coordinator.

@@ -44,7 +44,7 @@ def options_fixture(hass):
     }
 
 
-@pytest.fixture(name="data", scope="session")
+@pytest.fixture(name="data", scope="package")
 def data_fixture():
     """Define a fixture for response data."""
     return json.loads(load_fixture("response.json", "airnow"))

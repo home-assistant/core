@@ -33,7 +33,7 @@ async def test_calendar_events(
 ) -> None:
     """Test the calendar."""
 
-    test_time = datetime(2024, 1, 12, 11, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+    test_time = datetime(2024, 1, 12, 11, tzinfo=dt_util.get_default_time_zone())
     freezer.move_to(test_time)
 
     await async_init_integration(hass, mock_config_entry)
@@ -96,8 +96,8 @@ async def test_calendar_edge_cases(
     end_date: datetime,
 ) -> None:
     """Test edge cases."""
-    start_date = start_date.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
-    end_date = end_date.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
+    start_date = start_date.replace(tzinfo=dt_util.get_default_time_zone())
+    end_date = end_date.replace(tzinfo=dt_util.get_default_time_zone())
 
     await async_init_integration(hass, mock_config_entry)
 
@@ -128,7 +128,7 @@ async def test_no_calendar_events_global_disable(
     wake_up_sleep_entry_id = WAKE_UP_SLEEP_ENTRY_IDS[0]
 
     mock_lamarzocco.config.wake_up_sleep_entries[wake_up_sleep_entry_id].enabled = False
-    test_time = datetime(2024, 1, 12, 11, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+    test_time = datetime(2024, 1, 12, 11, tzinfo=dt_util.get_default_time_zone())
     freezer.move_to(test_time)
 
     await async_init_integration(hass, mock_config_entry)

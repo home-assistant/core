@@ -1,34 +1,34 @@
 """Test Hydrawise binary_sensor."""
 
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.hydrawise.const import SCAN_INTERVAL
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-async def test_states(
+async def test_all_binary_sensors(
     hass: HomeAssistant,
-    mock_added_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
+    mock_add_config_entry: Callable[[], Awaitable[MockConfigEntry]],
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test binary_sensor states."""
-    connectivity = hass.states.get("binary_sensor.home_controller_connectivity")
-    assert connectivity is not None
-    assert connectivity.state == "on"
-
-    watering1 = hass.states.get("binary_sensor.zone_one_watering")
-    assert watering1 is not None
-    assert watering1.state == "off"
-
-    watering2 = hass.states.get("binary_sensor.zone_two_watering")
-    assert watering2 is not None
-    assert watering2.state == "on"
+    """Test that all binary sensors are working."""
+    with patch(
+        "homeassistant.components.hydrawise.PLATFORMS",
+        [Platform.BINARY_SENSOR],
+    ):
+        config_entry = await mock_add_config_entry()
+        await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_update_data_fails(

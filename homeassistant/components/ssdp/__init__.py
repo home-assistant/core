@@ -126,7 +126,7 @@ class SsdpServiceInfo(BaseServiceInfo):
 
 
 SsdpChange = Enum("SsdpChange", "ALIVE BYEBYE UPDATE")
-SsdpHassJobCallback = HassJob[
+type SsdpHassJobCallback = HassJob[
     [SsdpServiceInfo, SsdpChange], Coroutine[Any, Any, None] | None
 ]
 
@@ -148,7 +148,7 @@ def _format_err(name: str, *args: Any) -> str:
 async def async_register_callback(
     hass: HomeAssistant,
     callback: Callable[[SsdpServiceInfo, SsdpChange], Coroutine[Any, Any, None] | None],
-    match_dict: None | dict[str, str] = None,
+    match_dict: dict[str, str] | None = None,
 ) -> Callable[[], None]:
     """Register to receive a callback on ssdp broadcast.
 
@@ -234,7 +234,7 @@ def _async_process_callbacks(
             hass.async_run_hass_job(
                 callback, discovery_info, ssdp_change, background=True
             )
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Failed to callback info: %s", discovery_info)
 
 
@@ -317,7 +317,7 @@ class Scanner:
         return list(self._device_tracker.devices.values())
 
     async def async_register_callback(
-        self, callback: SsdpHassJobCallback, match_dict: None | dict[str, str] = None
+        self, callback: SsdpHassJobCallback, match_dict: dict[str, str] | None = None
     ) -> Callable[[], None]:
         """Register a callback."""
         if match_dict is None:
@@ -392,9 +392,7 @@ class Scanner:
 
         await self._async_start_ssdp_listeners()
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self.async_stop, run_immediately=True
-        )
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         self._cancel_scan = async_track_time_interval(
             self.hass, self.async_scan, SCAN_INTERVAL, name="SSDP scanner"
         )
@@ -755,13 +753,10 @@ class Server:
     async def async_start(self) -> None:
         """Start the server."""
         bus = self.hass.bus
-        bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self.async_stop, run_immediately=True
-        )
+        bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED,
             self._async_start_upnp_servers,
-            run_immediately=True,
         )
 
     async def _async_get_instance_udn(self) -> str:

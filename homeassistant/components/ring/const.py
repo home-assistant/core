@@ -28,10 +28,4 @@ PLATFORMS = [
 SCAN_INTERVAL = timedelta(minutes=1)
 NOTIFICATIONS_SCAN_INTERVAL = timedelta(seconds=5)
 
-RING_API = "api"
-RING_DEVICES = "devices"
-
-RING_DEVICES_COORDINATOR = "device_data"
-RING_NOTIFICATIONS_COORDINATOR = "dings_data"
-
 CONF_2FA = "2fa"

@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_HOUSE_NUMBER_SUFFIX, default=""): cv.string,
         vol.Optional(CONF_NAME, default="Rova"): cv.string,
         vol.Optional(CONF_MONITORED_CONDITIONS, default=["bio"]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+            cv.ensure_list, [vol.In(["bio", "paper", "plastic", "residual"])]
         ),
     }
 )

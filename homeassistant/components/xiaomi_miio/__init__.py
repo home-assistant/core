@@ -248,7 +248,7 @@ def _async_update_data_vacuum(
 
         fan_speeds = device.fan_speed_presets()
 
-        data = VacuumCoordinatorData(
+        return VacuumCoordinatorData(
             device.status(),
             device.dnd_status(),
             device.last_clean_details(),
@@ -258,8 +258,6 @@ def _async_update_data_vacuum(
             fan_speeds,
             {v: k for k, v in fan_speeds.items()},
         )
-
-        return data
 
     async def update_async() -> VacuumCoordinatorData:
         """Fetch data from the device using async_add_executor_job."""
@@ -301,6 +299,7 @@ async def async_create_miio_device_and_coordinator(
 
     # List of models requiring specific lazy_discover setting
     LAZY_DISCOVER_FOR_MODEL = {
+        "zhimi.fan.za3": True,
         "zhimi.fan.za5": True,
         "zhimi.airpurifier.za1": True,
     }

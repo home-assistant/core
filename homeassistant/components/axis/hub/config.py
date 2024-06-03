@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_PROTOCOL,
     CONF_TRIGGER_TIME,
     CONF_USERNAME,
 )
@@ -31,6 +32,7 @@ class AxisConfig:
 
     entry: ConfigEntry
 
+    protocol: str
     host: str
     port: int
     username: str
@@ -54,6 +56,7 @@ class AxisConfig:
         options = config_entry.options
         return cls(
             entry=config_entry,
+            protocol=config.get(CONF_PROTOCOL, "http"),
             host=config[CONF_HOST],
             username=config[CONF_USERNAME],
             password=config[CONF_PASSWORD],

@@ -274,15 +274,9 @@ async def test_cleanup_device_tracker(
 
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(MQTT_DOMAIN)[0]
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mqtt_config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
+    response = await ws_client.remove_device(
+        device_entry.id, mqtt_config_entry.entry_id
     )
-    response = await ws_client.receive_json()
     assert response["success"]
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -300,7 +294,7 @@ async def test_cleanup_device_tracker(
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/device_tracker/bla/config", "", 0, True
+        "homeassistant/device_tracker/bla/config", None, 0, True
     )
 
 
@@ -328,6 +322,11 @@ async def test_setting_device_tracker_value_via_mqtt_message(
     assert state.state == STATE_HOME
 
     async_fire_mqtt_message(hass, "test-topic", "not_home")
+    state = hass.states.get("device_tracker.test")
+    assert state.state == STATE_NOT_HOME
+
+    # Test an empty value is ignored and the state is retained
+    async_fire_mqtt_message(hass, "test-topic", "")
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_NOT_HOME
 

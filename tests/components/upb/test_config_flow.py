@@ -34,11 +34,10 @@ async def valid_tcp_flow(hass, sync_complete=True, config_ok=True):
         flow = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        result = await hass.config_entries.flow.async_configure(
+        return await hass.config_entries.flow.async_configure(
             flow["flow_id"],
             {"protocol": "TCP", "address": "1.2.3.4", "file_path": "upb.upe"},
         )
-    return result
 
 
 async def test_full_upb_flow_with_serial_port(hass: HomeAssistant) -> None:

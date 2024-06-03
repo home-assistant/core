@@ -91,7 +91,7 @@ class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):  # pylin
         return ToloSaunaData(status, settings)
 
 
-class ToloSaunaCoordinatorEntity(CoordinatorEntity[ToloSaunaUpdateCoordinator]):  # pylint: disable=hass-enforce-coordinator-module
+class ToloSaunaCoordinatorEntity(CoordinatorEntity[ToloSaunaUpdateCoordinator]):
     """CoordinatorEntity for TOLO Sauna."""
 
     _attr_has_entity_name = True

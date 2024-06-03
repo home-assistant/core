@@ -86,9 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _async_stop_homekit_controller, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_homekit_controller)
 
     return True
 

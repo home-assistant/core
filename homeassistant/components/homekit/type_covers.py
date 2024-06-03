@@ -34,11 +34,14 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.core import Event, State, callback
-from homeassistant.helpers.event import (
+from homeassistant.core import (
+    Event,
     EventStateChangedData,
-    async_track_state_change_event,
+    HassJobType,
+    State,
+    callback,
 )
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -139,6 +142,7 @@ class GarageDoorOpener(HomeAccessory):
                     self.hass,
                     [self.linked_obstruction_sensor],
                     self._async_update_obstruction_event,
+                    job_type=HassJobType.Callback,
                 )
             )
 

@@ -27,7 +27,7 @@ async def test_successful_config_entry(hass: HomeAssistant) -> None:
 
     await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_entry_deprecated_version(
@@ -38,14 +38,15 @@ async def test_entry_deprecated_version(
     entry.add_to_hass(hass)
 
     mock_api.return_value.get_ha_sensor_data.side_effect = [
-        GlancesApiNoDataAvailable("endpoint: 'all' is not valid"),
-        HA_SENSOR_DATA,
+        GlancesApiNoDataAvailable("endpoint: 'all' is not valid"),  # fail v4
+        GlancesApiNoDataAvailable("endpoint: 'all' is not valid"),  # fail v3
+        HA_SENSOR_DATA,  # success v2
         HA_SENSOR_DATA,
     ]
 
     await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_version")
     assert issue is not None

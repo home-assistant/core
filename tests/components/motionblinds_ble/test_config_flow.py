@@ -1,4 +1,4 @@
-"""Test the MotionBlinds BLE config flow."""
+"""Test the Motionblinds Bluetooth config flow."""
 
 from unittest.mock import patch
 
@@ -39,6 +39,7 @@ BLIND_SERVICE_INFO = BluetoothServiceInfoBleak(
     ),
     connectable=True,
     time=0,
+    tx_power=-127,
 )
 
 

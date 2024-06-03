@@ -15,4 +15,4 @@ async def setup_platform(hass, platform):
     )
     with patch("homeassistant.components.ring.PLATFORMS", [platform]):
         assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)

@@ -121,7 +121,7 @@ async def test_flow_entry_already_configured(
 ) -> None:
     """Test user input for config_entry that already exists."""
     # Verify mock config setup from fixture
-    assert init_integration.state == ConfigEntryState.LOADED
+    assert init_integration.state is ConfigEntryState.LOADED
     assert init_integration.data[CONF_ID] == ACCNT_ID
     assert init_integration.unique_id == ACCNT_ID
 
@@ -144,7 +144,7 @@ async def test_flow_multiple_configs(
 ) -> None:
     """Test multiple config entries."""
     # Verify mock config setup from fixture
-    assert init_integration.state == ConfigEntryState.LOADED
+    assert init_integration.state is ConfigEntryState.LOADED
     assert init_integration.data[CONF_ID] == ACCNT_ID
     assert init_integration.unique_id == ACCNT_ID
 

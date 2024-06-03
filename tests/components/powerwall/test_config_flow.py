@@ -13,6 +13,7 @@ from tesla_powerwall import (
 from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.powerwall.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -524,7 +525,7 @@ async def test_dhcp_discovery_updates_unique_id_when_entry_is_failed(
         unique_id="1.2.3.4",
     )
     entry.add_to_hass(hass)
-    entry.mock_state(hass, config_entries.ConfigEntryState.SETUP_ERROR)
+    entry.mock_state(hass, ConfigEntryState.SETUP_ERROR)
     mock_powerwall = await _mock_powerwall_site_name(hass, "Some site")
 
     with (

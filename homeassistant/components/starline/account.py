@@ -74,7 +74,7 @@ class StarlineAccount:
                     DATA_USER_ID: user_id,
                 },
             )
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             _LOGGER.error("Error updating SLNet token: %s", err)
 
     def _update_data(self):

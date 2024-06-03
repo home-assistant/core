@@ -23,8 +23,9 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin,
 )
 
-from . import AbodeDevice, AbodeSystem
+from . import AbodeSystem
 from .const import DOMAIN
+from .entity import AbodeDevice
 
 
 async def async_setup_entry(

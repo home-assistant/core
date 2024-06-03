@@ -641,12 +641,12 @@ async def test_statistic_during_period_hole(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test statistic_during_period when there are holes in the data."""
-    id = 1
+    stat_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal stat_id
+        stat_id += 1
+        return stat_id
 
     now = dt_util.utcnow()
 
@@ -1119,7 +1119,7 @@ async def test_statistics_during_period_in_the_past(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test statistics_during_period in the past."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     now = dt_util.utcnow().replace()
 
     hass.config.units = US_CUSTOMARY_SYSTEM
