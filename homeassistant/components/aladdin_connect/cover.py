@@ -6,7 +6,11 @@ from typing import Any
 from genie_partner_sdk.client import AladdinConnectClient
 from genie_partner_sdk.model import GarageDoor
 
-from homeassistant.components.cover import CoverDeviceClass, CoverEntity
+from homeassistant.components.cover import (
+    CoverDeviceClass,
+    CoverEntity,
+    CoverEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -15,7 +19,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import api
-from .const import DOMAIN, SUPPORTED_FEATURES
+from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=15)
 
@@ -75,7 +79,7 @@ class AladdinDevice(CoverEntity):
     """Representation of Aladdin Connect cover."""
 
     _attr_device_class = CoverDeviceClass.GARAGE
-    _attr_supported_features = SUPPORTED_FEATURES
+    _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
     _attr_has_entity_name = True
     _attr_name = None
 
