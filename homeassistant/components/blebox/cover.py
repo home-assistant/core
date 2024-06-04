@@ -149,21 +149,12 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Fully open the cover tilt."""
-        # note: dedicated API coming in blebox_uniapi>=2.3.0
-        if hasattr(self._feature, "async_open_tilt"):
-            await self._feature.async_open_tilt()
-        else:
-            # note: values are reversed
-            await self._feature.async_set_tilt_position(0)
+        await self._feature.async_set_tilt_position(0)
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Fully close the cover tilt."""
-        # note: dedicated API coming in blebox_uniapi>=2.3.0
-        if hasattr(self._feature, "async_close_tilt"):
-            await self._feature.async_close_tilt()
-        else:
-            # note: values are reversed
-            await self._feature.async_set_tilt_position(100)
+        # note: values are reversed
+        await self._feature.async_set_tilt_position(100)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover position."""
