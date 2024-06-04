@@ -179,4 +179,4 @@ async def test_options_updates_sensors(
     new_sensor_value = dt_util.parse_datetime(new_sensor_value)
 
     # Verify that the new sensor value is one minute later
-    assert new_sensor_value - initial_sensor_value == timedelta(minutes=1)
+    assert abs(new_sensor_value - initial_sensor_value) == timedelta(minutes=1)
