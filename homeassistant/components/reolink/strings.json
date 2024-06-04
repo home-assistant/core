@@ -383,8 +383,8 @@
           "pantiltfirst": "Pan/tilt first"
         }
       },
-      "status_led": {
-        "name": "Status LED",
+      "doorbell_led": {
+        "name": "Doorbell LED",
         "state": {
           "stayoff": "Stay off",
           "auto": "Auto",
