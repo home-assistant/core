@@ -83,11 +83,11 @@ async def test_restart_device_button(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
-    setup_config_entry,
+    config_entry_setup,
     websocket_mock,
 ) -> None:
     """Test restarting device button."""
-    config_entry = setup_config_entry
+    config_entry = config_entry_setup
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 1
 
     ent_reg_entry = entity_registry.async_get("button.switch_restart")
@@ -169,11 +169,11 @@ async def test_power_cycle_poe(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
-    setup_config_entry,
+    config_entry_setup,
     websocket_mock,
 ) -> None:
     """Test restarting device button."""
-    config_entry = setup_config_entry
+    config_entry = config_entry_setup
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 2
 
     ent_reg_entry = entity_registry.async_get("button.switch_port_1_power_cycle")
@@ -225,11 +225,11 @@ async def test_wlan_regenerate_password(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
-    setup_config_entry,
+    config_entry_setup,
     websocket_mock,
 ) -> None:
     """Test WLAN regenerate password button."""
-    config_entry = setup_config_entry
+    config_entry = config_entry_setup
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 0
 
     button_regenerate_password = "button.ssid_1_regenerate_password"

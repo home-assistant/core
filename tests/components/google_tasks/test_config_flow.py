@@ -19,6 +19,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -41,11 +42,11 @@ def setup_userinfo(user_identifier: str) -> Generator[Mock, None, None]:
         yield mock
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
-    hass_client_no_auth,
+    hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host,
     setup_credentials,
     setup_userinfo,
 ) -> None:
@@ -96,11 +97,11 @@ async def test_full_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_api_not_enabled(
     hass: HomeAssistant,
-    hass_client_no_auth,
+    hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host,
     setup_credentials,
     setup_userinfo,
 ) -> None:
@@ -157,11 +158,11 @@ async def test_api_not_enabled(
     )
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_general_exception(
     hass: HomeAssistant,
-    hass_client_no_auth,
+    hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host,
     setup_credentials,
     setup_userinfo,
 ) -> None:
@@ -234,11 +235,11 @@ async def test_general_exception(
         ),
     ],
 )
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth(
     hass: HomeAssistant,
-    hass_client_no_auth,
+    hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host,
     setup_credentials,
     setup_userinfo,
     user_identifier: str,

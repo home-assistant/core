@@ -405,7 +405,9 @@ async def test_disconnected(
 @pytest.mark.parametrize(
     ("error_code", "swallow"), [(ERROR_REQUEST_RETRY, True), (1234, False)]
 )
-async def test_error_swallowing(hass, caplog, service, error_code, swallow):
+async def test_error_swallowing(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, service, error_code, swallow
+) -> None:
     """Test swallowing specific errors on turn_on and turn_off."""
     mocked_device = _create_mocked_device()
     entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)

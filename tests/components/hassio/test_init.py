@@ -52,7 +52,7 @@ def os_info(extra_os_info):
 
 
 @pytest.fixture(autouse=True)
-def mock_all(aioclient_mock, request, os_info):
+def mock_all(aioclient_mock: AiohttpClientMocker, os_info) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
@@ -999,10 +999,10 @@ async def test_coordinator_updates(
         assert "Error on Supervisor API: Unknown" in caplog.text
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_coordinator_updates_stats_entities_enabled(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test coordinator updates with stats entities enabled."""
     await async_setup_component(hass, "homeassistant", {})
