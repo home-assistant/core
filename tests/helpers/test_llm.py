@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 import voluptuous as vol
 
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -311,6 +312,7 @@ async def test_assist_api_prompt(
             }
         },
     )
+    async_expose_entity(hass, "conversation", "script.test_script", True)
 
     entry = MockConfigEntry(title=None)
     entry.add_to_hass(hass)
