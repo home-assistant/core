@@ -8,14 +8,11 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.util.json import json_loads
 
 from .const import DOMAIN
 from .coordinator import V2CUpdateCoordinator
 
-TO_REDACT = {
-    CONF_HOST,
-}
+TO_REDACT = {CONF_HOST, "title"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -33,6 +30,6 @@ async def async_get_config_entry_diagnostics(
     return {
         "config_entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "data": str(coordinator_data),
-        "raw_data": json_loads(evse_raw_data["content"]),  # type: ignore[arg-type]
+        "raw_data": evse_raw_data["content"].decode("utf-8"),  # type: ignore[attr-defined]
         "host_status": evse_raw_data["status_code"],
     }
