@@ -1,6 +1,6 @@
 """Test the Aladdin Connect Garage Door config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -15,6 +15,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
@@ -23,6 +24,12 @@ from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
+
+EXAMPLE_TOKEN = (
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYWFhYWFhYS1iYmJiLWNjY2MtZGRk"
+    "ZC1lZWVlZWVlZWVlZWUiLCJuYW1lIjoiSm9obiBEb2UiLCJpYXQiOjE1MTYyMzkwMjIsInVzZXJuYW"
+    "1lIjoidGVzdEB0ZXN0LmNvbSJ9.CTU1YItIrUl8nSM3koJxlFJr5CjLghgc9gS6h45D8dE"
+)
 
 
 @pytest.fixture
@@ -36,11 +43,13 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
-@pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+    setup_credentials: None,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -69,16 +78,18 @@ async def test_full_flow(
         OAUTH2_TOKEN,
         json={
             "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
+            "access_token": EXAMPLE_TOKEN,
             "type": "Bearer",
             "expires_in": 60,
         },
     )
 
-    with patch(
-        "homeassistant.components.aladdin_connect.async_setup_entry", return_value=True
-    ) as mock_setup:
-        await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test@test.com"
+    assert result["data"]["token"]["access_token"] == EXAMPLE_TOKEN
+    assert result["data"]["token"]["refresh_token"] == "mock-refresh-token"
+    assert result["result"].unique_id == "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
