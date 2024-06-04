@@ -591,11 +591,7 @@ omit =
     homeassistant/components/iglo/light.py
     homeassistant/components/ihc/*
     homeassistant/components/incomfort/__init__.py
-    homeassistant/components/incomfort/binary_sensor.py
     homeassistant/components/incomfort/climate.py
-    homeassistant/components/incomfort/errors.py
-    homeassistant/components/incomfort/models.py
-    homeassistant/components/incomfort/sensor.py
     homeassistant/components/incomfort/water_heater.py
     homeassistant/components/insteon/binary_sensor.py
     homeassistant/components/insteon/climate.py
