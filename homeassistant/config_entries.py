@@ -2077,7 +2077,13 @@ class ConfigEntries:
     async def async_late_forward_entry_setups(
         self, entry: ConfigEntry, platforms: Iterable[Platform | str]
     ) -> None:
-        """Forward the setup of an entry to platforms after setup."""
+        """Forward the setup of an entry to platforms after setup.
+
+        If platforms must be loaded late (after the config entry is setup),
+        use this method instead of async_forward_entry_setups as it holds
+        the setup lock until the platforms are loaded to ensure that the
+        config entry cannot be unloaded while platforms are loaded.
+        """
         async with entry.setup_lock:
             if entry.state is not ConfigEntryState.LOADED:
                 raise OperationNotAllowed(
