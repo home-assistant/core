@@ -458,13 +458,13 @@ async def test_bandwidth_sensors(
         (60, 64, 60),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_uptime_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
     mock_unifi_websocket,
-    entity_registry_enabled_by_default: None,
     initial_uptime,
     event_uptime,
     new_uptime,
@@ -545,11 +545,11 @@ async def test_uptime_sensors(
     assert hass.states.get("sensor.client1_uptime")
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_remove_sensors(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Verify removing of clients work as expected."""
     wired_client = {
