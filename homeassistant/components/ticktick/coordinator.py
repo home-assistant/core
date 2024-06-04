@@ -22,7 +22,7 @@ class TickTickDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(minutes=1),
+            update_interval=timedelta(minutes=15),
         )
         self.ticktick_client = ticktick_client
 

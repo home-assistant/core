@@ -8,8 +8,8 @@ import logging
 import random
 import re
 import secrets
+import zoneinfo
 
-import pytz
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -19,6 +19,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET, DOMAIN
+from .coordinator import TickTickDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.TODO]
 
@@ -135,43 +136,6 @@ class OAuth2:
         self.access_token_info = json.loads(access_token)
 
 
-def convert_local_time_to_utc(original_time, time_zone: str):
-    """Convert a local time to UTC using the provided time zone.
-
-    Arguments:
-        original_time (datetime): Datetime object
-        time_zone: Time zone of `original_time`
-
-    Returns:
-        datetime: Datetime object with the converted UTC time - with no timezone information attached.
-
-    ??? info "Import Help"
-        ```python
-        from ticktick.helpers.time_methods import convert_local_time_to_utc
-        ```
-
-    ??? Example
-        ```python
-        pst = datetime(2020, 12, 11, 23, 59)
-        converted = convert_local_time_to_utc(pst, 'US/Pacific')
-        ```
-
-        ??? success "Result"
-            A datetime object that is the UTC equivalent of the original date.
-
-            ```python
-            datetime(2020, 12, 12, 7, 59)
-            ```
-
-    """
-    utc = pytz.utc
-    time_zone = pytz.timezone(time_zone)
-    original_time = original_time.strftime(DATE_FORMAT)
-    time_object = datetime.datetime.strptime(original_time, DATE_FORMAT)
-    time_zone_dt = time_zone.localize(time_object)
-    return time_zone_dt.astimezone(utc).replace(tzinfo=None)
-
-
 def convert_date_to_tick_tick_format(datetime_obj, tz: str) -> str:
     """Convert a datetime object to TickTick date format.
 
@@ -210,10 +174,9 @@ def convert_date_to_tick_tick_format(datetime_obj, tz: str) -> str:
 
     """
     return (
-        convert_local_time_to_utc(datetime_obj, tz)
-        .replace(tzinfo=datetime.UTC)
-        .isoformat()
-        .replace(":", "", 1)[::-1]
+        datetime_obj.replace(tzinfo=zoneinfo.ZoneInfo(tz))
+        .astimezone(datetime.UTC)
+        .strftime("%Y-%m-%dT%H:%M:%S%z")
     )
 
 
@@ -1121,16 +1084,22 @@ class TaskManager:
             raise TypeError("End Must Be A Datetime Object")
         if end is not None and start > end:
             raise ValueError("Invalid Date Range: Start Date Occurs After End Date")
-        if tz not in pytz.all_timezones_set:
+        if tz not in zoneinfo.available_timezones():
             raise KeyError("Invalid Time Zone")
         if end is None:
-            start = datetime.datetime(start.year, start.month, start.day, 0, 0, 0)
-            end = datetime.datetime(start.year, start.month, start.day, 23, 59, 59)
+            start = datetime.datetime(
+                start.year, start.month, start.day, 0, 0, 0
+            ).astimezone(zoneinfo.ZoneInfo(tz))
+            end = datetime.datetime(
+                start.year, start.month, start.day, 23, 59, 59
+            ).astimezone(zoneinfo.ZoneInfo(tz))
         elif full is True and end is not None:
-            start = datetime.datetime(start.year, start.month, start.day, 0, 0, 0)
-            end = datetime.datetime(end.year, end.month, end.day, 23, 59, 59)
-        start = convert_local_time_to_utc(start, tz)
-        end = convert_local_time_to_utc(end, tz)
+            start = datetime.datetime(
+                start.year, start.month, start.day, 0, 0, 0
+            ).astimezone(zoneinfo.ZoneInfo(tz))
+            end = datetime.datetime(
+                end.year, end.month, end.day, 23, 59, 59
+            ).astimezone(zoneinfo.ZoneInfo(tz))
         parameters = {
             "from": start.strftime(DATE_FORMAT),
             "to": end.strftime(DATE_FORMAT),
@@ -3961,7 +3930,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # projects = ticktick_client.state["projects"]
         tasks = ticktick_client.task.get_from_project("5dad62dff0fe1fc4fbea252b")
         _LOGGER.debug("TickTick Tasks: %s", tasks)
-        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = ticktick_client
+        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = (
+            TickTickDataUpdateCoordinator(hass, ticktick_client)
+        )
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     except Exception as e:
