@@ -1,33 +1,25 @@
 """Tests for Intergas InComfort integration."""
 
 from datetime import timedelta
-from syrupy import SnapshotAssertion
 from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 from incomfortclient import IncomfortError
 import pytest
-from syrupy import SnapshotAssertion
 
-from homeassistant.components.incomfort import DOMAIN
 from homeassistant.components.incomfort.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
-
-from .conftest import MOCK_CONFIG
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_platforms(
     hass: HomeAssistant,
     mock_incomfort: MagicMock,
     entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
     mock_config_entry: ConfigEntry,
 ) -> None:
     """Test the incomfort integration is set up correctly."""
@@ -39,11 +31,10 @@ async def test_coordinator_updates(
     hass: HomeAssistant,
     mock_incomfort: MagicMock,
     freezer: FrozenDateTimeFactory,
+    mock_config_entry: ConfigEntry,
 ) -> None:
     """Test the incomfort coordinator is updating."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     state = hass.states.get("climate.thermostat_1")
     assert state is not None
     assert state.attributes["current_temperature"] == 21.4
@@ -54,7 +45,8 @@ async def test_coordinator_updates(
     assert state.state == "1.86"
     mock_incomfort().mock_heater_status["pressure"] = 1.84
 
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=UPDATE_INTERVAL))
+    freezer.move_to(utcnow() + timedelta(seconds=UPDATE_INTERVAL + 5))
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.thermostat_1")
@@ -80,11 +72,10 @@ async def test_coordinator_update_fails(
     mock_incomfort: MagicMock,
     freezer: FrozenDateTimeFactory,
     exc: Exception,
+    mock_config_entry: ConfigEntry,
 ) -> None:
     """Test the incomfort coordinator update fails."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     state = hass.states.get("sensor.boiler_cv_pressure")
     assert state is not None
     assert state.state == "1.86"
@@ -92,7 +83,8 @@ async def test_coordinator_update_fails(
     with patch.object(
         mock_incomfort().heaters.return_value[0], "update", side_effect=exc
     ):
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=UPDATE_INTERVAL))
+        freezer.move_to(utcnow() + timedelta(seconds=UPDATE_INTERVAL + 5))
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.boiler_cv_pressure")
