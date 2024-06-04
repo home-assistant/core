@@ -211,8 +211,6 @@ class EmonCmsSensor(SensorEntity):
                 template.timestamp_local(float(elem["time"]))
             )
 
-    def _update_value(self, elem: dict[str, Any]) -> None:
-        """Update sensor value."""
         self._attr_native_value = None
         if self._value_template is not None:
             self._attr_native_value = (
