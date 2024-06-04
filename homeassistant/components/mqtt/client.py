@@ -91,6 +91,8 @@ if TYPE_CHECKING:
     # because integrations should be able to optionally rely on MQTT.
     import paho.mqtt.client as mqtt
 
+    from .async_client import AsyncMQTTClient
+
 _LOGGER = logging.getLogger(__name__)
 
 MIN_BUFFER_SIZE = 131072  # Minimum buffer size to use if preferred size fails
@@ -281,6 +283,9 @@ class MqttClientSetup:
         # should be able to optionally rely on MQTT.
         import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
+        # pylint: disable-next=import-outside-toplevel
+        from .async_client import AsyncMQTTClient
+
         if (protocol := config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)) == PROTOCOL_31:
             proto = mqtt.MQTTv31
         elif protocol == PROTOCOL_5:
@@ -293,9 +298,10 @@ class MqttClientSetup:
             # However, that feature is not mandatory so we generate our own.
             client_id = mqtt.base62(uuid.uuid4().int, padding=22)
         transport = config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
-        self._client = mqtt.Client(
+        self._client = AsyncMQTTClient(
             client_id, protocol=proto, transport=transport, reconnect_on_failure=False
         )
+        self._client.async_setup()
 
         # Enable logging
         self._client.enable_logger()
@@ -329,7 +335,7 @@ class MqttClientSetup:
                 self._client.tls_insecure_set(tls_insecure)
 
     @property
-    def client(self) -> mqtt.Client:
+    def client(self) -> AsyncMQTTClient:
         """Return the paho MQTT client."""
         return self._client
 
@@ -434,7 +440,7 @@ class EnsureJobAfterCooldown:
 class MQTT:
     """Home Assistant MQTT client."""
 
-    _mqttc: mqtt.Client
+    _mqttc: AsyncMQTTClient
     _last_subscribe: float
     _mqtt_data: MqttData
 
@@ -533,7 +539,9 @@ class MQTT:
     async def async_init_client(self) -> None:
         """Initialize paho client."""
         with async_pause_setup(self.hass, SetupPhases.WAIT_IMPORT_PACKAGES):
-            await async_import_module(self.hass, "paho.mqtt.client")
+            await async_import_module(
+                self.hass, "homeassistant.components.mqtt.async_client"
+            )
 
         mqttc = MqttClientSetup(self.conf).client
         # on_socket_unregister_write and _async_on_socket_close
