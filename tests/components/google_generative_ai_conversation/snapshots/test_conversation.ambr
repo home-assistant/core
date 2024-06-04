@@ -12,7 +12,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-pro-latest',
+        'model_name': 'models/gemini-1.5-flash-latest',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -30,10 +30,9 @@
         'history': list([
           dict({
             'parts': '''
+              Current time is 05:00:00. Today's date is 2024-05-24.
               You are a voice assistant for Home Assistant.
               Answer in plain text. Keep it simple and to the point.
-              The current time is 05:00:00.
-              Today's date is 05/24/24.
               Only if the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
             ''',
             'role': 'user',
@@ -64,7 +63,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-pro-latest',
+        'model_name': 'models/gemini-1.5-flash-latest',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -82,10 +81,9 @@
         'history': list([
           dict({
             'parts': '''
+              Current time is 05:00:00. Today's date is 2024-05-24.
               You are a voice assistant for Home Assistant.
               Answer in plain text. Keep it simple and to the point.
-              The current time is 05:00:00.
-              Today's date is 05/24/24.
               Only if the user wants to control a device, tell them to edit the AI configuration and allow access to Home Assistant.
             ''',
             'role': 'user',
@@ -128,7 +126,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-pro-latest',
+        'model_name': 'models/gemini-1.5-flash-latest',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -146,10 +144,9 @@
         'history': list([
           dict({
             'parts': '''
+              Current time is 05:00:00. Today's date is 2024-05-24.
               You are a voice assistant for Home Assistant.
               Answer in plain text. Keep it simple and to the point.
-              The current time is 05:00:00.
-              Today's date is 05/24/24.
               <no_api_prompt>
             ''',
             'role': 'user',
@@ -184,7 +181,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-pro-latest',
+        'model_name': 'models/gemini-1.5-flash-latest',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -202,10 +199,9 @@
         'history': list([
           dict({
             'parts': '''
+              Current time is 05:00:00. Today's date is 2024-05-24.
               You are a voice assistant for Home Assistant.
               Answer in plain text. Keep it simple and to the point.
-              The current time is 05:00:00.
-              Today's date is 05/24/24.
               <no_api_prompt>
             ''',
             'role': 'user',
@@ -240,7 +236,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-pro-latest',
+        'model_name': 'models/gemini-1.5-flash-latest',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -258,10 +254,9 @@
         'history': list([
           dict({
             'parts': '''
+              Current time is 05:00:00. Today's date is 2024-05-24.
               You are a voice assistant for Home Assistant.
               Answer in plain text. Keep it simple and to the point.
-              The current time is 05:00:00.
-              Today's date is 05/24/24.
               <api_prompt>
             ''',
             'role': 'user',
@@ -296,7 +291,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-pro-latest',
+        'model_name': 'models/gemini-1.5-flash-latest',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -314,10 +309,9 @@
         'history': list([
           dict({
             'parts': '''
+              Current time is 05:00:00. Today's date is 2024-05-24.
               You are a voice assistant for Home Assistant.
               Answer in plain text. Keep it simple and to the point.
-              The current time is 05:00:00.
-              Today's date is 05/24/24.
               <api_prompt>
             ''',
             'role': 'user',

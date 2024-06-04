@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import requests_mock
 
 from homeassistant.components.plex.const import DOMAIN, PLEX_SERVER_CONFIG, SERVERS
 from homeassistant.const import CONF_URL
@@ -436,7 +437,7 @@ def mock_websocket():
 @pytest.fixture
 def mock_plex_calls(
     entry,
-    requests_mock,
+    requests_mock: requests_mock.Mocker,
     children_20,
     children_30,
     children_200,
@@ -550,7 +551,7 @@ def setup_plex_server(
     livetv_sessions,
     mock_websocket,
     mock_plex_calls,
-    requests_mock,
+    requests_mock: requests_mock.Mocker,
     empty_payload,
     session_default,
     session_live_tv,

@@ -74,7 +74,7 @@ def device_fixture() -> str:
 
 
 @pytest.fixture
-def mock_lametric(request, device_fixture: str) -> Generator[MagicMock, None, None]:
+def mock_lametric(device_fixture: str) -> Generator[MagicMock, None, None]:
     """Return a mocked LaMetric TIME client."""
     with (
         patch(

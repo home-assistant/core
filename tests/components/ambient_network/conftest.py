@@ -66,7 +66,7 @@ async def mock_aioambient(open_api: OpenAPI):
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(request) -> MockConfigEntry:
+def config_entry_fixture(request: pytest.FixtureRequest) -> MockConfigEntry:
     """Mock config entry."""
     return MockConfigEntry(
         domain=ambient_network.DOMAIN,

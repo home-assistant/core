@@ -68,6 +68,32 @@ def validate_dates(holiday_list: list[str]) -> list[str]:
     return calc_holidays
 
 
+def _get_obj_holidays(
+    country: str | None, province: str | None, year: int, language: str | None
+) -> HolidayBase:
+    """Get the object for the requested country and year."""
+    if not country:
+        return HolidayBase()
+
+    obj_holidays: HolidayBase = country_holidays(
+        country,
+        subdiv=province,
+        years=year,
+        language=language,
+    )
+    if (supported_languages := obj_holidays.supported_languages) and language == "en":
+        for lang in supported_languages:
+            if lang.startswith("en"):
+                obj_holidays = country_holidays(
+                    country,
+                    subdiv=province,
+                    years=year,
+                    language=lang,
+                )
+            LOGGER.debug("Changing language from %s to %s", language, lang)
+    return obj_holidays
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -83,29 +109,9 @@ async def async_setup_entry(
     language: str | None = entry.options.get(CONF_LANGUAGE)
 
     year: int = (dt_util.now() + timedelta(days=days_offset)).year
-
-    if country:
-        obj_holidays: HolidayBase = country_holidays(
-            country,
-            subdiv=province,
-            years=year,
-            language=language,
-        )
-        if (
-            supported_languages := obj_holidays.supported_languages
-        ) and language == "en":
-            for lang in supported_languages:
-                if lang.startswith("en"):
-                    obj_holidays = country_holidays(
-                        country,
-                        subdiv=province,
-                        years=year,
-                        language=lang,
-                    )
-                LOGGER.debug("Changing language from %s to %s", language, lang)
-    else:
-        obj_holidays = HolidayBase()
-
+    obj_holidays: HolidayBase = await hass.async_add_executor_job(
+        _get_obj_holidays, country, province, year, language
+    )
     calc_add_holidays: list[str] = validate_dates(add_holidays)
     calc_remove_holidays: list[str] = validate_dates(remove_holidays)
 
@@ -198,7 +204,6 @@ async def async_setup_entry(
                 entry.entry_id,
             )
         ],
-        True,
     )
 
 
