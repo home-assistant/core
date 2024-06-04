@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from genie_partner_sdk.client import AladdinConnectClient
+from genie_partner_sdk.model import GarageDoor
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -19,7 +20,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AladdinConnectConfigEntry, AladdinConnectCoordinator
 from .entity import AladdinConnectEntity
-from .model import GarageDoor
 
 
 @dataclass(frozen=True, kw_only=True)

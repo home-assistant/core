@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from genie_partner_sdk.model import GarageDoor
+
 from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
@@ -14,7 +16,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import AladdinConnectConfigEntry, AladdinConnectCoordinator
 from .const import DOMAIN
 from .entity import AladdinConnectEntity
-from .model import GarageDoor
 
 
 async def async_setup_entry(
