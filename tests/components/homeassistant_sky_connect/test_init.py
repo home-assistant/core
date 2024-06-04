@@ -6,9 +6,36 @@ from universal_silabs_flasher.const import ApplicationType
 
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
 from homeassistant.components.homeassistant_sky_connect.util import FirmwareGuess
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+
+async def test_remove_invalid_entry(hass: HomeAssistant) -> None:
+    """Test removing invalid entries."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "device": "/dev/serial/by-id/usb-ITEAD_SONOFF_Zigbee_3.0_USB_Dongle_Plus_V2_20230325081110-if00",
+            "vid": "1A86",
+            "pid": "55D4",
+            "serial_number": "20230325081110",
+            "manufacturer": "ITEAD",
+            "description": "SONOFF Zigbee 3.0 USB Dongle Plus V2",
+            "firmware": "cpc",
+            "product": "SONOFF Zigbee 3.0 USB Dongle Plus V2",
+        },
+    )
+
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    # The config entry was removed
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
 async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:

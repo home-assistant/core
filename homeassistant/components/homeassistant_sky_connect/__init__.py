@@ -7,13 +7,21 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .util import guess_firmware_type
+from .util import get_hardware_variant, guess_firmware_type
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Home Assistant SkyConnect config entry."""
+
+    # Invalid hardware variants somehow exist. They should be removed.
+    # Example: SONOFF Zigbee 3.0 USB Dongle Plus V2
+    try:
+        get_hardware_variant(entry)
+    except ValueError:
+        hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
+
     return True
 
 
