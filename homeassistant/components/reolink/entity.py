@@ -104,7 +104,7 @@ class ReolinkHostCoordinatorEntity(ReolinkBaseCoordinatorEntity[None]):
         await super().async_will_remove_from_hass()
 
     async def async_update(self) -> None:
-        """Update the entity from the generic entity update service."""
+        """Force full update from the generic entity update service."""
         self._host.last_wake = datetime(1970, 1, 1, tzinfo=DEFAULT_TIME_ZONE)
         await super().async_update()
 
