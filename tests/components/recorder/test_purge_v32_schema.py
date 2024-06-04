@@ -1,5 +1,6 @@
 """Test data purging."""
 
+from collections.abc import Generator
 from datetime import datetime, timedelta
 import json
 import sqlite3
@@ -54,7 +55,7 @@ def db_schema_32():
 
 
 @pytest.fixture(name="use_sqlite")
-def mock_use_sqlite(request):
+def mock_use_sqlite(request: pytest.FixtureRequest) -> Generator[None, None, None]:
     """Pytest fixture to switch purge method."""
     with patch(
         "homeassistant.components.recorder.core.Recorder.dialect_name",

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from genie_partner_sdk.client import AladdinConnectClient
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -12,10 +14,11 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from .api import AsyncConfigEntryAuth
+from .coordinator import AladdinConnectCoordinator
 
 PLATFORMS: list[Platform] = [Platform.COVER, Platform.SENSOR]
 
-type AladdinConnectConfigEntry = ConfigEntry[AsyncConfigEntryAuth]
+type AladdinConnectConfigEntry = ConfigEntry[AladdinConnectCoordinator]
 
 
 async def async_setup_entry(
@@ -25,8 +28,13 @@ async def async_setup_entry(
     implementation = await async_get_config_entry_implementation(hass, entry)
 
     session = OAuth2Session(hass, entry, implementation)
+    auth = AsyncConfigEntryAuth(async_get_clientsession(hass), session)
+    coordinator = AladdinConnectCoordinator(hass, AladdinConnectClient(auth))
 
-    entry.runtime_data = AsyncConfigEntryAuth(async_get_clientsession(hass), session)
+    await coordinator.async_setup()
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

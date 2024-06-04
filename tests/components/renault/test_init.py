@@ -25,7 +25,7 @@ def override_platforms() -> Generator[None, None, None]:
 
 
 @pytest.fixture(autouse=True, name="vehicle_type", params=["zoe_40"])
-def override_vehicle_type(request) -> str:
+def override_vehicle_type(request: pytest.FixtureRequest) -> str:
     """Parametrize vehicle type."""
     return request.param
 
