@@ -276,14 +276,13 @@ class RequirementsManager:
             return
         self._raise_for_failed_requirements(name, missing)
 
-        if is_custom_component:
-            self._raise_for_custom_component_overriding_core_requirements(
-                name, requirements
-            )
-
         async with self.pip_lock:
             # Recalculate missing again now that we have the lock
             if missing := self._find_missing_requirements(requirements):
+                if is_custom_component:
+                    self._raise_for_custom_component_overriding_core_requirements(
+                        name, missing
+                    )
                 await self._async_process_requirements(name, missing)
 
     def _raise_for_custom_component_overriding_core_requirements(
