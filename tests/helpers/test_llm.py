@@ -293,6 +293,25 @@ async def test_assist_api_prompt(
     )
 
     # Expose entities
+
+    # Create a script with a unique ID
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "test_script": {
+                    "description": "This is a test script",
+                    "sequence": [],
+                    "fields": {
+                        "beer": {"description": "Number of beers"},
+                        "wine": {},
+                    },
+                }
+            }
+        },
+    )
+
     entry = MockConfigEntry(title=None)
     entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(
@@ -415,20 +434,6 @@ async def test_assist_api_prompt(
         )
     )
 
-    # Create a script with a unique ID
-    assert await async_setup_component(
-        hass,
-        "script",
-        {
-            "script": {
-                "test_script": {
-                    "description": "This is a test script",
-                    "sequence": [],
-                }
-            }
-        },
-    )
-
     exposed_entities = llm._get_exposed_entities(hass, llm_context.assistant)
     assert exposed_entities == {
         "light.1": {
@@ -487,6 +492,10 @@ async def test_assist_api_prompt(
         },
         "script.test_script": {
             "description": "This is a test script",
+            "fields": {
+                "beer": "Number of beers",
+                "wine": "",
+            },
             "names": "test_script",
             "state": "off",
         },

@@ -409,6 +409,7 @@ def _get_exposed_entities(
         names = [state.name]
         area_names = []
         description: str | None = None
+        fields: dict[str] | None = None
 
         if entity_entry is not None:
             names.extend(entity_entry.aliases)
@@ -438,6 +439,10 @@ def _get_exposed_entities(
                 )
             ):
                 description = service_desc.get("description")
+                fields = {
+                    field: info.get("description", "")
+                    for field, info in service_desc.get("fields", {}).items()
+                }
 
         info: dict[str, Any] = {
             "names": ", ".join(names),
@@ -446,6 +451,9 @@ def _get_exposed_entities(
 
         if description:
             info["description"] = description
+
+        if fields:
+            info["fields"] = fields
 
         if area_names:
             info["areas"] = ", ".join(area_names)
