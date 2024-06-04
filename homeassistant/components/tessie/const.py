@@ -79,3 +79,16 @@ TessieChargeStates = {
     "Disconnected": "disconnected",
     "NoPower": "no_power",
 }
+
+TessieWallConnectorStates = {
+    0: "booting",
+    1: "charging",
+    2: "not_connected",
+    4: "connected",
+    5: "scheduled",
+    6: "negotiating",
+    7: "error",
+    8: "charging_finished",
+    9: "waiting_car",
+    10: "charging_reduced",
+}
