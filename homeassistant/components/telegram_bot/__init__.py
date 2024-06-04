@@ -284,6 +284,14 @@ SERVICE_MAP = {
 }
 
 
+def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
+    """Read a file and return it as a BytesIO object."""
+    with open(file_path, "rb") as file:
+        data = io.BytesIO(file.read())
+        data.name = file_path
+        return data
+
+
 async def load_data(
     hass,
     url=None,
@@ -342,7 +350,9 @@ async def load_data(
                 )
         elif filepath is not None:
             if hass.config.is_allowed_path(filepath):
-                return open(filepath, "rb")
+                return await hass.async_add_executor_job(
+                    _read_file_as_bytesio, filepath
+                )
 
             _LOGGER.warning("'%s' are not secure to load data from!", filepath)
         else:

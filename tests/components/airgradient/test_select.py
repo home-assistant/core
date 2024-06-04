@@ -77,15 +77,11 @@ async def test_setting_value(
 
 async def test_setting_protected_value(
     hass: HomeAssistant,
-    mock_airgradient_client: AsyncMock,
+    mock_cloud_airgradient_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setting protected value."""
     await setup_integration(hass, mock_config_entry)
-
-    mock_airgradient_client.get_config.return_value.configuration_control = (
-        ConfigurationControl.CLOUD
-    )
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
@@ -97,9 +93,9 @@ async def test_setting_protected_value(
             },
             blocking=True,
         )
-    mock_airgradient_client.set_temperature_unit.assert_not_called()
+    mock_cloud_airgradient_client.set_temperature_unit.assert_not_called()
 
-    mock_airgradient_client.get_config.return_value.configuration_control = (
+    mock_cloud_airgradient_client.get_config.return_value.configuration_control = (
         ConfigurationControl.LOCAL
     )
 
@@ -112,4 +108,4 @@ async def test_setting_protected_value(
         },
         blocking=True,
     )
-    mock_airgradient_client.set_temperature_unit.assert_called_once_with("c")
+    mock_cloud_airgradient_client.set_temperature_unit.assert_called_once_with("c")

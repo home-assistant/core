@@ -163,20 +163,22 @@ class GoogleGenerativeAIConversationEntity(
         intent_response = intent.IntentResponse(language=user_input.language)
         llm_api: llm.APIInstance | None = None
         tools: list[dict[str, Any]] | None = None
+        user_name: str | None = None
+        llm_context = llm.LLMContext(
+            platform=DOMAIN,
+            context=user_input.context,
+            user_prompt=user_input.text,
+            language=user_input.language,
+            assistant=conversation.DOMAIN,
+            device_id=user_input.device_id,
+        )
 
         if self.entry.options.get(CONF_LLM_HASS_API):
             try:
                 llm_api = await llm.async_get_api(
                     self.hass,
                     self.entry.options[CONF_LLM_HASS_API],
-                    llm.ToolContext(
-                        platform=DOMAIN,
-                        context=user_input.context,
-                        user_prompt=user_input.text,
-                        language=user_input.language,
-                        assistant=conversation.DOMAIN,
-                        device_id=user_input.device_id,
-                    ),
+                    llm_context,
                 )
             except HomeAssistantError as err:
                 LOGGER.error("Error getting LLM API: %s", err)
@@ -223,7 +225,16 @@ class GoogleGenerativeAIConversationEntity(
             messages = self.history[conversation_id]
         else:
             conversation_id = ulid.ulid_now()
-            messages = [{}, {}]
+            messages = [{}, {"role": "model", "parts": "Ok"}]
+
+        if (
+            user_input.context
+            and user_input.context.user_id
+            and (
+                user := await self.hass.auth.async_get_user(user_input.context.user_id)
+            )
+        ):
+            user_name = user.name
 
         try:
             if llm_api:
@@ -234,13 +245,16 @@ class GoogleGenerativeAIConversationEntity(
             prompt = "\n".join(
                 (
                     template.Template(
-                        self.entry.options.get(
+                        llm.BASE_PROMPT
+                        + self.entry.options.get(
                             CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
                         ),
                         self.hass,
                     ).async_render(
                         {
                             "ha_name": self.hass.config.location_name,
+                            "user_name": user_name,
+                            "llm_context": llm_context,
                         },
                         parse_result=False,
                     ),
@@ -258,8 +272,11 @@ class GoogleGenerativeAIConversationEntity(
                 response=intent_response, conversation_id=conversation_id
             )
 
-        messages[0] = {"role": "user", "parts": prompt}
-        messages[1] = {"role": "model", "parts": "Ok"}
+        # Make a copy, because we attach it to the trace event.
+        messages = [
+            {"role": "user", "parts": prompt},
+            *messages[1:],
+        ]
 
         LOGGER.debug("Input: '%s' with history: %s", user_input.text, messages)
         trace.async_conversation_trace_append(
@@ -341,7 +358,7 @@ class GoogleGenerativeAIConversationEntity(
             chat_request = glm.Content(parts=tool_responses)
 
         intent_response.async_set_speech(
-            " ".join([part.text for part in chat_response.parts if part.text])
+            " ".join([part.text.strip() for part in chat_response.parts if part.text])
         )
         return conversation.ConversationResult(
             response=intent_response, conversation_id=conversation_id

@@ -8,7 +8,6 @@
       'options': list([
         'cloud',
         'local',
-        'both',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -45,7 +44,6 @@
       'options': list([
         'cloud',
         'local',
-        'both',
       ]),
     }),
     'context': <ANY>,
@@ -53,7 +51,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'both',
+    'state': 'local',
   })
 # ---
 # name: test_all_entities[select.airgradient_display_temperature_unit-entry]
@@ -120,7 +118,6 @@
       'options': list([
         'cloud',
         'local',
-        'both',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -157,7 +154,6 @@
       'options': list([
         'cloud',
         'local',
-        'both',
       ]),
     }),
     'context': <ANY>,
@@ -165,6 +161,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'both',
+    'state': 'local',
   })
 # ---
