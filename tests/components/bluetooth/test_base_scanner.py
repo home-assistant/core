@@ -66,9 +66,8 @@ class FakeScanner(BaseHaRemoteScanner):
 
 
 @pytest.mark.parametrize("name_2", [None, "w"])
-async def test_remote_scanner(
-    hass: HomeAssistant, enable_bluetooth: None, name_2: str | None
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_remote_scanner(hass: HomeAssistant, name_2: str | None) -> None:
     """Test the remote scanner base class merges advertisement_data."""
     manager = _get_manager()
 
@@ -159,9 +158,8 @@ async def test_remote_scanner(
     unsetup()
 
 
-async def test_remote_scanner_expires_connectable(
-    hass: HomeAssistant, enable_bluetooth: None
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_remote_scanner_expires_connectable(hass: HomeAssistant) -> None:
     """Test the remote scanner expires stale connectable data."""
     manager = _get_manager()
 
@@ -213,9 +211,8 @@ async def test_remote_scanner_expires_connectable(
     unsetup()
 
 
-async def test_remote_scanner_expires_non_connectable(
-    hass: HomeAssistant, enable_bluetooth: None
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_remote_scanner_expires_non_connectable(hass: HomeAssistant) -> None:
     """Test the remote scanner expires stale non connectable data."""
     manager = _get_manager()
 
@@ -287,9 +284,8 @@ async def test_remote_scanner_expires_non_connectable(
     unsetup()
 
 
-async def test_base_scanner_connecting_behavior(
-    hass: HomeAssistant, enable_bluetooth: None
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_base_scanner_connecting_behavior(hass: HomeAssistant) -> None:
     """Test that the default behavior is to mark the scanner as not scanning when connecting."""
     manager = _get_manager()
 
@@ -392,9 +388,8 @@ async def test_restore_history_remote_adapter(
     unsetup()
 
 
-async def test_device_with_ten_minute_advertising_interval(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, enable_bluetooth: None
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_device_with_ten_minute_advertising_interval(hass: HomeAssistant) -> None:
     """Test a device with a 10 minute advertising interval."""
     manager = _get_manager()
 
@@ -496,9 +491,8 @@ async def test_device_with_ten_minute_advertising_interval(
     unsetup()
 
 
-async def test_scanner_stops_responding(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, enable_bluetooth: None
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_scanner_stops_responding(hass: HomeAssistant) -> None:
     """Test we mark a scanner are not scanning when it stops responding."""
     manager = _get_manager()
 
