@@ -34,6 +34,5 @@ class AladdinConnectCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
-        assert self.doors is not None
         for door in self.doors:
             await self.acc.update_door(door.device_id, door.door_number)
