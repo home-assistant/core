@@ -7,19 +7,17 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
-from .const import CONFIG_FLOW_MINOR_VERSION, CONFIG_FLOW_VERSION, DOMAIN
+from .const import DOMAIN
 
 
-class OAuth2FlowHandler(
-    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
-):
+class AladdinConnectOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Config flow to handle Aladdin Connect Genie OAuth2 authentication."""
 
     DOMAIN = DOMAIN
-    VERSION = CONFIG_FLOW_VERSION
-    MINOR_VERSION = CONFIG_FLOW_MINOR_VERSION
+    VERSION = 2
+    MINOR_VERSION = 1
 
     reauth_entry: ConfigEntry | None = None
 
@@ -43,7 +41,7 @@ class OAuth2FlowHandler(
             )
         return await self.async_step_user()
 
-    async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
         if self.reauth_entry:
             return self.async_update_reload_and_abort(
