@@ -66,7 +66,7 @@ from .setup import (
     async_setup_component,
     async_start_setup,
 )
-from .util import uuid as uuid_util
+from .util import ulid as ulid_util
 from .util.async_ import create_eager_task
 from .util.decorator import Registry
 from .util.enum import try_parse_enum
@@ -324,7 +324,7 @@ class ConfigEntry(Generic[_DataT]):
         """Initialize a config entry."""
         _setter = object.__setattr__
         # Unique id of the config entry
-        _setter(self, "entry_id", entry_id or uuid_util.random_uuid_hex())
+        _setter(self, "entry_id", entry_id or ulid_util.ulid_now())
 
         # Version of the configuration.
         _setter(self, "version", version)
@@ -1226,7 +1226,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         if not context or "source" not in context:
             raise KeyError("Context not set or doesn't have a source set")
 
-        flow_id = uuid_util.random_uuid_hex()
+        flow_id = ulid_util.ulid_now()
 
         # Avoid starting a config flow on an integration that only supports
         # a single config entry, but which already has an entry

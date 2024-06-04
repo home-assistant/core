@@ -118,7 +118,9 @@ async def test_color_light_no_emeter(hass: HomeAssistant) -> None:
         assert hass.states.get(sensor_entity_id) is None
 
 
-async def test_sensor_unique_id(hass: HomeAssistant) -> None:
+async def test_sensor_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test a sensor unique ids."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
@@ -145,6 +147,5 @@ async def test_sensor_unique_id(hass: HomeAssistant) -> None:
         "sensor.my_plug_voltage": "aa:bb:cc:dd:ee:ff_voltage",
         "sensor.my_plug_current": "aa:bb:cc:dd:ee:ff_current_a",
     }
-    entity_registry = er.async_get(hass)
     for sensor_entity_id, value in expected.items():
         assert entity_registry.async_get(sensor_entity_id).unique_id == value

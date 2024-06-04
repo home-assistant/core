@@ -35,10 +35,12 @@ DEVICE_ID = "abc123"
 
 
 async def test_registry_entries(
-    hass: HomeAssistant, bypass_api_fixture, setup_entry: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
 ) -> None:
     """Tests devices are registered in the entity registry."""
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(ENTITY_ID)
     assert entry.unique_id == DEVICE_ID
 

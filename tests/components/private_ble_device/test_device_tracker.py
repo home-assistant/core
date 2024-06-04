@@ -3,6 +3,7 @@
 import time
 
 from habluetooth.advertisement_tracker import ADVERTISING_TIMES_NEEDED
+import pytest
 
 from homeassistant.components.bluetooth.api import (
     async_get_fallback_availability_interval,
@@ -184,11 +185,8 @@ async def test_old_tracker_leave_home(
     assert state.state == "not_home"
 
 
-async def test_mac_rotation(
-    hass: HomeAssistant,
-    enable_bluetooth: None,
-    entity_registry_enabled_by_default: None,
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth", "entity_registry_enabled_by_default")
+async def test_mac_rotation(hass: HomeAssistant) -> None:
     """Test sensors get value when we receive a broadcast."""
     await async_mock_config_entry(hass)
 
