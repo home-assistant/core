@@ -221,9 +221,5 @@ class BMWSensor(BMWBaseEntity, SensorEntity):
             if state == STATE_UNKNOWN:
                 state = None
 
-            # special handling for charging_status to avoid a breaking change
-            if self.entity_description.key == "charging_status" and state:
-                state = state.upper()
-
         self._attr_native_value = state
         super()._handle_coordinator_update()

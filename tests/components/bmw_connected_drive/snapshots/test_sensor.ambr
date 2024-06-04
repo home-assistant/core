@@ -191,7 +191,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'WAITING_FOR_CHARGING',
+    'state': 'waiting_for_charging',
   })
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_charging_target-entry]
@@ -822,7 +822,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'NOT_CHARGING',
+    'state': 'not_charging',
   })
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_charging_target-entry]
@@ -1350,7 +1350,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'CHARGING',
+    'state': 'charging',
   })
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_charging_target-entry]
