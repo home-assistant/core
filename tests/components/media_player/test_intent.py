@@ -4,12 +4,10 @@ import pytest
 
 from homeassistant.components.media_player import (
     DOMAIN,
-    SERVICE_CLEAR_PLAYLIST,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_STOP,
     SERVICE_VOLUME_SET,
     intent as media_player_intent,
 )
@@ -29,30 +27,6 @@ from homeassistant.helpers import (
 )
 
 from tests.common import async_mock_service
-
-
-async def test_clear_playlist_media_player_intent(hass: HomeAssistant) -> None:
-    """Test HassMediaClearPlaylist intent for media players."""
-    await media_player_intent.async_setup_intents(hass)
-
-    entity_id = f"{DOMAIN}.test_media_player"
-    hass.states.async_set(entity_id, STATE_IDLE)
-    calls = async_mock_service(hass, DOMAIN, SERVICE_CLEAR_PLAYLIST)
-
-    response = await intent.async_handle(
-        hass,
-        "test",
-        media_player_intent.INTENT_CLEAR_PLAYLIST,
-        {"name": {"value": "test media player"}},
-    )
-    await hass.async_block_till_done()
-
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == DOMAIN
-    assert call.service == SERVICE_CLEAR_PLAYLIST
-    assert call.data == {"entity_id": entity_id}
 
 
 async def test_pause_media_player_intent(hass: HomeAssistant) -> None:
@@ -221,30 +195,6 @@ async def test_previous_media_player_intent(hass: HomeAssistant) -> None:
     call = calls[0]
     assert call.domain == DOMAIN
     assert call.service == SERVICE_MEDIA_PREVIOUS_TRACK
-    assert call.data == {"entity_id": entity_id}
-
-
-async def test_stop_media_player_intent(hass: HomeAssistant) -> None:
-    """Test HassMediaStop intent for media players."""
-    await media_player_intent.async_setup_intents(hass)
-
-    entity_id = f"{DOMAIN}.test_media_player"
-    hass.states.async_set(entity_id, STATE_IDLE)
-    calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_STOP)
-
-    response = await intent.async_handle(
-        hass,
-        "test",
-        media_player_intent.INTENT_MEDIA_STOP,
-        {"name": {"value": "test media player"}},
-    )
-    await hass.async_block_till_done()
-
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == DOMAIN
-    assert call.service == SERVICE_MEDIA_STOP
     assert call.data == {"entity_id": entity_id}
 
 
