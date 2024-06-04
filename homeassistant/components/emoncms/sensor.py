@@ -197,7 +197,7 @@ class EmonCmsSensor(SensorEntity):
         self._update_attributes(elem)
 
     def _update_attributes(self, elem: dict[str, Any]) -> None:
-        """Update extra attributes."""
+        """Update entity attributes."""
         self._attr_extra_state_attributes = {
             ATTR_FEEDID: elem["id"],
             ATTR_TAG: elem["tag"],
