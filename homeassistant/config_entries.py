@@ -2119,9 +2119,11 @@ class ConfigEntries:
             _report_non_locked_platform_forwards(entry)
         else:
             report(
-                "calls async_forward_entry_setup which is deprecated and "
+                "calls async_forward_entry_setup for "
+                f"integration, {entry.domain} with title: {entry.title} "
+                f"and entry_id: {entry.entry_id}, which is deprecated and "
                 "will stop working in Home Assistant 2025.6, "
-                "await async_forward_entry_setups instead.",
+                "await async_forward_entry_setups instead",
                 error_if_core=False,
                 error_if_integration=False,
             )

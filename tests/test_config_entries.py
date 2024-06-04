@@ -1007,6 +1007,58 @@ async def test_forward_entry_does_not_setup_entry_if_setup_fails(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
+async def test_async_forward_entry_setup_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test async_forward_entry_setup is deprecated."""
+    entry = MockConfigEntry(
+        domain="original", state=config_entries.ConfigEntryState.LOADED
+    )
+
+    mock_original_setup_entry = AsyncMock(return_value=True)
+    integration = mock_integration(
+        hass, MockModule("original", async_setup_entry=mock_original_setup_entry)
+    )
+
+    mock_setup = AsyncMock(return_value=False)
+    mock_setup_entry = AsyncMock()
+    mock_integration(
+        hass,
+        MockModule(
+            "forwarded", async_setup=mock_setup, async_setup_entry=mock_setup_entry
+        ),
+    )
+
+    with patch.object(integration, "async_get_platforms"):
+        await hass.config_entries.async_forward_entry_setup(entry, "forwarded")
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 0
+    entry_id = entry.entry_id
+    assert (
+        "Detected code that calls async_forward_entry_setup after the entry "
+        "for integration, original with title: Mock Title and entry_id: "
+        f"{entry_id}, has been set up, without holding the setup lock that "
+        "prevents the config entry from being set up multiple times. "
+        "Instead await hass.config_entries.async_forward_entry_setup "
+        "during setup of the config entry or call "
+        "hass.config_entries.async_late_forward_entry_setups "
+        "in a tracked task. This will stop working in Home Assistant "
+        "2025.1. Please report this issue."
+    ) in caplog.text
+
+    caplog.clear()
+    with patch.object(integration, "async_get_platforms"):
+        async with entry.setup_lock:
+            await hass.config_entries.async_forward_entry_setup(entry, "forwarded")
+
+    assert (
+        "Detected code that calls async_forward_entry_setup for integration, "
+        f"original with title: Mock Title and entry_id: {entry_id}, "
+        "which is deprecated and will stop working in Home Assistant 2025.6, "
+        "await async_forward_entry_setups instead. Please report this issue."
+    ) in caplog.text
+
+
 async def test_discovery_notification(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
