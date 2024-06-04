@@ -195,7 +195,6 @@ class EmonCmsSensor(SensorEntity):
             self._attr_device_class = SensorDeviceClass.PRESSURE
             self._attr_state_class = SensorStateClass.MEASUREMENT
         self._update_attributes(elem)
-        self._update_value(elem)
 
     def _update_attributes(self, elem: dict[str, Any]) -> None:
         """Update extra attributes."""
