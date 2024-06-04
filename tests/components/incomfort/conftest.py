@@ -6,7 +6,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.components.incomfort import DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 MOCK_CONFIG = {
     "host": "192.168.1.12",
@@ -23,6 +27,22 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         return_value=True,
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_entry_data() -> dict[str, Any]:
+    """Mock config entry data for fixture."""
+    return MOCK_CONFIG
+
+
+@pytest.fixture
+def mock_config_entry(
+    hass: HomeAssistant, mock_entry_data: dict[str, Any]
+) -> ConfigEntry:
+    """Mock a config entry setup for incomfort integration."""
+    entry = MockConfigEntry(domain=DOMAIN, data=mock_entry_data)
+    entry.add_to_hass(hass)
+    return entry
 
 
 @pytest.fixture
