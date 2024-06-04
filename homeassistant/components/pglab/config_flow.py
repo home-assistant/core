@@ -26,12 +26,12 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(DOMAIN)
 
-        # Validate the message, abort if it fails
+        # Validate the message, abort if it fails.
         if not discovery_info.topic.endswith("/config"):
-            # Not a PG LAB Electronics discovery message
+            # Not a PGLab Electronics discovery message.
             return self.async_abort(reason="invalid_discovery_info")
         if not discovery_info.payload:
-            # Empty payload, Unexpected payload
+            # Empty payload, Unexpected payload.
             return self.async_abort(reason="invalid_discovery_info")
 
         return await self.async_step_confirm()

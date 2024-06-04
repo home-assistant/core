@@ -14,7 +14,7 @@ from .discovery import PGLabDiscovery
 
 
 class PgLabEntity(Entity):
-    """Representation of a PGLAB entity in Home Assistant."""
+    """Representation of a PGLab entity in Home Assistant."""
 
     _attr_has_entity_name = True
 
@@ -31,10 +31,10 @@ class PgLabEntity(Entity):
         self._entity = entity
         self._discovery = discovery
 
-        # Set the state update
+        # Set the state update.
         self._entity.add_state_update(self.state_updated)
 
-        # Information about the devices that is partially visible in the UI.
+        # Information about the device that is partially visible in the UI.
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.id)},
             name=device.name,
@@ -49,9 +49,9 @@ class PgLabEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Update the device discovery info."""
 
-        # inform PG LAB discovery instance that a new entity is available
-        # this it's important to know in case the device needs to be reconfigure
-        # and the entity can be potentially destroy
+        # Inform PGLab discovery instance that a new entity is available.
+        # This is important to know in case the device needs to be reconfigured
+        # and the entity can be potentially destroyed.
         await self._discovery.add_entity(self, self._device_id)
 
     async def async_will_remove_from_hass(self) -> None:

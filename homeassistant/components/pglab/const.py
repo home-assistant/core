@@ -2,11 +2,11 @@
 
 import logging
 
-# The domain of the integration
+# The domain of the integration.
 DOMAIN = "pglab"
 
-# The message logger
+# The message logger.
 _LOGGER = logging.getLogger(__name__)
 
-# The mqtt message to be subscribe to get new PG LAB device
+# The MQTT message used to subscribe to get a new PG LAB device.
 DISCOVERY_TOPIC = "pglab/discovery"

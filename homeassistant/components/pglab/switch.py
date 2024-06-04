@@ -26,18 +26,18 @@ async def async_setup_entry(
 
     @callback
     def async_discover(pglab_device: PyPGLabDevice, pglab_relay: PyPGLabRelay) -> None:
-        """Discover and add a PG LAB Relay."""
+        """Discover and add a PGLab Relay."""
         pglab_discovery = config_entry.runtime_data
         pglab_switch = PgLabSwitch(pglab_discovery, pglab_device, pglab_relay)
         async_add_entities([pglab_switch])
 
-    # register the callback to create the switch entity when discovered
+    # Register the callback to create the switch entity when discovered.
     pglab_discovery = config_entry.runtime_data
     await pglab_discovery.register_platform(hass, Platform.SWITCH, async_discover)
 
 
 class PgLabSwitch(PgLabEntity, SwitchEntity):
-    """A PG LAB switch."""
+    """A PGLab switch."""
 
     _attr_translation_key = "relay"
 

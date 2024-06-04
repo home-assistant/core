@@ -1,4 +1,4 @@
-"""Discovery a PG LAB Electronics devices."""
+"""Discovery PG LAB Electronics devices."""
 
 from __future__ import annotations
 
@@ -32,12 +32,12 @@ from .const import _LOGGER, DISCOVERY_TOPIC, DOMAIN
 if TYPE_CHECKING:
     from . import PGLABConfigEntry
 
-# Supported platforms
+# Supported platforms.
 PLATFORMS = [
     Platform.SWITCH,
 ]
 
-# Used to create a new component entity
+# Used to create a new component entity.
 CREATE_NEW_ENTITY = {
     Platform.SWITCH: "pglab_create_new_entity_switch",
 }
@@ -46,10 +46,10 @@ CREATE_NEW_ENTITY = {
 def get_device_id_from_discovery_topic(topic: str) -> str | None:
     """From the discovery topic get the PG LAB Electronics device id."""
 
-    # the discovery topic has the following format "pglab/discovery/[Device ID]/config"
+    # The discovery topic has the following format "pglab/discovery/[Device ID]/config"
     split_topic = topic.split("/", 5)
 
-    # do a sanity check on the string
+    # Do a sanity check on the string.
     if len(split_topic) != 4:
         return None
 
@@ -60,14 +60,14 @@ def get_device_id_from_discovery_topic(topic: str) -> str | None:
 
 
 class DiscoverDeviceInfo:
-    """It's keeping information of the PGLAB discovered device."""
+    """Keeps information of the PGLab discovered device."""
 
     def __init__(self, pglab_device: PyPGLabDevice) -> None:
         """Initialize the device discovery info."""
 
-        # hash string that represent the device actual configuration,
-        # it depends by the number of available relay and shutter
-        # When changed the device enties must be rebuilt
+        # Hash string represents the devices actual configuration,
+        # it depends on the number of available relays and shutters.
+        # When the hash string changes the devices entities must be rebuilt.
         self._hash = pglab_device.hash
         self._entities: list[tuple[str, str]] = []
 
@@ -93,7 +93,7 @@ class PGLabDiscoveryError(Exception):
 
 @dataclass
 class PGLabDiscovery:
-    """PG LAB Discovery class. Discovery a pglab/discovert/[device]/config."""
+    """Discovery a PGLab device with the following MQTT topic format pglab/discovery/[device]/config."""
 
     def __init__(self) -> None:
         """Initialize the discovery class."""
@@ -106,9 +106,9 @@ class PGLabDiscovery:
     async def __build_device(
         self, mqtt: PyPGLabMqttClient, msg: ReceiveMessage
     ) -> PyPGLabDevice:
-        """Build a PG LAB device."""
+        """Build a PGLab device."""
 
-        # check if the discovery message is in valid jason format
+        # Check if the discovery message is in valid json format.
         try:
             payload = json.loads(msg.payload)
         except ValueError:
@@ -118,33 +118,33 @@ class PGLabDiscovery:
 
         device_id = "id"
 
-        # check the key id is present in the paylod. It must always present !!!
+        # Check if the key id is present in the payload. It must always be present.
         if device_id not in payload:
             raise PGLabDiscoveryError(
                 "Unexpected discovery payload format, id key not present"
             )
 
-        # do a sanity check: the id must match the discovery topic /pglab/discovery/[id]/config
+        # Do a sanity check: the id must match the discovery topic /pglab/discovery/[id]/config
         topic = msg.topic
         if not topic.endswith(f"{payload[device_id]}/config"):
             raise PGLabDiscoveryError("Unexpected discovery topic format")
 
-        # build and configure the PG LAB device
+        # Build and configure the PGLab device.
         pglab_device = PyPGLabDevice()
         if not await pglab_device.config(mqtt, payload):
-            raise PGLabDiscoveryError("Error during setup of new discovered device")
+            raise PGLabDiscoveryError("Error during setup of a new discovered device")
 
         return pglab_device
 
     def __clean_discovered_device(self, hass: HomeAssistant, device_id: str) -> None:
-        """Destroy the device and any enties connected with the device."""
+        """Destroy the device and any entities connected to the device."""
 
         if device_id not in self._discovered:
             return
 
         discovery_info = self._discovered[device_id]
 
-        # destroy all entities connected with the device
+        # Destroy all entities connected to the device.
         entity_registry = er.async_get(hass)
         for platform, unique_id in discovery_info.entities:
             if entity_id := entity_registry.async_get_entity_id(
@@ -152,39 +152,39 @@ class PGLabDiscovery:
             ):
                 entity_registry.async_remove(entity_id)
 
-        # destroy the device
+        # Destroy the device.
         device_registry = dr.async_get(hass)
         if device_entry := device_registry.async_get_device(
             identifiers={(DOMAIN, device_id)}
         ):
             device_registry.async_remove_device(device_entry.id)
 
-        # clean the discovery info
+        # Clean the discovery info.
         del self._discovered[device_id]
 
     async def start(
         self, hass: HomeAssistant, mqtt: PyPGLabMqttClient, entry: PGLABConfigEntry
     ) -> None:
-        """Start to discovery a device."""
+        """Start discovering a PGLab devices."""
 
         async def discovery_message_received(msg: ReceiveMessage) -> None:
             """Received a new discovery message."""
 
-            # create a PG LAB device and add in HA all the available entities
+            # Create a PGLab device and add entities.
             pglab_device = await self.__build_device(mqtt, msg)
 
             if not pglab_device:
-                # for some reason it's not possible to create the device with the discovery message
-                # be sure that any previous device with the same topic are now destroy
+                # For some reason it's not possible to create the device with the discovery message,
+                # be sure that any previous device with the same topic is now destroyed.
                 device_id = get_device_id_from_discovery_topic(msg.topic)
 
-                # if we have a valid topic device_id clean every thing relative to the device
+                # If there is a valid topic device_id clean everything relative to the device.
                 if device_id:
                     self.__clean_discovered_device(hass, device_id)
 
                 return
 
-            # we can create a new device now
+            # Create a new device.
             device_registry = dr.async_get(hass)
             device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
@@ -198,15 +198,15 @@ class PGLabDiscovery:
                 hw_version=pglab_device.hardware_version,
             )
 
-            # do some checking if previous entities must be updated
+            # Do some checking if previous entities must be updated.
             if pglab_device.id in self._discovered:
-                # the device is already been discover
-                # get the old discovery info data
+                # The device is already been discovered,
+                # get the old discovery info data.
                 discovery_info = self._discovered[pglab_device.id]
 
                 if discovery_info.hash == pglab_device.hash:
-                    # best case!!! there is nothing to do ... the device
-                    # is still  in the same configuration. Same name, same shutters, same relay etc...
+                    # Best case, there is nothing to do.
+                    # The device is still in the same configuration. Same name, same shutters, same relay etc.
                     return None
 
                 _LOGGER.info(
@@ -214,16 +214,16 @@ class PGLabDiscovery:
                     pglab_device.id,
                 )
 
-                # something is changed ... all previous entities must be destroy and re-create
+                # Something has changed, all previous entities must be destroyed and re-created.
                 self.__clean_discovered_device(hass, pglab_device.id)
 
-            # add a new device
+            # Add a new device.
             discovery_info = DiscoverDeviceInfo(pglab_device)
             self._discovered[pglab_device.id] = discovery_info
 
-            # create all new relay entities
+            # Create all new relay entities.
             for r in pglab_device.relays:
-                # the HA entity is not yet created, send a message to create it
+                # The HA entity is not yet created, send a message to create it.
                 async_dispatcher_send(
                     hass, CREATE_NEW_ENTITY[Platform.SWITCH], pglab_device, r
                 )
@@ -235,7 +235,7 @@ class PGLabDiscovery:
             }
         }
 
-        # forward setup all HA supported platforms
+        # Forward setup all HA supported platforms.
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
         self._mqtt_client = mqtt
@@ -255,20 +255,19 @@ class PGLabDiscovery:
         """Stop to discovery PG LAB devices."""
         await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-        # disconnect all registered platforms
+        # Disconnect all registered platforms.
         for disconnect_callback in self._disconnect_platform:
             disconnect_callback()
 
         async_unsubscribe_topics(hass, self._substate)
 
     async def add_entity(self, entity: Entity, device_id: str):
-        """Save a new PG LAB Device entity."""
+        """Save a new PG LAB device entity."""
         if device_id in self._discovered:
             discovery_info = self._discovered[device_id]
             discovery_info.add_entity_id(entity)
 
 
-# create an instance of the discovery PG LAB devices
 async def create_discovery(
     hass: HomeAssistant, entry: PGLABConfigEntry, mqtt: PyPGLabMqttClient
 ):
@@ -276,8 +275,8 @@ async def create_discovery(
 
     pglab_discovery = PGLabDiscovery()
 
-    # store the discovery instance
+    # Store the discovery instance.
     entry.runtime_data = pglab_discovery
 
-    # start to discovery PG Lab devices
+    # Start to discovery PG Lab devices.
     await pglab_discovery.start(hass, mqtt, entry)
