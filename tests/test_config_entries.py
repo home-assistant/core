@@ -957,7 +957,9 @@ async def test_as_dict(snapshot: SnapshotAssertion) -> None:
 
 async def test_forward_entry_sets_up_component(hass: HomeAssistant) -> None:
     """Test we setup the component entry is forwarded to."""
-    entry = MockConfigEntry(domain="original")
+    entry = MockConfigEntry(
+        domain="original", state=config_entries.ConfigEntryState.LOADED
+    )
 
     mock_original_setup_entry = AsyncMock(return_value=True)
     integration = mock_integration(
@@ -969,10 +971,10 @@ async def test_forward_entry_sets_up_component(hass: HomeAssistant) -> None:
         hass, MockModule("forwarded", async_setup_entry=mock_forwarded_setup_entry)
     )
 
-    with patch.object(integration, "async_get_platform") as mock_async_get_platform:
-        await hass.config_entries.async_forward_entry_setup(entry, "forwarded")
+    with patch.object(integration, "async_get_platforms") as mock_async_get_platforms:
+        await hass.config_entries.async_late_forward_entry_setups(entry, ["forwarded"])
 
-    mock_async_get_platform.assert_called_once_with("forwarded")
+    mock_async_get_platforms.assert_called_once_with(["forwarded"])
     assert len(mock_original_setup_entry.mock_calls) == 0
     assert len(mock_forwarded_setup_entry.mock_calls) == 1
 
@@ -981,7 +983,14 @@ async def test_forward_entry_does_not_setup_entry_if_setup_fails(
     hass: HomeAssistant,
 ) -> None:
     """Test we do not set up entry if component setup fails."""
-    entry = MockConfigEntry(domain="original")
+    entry = MockConfigEntry(
+        domain="original", state=config_entries.ConfigEntryState.LOADED
+    )
+
+    mock_original_setup_entry = AsyncMock(return_value=True)
+    integration = mock_integration(
+        hass, MockModule("original", async_setup_entry=mock_original_setup_entry)
+    )
 
     mock_setup = AsyncMock(return_value=False)
     mock_setup_entry = AsyncMock()
@@ -992,7 +1001,8 @@ async def test_forward_entry_does_not_setup_entry_if_setup_fails(
         ),
     )
 
-    await hass.config_entries.async_forward_entry_setup(entry, "forwarded")
+    with patch.object(integration, "async_get_platforms"):
+        await hass.config_entries.async_late_forward_entry_setups(entry, ["forwarded"])
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 0
 
