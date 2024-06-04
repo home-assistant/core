@@ -80,11 +80,11 @@ async def _oauth_actions(
     )
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials: None,
     mock_setup_entry: AsyncMock,
 ) -> None:
@@ -105,11 +105,11 @@ async def test_full_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_duplicate_entry(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials: None,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -125,11 +125,11 @@ async def test_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials: None,
     mock_config_entry: MockConfigEntry,
     mock_setup_entry: AsyncMock,
@@ -154,11 +154,11 @@ async def test_reauth(
     assert result["reason"] == "reauth_successful"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth_wrong_account(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials: None,
     mock_setup_entry: AsyncMock,
 ) -> None:
@@ -189,11 +189,11 @@ async def test_reauth_wrong_account(
     assert result["reason"] == "wrong_account"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth_old_account(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials: None,
     mock_setup_entry: AsyncMock,
 ) -> None:
