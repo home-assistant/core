@@ -11,7 +11,7 @@ from bring_api.exceptions import BringAuthException, BringRequestException
 from bring_api.types import BringAuthResponse
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_NAME, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -20,6 +20,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
+from . import BringConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,8 +45,7 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bring!."""
 
     VERSION = 1
-    reauth_entry: ConfigEntry | None = None
-    info = {}
+    reauth_entry: BringConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
