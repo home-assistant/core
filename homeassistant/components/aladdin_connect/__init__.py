@@ -13,7 +13,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from .api import AsyncConfigEntryAuth
 
-PLATFORMS: list[Platform] = [Platform.COVER]
+PLATFORMS: list[Platform] = [Platform.COVER, Platform.SENSOR]
 
 type AladdinConnectConfigEntry = ConfigEntry[AsyncConfigEntryAuth]
 
