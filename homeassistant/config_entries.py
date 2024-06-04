@@ -2042,7 +2042,16 @@ class ConfigEntries:
     async def async_forward_entry_setups(
         self, entry: ConfigEntry, platforms: Iterable[Platform | str]
     ) -> None:
-        """Forward the setup of an entry to platforms."""
+        """Forward the setup of an entry to platforms.
+
+        This method should be awaited before async_setup_entry is finished
+        in each integration. This is to ensure that all platforms are loaded
+        before the entry is set up. This ensures that the config entry cannot
+        be unloaded before all platforms are loaded.
+
+        If platforms must be loaded late (after the config entry is setup),
+        use async_late_forward_entry_setup instead.
+        """
         integration = await loader.async_get_integration(self.hass, entry.domain)
         if not integration.platforms_are_loaded(platforms):
             with async_pause_setup(self.hass, SetupPhases.WAIT_IMPORT_PLATFORMS):
@@ -2086,9 +2095,24 @@ class ConfigEntries:
         By default an entry is setup with the component it belongs to. If that
         component also has related platforms, the component will have to
         forward the entry to be setup by that component.
+
+        This method is deprecated and will stop working in Home Assistant 2025.6.
+
+        Instead, await async_forward_entry_setups.
+
+        If platforms must be loaded late (after the config entry is setup),
+        use async_late_forward_entry_setup instead.
         """
         if non_locked_platform_forwards := not entry.setup_lock.locked():
             _report_non_locked_platform_forwards(entry)
+        else:
+            report(
+                "calls async_forward_entry_setup which is deprecated and "
+                "will stop working in Home Assistant 2025.6, "
+                "await async_forward_entry_setups instead.",
+                error_if_core=False,
+                error_if_integration=False,
+            )
         return await self._async_forward_entry_setup(
             entry, domain, True, non_locked_platform_forwards
         )
