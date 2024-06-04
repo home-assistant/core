@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
 
 from reolink_aio.api import DUAL_LENS_MODELS, Host
 
@@ -14,7 +13,6 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.util.dt import DEFAULT_TIME_ZONE
 
 from . import ReolinkData
 from .const import DOMAIN
@@ -105,7 +103,7 @@ class ReolinkHostCoordinatorEntity(ReolinkBaseCoordinatorEntity[None]):
 
     async def async_update(self) -> None:
         """Force full update from the generic entity update service."""
-        self._host.last_wake = datetime(1970, 1, 1, tzinfo=DEFAULT_TIME_ZONE)
+        self._host.last_wake = 0
         await super().async_update()
 
 
