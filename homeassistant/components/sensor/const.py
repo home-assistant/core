@@ -140,7 +140,7 @@ class SensorDeviceClass(StrEnum):
     """
 
     CONDUCTIVITY = "conductivity"
-    """Carbon Dioxide gas concentration.
+    """Conductivity.
 
     Unit of measurement: `mS/cm`, `µS/cm`
     """
