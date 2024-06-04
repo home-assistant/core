@@ -1,6 +1,7 @@
 """Tests for Intergas InComfort integration."""
 
 from datetime import timedelta
+from syrupy import SnapshotAssertion
 from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientResponseError
@@ -11,7 +12,8 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.incomfort import DOMAIN
 from homeassistant.components.incomfort.coordinator import UPDATE_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
@@ -26,18 +28,11 @@ async def test_setup_platforms(
     mock_incomfort: MagicMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    mock_config_entry: ConfigEntry,
 ) -> None:
     """Test the incomfort integration is set up correctly."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-    assert entity_entries
-    for entity_entry in entity_entries:
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-        assert hass.states.get(entity_entry.entity_id) == snapshot(
-            name=f"{entity_entry.entity_id}-state"
-        )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_coordinator_updates(

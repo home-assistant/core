@@ -62,7 +62,6 @@ omit =
     homeassistant/components/aladdin_connect/api.py
     homeassistant/components/aladdin_connect/application_credentials.py
     homeassistant/components/aladdin_connect/cover.py
-    homeassistant/components/aladdin_connect/model.py
     homeassistant/components/aladdin_connect/sensor.py
     homeassistant/components/alarmdecoder/__init__.py
     homeassistant/components/alarmdecoder/alarm_control_panel.py
@@ -150,12 +149,7 @@ omit =
     homeassistant/components/bloomsky/*
     homeassistant/components/bluesound/*
     homeassistant/components/bluetooth_tracker/*
-    homeassistant/components/bmw_connected_drive/__init__.py
-    homeassistant/components/bmw_connected_drive/binary_sensor.py
-    homeassistant/components/bmw_connected_drive/coordinator.py
-    homeassistant/components/bmw_connected_drive/lock.py
     homeassistant/components/bmw_connected_drive/notify.py
-    homeassistant/components/bmw_connected_drive/sensor.py
     homeassistant/components/bosch_shc/__init__.py
     homeassistant/components/bosch_shc/binary_sensor.py
     homeassistant/components/bosch_shc/cover.py
@@ -628,6 +622,7 @@ omit =
     homeassistant/components/irish_rail_transport/sensor.py
     homeassistant/components/iss/__init__.py
     homeassistant/components/iss/sensor.py
+    homeassistant/components/ista_ecotrend/coordinator.py
     homeassistant/components/isy994/__init__.py
     homeassistant/components/isy994/binary_sensor.py
     homeassistant/components/isy994/button.py
