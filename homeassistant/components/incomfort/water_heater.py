@@ -15,7 +15,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import DATA_INCOMFORT, InComfortDataCoordinator, IncomfortEntity
+from .coordinator import DATA_INCOMFORT, InComfortDataCoordinator
+from .entity import IncomfortEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +49,6 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
         """Initialize the water_heater device."""
         super().__init__(coordinator)
 
-        self._client = coordinator.data.client
         self._heater = heater
 
         self._attr_unique_id = heater.serial_no

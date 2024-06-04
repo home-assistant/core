@@ -20,7 +20,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
 from .const import DOMAIN
-from .coordinator import DATA_INCOMFORT, InComfortDataCoordinator, IncomfortEntity
+from .coordinator import DATA_INCOMFORT, InComfortDataCoordinator
+from .entity import IncomfortEntity
 
 INCOMFORT_HEATER_TEMP = "CV Temp"
 INCOMFORT_PRESSURE = "CV Pressure"
@@ -91,7 +92,6 @@ class IncomfortSensor(IncomfortEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
 
-        self._client = coordinator.data.client
         self._heater = heater
 
         self._attr_unique_id = f"{heater.serial_no}_{slugify(description.name)}"

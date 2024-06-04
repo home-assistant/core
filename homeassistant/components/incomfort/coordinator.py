@@ -16,11 +16,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
@@ -62,19 +58,13 @@ class InComfortDataCoordinator(DataUpdateCoordinator[InComfortData]):
         super().__init__(
             hass,
             _LOGGER,
-            # Name of the data. For logging purposes.
             name="InComfort datacoordinator",
-            # Polling interval. Will only be polled if there are subscribers.
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
         self.incomfort_data = incomfort_data
 
     async def _async_update_data(self) -> InComfortData:
-        """Fetch data from API endpoint.
-
-        This is the place to pre-process the data to lookup tables
-        so entities can quickly look up their data.
-        """
+        """Fetch data from API endpoint."""
         try:
             for heater in self.incomfort_data.heaters:
                 await heater.update()
@@ -89,10 +79,3 @@ class InComfortDataCoordinator(DataUpdateCoordinator[InComfortData]):
 
 
 DATA_INCOMFORT: HassKey[dict[str, InComfortDataCoordinator]] = HassKey(DOMAIN)
-
-
-class IncomfortEntity(CoordinatorEntity[InComfortDataCoordinator]):
-    """Base class for all InComfort entities."""
-
-    _attr_should_poll = False
-    _attr_has_entity_name = True

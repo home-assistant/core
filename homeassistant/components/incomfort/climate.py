@@ -18,7 +18,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import DATA_INCOMFORT, InComfortDataCoordinator, IncomfortEntity
+from .coordinator import DATA_INCOMFORT, InComfortDataCoordinator
+from .entity import IncomfortEntity
 
 
 async def async_setup_entry(
@@ -55,7 +56,6 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
         """Initialize the climate device."""
         super().__init__(coordinator)
 
-        self._client = coordinator.data.client
         self._room = room
 
         self._attr_unique_id = f"{heater.serial_no}_{room.room_no}"

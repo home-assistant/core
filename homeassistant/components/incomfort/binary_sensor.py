@@ -13,7 +13,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import DATA_INCOMFORT, InComfortDataCoordinator, IncomfortEntity
+from .coordinator import DATA_INCOMFORT, InComfortDataCoordinator
+from .entity import IncomfortEntity
 
 
 async def async_setup_entry(
@@ -38,7 +39,6 @@ class IncomfortFailed(IncomfortEntity, BinarySensorEntity):
         """Initialize the binary sensor."""
         super().__init__(coordinator)
 
-        self._client = coordinator.data.client
         self._heater = heater
 
         self._attr_unique_id = f"{heater.serial_no}_failed"
