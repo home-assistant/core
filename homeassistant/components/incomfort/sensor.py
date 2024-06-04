@@ -12,13 +12,15 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPressure, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
-from . import DOMAIN, IncomfortEntity
+from . import DATA_INCOMFORT, IncomfortEntity
+from .const import DOMAIN
 
 INCOMFORT_HEATER_TEMP = "CV Temp"
 INCOMFORT_PRESSURE = "CV Pressure"
@@ -59,26 +61,18 @@ SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up an InComfort/InTouch sensor device."""
-    if discovery_info is None:
-        return
-
-    client = hass.data[DOMAIN]["client"]
-    heaters = hass.data[DOMAIN]["heaters"]
-
-    entities = [
-        IncomfortSensor(client, heater, description)
-        for heater in heaters
+    """Set up InComfort/InTouch sensor entities."""
+    incomfort_data = hass.data[DATA_INCOMFORT][entry.entry_id]
+    async_add_entities(
+        IncomfortSensor(incomfort_data.client, heater, description)
+        for heater in incomfort_data.heaters
         for description in SENSOR_TYPES
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 class IncomfortSensor(IncomfortEntity, SensorEntity):
@@ -100,6 +94,9 @@ class IncomfortSensor(IncomfortEntity, SensorEntity):
         self._heater = heater
 
         self._attr_unique_id = f"{heater.serial_no}_{slugify(description.name)}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, heater.serial_no)},
+        )
 
     @property
     def native_value(self) -> str | None:

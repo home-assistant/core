@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from dataclasses import dataclass
 from datetime import timedelta
 from http import HTTPStatus
@@ -79,7 +80,9 @@ class Table:
 
 
 @pytest.fixture(name="mock_client")
-def mock_client_fixture(request):
+def mock_client_fixture(
+    request: pytest.FixtureRequest,
+) -> Generator[MagicMock, None, None]:
     """Patch the InfluxDBClient object with mock for version under test."""
     if request.param == API_VERSION_2:
         client_target = f"{INFLUXDB_CLIENT_PATH}V2"

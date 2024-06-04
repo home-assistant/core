@@ -9,33 +9,31 @@ from aiohttp import ClientResponseError
 from incomfortclient import Gateway as InComfortGateway, Heater as InComfortHeater
 
 from homeassistant.components.water_heater import WaterHeaterEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, IncomfortEntity
+from . import DATA_INCOMFORT, IncomfortEntity
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 HEATER_ATTRS = ["display_code", "display_text", "is_burning"]
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up an InComfort/Intouch water_heater device."""
-    if discovery_info is None:
-        return
-
-    client = hass.data[DOMAIN]["client"]
-    heaters = hass.data[DOMAIN]["heaters"]
-
-    async_add_entities([IncomfortWaterHeater(client, h) for h in heaters])
+    """Set up an InComfort/InTouch water_heater device."""
+    incomfort_data = hass.data[DATA_INCOMFORT][entry.entry_id]
+    async_add_entities(
+        IncomfortWaterHeater(incomfort_data.client, h) for h in incomfort_data.heaters
+    )
 
 
 class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
@@ -43,7 +41,7 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
 
     _attr_min_temp = 30.0
     _attr_max_temp = 80.0
-    _attr_name = "Boiler"
+    _attr_name = None
     _attr_should_poll = True
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -55,6 +53,11 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
         self._heater = heater
 
         self._attr_unique_id = heater.serial_no
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, heater.serial_no)},
+            manufacturer="Intergas",
+            name="Boiler",
+        )
 
     @property
     def icon(self) -> str:
@@ -92,4 +95,4 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
             _LOGGER.warning("Update failed, message is: %s", err)
 
         else:
-            async_dispatcher_send(self.hass, DOMAIN)
+            async_dispatcher_send(self.hass, f"{DOMAIN}_{self.unique_id}")

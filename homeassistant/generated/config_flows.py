@@ -256,6 +256,7 @@ FLOWS = {
         "imap",
         "imgw_pib",
         "improv_ble",
+        "incomfort",
         "inkbird",
         "insteon",
         "intellifire",

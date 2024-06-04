@@ -15,29 +15,27 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, IncomfortEntity
+from . import DATA_INCOMFORT, IncomfortEntity
+from .const import DOMAIN
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up an InComfort/InTouch climate device."""
-    if discovery_info is None:
-        return
-
-    client = hass.data[DOMAIN]["client"]
-    heaters = hass.data[DOMAIN]["heaters"]
-
+    """Set up InComfort/InTouch climate devices."""
+    incomfort_data = hass.data[DATA_INCOMFORT][entry.entry_id]
     async_add_entities(
-        [InComfortClimate(client, h, r) for h in heaters for r in h.rooms]
+        InComfortClimate(incomfort_data.client, h, r)
+        for h in incomfort_data.heaters
+        for r in h.rooms
     )
 
 
@@ -46,6 +44,7 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
 
     _attr_min_temp = 5.0
     _attr_max_temp = 30.0
+    _attr_name = None
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
@@ -62,7 +61,11 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
         self._room = room
 
         self._attr_unique_id = f"{heater.serial_no}_{room.room_no}"
-        self._attr_name = f"Thermostat {room.room_no}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            manufacturer="Intergas",
+            name=f"Thermostat {room.room_no}",
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

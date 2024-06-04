@@ -861,7 +861,7 @@ habitipy==0.3.1
 habluetooth==3.1.1
 
 # homeassistant.components.cloud
-hass-nabucasa==0.81.0
+hass-nabucasa==0.81.1
 
 # homeassistant.components.conversation
 hassil==1.7.1
@@ -889,10 +889,10 @@ hole==0.8.0
 holidays==0.49
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240530.0
+home-assistant-frontend==20240603.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.5.28
+home-assistant-intents==2024.6.3
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -934,6 +934,9 @@ ifaddr==0.2.0
 
 # homeassistant.components.imgw_pib
 imgw_pib==1.0.1
+
+# homeassistant.components.incomfort
+incomfort-client==0.5.0
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
@@ -1405,7 +1408,7 @@ pydexcom==0.2.3
 pydiscovergy==3.0.1
 
 # homeassistant.components.hydrawise
-pydrawise==2024.4.1
+pydrawise==2024.6.2
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
@@ -1733,7 +1736,7 @@ pytautulli==23.1.1
 pytedee-async==0.2.17
 
 # homeassistant.components.motionmount
-python-MotionMount==1.0.0
+python-MotionMount==2.0.0
 
 # homeassistant.components.awair
 python-awair==0.2.4
@@ -1794,7 +1797,7 @@ python-qbittorrent==0.4.3
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.1.1
+python-roborock==2.2.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -1831,7 +1834,7 @@ pytradfri[async]==9.0.1
 pytrafikverket==0.3.10
 
 # homeassistant.components.v2c
-pytrydan==0.6.1
+pytrydan==0.7.0
 
 # homeassistant.components.usb
 pyudev==0.24.1
@@ -1906,13 +1909,13 @@ refoss-ha==1.2.1
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.2.2
+renault-api==0.2.3
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.8.11
+reolink-aio==0.9.1
 
 # homeassistant.components.rflink
 rflink==0.0.66
