@@ -2051,6 +2051,10 @@ class ConfigEntries:
 
         If platforms must be loaded late (after the config entry is setup),
         use async_late_forward_entry_setup instead.
+
+        This method is more efficient than async_forward_entry_setup as
+        it can load multiple platforms at once and does not require a separate
+        import executor job for each platform.
         """
         integration = await loader.async_get_integration(self.hass, entry.domain)
         if not integration.platforms_are_loaded(platforms):
@@ -2104,7 +2108,9 @@ class ConfigEntries:
 
         This method is deprecated and will stop working in Home Assistant 2025.6.
 
-        Instead, await async_forward_entry_setups.
+        Instead, await async_forward_entry_setups as it can load
+        multiple platforms at once and is more efficient since it
+        does not require a separate import executor job for each platform.
 
         If platforms must be loaded late (after the config entry is setup),
         use async_late_forward_entry_setup instead.
