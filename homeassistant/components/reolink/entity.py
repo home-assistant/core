@@ -91,11 +91,17 @@ class ReolinkHostCoordinatorEntity(ReolinkBaseCoordinatorEntity[None]):
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
-        if (
-            self.entity_description.cmd_key is not None
-            and self.entity_description.cmd_key not in self._host.update_cmd_list
-        ):
-            self._host.update_cmd_list[self.entity_description.cmd_key] = []
+        cmd_key = self.entity_description.cmd_key
+        if cmd_key is not None:
+            self._host.async_register_update_cmd(cmd_key)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Entity removed."""
+        cmd_key = self.entity_description.cmd_key
+        if cmd_key is not None:
+            self._host.async_unregister_update_cmd(cmd_key)
+
+        await super().async_will_remove_from_hass()
 
     async def async_update(self) -> None:
         """Update the entity from the generic entity update service."""
@@ -140,8 +146,13 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
         """Entity created."""
         await super().async_added_to_hass()
         cmd_key = self.entity_description.cmd_key
-        if (
-            cmd_key is not None
-            and self._channel not in self._host.update_cmd_list[cmd_key]
-        ):
-            self._host.update_cmd_list[cmd_key].append(self._channel)
+        if cmd_key is not None:
+            self._host.async_register_update_cmd(cmd_key, self._channel)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Entity removed."""
+        cmd_key = self.entity_description.cmd_key
+        if cmd_key is not None:
+            self._host.async_unregister_update_cmd(cmd_key, self._channel)
+
+        await super().async_will_remove_from_hass()
