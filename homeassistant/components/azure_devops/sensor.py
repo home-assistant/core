@@ -37,6 +37,7 @@ class AzureDevOpsBuildSensorEntityDescription(SensorEntityDescription):
 
 
 BASE_BUILD_SENSOR_DESCRIPTIONS: tuple[AzureDevOpsBuildSensorEntityDescription, ...] = (
+    # Attributes are deprecated in 2024.7 and can be removed in 2025.1
     AzureDevOpsBuildSensorEntityDescription(
         key="latest_build",
         translation_key="latest_build",
