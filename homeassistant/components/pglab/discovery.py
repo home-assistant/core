@@ -87,6 +87,10 @@ class DiscoverDeviceInfo:
         return self._entities
 
 
+class PGLabDiscoveryError(Exception):
+    """Raised when a discovery has failed."""
+
+
 @dataclass
 class PGLabDiscovery:
     """PG LAB Discovery class. Discovery a pglab/discovert/[device]/config."""
@@ -108,26 +112,27 @@ class PGLabDiscovery:
         try:
             payload = json.loads(msg.payload)
         except ValueError:
-            _LOGGER.warning("Can't decode discovery payload: %s", msg.payload)
-            return None
+            raise PGLabDiscoveryError(
+                f"Can't decode discovery payload: {msg.payload!r}"
+            ) from None
 
         device_id = "id"
 
         # check the key id is present in the paylod. It must always present !!!
         if device_id not in payload:
-            _LOGGER.warning("Unexpected discovery payload format, id key not present")
-            return None
+            raise PGLabDiscoveryError(
+                "Unexpected discovery payload format, id key not present"
+            )
 
         # do a sanity check: the id must match the discovery topic /pglab/discovery/[id]/config
         topic = msg.topic
         if not topic.endswith(f"{payload[device_id]}/config"):
-            return None
+            raise PGLabDiscoveryError("Unexpected discovery topic format")
 
         # build and configure the PG LAB device
         pglab_device = PyPGLabDevice()
         if not await pglab_device.config(mqtt, payload):
-            _LOGGER.warning("Error during setup of new discovered device")
-            return None
+            raise PGLabDiscoveryError("Error during setup of new discovered device")
 
         return pglab_device
 
