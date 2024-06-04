@@ -152,6 +152,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "mqtt_mock_entry": "MqttMockHAClientGenerator",
     "recorder_db_url": "str",
     "recorder_mock": "Recorder",
+    "request": "pytest.FixtureRequest",
     "requests_mock": "Mocker",
     "snapshot": "SnapshotAssertion",
     "socket_enabled": "None",

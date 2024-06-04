@@ -27,7 +27,7 @@ def blueprint_1():
 
 
 @pytest.fixture(params=[False, True])
-def blueprint_2(request):
+def blueprint_2(request: pytest.FixtureRequest) -> models.Blueprint:
     """Blueprint fixture with default inputs."""
     blueprint = {
         "blueprint": {
