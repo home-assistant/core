@@ -22,18 +22,12 @@ from .coordinator import TickTickDataUpdateCoordinator
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
-TODO_STATUS_MAP = {
-    "needsAction": TodoItemStatus.NEEDS_ACTION,
-    "completed": TodoItemStatus.COMPLETED,
-}
-TODO_STATUS_MAP_INV = {v: k for k, v in TODO_STATUS_MAP.items()}
-
 
 def _convert_todo_item(item: TodoItem) -> dict[str, Any]:
     """Convert TodoItem dataclass items to dictionary of attributes for the TickTick API."""
     result: dict[str, Any] = {
         "title": item.summary,
-        "status": TODO_STATUS_MAP_INV.get(item.status, "needsAction"),
+        "status": 0 if TodoItemStatus.NEEDS_ACTION else 1,
         "content": item.description,
     }
     if (due := item.due) is not None:
@@ -45,14 +39,13 @@ def _convert_api_item(item: dict[str, Any]) -> TodoItem:
     """Convert TickTick API items into a TodoItem."""
     due: date | None = None
     if (due_str := item.get("dueDate")) is not None:
-        due = datetime.fromisoformat(due_str).date()
+        due = datetime.strptime(due_str, "%Y-%m-%dT%H:%M:%S.%f%z").date()
     return TodoItem(
         summary=item["title"],
         uid=item["id"],
-        status=TODO_STATUS_MAP.get(
-            item.get("status", ""),
-            TodoItemStatus.NEEDS_ACTION,
-        ),
+        status=TodoItemStatus.NEEDS_ACTION
+        if item["status"] == 0
+        else TodoItemStatus.COMPLETED,
         due=due,
         description=item.get("content"),
     )
