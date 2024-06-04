@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "status": {
+        "default": "mdi:ev-station"
+      }
+    }
+  }
+}

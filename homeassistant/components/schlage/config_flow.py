@@ -1,4 +1,5 @@
 """Config flow for Schlage integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -103,7 +104,7 @@ def _authenticate(username: str, password: str) -> tuple[str | None, dict[str, s
         auth.authenticate()
     except NotAuthorizedError:
         errors["base"] = "invalid_auth"
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         LOGGER.exception("Unknown error")
         errors["base"] = "unknown"
     else:

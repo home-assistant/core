@@ -1,4 +1,5 @@
 """Test configuration for the ZHA component."""
+
 from collections.abc import Callable, Generator
 import itertools
 import time
@@ -41,7 +42,7 @@ FIXTURE_GRP_NAME = "fixture group"
 COUNTER_NAMES = ["counter_1", "counter_2", "counter_3"]
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def disable_request_retry_delay():
     """Disable ZHA request retrying delay to speed up failures."""
 
@@ -52,7 +53,7 @@ def disable_request_retry_delay():
         yield
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def globally_load_quirks():
     """Load quirks automatically so that ZHA tests run deterministically in isolation.
 
@@ -226,12 +227,15 @@ def mock_zigpy_connect(
     zigpy_app_controller: ControllerApplication,
 ) -> Generator[ControllerApplication, None, None]:
     """Patch the zigpy radio connection with our mock application."""
-    with patch(
-        "bellows.zigbee.application.ControllerApplication.new",
-        return_value=zigpy_app_controller,
-    ), patch(
-        "bellows.zigbee.application.ControllerApplication",
-        return_value=zigpy_app_controller,
+    with (
+        patch(
+            "bellows.zigbee.application.ControllerApplication.new",
+            return_value=zigpy_app_controller,
+        ),
+        patch(
+            "bellows.zigbee.application.ControllerApplication",
+            return_value=zigpy_app_controller,
+        ),
     ):
         yield zigpy_app_controller
 
@@ -381,7 +385,7 @@ def zha_device_restored(hass, zigpy_app_controller, setup_zha):
 
 
 @pytest.fixture(params=["zha_device_joined", "zha_device_restored"])
-def zha_device_joined_restored(request):
+def zha_device_joined_restored(request: pytest.FixtureRequest):
     """Join or restore ZHA device."""
     named_method = request.getfixturevalue(request.param)
     named_method.name = request.param
@@ -418,12 +422,11 @@ def zha_device_mock(
         zigpy_device = zigpy_device_mock(
             endpoints, ieee, manufacturer, model, node_desc, patch_cluster=patch_cluster
         )
-        zha_device = zha_core_device.ZHADevice(
+        return zha_core_device.ZHADevice(
             hass,
             zigpy_device,
             ZHAGateway(hass, {}, config_entry),
         )
-        return zha_device
 
     return _zha_device
 
@@ -516,7 +519,7 @@ def network_backup() -> zigpy.backups.NetworkBackup:
 
 
 @pytest.fixture
-def core_rs(hass_storage):
+def core_rs(hass_storage: dict[str, Any]):
     """Core.restore_state fixture."""
 
     def _storage(entity_id, state, attributes={}):
@@ -542,6 +545,5 @@ def core_rs(hass_storage):
                 }
             ],
         }
-        return
 
     return _storage

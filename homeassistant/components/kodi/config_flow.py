@@ -1,4 +1,5 @@
 """Config flow for Kodi integration."""
+
 from __future__ import annotations
 
 import logging
@@ -77,7 +78,7 @@ async def validate_ws(hass: HomeAssistant, data):
         await kwc.connect()
         if not kwc.connected:
             _LOGGER.warning("Cannot connect to %s:%s over WebSocket", host, ws_port)
-            raise WSCannotConnect()
+            raise WSCannotConnect
         kodi = Kodi(kwc)
         await kodi.ping()
     except CannotConnectError as error:
@@ -132,7 +133,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_ws_port()
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
@@ -166,7 +167,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_ws_port()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -191,7 +192,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_ws_port()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -214,7 +215,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_ws(self.hass, self._get_data())
             except WSCannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -234,7 +235,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
         except CannotConnect:
             _LOGGER.exception("Cannot connect to Kodi")
             reason = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             reason = "unknown"
         else:
@@ -299,7 +300,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _get_data(self):
-        data = {
+        return {
             CONF_NAME: self._name,
             CONF_HOST: self._host,
             CONF_PORT: self._port,
@@ -309,8 +310,6 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_SSL: self._ssl,
             CONF_TIMEOUT: DEFAULT_TIMEOUT,
         }
-
-        return data
 
 
 class CannotConnect(HomeAssistantError):

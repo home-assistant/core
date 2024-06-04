@@ -24,7 +24,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .const import (
     BANG_OLUFSEN_WEBSOCKET_EVENT,
     CONNECTION_STATUS,
-    WEBSOCKET_NOTIFICATION,
+    WebsocketNotification,
 )
 from .entity import BangOlufsenBase
 from .util import get_device
@@ -80,12 +80,12 @@ class BangOlufsenWebsocket(BangOlufsenBase):
 
     def on_connection(self) -> None:
         """Handle WebSocket connection made."""
-        _LOGGER.debug("Connected to the %s notification channel", self._name)
+        _LOGGER.debug("Connected to the %s notification channel", self.entry.title)
         self._update_connection_status()
 
     def on_connection_lost(self) -> None:
         """Handle WebSocket connection lost."""
-        _LOGGER.error("Lost connection to the %s", self._name)
+        _LOGGER.error("Lost connection to the %s", self.entry.title)
         self._update_connection_status()
 
     def on_notification_notification(
@@ -93,17 +93,17 @@ class BangOlufsenWebsocket(BangOlufsenBase):
     ) -> None:
         """Send notification dispatch."""
         if notification.value:
-            if WEBSOCKET_NOTIFICATION.REMOTE_MENU_CHANGED in notification.value:
+            if WebsocketNotification.REMOTE_MENU_CHANGED in notification.value:
                 async_dispatcher_send(
                     self.hass,
-                    f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.REMOTE_MENU_CHANGED}",
+                    f"{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",
                 )
 
     def on_playback_error_notification(self, notification: PlaybackError) -> None:
         """Send playback_error dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_ERROR}",
+            f"{self._unique_id}_{WebsocketNotification.PLAYBACK_ERROR}",
             notification,
         )
 
@@ -113,7 +113,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         """Send playback_metadata dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_METADATA}",
+            f"{self._unique_id}_{WebsocketNotification.PLAYBACK_METADATA}",
             notification,
         )
 
@@ -121,7 +121,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         """Send playback_progress dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_PROGRESS}",
+            f"{self._unique_id}_{WebsocketNotification.PLAYBACK_PROGRESS}",
             notification,
         )
 
@@ -129,7 +129,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         """Send playback_state dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_STATE}",
+            f"{self._unique_id}_{WebsocketNotification.PLAYBACK_STATE}",
             notification,
         )
 
@@ -137,7 +137,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         """Send source_change dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.SOURCE_CHANGE}",
+            f"{self._unique_id}_{WebsocketNotification.SOURCE_CHANGE}",
             notification,
         )
 
@@ -145,7 +145,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         """Send volume dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.VOLUME}",
+            f"{self._unique_id}_{WebsocketNotification.VOLUME}",
             notification,
         )
 

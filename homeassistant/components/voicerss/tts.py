@@ -1,4 +1,5 @@
 """Support for the voicerss speech service."""
+
 import asyncio
 from http import HTTPStatus
 import logging
@@ -79,7 +80,7 @@ SUPPORT_LANGUAGES = [
     "vi-vn",
 ]
 
-SUPPORT_CODECS = ["mp3", "wav", "aac", "ogg", "caf"]
+SUPPORT_CODECS = ["mp3", "wav", "aac", "ogg", "caf"]  # codespell:ignore caf
 
 SUPPORT_FORMATS = [
     "8khz_8bit_mono",

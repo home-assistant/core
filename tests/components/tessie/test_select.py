@@ -1,4 +1,5 @@
 """Test the Tessie select platform."""
+
 from unittest.mock import patch
 
 import pytest
@@ -52,10 +53,13 @@ async def test_errors(hass: HomeAssistant) -> None:
     entity_id = "select.test_seat_heater_left"
 
     # Test setting cover open with unknown error
-    with patch(
-        "homeassistant.components.tessie.select.set_seat_heat",
-        side_effect=ERROR_UNKNOWN,
-    ) as mock_set, pytest.raises(HomeAssistantError) as error:
+    with (
+        patch(
+            "homeassistant.components.tessie.select.set_seat_heat",
+            side_effect=ERROR_UNKNOWN,
+        ) as mock_set,
+        pytest.raises(HomeAssistantError) as error,
+    ):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,

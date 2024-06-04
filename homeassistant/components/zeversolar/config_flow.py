@@ -1,4 +1,5 @@
 """Config flow for zeversolar integration."""
+
 from __future__ import annotations
 
 import logging
@@ -47,7 +48,7 @@ class ZeverSolarConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except zeversolar.ZeverSolarTimeout:
             errors["base"] = "timeout_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

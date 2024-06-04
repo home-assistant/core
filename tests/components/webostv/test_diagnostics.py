@@ -1,4 +1,5 @@
 """Tests for the diagnostics data provided by LG webOS Smart TV."""
+
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
 

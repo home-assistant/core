@@ -1,4 +1,5 @@
 """Support for displaying IPs banned by fail2ban."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -46,12 +47,9 @@ async def async_setup_platform(
     jails = config[CONF_JAILS]
     log_file = config.get(CONF_FILE_PATH, DEFAULT_LOG)
 
-    device_list = []
     log_parser = BanLogParser(log_file)
-    for jail in jails:
-        device_list.append(BanSensor(name, jail, log_parser))
 
-    async_add_entities(device_list, True)
+    async_add_entities((BanSensor(name, jail, log_parser) for jail in jails), True)
 
 
 class BanSensor(SensorEntity):

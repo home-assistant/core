@@ -1,4 +1,5 @@
 """Config flow for Tellduslive."""
+
 import asyncio
 import logging
 import os
@@ -96,7 +97,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="unknown_authorize_url_generation")
         except TimeoutError:
             return self.async_abort(reason="authorize_url_timeout")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected error generating auth url")
             return self.async_abort(reason="unknown_authorize_url_generation")
 

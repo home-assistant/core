@@ -1,4 +1,5 @@
 """Support for the Nettigo Air Monitor service."""
+
 from __future__ import annotations
 
 import logging
@@ -8,14 +9,12 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import NAMDataUpdateCoordinator
-from .const import DOMAIN
+from . import NAMConfigEntry, NAMDataUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 
@@ -29,10 +28,10 @@ RESTART_BUTTON: ButtonEntityDescription = ButtonEntityDescription(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: NAMConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add a Nettigo Air Monitor entities from a config_entry."""
-    coordinator: NAMDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     buttons: list[NAMButton] = []
     buttons.append(NAMButton(coordinator, RESTART_BUTTON))

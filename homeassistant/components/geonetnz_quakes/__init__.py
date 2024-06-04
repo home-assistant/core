@@ -1,4 +1,5 @@
 """The GeoNet NZ Quakes integration."""
+
 from datetime import timedelta
 import logging
 

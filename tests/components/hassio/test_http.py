@@ -1,10 +1,12 @@
 """The tests for the hassio component."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
 from aiohttp import StreamReader
 import pytest
 
+from tests.common import MockUser
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -18,7 +20,7 @@ def mock_not_onboarded():
 
 
 @pytest.fixture
-def hassio_user_client(hassio_client, hass_admin_user):
+def hassio_user_client(hassio_client, hass_admin_user: MockUser):
     """Return a Hass.io HTTP client tied to a non-admin user."""
     hass_admin_user.groups = []
     return hassio_client

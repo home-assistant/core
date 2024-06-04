@@ -1,4 +1,5 @@
 """The denonavr component."""
+
 import logging
 
 from denonavr import DenonAVR

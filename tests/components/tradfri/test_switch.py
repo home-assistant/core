@@ -1,4 +1,5 @@
 """Tradfri switch (recognised as sockets in the IKEA ecosystem) platform tests."""
+
 from __future__ import annotations
 
 import pytest

@@ -1,4 +1,5 @@
 """Switch representing the shutoff valve for the Flo by Moen integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -13,7 +14,7 @@ from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as FLO_DOMAIN
-from .device import FloDeviceDataUpdateCoordinator
+from .coordinator import FloDeviceDataUpdateCoordinator
 from .entity import FloEntity
 
 ATTR_REVERT_TO_MODE = "revert_to_mode"
@@ -33,11 +34,10 @@ async def async_setup_entry(
     devices: list[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
         config_entry.entry_id
     ]["devices"]
-    entities = []
-    for device in devices:
-        if device.device_type != "puck_oem":
-            entities.append(FloSwitch(device))
-    async_add_entities(entities)
+
+    async_add_entities(
+        [FloSwitch(device) for device in devices if device.device_type != "puck_oem"]
+    )
 
     platform = entity_platform.async_get_current_platform()
 

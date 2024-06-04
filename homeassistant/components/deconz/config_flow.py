@@ -44,7 +44,7 @@ from .const import (
     HASSIO_CONFIGURATION_URL,
     LOGGER,
 )
-from .gateway import DeconzGateway
+from .hub import DeconzHub
 
 DECONZ_MANUFACTURERURL = "http://www.dresden-elektronik.de"
 CONF_SERIAL = "serial"
@@ -52,11 +52,11 @@ CONF_MANUAL_INPUT = "Manually define gateway"
 
 
 @callback
-def get_master_gateway(hass: HomeAssistant) -> DeconzGateway:
+def get_master_hub(hass: HomeAssistant) -> DeconzHub:
     """Return the gateway which is marked as master."""
-    for gateway in hass.data[DOMAIN].values():
-        if gateway.master:
-            return cast(DeconzGateway, gateway)
+    for hub in hass.data[DOMAIN].values():
+        if hub.master:
+            return cast(DeconzHub, hub)
     raise ValueError
 
 
@@ -114,10 +114,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
             LOGGER.debug("Discovered deCONZ gateways %s", pformat(self.bridges))
 
         if self.bridges:
-            hosts = []
-
-            for bridge in self.bridges:
-                hosts.append(bridge[CONF_HOST])
+            hosts = [bridge[CONF_HOST] for bridge in self.bridges]
 
             hosts.append(CONF_MANUAL_INPUT)
 
@@ -300,7 +297,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
 class DeconzOptionsFlowHandler(OptionsFlow):
     """Handle deCONZ options."""
 
-    gateway: DeconzGateway
+    gateway: DeconzHub
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize deCONZ options flow."""

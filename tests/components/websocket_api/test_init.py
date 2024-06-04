@@ -1,4 +1,5 @@
 """Tests for the Home Assistant Websocket API."""
+
 from unittest.mock import Mock, patch
 
 from aiohttp import WSMsgType
@@ -40,7 +41,7 @@ async def test_quiting_hass(hass: HomeAssistant, websocket_client) -> None:
 
     msg = await websocket_client.receive()
 
-    assert msg.type == WSMsgType.CLOSED
+    assert msg.type is WSMsgType.CLOSE
 
 
 async def test_unknown_command(websocket_client) -> None:

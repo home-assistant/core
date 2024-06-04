@@ -1,5 +1,6 @@
 """The tests for the mFi switch platform."""
-import unittest.mock as mock
+
+from unittest import mock
 
 import pytest
 
@@ -26,11 +27,12 @@ GOOD_CONFIG = {
 
 async def test_setup_adds_proper_devices(hass: HomeAssistant) -> None:
     """Test if setup adds devices."""
-    with mock.patch(
-        "homeassistant.components.mfi.switch.MFiClient"
-    ) as mock_client, mock.patch(
-        "homeassistant.components.mfi.switch.MfiSwitch", side_effect=mfi.MfiSwitch
-    ) as mock_switch:
+    with (
+        mock.patch("homeassistant.components.mfi.switch.MFiClient") as mock_client,
+        mock.patch(
+            "homeassistant.components.mfi.switch.MfiSwitch", side_effect=mfi.MfiSwitch
+        ) as mock_switch,
+    ):
         ports = {
             i: mock.MagicMock(
                 model=model, label=f"Port {i}", output=False, data={}, ident=f"abcd-{i}"

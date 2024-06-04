@@ -1,4 +1,5 @@
 """Support for Duotecno switches."""
+
 from typing import Any
 
 from duotecno.controller import PyDuotecno

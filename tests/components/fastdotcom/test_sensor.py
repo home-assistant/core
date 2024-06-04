@@ -1,4 +1,5 @@
 """Test the FastdotcomDataUpdateCoordindator."""
+
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory

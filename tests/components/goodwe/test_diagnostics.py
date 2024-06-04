@@ -1,4 +1,5 @@
 """Test the CO2Signal diagnostics."""
+
 from unittest.mock import MagicMock, patch
 
 from syrupy import SnapshotAssertion

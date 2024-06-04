@@ -1,10 +1,13 @@
 """Support for Abode Security System alarm control panels."""
+
 from __future__ import annotations
 
-from jaraco.abode.devices.alarm import Alarm as AbodeAl
+from jaraco.abode.devices.alarm import Alarm
 
-import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
@@ -14,8 +17,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AbodeDevice, AbodeSystem
+from . import AbodeSystem
 from .const import DOMAIN
+from .entity import AbodeDevice
 
 
 async def async_setup_entry(
@@ -28,7 +32,7 @@ async def async_setup_entry(
     )
 
 
-class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanelEntity):
+class AbodeAlarm(AbodeDevice, AlarmControlPanelEntity):
     """An alarm_control_panel implementation for Abode."""
 
     _attr_name = None
@@ -37,7 +41,7 @@ class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanelEntity):
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
-    _device: AbodeAl
+    _device: Alarm
 
     @property
     def state(self) -> str | None:

@@ -1,4 +1,5 @@
 """Platform to control a Renson ventilation unit."""
+
 from __future__ import annotations
 
 import logging
@@ -117,9 +118,9 @@ async def async_setup_entry(
 class RensonFan(RensonEntity, FanEntity):
     """Representation of the Renson fan platform."""
 
-    _attr_icon = "mdi:air-conditioner"
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "fan"
     _attr_supported_features = FanEntityFeature.SET_SPEED
 
     def __init__(self, api: RensonVentilation, coordinator: RensonCoordinator) -> None:

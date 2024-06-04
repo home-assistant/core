@@ -1,4 +1,5 @@
 """Support for Overkiz alarm control panel."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -35,19 +36,12 @@ from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity
 
 
-@dataclass(frozen=True)
-class OverkizAlarmDescriptionMixin:
-    """Define an entity description mixin for switch entities."""
+@dataclass(frozen=True, kw_only=True)
+class OverkizAlarmDescription(AlarmControlPanelEntityDescription):
+    """Class to describe an Overkiz alarm control panel."""
 
     supported_features: AlarmControlPanelEntityFeature
     fn_state: Callable[[Callable[[str], OverkizStateType]], str]
-
-
-@dataclass(frozen=True)
-class OverkizAlarmDescription(
-    AlarmControlPanelEntityDescription, OverkizAlarmDescriptionMixin
-):
-    """Class to describe an Overkiz alarm control panel."""
 
     alarm_disarm: str | None = None
     alarm_disarm_args: OverkizStateType | list[OverkizStateType] = None
@@ -227,21 +221,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Overkiz alarm control panel from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
-    entities: list[OverkizAlarmControlPanel] = []
 
-    for device in data.platforms[Platform.ALARM_CONTROL_PANEL]:
-        if description := SUPPORTED_DEVICES.get(device.widget) or SUPPORTED_DEVICES.get(
-            device.ui_class
-        ):
-            entities.append(
-                OverkizAlarmControlPanel(
-                    device.device_url,
-                    data.coordinator,
-                    description,
-                )
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        OverkizAlarmControlPanel(
+            device.device_url,
+            data.coordinator,
+            description,
+        )
+        for device in data.platforms[Platform.ALARM_CONTROL_PANEL]
+        if (
+            description := SUPPORTED_DEVICES.get(device.widget)
+            or SUPPORTED_DEVICES.get(device.ui_class)
+        )
+    )
 
 
 class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity):

@@ -1,4 +1,5 @@
 """Viessmann ViCare button device."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -39,7 +40,6 @@ BUTTON_DESCRIPTIONS: tuple[ViCareButtonEntityDescription, ...] = (
     ViCareButtonEntityDescription(
         key="activate_onetimecharge",
         translation_key="activate_onetimecharge",
-        icon="mdi:shower-head",
         entity_category=EntityCategory.CONFIG,
         value_getter=lambda api: api.getOneTimeCharge(),
         value_setter=lambda api: api.activateOneTimeCharge(),

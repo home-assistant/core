@@ -1,4 +1,5 @@
 """The tests for the Tomato device tracker platform."""
+
 from unittest import mock
 
 import pytest

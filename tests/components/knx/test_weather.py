@@ -1,4 +1,5 @@
 """Test KNX weather."""
+
 from homeassistant.components.knx.schema import WeatherSchema
 from homeassistant.components.weather import (
     ATTR_CONDITION_EXCEPTIONAL,

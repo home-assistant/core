@@ -2,7 +2,8 @@
   "title": "Holiday",
   "config": {
     "abort": {
-      "already_configured": "Already configured. Only a single configuration for country/province combination possible."
+      "already_configured": "Already configured. Only a single configuration for country/province combination possible.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "step": {
       "user": {
@@ -13,6 +14,11 @@
       "province": {
         "data": {
           "province": "Province"
+        }
+      },
+      "reconfigure_confirm": {
+        "data": {
+          "province": "[%key:component::holiday::config::step::province::data::province%]"
         }
       }
     }

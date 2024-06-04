@@ -1,4 +1,5 @@
 """Platform to retrieve Islamic prayer times information for Home Assistant."""
+
 from datetime import datetime
 
 from homeassistant.components.sensor import (

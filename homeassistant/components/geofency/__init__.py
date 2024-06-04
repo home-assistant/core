@@ -1,4 +1,5 @@
 """Support for Geofency."""
+
 from http import HTTPStatus
 
 from aiohttp import web

@@ -1,4 +1,5 @@
 """Tests for hassfest version."""
+
 import pytest
 import voluptuous as vol
 

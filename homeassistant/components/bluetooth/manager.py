@@ -1,4 +1,5 @@
 """The bluetooth integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
@@ -96,10 +97,9 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         matched_domains = self._integration_matcher.match_domains(service_info)
         if self._debug:
             _LOGGER.debug(
-                "%s: %s %s match: %s",
+                "%s: %s match: %s",
                 self._async_describe_source(service_info),
-                service_info.address,
-                service_info.advertisement,
+                service_info,
                 matched_domains,
             )
 
@@ -107,7 +107,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             callback = match[CALLBACK]
             try:
                 callback(service_info, BluetoothChange.ADVERTISEMENT)
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Error in bluetooth callback")
 
         for domain in matched_domains:
@@ -182,7 +182,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             if ble_device_matches(callback_matcher, service_info):
                 try:
                     callback(service_info, BluetoothChange.ADVERTISEMENT)
-                except Exception:  # pylint: disable=broad-except
+                except Exception:
                     _LOGGER.exception("Error in bluetooth callback")
 
         return _async_remove_callback

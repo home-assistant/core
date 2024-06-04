@@ -2,6 +2,7 @@
 
 detect_location_info and elevation are mocked by default during tests.
 """
+
 from __future__ import annotations
 
 from functools import lru_cache

@@ -1,4 +1,5 @@
 """Tests for Shelly utils."""
+
 from typing import Any
 from unittest.mock import Mock
 

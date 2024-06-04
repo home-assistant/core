@@ -1,8 +1,9 @@
 """The tests for Cover device conditions."""
+
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.cover import DOMAIN, CoverEntityFeature
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import (
@@ -14,7 +15,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     EntityCategory,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
@@ -24,7 +25,9 @@ from tests.common import (
     async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
+    setup_test_component_platform,
 )
+from tests.components.cover.common import MockCover
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -33,7 +36,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -122,12 +125,12 @@ async def test_get_conditions(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_conditions_hidden_auxiliary(
     hass: HomeAssistant,
@@ -173,12 +176,11 @@ async def test_get_condition_capabilities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover condition."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[0]
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
+    ent = mock_cover_entities[0]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -207,12 +209,11 @@ async def test_get_condition_capabilities_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover condition."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[0]
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
+    ent = mock_cover_entities[0]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -244,12 +245,11 @@ async def test_get_condition_capabilities_set_pos(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover condition."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[1]
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
+    ent = mock_cover_entities[1]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -301,12 +301,12 @@ async def test_get_condition_capabilities_set_tilt_pos(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover condition."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[3]
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
+
+    ent = mock_cover_entities[3]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -358,7 +358,7 @@ async def test_if_state(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off conditions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -501,7 +501,7 @@ async def test_if_state_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off conditions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -557,14 +557,13 @@ async def test_if_position(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test for position conditions."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[1]
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
+    ent = mock_cover_entities[1]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -718,14 +717,13 @@ async def test_if_tilt_position(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test for tilt position conditions."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[3]
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
+    ent = mock_cover_entities[3]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 

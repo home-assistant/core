@@ -1,4 +1,5 @@
 """Config flow for MySensors."""
+
 from __future__ import annotations
 
 import os
@@ -62,7 +63,7 @@ def is_persistence_file(value: str) -> str:
 
 def _get_schema_common(user_input: dict[str, str]) -> dict:
     """Create a schema with options common to all gateway types."""
-    schema = {
+    return {
         vol.Required(
             CONF_VERSION,
             description={
@@ -71,7 +72,6 @@ def _get_schema_common(user_input: dict[str, str]) -> dict:
         ): str,
         vol.Optional(CONF_PERSISTENCE_FILE): str,
     }
-    return schema
 
 
 def _validate_version(version: str) -> dict[str, str]:
@@ -301,9 +301,9 @@ class MySensorsConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             except vol.Invalid:
                 errors[CONF_PERSISTENCE_FILE] = "invalid_persistence_file"
             else:
-                real_persistence_path = user_input[
-                    CONF_PERSISTENCE_FILE
-                ] = self._normalize_persistence_file(user_input[CONF_PERSISTENCE_FILE])
+                real_persistence_path = user_input[CONF_PERSISTENCE_FILE] = (
+                    self._normalize_persistence_file(user_input[CONF_PERSISTENCE_FILE])
+                )
                 for other_entry in self._async_current_entries():
                     if CONF_PERSISTENCE_FILE not in other_entry.data:
                         continue

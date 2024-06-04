@@ -1,4 +1,5 @@
 """Test that we can upload images."""
+
 import pathlib
 import tempfile
 from unittest.mock import patch
@@ -26,8 +27,9 @@ async def test_upload_image(
     now = dt_util.utcnow()
     freezer.move_to(now)
 
-    with tempfile.TemporaryDirectory() as tempdir, patch.object(
-        hass.config, "path", return_value=tempdir
+    with (
+        tempfile.TemporaryDirectory() as tempdir,
+        patch.object(hass.config, "path", return_value=tempdir),
     ):
         assert await async_setup_component(hass, "image_upload", {})
         ws_client: ClientWebSocketResponse = await hass_ws_client()
@@ -47,7 +49,14 @@ async def test_upload_image(
 
         tempdir = pathlib.Path(tempdir)
         item_folder: pathlib.Path = tempdir / item["id"]
-        assert (item_folder / "original").read_bytes() == TEST_IMAGE.read_bytes()
+        test_image_bytes = TEST_IMAGE.read_bytes()
+        assert (item_folder / "original").read_bytes() == test_image_bytes
+
+        # fetch original image
+        res = await client.get(f"/api/image/serve/{item['id']}/original")
+        assert res.status == 200
+        fetched_image_bytes = await res.read()
+        assert fetched_image_bytes == test_image_bytes
 
         # fetch non-existing image
         res = await client.get("/api/image/serve/non-existing/256x256")

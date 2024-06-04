@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration advertisement tracking."""
+
 from datetime import timedelta
 import time
 

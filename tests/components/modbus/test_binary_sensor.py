@@ -1,4 +1,5 @@
 """Thetests for the Modbus sensor component."""
+
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as SENSOR_DOMAIN
@@ -206,7 +207,7 @@ async def test_all_binary_sensor(hass: HomeAssistant, expected, mock_do_cycle) -
     ],
 )
 async def test_service_binary_sensor_update(
-    hass: HomeAssistant, mock_modbus, mock_ha
+    hass: HomeAssistant, mock_modbus_ha
 ) -> None:
     """Run test for service homeassistant.update_entity."""
 
@@ -216,7 +217,7 @@ async def test_service_binary_sensor_update(
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
-    mock_modbus.read_coils.return_value = ReadResult([0x01])
+    mock_modbus_ha.read_coils.return_value = ReadResult([0x01])
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )

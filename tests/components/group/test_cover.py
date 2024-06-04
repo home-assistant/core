@@ -1,4 +1,5 @@
 """The tests for the group cover platform."""
+
 import asyncio
 from datetime import timedelta
 

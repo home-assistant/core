@@ -1,4 +1,5 @@
 """Module to handle installing requirements."""
+
 from __future__ import annotations
 
 import asyncio
@@ -11,6 +12,7 @@ from packaging.requirements import Requirement
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
+from .helpers import singleton
 from .helpers.typing import UNDEFINED, UndefinedType
 from .loader import Integration, IntegrationNotFound, async_get_integration
 from .util import package as pkg_util
@@ -71,14 +73,10 @@ async def async_load_installed_versions(
 
 
 @callback
+@singleton.singleton(DATA_REQUIREMENTS_MANAGER)
 def _async_get_manager(hass: HomeAssistant) -> RequirementsManager:
     """Get the requirements manager."""
-    if DATA_REQUIREMENTS_MANAGER in hass.data:
-        manager: RequirementsManager = hass.data[DATA_REQUIREMENTS_MANAGER]
-        return manager
-
-    manager = hass.data[DATA_REQUIREMENTS_MANAGER] = RequirementsManager(hass)
-    return manager
+    return RequirementsManager(hass)
 
 
 @callback
@@ -121,6 +119,11 @@ def _install_requirements_if_missing(
     return installed, failures
 
 
+def _set_result_unless_done(future: asyncio.Future[None]) -> None:
+    if not future.done():
+        future.set_result(None)
+
+
 class RequirementsManager:
     """Manage requirements."""
 
@@ -143,16 +146,13 @@ class RequirementsManager:
         is invalid, RequirementNotFound if there was some type of
         failure to install requirements.
         """
-
         if done is None:
             done = {domain}
         else:
             done.add(domain)
 
-        integration = await async_get_integration(self.hass, domain)
-
         if self.hass.config.skip_pip:
-            return integration
+            return await async_get_integration(self.hass, domain)
 
         cache = self.integrations_with_reqs
         int_or_fut = cache.get(domain, UNDEFINED)
@@ -169,19 +169,19 @@ class RequirementsManager:
         if int_or_fut is not UNDEFINED:
             return cast(Integration, int_or_fut)
 
-        event = cache[domain] = self.hass.loop.create_future()
+        future = cache[domain] = self.hass.loop.create_future()
 
         try:
+            integration = await async_get_integration(self.hass, domain)
             await self._async_process_integration(integration, done)
         except Exception:
             del cache[domain]
-            if not event.done():
-                event.set_result(None)
             raise
+        finally:
+            _set_result_unless_done(future)
 
         cache[domain] = integration
-        if not event.done():
-            event.set_result(None)
+        _set_result_unless_done(future)
         return integration
 
     async def _async_process_integration(
@@ -243,7 +243,7 @@ class RequirementsManager:
                     or ex.domain not in integration.after_dependencies
                 ):
                     exceptions.append(ex)
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception as ex:  # noqa: BLE001
                 exceptions.insert(0, ex)
 
         if exceptions:

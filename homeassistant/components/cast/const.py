@@ -1,9 +1,10 @@
 """Consts for Cast integration."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, TypedDict
 
-from homeassistant.helpers.dispatcher import SignalType
+from homeassistant.util.signal_type import SignalType
 
 if TYPE_CHECKING:
     from .helpers import ChromecastInfo

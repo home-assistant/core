@@ -1,4 +1,5 @@
 """The tests for the group fan platform."""
+
 import asyncio
 from unittest.mock import patch
 

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+from functools import lru_cache
+import logging
 import os
 from pathlib import Path
 import tempfile
@@ -10,10 +12,12 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import MAX_LENGTH_STATE_STATE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.async_ import create_eager_task
 
 from .const import (
     ATTR_PAYLOAD,
@@ -23,14 +27,12 @@ from .const import (
     CONF_CERTIFICATE,
     CONF_CLIENT_CERT,
     CONF_CLIENT_KEY,
-    DATA_MQTT,
-    DATA_MQTT_AVAILABLE,
     DEFAULT_ENCODING,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
 )
-from .models import MqttData
+from .models import DATA_MQTT, DATA_MQTT_AVAILABLE, ReceiveMessage
 
 AVAILABILITY_TIMEOUT = 30.0
 
@@ -39,11 +41,56 @@ TEMP_DIR_NAME = f"home-assistant-{DOMAIN}"
 _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
 
 
+def platforms_from_config(config: list[ConfigType]) -> set[Platform | str]:
+    """Return the platforms to be set up."""
+    return {key for platform in config for key in platform}
+
+
+async def async_forward_entry_setup_and_setup_discovery(
+    hass: HomeAssistant, config_entry: ConfigEntry, platforms: set[Platform | str]
+) -> None:
+    """Forward the config entry setup to the platforms and set up discovery."""
+    mqtt_data = hass.data[DATA_MQTT]
+    platforms_loaded = mqtt_data.platforms_loaded
+    new_platforms: set[Platform | str] = platforms - platforms_loaded
+    tasks: list[asyncio.Task] = []
+    if "device_automation" in new_platforms:
+        # Local import to avoid circular dependencies
+        # pylint: disable-next=import-outside-toplevel
+        from . import device_automation
+
+        tasks.append(
+            create_eager_task(device_automation.async_setup_entry(hass, config_entry))
+        )
+    if "tag" in new_platforms:
+        # Local import to avoid circular dependencies
+        # pylint: disable-next=import-outside-toplevel
+        from . import tag
+
+        tasks.append(create_eager_task(tag.async_setup_entry(hass, config_entry)))
+    if new_entity_platforms := (new_platforms - {"tag", "device_automation"}):
+        tasks.append(
+            create_eager_task(
+                hass.config_entries.async_forward_entry_setups(
+                    config_entry, new_entity_platforms
+                )
+            )
+        )
+    if not tasks:
+        return
+    await asyncio.gather(*tasks)
+    platforms_loaded.update(new_platforms)
+
+
 def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
     """Return true when the MQTT config entry is enabled."""
-    if not bool(hass.config_entries.async_entries(DOMAIN)):
-        return None
-    return not bool(hass.config_entries.async_entries(DOMAIN)[0].disabled_by)
+    # If the mqtt client is connected, skip the expensive config
+    # entry check as its roughly two orders of magnitude faster.
+    return (
+        DATA_MQTT in hass.data and hass.data[DATA_MQTT].client.connected
+    ) or hass.config_entries.async_has_entries(
+        DOMAIN, include_disabled=False, include_ignore=False
+    )
 
 
 async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
@@ -67,8 +114,6 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
         hass.data[DATA_MQTT_AVAILABLE] = state_reached_future
     else:
         state_reached_future = hass.data[DATA_MQTT_AVAILABLE]
-        if state_reached_future.done():
-            return state_reached_future.result()
 
     try:
         async with asyncio.timeout(AVAILABILITY_TIMEOUT):
@@ -79,7 +124,16 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
 
 
 def valid_topic(topic: Any) -> str:
-    """Validate that this is a valid topic name/filter."""
+    """Validate that this is a valid topic name/filter.
+
+    This function is not cached and is not expected to be called
+    directly outside of this module. It is not marked as protected
+    only because its tested directly in test_util.py.
+
+    If it gets used outside of valid_subscribe_topic and
+    valid_publish_topic, it may need an lru_cache decorator or
+    an lru_cache decorator on the function where its used.
+    """
     validated_topic = cv.string(topic)
     try:
         raw_validated_topic = validated_topic.encode("utf-8")
@@ -91,30 +145,32 @@ def valid_topic(topic: Any) -> str:
         raise vol.Invalid(
             "MQTT topic name/filter must not be longer than 65535 encoded bytes."
         )
-    if "\0" in validated_topic:
-        raise vol.Invalid("MQTT topic name/filter must not contain null character.")
-    if any(char <= "\u001F" for char in validated_topic):
-        raise vol.Invalid("MQTT topic name/filter must not contain control characters.")
-    if any("\u007f" <= char <= "\u009F" for char in validated_topic):
-        raise vol.Invalid("MQTT topic name/filter must not contain control characters.")
-    if any("\ufdd0" <= char <= "\ufdef" for char in validated_topic):
-        raise vol.Invalid("MQTT topic name/filter must not contain non-characters.")
-    if any((ord(char) & 0xFFFF) in (0xFFFE, 0xFFFF) for char in validated_topic):
-        raise vol.Invalid("MQTT topic name/filter must not contain noncharacters.")
+
+    for char in validated_topic:
+        if char == "\0":
+            raise vol.Invalid("MQTT topic name/filter must not contain null character.")
+        if char <= "\u001f" or "\u007f" <= char <= "\u009f":
+            raise vol.Invalid(
+                "MQTT topic name/filter must not contain control characters."
+            )
+        if "\ufdd0" <= char <= "\ufdef" or (ord(char) & 0xFFFF) in (0xFFFE, 0xFFFF):
+            raise vol.Invalid("MQTT topic name/filter must not contain non-characters.")
 
     return validated_topic
 
 
+@lru_cache
 def valid_subscribe_topic(topic: Any) -> str:
     """Validate that we can subscribe using this MQTT topic."""
     validated_topic = valid_topic(topic)
-    for i in (i for i, c in enumerate(validated_topic) if c == "+"):
-        if (i > 0 and validated_topic[i - 1] != "/") or (
-            i < len(validated_topic) - 1 and validated_topic[i + 1] != "/"
-        ):
-            raise vol.Invalid(
-                "Single-level wildcard must occupy an entire level of the filter"
-            )
+    if "+" in validated_topic:
+        for i in (i for i, c in enumerate(validated_topic) if c == "+"):
+            if (i > 0 and validated_topic[i - 1] != "/") or (
+                i < len(validated_topic) - 1 and validated_topic[i + 1] != "/"
+            ):
+                raise vol.Invalid(
+                    "Single-level wildcard must occupy an entire level of the filter"
+                )
 
     index = validated_topic.find("#")
     if index != -1:
@@ -141,6 +197,7 @@ def valid_subscribe_topic_template(value: Any) -> template.Template:
     return tpl
 
 
+@lru_cache
 def valid_publish_topic(topic: Any) -> str:
     """Validate that we can publish using this MQTT topic."""
     validated_topic = valid_topic(topic)
@@ -173,13 +230,6 @@ def valid_birth_will(config: ConfigType) -> ConfigType:
     return config
 
 
-def get_mqtt_data(hass: HomeAssistant) -> MqttData:
-    """Return typed MqttData from hass.data[DATA_MQTT]."""
-    mqtt_data: MqttData
-    mqtt_data = hass.data[DATA_MQTT]
-    return mqtt_data
-
-
 async def async_create_certificate_temp_files(
     hass: HomeAssistant, config: ConfigType
 ) -> None:
@@ -208,6 +258,28 @@ async def async_create_certificate_temp_files(
         _create_temp_file(temp_dir / CONF_CLIENT_KEY, config.get(CONF_CLIENT_KEY))
 
     await hass.async_add_executor_job(_create_temp_dir_and_files)
+
+
+def check_state_too_long(
+    logger: logging.Logger, proposed_state: str, entity_id: str, msg: ReceiveMessage
+) -> bool:
+    """Check if the processed state is too long and log warning."""
+    if (state_length := len(proposed_state)) > MAX_LENGTH_STATE_STATE:
+        logger.warning(
+            "Cannot update state for entity %s after processing "
+            "payload on topic %s. The requested state (%s) exceeds "
+            "the maximum allowed length (%s). Fall back to "
+            "%s, failed state: %s",
+            entity_id,
+            msg.topic,
+            state_length,
+            MAX_LENGTH_STATE_STATE,
+            STATE_UNKNOWN,
+            proposed_state[:8192],
+        )
+        return True
+
+    return False
 
 
 def get_file_path(option: str, default: str | None = None) -> str | None:

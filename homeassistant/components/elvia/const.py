@@ -1,4 +1,5 @@
 """Constants for the Elvia integration."""
+
 from logging import getLogger
 
 DOMAIN = "elvia"

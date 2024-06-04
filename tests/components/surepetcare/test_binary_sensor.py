@@ -1,4 +1,5 @@
 """The tests for the Sure Petcare binary sensor platform."""
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -16,10 +17,12 @@ EXPECTED_ENTITY_IDS = {
 
 
 async def test_binary_sensors(
-    hass: HomeAssistant, surepetcare, mock_config_entry_setup: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    surepetcare,
+    mock_config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test the generation of unique ids."""
-    entity_registry = er.async_get(hass)
     state_entity_ids = hass.states.async_entity_ids()
 
     for entity_id, unique_id in EXPECTED_ENTITY_IDS.items():

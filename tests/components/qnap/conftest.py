@@ -1,4 +1,5 @@
 """Setup the QNAP tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -23,7 +24,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def qnap_connect(mock_get_source_ip: None) -> Generator[MagicMock, None, None]:
+def qnap_connect() -> Generator[MagicMock, None, None]:
     """Mock qnap connection."""
     with patch(
         "homeassistant.components.qnap.config_flow.QNAPStats", autospec=True

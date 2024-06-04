@@ -1,4 +1,5 @@
 """Elmax sensor platform."""
+
 from __future__ import annotations
 
 from elmax_api.model.panel import PanelStatus
@@ -11,9 +12,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ElmaxCoordinator
 from .common import ElmaxEntity
 from .const import DOMAIN
+from .coordinator import ElmaxCoordinator
 
 
 async def async_setup_entry(

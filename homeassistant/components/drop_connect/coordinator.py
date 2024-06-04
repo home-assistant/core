@@ -1,4 +1,5 @@
 """DROP device data update coordinator object."""
+
 from __future__ import annotations
 
 import logging

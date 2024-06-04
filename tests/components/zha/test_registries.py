@@ -1,4 +1,5 @@
 """Test ZHA registries."""
+
 from __future__ import annotations
 
 import typing
@@ -8,8 +9,8 @@ import pytest
 import zigpy.quirks as zigpy_quirks
 
 from homeassistant.components.zha.binary_sensor import IASZone
+from homeassistant.components.zha.core import registries
 from homeassistant.components.zha.core.const import ATTR_QUIRK_ID
-import homeassistant.components.zha.core.registries as registries
 from homeassistant.helpers import entity_registry as er
 
 if typing.TYPE_CHECKING:
@@ -394,14 +395,14 @@ def entity_registry():
 
 @pytest.mark.parametrize(
     ("manufacturer", "model", "quirk_id", "match_name"),
-    (
+    [
         ("random manufacturer", "random model", "random.class", "OnOff"),
         ("random manufacturer", MODEL, "random.class", "OnOffModel"),
         (MANUFACTURER, "random model", "random.class", "OnOffManufacturer"),
         ("random manufacturer", "random model", QUIRK_ID, "OnOffQuirk"),
         (MANUFACTURER, MODEL, "random.class", "OnOffModelManufacturer"),
         (MANUFACTURER, "some model", "random.class", "OnOffMultimodel"),
-    ),
+    ],
 )
 def test_weighted_match(
     cluster_handler,

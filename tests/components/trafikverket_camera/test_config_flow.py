@@ -1,4 +1,5 @@
 """Test the Trafikverket Camera config flow."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -22,16 +23,19 @@ async def test_form(hass: HomeAssistant, get_camera: CameraInfo) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
-        return_value=[get_camera],
-    ), patch(
-        "homeassistant.components.trafikverket_camera.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
+            return_value=[get_camera],
+        ),
+        patch(
+            "homeassistant.components.trafikverket_camera.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -41,7 +45,7 @@ async def test_form(hass: HomeAssistant, get_camera: CameraInfo) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Test Camera"
     assert result2["data"] == {
         "api_key": "1234567890",
@@ -59,7 +63,7 @@ async def test_form_multiple_cameras(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -75,13 +79,16 @@ async def test_form_multiple_cameras(
         )
         await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
-        return_value=[get_camera2],
-    ), patch(
-        "homeassistant.components.trafikverket_camera.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
+            return_value=[get_camera2],
+        ),
+        patch(
+            "homeassistant.components.trafikverket_camera.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -90,7 +97,7 @@ async def test_form_multiple_cameras(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Camera2"
     assert result["data"] == {
         "api_key": "1234567890",
@@ -108,16 +115,19 @@ async def test_form_no_location_data(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
-        return_value=[get_camera_no_location],
-    ), patch(
-        "homeassistant.components.trafikverket_camera.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
+            return_value=[get_camera_no_location],
+        ),
+        patch(
+            "homeassistant.components.trafikverket_camera.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -127,7 +137,7 @@ async def test_form_no_location_data(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Test Camera"
     assert result2["data"] == {
         "api_key": "1234567890",
@@ -165,7 +175,7 @@ async def test_flow_fails(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result4["type"] == FlowResultType.FORM
+    assert result4["type"] is FlowResultType.FORM
     assert result4["step_id"] == config_entries.SOURCE_USER
 
     with patch(
@@ -206,14 +216,17 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         data=entry.data,
     )
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
-    ), patch(
-        "homeassistant.components.trafikverket_camera.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_camera.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -221,7 +234,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert entry.data == {
         "api_key": "1234567891",
@@ -286,14 +299,17 @@ async def test_reauth_flow_error(
         await hass.async_block_till_done()
 
     assert result2["step_id"] == "reauth_confirm"
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {error_key: p_error}
 
-    with patch(
-        "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
-    ), patch(
-        "homeassistant.components.trafikverket_camera.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_camera.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -301,7 +317,7 @@ async def test_reauth_flow_error(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert entry.data == {
         "api_key": "1234567891",

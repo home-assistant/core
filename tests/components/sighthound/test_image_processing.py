@@ -1,4 +1,5 @@
 """Tests for the Sighthound integration."""
+
 from copy import deepcopy
 import datetime
 import os

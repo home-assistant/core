@@ -1,4 +1,5 @@
 """Support for Bond covers."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,13 +12,11 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import BondConfigEntry
 from .entity import BondEntity
-from .models import BondData
 from .utils import BondDevice, BondHub
 
 
@@ -33,11 +32,11 @@ def _hass_to_bond_position(hass_position: int) -> int:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: BondConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Bond cover devices."""
-    data: BondData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     hub = data.hub
     bpup_subs = data.bpup_subs
 

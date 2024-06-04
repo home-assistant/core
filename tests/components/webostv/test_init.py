@@ -1,4 +1,5 @@
 """The tests for the LG webOS TV platform."""
+
 from unittest.mock import Mock
 
 from aiowebostv import WebOsTvPairError
@@ -17,7 +18,7 @@ async def test_reauth_setup_entry(hass: HomeAssistant, client, monkeypatch) -> N
     monkeypatch.setattr(client, "connect", Mock(side_effect=WebOsTvPairError))
     entry = await setup_webostv(hass)
 
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -36,5 +37,5 @@ async def test_key_update_setup_entry(hass: HomeAssistant, client, monkeypatch) 
     monkeypatch.setattr(client, "client_key", "new_key")
     entry = await setup_webostv(hass)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.data[CONF_CLIENT_SECRET] == "new_key"

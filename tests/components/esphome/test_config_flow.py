@@ -1,4 +1,5 @@
 """Test config flow."""
+
 from ipaddress import ip_address
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -15,7 +16,7 @@ from aioesphomeapi import (
 import aiohttp
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.esphome import DomainData, dashboard
 from homeassistant.components.esphome.const import (
@@ -29,6 +30,7 @@ from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from . import VALID_NOISE_PSK
 
@@ -55,7 +57,7 @@ async def test_user_connection_works(
         data=None,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_init(
@@ -64,7 +66,7 @@ async def test_user_connection_works(
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 80},
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 80,
@@ -103,7 +105,7 @@ async def test_user_connection_updates_host(
         data=None,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_init(
@@ -111,7 +113,7 @@ async def test_user_connection_updates_host(
         context={"source": config_entries.SOURCE_USER},
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 80},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == "127.0.0.1"
 
@@ -135,14 +137,14 @@ async def test_user_sets_unique_id(
         "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
     )
 
-    assert discovery_result["type"] == FlowResultType.FORM
+    assert discovery_result["type"] is FlowResultType.FORM
     assert discovery_result["step_id"] == "discovery_confirm"
 
     discovery_result = await hass.config_entries.flow.async_configure(
         discovery_result["flow_id"],
         {},
     )
-    assert discovery_result["type"] == FlowResultType.CREATE_ENTRY
+    assert discovery_result["type"] is FlowResultType.CREATE_ENTRY
     assert discovery_result["data"] == {
         CONF_HOST: "192.168.43.183",
         CONF_PORT: 6053,
@@ -157,14 +159,14 @@ async def test_user_sets_unique_id(
         data=None,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -184,7 +186,7 @@ async def test_user_resolve_error(
             data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "resolve_error"}
 
@@ -212,7 +214,7 @@ async def test_user_causes_zeroconf_to_abort(
         "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
     )
 
-    assert discovery_result["type"] == FlowResultType.FORM
+    assert discovery_result["type"] is FlowResultType.FORM
     assert discovery_result["step_id"] == "discovery_confirm"
 
     result = await hass.config_entries.flow.async_init(
@@ -221,14 +223,14 @@ async def test_user_causes_zeroconf_to_abort(
         data=None,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6053,
@@ -252,7 +254,7 @@ async def test_user_connection_error(
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "connection_error"}
 
@@ -273,14 +275,14 @@ async def test_user_with_password(
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authenticate"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_PASSWORD: "password1"}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6053,
@@ -303,7 +305,7 @@ async def test_user_invalid_password(
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authenticate"
 
     mock_client.connect.side_effect = InvalidAuthAPIError
@@ -312,7 +314,7 @@ async def test_user_invalid_password(
         result["flow_id"], user_input={CONF_PASSWORD: "invalid"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authenticate"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -336,7 +338,7 @@ async def test_user_dashboard_has_wrong_key(
     ]
 
     with patch(
-        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=WRONG_NOISE_PSK,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -346,14 +348,14 @@ async def test_user_dashboard_has_wrong_key(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6053,
@@ -391,7 +393,7 @@ async def test_user_discovers_name_and_gets_key_from_dashboard(
     await dashboard.async_get_dashboard(hass).async_refresh()
 
     with patch(
-        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -401,7 +403,7 @@ async def test_user_discovers_name_and_gets_key_from_dashboard(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6053,
@@ -444,7 +446,7 @@ async def test_user_discovers_name_and_gets_key_from_dashboard_fails(
     await dashboard.async_get_dashboard(hass).async_refresh()
 
     with patch(
-        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         side_effect=dashboard_exception,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -454,14 +456,14 @@ async def test_user_discovers_name_and_gets_key_from_dashboard_fails(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6053,
@@ -509,14 +511,14 @@ async def test_user_discovers_name_and_dashboard_is_unavailable(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6053,
@@ -539,7 +541,7 @@ async def test_login_connection_error(
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authenticate"
 
     mock_client.connect.side_effect = APIConnectionError
@@ -548,7 +550,7 @@ async def test_login_connection_error(
         result["flow_id"], user_input={CONF_PASSWORD: "valid"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authenticate"
     assert result["errors"] == {"base": "connection_error"}
 
@@ -576,7 +578,7 @@ async def test_discovery_initiation(
         flow["flow_id"], user_input={}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test"
     assert result["data"][CONF_HOST] == "192.168.43.183"
     assert result["data"][CONF_PORT] == 6053
@@ -601,7 +603,7 @@ async def test_discovery_no_mac(
     flow = await hass.config_entries.flow.async_init(
         "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
     )
-    assert flow["type"] == FlowResultType.ABORT
+    assert flow["type"] is FlowResultType.ABORT
     assert flow["reason"] == "mdns_missing_mac"
 
 
@@ -630,7 +632,7 @@ async def test_discovery_already_configured(
         "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -651,13 +653,13 @@ async def test_discovery_duplicate_data(
     result = await hass.config_entries.flow.async_init(
         "esphome", data=service_info, context={"source": config_entries.SOURCE_ZEROCONF}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
     result = await hass.config_entries.flow.async_init(
         "esphome", data=service_info, context={"source": config_entries.SOURCE_ZEROCONF}
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
 
 
@@ -686,7 +688,7 @@ async def test_discovery_updates_unique_id(
         "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert entry.unique_id == "11:22:33:44:55:aa"
@@ -704,7 +706,7 @@ async def test_user_requires_psk(
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
     assert result["errors"] == {}
 
@@ -726,7 +728,7 @@ async def test_encryption_key_valid_psk(
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
 
     mock_client.device_info = AsyncMock(
@@ -736,7 +738,7 @@ async def test_encryption_key_valid_psk(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6053,
@@ -760,7 +762,7 @@ async def test_encryption_key_invalid_psk(
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
 
     mock_client.device_info.side_effect = InvalidEncryptionKeyAPIError
@@ -768,7 +770,7 @@ async def test_encryption_key_invalid_psk(
         result["flow_id"], user_input={CONF_NOISE_PSK: INVALID_NOISE_PSK}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
     assert result["errors"] == {"base": "invalid_psk"}
     assert mock_client.noise_psk == INVALID_NOISE_PSK
@@ -792,7 +794,7 @@ async def test_reauth_initiation(
             "unique_id": entry.unique_id,
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
 
@@ -820,7 +822,7 @@ async def test_reauth_confirm_valid(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
 
@@ -857,7 +859,7 @@ async def test_reauth_fixed_via_dashboard(
     await dashboard.async_get_dashboard(hass).async_refresh()
 
     with patch(
-        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ) as mock_get_encryption_key:
         result = await hass.config_entries.flow.async_init(
@@ -869,7 +871,7 @@ async def test_reauth_fixed_via_dashboard(
             },
         )
 
-    assert result["type"] == FlowResultType.ABORT, result
+    assert result["type"] is FlowResultType.ABORT, result
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
 
@@ -900,7 +902,7 @@ async def test_reauth_fixed_via_dashboard_add_encryption_remove_password(
     await dashboard.async_get_dashboard(hass).async_refresh()
 
     with patch(
-        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ) as mock_get_encryption_key:
         result = await hass.config_entries.flow.async_init(
@@ -912,7 +914,7 @@ async def test_reauth_fixed_via_dashboard_add_encryption_remove_password(
             },
         )
 
-    assert result["type"] == FlowResultType.ABORT, result
+    assert result["type"] is FlowResultType.ABORT, result
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
     assert mock_config_entry.data[CONF_PASSWORD] == ""
@@ -939,7 +941,7 @@ async def test_reauth_fixed_via_remove_password(
         },
     )
 
-    assert result["type"] == FlowResultType.ABORT, result
+    assert result["type"] is FlowResultType.ABORT, result
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == ""
 
@@ -975,7 +977,7 @@ async def test_reauth_fixed_via_dashboard_at_confirm(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM, result
+    assert result["type"] is FlowResultType.FORM, result
     assert result["step_id"] == "reauth_confirm"
 
     mock_dashboard["configured"].append(
@@ -988,13 +990,13 @@ async def test_reauth_fixed_via_dashboard_at_confirm(
     await dashboard.async_get_dashboard(hass).async_refresh()
 
     with patch(
-        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ) as mock_get_encryption_key:
         # We just fetch the form
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.ABORT, result
+    assert result["type"] is FlowResultType.ABORT, result
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
 
@@ -1025,7 +1027,7 @@ async def test_reauth_confirm_invalid(
         result["flow_id"], user_input={CONF_NOISE_PSK: INVALID_NOISE_PSK}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"]
     assert result["errors"]["base"] == "invalid_psk"
@@ -1037,7 +1039,7 @@ async def test_reauth_confirm_invalid(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
 
@@ -1067,7 +1069,7 @@ async def test_reauth_confirm_invalid_with_unique_id(
         result["flow_id"], user_input={CONF_NOISE_PSK: INVALID_NOISE_PSK}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"]
     assert result["errors"]["base"] == "invalid_psk"
@@ -1079,7 +1081,7 @@ async def test_reauth_confirm_invalid_with_unique_id(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
 
@@ -1104,7 +1106,7 @@ async def test_discovery_dhcp_updates_host(
         "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert entry.data[CONF_HOST] == "192.168.43.184"
@@ -1134,7 +1136,7 @@ async def test_discovery_dhcp_no_changes(
         "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert entry.data[CONF_HOST] == "192.168.43.183"
@@ -1156,7 +1158,7 @@ async def test_discovery_hassio(hass: HomeAssistant, mock_dashboard) -> None:
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "service_received"
 
     dash = dashboard.async_get_dashboard(hass)
@@ -1187,7 +1189,7 @@ async def test_zeroconf_encryption_key_via_dashboard(
         "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
     )
 
-    assert flow["type"] == FlowResultType.FORM
+    assert flow["type"] is FlowResultType.FORM
     assert flow["step_id"] == "discovery_confirm"
 
     mock_dashboard["configured"].append(
@@ -1209,7 +1211,7 @@ async def test_zeroconf_encryption_key_via_dashboard(
     ]
 
     with patch(
-        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ) as mock_get_encryption_key:
         result = await hass.config_entries.flow.async_configure(
@@ -1218,7 +1220,7 @@ async def test_zeroconf_encryption_key_via_dashboard(
 
     assert len(mock_get_encryption_key.mock_calls) == 1
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test8266"
     assert result["data"][CONF_HOST] == "192.168.43.183"
     assert result["data"][CONF_PORT] == 6053
@@ -1254,7 +1256,7 @@ async def test_zeroconf_encryption_key_via_dashboard_with_api_encryption_prop(
         "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
     )
 
-    assert flow["type"] == FlowResultType.FORM
+    assert flow["type"] is FlowResultType.FORM
     assert flow["step_id"] == "discovery_confirm"
 
     mock_dashboard["configured"].append(
@@ -1275,7 +1277,7 @@ async def test_zeroconf_encryption_key_via_dashboard_with_api_encryption_prop(
     ]
 
     with patch(
-        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ) as mock_get_encryption_key:
         result = await hass.config_entries.flow.async_configure(
@@ -1284,7 +1286,7 @@ async def test_zeroconf_encryption_key_via_dashboard_with_api_encryption_prop(
 
     assert len(mock_get_encryption_key.mock_calls) == 1
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test8266"
     assert result["data"][CONF_HOST] == "192.168.43.183"
     assert result["data"][CONF_PORT] == 6053
@@ -1319,7 +1321,7 @@ async def test_zeroconf_no_encryption_key_via_dashboard(
         "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
     )
 
-    assert flow["type"] == FlowResultType.FORM
+    assert flow["type"] is FlowResultType.FORM
     assert flow["step_id"] == "discovery_confirm"
 
     await dashboard.async_get_dashboard(hass).async_refresh()
@@ -1330,7 +1332,7 @@ async def test_zeroconf_no_encryption_key_via_dashboard(
         flow["flow_id"], user_input={}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
 
 
@@ -1351,7 +1353,7 @@ async def test_option_flow(
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["data_schema"]({}) == {
         CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS
@@ -1368,7 +1370,7 @@ async def test_option_flow(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_ALLOW_SERVICE_CALLS: option_value}
     assert len(mock_reload.mock_calls) == int(option_value)
 
@@ -1397,14 +1399,14 @@ async def test_user_discovers_name_no_dashboard(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6053,
@@ -1413,3 +1415,72 @@ async def test_user_discovers_name_no_dashboard(
         CONF_DEVICE_NAME: "test",
     }
     assert mock_client.noise_psk == VALID_NOISE_PSK
+
+
+async def mqtt_discovery_test_abort(hass: HomeAssistant, payload: str, reason: str):
+    """Test discovery aborted."""
+    service_info = MqttServiceInfo(
+        topic="esphome/discover/test",
+        payload=payload,
+        qos=0,
+        retain=False,
+        subscribed_topic="esphome/discover/#",
+        timestamp=None,
+    )
+    flow = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_MQTT}, data=service_info
+    )
+    assert flow["type"] is FlowResultType.ABORT
+    assert flow["reason"] == reason
+
+
+async def test_discovery_mqtt_no_mac(
+    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+) -> None:
+    """Test discovery aborted if mac is missing in MQTT payload."""
+    await mqtt_discovery_test_abort(hass, "{}", "mqtt_missing_mac")
+
+
+async def test_discovery_mqtt_no_api(
+    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+) -> None:
+    """Test discovery aborted if api/port is missing in MQTT payload."""
+    await mqtt_discovery_test_abort(hass, '{"mac":"abcdef123456"}', "mqtt_missing_api")
+
+
+async def test_discovery_mqtt_no_ip(
+    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+) -> None:
+    """Test discovery aborted if ip is missing in MQTT payload."""
+    await mqtt_discovery_test_abort(
+        hass, '{"mac":"abcdef123456","port":6053}', "mqtt_missing_ip"
+    )
+
+
+async def test_discovery_mqtt_initiation(
+    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+) -> None:
+    """Test discovery importing works."""
+    service_info = MqttServiceInfo(
+        topic="esphome/discover/test",
+        payload='{"name":"mock_name","mac":"1122334455aa","port":6053,"ip":"192.168.43.183"}',
+        qos=0,
+        retain=False,
+        subscribed_topic="esphome/discover/#",
+        timestamp=None,
+    )
+    flow = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_MQTT}, data=service_info
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test"
+    assert result["data"][CONF_HOST] == "192.168.43.183"
+    assert result["data"][CONF_PORT] == 6053
+
+    assert result["result"]
+    assert result["result"].unique_id == "11:22:33:44:55:aa"

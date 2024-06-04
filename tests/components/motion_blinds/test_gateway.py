@@ -1,4 +1,5 @@
 """Test the Motionblinds config flow."""
+
 from unittest.mock import Mock
 
 from motionblinds import DEVICE_TYPES_WIFI, BlindType

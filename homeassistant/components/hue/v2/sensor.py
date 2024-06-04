@@ -1,8 +1,9 @@
 """Support for Hue sensors."""
+
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, TypeAlias
+from typing import Any
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
@@ -33,8 +34,8 @@ from ..bridge import HueBridge
 from ..const import DOMAIN
 from .entity import HueBaseEntity
 
-SensorType: TypeAlias = DevicePower | LightLevel | Temperature | ZigbeeConnectivity
-ControllerType: TypeAlias = (
+type SensorType = DevicePower | LightLevel | Temperature | ZigbeeConnectivity
+type ControllerType = (
     DevicePowerController
     | LightLevelController
     | TemperatureController

@@ -1,4 +1,5 @@
 """Tests for the logbook component."""
+
 from __future__ import annotations
 
 import json

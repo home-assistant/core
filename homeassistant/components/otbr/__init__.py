@@ -1,4 +1,5 @@
 """The Open Thread Border Router integration."""
+
 from __future__ import annotations
 
 import aiohttp

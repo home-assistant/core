@@ -1,4 +1,5 @@
 """Config flow to configure Heos."""
+
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 

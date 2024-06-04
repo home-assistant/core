@@ -1,4 +1,5 @@
 """The tests for the MQTT cover platform."""
+
 from copy import deepcopy
 from typing import Any
 from unittest.mock import patch
@@ -42,7 +43,6 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 
@@ -85,13 +85,6 @@ DEFAULT_CONFIG = {
 }
 
 
-@pytest.fixture(autouse=True)
-def cover_platform_only():
-    """Only setup the cover platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.COVER]):
-        yield
-
-
 @pytest.mark.parametrize(
     "hass_config",
     [
@@ -129,6 +122,11 @@ async def test_state_via_state_topic(
 
     state = hass.states.get("cover.test")
     assert state.state == STATE_OPEN
+
+    async_fire_mqtt_message(hass, "state-topic", "None")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(

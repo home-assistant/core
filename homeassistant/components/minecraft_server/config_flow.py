@@ -1,4 +1,5 @@
 """Config flow for Minecraft Server integration."""
+
 from __future__ import annotations
 
 import logging
@@ -30,6 +31,9 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input:
             address = user_input[CONF_ADDRESS]
+
+            # Abort config flow if service is already configured.
+            self._async_abort_entries_match({CONF_ADDRESS: address})
 
             # Prepare config entry data.
             config_data = {

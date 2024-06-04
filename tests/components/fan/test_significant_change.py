@@ -1,4 +1,5 @@
 """Test the Fan significant change platform."""
+
 import pytest
 
 from homeassistant.components.fan import (

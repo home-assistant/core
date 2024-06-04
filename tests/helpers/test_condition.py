@@ -1,4 +1,5 @@
 """Test the condition helper."""
+
 from datetime import datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -7,7 +8,7 @@ from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -2177,12 +2178,12 @@ def _find_run_id(traces, trace_type, item_id):
 
 async def assert_automation_condition_trace(hass_ws_client, automation_id, expected):
     """Test the result of automation condition."""
-    id = 1
+    msg_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
 
     client = await hass_ws_client()
 
@@ -3058,7 +3059,7 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(
     at 7 AM and sunset at 3AM during summer
     After sunrise is true from sunrise until midnight, local time.
     """
-    hass.config.set_time_zone("America/Anchorage")
+    await hass.config.async_set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -3135,7 +3136,7 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(
     at 7 AM and sunset at 3AM during summer
     Before sunrise is true from midnight until sunrise, local time.
     """
-    hass.config.set_time_zone("America/Anchorage")
+    await hass.config.async_set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -3212,7 +3213,7 @@ async def test_if_action_before_sunset_no_offset_kotzebue(
     at 7 AM and sunset at 3AM during summer
     Before sunset is true from midnight until sunset, local time.
     """
-    hass.config.set_time_zone("America/Anchorage")
+    await hass.config.async_set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -3289,7 +3290,7 @@ async def test_if_action_after_sunset_no_offset_kotzebue(
     at 7 AM and sunset at 3AM during summer
     After sunset is true from sunset until midnight, local time.
     """
-    hass.config.set_time_zone("America/Anchorage")
+    await hass.config.async_set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -3381,10 +3382,36 @@ async def test_platform_async_validate_condition_config(hass: HomeAssistant) -> 
         device_automation_validate_condition_mock.assert_awaited()
 
 
-async def test_disabled_condition(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("enabled_value", [True, "{{ 1 == 1 }}"])
+async def test_enabled_condition(
+    hass: HomeAssistant, enabled_value: bool | str
+) -> None:
+    """Test an explicitly enabled condition."""
+    config = {
+        "enabled": enabled_value,
+        "condition": "state",
+        "entity_id": "binary_sensor.test",
+        "state": "on",
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("binary_sensor.test", "on")
+    assert test(hass) is True
+
+    # Still passes, condition is not enabled
+    hass.states.async_set("binary_sensor.test", "off")
+    assert test(hass) is False
+
+
+@pytest.mark.parametrize("enabled_value", [False, "{{ 1 == 9 }}"])
+async def test_disabled_condition(
+    hass: HomeAssistant, enabled_value: bool | str
+) -> None:
     """Test a disabled condition returns none."""
     config = {
-        "enabled": False,
+        "enabled": enabled_value,
         "condition": "state",
         "entity_id": "binary_sensor.test",
         "state": "on",
@@ -3396,9 +3423,24 @@ async def test_disabled_condition(hass: HomeAssistant) -> None:
     hass.states.async_set("binary_sensor.test", "on")
     assert test(hass) is None
 
-    # Still passses, condition is not enabled
+    # Still passes, condition is not enabled
     hass.states.async_set("binary_sensor.test", "off")
     assert test(hass) is None
+
+
+async def test_condition_enabled_template_limited(hass: HomeAssistant) -> None:
+    """Test conditions enabled template raises for non-limited template uses."""
+    config = {
+        "enabled": "{{ states('sensor.limited') }}",
+        "condition": "state",
+        "entity_id": "binary_sensor.test",
+        "state": "on",
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+
+    with pytest.raises(HomeAssistantError):
+        await condition.async_from_config(hass, config)
 
 
 async def test_and_condition_with_disabled_condition(hass: HomeAssistant) -> None:

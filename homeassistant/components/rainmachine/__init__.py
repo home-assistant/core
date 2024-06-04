@@ -1,4 +1,5 @@
 """Support for RainMachine devices."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -52,8 +53,8 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .coordinator import RainMachineDataUpdateCoordinator
 from .model import RainMachineEntityDescription
-from .util import RainMachineDataUpdateCoordinator
 
 DEFAULT_SSL = True
 

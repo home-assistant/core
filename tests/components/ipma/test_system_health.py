@@ -1,4 +1,5 @@
 """Test ipma system health."""
+
 import asyncio
 
 from homeassistant.components.ipma.system_health import IPMA_API_URL
@@ -17,6 +18,7 @@ async def test_ipma_system_health(
 
     hass.config.components.add("ipma")
     assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
 
     info = await get_system_health_info(hass, "ipma")
 

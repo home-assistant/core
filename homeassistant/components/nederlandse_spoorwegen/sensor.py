@@ -1,4 +1,5 @@
 """Support for Nederlandse Spoorwegen public transport."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -63,7 +64,7 @@ def setup_platform(
         requests.exceptions.HTTPError,
     ) as error:
         _LOGGER.error("Could not connect to the internet: %s", error)
-        raise PlatformNotReady() from error
+        raise PlatformNotReady from error
     except RequestParametersError as error:
         _LOGGER.error("Could not fetch stations, please check configuration: %s", error)
         return
@@ -130,12 +131,11 @@ class NSDepartureSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         if not self._trips:
-            return
+            return None
 
         if self._trips[0].trip_parts:
             route = [self._trips[0].departure]
-            for k in self._trips[0].trip_parts:
-                route.append(k.destination)
+            route.extend(k.destination for k in self._trips[0].trip_parts)
 
         # Static attributes
         attributes = {

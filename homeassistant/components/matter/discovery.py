@@ -1,4 +1,5 @@
 """Map Matter Nodes and Attributes to Home Assistant entities."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -13,6 +14,7 @@ from .binary_sensor import DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS
 from .climate import DISCOVERY_SCHEMAS as CLIMATE_SENSOR_SCHEMAS
 from .cover import DISCOVERY_SCHEMAS as COVER_SCHEMAS
 from .event import DISCOVERY_SCHEMAS as EVENT_SCHEMAS
+from .fan import DISCOVERY_SCHEMAS as FAN_SCHEMAS
 from .light import DISCOVERY_SCHEMAS as LIGHT_SCHEMAS
 from .lock import DISCOVERY_SCHEMAS as LOCK_SCHEMAS
 from .models import MatterDiscoverySchema, MatterEntityInfo
@@ -24,6 +26,7 @@ DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
     Platform.CLIMATE: CLIMATE_SENSOR_SCHEMAS,
     Platform.COVER: COVER_SCHEMAS,
     Platform.EVENT: EVENT_SCHEMAS,
+    Platform.FAN: FAN_SCHEMAS,
     Platform.LIGHT: LIGHT_SCHEMAS,
     Platform.LOCK: LOCK_SCHEMAS,
     Platform.SENSOR: SENSOR_SCHEMAS,
@@ -115,7 +118,6 @@ def async_discover_entities(
             attributes_to_watch=attributes_to_watch,
             entity_description=schema.entity_description,
             entity_class=schema.entity_class,
-            should_poll=schema.should_poll,
         )
 
         # prevent re-discovery of the primary attribute if not allowed

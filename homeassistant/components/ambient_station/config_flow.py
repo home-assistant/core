@@ -1,4 +1,5 @@
 """Config flow to configure the Ambient PWS component."""
+
 from __future__ import annotations
 
 from aioambient import API

@@ -1,12 +1,13 @@
 """Test the Aussie Broadband init."""
+
 from unittest.mock import patch
 
 from aiohttp import ClientConnectionError
 from aussiebb.exceptions import AuthenticationException, UnrecognisedServiceType
 
-from homeassistant import data_entry_flow
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .common import setup_platform
 
@@ -24,7 +25,7 @@ async def test_auth_failure(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.aussie_broadband.config_flow.AussieBroadbandConfigFlow.async_step_reauth",
         return_value={
-            "type": data_entry_flow.FlowResultType.FORM,
+            "type": FlowResultType.FORM,
             "flow_id": "mock_flow",
             "step_id": "reauth_confirm",
         },

@@ -1,4 +1,5 @@
 """Support for QNAP NAS Sensors."""
+
 from __future__ import annotations
 
 from homeassistant import config_entries

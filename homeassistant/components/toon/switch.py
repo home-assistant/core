@@ -1,4 +1,5 @@
 """Support for Toon switches."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

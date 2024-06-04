@@ -1,4 +1,5 @@
 """Config flow for buienradar integration."""
+
 from __future__ import annotations
 
 import copy

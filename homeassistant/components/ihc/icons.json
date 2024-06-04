@@ -1,0 +1,8 @@
+{
+  "services": {
+    "set_runtime_value_bool": "mdi:toggle-switch",
+    "set_runtime_value_int": "mdi:numeric",
+    "set_runtime_value_float": "mdi:numeric",
+    "pulse": "mdi:pulse"
+  }
+}

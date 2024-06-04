@@ -1,4 +1,5 @@
 """Test OpenUV diagnostics."""
+
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

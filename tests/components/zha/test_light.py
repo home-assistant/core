@@ -1,11 +1,11 @@
 """Test ZHA light."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, call, patch, sentinel
 
 import pytest
-import zigpy.profiles.zha as zha
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.lighting as lighting
+from zigpy.profiles import zha
+from zigpy.zcl.clusters import general, lighting
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.light import (
@@ -1601,7 +1601,12 @@ async def async_test_flash_from_hass(hass, cluster, entity_id, flash):
     new=0,
 )
 async def test_zha_group_light_entity(
-    hass: HomeAssistant, device_light_1, device_light_2, device_light_3, coordinator
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_light_1,
+    device_light_2,
+    device_light_3,
+    coordinator,
 ) -> None:
     """Test the light entity for a ZHA group."""
     zha_gateway = get_zha_gateway(hass)
@@ -1630,10 +1635,7 @@ async def test_zha_group_light_entity(
     device_2_entity_id = find_entity_id(Platform.LIGHT, device_light_2, hass)
     device_3_entity_id = find_entity_id(Platform.LIGHT, device_light_3, hass)
 
-    assert (
-        device_1_entity_id != device_2_entity_id
-        and device_1_entity_id != device_3_entity_id
-    )
+    assert device_1_entity_id not in (device_2_entity_id, device_3_entity_id)
     assert device_2_entity_id != device_3_entity_id
 
     group_entity_id = async_find_group_entity_id(hass, Platform.LIGHT, zha_group)
@@ -1785,7 +1787,6 @@ async def test_zha_group_light_entity(
     assert device_3_entity_id not in zha_group.member_entity_ids
 
     # make sure the entity registry entry is still there
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_get(group_entity_id) is not None
 
     # add a member back and ensure that the group entity was created again
@@ -1832,6 +1833,7 @@ async def test_zha_group_light_entity(
 )
 async def test_group_member_assume_state(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     zigpy_device_mock,
     zha_device_joined,
     coordinator,
@@ -1919,7 +1921,6 @@ async def test_group_member_assume_state(
         assert hass.states.get(group_entity_id).state == STATE_OFF
 
         # remove the group and ensure that there is no entity and that the entity registry is cleaned up
-        entity_registry = er.async_get(hass)
         assert entity_registry.async_get(group_entity_id) is not None
         await zha_gateway.async_remove_zigpy_group(zha_group.group_id)
         assert hass.states.get(group_entity_id) is None

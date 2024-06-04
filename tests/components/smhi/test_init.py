@@ -1,4 +1,5 @@
 """Test SMHI component setup process."""
+
 from unittest.mock import patch
 
 from smhi.smhi_lib import APIURL_TEMPLATE

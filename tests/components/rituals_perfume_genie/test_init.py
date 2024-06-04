@@ -1,4 +1,5 @@
 """Tests for the Rituals Perfume Genie integration."""
+
 from unittest.mock import patch
 
 import aiohttp

@@ -29,8 +29,8 @@
           "description": "Disables link previews for links in the message."
         },
         "timeout": {
-          "name": "Timeout",
-          "description": "Timeout for send message. Will help with timeout errors (poor internet connection, etc)s."
+          "name": "Read timeout",
+          "description": "Read timeout for send message. Will help with timeout errors (poor internet connection, etc)s."
         },
         "keyboard": {
           "name": "Keyboard",
@@ -95,8 +95,8 @@
           "description": "Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server."
         },
         "timeout": {
-          "name": "Timeout",
-          "description": "Timeout for send photo. Will help with timeout errors (poor internet connection, etc)."
+          "name": "Read timeout",
+          "description": "Read timeout for send photo."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -157,8 +157,8 @@
           "description": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::description%]"
         },
         "timeout": {
-          "name": "Timeout",
-          "description": "Timeout for send sticker. Will help with timeout errors (poor internet connection, etc)."
+          "name": "Read timeout",
+          "description": "Read timeout for send sticker."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -223,7 +223,7 @@
           "description": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::description%]"
         },
         "timeout": {
-          "name": "Timeout",
+          "name": "Read timeout",
           "description": "[%key:component::telegram_bot::services::send_sticker::fields::timeout::description%]"
         },
         "keyboard": {
@@ -289,8 +289,8 @@
           "description": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::description%]"
         },
         "timeout": {
-          "name": "Timeout",
-          "description": "Timeout for send video. Will help with timeout errors (poor internet connection, etc)."
+          "name": "Read timeout",
+          "description": "Read timeout for send video."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -351,8 +351,8 @@
           "description": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::description%]"
         },
         "timeout": {
-          "name": "Timeout",
-          "description": "Timeout for send voice. Will help with timeout errors (poor internet connection, etc)."
+          "name": "Read timeout",
+          "description": "Read timeout for send voice."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -417,8 +417,8 @@
           "description": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::description%]"
         },
         "timeout": {
-          "name": "Timeout",
-          "description": "Timeout for send document. Will help with timeout errors (poor internet connection, etc)."
+          "name": "Read timeout",
+          "description": "Read timeout for send document."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -459,7 +459,7 @@
           "description": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::description%]"
         },
         "timeout": {
-          "name": "Timeout",
+          "name": "Read timeout",
           "description": "[%key:component::telegram_bot::services::send_photo::fields::timeout::description%]"
         },
         "keyboard": {
@@ -513,8 +513,8 @@
           "description": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::description%]"
         },
         "timeout": {
-          "name": "Timeout",
-          "description": "Timeout for send poll. Will help with timeout errors (poor internet connection, etc)."
+          "name": "Read timeout",
+          "description": "Read timeout for send poll."
         },
         "message_tag": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_tag::name%]",
@@ -617,8 +617,8 @@
           "description": "Show a permanent notification."
         },
         "timeout": {
-          "name": "Timeout",
-          "description": "Timeout for sending the answer. Will help with timeout errors (poor internet connection, etc)."
+          "name": "Read timeout",
+          "description": "Read timeout for sending the answer."
         }
       }
     },
@@ -635,6 +635,16 @@
           "description": "The chat_id where to delete the message."
         }
       }
+    }
+  },
+  "issues": {
+    "proxy_params_auth_deprecation": {
+      "title": "{telegram_bot}: Proxy authentication should be moved to the URL",
+      "description": "Authentication details for the the proxy configured in the {telegram_bot} integration should be moved into the {proxy_url} instead. Please update your configuration and restart Home Assistant to fix this issue.\n\nThe {proxy_params} config key will be removed in a future release."
+    },
+    "proxy_params_deprecation": {
+      "title": "{telegram_bot}: Proxy params option will be removed",
+      "description": "The {proxy_params} config key for the {telegram_bot} integration will be removed in a future release.\n\nAuthentication can now be provided through the {proxy_url} key.\n\nThe underlying library has changed to {httpx} which is incompatible with previous parameters. If you still need this functionality for other options, please leave a comment on the learn more link.\n\nPlease update your configuration to remove the {proxy_params} key and restart Home Assistant to fix this issue."
     }
   }
 }

@@ -1,4 +1,5 @@
 """GoodWe PV inverter numeric settings entities."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -23,20 +24,13 @@ from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class GoodweNumberEntityDescriptionBase:
-    """Required values when describing Goodwe number entities."""
+@dataclass(frozen=True, kw_only=True)
+class GoodweNumberEntityDescription(NumberEntityDescription):
+    """Class describing Goodwe number entities."""
 
     getter: Callable[[Inverter], Awaitable[int]]
     setter: Callable[[Inverter, int], Awaitable[None]]
     filter: Callable[[Inverter], bool]
-
-
-@dataclass(frozen=True)
-class GoodweNumberEntityDescription(
-    NumberEntityDescription, GoodweNumberEntityDescriptionBase
-):
-    """Class describing Goodwe number entities."""
 
 
 def _get_setting_unit(inverter: Inverter, setting: str) -> str:
@@ -69,7 +63,7 @@ NUMBERS = (
         native_unit_of_measurement=PERCENTAGE,
         native_step=1,
         native_min_value=0,
-        native_max_value=100,
+        native_max_value=200,
         getter=lambda inv: inv.get_grid_export_limit(),
         setter=lambda inv, val: inv.set_grid_export_limit(val),
         filter=lambda inv: _get_setting_unit(inv, "grid_export_limit") == "%",

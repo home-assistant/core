@@ -1,4 +1,5 @@
 """Support for the Hive alarm."""
+
 from __future__ import annotations
 
 from datetime import timedelta

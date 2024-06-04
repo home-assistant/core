@@ -1,4 +1,5 @@
 """Philips Hue sensors platform tests."""
+
 from unittest.mock import Mock
 
 import aiohue

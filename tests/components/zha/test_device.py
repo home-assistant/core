@@ -1,4 +1,5 @@
 """Test ZHA device switch."""
+
 from datetime import timedelta
 import logging
 import time
@@ -8,7 +9,7 @@ from unittest.mock import patch
 import pytest
 import zigpy.profiles.zha
 import zigpy.types
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import general
 import zigpy.zdo.types as zdo_t
 
 from homeassistant.components.zha.core.const import (
@@ -114,8 +115,7 @@ async def ota_zha_device(zha_device_restored, zigpy_device_mock):
         "test model",
     )
 
-    zha_device = await zha_device_restored(zigpy_dev)
-    return zha_device
+    return await zha_device_restored(zigpy_dev)
 
 
 def _send_time_changed(hass, seconds):
@@ -247,12 +247,13 @@ async def test_check_available_no_basic_cluster_handler(
     assert "does not have a mandatory basic cluster" in caplog.text
 
 
-async def test_ota_sw_version(hass: HomeAssistant, ota_zha_device) -> None:
+async def test_ota_sw_version(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, ota_zha_device
+) -> None:
     """Test device entry gets sw_version updated via OTA cluster handler."""
 
     ota_ch = ota_zha_device._endpoints[1].client_cluster_handlers["1:0x0019"]
-    dev_registry = dr.async_get(hass)
-    entry = dev_registry.async_get(ota_zha_device.device_id)
+    entry = device_registry.async_get(ota_zha_device.device_id)
     assert entry.sw_version is None
 
     cluster = ota_ch.cluster
@@ -260,13 +261,13 @@ async def test_ota_sw_version(hass: HomeAssistant, ota_zha_device) -> None:
     sw_version = 0x2345
     cluster.handle_message(hdr, [1, 2, 3, sw_version, None])
     await hass.async_block_till_done()
-    entry = dev_registry.async_get(ota_zha_device.device_id)
+    entry = device_registry.async_get(ota_zha_device.device_id)
     assert int(entry.sw_version, base=16) == sw_version
 
 
 @pytest.mark.parametrize(
     ("device", "last_seen_delta", "is_available"),
-    (
+    [
         ("zigpy_device", 0, True),
         (
             "zigpy_device",
@@ -304,11 +305,11 @@ async def test_ota_sw_version(hass: HomeAssistant, ota_zha_device) -> None:
             CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY + 2,
             False,
         ),
-    ),
+    ],
 )
 async def test_device_restore_availability(
     hass: HomeAssistant,
-    request,
+    request: pytest.FixtureRequest,
     device,
     last_seen_delta,
     is_available,

@@ -1,9 +1,10 @@
 """Test the GPSD config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from gps3.agps3threaded import GPSD_PORT as DEFAULT_PORT
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.gpsd.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -17,7 +18,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     with patch("socket.socket") as mock_socket:
         mock_connect = mock_socket.return_value.connect
@@ -31,7 +32,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == f"GPS {HOST}"
     assert result2["data"] == {
         CONF_HOST: HOST,
@@ -52,7 +53,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
             data={CONF_HOST: "nonexistent.local", CONF_PORT: 1234},
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
 
@@ -67,7 +68,7 @@ async def test_import(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_IMPORT},
             data={CONF_HOST: HOST, CONF_PORT: 1234, CONF_NAME: "MyGPS"},
         )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "MyGPS"
         assert result["data"] == {
             CONF_HOST: HOST,

@@ -1,4 +1,5 @@
 """Support for a ScreenLogic Binary Sensor."""
+
 from copy import copy
 import dataclasses
 import logging
@@ -32,14 +33,14 @@ from .util import cleanup_excluded_entity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class ScreenLogicBinarySensorDescription(
     BinarySensorEntityDescription, ScreenLogicEntityDescription
 ):
     """A class that describes ScreenLogic binary sensor eneites."""
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class ScreenLogicPushBinarySensorDescription(
     ScreenLogicBinarySensorDescription, ScreenLogicPushEntityDescription
 ):
@@ -174,32 +175,31 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    entities: list[ScreenLogicBinarySensor] = []
     coordinator: ScreenlogicDataUpdateCoordinator = hass.data[SL_DOMAIN][
         config_entry.entry_id
     ]
     gateway = coordinator.gateway
 
-    for core_sensor_description in SUPPORTED_CORE_SENSORS:
+    entities: list[ScreenLogicBinarySensor] = [
+        ScreenLogicPushBinarySensor(coordinator, core_sensor_description)
+        for core_sensor_description in SUPPORTED_CORE_SENSORS
         if (
             gateway.get_data(
                 *core_sensor_description.data_root, core_sensor_description.key
             )
             is not None
-        ):
-            entities.append(
-                ScreenLogicPushBinarySensor(coordinator, core_sensor_description)
-            )
+        )
+    ]
 
     for p_index, p_data in gateway.get_data(DEVICE.PUMP).items():
         if not p_data or not p_data.get(VALUE.DATA):
             continue
-        for proto_pump_sensor_description in SUPPORTED_PUMP_SENSORS:
-            entities.append(
-                ScreenLogicPumpBinarySensor(
-                    coordinator, copy(proto_pump_sensor_description), p_index
-                )
+        entities.extend(
+            ScreenLogicPumpBinarySensor(
+                coordinator, copy(proto_pump_sensor_description), p_index
             )
+            for proto_pump_sensor_description in SUPPORTED_PUMP_SENSORS
+        )
 
     chem_sensor_description: ScreenLogicPushBinarySensorDescription
     for chem_sensor_description in SUPPORTED_INTELLICHEM_SENSORS:

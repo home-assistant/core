@@ -37,6 +37,27 @@
       "jvc_power": {
         "name": "[%key:component::sensor::entity_component::power::name%]"
       }
+    },
+    "select": {
+      "input": {
+        "name": "Input",
+        "state": {
+          "hdmi1": "HDMI 1",
+          "hdmi2": "HDMI 2"
+        }
+      }
+    },
+    "sensor": {
+      "jvc_power_status": {
+        "name": "Power status",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "on": "[%key:common::state::on%]",
+          "warming": "Warming",
+          "cooling": "Cooling",
+          "error": "Error"
+        }
+      }
     }
   }
 }

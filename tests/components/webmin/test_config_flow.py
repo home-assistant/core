@@ -1,4 +1,5 @@
 """Test the Webmin config flow."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -27,7 +28,7 @@ async def user_flow(hass: HomeAssistant) -> str:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     return result["flow_id"]
 
@@ -46,7 +47,7 @@ async def test_form_user(
             user_flow, TEST_USER_INPUT
         )
         await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_USER_INPUT[CONF_HOST]
     assert result["options"] == TEST_USER_INPUT
 
@@ -88,7 +89,7 @@ async def test_form_user_errors(
             user_flow, TEST_USER_INPUT
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": error_type}
 
@@ -100,7 +101,7 @@ async def test_form_user_errors(
             result["flow_id"], TEST_USER_INPUT
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_USER_INPUT[CONF_HOST]
     assert result["options"] == TEST_USER_INPUT
 
@@ -120,7 +121,7 @@ async def test_duplicate_entry(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_USER_INPUT[CONF_HOST]
     assert result["options"] == TEST_USER_INPUT
 
@@ -136,5 +137,5 @@ async def test_duplicate_entry(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

@@ -1,16 +1,17 @@
 """The tests for the Event automation."""
+
 import pytest
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service, mock_component
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -27,7 +28,7 @@ def setup_comp(hass):
     mock_component(hass, "group")
 
 
-async def test_if_fires_on_event(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_event(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test the firing of events."""
     context = Context()
 
@@ -63,7 +64,9 @@ async def test_if_fires_on_event(hass: HomeAssistant, calls) -> None:
     assert calls[0].data["id"] == 0
 
 
-async def test_if_fires_on_templated_event(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_templated_event(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test the firing of events."""
     context = Context()
 
@@ -96,7 +99,9 @@ async def test_if_fires_on_templated_event(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 1
 
 
-async def test_if_fires_on_multiple_events(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_multiple_events(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test the firing of events."""
     context = Context()
 
@@ -124,7 +129,7 @@ async def test_if_fires_on_multiple_events(hass: HomeAssistant, calls) -> None:
 
 
 async def test_if_fires_on_event_extra_data(
-    hass: HomeAssistant, calls, context_with_user
+    hass: HomeAssistant, calls: list[ServiceCall], context_with_user: Context
 ) -> None:
     """Test the firing of events still matches with event data and context."""
     assert await async_setup_component(
@@ -156,7 +161,7 @@ async def test_if_fires_on_event_extra_data(
 
 
 async def test_if_fires_on_event_with_data_and_context(
-    hass: HomeAssistant, calls, context_with_user
+    hass: HomeAssistant, calls: list[ServiceCall], context_with_user: Context
 ) -> None:
     """Test the firing of events with data and context."""
     assert await async_setup_component(
@@ -203,7 +208,7 @@ async def test_if_fires_on_event_with_data_and_context(
 
 
 async def test_if_fires_on_event_with_templated_data_and_context(
-    hass: HomeAssistant, calls, context_with_user
+    hass: HomeAssistant, calls: list[ServiceCall], context_with_user: Context
 ) -> None:
     """Test the firing of events with templated data and context."""
     assert await async_setup_component(
@@ -255,7 +260,7 @@ async def test_if_fires_on_event_with_templated_data_and_context(
 
 
 async def test_if_fires_on_event_with_empty_data_and_context_config(
-    hass: HomeAssistant, calls, context_with_user
+    hass: HomeAssistant, calls: list[ServiceCall], context_with_user: Context
 ) -> None:
     """Test the firing of events with empty data and context config.
 
@@ -287,7 +292,9 @@ async def test_if_fires_on_event_with_empty_data_and_context_config(
     assert len(calls) == 1
 
 
-async def test_if_fires_on_event_with_nested_data(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_event_with_nested_data(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test the firing of events with nested data.
 
     This test exercises the slow path of using vol.Schema to validate
@@ -315,7 +322,9 @@ async def test_if_fires_on_event_with_nested_data(hass: HomeAssistant, calls) ->
     assert len(calls) == 1
 
 
-async def test_if_fires_on_event_with_empty_data(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_event_with_empty_data(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test the firing of events with empty data.
 
     This test exercises the fast path to validate matching event data.
@@ -339,7 +348,9 @@ async def test_if_fires_on_event_with_empty_data(hass: HomeAssistant, calls) -> 
     assert len(calls) == 1
 
 
-async def test_if_fires_on_sample_zha_event(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_sample_zha_event(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test the firing of events with a sample zha event.
 
     This test exercises the fast path to validate matching event data.
@@ -397,7 +408,7 @@ async def test_if_fires_on_sample_zha_event(hass: HomeAssistant, calls) -> None:
 
 
 async def test_if_not_fires_if_event_data_not_matches(
-    hass: HomeAssistant, calls
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test firing of event if no data match."""
     assert await async_setup_component(
@@ -421,7 +432,7 @@ async def test_if_not_fires_if_event_data_not_matches(
 
 
 async def test_if_not_fires_if_event_context_not_matches(
-    hass: HomeAssistant, calls, context_with_user
+    hass: HomeAssistant, calls: list[ServiceCall], context_with_user: Context
 ) -> None:
     """Test firing of event if no context match."""
     assert await async_setup_component(
@@ -445,7 +456,7 @@ async def test_if_not_fires_if_event_context_not_matches(
 
 
 async def test_if_fires_on_multiple_user_ids(
-    hass: HomeAssistant, calls, context_with_user
+    hass: HomeAssistant, calls: list[ServiceCall], context_with_user: Context
 ) -> None:
     """Test the firing of event when the trigger has multiple user ids.
 
@@ -473,7 +484,9 @@ async def test_if_fires_on_multiple_user_ids(
     assert len(calls) == 1
 
 
-async def test_event_data_with_list(hass: HomeAssistant, calls) -> None:
+async def test_event_data_with_list(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test the (non)firing of event when the data schema has lists."""
     assert await async_setup_component(
         hass,
@@ -504,3 +517,69 @@ async def test_event_data_with_list(hass: HomeAssistant, calls) -> None:
     hass.bus.async_fire("test_event", {"some_attr": [1, 2, 3]})
     await hass.async_block_till_done()
     assert len(calls) == 1
+
+
+@pytest.mark.parametrize(
+    "event_type", ["state_reported", ["test_event", "state_reported"]]
+)
+async def test_state_reported_event(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    caplog: pytest.LogCaptureFixture,
+    event_type: str | list[str],
+) -> None:
+    """Test triggering on state reported event."""
+    context = Context()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": event_type},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"id": "{{ trigger.id}}"},
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event", context=context)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    assert (
+        "Unnamed automation failed to setup triggers and has been disabled: Can't "
+        "listen to state_reported in event trigger for dictionary value @ "
+        "data['event_type']. Got None" in caplog.text
+    )
+
+
+async def test_templated_state_reported_event(
+    hass: HomeAssistant, calls: list[ServiceCall], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test triggering on state reported event."""
+    context = Context()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger_variables": {"event_type": "state_reported"},
+                "trigger": {"platform": "event", "event_type": "{{event_type}}"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"id": "{{ trigger.id}}"},
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event", context=context)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    assert (
+        "Got error 'Can't listen to state_reported in event trigger' "
+        "when setting up triggers for automation 0" in caplog.text
+    )

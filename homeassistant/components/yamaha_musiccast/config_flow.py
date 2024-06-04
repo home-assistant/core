@@ -1,4 +1,5 @@
 """Config flow for MusicCast."""
+
 from __future__ import annotations
 
 import logging
@@ -50,7 +51,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             )
         except (MusicCastConnectionException, ClientConnectorError):
             errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

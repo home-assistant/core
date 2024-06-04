@@ -1,4 +1,5 @@
 """The BSB-Lan integration."""
+
 import dataclasses
 
 from bsblan import BSBLAN, Device, Info, StaticState

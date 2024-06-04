@@ -1,4 +1,5 @@
 """Support for the Environment Canada weather service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -33,19 +34,11 @@ from .const import ATTR_STATION, DOMAIN
 ATTR_TIME = "alert time"
 
 
-@dataclass(frozen=True)
-class ECSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
-
-    value_fn: Callable[[Any], Any]
-
-
-@dataclass(frozen=True)
-class ECSensorEntityDescription(
-    SensorEntityDescription, ECSensorEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class ECSensorEntityDescription(SensorEntityDescription):
     """Describes Environment Canada sensor entity."""
 
+    value_fn: Callable[[Any], Any]
     transform: Callable[[Any], Any] | None = None
 
 

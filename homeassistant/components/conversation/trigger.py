@@ -1,4 +1,5 @@
 """Offer sentence based automation rules."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -13,9 +14,8 @@ from homeassistant.helpers.script import ScriptRunResult
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
 
-from . import HOME_ASSISTANT_AGENT, _get_agent_manager
 from .const import DOMAIN
-from .default_agent import DefaultAgent
+from .default_agent import DefaultAgent, async_get_default_agent
 
 
 def has_no_punctuation(value: list[str]) -> list[str]:
@@ -61,7 +61,9 @@ async def async_attach_trigger(
 
     job = HassJob(action)
 
-    async def call_action(sentence: str, result: RecognizeResult) -> str | None:
+    async def call_action(
+        sentence: str, result: RecognizeResult, device_id: str | None
+    ) -> str | None:
         """Call action with right context."""
 
         # Add slot values as extra trigger data
@@ -69,9 +71,11 @@ async def async_attach_trigger(
             entity_name: {
                 "name": entity_name,
                 "text": entity.text.strip(),  # remove whitespace
-                "value": entity.value.strip()
-                if isinstance(entity.value, str)
-                else entity.value,
+                "value": (
+                    entity.value.strip()
+                    if isinstance(entity.value, str)
+                    else entity.value
+                ),
             }
             for entity_name, entity in result.entities.items()
         }
@@ -84,6 +88,7 @@ async def async_attach_trigger(
             "slots": {  # direct access to values
                 entity_name: entity["value"] for entity_name, entity in details.items()
             },
+            "device_id": device_id,
         }
 
         # Wait for the automation to complete
@@ -105,7 +110,7 @@ async def async_attach_trigger(
         # two trigger copies for who will provide a response.
         return None
 
-    default_agent = await _get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
+    default_agent = async_get_default_agent(hass)
     assert isinstance(default_agent, DefaultAgent)
 
     return default_agent.register_trigger(sentences, call_action)

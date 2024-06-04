@@ -1,4 +1,5 @@
 """Base entity class for DROP entities."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

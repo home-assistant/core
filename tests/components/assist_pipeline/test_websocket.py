@@ -1,4 +1,5 @@
 """Websocket tests for Voice Assistant integration."""
+
 import asyncio
 import base64
 from typing import Any
@@ -380,12 +381,15 @@ async def test_audio_pipeline_no_wake_word_entity(
     """Test timeout from a pipeline run with audio input/output + wake word."""
     client = await hass_ws_client(hass)
 
-    with patch(
-        "homeassistant.components.wake_word.async_default_entity",
-        return_value="wake_word.bad-entity-id",
-    ), patch(
-        "homeassistant.components.wake_word.async_get_wake_word_detection_entity",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.wake_word.async_default_entity",
+            return_value="wake_word.bad-entity-id",
+        ),
+        patch(
+            "homeassistant.components.wake_word.async_get_wake_word_detection_entity",
+            return_value=None,
+        ),
     ):
         await client.send_json_auto_id(
             {
@@ -1162,7 +1166,7 @@ async def test_get_pipeline(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "conversation_engine": "homeassistant",
+        "conversation_engine": "conversation.home_assistant",
         "conversation_language": "en",
         "id": ANY,
         "language": "en",
@@ -1246,7 +1250,7 @@ async def test_list_pipelines(
     assert msg["result"] == {
         "pipelines": [
             {
-                "conversation_engine": "homeassistant",
+                "conversation_engine": "conversation.home_assistant",
                 "conversation_language": "en",
                 "id": ANY,
                 "language": "en",
@@ -1699,15 +1703,19 @@ async def test_list_pipeline_languages_with_aliases(
     """Test listing pipeline languages using aliases."""
     client = await hass_ws_client(hass)
 
-    with patch(
-        "homeassistant.components.conversation.async_get_conversation_languages",
-        return_value={"he", "nb"},
-    ), patch(
-        "homeassistant.components.stt.async_get_speech_to_text_languages",
-        return_value={"he", "no"},
-    ), patch(
-        "homeassistant.components.tts.async_get_text_to_speech_languages",
-        return_value={"iw", "nb"},
+    with (
+        patch(
+            "homeassistant.components.conversation.async_get_conversation_languages",
+            return_value={"he", "nb"},
+        ),
+        patch(
+            "homeassistant.components.stt.async_get_speech_to_text_languages",
+            return_value={"he", "no"},
+        ),
+        patch(
+            "homeassistant.components.tts.async_get_text_to_speech_languages",
+            return_value={"iw", "nb"},
+        ),
     ):
         await client.send_json_auto_id({"type": "assist_pipeline/language/list"})
 
@@ -2004,7 +2012,7 @@ async def test_wake_word_cooldown_different_entities(
     await client_pipeline.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/create",
-            "conversation_engine": "homeassistant",
+            "conversation_engine": "conversation.home_assistant",
             "conversation_language": "en-US",
             "language": "en",
             "name": "pipeline_with_wake_word_1",
@@ -2024,7 +2032,7 @@ async def test_wake_word_cooldown_different_entities(
     await client_pipeline.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/create",
-            "conversation_engine": "homeassistant",
+            "conversation_engine": "conversation.home_assistant",
             "conversation_language": "en-US",
             "language": "en",
             "name": "pipeline_with_wake_word_2",
@@ -2391,7 +2399,7 @@ async def test_device_capture_queue_full(
 
         def put_nowait(self, item):
             if item is not None:
-                raise asyncio.QueueFull()
+                raise asyncio.QueueFull
 
             super().put_nowait(item)
 

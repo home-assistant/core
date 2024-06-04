@@ -1,0 +1,85 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "flow_sensor": {
+        "default": "mdi:water-pump"
+      },
+      "freeze": {
+        "default": "mdi:cancel"
+      },
+      "hourly": {
+        "default": "mdi:cancel"
+      },
+      "month": {
+        "default": "mdi:cancel"
+      },
+      "raindelay": {
+        "default": "mdi:cancel"
+      },
+      "rainsensor": {
+        "default": "mdi:cancel"
+      },
+      "weekday": {
+        "default": "mdi:cancel"
+      }
+    },
+    "select": {
+      "freeze_protection_temperature": {
+        "default": "mdi:thermometer"
+      }
+    },
+    "sensor": {
+      "translation_key_0": {
+        "default": "mdi:abc"
+      },
+      "translation_key_1": {
+        "default": "mdi:abc"
+      },
+      "translation_key_2": {
+        "default": "mdi:abc"
+      },
+      "translation_key_3": {
+        "default": "mdi:abc"
+      },
+      "translation_key_4": {
+        "default": "mdi:abc"
+      },
+      "translation_key_5": {
+        "default": "mdi:abc"
+      },
+      "translation_key_6": {
+        "default": "mdi:abc"
+      },
+      "translation_key_7": {
+        "default": "mdi:abc"
+      }
+    },
+    "switch": {
+      "flow_sensor_clicks_cubic_meter": {
+        "default": "mdi:water-pump"
+      },
+      "flow_sensor_consumed_liters": {
+        "default": "mdi:water-pump"
+      },
+      "flow_sensor_leak_clicks": {
+        "default": "mdi:pipe-leak"
+      },
+      "flow_sensor_leak_volume": {
+        "default": "mdi:pipe-leak"
+      }
+    }
+  },
+  "services": {
+    "pause_watering": "mdi:pause",
+    "restrict_watering": "mdi:cancel",
+    "start_program": "mdi:play",
+    "start_zone": "mdi:play",
+    "stop_all": "mdi:stop",
+    "stop_program": "mdi:stop",
+    "stop_zone": "mdi:stop",
+    "unpause_watering": "mdi:play-pause",
+    "push_flow_meter_data": "mdi:database-arrow-up",
+    "push_weather_data": "mdi:database-arrow-up",
+    "unrestrict_watering": "mdi:check"
+  }
+}

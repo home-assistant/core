@@ -1,4 +1,5 @@
 """The tests for the rest command platform."""
+
 import base64
 from http import HTTPStatus
 from unittest.mock import patch
@@ -65,11 +66,9 @@ async def test_rest_command_timeout(
 
     aioclient_mock.get(TEST_URL, exc=TimeoutError())
 
-    with pytest.raises(
-        HomeAssistantError,
-        match=r"^Timeout when calling resource 'https://example.com/'$",
-    ):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(DOMAIN, "get_test", {}, blocking=True)
+    assert str(exc.value) == 'Timeout when calling resource "https://example.com/"'
 
     assert len(aioclient_mock.mock_calls) == 1
 
@@ -84,12 +83,13 @@ async def test_rest_command_aiohttp_error(
 
     aioclient_mock.get(TEST_URL, exc=aiohttp.ClientError())
 
-    with pytest.raises(
-        HomeAssistantError,
-        match=r"^Client error occurred when calling resource 'https://example.com/'$",
-    ):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(DOMAIN, "get_test", {}, blocking=True)
 
+    assert (
+        str(exc.value)
+        == 'Client error occurred when calling resource "https://example.com/"'
+    )
     assert len(aioclient_mock.mock_calls) == 1
 
 
@@ -335,13 +335,14 @@ async def test_rest_command_get_response_malformed_json(
     assert not response
 
     # Throws error when requesting response
-    with pytest.raises(
-        HomeAssistantError,
-        match=r"^Response of 'https://example.com/' could not be decoded as JSON$",
-    ):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             DOMAIN, "get_test", {}, blocking=True, return_response=True
         )
+    assert (
+        str(exc.value)
+        == 'The response of "https://example.com/" could not be decoded as JSON'
+    )
 
 
 async def test_rest_command_get_response_none(
@@ -368,12 +369,13 @@ async def test_rest_command_get_response_none(
     assert not response
 
     # Throws Decode error when requesting response
-    with pytest.raises(
-        HomeAssistantError,
-        match=r"^Response of 'https://example.com/' could not be decoded as text$",
-    ):
+    with pytest.raises(HomeAssistantError) as exc:
         response = await hass.services.async_call(
             DOMAIN, "get_test", {}, blocking=True, return_response=True
         )
+    assert (
+        str(exc.value)
+        == 'The response of "https://example.com/" could not be decoded as text'
+    )
 
     assert not response

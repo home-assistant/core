@@ -1,4 +1,5 @@
 """Tests for the diagnostics data provided by the ESPHome integration."""
+
 from unittest.mock import ANY
 
 from syrupy import SnapshotAssertion
@@ -93,7 +94,8 @@ async def test_diagnostics_with_bluetooth(
                 "project_version": "",
                 "suggested_area": "",
                 "uses_password": False,
-                "voice_assistant_version": 0,
+                "legacy_voice_assistant_version": 0,
+                "voice_assistant_feature_flags": 0,
                 "webserver_port": 0,
             },
             "services": [],

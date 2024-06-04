@@ -2,6 +2,7 @@
 
 Support for QR code for guest WLANs.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -13,12 +14,12 @@ from aiounifi.models.api import ApiItemT
 from aiounifi.models.wlan import Wlan
 
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
+from . import UnifiConfigEntry
 from .entity import (
     HandlerT,
     UnifiEntity,
@@ -49,15 +50,12 @@ ENTITY_DESCRIPTIONS: tuple[UnifiImageEntityDescription, ...] = (
     UnifiImageEntityDescription[Wlans, Wlan](
         key="WLAN QR Code",
         entity_category=EntityCategory.DIAGNOSTIC,
-        has_entity_name=True,
         entity_registry_enabled_default=False,
-        allowed_fn=lambda hub, obj_id: True,
         api_handler_fn=lambda api: api.wlans,
         available_fn=async_wlan_available_fn,
         device_info_fn=async_wlan_device_info_fn,
         name_fn=lambda wlan: "QR Code",
         object_fn=lambda api, obj_id: api.wlans[obj_id],
-        supported_fn=lambda hub, obj_id: True,
         unique_id_fn=lambda hub, obj_id: f"qr_code-{obj_id}",
         image_fn=async_wlan_qr_code_image_fn,
         value_fn=lambda obj: obj.x_passphrase,
@@ -67,17 +65,12 @@ ENTITY_DESCRIPTIONS: tuple[UnifiImageEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: UnifiConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up image platform for UniFi Network integration."""
-    UnifiHub.register_platform(
-        hass,
-        config_entry,
-        async_add_entities,
-        UnifiImageEntity,
-        ENTITY_DESCRIPTIONS,
-        requires_admin=True,
+    config_entry.runtime_data.entity_loader.register_platform(
+        async_add_entities, UnifiImageEntity, ENTITY_DESCRIPTIONS, requires_admin=True
     )
 
 

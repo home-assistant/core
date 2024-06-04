@@ -1,9 +1,11 @@
 """Component to interface with locks that can be controlled remotely."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
+from functools import cached_property
 import logging
 import re
 from typing import TYPE_CHECKING, Any, final
@@ -20,6 +22,8 @@ from homeassistant.const import (
     STATE_JAMMED,
     STATE_LOCKED,
     STATE_LOCKING,
+    STATE_OPEN,
+    STATE_OPENING,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
@@ -41,17 +45,14 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
+from . import group as group_pre_import  # noqa: F401
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CHANGED_BY = "changed_by"
 CONF_DEFAULT_CODE = "default_code"
 
-DOMAIN = "lock"
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -122,6 +123,8 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "is_locked",
     "is_locking",
     "is_unlocking",
+    "is_open",
+    "is_opening",
     "is_jammed",
     "supported_features",
 }
@@ -135,6 +138,8 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_code_format: str | None = None
     _attr_is_locked: bool | None = None
     _attr_is_locking: bool | None = None
+    _attr_is_open: bool | None = None
+    _attr_is_opening: bool | None = None
     _attr_is_unlocking: bool | None = None
     _attr_is_jammed: bool | None = None
     _attr_state: None = None
@@ -153,7 +158,6 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             if TYPE_CHECKING:
                 assert self.code_format
             raise ServiceValidationError(
-                f"The code for {self.entity_id} doesn't match pattern {self.code_format}",
                 translation_domain=DOMAIN,
                 translation_key="add_default_code",
                 translation_placeholders={
@@ -205,6 +209,16 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_is_unlocking
 
     @cached_property
+    def is_open(self) -> bool | None:
+        """Return true if the lock is open."""
+        return self._attr_is_open
+
+    @cached_property
+    def is_opening(self) -> bool | None:
+        """Return true if the lock is opening."""
+        return self._attr_is_opening
+
+    @cached_property
     def is_jammed(self) -> bool | None:
         """Return true if the lock is jammed (incomplete locking)."""
         return self._attr_is_jammed
@@ -216,7 +230,7 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
@@ -229,7 +243,7 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
@@ -242,7 +256,7 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def open(self, **kwargs: Any) -> None:
         """Open the door latch."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
@@ -264,8 +278,12 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the state."""
         if self.is_jammed:
             return STATE_JAMMED
+        if self.is_opening:
+            return STATE_OPENING
         if self.is_locking:
             return STATE_LOCKING
+        if self.is_open:
+            return STATE_OPEN
         if self.is_unlocking:
             return STATE_UNLOCKING
         if (locked := self.is_locked) is None:

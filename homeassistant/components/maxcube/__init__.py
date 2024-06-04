@@ -1,4 +1,5 @@
 """Support for the MAX! Cube LAN Gateway."""
+
 import logging
 from threading import Lock
 import time

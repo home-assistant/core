@@ -1,4 +1,5 @@
 """Support for showing random numbers."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

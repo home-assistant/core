@@ -1,4 +1,5 @@
 """Fixtures for advantage_air."""
+
 from __future__ import annotations
 
 import pytest

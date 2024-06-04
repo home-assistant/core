@@ -1,4 +1,5 @@
 """Support for Google Assistant SDK broadcast notifications."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -14,7 +15,10 @@ from .helpers import async_send_text_commands, default_language_code
 # https://support.google.com/assistant/answer/9071582?hl=en
 LANG_TO_BROADCAST_COMMAND = {
     "en": ("broadcast {0}", "broadcast to {1} {0}"),
-    "de": ("Nachricht an alle {0}", "Nachricht an alle an {1} {0}"),
+    "de": (
+        "Nachricht an alle {0}",  # codespell:ignore alle
+        "Nachricht an alle an {1} {0}",  # codespell:ignore alle
+    ),
     "es": ("Anuncia {0}", "Anuncia en {1} {0}"),
     "fr": ("Diffuse {0}", "Diffuse dans {1} {0}"),
     "it": ("Trasmetti {0}", "Trasmetti in {1} {0}"),
@@ -65,8 +69,8 @@ class BroadcastNotificationService(BaseNotificationService):
         if not targets:
             commands.append(broadcast_commands(language_code)[0].format(message))
         else:
-            for target in targets:
-                commands.append(
-                    broadcast_commands(language_code)[1].format(message, target)
-                )
+            commands.extend(
+                broadcast_commands(language_code)[1].format(message, target)
+                for target in targets
+            )
         await async_send_text_commands(self.hass, commands)

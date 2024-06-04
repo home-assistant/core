@@ -1,4 +1,5 @@
 """The generic_hygrostat component."""
+
 import voluptuous as vol
 
 from homeassistant.components.humidifier import HumidifierDeviceClass
@@ -35,13 +36,13 @@ HYGROSTAT_SCHEMA = vol.Schema(
         vol.Optional(CONF_DEVICE_CLASS): vol.In(
             [HumidifierDeviceClass.HUMIDIFIER, HumidifierDeviceClass.DEHUMIDIFIER]
         ),
-        vol.Optional(CONF_MAX_HUMIDITY): vol.Coerce(int),
+        vol.Optional(CONF_MAX_HUMIDITY): vol.Coerce(float),
         vol.Optional(CONF_MIN_DUR): vol.All(cv.time_period, cv.positive_timedelta),
-        vol.Optional(CONF_MIN_HUMIDITY): vol.Coerce(int),
+        vol.Optional(CONF_MIN_HUMIDITY): vol.Coerce(float),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_DRY_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
         vol.Optional(CONF_WET_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
-        vol.Optional(CONF_TARGET_HUMIDITY): vol.Coerce(int),
+        vol.Optional(CONF_TARGET_HUMIDITY): vol.Coerce(float),
         vol.Optional(CONF_KEEP_ALIVE): vol.All(cv.time_period, cv.positive_timedelta),
         vol.Optional(CONF_INITIAL_STATE): cv.boolean,
         vol.Optional(CONF_AWAY_HUMIDITY): vol.Coerce(int),

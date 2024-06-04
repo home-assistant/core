@@ -1,4 +1,5 @@
 """Binary Sensors for Tesla Wall Connector."""
+
 from dataclasses import dataclass
 import logging
 

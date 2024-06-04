@@ -1,4 +1,5 @@
 """Support for Crownstone devices."""
+
 from __future__ import annotations
 
 from functools import partial

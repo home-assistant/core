@@ -1,4 +1,5 @@
 """Camera platform that receives images through HTTP POST."""
+
 from __future__ import annotations
 
 import asyncio

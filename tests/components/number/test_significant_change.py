@@ -1,4 +1,5 @@
 """Test the Number significant change platform."""
+
 import pytest
 
 from homeassistant.components.number import NumberDeviceClass

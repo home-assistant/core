@@ -12,6 +12,7 @@ SUNWEG_USER_INPUT = {
 
 SUNWEG_MOCK_ENTRY = MockConfigEntry(
     domain=DOMAIN,
+    unique_id=0,
     data={
         CONF_USERNAME: "user@email.com",
         CONF_PASSWORD: "password",

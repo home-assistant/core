@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Inspect all component SCHEMAS."""
+
 import importlib
 import os
 import pkgutil

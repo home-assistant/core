@@ -1,4 +1,5 @@
 """Support for V2C binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -20,18 +21,11 @@ from .coordinator import V2CUpdateCoordinator
 from .entity import V2CBaseEntity
 
 
-@dataclass(frozen=True)
-class V2CRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class V2CBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes an EVSE binary sensor entity."""
 
     value_fn: Callable[[Trydan], bool]
-
-
-@dataclass(frozen=True)
-class V2CBinarySensorEntityDescription(
-    BinarySensorEntityDescription, V2CRequiredKeysMixin
-):
-    """Describes an EVSE binary sensor entity."""
 
 
 TRYDAN_SENSORS = (

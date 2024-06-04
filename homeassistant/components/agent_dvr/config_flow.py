@@ -1,4 +1,5 @@
 """Config flow to configure Agent devices."""
+
 from contextlib import suppress
 from typing import Any
 

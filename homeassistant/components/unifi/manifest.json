@@ -4,12 +4,11 @@
   "codeowners": ["@Kane610"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/unifi",
-  "import_executor": true,
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["aiounifi"],
   "quality_scale": "platinum",
-  "requirements": ["aiounifi==72"],
+  "requirements": ["aiounifi==77"],
   "ssdp": [
     {
       "manufacturer": "Ubiquiti Networks",

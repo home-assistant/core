@@ -1,4 +1,5 @@
 """Test the default_config init."""
+
 from unittest.mock import patch
 
 import pytest
@@ -17,9 +18,11 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 @pytest.fixture(autouse=True)
 def mock_ssdp():
     """Mock ssdp."""
-    with patch("homeassistant.components.ssdp.Scanner.async_scan"), patch(
-        "homeassistant.components.ssdp.Server.async_start"
-    ), patch("homeassistant.components.ssdp.Server.async_stop"):
+    with (
+        patch("homeassistant.components.ssdp.Scanner.async_scan"),
+        patch("homeassistant.components.ssdp.Server.async_start"),
+        patch("homeassistant.components.ssdp.Server.async_stop"),
+    ):
         yield
 
 
@@ -31,7 +34,7 @@ def recorder_url_mock():
 
 
 async def test_setup(
-    hass: HomeAssistant, mock_zeroconf: None, mock_get_source_ip, mock_bluetooth: None
+    hass: HomeAssistant, mock_zeroconf: None, mock_bluetooth: None
 ) -> None:
     """Test setup."""
     recorder_helper.async_initialize_recorder(hass)

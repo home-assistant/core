@@ -1,4 +1,5 @@
 """The tankerkoenig base entity."""
+
 from aiotankerkoenig import Station
 
 from homeassistant.const import ATTR_ID

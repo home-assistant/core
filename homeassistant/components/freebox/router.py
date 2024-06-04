@@ -1,4 +1,5 @@
 """Represent the Freebox router and its devices and sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -42,7 +43,6 @@ def is_json(json_str: str) -> bool:
     """Validate if a String is a JSON value or not."""
     try:
         json.loads(json_str)
-        return True
     except (ValueError, TypeError) as err:
         _LOGGER.error(
             "Failed to parse JSON '%s', error '%s'",
@@ -50,6 +50,7 @@ def is_json(json_str: str) -> bool:
             err,
         )
         return False
+    return True
 
 
 async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
@@ -86,7 +87,7 @@ async def get_hosts_list_if_supported(
             )
 
         else:
-            raise err
+            raise
 
     return supports_hosts, fbx_devices
 

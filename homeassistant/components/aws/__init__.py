@@ -1,4 +1,5 @@
 """Support for Amazon Web Services (AWS)."""
+
 import asyncio
 from collections import OrderedDict
 import logging
@@ -128,9 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # validate credentials and create sessions
     validation = True
-    tasks = []
-    for cred in conf[ATTR_CREDENTIALS]:
-        tasks.append(_validate_aws_credentials(hass, cred))
+    tasks = [_validate_aws_credentials(hass, cred) for cred in conf[ATTR_CREDENTIALS]]
     if tasks:
         results = await asyncio.gather(*tasks, return_exceptions=True)
         for index, result in enumerate(results):

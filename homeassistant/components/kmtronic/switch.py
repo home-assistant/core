@@ -1,4 +1,5 @@
 """KMtronic Switch integration."""
+
 from typing import Any
 import urllib.parse
 

@@ -1,7 +1,6 @@
 """Platform for shared base classes for sensors."""
-from __future__ import annotations
 
-from typing import TypeVar
+from __future__ import annotations
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -14,17 +13,12 @@ from .coordinator import (
     FlumeNotificationDataUpdateCoordinator,
 )
 
-_FlumeCoordinatorT = TypeVar(
-    "_FlumeCoordinatorT",
-    bound=(
-        FlumeDeviceDataUpdateCoordinator
-        | FlumeDeviceConnectionUpdateCoordinator
-        | FlumeNotificationDataUpdateCoordinator
-    ),
-)
 
-
-class FlumeEntity(CoordinatorEntity[_FlumeCoordinatorT]):
+class FlumeEntity[
+    _FlumeCoordinatorT: FlumeDeviceDataUpdateCoordinator
+    | FlumeDeviceConnectionUpdateCoordinator
+    | FlumeNotificationDataUpdateCoordinator
+](CoordinatorEntity[_FlumeCoordinatorT]):
     """Base entity class."""
 
     _attr_attribution = "Data provided by Flume API"

@@ -1,4 +1,5 @@
 """Test ZHA WebSocket API."""
+
 from __future__ import annotations
 
 from binascii import unhexlify
@@ -14,9 +15,8 @@ import zigpy.profiles.zha
 import zigpy.types
 from zigpy.types.named import EUI64
 import zigpy.util
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import general, security
 from zigpy.zcl.clusters.general import Groups
-import zigpy.zcl.clusters.security as security
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.components.websocket_api import const
@@ -64,6 +64,7 @@ from .conftest import (
 from .data import BASE_CUSTOM_CONFIGURATION, CONFIG_WITH_ALARM_OPTIONS
 
 from tests.common import MockConfigEntry, MockUser
+from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -151,7 +152,12 @@ async def device_groupable(hass, zigpy_device_mock, zha_device_joined):
 
 
 @pytest.fixture
-async def zha_client(hass, hass_ws_client, device_switch, device_groupable):
+async def zha_client(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_switch,
+    device_groupable,
+) -> MockHAClientWebSocket:
     """Get ZHA WebSocket client."""
 
     # load the ZHA API
@@ -302,7 +308,7 @@ async def test_update_zha_config(
     app_controller: ControllerApplication,
 ) -> None:
     """Test updating ZHA custom configuration."""
-    configuration: dict = deepcopy(CONFIG_WITH_ALARM_OPTIONS)
+    configuration: dict = deepcopy(BASE_CUSTOM_CONFIGURATION)
     configuration["data"]["zha_options"]["default_light_transition"] = 10
 
     with patch(
@@ -317,8 +323,8 @@ async def test_update_zha_config(
 
     await zha_client.send_json({ID: 6, TYPE: "zha/configuration"})
     msg = await zha_client.receive_json()
-    configuration = msg["result"]
-    assert configuration == configuration
+    test_configuration = msg["result"]
+    assert test_configuration == configuration
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
@@ -498,7 +504,7 @@ async def app_controller(
 
 @pytest.mark.parametrize(
     ("params", "duration", "node"),
-    (
+    [
         ({}, 60, None),
         ({ATTR_DURATION: 30}, 30, None),
         (
@@ -511,7 +517,7 @@ async def app_controller(
             60,
             zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:d1"),
         ),
-    ),
+    ],
 )
 async def test_permit_ha12(
     hass: HomeAssistant,
@@ -703,7 +709,13 @@ async def test_ws_permit_with_qr_code(
         {ID: 14, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}", **params}
     )
 
-    msg = await zha_client.receive_json()
+    msg_type = None
+    while msg_type != const.TYPE_RESULT:
+        # There will be logging events coming over the websocket
+        # as well so we want to ignore those
+        msg = await zha_client.receive_json()
+        msg_type = msg["type"]
+
     assert msg["id"] == 14
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
@@ -736,7 +748,7 @@ async def test_ws_permit_with_install_code_fail(
 
 @pytest.mark.parametrize(
     ("params", "duration", "node"),
-    (
+    [
         ({}, 60, None),
         ({ATTR_DURATION: 30}, 30, None),
         (
@@ -749,7 +761,7 @@ async def test_ws_permit_with_install_code_fail(
             60,
             zigpy.types.EUI64.convert("aa:bb:cc:dd:aa:bb:cc:d1"),
         ),
-    ),
+    ],
 )
 async def test_ws_permit_ha12(
     app_controller: ControllerApplication, zha_client, params, duration, node
@@ -760,7 +772,13 @@ async def test_ws_permit_ha12(
         {ID: 14, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}", **params}
     )
 
-    msg = await zha_client.receive_json()
+    msg_type = None
+    while msg_type != const.TYPE_RESULT:
+        # There will be logging events coming over the websocket
+        # as well so we want to ignore those
+        msg = await zha_client.receive_json()
+        msg_type = msg["type"]
+
     assert msg["id"] == 14
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
@@ -925,7 +943,7 @@ async def test_websocket_change_channel(
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
 
-    change_channel_mock.mock_calls == [call(ANY, new_channel)]
+    change_channel_mock.assert_has_calls([call(ANY, new_channel)])
 
 
 @pytest.mark.parametrize(

@@ -1,4 +1,5 @@
 """Support for Logi Circle devices."""
+
 import asyncio
 
 from aiohttp.client_exceptions import ClientResponseError

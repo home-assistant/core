@@ -1,4 +1,5 @@
 """Configure tests for the YouTube integration."""
+
 from collections.abc import Awaitable, Callable, Coroutine
 import time
 from typing import Any
@@ -18,7 +19,7 @@ from tests.common import MockConfigEntry
 from tests.components.youtube import MockYouTube
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-ComponentSetup = Callable[[], Awaitable[MockYouTube]]
+type ComponentSetup = Callable[[], Awaitable[MockYouTube]]
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"

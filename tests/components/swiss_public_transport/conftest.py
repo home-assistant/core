@@ -1,4 +1,5 @@
 """Common fixtures for the swiss_public_transport tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 

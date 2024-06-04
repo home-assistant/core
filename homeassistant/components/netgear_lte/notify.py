@@ -1,4 +1,5 @@
 """Support for Netgear LTE notifications."""
+
 from __future__ import annotations
 
 import attr

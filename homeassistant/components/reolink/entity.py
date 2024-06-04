@@ -1,9 +1,9 @@
 """Reolink parent entity class."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TypeVar
 
 from reolink_aio.api import DUAL_LENS_MODELS, Host
 
@@ -16,8 +16,6 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import ReolinkData
 from .const import DOMAIN
-
-_T = TypeVar("_T")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -36,7 +34,9 @@ class ReolinkHostEntityDescription(EntityDescription):
     supported: Callable[[Host], bool] = lambda api: True
 
 
-class ReolinkBaseCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[_T]]):
+class ReolinkBaseCoordinatorEntity[_DataT](
+    CoordinatorEntity[DataUpdateCoordinator[_DataT]]
+):
     """Parent class for Reolink entities."""
 
     _attr_has_entity_name = True
@@ -44,7 +44,7 @@ class ReolinkBaseCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[_T]])
     def __init__(
         self,
         reolink_data: ReolinkData,
-        coordinator: DataUpdateCoordinator[_T],
+        coordinator: DataUpdateCoordinator[_DataT],
     ) -> None:
         """Initialize ReolinkBaseCoordinatorEntity."""
         super().__init__(coordinator)
@@ -89,11 +89,17 @@ class ReolinkHostCoordinatorEntity(ReolinkBaseCoordinatorEntity[None]):
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
-        if (
-            self.entity_description.cmd_key is not None
-            and self.entity_description.cmd_key not in self._host.update_cmd_list
-        ):
-            self._host.update_cmd_list.append(self.entity_description.cmd_key)
+        cmd_key = self.entity_description.cmd_key
+        if cmd_key is not None:
+            self._host.async_register_update_cmd(cmd_key)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Entity removed."""
+        cmd_key = self.entity_description.cmd_key
+        if cmd_key is not None:
+            self._host.async_unregister_update_cmd(cmd_key)
+
+        await super().async_will_remove_from_hass()
 
 
 class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
@@ -128,3 +134,18 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
                 sw_version=self._host.api.camera_sw_version(dev_ch),
                 configuration_url=self._conf_url,
             )
+
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        await super().async_added_to_hass()
+        cmd_key = self.entity_description.cmd_key
+        if cmd_key is not None:
+            self._host.async_register_update_cmd(cmd_key, self._channel)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Entity removed."""
+        cmd_key = self.entity_description.cmd_key
+        if cmd_key is not None:
+            self._host.async_unregister_update_cmd(cmd_key, self._channel)
+
+        await super().async_will_remove_from_hass()

@@ -1,4 +1,5 @@
 """Support for Streamlabs Water Monitor Usage."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

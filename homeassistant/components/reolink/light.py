@@ -1,4 +1,5 @@
 """Component providing support for Reolink light entities."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -43,7 +44,6 @@ LIGHT_ENTITIES = (
         key="floodlight",
         cmd_key="GetWhiteLed",
         translation_key="floodlight",
-        icon="mdi:spotlight-beam",
         supported=lambda api, ch: api.supported(ch, "floodLight"),
         is_on_fn=lambda api, ch: api.whiteled_state(ch),
         turn_on_off_fn=lambda api, ch, value: api.set_whiteled(ch, state=value),
@@ -54,7 +54,6 @@ LIGHT_ENTITIES = (
         key="status_led",
         cmd_key="GetPowerLed",
         translation_key="status_led",
-        icon="mdi:lightning-bolt-circle",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "power_led"),
         is_on_fn=lambda api, ch: api.status_led_enabled(ch),

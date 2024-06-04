@@ -1,4 +1,5 @@
 """The Flexit Nordic (BACnet) integration."""
+
 import asyncio.exceptions
 from typing import Any
 

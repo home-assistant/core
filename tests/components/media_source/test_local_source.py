@@ -1,4 +1,5 @@
 """Test Local Media Source."""
+
 from collections.abc import AsyncGenerator
 from http import HTTPStatus
 import io

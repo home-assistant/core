@@ -1,4 +1,5 @@
 """Platform allowing several lights to be grouped into one light."""
+
 from __future__ import annotations
 
 from collections import Counter
@@ -50,7 +51,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import GroupEntity
+from .entity import GroupEntity
 from .util import find_state_attributes, mean_tuple, reduce_attribute
 
 DEFAULT_NAME = "Light Group"

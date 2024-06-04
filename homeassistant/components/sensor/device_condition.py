@@ -1,4 +1,5 @@
 """Provides device conditions for sensors."""
+
 from __future__ import annotations
 
 import voluptuous as vol

@@ -1,4 +1,5 @@
 """Test the Humidifier significant change platform."""
+
 import pytest
 
 from homeassistant.components.humidifier import (

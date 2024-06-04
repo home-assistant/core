@@ -1,4 +1,5 @@
 """The islamic_prayer_times component."""
+
 from __future__ import annotations
 
 import logging

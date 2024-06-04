@@ -1,4 +1,5 @@
 """Config Flow for PlayStation 4."""
+
 from collections import OrderedDict
 
 from pyps4_2ndscreen.errors import CredentialTimeout

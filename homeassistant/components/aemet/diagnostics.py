@@ -1,4 +1,5 @@
 """Support for the AEMET OpenData diagnostics."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,7 +7,6 @@ from typing import Any
 from aemet_opendata.const import AOD_COORDS
 
 from homeassistant.components.diagnostics.util import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -15,8 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, ENTRY_WEATHER_COORDINATOR
-from .coordinator import WeatherUpdateCoordinator
+from . import AemetConfigEntry
 
 TO_REDACT_CONFIG = [
     CONF_API_KEY,
@@ -31,11 +30,10 @@ TO_REDACT_COORD = [
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: AemetConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    aemet_entry = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator: WeatherUpdateCoordinator = aemet_entry[ENTRY_WEATHER_COORDINATOR]
+    coordinator = config_entry.runtime_data.coordinator
 
     return {
         "api_data": coordinator.aemet.raw_data(),

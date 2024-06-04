@@ -1,4 +1,5 @@
 """Test different accessory types: Media Players."""
+
 import pytest
 
 from homeassistant.components.homekit.accessories import HomeDriver

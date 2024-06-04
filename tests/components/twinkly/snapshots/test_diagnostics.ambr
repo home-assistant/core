@@ -8,7 +8,6 @@
       'effect_list': list([
       ]),
       'friendly_name': 'twinkly_test_device_name',
-      'icon': 'mdi:string-lights',
       'supported_color_modes': list([
         'brightness',
       ]),

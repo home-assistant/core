@@ -1,4 +1,5 @@
 """Support led_brightness for Mi Air Humidifier."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -210,27 +211,24 @@ async def async_setup_entry(
     if model not in MODEL_TO_ATTR_MAP:
         return
 
-    entities = []
     unique_id = config_entry.unique_id
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
     attributes = MODEL_TO_ATTR_MAP[model]
 
-    for description in SELECTOR_TYPES:
-        for attribute in attributes:
-            if description.key == attribute.attr_name:
-                entities.append(
-                    XiaomiGenericSelector(
-                        device,
-                        config_entry,
-                        f"{description.key}_{unique_id}",
-                        coordinator,
-                        description,
-                        attribute.enum_class,
-                    )
-                )
-
-    async_add_entities(entities)
+    async_add_entities(
+        XiaomiGenericSelector(
+            device,
+            config_entry,
+            f"{description.key}_{unique_id}",
+            coordinator,
+            description,
+            attribute.enum_class,
+        )
+        for description in SELECTOR_TYPES
+        for attribute in attributes
+        if description.key == attribute.attr_name
+    )
 
 
 class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
@@ -258,10 +256,10 @@ class XiaomiGenericSelector(XiaomiSelector):
 
         if description.options_map:
             self._options_map = {}
-            for key, val in enum_class._member_map_.items():
+            for key, val in enum_class._member_map_.items():  # noqa: SLF001
                 self._options_map[description.options_map[key]] = val
         else:
-            self._options_map = enum_class._member_map_
+            self._options_map = enum_class._member_map_  # noqa: SLF001
         self._reverse_map = {val: key for key, val in self._options_map.items()}
         self._enum_class = enum_class
 

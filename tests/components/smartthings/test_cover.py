@@ -3,6 +3,7 @@
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
 """
+
 from pysmartthings import Attribute, Capability
 
 from homeassistant.components.cover import (
@@ -28,7 +29,10 @@ from .conftest import setup_platform
 
 
 async def test_entity_and_device_attributes(
-    hass: HomeAssistant, device_factory
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device_factory,
 ) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
@@ -43,8 +47,6 @@ async def test_entity_and_device_attributes(
             Attribute.mnfv: "v7.89",
         },
     )
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
     # Act
     await setup_platform(hass, COVER_DOMAIN, devices=[device])
     # Assert
@@ -139,7 +141,7 @@ async def test_set_cover_position_switch_level(
     assert state.attributes[ATTR_CURRENT_POSITION] == 10
     # Ensure API called
 
-    assert device._api.post_device_command.call_count == 1  # type: ignore
+    assert device._api.post_device_command.call_count == 1
 
 
 async def test_set_cover_position(hass: HomeAssistant, device_factory) -> None:
@@ -170,7 +172,7 @@ async def test_set_cover_position(hass: HomeAssistant, device_factory) -> None:
     assert state.attributes[ATTR_CURRENT_POSITION] == 10
     # Ensure API called
 
-    assert device._api.post_device_command.call_count == 1  # type: ignore
+    assert device._api.post_device_command.call_count == 1
 
 
 async def test_set_cover_position_unsupported(
@@ -195,7 +197,7 @@ async def test_set_cover_position_unsupported(
 
     # Ensure API was not called
 
-    assert device._api.post_device_command.call_count == 0  # type: ignore
+    assert device._api.post_device_command.call_count == 0
 
 
 async def test_update_to_open_from_signal(hass: HomeAssistant, device_factory) -> None:

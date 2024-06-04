@@ -1,9 +1,10 @@
 """Base Philips js entity."""
+
 from __future__ import annotations
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import PhilipsTVDataUpdateCoordinator
+from .coordinator import PhilipsTVDataUpdateCoordinator
 
 
 class PhilipsJsEntity(CoordinatorEntity[PhilipsTVDataUpdateCoordinator]):

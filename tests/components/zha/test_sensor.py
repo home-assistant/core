@@ -1,6 +1,8 @@
 """Test ZHA sensor."""
+
 from datetime import timedelta
 import math
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -377,7 +379,7 @@ async def async_test_pi_heating_demand(hass, cluster, entity_id):
         "unsupported_attrs",
         "initial_sensor_state",
     ),
-    (
+    [
         (
             measurement.RelativeHumidity.cluster_id,
             "humidity",
@@ -562,7 +564,7 @@ async def async_test_pi_heating_demand(hass, cluster, entity_id):
             None,
             STATE_UNKNOWN,
         ),
-    ),
+    ],
 )
 async def test_sensor(
     hass: HomeAssistant,
@@ -645,7 +647,7 @@ def hass_ms(hass: HomeAssistant):
 
 
 @pytest.fixture
-def core_rs(hass_storage):
+def core_rs(hass_storage: dict[str, Any]):
     """Core.restore_state fixture."""
 
     def _storage(entity_id, uom, state):
@@ -671,7 +673,6 @@ def core_rs(hass_storage):
                 }
             ],
         }
-        return
 
     return _storage
 
@@ -807,7 +808,7 @@ async def test_electrical_measurement_init(
 
 @pytest.mark.parametrize(
     ("cluster_id", "unsupported_attributes", "entity_ids", "missing_entity_ids"),
-    (
+    [
         (
             homeautomation.ElectricalMeasurement.cluster_id,
             {"apparent_power", "rms_voltage", "rms_current"},
@@ -876,7 +877,7 @@ async def test_electrical_measurement_init(
             },
             {},
         ),
-    ),
+    ],
 )
 async def test_unsupported_attributes_sensor(
     hass: HomeAssistant,
@@ -918,7 +919,7 @@ async def test_unsupported_attributes_sensor(
 
 @pytest.mark.parametrize(
     ("raw_uom", "raw_value", "expected_state", "expected_uom"),
-    (
+    [
         (
             1,
             12320,
@@ -1003,7 +1004,7 @@ async def test_unsupported_attributes_sensor(
             "5.01",
             UnitOfVolume.LITERS,
         ),
-    ),
+    ],
 )
 async def test_se_summation_uom(
     hass: HomeAssistant,
@@ -1051,7 +1052,7 @@ async def test_se_summation_uom(
 
 @pytest.mark.parametrize(
     ("raw_measurement_type", "expected_type"),
-    (
+    [
         (1, "ACTIVE_MEASUREMENT"),
         (8, "PHASE_A_MEASUREMENT"),
         (9, "ACTIVE_MEASUREMENT, PHASE_A_MEASUREMENT"),
@@ -1062,7 +1063,7 @@ async def test_se_summation_uom(
                 " PHASE_A_MEASUREMENT"
             ),
         ),
-    ),
+    ],
 )
 async def test_elec_measurement_sensor_type(
     hass: HomeAssistant,
@@ -1095,9 +1096,9 @@ async def test_elec_measurement_sensor_polling(
 
     entity_id = ENTITY_ID_PREFIX.format("power")
     zigpy_dev = elec_measurement_zigpy_dev
-    zigpy_dev.endpoints[1].electrical_measurement.PLUGGED_ATTR_READS[
-        "active_power"
-    ] = 20
+    zigpy_dev.endpoints[1].electrical_measurement.PLUGGED_ATTR_READS["active_power"] = (
+        20
+    )
 
     await zha_device_joined_restored(zigpy_dev)
 
@@ -1106,9 +1107,9 @@ async def test_elec_measurement_sensor_polling(
     assert state.state == "2.0"
 
     # update the value for the power reading
-    zigpy_dev.endpoints[1].electrical_measurement.PLUGGED_ATTR_READS[
-        "active_power"
-    ] = 60
+    zigpy_dev.endpoints[1].electrical_measurement.PLUGGED_ATTR_READS["active_power"] = (
+        60
+    )
 
     # ensure the state is still 2.0
     state = hass.states.get(entity_id)
@@ -1117,7 +1118,7 @@ async def test_elec_measurement_sensor_polling(
     # let the polling happen
     future = dt_util.utcnow() + timedelta(seconds=90)
     async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # ensure the state has been updated to 6.0
     state = hass.states.get(entity_id)
@@ -1126,7 +1127,7 @@ async def test_elec_measurement_sensor_polling(
 
 @pytest.mark.parametrize(
     "supported_attributes",
-    (
+    [
         set(),
         {
             "active_power",
@@ -1151,7 +1152,7 @@ async def test_elec_measurement_sensor_polling(
             "rms_voltage",
             "rms_voltage_max",
         },
-    ),
+    ],
 )
 async def test_elec_measurement_skip_unsupported_attribute(
     hass: HomeAssistant,
@@ -1259,10 +1260,10 @@ async def test_last_feeding_size_sensor_v2(
     assert entity_id is not None
 
     await send_attributes_report(hass, cluster, {0x010C: 1})
-    assert_state(hass, entity_id, "1.0", UnitOfMass.GRAMS)
+    assert_state(hass, entity_id, "1.0", UnitOfMass.GRAMS.value)
 
     await send_attributes_report(hass, cluster, {0x010C: 5})
-    assert_state(hass, entity_id, "5.0", UnitOfMass.GRAMS)
+    assert_state(hass, entity_id, "5.0", UnitOfMass.GRAMS.value)
 
 
 @pytest.fixture

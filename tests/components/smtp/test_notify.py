@@ -1,4 +1,5 @@
 """The tests for the notify smtp platform."""
+
 from pathlib import Path
 import re
 from unittest.mock import patch
@@ -6,7 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config as hass_config
-import homeassistant.components.notify as notify
+from homeassistant.components import notify
 from homeassistant.components.smtp.const import DOMAIN
 from homeassistant.components.smtp.notify import MailNotificationService
 from homeassistant.const import SERVICE_RELOAD
@@ -50,8 +51,11 @@ async def test_reload_notify(hass: HomeAssistant) -> None:
     assert hass.services.has_service(notify.DOMAIN, DOMAIN)
 
     yaml_path = get_fixture_path("configuration.yaml", "smtp")
-    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path), patch(
-        "homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"
+    with (
+        patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path),
+        patch(
+            "homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -68,7 +72,7 @@ async def test_reload_notify(hass: HomeAssistant) -> None:
 @pytest.fixture
 def message():
     """Return MockSMTP object with test data."""
-    mailer = MockSMTP(
+    return MockSMTP(
         "localhost",
         25,
         5,
@@ -81,7 +85,6 @@ def message():
         0,
         True,
     )
-    return mailer
 
 
 HTML = """
@@ -165,9 +168,10 @@ def test_sending_insecure_files_fails(
     """Verify if we cannot send messages with insecure attachments."""
     sample_email = "<mock@mock>"
     message.hass = hass
-    with patch("email.utils.make_msgid", return_value=sample_email), pytest.raises(
-        ServiceValidationError
-    ) as exc:
+    with (
+        patch("email.utils.make_msgid", return_value=sample_email),
+        pytest.raises(ServiceValidationError) as exc,
+    ):
         result, _ = message.send_message(message_data, data=data)
         assert content_type in result
     assert exc.value.translation_key == "remote_path_not_allowed"

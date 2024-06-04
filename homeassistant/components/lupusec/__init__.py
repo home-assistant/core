@@ -1,4 +1,5 @@
 """Support for Lupusec Home Security system."""
+
 from json import JSONDecodeError
 import logging
 
@@ -78,12 +79,12 @@ async def handle_async_init_result(hass: HomeAssistant, domain: str, conf: dict)
         async_create_issue(
             hass,
             DOMAIN,
-            f"deprecated_yaml_import_issue_${result['reason']}",
+            f"deprecated_yaml_import_issue_{result['reason']}",
             breaks_in_ha_version="2024.8.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_${result['reason']}",
+            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
             translation_placeholders=ISSUE_PLACEHOLDER,
         )
 

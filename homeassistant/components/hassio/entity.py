@@ -1,4 +1,5 @@
 """Base for Hass.io entities."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -20,7 +21,7 @@ from .const import (
     KEY_TO_UPDATE_TYPES,
     SUPERVISOR_CONTAINER,
 )
-from .data import HassioDataUpdateCoordinator
+from .coordinator import HassioDataUpdateCoordinator
 
 
 class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):

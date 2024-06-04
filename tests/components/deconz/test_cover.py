@@ -1,4 +1,5 @@
 """deCONZ cover platform tests."""
+
 from unittest.mock import patch
 
 from homeassistant.components.cover import (

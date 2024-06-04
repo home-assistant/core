@@ -1,4 +1,5 @@
 """The tests for the openalpr cloud platform."""
+
 from unittest.mock import PropertyMock, patch
 
 import pytest
@@ -135,7 +136,7 @@ async def test_openalpr_process_image(
     aioclient_mock.post(
         OPENALPR_API_URL,
         params=PARAMS,
-        text=load_fixture("alpr_cloud.json"),
+        text=load_fixture("alpr_cloud.json", "openalpr_cloud"),
         status=200,
     )
 

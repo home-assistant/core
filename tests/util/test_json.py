@@ -1,4 +1,5 @@
 """Test Home Assistant json utility functions."""
+
 from pathlib import Path
 import re
 
@@ -162,7 +163,7 @@ async def test_loading_derived_class():
     """Test loading data from classes derived from str."""
 
     class MyStr(str):
-        pass
+        __slots__ = ()
 
     class MyBytes(bytes):
         pass

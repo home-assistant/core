@@ -1,4 +1,5 @@
 """Support for interfacing with Monoprice Blackbird 4k 8x8 HDBaseT Matrix."""
+
 from __future__ import annotations
 
 import logging

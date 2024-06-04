@@ -1,8 +1,7 @@
 """Support for Notion."""
+
 from __future__ import annotations
 
-import asyncio
-from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import Any
 from uuid import UUID
@@ -10,8 +9,6 @@ from uuid import UUID
 from aionotion.bridge.models import Bridge
 from aionotion.errors import InvalidCredentialsError, NotionError
 from aionotion.listener.models import Listener, ListenerKind
-from aionotion.sensor.models import Sensor
-from aionotion.user.models import UserPreferences
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -24,11 +21,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONF_REFRESH_TOKEN,
@@ -46,17 +39,13 @@ from .const import (
     SENSOR_TEMPERATURE,
     SENSOR_WINDOW_HINGED,
 )
+from .coordinator import NotionDataUpdateCoordinator
 from .util import async_get_client_with_credentials, async_get_client_with_refresh_token
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 ATTR_SYSTEM_MODE = "system_mode"
 ATTR_SYSTEM_NAME = "system_name"
-
-DATA_BRIDGES = "bridges"
-DATA_LISTENERS = "listeners"
-DATA_SENSORS = "sensors"
-DATA_USER_PREFERENCES = "user_preferences"
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -87,57 +76,6 @@ def is_uuid(value: str) -> bool:
     return True
 
 
-@dataclass
-class NotionData:
-    """Define a manager class for Notion data."""
-
-    hass: HomeAssistant
-    entry: ConfigEntry
-
-    # Define a dict of bridges, indexed by bridge ID (an integer):
-    bridges: dict[int, Bridge] = field(default_factory=dict)
-
-    # Define a dict of listeners, indexed by listener UUID (a string):
-    listeners: dict[str, Listener] = field(default_factory=dict)
-
-    # Define a dict of sensors, indexed by sensor UUID (a string):
-    sensors: dict[str, Sensor] = field(default_factory=dict)
-
-    # Define a user preferences response object:
-    user_preferences: UserPreferences | None = field(default=None)
-
-    def update_bridges(self, bridges: list[Bridge]) -> None:
-        """Update the bridges."""
-        for bridge in bridges:
-            # If a new bridge is discovered, register it:
-            if bridge.id not in self.bridges:
-                _async_register_new_bridge(self.hass, self.entry, bridge)
-            self.bridges[bridge.id] = bridge
-
-    def update_listeners(self, listeners: list[Listener]) -> None:
-        """Update the listeners."""
-        self.listeners = {listener.id: listener for listener in listeners}
-
-    def update_sensors(self, sensors: list[Sensor]) -> None:
-        """Update the sensors."""
-        self.sensors = {sensor.uuid: sensor for sensor in sensors}
-
-    def update_user_preferences(self, user_preferences: UserPreferences) -> None:
-        """Update the user preferences."""
-        self.user_preferences = user_preferences
-
-    def asdict(self) -> dict[str, Any]:
-        """Represent this dataclass (and its Pydantic contents) as a dict."""
-        data: dict[str, Any] = {
-            DATA_BRIDGES: [item.to_dict() for item in self.bridges.values()],
-            DATA_LISTENERS: [item.to_dict() for item in self.listeners.values()],
-            DATA_SENSORS: [item.to_dict() for item in self.sensors.values()],
-        }
-        if self.user_preferences:
-            data[DATA_USER_PREFERENCES] = self.user_preferences.to_dict()
-        return data
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Notion as a config entry."""
     entry_updates: dict[str, Any] = {"data": {**entry.data}}
@@ -165,9 +103,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except NotionError as err:
         raise ConfigEntryNotReady("Config entry failed to load") from err
 
-    # Always update the config entry with the latest refresh token and user UUID:
-    entry_updates["data"][CONF_REFRESH_TOKEN] = client.refresh_token
-    entry_updates["data"][CONF_USER_UUID] = client.user_uuid
+    # Update the Notion user UUID and refresh token if they've changed:
+    for key, value in (
+        (CONF_REFRESH_TOKEN, client.refresh_token),
+        (CONF_USER_UUID, client.user_uuid),
+    ):
+        if entry.data.get(key) == value:
+            continue
+        entry_updates["data"][key] = value
+
+    hass.config_entries.async_update_entry(entry, **entry_updates)
 
     @callback
     def async_save_refresh_token(refresh_token: str) -> None:
@@ -180,53 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create a callback to save the refresh token when it changes:
     entry.async_on_unload(client.add_refresh_token_callback(async_save_refresh_token))
 
-    hass.config_entries.async_update_entry(entry, **entry_updates)
-
-    async def async_update() -> NotionData:
-        """Get the latest data from the Notion API."""
-        data = NotionData(hass=hass, entry=entry)
-
-        try:
-            async with asyncio.TaskGroup() as tg:
-                bridges = tg.create_task(client.bridge.async_all())
-                listeners = tg.create_task(client.listener.async_all())
-                sensors = tg.create_task(client.sensor.async_all())
-                user_preferences = tg.create_task(client.user.async_preferences())
-        except BaseExceptionGroup as err:
-            result = err.exceptions[0]
-            if isinstance(result, InvalidCredentialsError):
-                raise ConfigEntryAuthFailed(
-                    "Invalid username and/or password"
-                ) from result
-            if isinstance(result, NotionError):
-                raise UpdateFailed(
-                    f"There was a Notion error while updating: {result}"
-                ) from result
-            if isinstance(result, Exception):
-                LOGGER.debug(
-                    "There was an unknown error while updating: %s",
-                    result,
-                    exc_info=result,
-                )
-                raise UpdateFailed(
-                    f"There was an unknown error while updating: {result}"
-                ) from result
-            if isinstance(result, BaseException):
-                raise result from None
-
-        data.update_bridges(bridges.result())
-        data.update_listeners(listeners.result())
-        data.update_sensors(sensors.result())
-        data.update_user_preferences(user_preferences.result())
-        return data
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        name=entry.data[CONF_USERNAME],
-        update_interval=DEFAULT_SCAN_INTERVAL,
-        update_method=async_update,
-    )
+    coordinator = NotionDataUpdateCoordinator(hass, entry=entry, client=client)
 
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})
@@ -276,39 +175,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-@callback
-def _async_register_new_bridge(
-    hass: HomeAssistant, entry: ConfigEntry, bridge: Bridge
-) -> None:
-    """Register a new bridge."""
-    if name := bridge.name:
-        bridge_name = name.capitalize()
-    else:
-        bridge_name = str(bridge.id)
-
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, bridge.hardware_id)},
-        manufacturer="Silicon Labs",
-        model=str(bridge.hardware_revision),
-        name=bridge_name,
-        sw_version=bridge.firmware_version.wifi,
-    )
-
-
-class NotionEntity(CoordinatorEntity[DataUpdateCoordinator[NotionData]]):
+class NotionEntity(CoordinatorEntity[NotionDataUpdateCoordinator]):
     """Define a base Notion entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[NotionData],
+        coordinator: NotionDataUpdateCoordinator,
         listener_id: str,
         sensor_id: str,
         bridge_id: int,
-        system_id: str,
         description: EntityDescription,
     ) -> None:
         """Initialize the entity."""
@@ -332,7 +209,6 @@ class NotionEntity(CoordinatorEntity[DataUpdateCoordinator[NotionData]]):
         self._bridge_id = bridge_id
         self._listener_id = listener_id
         self._sensor_id = sensor_id
-        self._system_id = system_id
         self.entity_description = description
 
     @property

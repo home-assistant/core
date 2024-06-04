@@ -1,4 +1,5 @@
 """Test config entries API."""
+
 import pytest
 
 from homeassistant.auth import models as auth_models

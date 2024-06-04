@@ -1,4 +1,5 @@
 """Support for Google Mail."""
+
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -31,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Google Mail from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
-    auth = AsyncConfigEntryAuth(session)
+    auth = AsyncConfigEntryAuth(hass, session)
     await auth.check_and_refresh_token()
     hass.data[DOMAIN][entry.entry_id] = auth
 

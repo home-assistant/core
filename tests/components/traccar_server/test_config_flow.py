@@ -1,4 +1,5 @@
 """Test the Traccar Server config flow."""
+
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock
@@ -16,6 +17,7 @@ from homeassistant.components.traccar_server.const import (
     DOMAIN,
     EVENTS,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -38,7 +40,7 @@ async def test_form(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
@@ -51,7 +53,7 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "1.1.1.1:8082"
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -61,15 +63,15 @@ async def test_form(
         CONF_SSL: False,
         CONF_VERIFY_SSL: True,
     }
-    assert result["result"].state == config_entries.ConfigEntryState.LOADED
+    assert result["result"].state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
     ("side_effect", "error"),
-    (
+    [
         (TraccarException, "cannot_connect"),
         (Exception, "unknown"),
-    ),
+    ],
 )
 async def test_form_cannot_connect(
     hass: HomeAssistant,
@@ -93,7 +95,7 @@ async def test_form_cannot_connect(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
     mock_traccar_api_client.get_server.side_effect = None
@@ -108,7 +110,7 @@ async def test_form_cannot_connect(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "1.1.1.1:8082"
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -119,7 +121,7 @@ async def test_form_cannot_connect(
         CONF_VERIFY_SSL: True,
     }
 
-    assert result["result"].state == config_entries.ConfigEntryState.LOADED
+    assert result["result"].state is ConfigEntryState.LOADED
 
 
 async def test_options(
@@ -142,7 +144,7 @@ async def test_options(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_config_entry.options == {
         CONF_MAX_ACCURACY: 2.0,
         CONF_EVENTS: [],
@@ -153,7 +155,7 @@ async def test_options(
 
 @pytest.mark.parametrize(
     ("imported", "data", "options"),
-    (
+    [
         (
             {
                 CONF_HOST: "1.1.1.1",
@@ -222,7 +224,7 @@ async def test_options(
                 CONF_MAX_ACCURACY: 0,
             },
         ),
-    ),
+    ],
 )
 async def test_import_from_yaml(
     hass: HomeAssistant,
@@ -237,11 +239,11 @@ async def test_import_from_yaml(
         context={"source": config_entries.SOURCE_IMPORT},
         data=PLATFORM_SCHEMA({"platform": "traccar", **imported}),
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{data[CONF_HOST]}:{data[CONF_PORT]}"
     assert result["data"] == data
     assert result["options"] == options
-    assert result["result"].state == config_entries.ConfigEntryState.LOADED
+    assert result["result"].state is ConfigEntryState.LOADED
 
 
 async def test_abort_import_already_configured(hass: HomeAssistant) -> None:
@@ -268,7 +270,7 @@ async def test_abort_import_already_configured(hass: HomeAssistant) -> None:
         ),
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -295,5 +297,5 @@ async def test_abort_already_configured(
         },
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

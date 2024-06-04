@@ -1,4 +1,5 @@
 """The test for the DNS IP sensor platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -55,8 +56,15 @@ async def test_sensor(hass: HomeAssistant) -> None:
     state1 = hass.states.get("sensor.home_assistant_io")
     state2 = hass.states.get("sensor.home_assistant_io_ipv6")
 
-    assert state1.state == "1.2.3.4"
-    assert state2.state == "1.2.3.4"
+    assert state1.state == "1.1.1.1"
+    assert state1.attributes["ip_addresses"] == ["1.1.1.1", "1.2.3.4"]
+    assert state2.state == "2001:db8::77:dead:beef"
+    assert state2.attributes["ip_addresses"] == [
+        "2001:db8::77:dead:beef",
+        "2001:db8:66::dead:beef",
+        "2001:db8:77::dead:beef",
+        "2001:db8:77::face:b00c",
+    ]
 
 
 async def test_sensor_no_response(
@@ -91,7 +99,7 @@ async def test_sensor_no_response(
 
     state = hass.states.get("sensor.home_assistant_io")
 
-    assert state.state == "1.2.3.4"
+    assert state.state == "1.1.1.1"
 
     dns_mock.error = DNSError()
     with patch(
@@ -106,7 +114,8 @@ async def test_sensor_no_response(
 
         # Allows 2 retries before going unavailable
         state = hass.states.get("sensor.home_assistant_io")
-        assert state.state == "1.2.3.4"
+        assert state.state == "1.1.1.1"
+        assert state.attributes["ip_addresses"] == ["1.1.1.1", "1.2.3.4"]
 
         freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
         async_fire_time_changed(hass)

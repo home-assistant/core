@@ -1,4 +1,5 @@
 """UniFi entity representation."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -97,16 +98,28 @@ def async_client_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
 class UnifiEntityDescription(EntityDescription, Generic[HandlerT, ApiItemT]):
     """UniFi Entity Description."""
 
-    allowed_fn: Callable[[UnifiHub, str], bool]
     api_handler_fn: Callable[[aiounifi.Controller], HandlerT]
-    available_fn: Callable[[UnifiHub, str], bool]
+    """Provide api_handler from api."""
     device_info_fn: Callable[[UnifiHub, str], DeviceInfo | None]
-    name_fn: Callable[[ApiItemT], str | None]
+    """Provide device info object based on hub and obj_id."""
     object_fn: Callable[[aiounifi.Controller, str], ApiItemT]
-    supported_fn: Callable[[UnifiHub, str], bool | None]
+    """Retrieve object based on api and obj_id."""
     unique_id_fn: Callable[[UnifiHub, str], str]
+    """Provide a unique ID based on hub and obj_id."""
 
-    # Optional
+    # Optional functions
+    allowed_fn: Callable[[UnifiHub, str], bool] = lambda hub, obj_id: True
+    """Determine if config entry options allow creation of entity."""
+    available_fn: Callable[[UnifiHub, str], bool] = lambda hub, obj_id: hub.available
+    """Determine if entity is available, default is if connection is working."""
+    name_fn: Callable[[ApiItemT], str | None] = lambda obj: None
+    """Entity name function, can be used to extend entity name beyond device name."""
+    supported_fn: Callable[[UnifiHub, str], bool] = lambda hub, obj_id: True
+    """Determine if UniFi object supports providing relevant data for entity."""
+
+    # Optional constants
+    has_entity_name = True  # Part of EntityDescription
+    """Has entity name defaults to true."""
     event_is_on: tuple[EventKey, ...] | None = None
     """Which UniFi events should be used to consider state 'on'."""
     event_to_subscribe: tuple[EventKey, ...] | None = None
@@ -132,7 +145,7 @@ class UnifiEntity(Entity, Generic[HandlerT, ApiItemT]):
         self.hub = hub
         self.entity_description = description
 
-        hub.known_objects.add((description.key, obj_id))
+        hub.entity_loader.known_objects.add((description.key, obj_id))
 
         self._removed = False
 
@@ -153,7 +166,9 @@ class UnifiEntity(Entity, Generic[HandlerT, ApiItemT]):
         @callback
         def unregister_object() -> None:
             """Remove object ID from known_objects when unloaded."""
-            self.hub.known_objects.discard((description.key, self._obj_id))
+            self.hub.entity_loader.known_objects.discard(
+                (description.key, self._obj_id)
+            )
 
         self.async_on_remove(unregister_object)
 
@@ -255,4 +270,4 @@ class UnifiEntity(Entity, Generic[HandlerT, ApiItemT]):
 
         Perform additional action updating platform entity child class state.
         """
-        raise NotImplementedError()
+        raise NotImplementedError

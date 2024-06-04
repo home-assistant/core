@@ -1,4 +1,5 @@
 """Tests for the Google Assistant integration."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.google_assistant import helpers, http

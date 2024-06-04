@@ -1,4 +1,5 @@
 """Config flow for Spider."""
+
 import logging
 
 from spiderpy.spiderapi import SpiderApi, SpiderApiException, UnauthorizedException

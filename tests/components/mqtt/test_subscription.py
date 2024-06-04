@@ -1,5 +1,6 @@
 """The tests for the MQTT subscription component."""
-from unittest.mock import ANY, patch
+
+from unittest.mock import ANY
 
 import pytest
 
@@ -12,13 +13,6 @@ from homeassistant.core import HomeAssistant, callback
 
 from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClientGenerator
-
-
-@pytest.fixture(autouse=True)
-def no_platforms():
-    """Skip platform setup to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", []):
-        yield
 
 
 async def test_subscribe_topics(
@@ -160,7 +154,7 @@ async def test_qos_encoding_default(
         {"test_topic1": {"topic": "test-topic1", "msg_callback": msg_callback}},
     )
     await async_subscribe_topics(hass, sub_state)
-    mqtt_mock.async_subscribe.assert_called_with("test-topic1", ANY, 0, "utf-8")
+    mqtt_mock.async_subscribe.assert_called_with("test-topic1", ANY, 0, "utf-8", None)
 
 
 async def test_qos_encoding_custom(
@@ -189,7 +183,7 @@ async def test_qos_encoding_custom(
         },
     )
     await async_subscribe_topics(hass, sub_state)
-    mqtt_mock.async_subscribe.assert_called_with("test-topic1", ANY, 1, "utf-16")
+    mqtt_mock.async_subscribe.assert_called_with("test-topic1", ANY, 1, "utf-16", None)
 
 
 async def test_no_change(

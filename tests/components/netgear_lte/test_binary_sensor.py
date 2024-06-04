@@ -1,4 +1,5 @@
 """The tests for Netgear LTE binary sensor platform."""
+
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN

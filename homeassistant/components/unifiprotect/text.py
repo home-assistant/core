@@ -1,4 +1,5 @@
 """Text entities for UniFi Protect."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

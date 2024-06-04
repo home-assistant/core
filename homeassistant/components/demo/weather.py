@@ -1,4 +1,5 @@
 """Demo platform that offers fake meteorological data."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta

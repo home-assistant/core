@@ -1,4 +1,5 @@
 """Test the Rainforest Eagle diagnostics."""
+
 from dataclasses import asdict
 
 import pytest
@@ -12,6 +13,7 @@ from .const import DEMAND, NETWORK_INFO, PRICE_CLUSTER, SUMMATION
 
 from tests.common import patch
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
@@ -46,8 +48,11 @@ async def mock_entry_no_meters(hass: HomeAssistant, mock_device):
 
 
 async def test_entry_diagnostics_no_meters(
-    hass, hass_client, mock_device, mock_entry_no_meters
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_device,
+    mock_entry_no_meters,
+) -> None:
     """Test RAVEn diagnostics before the coordinator has updated."""
     result = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_entry_no_meters
@@ -65,7 +70,9 @@ async def test_entry_diagnostics_no_meters(
     }
 
 
-async def test_entry_diagnostics(hass, hass_client, mock_device, mock_entry):
+async def test_entry_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_device, mock_entry
+) -> None:
     """Test RAVEn diagnostics."""
     result = await get_diagnostics_for_config_entry(hass, hass_client, mock_entry)
 

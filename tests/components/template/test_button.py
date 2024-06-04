@@ -1,4 +1,5 @@
 """The tests for the Template button platform."""
+
 import datetime as dt
 
 from freezegun.api import FrozenDateTimeFactory
@@ -13,7 +14,7 @@ from homeassistant.const import (
     CONF_ICON,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.entity_registry import async_get
 
 from tests.common import assert_setup_component
@@ -61,7 +62,7 @@ async def test_missing_required_keys(hass: HomeAssistant) -> None:
 
 
 async def test_all_optional_config(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls: list[ServiceCall]
 ) -> None:
     """Test: including all optional templates is ok."""
     with assert_setup_component(1, "template"):

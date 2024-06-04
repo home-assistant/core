@@ -1,4 +1,5 @@
 """Demo platform that has a couple fake lawn mowers."""
+
 from __future__ import annotations
 
 from homeassistant.components.lawn_mower import (

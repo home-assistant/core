@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for the Schlage integration."""
+
 from __future__ import annotations
 
 import asyncio

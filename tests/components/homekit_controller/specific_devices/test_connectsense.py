@@ -1,4 +1,5 @@
 """Make sure that ConnectSense Smart Outlet2 / In-Wall Outlet is enumerated properly."""
+
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import UnitOfElectricCurrent, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant

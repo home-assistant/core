@@ -1,4 +1,5 @@
 """The tests for the GeoNet NZ Quakes Feed integration."""
+
 import datetime
 from unittest.mock import patch
 
@@ -57,9 +58,10 @@ async def test_setup(hass: HomeAssistant) -> None:
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with freeze_time(utcnow), patch(
-        "aio_geojson_client.feed.GeoJsonFeed.update"
-    ) as mock_feed_update:
+    with (
+        freeze_time(utcnow),
+        patch("aio_geojson_client.feed.GeoJsonFeed.update") as mock_feed_update,
+    ):
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
         assert await async_setup_component(hass, geonetnz_quakes.DOMAIN, CONFIG)
         # Artificially trigger update and collect events.

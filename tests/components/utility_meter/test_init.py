@@ -1,4 +1,5 @@
 """The tests for the utility_meter component."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -61,10 +62,10 @@ async def test_restore_state(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     "meter",
-    (
+    [
         ["select.energy_bill"],
         "select.energy_bill",
-    ),
+    ],
 )
 async def test_services(hass: HomeAssistant, meter) -> None:
     """Test energy sensor reset service."""
@@ -384,7 +385,7 @@ async def test_setup_missing_discovery(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("tariffs", "expected_entities"),
-    (
+    [
         (
             [],
             ["sensor.electricity_meter"],
@@ -397,14 +398,16 @@ async def test_setup_missing_discovery(hass: HomeAssistant) -> None:
                 "select.electricity_meter",
             ],
         ),
-    ),
+    ],
 )
 async def test_setup_and_remove_config_entry(
-    hass: HomeAssistant, tariffs: str, expected_entities: list[str]
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    tariffs: str,
+    expected_entities: list[str],
 ) -> None:
     """Test setting up and removing a config entry."""
     input_sensor_entity_id = "sensor.input"
-    registry = er.async_get(hass)
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -427,10 +430,10 @@ async def test_setup_and_remove_config_entry(
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == len(expected_entities)
-    assert len(registry.entities) == len(expected_entities)
+    assert len(entity_registry.entities) == len(expected_entities)
     for entity in expected_entities:
         assert hass.states.get(entity)
-        assert entity in registry.entities
+        assert entity in entity_registry.entities
 
     # Remove the config entry
     assert await hass.config_entries.async_remove(config_entry.entry_id)
@@ -438,4 +441,4 @@ async def test_setup_and_remove_config_entry(
 
     # Check the state and entity registry entry are removed
     assert len(hass.states.async_all()) == 0
-    assert len(registry.entities) == 0
+    assert len(entity_registry.entities) == 0

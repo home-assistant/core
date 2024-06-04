@@ -1,4 +1,5 @@
 """Provide common Netatmo fixtures."""
+
 from time import time
 from unittest.mock import AsyncMock, patch
 

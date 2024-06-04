@@ -1,4 +1,5 @@
 """Config flow for Smappee."""
+
 import logging
 
 from pysmappee import helper, mqtt

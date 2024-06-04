@@ -1,6 +1,5 @@
 """Tests for the Leaone integration."""
 
-
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 SCALE_SERVICE_INFO = BluetoothServiceInfo(

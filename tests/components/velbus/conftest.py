@@ -1,4 +1,5 @@
 """Fixtures for the Velbus tests."""
+
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 

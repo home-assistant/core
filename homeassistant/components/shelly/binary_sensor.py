@@ -1,4 +1,5 @@
 """Binary sensor for Shelly."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -11,13 +12,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import CONF_SLEEP_PERIOD
+from .coordinator import ShellyConfigEntry
 from .entity import (
     BlockEntityDescription,
     RestEntityDescription,
@@ -38,19 +39,19 @@ from .utils import (
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class BlockBinarySensorDescription(
     BlockEntityDescription, BinarySensorEntityDescription
 ):
     """Class to describe a BLOCK binary sensor."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class RpcBinarySensorDescription(RpcEntityDescription, BinarySensorEntityDescription):
     """Class to describe a RPC binary sensor."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class RestBinarySensorDescription(RestEntityDescription, BinarySensorEntityDescription):
     """Class to describe a REST binary sensor."""
 
@@ -166,7 +167,7 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "external_power": RpcBinarySensorDescription(
-        key="devicepower:0",
+        key="devicepower",
         sub_key="external",
         name="External power",
         value=lambda status, _: status["present"],
@@ -206,12 +207,20 @@ RPC_SENSORS: Final = {
         name="Smoke",
         device_class=BinarySensorDeviceClass.SMOKE,
     ),
+    "restart": RpcBinarySensorDescription(
+        key="sys",
+        sub_key="restart_required",
+        name="Restart required",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""

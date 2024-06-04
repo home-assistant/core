@@ -1,4 +1,5 @@
 """Constants for the WiZ Platform integration."""
+
 from datetime import timedelta
 
 from pywizlight.exceptions import (

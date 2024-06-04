@@ -1,4 +1,5 @@
 """System Bridge Media Source Implementation."""
+
 from __future__ import annotations
 
 from systembridgemodels.media_directories import MediaDirectory
@@ -13,7 +14,7 @@ from homeassistant.components.media_source.models import (
     PlayMedia,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -87,22 +88,21 @@ class SystemBridgeSource(MediaSource):
 
     def _build_bridges(self) -> BrowseMediaSource:
         """Build bridges for System Bridge media."""
-        children = []
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.entry_id is not None:
-                children.append(
-                    BrowseMediaSource(
-                        domain=DOMAIN,
-                        identifier=entry.entry_id,
-                        media_class=MediaClass.DIRECTORY,
-                        media_content_type="",
-                        title=entry.title,
-                        can_play=False,
-                        can_expand=True,
-                        children=[],
-                        children_media_class=MediaClass.DIRECTORY,
-                    )
-                )
+        children = [
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=entry.entry_id,
+                media_class=MediaClass.DIRECTORY,
+                media_content_type="",
+                title=entry.title,
+                can_play=False,
+                can_expand=True,
+                children=[],
+                children_media_class=MediaClass.DIRECTORY,
+            )
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
+            if entry.entry_id is not None
+        ]
 
         return BrowseMediaSource(
             domain=DOMAIN,
@@ -123,7 +123,7 @@ def _build_base_url(
     """Build base url for System Bridge media."""
     return (
         f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
-        f"/api/media/file/data?apiKey={entry.data[CONF_API_KEY]}"
+        f"/api/media/file/data?token={entry.data[CONF_TOKEN]}"
     )
 
 

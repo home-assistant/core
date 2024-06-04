@@ -1,4 +1,5 @@
 """Config flow to configure the LaMetric integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -146,12 +147,12 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 return await self._async_step_create_entry(
                     host, user_input[CONF_API_KEY]
                 )
-            except AbortFlow as ex:
-                raise ex
+            except AbortFlow:
+                raise
             except LaMetricConnectionError as ex:
                 LOGGER.error("Error connecting to LaMetric: %s", ex)
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected error occurred")
                 errors["base"] = "unknown"
 
@@ -208,12 +209,12 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 return await self._async_step_create_entry(
                     str(device.ip), device.api_key
                 )
-            except AbortFlow as ex:
-                raise ex
+            except AbortFlow:
+                raise
             except LaMetricConnectionError as ex:
                 LOGGER.error("Error connecting to LaMetric: %s", ex)
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected error occurred")
                 errors["base"] = "unknown"
 

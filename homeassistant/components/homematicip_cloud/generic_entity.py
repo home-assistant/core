@@ -1,4 +1,5 @@
 """Generic entity for the HomematicIP Cloud component."""
+
 from __future__ import annotations
 
 import logging
@@ -175,7 +176,9 @@ class HomematicipGenericEntity(Entity):
         """Handle hmip device removal."""
         # Set marker showing that the HmIP device hase been removed.
         self.hmip_device_removed = True
-        self.hass.async_create_task(self.async_remove(force_remove=True))
+        self.hass.async_create_task(
+            self.async_remove(force_remove=True), eager_start=False
+        )
 
     @property
     def name(self) -> str:

@@ -1,4 +1,5 @@
 """Test the repairs websocket API."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -269,10 +270,10 @@ async def test_fix_non_existing_issue(
 
 @pytest.mark.parametrize(
     ("domain", "step", "description_placeholders"),
-    (
+    [
         ("fake_integration", "custom_step", None),
         ("fake_integration_default_handler", "confirm", {"abc": "123"}),
-    ),
+    ],
 )
 async def test_fix_issue(
     hass: HomeAssistant,
@@ -431,7 +432,9 @@ async def test_step_unauth(
 
 @pytest.mark.freeze_time("2022-07-19 07:53:05")
 async def test_list_issues(
-    hass: HomeAssistant, hass_storage: dict[str, Any], hass_ws_client
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test we can list issues."""
 
@@ -580,7 +583,9 @@ async def test_fix_issue_aborted(
 
 
 @pytest.mark.freeze_time("2022-07-19 07:53:05")
-async def test_get_issue_data(hass: HomeAssistant, hass_ws_client) -> None:
+async def test_get_issue_data(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we can get issue data."""
 
     assert await async_setup_component(hass, DOMAIN, {})

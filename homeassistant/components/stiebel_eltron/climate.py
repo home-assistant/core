@@ -1,4 +1,5 @@
 """Support for stiebel_eltron climate platform."""
+
 from __future__ import annotations
 
 import logging

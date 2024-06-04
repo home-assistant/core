@@ -1,4 +1,5 @@
 """The command_line component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -14,6 +15,7 @@ from homeassistant.components.binary_sensor import (
     SCAN_INTERVAL as BINARY_SENSOR_DEFAULT_SCAN_INTERVAL,
 )
 from homeassistant.components.cover import (
+    DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
     DOMAIN as COVER_DOMAIN,
     SCAN_INTERVAL as COVER_DEFAULT_SCAN_INTERVAL,
 )
@@ -101,8 +103,10 @@ COVER_SCHEMA = vol.Schema(
         vol.Optional(CONF_COMMAND_STATE): cv.string,
         vol.Optional(CONF_COMMAND_STOP, default="true"): cv.string,
         vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_ICON): cv.template,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_SCAN_INTERVAL, default=COVER_DEFAULT_SCAN_INTERVAL): vol.All(
             cv.time_period, cv.positive_timedelta

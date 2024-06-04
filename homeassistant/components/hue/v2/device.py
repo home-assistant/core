@@ -1,4 +1,7 @@
 """Handles Hue resource of type `device` mapping to Home Assistant device."""
+
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from aiohue.v2 import HueBridgeV2
@@ -26,7 +29,7 @@ if TYPE_CHECKING:
     from ..bridge import HueBridge
 
 
-async def async_setup_devices(bridge: "HueBridge"):
+async def async_setup_devices(bridge: HueBridge):
     """Manage setup of devices from Hue devices."""
     entry = bridge.config_entry
     hass = bridge.hass

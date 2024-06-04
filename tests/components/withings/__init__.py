@@ -1,4 +1,5 @@
 """Tests for the withings component."""
+
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any

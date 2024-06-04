@@ -1,4 +1,5 @@
 """Code to handle a Livisi Binary Sensor."""
+
 from __future__ import annotations
 
 from typing import Any

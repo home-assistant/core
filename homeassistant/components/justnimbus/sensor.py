@@ -1,4 +1,5 @@
 """Support for the JustNimbus platform."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -28,18 +29,11 @@ from .const import DOMAIN
 from .entity import JustNimbusEntity
 
 
-@dataclass(frozen=True)
-class JustNimbusEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class JustNimbusEntityDescription(SensorEntityDescription):
+    """Describes JustNimbus sensor entity."""
 
     value_fn: Callable[[JustNimbusCoordinator], Any]
-
-
-@dataclass(frozen=True)
-class JustNimbusEntityDescription(
-    SensorEntityDescription, JustNimbusEntityDescriptionMixin
-):
-    """Describes JustNimbus sensor entity."""
 
 
 SENSOR_TYPES = (

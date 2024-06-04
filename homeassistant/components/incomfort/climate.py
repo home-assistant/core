@@ -1,59 +1,71 @@
 """Support for an Intergas boiler via an InComfort/InTouch Lan2RF gateway."""
+
 from __future__ import annotations
 
 from typing import Any
 
+from incomfortclient import (
+    Gateway as InComfortGateway,
+    Heater as InComfortHeater,
+    Room as InComfortRoom,
+)
+
 from homeassistant.components.climate import (
-    DOMAIN as CLIMATE_DOMAIN,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, IncomfortChild
+from . import DATA_INCOMFORT, IncomfortEntity
+from .const import DOMAIN
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up an InComfort/InTouch climate device."""
-    if discovery_info is None:
-        return
-
-    client = hass.data[DOMAIN]["client"]
-    heaters = hass.data[DOMAIN]["heaters"]
-
+    """Set up InComfort/InTouch climate devices."""
+    incomfort_data = hass.data[DATA_INCOMFORT][entry.entry_id]
     async_add_entities(
-        [InComfortClimate(client, h, r) for h in heaters for r in h.rooms]
+        InComfortClimate(incomfort_data.client, h, r)
+        for h in incomfort_data.heaters
+        for r in h.rooms
     )
 
 
-class InComfortClimate(IncomfortChild, ClimateEntity):
+class InComfortClimate(IncomfortEntity, ClimateEntity):
     """Representation of an InComfort/InTouch climate device."""
 
+    _attr_min_temp = 5.0
+    _attr_max_temp = 30.0
+    _attr_name = None
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _enable_turn_on_off_backwards_compatibility = False
 
-    def __init__(self, client, heater, room) -> None:
+    def __init__(
+        self, client: InComfortGateway, heater: InComfortHeater, room: InComfortRoom
+    ) -> None:
         """Initialize the climate device."""
         super().__init__()
 
-        self._unique_id = f"{heater.serial_no}_{room.room_no}"
-        self.entity_id = f"{CLIMATE_DOMAIN}.{DOMAIN}_{room.room_no}"
-        self._name = f"Thermostat {room.room_no}"
-
         self._client = client
         self._room = room
+
+        self._attr_unique_id = f"{heater.serial_no}_{room.room_no}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            manufacturer="Intergas",
+            name=f"Thermostat {room.room_no}",
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -69,16 +81,6 @@ class InComfortClimate(IncomfortChild, ClimateEntity):
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._room.setpoint
-
-    @property
-    def min_temp(self) -> float:
-        """Return max valid temperature that can be set."""
-        return 5.0
-
-    @property
-    def max_temp(self) -> float:
-        """Return max valid temperature that can be set."""
-        return 30.0
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature for this zone."""

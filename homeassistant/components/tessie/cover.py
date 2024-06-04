@@ -1,4 +1,5 @@
 """Cover platform for Tessie integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -17,30 +18,32 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, TessieCoverStates
+from . import TessieConfigEntry
+from .const import TessieCoverStates
 from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TessieConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Tessie sensor platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
-        klass(vehicle.state_coordinator)
+        klass(vehicle)
         for klass in (
             TessieWindowEntity,
             TessieChargePortEntity,
             TessieFrontTrunkEntity,
             TessieRearTrunkEntity,
         )
-        for vehicle in data
+        for vehicle in data.vehicles
     )
 
 

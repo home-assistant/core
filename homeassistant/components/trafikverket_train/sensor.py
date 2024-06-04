@@ -1,4 +1,5 @@
 """Train information for departures and delays, provided by Trafikverket."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -11,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -19,38 +19,30 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import TVTrainConfigEntry
 from .const import ATTRIBUTION, DOMAIN
 from .coordinator import TrainData, TVDataUpdateCoordinator
 
 ATTR_PRODUCT_FILTER = "product_filter"
 
 
-@dataclass(frozen=True)
-class TrafikverketRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class TrafikverketSensorEntityDescription(SensorEntityDescription):
+    """Describes Trafikverket sensor entity."""
 
     value_fn: Callable[[TrainData], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class TrafikverketSensorEntityDescription(
-    SensorEntityDescription, TrafikverketRequiredKeysMixin
-):
-    """Describes Trafikverket sensor entity."""
 
 
 SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     TrafikverketSensorEntityDescription(
         key="departure_time",
         translation_key="departure_time",
-        icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.departure_time,
     ),
     TrafikverketSensorEntityDescription(
         key="departure_state",
         translation_key="departure_state",
-        icon="mdi:clock",
         value_fn=lambda data: data.departure_state,
         device_class=SensorDeviceClass.ENUM,
         options=["on_time", "delayed", "canceled"],
@@ -58,13 +50,11 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     TrafikverketSensorEntityDescription(
         key="cancelled",
         translation_key="cancelled",
-        icon="mdi:alert",
         value_fn=lambda data: data.cancelled,
     ),
     TrafikverketSensorEntityDescription(
         key="delayed_time",
         translation_key="delayed_time",
-        icon="mdi:clock",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         value_fn=lambda data: data.delayed_time,
@@ -72,7 +62,6 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     TrafikverketSensorEntityDescription(
         key="planned_time",
         translation_key="planned_time",
-        icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.planned_time,
         entity_registry_enabled_default=False,
@@ -80,7 +69,6 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     TrafikverketSensorEntityDescription(
         key="estimated_time",
         translation_key="estimated_time",
-        icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.estimated_time,
         entity_registry_enabled_default=False,
@@ -88,7 +76,6 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     TrafikverketSensorEntityDescription(
         key="actual_time",
         translation_key="actual_time",
-        icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.actual_time,
         entity_registry_enabled_default=False,
@@ -96,26 +83,22 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     TrafikverketSensorEntityDescription(
         key="other_info",
         translation_key="other_info",
-        icon="mdi:information-variant",
         value_fn=lambda data: data.other_info,
     ),
     TrafikverketSensorEntityDescription(
         key="deviation",
         translation_key="deviation",
-        icon="mdi:alert",
         value_fn=lambda data: data.deviation,
     ),
     TrafikverketSensorEntityDescription(
         key="departure_time_next",
         translation_key="departure_time_next",
-        icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.departure_time_next,
     ),
     TrafikverketSensorEntityDescription(
         key="departure_time_next_next",
         translation_key="departure_time_next_next",
-        icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.departure_time_next_next,
     ),
@@ -123,11 +106,13 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TVTrainConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Trafikverket sensor entry."""
 
-    coordinator: TVDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         [

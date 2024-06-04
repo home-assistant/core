@@ -1,4 +1,5 @@
 """Support for HomeMatic devices."""
+
 from datetime import datetime
 from functools import partial
 import logging
@@ -258,9 +259,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, hass.data[DATA_HOMEMATIC].stop)
 
     # Init homematic hubs
-    entity_hubs = []
-    for hub_name in conf[CONF_HOSTS]:
-        entity_hubs.append(HMHub(hass, homematic, hub_name))
+    entity_hubs = [HMHub(hass, homematic, hub_name) for hub_name in conf[CONF_HOSTS]]
 
     def _hm_service_virtualkey(service: ServiceCall) -> None:
         """Service to handle virtualkey servicecalls."""

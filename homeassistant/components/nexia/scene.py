@@ -1,4 +1,5 @@
 """Support for Nexia Automations."""
+
 from typing import Any
 
 from nexia.automation import NexiaAutomation

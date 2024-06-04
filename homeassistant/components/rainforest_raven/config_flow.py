@@ -1,4 +1,5 @@
 """Config flow for Rainforest RAVEn devices."""
+
 from __future__ import annotations
 
 import asyncio

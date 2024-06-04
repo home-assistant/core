@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -104,7 +105,6 @@ SENSORS: tuple[TechnoVESensorEntityDescription, ...] = (
     TechnoVESensorEntityDescription(
         key="ssid",
         translation_key="ssid",
-        icon="mdi:wifi",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda station: station.info.network_ssid,

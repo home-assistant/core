@@ -1,4 +1,5 @@
 """The Flexit Nordic (BACnet) integration."""
+
 import asyncio.exceptions
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass

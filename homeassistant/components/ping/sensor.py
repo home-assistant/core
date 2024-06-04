@@ -1,4 +1,5 @@
 """Sensor platform that for Ping integration."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -13,8 +14,7 @@ from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import PingDomainData
-from .const import DOMAIN
+from . import PingConfigEntry
 from .coordinator import PingResult, PingUpdateCoordinator
 from .entity import PingEntity
 
@@ -76,11 +76,10 @@ SENSORS: tuple[PingSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: PingConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Ping sensors from config entry."""
-    data: PingDomainData = hass.data[DOMAIN]
-    coordinator = data.coordinators[entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         PingSensor(entry, description, coordinator)

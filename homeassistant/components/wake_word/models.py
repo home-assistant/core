@@ -1,4 +1,5 @@
 """Wake word models."""
+
 from dataclasses import dataclass
 
 

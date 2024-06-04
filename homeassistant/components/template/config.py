@@ -1,4 +1,5 @@
 """Template config validator."""
+
 import logging
 
 import voluptuous as vol

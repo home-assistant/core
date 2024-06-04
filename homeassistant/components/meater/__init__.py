@@ -1,4 +1,5 @@
 """The Meater Temperature Probe integration."""
+
 import asyncio
 from datetime import timedelta
 import logging

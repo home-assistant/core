@@ -1,4 +1,5 @@
 """Elmax switch platform."""
+
 import asyncio
 import logging
 from typing import Any
@@ -11,9 +12,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ElmaxCoordinator
 from .common import ElmaxEntity
 from .const import DOMAIN
+from .coordinator import ElmaxCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

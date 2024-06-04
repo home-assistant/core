@@ -1,4 +1,5 @@
 """The tests for Button device triggers."""
+
 from __future__ import annotations
 
 import pytest
@@ -58,12 +59,12 @@ async def test_get_triggers(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (er.RegistryEntryHider.INTEGRATION, None),
         (er.RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_triggers_hidden_auxiliary(
     hass,
@@ -108,7 +109,7 @@ async def test_if_fires_on_state_change(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -168,7 +169,7 @@ async def test_if_fires_on_state_change_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})

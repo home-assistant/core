@@ -1,4 +1,5 @@
 """Fixtures for DLNA DMS tests."""
+
 from __future__ import annotations
 
 from collections.abc import AsyncIterable, Iterable
@@ -92,7 +93,7 @@ def aiohttp_session_requester_mock() -> Iterable[Mock]:
 @pytest.fixture
 def config_entry_mock() -> MockConfigEntry:
     """Mock a config entry for this platform."""
-    mock_entry = MockConfigEntry(
+    return MockConfigEntry(
         unique_id=MOCK_DEVICE_USN,
         domain=DOMAIN,
         version=CONFIG_VERSION,
@@ -103,7 +104,6 @@ def config_entry_mock() -> MockConfigEntry:
         },
         title=MOCK_DEVICE_NAME,
     )
-    return mock_entry
 
 
 @pytest.fixture

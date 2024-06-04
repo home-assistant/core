@@ -1,4 +1,5 @@
 """Ecovacs sensor module."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -23,7 +24,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     ATTR_BATTERY_LEVEL,
@@ -36,8 +36,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN, SUPPORTED_LIFESPANS
-from .controller import EcovacsController
+from . import EcovacsConfigEntry
+from .const import SUPPORTED_LIFESPANS
 from .entity import (
     CapabilityDevice,
     EcovacsCapabilityEntityDescription,
@@ -170,25 +170,26 @@ LIFESPAN_ENTITY_DESCRIPTIONS = tuple(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EcovacsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add entities for passed config_entry in HA."""
-    controller: EcovacsController = hass.data[DOMAIN][config_entry.entry_id]
+    controller = config_entry.runtime_data
 
     entities: list[EcovacsEntity] = get_supported_entitites(
         controller, EcovacsSensor, ENTITY_DESCRIPTIONS
     )
-    for device in controller.devices(Capabilities):
-        lifespan_capability = device.capabilities.life_span
-        for description in LIFESPAN_ENTITY_DESCRIPTIONS:
-            if description.component in lifespan_capability.types:
-                entities.append(
-                    EcovacsLifespanSensor(device, lifespan_capability, description)
-                )
-
-        if capability := device.capabilities.error:
-            entities.append(EcovacsErrorSensor(device, capability))
+    entities.extend(
+        EcovacsLifespanSensor(device, device.capabilities.life_span, description)
+        for device in controller.devices(Capabilities)
+        for description in LIFESPAN_ENTITY_DESCRIPTIONS
+        if description.component in device.capabilities.life_span.types
+    )
+    entities.extend(
+        EcovacsErrorSensor(device, capability)
+        for device in controller.devices(Capabilities)
+        if (capability := device.capabilities.error)
+    )
 
     async_add_entities(entities)
 

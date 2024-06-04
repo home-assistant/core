@@ -1,4 +1,5 @@
 """Http view for the Backup integration."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -6,7 +7,7 @@ from http import HTTPStatus
 from aiohttp.hdrs import CONTENT_DISPOSITION
 from aiohttp.web import FileResponse, Request, Response
 
-from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
@@ -35,7 +36,7 @@ class DownloadBackupView(HomeAssistantView):
         if not request["hass_user"].is_admin:
             return Response(status=HTTPStatus.UNAUTHORIZED)
 
-        manager: BackupManager = request.app["hass"].data[DOMAIN]
+        manager: BackupManager = request.app[KEY_HASS].data[DOMAIN]
         backup = await manager.get_backup(slug)
 
         if backup is None or not backup.path.exists():

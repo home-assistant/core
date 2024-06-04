@@ -1,4 +1,5 @@
 """Integration with the Rachio Iro sprinkler system controller."""
+
 import logging
 import secrets
 
@@ -82,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from error
 
     # Check for Rachio controller devices
-    if not person.controllers:
+    if not person.controllers and not person.base_stations:
         _LOGGER.error("No Rachio devices found in account %s", person.username)
         return False
     _LOGGER.info(
@@ -90,9 +91,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "%d Rachio device(s) found; The url %s must be accessible from the internet"
             " in order to receive updates"
         ),
-        len(person.controllers),
+        len(person.controllers) + len(person.base_stations),
         webhook_url,
     )
+
+    for base in person.base_stations:
+        await base.coordinator.async_config_entry_first_refresh()
 
     # Enable platform
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = person

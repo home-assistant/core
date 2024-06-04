@@ -1,4 +1,5 @@
 """The tests for the siren component."""
+
 from types import ModuleType
 from unittest.mock import MagicMock
 

@@ -1,4 +1,5 @@
 """Config flow for solarlog integration."""
+
 import logging
 from urllib.parse import ParseResult, urlparse
 
@@ -43,14 +44,14 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         """Check if we can connect to the Solar-Log device."""
         try:
             await self.hass.async_add_executor_job(SolarLog, host)
-            return True
         except (OSError, HTTPError, Timeout):
             self._errors[CONF_HOST] = "cannot_connect"
             _LOGGER.error(
                 "Could not connect to Solar-Log device at %s, check host ip address",
                 host,
             )
-        return False
+            return False
+        return True
 
     async def async_step_user(self, user_input=None):
         """Step when user initializes a integration."""

@@ -1,4 +1,5 @@
 """NextBus data update coordinator."""
+
 from datetime import timedelta
 import logging
 from typing import Any, cast
@@ -71,8 +72,8 @@ class NextBusDataUpdateCoordinator(DataUpdateCoordinator):
                 # Casting here because we expect dict and not a str due to the input format selected being JSON
                 data = cast(dict[str, Any], data)
                 self._calc_predictions(data)
-                return data
             except (NextBusHTTPError, NextBusFormatError) as ex:
                 raise UpdateFailed("Failed updating nextbus data", ex) from ex
+            return data
 
         return await self.hass.async_add_executor_job(_update_data)

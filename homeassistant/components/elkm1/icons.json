@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "panel": {
+        "default": "mdi:home"
+      },
+      "setting": {
+        "default": "mdi:numeric"
+      }
+    }
+  },
+  "services": {
+    "alarm_bypass": "mdi:shield-off",
+    "alarm_clear_bypass": "mdi:shield",
+    "alarm_arm_home_instant": "mdi:shield-lock",
+    "alarm_arm_night_instant": "mdi:shield-moon",
+    "alarm_arm_vacation": "mdi:beach",
+    "alarm_display_message": "mdi:message-alert",
+    "set_time": "mdi:clock-edit",
+    "speak_phrase": "mdi:message-processing",
+    "speak_word": "mdi:message-minus",
+    "sensor_counter_refresh": "mdi:refresh",
+    "sensor_counter_set": "mdi:counter",
+    "sensor_zone_bypass": "mdi:shield-off",
+    "sensor_zone_trigger": "mdi:shield"
+  }
+}

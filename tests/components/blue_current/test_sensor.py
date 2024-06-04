@@ -1,4 +1,5 @@
 """The tests for Blue current sensors."""
+
 from datetime import datetime
 
 import pytest
@@ -87,7 +88,9 @@ grid_entity_ids = {
 
 
 async def test_sensors_created(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test if all sensors are created."""
     await init_integration(
@@ -99,8 +102,6 @@ async def test_sensors_created(
         grid,
     )
 
-    entity_registry = er.async_get(hass)
-
     sensors = er.async_entries_for_config_entry(entity_registry, "uuid")
     assert len(charge_point_status) + len(charge_point_status_timestamps) + len(
         grid
@@ -108,13 +109,16 @@ async def test_sensors_created(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensors(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def test_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+) -> None:
     """Test the underlying sensors."""
     await init_integration(
         hass, config_entry, "sensor", charge_point, charge_point_status, grid
     )
 
-    entity_registry = er.async_get(hass)
     for entity_id, key in charge_point_entity_ids.items():
         entry = entity_registry.async_get(f"sensor.101_{entity_id}")
         assert entry
@@ -137,14 +141,15 @@ async def test_sensors(hass: HomeAssistant, config_entry: MockConfigEntry) -> No
 
 
 async def test_timestamp_sensors(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test the underlying sensors."""
     await init_integration(
         hass, config_entry, "sensor", status=charge_point_status_timestamps
     )
 
-    entity_registry = er.async_get(hass)
     for entity_id, key in charge_point_timestamp_entity_ids.items():
         entry = entity_registry.async_get(f"sensor.101_{entity_id}")
         assert entry

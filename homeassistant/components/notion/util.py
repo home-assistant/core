@@ -1,4 +1,5 @@
 """Define notion utilities."""
+
 from aionotion import (
     async_get_client_with_credentials as cwc,
     async_get_client_with_refresh_token as cwrt,

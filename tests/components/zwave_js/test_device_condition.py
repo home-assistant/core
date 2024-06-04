@@ -1,4 +1,5 @@
 """The tests for Z-Wave JS device conditions."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -19,7 +20,7 @@ from homeassistant.components.zwave_js.helpers import (
     get_device_id,
     get_zwave_value_from_config,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -28,7 +29,7 @@ from tests.common import async_get_device_automations, async_mock_service
 
 
 @pytest.fixture
-def calls(hass: HomeAssistant):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -98,7 +99,7 @@ async def test_node_status_state(
     client,
     lock_schlage_be469,
     integration,
-    calls,
+    calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for node_status conditions."""
@@ -263,7 +264,7 @@ async def test_config_parameter_state(
     client,
     lock_schlage_be469,
     integration,
-    calls,
+    calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for config_parameter conditions."""
@@ -383,7 +384,7 @@ async def test_value_state(
     client,
     lock_schlage_be469,
     integration,
-    calls,
+    calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for value conditions."""
@@ -626,12 +627,15 @@ async def test_failure_scenarios(
             hass, {"type": "failed.test", "device_id": device.id}
         )
 
-    with patch(
-        "homeassistant.components.zwave_js.device_condition.async_get_node_from_device_id",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.zwave_js.device_condition.get_zwave_value_from_config",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.zwave_js.device_condition.async_get_node_from_device_id",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.zwave_js.device_condition.get_zwave_value_from_config",
+            return_value=None,
+        ),
     ):
         assert (
             await device_condition.async_get_condition_capabilities(

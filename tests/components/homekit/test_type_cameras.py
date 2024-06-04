@@ -1,4 +1,5 @@
 """Test different accessory types: Camera."""
+
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from uuid import UUID
@@ -172,12 +173,15 @@ async def test_camera_stream_source_configured(
     working_ffmpeg = _get_working_mock_ffmpeg()
     session_info = acc.sessions[MOCK_START_STREAM_SESSION_UUID]
 
-    with patch(
-        "homeassistant.components.demo.camera.DemoCamera.stream_source",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.homekit.type_cameras.HAFFmpeg",
-        return_value=working_ffmpeg,
+    with (
+        patch(
+            "homeassistant.components.demo.camera.DemoCamera.stream_source",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.homekit.type_cameras.HAFFmpeg",
+            return_value=working_ffmpeg,
+        ),
     ):
         await _async_start_streaming(hass, acc)
         await _async_stop_all_streams(hass, acc)
@@ -207,12 +211,15 @@ async def test_camera_stream_source_configured(
     working_ffmpeg = _get_working_mock_ffmpeg()
     session_info = acc.sessions[MOCK_START_STREAM_SESSION_UUID]
 
-    with patch(
-        "homeassistant.components.demo.camera.DemoCamera.stream_source",
-        return_value="rtsp://example.local",
-    ), patch(
-        "homeassistant.components.homekit.type_cameras.HAFFmpeg",
-        return_value=working_ffmpeg,
+    with (
+        patch(
+            "homeassistant.components.demo.camera.DemoCamera.stream_source",
+            return_value="rtsp://example.local",
+        ),
+        patch(
+            "homeassistant.components.homekit.type_cameras.HAFFmpeg",
+            return_value=working_ffmpeg,
+        ),
     ):
         await _async_start_streaming(hass, acc)
         await _async_stop_all_streams(hass, acc)
@@ -285,12 +292,15 @@ async def test_camera_stream_source_configured_with_failing_ffmpeg(
 
     await _async_setup_endpoints(hass, acc)
 
-    with patch(
-        "homeassistant.components.demo.camera.DemoCamera.stream_source",
-        return_value="rtsp://example.local",
-    ), patch(
-        "homeassistant.components.homekit.type_cameras.HAFFmpeg",
-        return_value=_get_failing_mock_ffmpeg(),
+    with (
+        patch(
+            "homeassistant.components.demo.camera.DemoCamera.stream_source",
+            return_value="rtsp://example.local",
+        ),
+        patch(
+            "homeassistant.components.homekit.type_cameras.HAFFmpeg",
+            return_value=_get_failing_mock_ffmpeg(),
+        ),
     ):
         await _async_start_streaming(hass, acc)
         await _async_stop_all_streams(hass, acc)
@@ -329,12 +339,15 @@ async def test_camera_stream_source_found(
     working_ffmpeg = _get_working_mock_ffmpeg()
     session_info = acc.sessions[MOCK_START_STREAM_SESSION_UUID]
 
-    with patch(
-        "homeassistant.components.demo.camera.DemoCamera.stream_source",
-        return_value="rtsp://example.local",
-    ), patch(
-        "homeassistant.components.homekit.type_cameras.HAFFmpeg",
-        return_value=working_ffmpeg,
+    with (
+        patch(
+            "homeassistant.components.demo.camera.DemoCamera.stream_source",
+            return_value="rtsp://example.local",
+        ),
+        patch(
+            "homeassistant.components.homekit.type_cameras.HAFFmpeg",
+            return_value=working_ffmpeg,
+        ),
     ):
         await _async_start_streaming(hass, acc)
         await _async_stop_all_streams(hass, acc)
@@ -360,12 +373,15 @@ async def test_camera_stream_source_found(
     working_ffmpeg = _get_working_mock_ffmpeg()
     session_info = acc.sessions[MOCK_START_STREAM_SESSION_UUID]
 
-    with patch(
-        "homeassistant.components.demo.camera.DemoCamera.stream_source",
-        return_value="rtsp://example2.local",
-    ), patch(
-        "homeassistant.components.homekit.type_cameras.HAFFmpeg",
-        return_value=working_ffmpeg,
+    with (
+        patch(
+            "homeassistant.components.demo.camera.DemoCamera.stream_source",
+            return_value="rtsp://example2.local",
+        ),
+        patch(
+            "homeassistant.components.homekit.type_cameras.HAFFmpeg",
+            return_value=working_ffmpeg,
+        ),
     ):
         await _async_start_streaming(hass, acc)
         await _async_stop_all_streams(hass, acc)
@@ -409,12 +425,15 @@ async def test_camera_stream_source_fails(
 
     await _async_setup_endpoints(hass, acc)
 
-    with patch(
-        "homeassistant.components.demo.camera.DemoCamera.stream_source",
-        side_effect=OSError,
-    ), patch(
-        "homeassistant.components.homekit.type_cameras.HAFFmpeg",
-        return_value=_get_working_mock_ffmpeg(),
+    with (
+        patch(
+            "homeassistant.components.demo.camera.DemoCamera.stream_source",
+            side_effect=OSError,
+        ),
+        patch(
+            "homeassistant.components.homekit.type_cameras.HAFFmpeg",
+            return_value=_get_working_mock_ffmpeg(),
+        ),
     ):
         await _async_start_streaming(hass, acc)
         await _async_stop_all_streams(hass, acc)
@@ -492,12 +511,15 @@ async def test_camera_stream_source_configured_and_copy_codec(
 
     working_ffmpeg = _get_working_mock_ffmpeg()
 
-    with patch(
-        "homeassistant.components.demo.camera.DemoCamera.stream_source",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.homekit.type_cameras.HAFFmpeg",
-        return_value=working_ffmpeg,
+    with (
+        patch(
+            "homeassistant.components.demo.camera.DemoCamera.stream_source",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.homekit.type_cameras.HAFFmpeg",
+            return_value=working_ffmpeg,
+        ),
     ):
         await _async_start_streaming(hass, acc)
         await _async_reconfigure_stream(hass, acc, session_info, {})
@@ -565,12 +587,15 @@ async def test_camera_stream_source_configured_and_override_profile_names(
 
     working_ffmpeg = _get_working_mock_ffmpeg()
 
-    with patch(
-        "homeassistant.components.demo.camera.DemoCamera.stream_source",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.homekit.type_cameras.HAFFmpeg",
-        return_value=working_ffmpeg,
+    with (
+        patch(
+            "homeassistant.components.demo.camera.DemoCamera.stream_source",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.homekit.type_cameras.HAFFmpeg",
+            return_value=working_ffmpeg,
+        ),
     ):
         await _async_start_streaming(hass, acc)
         await _async_reconfigure_stream(hass, acc, session_info, {})
@@ -637,12 +662,15 @@ async def test_camera_streaming_fails_after_starting_ffmpeg(
 
     ffmpeg_with_invalid_pid = _get_exits_after_startup_mock_ffmpeg()
 
-    with patch(
-        "homeassistant.components.demo.camera.DemoCamera.stream_source",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.homekit.type_cameras.HAFFmpeg",
-        return_value=ffmpeg_with_invalid_pid,
+    with (
+        patch(
+            "homeassistant.components.demo.camera.DemoCamera.stream_source",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.homekit.type_cameras.HAFFmpeg",
+            return_value=ffmpeg_with_invalid_pid,
+        ),
     ):
         await _async_start_streaming(hass, acc)
         await _async_reconfigure_stream(hass, acc, session_info, {})

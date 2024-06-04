@@ -1,4 +1,5 @@
 """Config flow for Canary."""
+
 from __future__ import annotations
 
 import logging
@@ -81,7 +82,7 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except (ConnectTimeout, HTTPError):
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
             else:

@@ -1,9 +1,11 @@
 """Test the UniFi Protect sensor platform."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 
+import pytest
 from pyunifiprotect.data import (
     NVR,
     Camera,
@@ -79,14 +81,15 @@ async def test_sensor_sensor_remove(
 
 
 async def test_sensor_setup_sensor(
-    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
 ) -> None:
     """Test sensor entity setup for sensor devices."""
 
     await init_entry(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.SENSOR, 22, 14)
-
-    entity_registry = er.async_get(hass)
 
     expected_values = (
         "10",
@@ -130,14 +133,15 @@ async def test_sensor_setup_sensor(
 
 
 async def test_sensor_setup_sensor_none(
-    hass: HomeAssistant, ufp: MockUFPFixture, sensor: Sensor
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor: Sensor,
 ) -> None:
     """Test sensor entity setup for sensor devices with no sensors enabled."""
 
     await init_entry(hass, ufp, [sensor])
     assert_entity_counts(hass, Platform.SENSOR, 22, 14)
-
-    entity_registry = er.async_get(hass)
 
     expected_values = (
         "10",
@@ -164,7 +168,10 @@ async def test_sensor_setup_sensor_none(
 
 
 async def test_sensor_setup_nvr(
-    hass: HomeAssistant, ufp: MockUFPFixture, fixed_now: datetime
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    fixed_now: datetime,
 ) -> None:
     """Test sensor entity setup for NVR device."""
 
@@ -188,8 +195,6 @@ async def test_sensor_setup_nvr(
     await hass.async_block_till_done()
 
     assert_entity_counts(hass, Platform.SENSOR, 12, 9)
-
-    entity_registry = er.async_get(hass)
 
     expected_values = (
         fixed_now.replace(second=0, microsecond=0).isoformat(),
@@ -240,7 +245,7 @@ async def test_sensor_setup_nvr(
 
 
 async def test_sensor_nvr_missing_values(
-    hass: HomeAssistant, ufp: MockUFPFixture
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, ufp: MockUFPFixture
 ) -> None:
     """Test NVR sensor sensors if no data available."""
 
@@ -255,8 +260,6 @@ async def test_sensor_nvr_missing_values(
     await hass.async_block_till_done()
 
     assert_entity_counts(hass, Platform.SENSOR, 12, 9)
-
-    entity_registry = er.async_get(hass)
 
     # Uptime
     description = NVR_SENSORS[0]
@@ -310,14 +313,16 @@ async def test_sensor_nvr_missing_values(
 
 
 async def test_sensor_setup_camera(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    fixed_now: datetime,
 ) -> None:
     """Test sensor entity setup for camera devices."""
 
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SENSOR, 24, 12)
-
-    entity_registry = er.async_get(hass)
 
     expected_values = (
         fixed_now.replace(microsecond=0).isoformat(),
@@ -395,9 +400,10 @@ async def test_sensor_setup_camera(
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_setup_camera_with_last_trip_time(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     doorbell: Camera,
     fixed_now: datetime,
@@ -406,8 +412,6 @@ async def test_sensor_setup_camera_with_last_trip_time(
 
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SENSOR, 24, 24)
-
-    entity_registry = er.async_get(hass)
 
     # Last Trip Time
     unique_id, entity_id = ids_from_device_description(
@@ -471,9 +475,10 @@ async def test_sensor_update_alarm(
     await time_changed(hass, 10)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_update_alarm_with_last_trip_time(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     sensor_all: Sensor,
     fixed_now: datetime,
@@ -487,7 +492,6 @@ async def test_sensor_update_alarm_with_last_trip_time(
     unique_id, entity_id = ids_from_device_description(
         Platform.SENSOR, sensor_all, SENSE_SENSORS_WRITE[-3]
     )
-    entity_registry = er.async_get(hass)
 
     entity = entity_registry.async_get(entity_id)
     assert entity
@@ -537,9 +541,9 @@ async def test_camera_update_licenseplate(
 
     new_camera = camera.copy()
     new_camera.is_smart_detected = True
-    new_camera.last_smart_detect_event_ids[
-        SmartDetectObjectType.LICENSE_PLATE
-    ] = event.id
+    new_camera.last_smart_detect_event_ids[SmartDetectObjectType.LICENSE_PLATE] = (
+        event.id
+    )
 
     mock_msg = Mock()
     mock_msg.changed_data = {}

@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/nut",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "loggers": ["pynut2"],
-  "requirements": ["pynut2==2.1.2"],
+  "loggers": ["aionut"],
+  "requirements": ["aionut==4.3.2"],
   "zeroconf": ["_nut._tcp.local."]
 }

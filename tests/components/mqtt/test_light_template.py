@@ -24,6 +24,7 @@ If your light doesn't support color temp feature, omit `color_temp_template`.
 
 If your light doesn't support RGB feature, omit `(red|green|blue)_template`.
 """
+
 import copy
 from typing import Any
 from unittest.mock import patch
@@ -41,7 +42,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant, State
 
@@ -91,13 +91,6 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-
-@pytest.fixture(autouse=True)
-def light_platform_only():
-    """Only setup the light platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT]):
-        yield
 
 
 @pytest.mark.parametrize(

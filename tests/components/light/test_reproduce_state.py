@@ -1,4 +1,5 @@
 """Test reproduce state for Light."""
+
 import pytest
 
 from homeassistant.components import light
@@ -126,7 +127,7 @@ async def test_reproducing_states(
 
 @pytest.mark.parametrize(
     "color_mode",
-    (
+    [
         light.ColorMode.COLOR_TEMP,
         light.ColorMode.BRIGHTNESS,
         light.ColorMode.HS,
@@ -137,7 +138,7 @@ async def test_reproducing_states(
         light.ColorMode.UNKNOWN,
         light.ColorMode.WHITE,
         light.ColorMode.XY,
-    ),
+    ],
 )
 async def test_filter_color_modes(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, color_mode
@@ -194,7 +195,7 @@ async def test_filter_color_modes(
 
 @pytest.mark.parametrize(
     "saved_state",
-    (
+    [
         NONE_BRIGHTNESS,
         NONE_EFFECT,
         NONE_COLOR_TEMP,
@@ -203,7 +204,7 @@ async def test_filter_color_modes(
         NONE_RGBW_COLOR,
         NONE_RGBWW_COLOR,
         NONE_XY_COLOR,
-    ),
+    ],
 )
 async def test_filter_none(hass: HomeAssistant, saved_state) -> None:
     """Test filtering of parameters which are None."""

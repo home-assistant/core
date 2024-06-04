@@ -1,4 +1,5 @@
 """Support to interact with a Music Player Daemon."""
+
 from __future__ import annotations
 
 import asyncio

@@ -1,4 +1,5 @@
 """Support for Insteon Thermostats via ISY Platform."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -63,14 +64,14 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the ISY thermostat platform."""
-    entities = []
 
     isy_data: IsyData = hass.data[DOMAIN][entry.entry_id]
     devices: dict[str, DeviceInfo] = isy_data.devices
-    for node in isy_data.nodes[Platform.CLIMATE]:
-        entities.append(ISYThermostatEntity(node, devices.get(node.primary_node)))
 
-    async_add_entities(entities)
+    async_add_entities(
+        ISYThermostatEntity(node, devices.get(node.primary_node))
+        for node in isy_data.nodes[Platform.CLIMATE]
+    )
 
 
 class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):

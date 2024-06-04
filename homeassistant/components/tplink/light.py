@@ -1,4 +1,5 @@
 """Support for TPLink lights."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -227,7 +228,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         await self.device.set_hsv(hue, sat, brightness, transition=transition)
 
     async def _async_set_color_temp(
-        self, color_temp: float | int, brightness: int | None, transition: int | None
+        self, color_temp: float, brightness: int | None, transition: int | None
     ) -> None:
         device = self.device
         valid_temperature_range = device.valid_temperature_range

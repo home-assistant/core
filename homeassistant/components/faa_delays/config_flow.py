@@ -1,4 +1,5 @@
 """Config flow for FAA Delays integration."""
+
 import logging
 from typing import Any
 
@@ -42,8 +43,8 @@ class FAADelaysConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Error connecting to FAA API")
                 errors["base"] = "cannot_connect"
 
-            except Exception as error:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception: %s", error)
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
             if not errors:

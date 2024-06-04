@@ -1,4 +1,5 @@
 """Test helpers for Freebox."""
+
 import json
 from unittest.mock import AsyncMock, PropertyMock, patch
 
@@ -28,8 +29,9 @@ from tests.common import MockConfigEntry
 @pytest.fixture(autouse=True)
 def mock_path():
     """Mock path lib."""
-    with patch("homeassistant.components.freebox.router.Path"), patch(
-        "homeassistant.components.freebox.router.os.makedirs"
+    with (
+        patch("homeassistant.components.freebox.router.Path"),
+        patch("homeassistant.components.freebox.router.os.makedirs"),
     ):
         yield
 
@@ -106,8 +108,7 @@ def mock_router_bridge_mode(mock_device_registry_devices, router):
 
     router().lan.get_hosts_list = AsyncMock(
         side_effect=HttpRequestError(
-            "Request failed (APIResponse: %s)"
-            % json.dumps(DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE)
+            f"Request failed (APIResponse: {json.dumps(DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE)})"
         )
     )
 

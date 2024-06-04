@@ -1,4 +1,5 @@
 """Config flow for APCUPSd integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -59,9 +60,6 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user", data_schema=_SCHEMA, errors=errors
             )
-
-        if not data:
-            return self.async_abort(reason="no_status")
 
         # We _try_ to use the serial number of the UPS as the unique id since this field
         # is not guaranteed to exist on all APC UPS models.

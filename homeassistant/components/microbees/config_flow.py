@@ -1,4 +1,5 @@
 """Config flow for microBees integration."""
+
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -6,6 +7,7 @@ from typing import Any
 from microBeesPy import MicroBees, MicroBeesException
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
@@ -31,9 +33,7 @@ class OAuth2FlowHandler(
         scopes = ["read", "write"]
         return {"scope": " ".join(scopes)}
 
-    async def async_oauth_create_entry(
-        self, data: dict[str, Any]
-    ) -> config_entries.ConfigFlowResult:
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
 
         microbees = MicroBees(
@@ -45,7 +45,7 @@ class OAuth2FlowHandler(
             current_user = await microbees.getMyProfile()
         except MicroBeesException:
             return self.async_abort(reason="invalid_auth")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             self.logger.exception("Unexpected error")
             return self.async_abort(reason="unknown")
 
@@ -64,7 +64,7 @@ class OAuth2FlowHandler(
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -73,7 +73,7 @@ class OAuth2FlowHandler(
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")

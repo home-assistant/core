@@ -1,4 +1,5 @@
 """The tests for the manual Alarm Control Panel component."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -314,7 +315,7 @@ async def test_with_specific_pending(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test"},
+        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "1234"},
         blocking=True,
     )
 

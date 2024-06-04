@@ -1,4 +1,8 @@
 """Tests for the Rainforest RAVEn data coordinator."""
+
+import asyncio
+import functools
+
 from aioraven.device import RAVEnConnectionError
 import pytest
 
@@ -79,6 +83,19 @@ async def test_coordinator_device_error_update(hass: HomeAssistant, mock_device)
     assert coordinator.last_update_success is True
 
     mock_device.get_network_info.side_effect = RAVEnConnectionError
+    await coordinator.async_refresh()
+    assert coordinator.last_update_success is False
+
+
+async def test_coordinator_device_timeout_update(hass: HomeAssistant, mock_device):
+    """Test handling of a device timeout during an update."""
+    entry = create_mock_entry()
+    coordinator = RAVEnDataCoordinator(hass, entry)
+
+    await coordinator.async_config_entry_first_refresh()
+    assert coordinator.last_update_success is True
+
+    mock_device.get_network_info.side_effect = functools.partial(asyncio.sleep, 10)
     await coordinator.async_refresh()
     assert coordinator.last_update_success is False
 

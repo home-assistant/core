@@ -1,4 +1,5 @@
 """Support for Melissa Climate A/C."""
+
 from __future__ import annotations
 
 import logging
@@ -43,13 +44,14 @@ async def async_setup_platform(
     api = hass.data[DATA_MELISSA]
     devices = (await api.async_fetch_devices()).values()
 
-    all_devices = []
-
-    for device in devices:
-        if device["type"] == "melissa":
-            all_devices.append(MelissaClimate(api, device["serial_number"], device))
-
-    async_add_entities(all_devices)
+    async_add_entities(
+        (
+            MelissaClimate(api, device["serial_number"], device)
+            for device in devices
+            if device["type"] == "melissa"
+        ),
+        True,
+    )
 
 
 class MelissaClimate(ClimateEntity):

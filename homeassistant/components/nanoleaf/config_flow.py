@@ -1,4 +1,5 @@
 """Config flow for Nanoleaf integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -66,7 +67,7 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except Unauthorized:
             pass
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unknown error connecting to Nanoleaf")
             return self.async_show_form(
                 step_id="user",
@@ -172,7 +173,7 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except Unavailable:
             return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unknown error authorizing Nanoleaf")
             return self.async_show_form(step_id="link", errors={"base": "unknown"})
 
@@ -199,7 +200,7 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         except InvalidToken:
             return self.async_abort(reason="invalid_token")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Unknown error connecting with Nanoleaf at %s", self.nanoleaf.host
             )

@@ -1,4 +1,5 @@
 """Test Netgear LTE integration."""
+
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.netgear_lte.const import DOMAIN
@@ -12,7 +13,7 @@ from .conftest import CONF_DATA
 async def test_setup_unload(hass: HomeAssistant, setup_integration: None) -> None:
     """Test setup and unload."""
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.data == CONF_DATA
 
@@ -28,7 +29,7 @@ async def test_async_setup_entry_not_ready(
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_device(

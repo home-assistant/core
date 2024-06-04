@@ -1,4 +1,5 @@
 """Config flow for Discovergy integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -90,7 +91,7 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except discovergyError.InvalidLogin:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected error occurred while getting meters")
                 errors["base"] = "unknown"
             else:

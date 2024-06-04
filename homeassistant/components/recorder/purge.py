@@ -1,4 +1,5 @@
 """Purge old data helper."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -9,6 +10,8 @@ import time
 from typing import TYPE_CHECKING
 
 from sqlalchemy.orm.session import Session
+
+from homeassistant.util.collection import chunked_or_all
 
 from .db_schema import Events, States, StatesMeta
 from .models import DatabaseEngine
@@ -39,7 +42,7 @@ from .queries import (
     find_statistics_runs_to_purge,
 )
 from .repack import repack_database
-from .util import chunked_or_all, retryable_database_job, session_scope
+from .util import retryable_database_job, session_scope
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -693,7 +696,7 @@ def _purge_filtered_states(
     )
     if not to_purge:
         return True
-    state_ids, attributes_ids, event_ids = zip(*to_purge)
+    state_ids, attributes_ids, event_ids = zip(*to_purge, strict=False)
     filtered_event_ids = {id_ for id_ in event_ids if id_ is not None}
     _LOGGER.debug(
         "Selected %s state_ids to remove that should be filtered", len(state_ids)
@@ -734,7 +737,7 @@ def _purge_filtered_events(
     )
     if not to_purge:
         return True
-    event_ids, data_ids = zip(*to_purge)
+    event_ids, data_ids = zip(*to_purge, strict=False)
     event_ids_set = set(event_ids)
     _LOGGER.debug(
         "Selected %s event_ids to remove that should be filtered", len(event_ids_set)

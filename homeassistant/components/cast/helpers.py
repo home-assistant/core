@@ -1,4 +1,5 @@
 """Helpers to deal with Cast devices."""
+
 from __future__ import annotations
 
 import configparser
@@ -161,7 +162,7 @@ class CastStatusListener(
         self._valid = True
         self._mz_mgr = mz_mgr
 
-        if cast_device._cast_info.is_audio_group:
+        if cast_device._cast_info.is_audio_group:  # noqa: SLF001
             self._mz_mgr.add_multizone(chromecast)
         if mz_only:
             return
@@ -169,7 +170,7 @@ class CastStatusListener(
         chromecast.register_status_listener(self)
         chromecast.socket_client.media_controller.register_status_listener(self)
         chromecast.register_connection_listener(self)
-        if not cast_device._cast_info.is_audio_group:
+        if not cast_device._cast_info.is_audio_group:  # noqa: SLF001
             self._mz_mgr.register_listener(chromecast.uuid, self)
 
     def new_cast_status(self, status):
@@ -213,8 +214,7 @@ class CastStatusListener(
 
         All following callbacks won't be forwarded.
         """
-        # pylint: disable-next=protected-access
-        if self._cast_device._cast_info.is_audio_group:
+        if self._cast_device._cast_info.is_audio_group:  # noqa: SLF001
             self._mz_mgr.remove_multizone(self._uuid)
         else:
             self._mz_mgr.deregister_listener(self._uuid, self)
@@ -359,7 +359,7 @@ async def parse_pls(hass, url):
 
 async def parse_playlist(hass, url):
     """Parse an m3u or pls playlist."""
-    if url.endswith(".m3u") or url.endswith(".m3u8"):
+    if url.endswith((".m3u", ".m3u8")):
         playlist = await parse_m3u(hass, url)
     else:
         playlist = await parse_pls(hass, url)

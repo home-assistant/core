@@ -1,4 +1,5 @@
 """Support for V2C EVSE sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -6,6 +7,7 @@ from dataclasses import dataclass
 import logging
 
 from pytrydan import TrydanData
+from pytrydan.models.trydan import SlaveCommunicationState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,6 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import V2CUpdateCoordinator
@@ -25,17 +28,14 @@ from .entity import V2CBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class V2CRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    value_fn: Callable[[TrydanData], float]
-
-
-@dataclass(frozen=True)
-class V2CSensorEntityDescription(SensorEntityDescription, V2CRequiredKeysMixin):
+@dataclass(frozen=True, kw_only=True)
+class V2CSensorEntityDescription(SensorEntityDescription):
     """Describes an EVSE Power sensor entity."""
 
+    value_fn: Callable[[TrydanData], StateType]
+
+
+_METER_ERROR_OPTIONS = [error.name.lower() for error in SlaveCommunicationState]
 
 TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
@@ -50,7 +50,6 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="charge_energy",
         translation_key="charge_energy",
-        icon="mdi:ev-station",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
@@ -59,7 +58,6 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="charge_time",
         translation_key="charge_time",
-        icon="mdi:timer",
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.DURATION,
@@ -68,7 +66,6 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="house_power",
         translation_key="house_power",
-        icon="mdi:home-lightning-bolt",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
@@ -77,11 +74,27 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="fv_power",
         translation_key="fv_power",
-        icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         value_fn=lambda evse_data: evse_data.fv_power,
+    ),
+    V2CSensorEntityDescription(
+        key="meter_error",
+        translation_key="meter_error",
+        value_fn=lambda evse_data: evse_data.slave_error.name.lower(),
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=_METER_ERROR_OPTIONS,
+    ),
+    V2CSensorEntityDescription(
+        key="battery_power",
+        translation_key="battery_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        value_fn=lambda evse_data: evse_data.battery_power,
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -116,6 +129,6 @@ class V2CSensorBaseEntity(V2CBaseEntity, SensorEntity):
         self._attr_unique_id = f"{entry_id}_{description.key}"
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.data)

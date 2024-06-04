@@ -1,4 +1,5 @@
 """Platform allowing several switches to be grouped into one switch."""
+
 from __future__ import annotations
 
 import logging
@@ -24,7 +25,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import GroupEntity
+from .entity import GroupEntity
 
 DEFAULT_NAME = "Switch Group"
 CONF_ALL = "all"

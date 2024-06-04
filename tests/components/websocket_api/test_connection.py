@@ -1,4 +1,5 @@
 """Test WebSocket Connection class."""
+
 import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch

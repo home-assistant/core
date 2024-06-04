@@ -1,4 +1,5 @@
 """Config flow for Nibe Heat Pump integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -192,7 +193,7 @@ class NibeHeatPumpConfigFlow(ConfigFlow, domain=DOMAIN):
         except FieldError as exception:
             LOGGER.debug("Validation error %s", exception)
             errors[exception.field] = exception.error
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -218,7 +219,7 @@ class NibeHeatPumpConfigFlow(ConfigFlow, domain=DOMAIN):
         except FieldError as exception:
             LOGGER.exception("Validation error")
             errors[exception.field] = exception.error
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

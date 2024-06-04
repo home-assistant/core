@@ -1,4 +1,5 @@
 """Switcher integration Switch platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -22,7 +23,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SwitcherDataUpdateCoordinator
 from .const import (
     CONF_AUTO_OFF,
     CONF_TIMER_MINUTES,
@@ -30,8 +30,12 @@ from .const import (
     SERVICE_TURN_ON_WITH_TIMER_NAME,
     SIGNAL_DEVICE_ADD,
 )
+from .coordinator import SwitcherDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+API_CONTROL_DEVICE = "control_device"
+API_SET_AUTO_SHUTDOWN = "set_auto_shutdown"
 
 SERVICE_SET_AUTO_OFF_SCHEMA = {
     vol.Required(CONF_AUTO_OFF): cv.time_period_str,
@@ -107,7 +111,7 @@ class SwitcherBaseSwitchEntity(
         _LOGGER.debug(
             "Calling api for %s, api: '%s', args: %s", self.coordinator.name, api, args
         )
-        response: SwitcherBaseResponse = None
+        response: SwitcherBaseResponse | None = None
         error = None
 
         try:
@@ -140,13 +144,13 @@ class SwitcherBaseSwitchEntity(
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self._async_call_api("control_device", Command.ON)
+        await self._async_call_api(API_CONTROL_DEVICE, Command.ON)
         self.control_result = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self._async_call_api("control_device", Command.OFF)
+        await self._async_call_api(API_CONTROL_DEVICE, Command.OFF)
         self.control_result = False
         self.async_write_ha_state()
 
@@ -180,11 +184,11 @@ class SwitcherWaterHeaterSwitchEntity(SwitcherBaseSwitchEntity):
 
     async def async_set_auto_off_service(self, auto_off: timedelta) -> None:
         """Use for handling setting device auto-off service calls."""
-        await self._async_call_api("set_auto_shutdown", auto_off)
+        await self._async_call_api(API_SET_AUTO_SHUTDOWN, auto_off)
         self.async_write_ha_state()
 
     async def async_turn_on_with_timer_service(self, timer_minutes: int) -> None:
         """Use for turning device on with a timer service calls."""
-        await self._async_call_api("control_device", Command.ON, timer_minutes)
+        await self._async_call_api(API_CONTROL_DEVICE, Command.ON, timer_minutes)
         self.control_result = True
         self.async_write_ha_state()

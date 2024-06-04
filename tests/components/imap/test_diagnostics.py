@@ -1,4 +1,5 @@
 """Test IMAP diagnostics."""
+
 from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock
@@ -65,6 +66,10 @@ async def test_entry_diagnostics(
         "port": 993,
         "charset": "utf-8",
         "folder": "INBOX",
+        "event_message_data": [
+            "text",
+            "headers",
+        ],
         "search": "UnSeen UnDeleted",
         "custom_event_data_template": "{{ 4 * 4 }}",
     }

@@ -1,4 +1,5 @@
 """The tests for the Xiaomi router device tracker platform."""
+
 from http import HTTPStatus
 import logging
 from unittest.mock import MagicMock, call, patch
@@ -47,7 +48,7 @@ def mocked_requests(*args, **kwargs):
                 raise requests.HTTPError(self.status_code)
 
     data = kwargs.get("data")
-    global FIRST_CALL
+    global FIRST_CALL  # noqa: PLW0603
 
     if data and data.get("username", None) == INVALID_USERNAME:
         # deliver an invalid token

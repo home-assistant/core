@@ -1,4 +1,5 @@
 """Config flow to configure qnap component."""
+
 from __future__ import annotations
 
 import logging
@@ -69,7 +70,7 @@ class QnapConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except TypeError:
                 errors["base"] = "invalid_auth"
-            except Exception as error:  # pylint: disable=broad-except
+            except Exception as error:  # noqa: BLE001
                 _LOGGER.error(error)
                 errors["base"] = "unknown"
             else:

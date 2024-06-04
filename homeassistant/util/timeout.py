@@ -3,6 +3,7 @@
 Set of helper classes to handle timeouts of tasks with advanced options
 like zones and freezing of timeouts.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -38,9 +39,9 @@ class _GlobalFreezeContext:
 
     async def __aexit__(
         self,
-        exc_type: type[BaseException],
-        exc_val: BaseException,
-        exc_tb: TracebackType,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> bool | None:
         self._exit()
         return None
@@ -51,9 +52,9 @@ class _GlobalFreezeContext:
 
     def __exit__(
         self,
-        exc_type: type[BaseException],
-        exc_val: BaseException,
-        exc_tb: TracebackType,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> bool | None:
         self._loop.call_soon_threadsafe(self._exit)
         return None
@@ -106,9 +107,9 @@ class _ZoneFreezeContext:
 
     async def __aexit__(
         self,
-        exc_type: type[BaseException],
-        exc_val: BaseException,
-        exc_tb: TracebackType,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> bool | None:
         self._exit()
         return None
@@ -119,9 +120,9 @@ class _ZoneFreezeContext:
 
     def __exit__(
         self,
-        exc_type: type[BaseException],
-        exc_val: BaseException,
-        exc_tb: TracebackType,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> bool | None:
         self._loop.call_soon_threadsafe(self._exit)
         return None
@@ -170,9 +171,9 @@ class _GlobalTaskContext:
 
     async def __aexit__(
         self,
-        exc_type: type[BaseException],
-        exc_val: BaseException,
-        exc_tb: TracebackType,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> bool | None:
         self._stop_timer()
         self._manager.global_tasks.remove(self)
@@ -285,9 +286,9 @@ class _ZoneTaskContext:
 
     async def __aexit__(
         self,
-        exc_type: type[BaseException],
-        exc_val: BaseException,
-        exc_tb: TracebackType,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> bool | None:
         self._zone.exit_task(self)
         self._stop_timer()
@@ -471,8 +472,7 @@ class TimeoutManager:
 
         # Global Zone
         if zone_name == ZONE_GLOBAL:
-            task = _GlobalTaskContext(self, current_task, timeout, cool_down)
-            return task
+            return _GlobalTaskContext(self, current_task, timeout, cool_down)
 
         # Zone Handling
         if zone_name in self.zones:

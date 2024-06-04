@@ -1,4 +1,5 @@
 """Tests for the Atag sensor platform."""
+
 from homeassistant.components.atag.sensor import SENSORS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

@@ -1,4 +1,5 @@
 """Support for Lidarr."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -62,10 +63,13 @@ class LidarrSensorEntityDescription(
     """Class to describe a Lidarr sensor."""
 
     attributes_fn: Callable[[T], dict[str, str] | None] = lambda _: None
-    description_fn: Callable[
-        [LidarrSensorEntityDescription[T], LidarrRootFolder],
-        tuple[LidarrSensorEntityDescription[T], str] | None,
-    ] | None = None
+    description_fn: (
+        Callable[
+            [LidarrSensorEntityDescription[T], LidarrRootFolder],
+            tuple[LidarrSensorEntityDescription[T], str] | None,
+        ]
+        | None
+    ) = None
 
 
 SENSOR_TYPES: dict[str, LidarrSensorEntityDescription[Any]] = {

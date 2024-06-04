@@ -1,8 +1,10 @@
 """Provide common tests tools for tts."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
 from http import HTTPStatus
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -40,7 +42,7 @@ SUPPORT_LANGUAGES = ["de_CH", "de_DE", "en_GB", "en_US"]
 TEST_DOMAIN = "test"
 
 
-def mock_tts_get_cache_files_fixture_helper():
+def mock_tts_get_cache_files_fixture_helper() -> Generator[MagicMock, None, None]:
     """Mock the list TTS cache function."""
     with patch(
         "homeassistant.components.tts._get_cache_files", return_value={}
@@ -65,8 +67,11 @@ def init_tts_cache_dir_side_effect_fixture_helper() -> Any:
 
 
 def mock_tts_cache_dir_fixture_helper(
-    tmp_path, mock_tts_init_cache_dir, mock_tts_get_cache_files, request
-):
+    tmp_path: Path,
+    mock_tts_init_cache_dir: MagicMock,
+    mock_tts_get_cache_files: MagicMock,
+    request: pytest.FixtureRequest,
+) -> Generator[Path, None, None]:
     """Mock the TTS cache dir with empty dir."""
     mock_tts_init_cache_dir.return_value = str(tmp_path)
 
@@ -87,7 +92,7 @@ def mock_tts_cache_dir_fixture_helper(
     pytest.fail("Test failed, see log for details")
 
 
-def tts_mutagen_mock_fixture_helper():
+def tts_mutagen_mock_fixture_helper() -> Generator[MagicMock, None, None]:
     """Mock writing tags."""
     with patch(
         "homeassistant.components.tts.SpeechManager.write_tags",

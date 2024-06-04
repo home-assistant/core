@@ -1,4 +1,5 @@
 """Config flow for Aurora."""
+
 from __future__ import annotations
 
 import logging
@@ -63,7 +64,7 @@ class AuroraConfigFlow(ConfigFlow, domain=DOMAIN):
                 await api.get_forecast_data(longitude, latitude)
             except ClientError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

@@ -1,8 +1,9 @@
 """The tests for Netatmo device triggers."""
+
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.netatmo import DOMAIN as NETATMO_DOMAIN
 from homeassistant.components.netatmo.const import (
@@ -13,7 +14,7 @@ from homeassistant.components.netatmo.const import (
 )
 from homeassistant.components.netatmo.device_trigger import SUBTYPES
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -26,7 +27,7 @@ from tests.common import (
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -62,18 +63,18 @@ async def test_get_triggers(
     expected_triggers = []
     for event_type in event_types:
         if event_type in SUBTYPES:
-            for subtype in SUBTYPES[event_type]:
-                expected_triggers.append(
-                    {
-                        "platform": "device",
-                        "domain": NETATMO_DOMAIN,
-                        "type": event_type,
-                        "subtype": subtype,
-                        "device_id": device_entry.id,
-                        "entity_id": entity_entry.id,
-                        "metadata": {"secondary": False},
-                    }
-                )
+            expected_triggers.extend(
+                {
+                    "platform": "device",
+                    "domain": NETATMO_DOMAIN,
+                    "type": event_type,
+                    "subtype": subtype,
+                    "device_id": device_entry.id,
+                    "entity_id": entity_entry.id,
+                    "metadata": {"secondary": False},
+                }
+                for subtype in SUBTYPES[event_type]
+            )
         else:
             expected_triggers.append(
                 {
@@ -112,7 +113,7 @@ async def test_get_triggers(
 )
 async def test_if_fires_on_event(
     hass: HomeAssistant,
-    calls,
+    calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     platform,
@@ -195,7 +196,7 @@ async def test_if_fires_on_event(
 )
 async def test_if_fires_on_event_legacy(
     hass: HomeAssistant,
-    calls,
+    calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     platform,
@@ -276,7 +277,7 @@ async def test_if_fires_on_event_legacy(
 )
 async def test_if_fires_on_event_with_subtype(
     hass: HomeAssistant,
-    calls,
+    calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     platform,

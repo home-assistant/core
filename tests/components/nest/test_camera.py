@@ -3,6 +3,7 @@
 These tests fake out the subscriber/devicemanager, and are not using a real
 pubsub subscriber.
 """
+
 import datetime
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
@@ -103,12 +104,12 @@ def webrtc_camera_device(create_device: CreateDevice) -> None:
 def make_motion_event(
     event_id: str = MOTION_EVENT_ID,
     event_session_id: str = EVENT_SESSION_ID,
-    timestamp: datetime.datetime = None,
+    timestamp: datetime.datetime | None = None,
 ) -> EventMessage:
     """Create an EventMessage for a motion event."""
     if not timestamp:
         timestamp = utcnow()
-    return EventMessage(
+    return EventMessage.create_event(
         {
             "eventId": "some-event-id",  # Ignored; we use the resource updated event id below
             "timestamp": timestamp.isoformat(timespec="seconds"),
@@ -127,7 +128,7 @@ def make_motion_event(
 
 
 def make_stream_url_response(
-    expiration: datetime.datetime = None, token_num: int = 0
+    expiration: datetime.datetime | None = None, token_num: int = 0
 ) -> aiohttp.web.Response:
     """Make response for the API that generates a streaming url."""
     if not expiration:
@@ -202,7 +203,11 @@ async def test_ineligible_device(
 
 
 async def test_camera_device(
-    hass: HomeAssistant, setup_platform: PlatformSetup, camera_device: None
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    setup_platform: PlatformSetup,
+    camera_device: None,
 ) -> None:
     """Test a basic camera with a live stream."""
     await setup_platform()
@@ -213,12 +218,10 @@ async def test_camera_device(
     assert camera.state == STATE_STREAMING
     assert camera.attributes.get(ATTR_FRIENDLY_NAME) == "My Camera"
 
-    registry = er.async_get(hass)
-    entry = registry.async_get("camera.my_camera")
+    entry = entity_registry.async_get("camera.my_camera")
     assert entry.unique_id == f"{DEVICE_ID}-camera"
     assert entry.domain == "camera"
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
     assert device.name == "My Camera"
     assert device.model == "Camera"

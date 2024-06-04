@@ -1,8 +1,9 @@
 """Support for Meteo-France raining forecast sensor."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, TypeVar
+from typing import Any
 
 from meteofrance_api.helpers import (
     get_warning_text_status_from_indice_color,
@@ -48,21 +49,12 @@ from .const import (
     MODEL,
 )
 
-_DataT = TypeVar("_DataT", bound=Rain | Forecast | CurrentPhenomenons)
 
-
-@dataclass(frozen=True)
-class MeteoFranceRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class MeteoFranceSensorEntityDescription(SensorEntityDescription):
+    """Describes Meteo-France sensor entity."""
 
     data_path: str
-
-
-@dataclass(frozen=True)
-class MeteoFranceSensorEntityDescription(
-    SensorEntityDescription, MeteoFranceRequiredKeysMixin
-):
-    """Describes Meteo-France sensor entity."""
 
 
 SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
@@ -232,7 +224,9 @@ async def async_setup_entry(
     async_add_entities(entities, False)
 
 
-class MeteoFranceSensor(CoordinatorEntity[DataUpdateCoordinator[_DataT]], SensorEntity):
+class MeteoFranceSensor[_DataT: Rain | Forecast | CurrentPhenomenons](
+    CoordinatorEntity[DataUpdateCoordinator[_DataT]], SensorEntity
+):
     """Representation of a Meteo-France sensor."""
 
     entity_description: MeteoFranceSensorEntityDescription

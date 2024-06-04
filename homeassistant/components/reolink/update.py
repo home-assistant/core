@@ -1,4 +1,5 @@
 """Update entities for Reolink devices."""
+
 from __future__ import annotations
 
 from datetime import datetime

@@ -1,4 +1,5 @@
 """Support for the Zeversolar platform."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,24 +23,17 @@ from .coordinator import ZeversolarCoordinator
 from .entity import ZeversolarEntity
 
 
-@dataclass(frozen=True)
-class ZeversolarEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class ZeversolarEntityDescription(SensorEntityDescription):
+    """Describes Zeversolar sensor entity."""
 
     value_fn: Callable[[zeversolar.ZeverSolarData], zeversolar.kWh | zeversolar.Watt]
-
-
-@dataclass(frozen=True)
-class ZeversolarEntityDescription(
-    SensorEntityDescription, ZeversolarEntityDescriptionMixin
-):
-    """Describes Zeversolar sensor entity."""
 
 
 SENSOR_TYPES = (
     ZeversolarEntityDescription(
         key="pac",
-        icon="mdi:solar-power-variant",
+        translation_key="pac",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -49,7 +43,6 @@ SENSOR_TYPES = (
     ZeversolarEntityDescription(
         key="energy_today",
         translation_key="energy_today",
-        icon="mdi:home-battery",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,

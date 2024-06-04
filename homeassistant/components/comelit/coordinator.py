@@ -1,4 +1,5 @@
 """Support for Comelit."""
+
 from abc import abstractmethod
 from datetime import timedelta
 from typing import Any

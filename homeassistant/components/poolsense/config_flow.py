@@ -1,4 +1,5 @@
 """Config flow for PoolSense integration."""
+
 import logging
 from typing import Any
 
@@ -18,9 +19,6 @@ class PoolSenseConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for PoolSense."""
 
     VERSION = 1
-
-    def __init__(self) -> None:
-        """Initialize PoolSense config flow."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

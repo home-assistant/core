@@ -5,7 +5,9 @@ import logging
 import pytest
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
+from homeassistant.components.conversation import default_agent
+from homeassistant.components.conversation.models import ConversationInput
+from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import trigger
 from homeassistant.setup import async_setup_component
 
@@ -14,19 +16,21 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 @pytest.fixture(autouse=True)
-async def setup_comp(hass):
+async def setup_comp(hass: HomeAssistant) -> None:
     """Initialize components."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
 
 
-async def test_if_fires_on_event(hass: HomeAssistant, calls, setup_comp) -> None:
+async def test_if_fires_on_event(
+    hass: HomeAssistant, calls: list[ServiceCall], setup_comp: None
+) -> None:
     """Test the firing of events."""
     assert await async_setup_component(
         hass,
@@ -51,9 +55,7 @@ async def test_if_fires_on_event(hass: HomeAssistant, calls, setup_comp) -> None
     service_response = await hass.services.async_call(
         "conversation",
         "process",
-        {
-            "text": "Ha ha ha",
-        },
+        {"text": "Ha ha ha"},
         blocking=True,
         return_response=True,
     )
@@ -69,6 +71,7 @@ async def test_if_fires_on_event(hass: HomeAssistant, calls, setup_comp) -> None
         "sentence": "Ha ha ha",
         "slots": {},
         "details": {},
+        "device_id": None,
     }
 
 
@@ -103,7 +106,39 @@ async def test_response(hass: HomeAssistant, setup_comp) -> None:
     assert service_response["response"]["speech"]["plain"]["speech"] == response
 
 
-async def test_response_same_sentence(hass: HomeAssistant, calls, setup_comp) -> None:
+async def test_empty_response(hass: HomeAssistant, setup_comp) -> None:
+    """Test the conversation response action with an empty response."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": ["Open the pod bay door Hal"],
+                },
+                "action": {
+                    "set_conversation_response": "",
+                },
+            }
+        },
+    )
+
+    service_response = await hass.services.async_call(
+        "conversation",
+        "process",
+        {
+            "text": "Open the pod bay door Hal",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert service_response["response"]["speech"]["plain"]["speech"] == ""
+
+
+async def test_response_same_sentence(
+    hass: HomeAssistant, calls: list[ServiceCall], setup_comp: None
+) -> None:
     """Test the conversation response action with multiple triggers using the same sentence."""
     assert await async_setup_component(
         hass,
@@ -160,11 +195,15 @@ async def test_response_same_sentence(hass: HomeAssistant, calls, setup_comp) ->
         "sentence": "test sentence",
         "slots": {},
         "details": {},
+        "device_id": None,
     }
 
 
 async def test_response_same_sentence_with_error(
-    hass: HomeAssistant, calls, setup_comp, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    setup_comp: None,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the conversation response action with multiple triggers using the same sentence and an error."""
     caplog.set_level(logging.ERROR)
@@ -271,7 +310,7 @@ async def test_subscribe_trigger_does_not_interfere_with_responses(
 
 
 async def test_same_trigger_multiple_sentences(
-    hass: HomeAssistant, calls, setup_comp
+    hass: HomeAssistant, calls: list[ServiceCall], setup_comp: None
 ) -> None:
     """Test matching of multiple sentences from the same trigger."""
     assert await async_setup_component(
@@ -311,11 +350,12 @@ async def test_same_trigger_multiple_sentences(
         "sentence": "hello",
         "slots": {},
         "details": {},
+        "device_id": None,
     }
 
 
 async def test_same_sentence_multiple_triggers(
-    hass: HomeAssistant, calls, setup_comp
+    hass: HomeAssistant, calls: list[ServiceCall], setup_comp: None
 ) -> None:
     """Test use of the same sentence in multiple triggers."""
     assert await async_setup_component(
@@ -434,7 +474,9 @@ async def test_fails_on_no_sentences(hass: HomeAssistant) -> None:
         )
 
 
-async def test_wildcards(hass: HomeAssistant, calls, setup_comp) -> None:
+async def test_wildcards(
+    hass: HomeAssistant, calls: list[ServiceCall], setup_comp: None
+) -> None:
     """Test wildcards in trigger sentences."""
     assert await async_setup_component(
         hass,
@@ -488,4 +530,41 @@ async def test_wildcards(hass: HomeAssistant, calls, setup_comp) -> None:
                 "value": "the beatles",
             },
         },
+        "device_id": None,
     }
+
+
+async def test_trigger_with_device_id(hass: HomeAssistant) -> None:
+    """Test that a trigger receives a device_id."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": ["test sentence"],
+                },
+                "action": {
+                    "set_conversation_response": "{{ trigger.device_id }}",
+                },
+            }
+        },
+    )
+
+    agent = default_agent.async_get_default_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    result = await agent.async_process(
+        ConversationInput(
+            text="test sentence",
+            context=Context(),
+            conversation_id=None,
+            device_id="my_device",
+            language=hass.config.language,
+            agent_id=None,
+        )
+    )
+    assert result.response.speech["plain"]["speech"] == "my_device"

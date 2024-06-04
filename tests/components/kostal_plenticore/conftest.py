@@ -1,4 +1,5 @@
 """Fixtures for Kostal Plenticore tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -7,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pykoplenti import MeData, VersionData
 import pytest
 
-from homeassistant.components.kostal_plenticore.helper import Plenticore
+from homeassistant.components.kostal_plenticore.coordinator import Plenticore
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 

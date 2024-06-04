@@ -1,4 +1,5 @@
 """Config flow for Traccar Server integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,6 +9,7 @@ from pytraccar import ApiClient, ServerModel, TraccarException
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -110,7 +112,7 @@ OPTIONS_FLOW = {
 }
 
 
-class TraccarServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TraccarServerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Traccar Server."""
 
     async def _get_server_info(self, user_input: dict[str, Any]) -> ServerModel:
@@ -129,7 +131,7 @@ class TraccarServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -144,7 +146,7 @@ class TraccarServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except TraccarException as exception:
                 LOGGER.error("Unable to connect to Traccar Server: %s", exception)
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -161,7 +163,7 @@ class TraccarServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(
         self, import_info: Mapping[str, Any]
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Import an entry."""
         configured_port = str(import_info[CONF_PORT])
         self._async_abort_entries_match(

@@ -1,4 +1,5 @@
 """Test the flow classes."""
+
 import asyncio
 import dataclasses
 import logging
@@ -24,10 +25,8 @@ def manager():
     handlers = Registry()
     entries = []
 
-    class FlowManager(data_entry_flow.BaseFlowManager):
+    class FlowManager(data_entry_flow.FlowManager):
         """Test flow manager."""
-
-        _flow_result = data_entry_flow.FlowResult
 
         async def async_create_flow(self, handler_key, *, context, data):
             """Test create flow."""
@@ -81,7 +80,7 @@ async def test_configure_reuses_handler_instance(manager) -> None:
     assert len(manager.mock_created_entries) == 0
 
 
-async def test_configure_two_steps(manager: data_entry_flow.BaseFlowManager) -> None:
+async def test_configure_two_steps(manager: data_entry_flow.FlowManager) -> None:
     """Test that we reuse instances."""
 
     @manager.mock_reg_handler("test")
@@ -190,7 +189,7 @@ async def test_abort_calls_async_remove_with_exception(
     with caplog.at_level(logging.ERROR):
         await manager.async_init("test")
 
-    assert "Error removing test flow: error" in caplog.text
+    assert "Error removing test flow" in caplog.text
 
     TestFlow.async_remove.assert_called_once()
 
@@ -258,7 +257,7 @@ async def test_finish_callback_change_result_type(hass: HomeAssistant) -> None:
                 step_id="init", data_schema=vol.Schema({"count": int})
             )
 
-    class FlowManager(data_entry_flow.BaseFlowManager):
+    class FlowManager(data_entry_flow.FlowManager):
         async def async_create_flow(self, handler_name, *, context, data):
             """Create a test flow."""
             return TestFlow()
@@ -270,8 +269,7 @@ async def test_finish_callback_change_result_type(hass: HomeAssistant) -> None:
                     return flow.async_show_form(
                         step_id="init", data_schema=vol.Schema({"count": int})
                     )
-                else:
-                    result["result"] = result["data"]["count"]
+                result["result"] = result["data"]["count"]
             return result
 
     manager = FlowManager(hass)
@@ -401,7 +399,6 @@ async def test_show_progress(hass: HomeAssistant, manager) -> None:
     hass.bus.async_listen(
         data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESSED,
         capture_events,
-        run_immediately=True,
     )
 
     result = await manager.async_init("test")
@@ -463,6 +460,7 @@ async def test_show_progress_error(hass: HomeAssistant, manager) -> None:
 
         async def async_step_init(self, user_input=None):
             async def long_running_task() -> None:
+                await asyncio.sleep(0)
                 raise TypeError
 
             if not self.progress_task:
@@ -481,7 +479,6 @@ async def test_show_progress_error(hass: HomeAssistant, manager) -> None:
     hass.bus.async_listen(
         data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESSED,
         capture_events,
-        run_immediately=True,
     )
 
     result = await manager.async_init("test")
@@ -522,7 +519,7 @@ async def test_show_progress_hidden_from_frontend(hass: HomeAssistant, manager) 
             nonlocal progress_task
 
             async def long_running_job() -> None:
-                return
+                await asyncio.sleep(0)
 
             if not progress_task:
                 progress_task = hass.async_create_task(long_running_job())
@@ -761,8 +758,9 @@ async def test_abort_flow_exception(manager) -> None:
 async def test_init_unknown_flow(manager) -> None:
     """Test that UnknownFlow is raised when async_create_flow returns None."""
 
-    with pytest.raises(data_entry_flow.UnknownFlow), patch.object(
-        manager, "async_create_flow", return_value=None
+    with (
+        pytest.raises(data_entry_flow.UnknownFlow),
+        patch.object(manager, "async_create_flow", return_value=None),
     ):
         await manager.async_init("test")
 
@@ -775,7 +773,7 @@ async def test_async_get_unknown_flow(manager) -> None:
 
 
 async def test_async_has_matching_flow(
-    hass: HomeAssistant, manager: data_entry_flow.BaseFlowManager
+    hass: HomeAssistant, manager: data_entry_flow.FlowManager
 ) -> None:
     """Test we can check for matching flows."""
     manager.hass = hass
@@ -909,7 +907,7 @@ async def test_abort_raises_unknown_flow_if_not_in_progress(manager) -> None:
 
 @pytest.mark.parametrize(
     "menu_options",
-    (["target1", "target2"], {"target1": "Target 1", "target2": "Target 2"}),
+    [["target1", "target2"], {"target1": "Target 1", "target2": "Target 2"}],
 )
 async def test_show_menu(hass: HomeAssistant, manager, menu_options) -> None:
     """Test show menu."""
@@ -951,7 +949,7 @@ async def test_show_menu(hass: HomeAssistant, manager, menu_options) -> None:
 
 
 async def test_find_flows_by_init_data_type(
-    manager: data_entry_flow.BaseFlowManager,
+    manager: data_entry_flow.FlowManager,
 ) -> None:
     """Test we can find flows by init data type."""
 

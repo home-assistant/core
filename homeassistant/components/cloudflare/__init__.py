@@ -1,4 +1,5 @@
 """Update the IP addresses of your Cloudflare DNS records."""
+
 from __future__ import annotations
 
 import asyncio

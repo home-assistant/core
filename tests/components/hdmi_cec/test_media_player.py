@@ -1,4 +1,5 @@
 """Tests for the HDMI-CEC media player platform."""
+
 from pycec.const import (
     DEVICE_TYPE_NAMES,
     KEY_BACKWARD,
@@ -69,7 +70,7 @@ from . import MockHDMIDevice, assert_key_press_release
     ],
     ids=["skip_assert_state", "run_assert_state"],
 )
-def assert_state_fixture(hass, request):
+def assert_state_fixture(request: pytest.FixtureRequest):
     """Allow for skipping the assert state changes.
 
     This is broken in this entity, but we still want to test that

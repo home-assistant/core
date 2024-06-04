@@ -5,8 +5,8 @@ import time
 
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
-from homeassistant import config_entries
 from homeassistant.components.private_ble_device.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -38,7 +38,7 @@ async def async_mock_config_entry(hass: HomeAssistant, irk: str = DUMMY_IRK) -> 
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     await hass.async_block_till_done()
 
 
@@ -63,6 +63,7 @@ async def async_inject_broadcast(
             advertisement=generate_advertisement_data(local_name="Not it"),
             time=broadcast_time or time.monotonic(),
             connectable=False,
+            tx_power=-127,
         ),
     )
     await hass.async_block_till_done()

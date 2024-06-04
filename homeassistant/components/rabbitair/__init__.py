@@ -1,4 +1,5 @@
 """The Rabbit Air integration."""
+
 from __future__ import annotations
 
 from rabbitair import Client, UdpClient

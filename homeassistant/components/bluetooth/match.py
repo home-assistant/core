@@ -1,11 +1,12 @@
 """The bluetooth integration matchers."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from fnmatch import translate
 from functools import lru_cache
 import re
-from typing import TYPE_CHECKING, Final, Generic, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Final, TypedDict
 
 from lru import LRU
 
@@ -147,10 +148,9 @@ class IntegrationMatcher:
         return matched_domains
 
 
-_T = TypeVar("_T", BluetoothMatcher, BluetoothCallbackMatcherWithCallback)
-
-
-class BluetoothMatcherIndexBase(Generic[_T]):
+class BluetoothMatcherIndexBase[
+    _T: (BluetoothMatcher, BluetoothCallbackMatcherWithCallback)
+]:
     """Bluetooth matcher base for the bluetooth integration.
 
     The indexer puts each matcher in the bucket that it is most
@@ -248,39 +248,47 @@ class BluetoothMatcherIndexBase(Generic[_T]):
 
     def match(self, service_info: BluetoothServiceInfoBleak) -> list[_T]:
         """Check for a match."""
-        matches = []
+        matches: list[_T] = []
         if (name := service_info.name) and (
             local_name_matchers := self.local_name.get(
                 name[:LOCAL_NAME_MIN_MATCH_LENGTH]
             )
         ):
-            for matcher in local_name_matchers:
-                if ble_device_matches(matcher, service_info):
-                    matches.append(matcher)
+            matches.extend(
+                matcher
+                for matcher in local_name_matchers
+                if ble_device_matches(matcher, service_info)
+            )
 
         if self.service_data_uuid_set and service_info.service_data:
-            for service_data_uuid in self.service_data_uuid_set.intersection(
-                service_info.service_data
-            ):
-                for matcher in self.service_data_uuid[service_data_uuid]:
-                    if ble_device_matches(matcher, service_info):
-                        matches.append(matcher)
+            matches.extend(
+                matcher
+                for service_data_uuid in self.service_data_uuid_set.intersection(
+                    service_info.service_data
+                )
+                for matcher in self.service_data_uuid[service_data_uuid]
+                if ble_device_matches(matcher, service_info)
+            )
 
         if self.manufacturer_id_set and service_info.manufacturer_data:
-            for manufacturer_id in self.manufacturer_id_set.intersection(
-                service_info.manufacturer_data
-            ):
-                for matcher in self.manufacturer_id[manufacturer_id]:
-                    if ble_device_matches(matcher, service_info):
-                        matches.append(matcher)
+            matches.extend(
+                matcher
+                for manufacturer_id in self.manufacturer_id_set.intersection(
+                    service_info.manufacturer_data
+                )
+                for matcher in self.manufacturer_id[manufacturer_id]
+                if ble_device_matches(matcher, service_info)
+            )
 
         if self.service_uuid_set and service_info.service_uuids:
-            for service_uuid in self.service_uuid_set.intersection(
-                service_info.service_uuids
-            ):
-                for matcher in self.service_uuid[service_uuid]:
-                    if ble_device_matches(matcher, service_info):
-                        matches.append(matcher)
+            matches.extend(
+                matcher
+                for service_uuid in self.service_uuid_set.intersection(
+                    service_info.service_uuids
+                )
+                for matcher in self.service_uuid[service_uuid]
+                if ble_device_matches(matcher, service_info)
+            )
 
         return matches
 

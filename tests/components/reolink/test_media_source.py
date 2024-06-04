@@ -1,4 +1,5 @@
 """Tests for the Reolink media_source platform."""
+
 from datetime import datetime, timedelta
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -62,6 +63,17 @@ async def setup_component(hass: HomeAssistant) -> None:
     """Set up component."""
     assert await async_setup_component(hass, MEDIA_SOURCE_DOMAIN, {})
     assert await async_setup_component(hass, MEDIA_STREAM_DOMAIN, {})
+
+
+async def test_platform_loads_before_config_entry(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test that the platform can be loaded before the config entry."""
+    # Fake that the config entry is not loaded before the media_source platform
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert mock_setup_entry.call_count == 0
 
 
 async def test_resolve(

@@ -1,4 +1,5 @@
 """Test KNX number."""
+
 from homeassistant.components.knx.const import CONF_RESPOND_TO_READ, KNX_ADDRESS
 from homeassistant.components.knx.schema import TextSchema
 from homeassistant.const import CONF_NAME

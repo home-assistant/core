@@ -1,4 +1,5 @@
 """Test the Advantage Air Diagnostics."""
+
 from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion

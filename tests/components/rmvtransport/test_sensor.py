@@ -1,4 +1,5 @@
 """The tests for the rmvtransport platform."""
+
 import datetime
 from unittest.mock import patch
 

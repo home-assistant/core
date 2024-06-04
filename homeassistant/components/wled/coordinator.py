@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for WLED."""
+
 from __future__ import annotations
 
 from wled import WLED, Device as WLEDDevice, WLEDConnectionClosedError, WLEDError

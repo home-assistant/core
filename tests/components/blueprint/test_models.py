@@ -1,4 +1,5 @@
 """Test blueprint models."""
+
 import logging
 from unittest.mock import AsyncMock, patch
 
@@ -25,24 +26,38 @@ def blueprint_1():
     )
 
 
-@pytest.fixture
-def blueprint_2():
+@pytest.fixture(params=[False, True])
+def blueprint_2(request: pytest.FixtureRequest) -> models.Blueprint:
     """Blueprint fixture with default inputs."""
-    return models.Blueprint(
-        {
-            "blueprint": {
-                "name": "Hello",
-                "domain": "automation",
-                "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+    blueprint = {
+        "blueprint": {
+            "name": "Hello",
+            "domain": "automation",
+            "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+            "input": {
+                "test-input": {"name": "Name", "description": "Description"},
+                "test-input-default": {"default": "test"},
+            },
+        },
+        "example": Input("test-input"),
+        "example-default": Input("test-input-default"),
+    }
+    if request.param:
+        # Replace the inputs with inputs in sections. Test should otherwise behave the same.
+        blueprint["blueprint"]["input"] = {
+            "section-1": {
+                "name": "Section 1",
                 "input": {
                     "test-input": {"name": "Name", "description": "Description"},
-                    "test-input-default": {"default": "test"},
                 },
             },
-            "example": Input("test-input"),
-            "example-default": Input("test-input-default"),
+            "section-2": {
+                "input": {
+                    "test-input-default": {"default": "test"},
+                }
+            },
         }
-    )
+    return models.Blueprint(blueprint)
 
 
 @pytest.fixture
@@ -206,14 +221,18 @@ async def test_domain_blueprints_get_blueprint_errors(
     """Test domain blueprints."""
     assert hass.data["blueprint"]["automation"] is domain_bps
 
-    with pytest.raises(errors.FailedToLoad), patch(
-        "homeassistant.util.yaml.load_yaml", side_effect=FileNotFoundError
+    with (
+        pytest.raises(errors.FailedToLoad),
+        patch("homeassistant.util.yaml.load_yaml", side_effect=FileNotFoundError),
     ):
         await domain_bps.async_get_blueprint("non-existing-path")
 
-    with patch(
-        "homeassistant.util.yaml.load_yaml", return_value={"blueprint": "invalid"}
-    ), pytest.raises(errors.FailedToLoad):
+    with (
+        patch(
+            "homeassistant.util.yaml.load_yaml", return_value={"blueprint": "invalid"}
+        ),
+        pytest.raises(errors.FailedToLoad),
+    ):
         await domain_bps.async_get_blueprint("non-existing-path")
 
 
@@ -239,8 +258,9 @@ async def test_domain_blueprints_inputs_from_config(domain_bps, blueprint_1) -> 
     with pytest.raises(errors.InvalidBlueprintInputs):
         await domain_bps.async_inputs_from_config({"not-referencing": "use_blueprint"})
 
-    with pytest.raises(errors.MissingInput), patch.object(
-        domain_bps, "async_get_blueprint", return_value=blueprint_1
+    with (
+        pytest.raises(errors.MissingInput),
+        patch.object(domain_bps, "async_get_blueprint", return_value=blueprint_1),
     ):
         await domain_bps.async_inputs_from_config(
             {"use_blueprint": {"path": "bla.yaml", "input": {}}}

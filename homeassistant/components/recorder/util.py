@@ -1,16 +1,16 @@
 """SQLAlchemy util functions."""
+
 from __future__ import annotations
 
-from collections.abc import Callable, Collection, Generator, Iterable, Sequence
+from collections.abc import Callable, Generator, Sequence
+import contextlib
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
-from functools import partial
-from itertools import islice
 import logging
 import os
 import time
-from typing import TYPE_CHECKING, Any, Concatenate, NoReturn, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, NoReturn
 
 from awesomeversion import (
     AwesomeVersion,
@@ -21,7 +21,7 @@ import ciso8601
 from sqlalchemy import inspect, text
 from sqlalchemy.engine import Result, Row
 from sqlalchemy.engine.interfaces import DBAPIConnection
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
@@ -58,9 +58,6 @@ if TYPE_CHECKING:
     from sqlite3.dbapi2 import Cursor as SQLiteCursor
 
     from . import Recorder
-
-_RecorderT = TypeVar("_RecorderT", bound="Recorder")
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,11 +134,11 @@ def session_scope(
     need_rollback = False
     try:
         yield session
-        if session.get_transaction() and not read_only:
+        if not read_only and session.get_transaction():
             need_rollback = True
             session.commit()
-    except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.exception("Error executing query: %s", err)
+    except Exception as err:
+        _LOGGER.exception("Error executing query")
         if need_rollback:
             session.rollback()
         if not exception_filter or not exception_filter(err):
@@ -158,7 +155,7 @@ def execute(
     This method also retries a few times in the case of stale connections.
     """
     debug = _LOGGER.isEnabledFor(logging.DEBUG)
-    for tryno in range(0, RETRIES):
+    for tryno in range(RETRIES):
         try:
             if debug:
                 timer_start = time.perf_counter()
@@ -190,13 +187,14 @@ def execute(
                         elapsed,
                     )
 
-            return result
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
 
             if tryno == RETRIES - 1:
                 raise
             time.sleep(QUERY_RETRY_WAIT)
+        else:
+            return result
 
     # Unreachable
     raise RuntimeError  # pragma: no cover
@@ -625,25 +623,27 @@ def _is_retryable_error(instance: Recorder, err: OperationalError) -> bool:
     )
 
 
-_FuncType = Callable[Concatenate[_RecorderT, _P], bool]
+type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], _R]
 
 
-def retryable_database_job(
+def retryable_database_job[_RecorderT: Recorder, **_P](
     description: str,
-) -> Callable[[_FuncType[_RecorderT, _P]], _FuncType[_RecorderT, _P]]:
+) -> Callable[[_FuncType[_RecorderT, _P, bool]], _FuncType[_RecorderT, _P, bool]]:
     """Try to execute a database job.
 
     The job should return True if it finished, and False if it needs to be rescheduled.
     """
 
-    def decorator(job: _FuncType[_RecorderT, _P]) -> _FuncType[_RecorderT, _P]:
+    def decorator(
+        job: _FuncType[_RecorderT, _P, bool],
+    ) -> _FuncType[_RecorderT, _P, bool]:
         @functools.wraps(job)
         def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> bool:
             try:
                 return job(instance, *args, **kwargs)
             except OperationalError as err:
                 if _is_retryable_error(instance, err):
-                    assert isinstance(err.orig, BaseException)
+                    assert isinstance(err.orig, BaseException)  # noqa: PT017
                     _LOGGER.info(
                         "%s; %s not completed, retrying", err.orig.args[1], description
                     )
@@ -661,12 +661,9 @@ def retryable_database_job(
     return decorator
 
 
-_WrappedFuncType = Callable[Concatenate[_RecorderT, _P], None]
-
-
-def database_job_retry_wrapper(
+def database_job_retry_wrapper[_RecorderT: Recorder, **_P](
     description: str, attempts: int = 5
-) -> Callable[[_WrappedFuncType[_RecorderT, _P]], _WrappedFuncType[_RecorderT, _P]]:
+) -> Callable[[_FuncType[_RecorderT, _P, None]], _FuncType[_RecorderT, _P, None]]:
     """Try to execute a database job multiple times.
 
     This wrapper handles InnoDB deadlocks and lock timeouts.
@@ -676,25 +673,26 @@ def database_job_retry_wrapper(
     """
 
     def decorator(
-        job: _WrappedFuncType[_RecorderT, _P],
-    ) -> _WrappedFuncType[_RecorderT, _P]:
+        job: _FuncType[_RecorderT, _P, None],
+    ) -> _FuncType[_RecorderT, _P, None]:
         @functools.wraps(job)
         def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> None:
             for attempt in range(attempts):
                 try:
                     job(instance, *args, **kwargs)
-                    return
                 except OperationalError as err:
                     if attempt == attempts - 1 or not _is_retryable_error(
                         instance, err
                     ):
                         raise
-                    assert isinstance(err.orig, BaseException)
+                    assert isinstance(err.orig, BaseException)  # noqa: PT017
                     _LOGGER.info(
                         "%s; %s failed, retrying", err.orig.args[1], description
                     )
                     time.sleep(instance.db_retry_wait)
                     # Failed with retryable error
+                else:
+                    return
 
         return wrapper
 
@@ -741,8 +739,7 @@ def async_migration_in_progress(hass: HomeAssistant) -> bool:
     """
     if DATA_INSTANCE not in hass.data:
         return False
-    instance = get_instance(hass)
-    return instance.migration_in_progress
+    return hass.data[DATA_INSTANCE].migration_in_progress
 
 
 def async_migration_is_live(hass: HomeAssistant) -> bool:
@@ -753,8 +750,7 @@ def async_migration_is_live(hass: HomeAssistant) -> bool:
     """
     if DATA_INSTANCE not in hass.data:
         return False
-    instance: Recorder = hass.data[DATA_INSTANCE]
-    return instance.migration_is_live
+    return hass.data[DATA_INSTANCE].migration_is_live
 
 
 def second_sunday(year: int, month: int) -> date:
@@ -773,10 +769,10 @@ def is_second_sunday(date_time: datetime) -> bool:
     return bool(second_sunday(date_time.year, date_time.month).day == date_time.day)
 
 
+@functools.lru_cache(maxsize=1)
 def get_instance(hass: HomeAssistant) -> Recorder:
     """Get the recorder instance."""
-    instance: Recorder = hass.data[DATA_INSTANCE]
-    return instance
+    return hass.data[DATA_INSTANCE]
 
 
 PERIOD_SCHEMA = vol.Schema(
@@ -859,36 +855,6 @@ def resolve_period(
     return (start_time, end_time)
 
 
-def take(take_num: int, iterable: Iterable) -> list[Any]:
-    """Return first n items of the iterable as a list.
-
-    From itertools recipes
-    """
-    return list(islice(iterable, take_num))
-
-
-def chunked(iterable: Iterable, chunked_num: int) -> Iterable[Any]:
-    """Break *iterable* into lists of length *n*.
-
-    From more-itertools
-    """
-    return iter(partial(take, chunked_num, iter(iterable)), [])
-
-
-def chunked_or_all(iterable: Collection[Any], chunked_num: int) -> Iterable[Any]:
-    """Break *collection* into iterables of length *n*.
-
-    Returns the collection if its length is less than *n*.
-
-    Unlike chunked, this function requires a collection so it can
-    determine the length of the collection and return the collection
-    if it is less than *n*.
-    """
-    if len(iterable) <= chunked_num:
-        return (iterable,)
-    return chunked(iterable, chunked_num)
-
-
 def get_index_by_name(session: Session, table_name: str, index_name: str) -> str | None:
     """Get an index by name."""
     connection = session.connection()
@@ -906,3 +872,54 @@ def get_index_by_name(session: Session, table_name: str, index_name: str) -> str
         ),
         None,
     )
+
+
+def filter_unique_constraint_integrity_error(
+    instance: Recorder, row_type: str
+) -> Callable[[Exception], bool]:
+    """Create a filter for unique constraint integrity errors."""
+
+    def _filter_unique_constraint_integrity_error(err: Exception) -> bool:
+        """Handle unique constraint integrity errors."""
+        if not isinstance(err, StatementError):
+            return False
+
+        assert instance.engine is not None
+        dialect_name = instance.engine.dialect.name
+
+        ignore = False
+        if (
+            dialect_name == SupportedDialect.SQLITE
+            and "UNIQUE constraint failed" in str(err)
+        ):
+            ignore = True
+        if (
+            dialect_name == SupportedDialect.POSTGRESQL
+            and err.orig
+            and hasattr(err.orig, "pgcode")
+            and err.orig.pgcode == "23505"
+        ):
+            ignore = True
+        if (
+            dialect_name == SupportedDialect.MYSQL
+            and err.orig
+            and hasattr(err.orig, "args")
+        ):
+            with contextlib.suppress(TypeError):
+                if err.orig.args[0] == 1062:
+                    ignore = True
+
+        if ignore:
+            _LOGGER.warning(
+                (
+                    "Blocked attempt to insert duplicated %s rows, please report"
+                    " at %s"
+                ),
+                row_type,
+                "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+recorder%22",
+                exc_info=err,
+            )
+
+        return ignore
+
+    return _filter_unique_constraint_integrity_error

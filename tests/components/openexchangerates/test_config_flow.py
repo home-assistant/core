@@ -1,4 +1,5 @@
 """Test the Open Exchange Rates config flow."""
+
 import asyncio
 from collections.abc import Generator
 from typing import Any
@@ -37,7 +38,7 @@ async def test_user_create_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
@@ -46,7 +47,7 @@ async def test_user_create_entry(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "USD"
     assert result["data"] == {
         "api_key": "test-api-key",
@@ -70,7 +71,7 @@ async def test_form_invalid_auth(
         {"api_key": "bad-api-key"},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -89,7 +90,7 @@ async def test_form_cannot_connect(
         {"api_key": "test-api-key"},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -108,7 +109,7 @@ async def test_form_unknown_error(
         {"api_key": "test-api-key"},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
 
 
@@ -122,7 +123,7 @@ async def test_already_configured_service(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
@@ -130,7 +131,7 @@ async def test_already_configured_service(
         {"api_key": "test-api-key"},
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -140,7 +141,7 @@ async def test_no_currencies(hass: HomeAssistant, currencies: AsyncMock) -> None
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -159,7 +160,7 @@ async def test_currencies_timeout(hass: HomeAssistant, currencies: AsyncMock) ->
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "timeout_connect"
 
 
@@ -187,7 +188,7 @@ async def test_latest_rates_timeout(
             {"api_key": "test-api-key"},
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "timeout_connect"}
 
 
@@ -209,7 +210,7 @@ async def test_reauth(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context=flow_context, data=mock_config_entry.data
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     mock_latest_rates_config_flow.side_effect = OpenExchangeRatesAuthError()
@@ -221,7 +222,7 @@ async def test_reauth(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
     mock_latest_rates_config_flow.side_effect = None
@@ -234,6 +235,6 @@ async def test_reauth(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1

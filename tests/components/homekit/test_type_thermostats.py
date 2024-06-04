@@ -1,4 +1,5 @@
 """Test different accessory types: Thermostats."""
+
 from unittest.mock import patch
 
 from pyhap.characteristic import Characteristic
@@ -1958,7 +1959,7 @@ async def test_thermostat_with_no_off_after_recheck(
 async def test_thermostat_with_temp_clamps(
     hass: HomeAssistant, hk_driver, events
 ) -> None:
-    """Test that tempatures are clamped to valid values to prevent homekit crash."""
+    """Test that temperatures are clamped to valid values to prevent homekit crash."""
     entity_id = "climate.test"
     base_attrs = {
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE

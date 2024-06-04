@@ -18,26 +18,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .models import (
-    MelnorDataUpdateCoordinator,
-    MelnorZoneEntity,
-    get_entities_for_valves,
-)
+from .coordinator import MelnorDataUpdateCoordinator
+from .models import MelnorZoneEntity, get_entities_for_valves
 
 
-@dataclass(frozen=True)
-class MelnorSwitchEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class MelnorSwitchEntityDescription(SwitchEntityDescription):
+    """Describes Melnor switch entity."""
 
     on_off_fn: Callable[[Valve, bool], Coroutine[Any, Any, None]]
     state_fn: Callable[[Valve], Any]
-
-
-@dataclass(frozen=True)
-class MelnorSwitchEntityDescription(
-    SwitchEntityDescription, MelnorSwitchEntityDescriptionMixin
-):
-    """Describes Melnor switch entity."""
 
 
 ZONE_ENTITY_DESCRIPTIONS = [

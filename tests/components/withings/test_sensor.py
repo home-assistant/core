@@ -1,4 +1,5 @@
 """Tests for the Withings component."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -20,7 +21,7 @@ from . import (
     setup_integration,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.freeze_time("2023-10-21")
@@ -35,15 +36,10 @@ async def test_all_entities(
     """Test all entities."""
     with patch("homeassistant.components.withings.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, polling_config_entry)
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, polling_config_entry.entry_id
-    )
 
-    assert entity_entries
-    for entity_entry in entity_entries:
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-        assert (state := hass.states.get(entity_entry.entity_id))
-        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
+    await snapshot_platform(
+        hass, entity_registry, snapshot, polling_config_entry.entry_id
+    )
 
 
 async def test_update_failed(

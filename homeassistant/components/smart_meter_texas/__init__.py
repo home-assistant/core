@@ -1,4 +1,5 @@
 """The Smart Meter Texas integration."""
+
 import logging
 import ssl
 

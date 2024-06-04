@@ -1,4 +1,5 @@
 """Adds config flow for MicroBot."""
+
 from __future__ import annotations
 
 import logging

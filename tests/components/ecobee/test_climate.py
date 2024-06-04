@@ -1,4 +1,5 @@
 """The test for the Ecobee thermostat module."""
+
 import copy
 from http import HTTPStatus
 from unittest import mock
@@ -6,10 +7,14 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from homeassistant import const
 from homeassistant.components import climate
 from homeassistant.components.climate import ClimateEntityFeature
-from homeassistant.components.ecobee.climate import ECOBEE_AUX_HEAT_ONLY, Thermostat
-import homeassistant.const as const
+from homeassistant.components.ecobee.climate import (
+    ECOBEE_AUX_HEAT_ONLY,
+    PRESET_AWAY_INDEFINITELY,
+    Thermostat,
+)
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_OFF
 from homeassistant.core import HomeAssistant
 
@@ -30,6 +35,7 @@ def ecobee_fixture():
             "climates": [
                 {"name": "Climate1", "climateRef": "c1"},
                 {"name": "Climate2", "climateRef": "c2"},
+                {"name": "Away", "climateRef": "away"},
             ],
             "currentClimateRef": "c1",
         },
@@ -55,9 +61,11 @@ def ecobee_fixture():
                 "name": "Event1",
                 "running": True,
                 "type": "hold",
-                "holdClimateRef": "away",
-                "endDate": "2017-01-01 10:00:00",
-                "startDate": "2017-02-02 11:00:00",
+                "holdClimateRef": "c1",
+                "startDate": "2017-02-02",
+                "startTime": "11:00:00",
+                "endDate": "2017-01-01",
+                "endTime": "10:00:00",
             }
         ],
     }
@@ -427,3 +435,30 @@ async def test_turn_aux_heat_off(hass: HomeAssistant, mock_ecobee: MagicMock) ->
     )
     assert mock_ecobee.set_hvac_mode.call_count == 1
     assert mock_ecobee.set_hvac_mode.call_args == mock.call(0, "auto")
+
+
+async def test_preset_indefinite_away(ecobee_fixture, thermostat) -> None:
+    """Test indefinite away showing correctly, and not as temporary away."""
+    ecobee_fixture["program"]["currentClimateRef"] = "away"
+    ecobee_fixture["events"][0]["holdClimateRef"] = "away"
+    assert thermostat.preset_mode == "away"
+
+    ecobee_fixture["events"][0]["endDate"] = "2999-01-01"
+    assert thermostat.preset_mode == PRESET_AWAY_INDEFINITELY
+
+
+async def test_set_preset_mode(ecobee_fixture, thermostat, data) -> None:
+    """Test set preset mode."""
+    # Set a preset provided by ecobee.
+    data.reset_mock()
+    thermostat.set_preset_mode("Climate2")
+    data.ecobee.set_climate_hold.assert_has_calls(
+        [mock.call(1, "c2", thermostat.hold_preference(), thermostat.hold_hours())]
+    )
+
+    # Set the indefinite away preset provided by this integration.
+    data.reset_mock()
+    thermostat.set_preset_mode(PRESET_AWAY_INDEFINITELY)
+    data.ecobee.set_climate_hold.assert_has_calls(
+        [mock.call(1, "away", "indefinite", thermostat.hold_hours())]
+    )

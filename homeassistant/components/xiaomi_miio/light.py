@@ -1,4 +1,5 @@
 """Support for Xiaomi Philips Lights."""
+
 from __future__ import annotations
 
 import asyncio
@@ -291,16 +292,15 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
             result = await self.hass.async_add_executor_job(
                 partial(func, *args, **kwargs)
             )
-
-            _LOGGER.debug("Response received from light: %s", result)
-
-            return result == SUCCESS
         except DeviceException as exc:
             if self._available:
                 _LOGGER.error(mask_error, exc)
                 self._available = False
 
             return False
+
+        _LOGGER.debug("Response received from light: %s", result)
+        return result == SUCCESS
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""

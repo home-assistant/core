@@ -1,4 +1,5 @@
 """Tests for the Abode alarm control panel device."""
+
 from unittest.mock import PropertyMock, patch
 
 from jaraco.abode.helpers import constants as CONST

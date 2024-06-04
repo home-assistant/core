@@ -1,4 +1,5 @@
 """The tests for Shelly logbook."""
+
 from unittest.mock import Mock
 
 from homeassistant.components.shelly.const import (
@@ -31,6 +32,7 @@ async def test_humanify_shelly_click_event_block_device(
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     event1, event2 = mock_humanify(
         hass,
@@ -81,6 +83,7 @@ async def test_humanify_shelly_click_event_rpc_device(
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     event1, event2 = mock_humanify(
         hass,

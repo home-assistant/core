@@ -1,4 +1,5 @@
 """Test Lovelace resources."""
+
 import copy
 from typing import Any
 from unittest.mock import patch
@@ -55,7 +56,9 @@ async def test_yaml_resources_backwards(
 
 
 async def test_storage_resources(
-    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test defining resources in storage config."""
     resource_config = [{**item, "id": uuid.uuid4().hex} for item in RESOURCE_EXAMPLES]
@@ -76,7 +79,9 @@ async def test_storage_resources(
 
 
 async def test_storage_resources_import(
-    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test importing resources from storage config."""
     assert await async_setup_component(hass, "lovelace", {})
@@ -164,7 +169,9 @@ async def test_storage_resources_import(
 
 
 async def test_storage_resources_import_invalid(
-    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test importing resources from storage config."""
     assert await async_setup_component(hass, "lovelace", {})
@@ -188,7 +195,9 @@ async def test_storage_resources_import_invalid(
 
 
 async def test_storage_resources_safe_mode(
-    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test defining resources in storage config."""
 

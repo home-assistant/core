@@ -1,4 +1,5 @@
 """Support for Z-Wave lights."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -67,7 +68,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Light from Config Entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
 
     @callback
     def async_add_light(info: ZwaveDiscoveryInfo) -> None:

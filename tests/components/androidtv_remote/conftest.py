@@ -1,4 +1,5 @@
 """Fixtures for the Android TV Remote integration tests."""
+
 from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 

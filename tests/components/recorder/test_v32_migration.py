@@ -1,4 +1,5 @@
 """The tests for recorder platform migrating data from v30."""
+
 from datetime import timedelta
 import importlib
 from pathlib import Path
@@ -77,13 +78,13 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmp_path: Path) -
             "new_state": mock_state,
         },
         EventOrigin.local,
-        time_fired=now,
+        time_fired_timestamp=now.timestamp(),
     )
     custom_event = Event(
         "custom_event",
         {"entity_id": "sensor.custom"},
         EventOrigin.local,
-        time_fired=now,
+        time_fired_timestamp=now.timestamp(),
     )
     number_of_migrations = 5
 
@@ -91,26 +92,33 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmp_path: Path) -
         with session_scope(hass=hass) as session:
             return inspect(session.connection()).get_indexes("states")
 
-    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch.object(core, "StatesMeta", old_db_schema.StatesMeta), patch.object(
-        core, "EventTypes", old_db_schema.EventTypes
-    ), patch.object(core, "EventData", old_db_schema.EventData), patch.object(
-        core, "States", old_db_schema.States
-    ), patch.object(core, "Events", old_db_schema.Events), patch(
-        CREATE_ENGINE_TARGET, new=_create_engine_test
-    ), patch(
-        "homeassistant.components.recorder.Recorder._migrate_events_context_ids",
-    ), patch(
-        "homeassistant.components.recorder.Recorder._migrate_states_context_ids",
-    ), patch(
-        "homeassistant.components.recorder.Recorder._migrate_event_type_ids",
-    ), patch(
-        "homeassistant.components.recorder.Recorder._migrate_entity_ids",
-    ), patch(
-        "homeassistant.components.recorder.Recorder._post_migrate_entity_ids"
-    ), patch(
-        "homeassistant.components.recorder.Recorder._cleanup_legacy_states_event_ids"
+    with (
+        patch.object(recorder, "db_schema", old_db_schema),
+        patch.object(
+            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+        ),
+        patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
+        patch.object(core, "EventTypes", old_db_schema.EventTypes),
+        patch.object(core, "EventData", old_db_schema.EventData),
+        patch.object(core, "States", old_db_schema.States),
+        patch.object(core, "Events", old_db_schema.Events),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
+        patch(
+            "homeassistant.components.recorder.Recorder._migrate_events_context_ids",
+        ),
+        patch(
+            "homeassistant.components.recorder.Recorder._migrate_states_context_ids",
+        ),
+        patch(
+            "homeassistant.components.recorder.Recorder._migrate_event_type_ids",
+        ),
+        patch(
+            "homeassistant.components.recorder.Recorder._migrate_entity_ids",
+        ),
+        patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
+        patch(
+            "homeassistant.components.recorder.Recorder._cleanup_legacy_states_event_ids"
+        ),
     ):
         async with async_test_home_assistant() as hass:
             recorder_helper.async_initialize_recorder(hass)
@@ -241,13 +249,13 @@ async def test_migrate_can_resume_entity_id_post_migration(
             "new_state": mock_state,
         },
         EventOrigin.local,
-        time_fired=now,
+        time_fired_timestamp=now.timestamp(),
     )
     custom_event = Event(
         "custom_event",
         {"entity_id": "sensor.custom"},
         EventOrigin.local,
-        time_fired=now,
+        time_fired_timestamp=now.timestamp(),
     )
     number_of_migrations = 5
 
@@ -255,26 +263,33 @@ async def test_migrate_can_resume_entity_id_post_migration(
         with session_scope(hass=hass) as session:
             return inspect(session.connection()).get_indexes("states")
 
-    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch.object(core, "StatesMeta", old_db_schema.StatesMeta), patch.object(
-        core, "EventTypes", old_db_schema.EventTypes
-    ), patch.object(core, "EventData", old_db_schema.EventData), patch.object(
-        core, "States", old_db_schema.States
-    ), patch.object(core, "Events", old_db_schema.Events), patch(
-        CREATE_ENGINE_TARGET, new=_create_engine_test
-    ), patch(
-        "homeassistant.components.recorder.Recorder._migrate_events_context_ids",
-    ), patch(
-        "homeassistant.components.recorder.Recorder._migrate_states_context_ids",
-    ), patch(
-        "homeassistant.components.recorder.Recorder._migrate_event_type_ids",
-    ), patch(
-        "homeassistant.components.recorder.Recorder._migrate_entity_ids",
-    ), patch(
-        "homeassistant.components.recorder.Recorder._post_migrate_entity_ids"
-    ), patch(
-        "homeassistant.components.recorder.Recorder._cleanup_legacy_states_event_ids"
+    with (
+        patch.object(recorder, "db_schema", old_db_schema),
+        patch.object(
+            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+        ),
+        patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
+        patch.object(core, "EventTypes", old_db_schema.EventTypes),
+        patch.object(core, "EventData", old_db_schema.EventData),
+        patch.object(core, "States", old_db_schema.States),
+        patch.object(core, "Events", old_db_schema.Events),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
+        patch(
+            "homeassistant.components.recorder.Recorder._migrate_events_context_ids",
+        ),
+        patch(
+            "homeassistant.components.recorder.Recorder._migrate_states_context_ids",
+        ),
+        patch(
+            "homeassistant.components.recorder.Recorder._migrate_event_type_ids",
+        ),
+        patch(
+            "homeassistant.components.recorder.Recorder._migrate_entity_ids",
+        ),
+        patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
+        patch(
+            "homeassistant.components.recorder.Recorder._cleanup_legacy_states_event_ids"
+        ),
     ):
         async with async_test_home_assistant() as hass:
             recorder_helper.async_initialize_recorder(hass)

@@ -1,4 +1,5 @@
 """Config flow to configure the Sun integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -17,9 +18,6 @@ class SunConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if user_input is not None:
             return self.async_create_entry(title=DEFAULT_NAME, data={})
 
