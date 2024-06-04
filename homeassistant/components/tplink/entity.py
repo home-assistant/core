@@ -139,21 +139,20 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
     def _category_for_feature(self, feature: Feature) -> EntityCategory | None:
         """Return entity category for a feature."""
-        match feature.category:
+        category_map = {
             # Main controls have no category
-            case Feature.Category.Primary:
-                return None
-            case Feature.Category.Config:
-                return EntityCategory.CONFIG
-            case Feature.Category.Info:
-                return EntityCategory.DIAGNOSTIC
-            case Feature.Category.Debug:
-                return EntityCategory.DIAGNOSTIC
-            case _:
-                _LOGGER.error(
-                    "Unhandled category %s, fallback to DIAGNOSTIC", feature.category
-                )
-                return EntityCategory.DIAGNOSTIC
+            Feature.Category.Primary: None,
+            Feature.Category.Config: EntityCategory.CONFIG,
+            Feature.Category.Info: EntityCategory.DIAGNOSTIC,
+            Feature.Category.Debug: EntityCategory.DIAGNOSTIC,
+        }
+        if (entity_category := category_map.get(feature.category)) is None:
+            _LOGGER.error(
+                "Unhandled category %s, fallback to DIAGNOSTIC", feature.category
+            )
+            entity_category = EntityCategory.DIAGNOSTIC
+
+        return entity_category
 
     @abstractmethod
     @callback
@@ -276,7 +275,5 @@ def _description_for_feature[_D: EntityDescription](
         key=feature.id,
         translation_key=feature.id,
         name=feature.name,
-        # Setting an icon overrides the translation, so we doing it here.
-        # icon=feature.icon,
         **kwargs,
     )
