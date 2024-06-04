@@ -2,9 +2,9 @@
 
 alarm_disarm:
   target:
-    entity:
+    entity: &alarm_entity
       domain: alarm_control_panel
-  fields:
+  fields: &common_fields
     code:
       example: "1234"
       selector:
@@ -13,71 +13,46 @@ alarm_disarm:
 alarm_arm_custom_bypass:
   target:
     entity:
-      domain: alarm_control_panel
+      <<: *alarm_entity
       supported_features:
         - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
-  fields:
-    code:
-      example: "1234"
-      selector:
-        text:
+  fields: *common_fields
 
 alarm_arm_home:
   target:
     entity:
-      domain: alarm_control_panel
+      <<: *alarm_entity
       supported_features:
         - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_HOME
-  fields:
-    code:
-      example: "1234"
-      selector:
-        text:
+  fields: *common_fields
 
 alarm_arm_away:
   target:
     entity:
-      domain: alarm_control_panel
+      <<: *alarm_entity
       supported_features:
         - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_AWAY
-  fields:
-    code:
-      example: "1234"
-      selector:
-        text:
-
+  fields: *common_fields
 alarm_arm_night:
   target:
     entity:
-      domain: alarm_control_panel
+      <<: *alarm_entity
       supported_features:
         - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_NIGHT
-  fields:
-    code:
-      example: "1234"
-      selector:
-        text:
+  fields: *common_fields
 
 alarm_arm_vacation:
   target:
     entity:
-      domain: alarm_control_panel
+      <<: *alarm_entity
       supported_features:
         - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_VACATION
-  fields:
-    code:
-      example: "1234"
-      selector:
-        text:
+  fields: *common_fields
 
 alarm_trigger:
   target:
     entity:
-      domain: alarm_control_panel
+      <<: *alarm_entity
       supported_features:
         - alarm_control_panel.AlarmControlPanelEntityFeature.TRIGGER
-  fields:
-    code:
-      example: "1234"
-      selector:
-        text:
+  fields: *common_fields
