@@ -158,7 +158,7 @@ async def async_port_forward_control_fn(
     """Control port forward state."""
     port_forward = hub.api.port_forwarding[obj_id]
     await hub.api.request(PortForwardEnableRequest.create(port_forward, target))
-    
+
 
 async def async_traffic_rule_control_fn(
     hub: UnifiHub, obj_id: str, target: bool
@@ -166,6 +166,9 @@ async def async_traffic_rule_control_fn(
     """Control traffic rule state."""
     traffic_rule = hub.api.traffic_rules[obj_id].raw
     await hub.api.request(TrafficRuleEnableRequest.create(traffic_rule, target))
+    # Update the traffic rules so the UI is updated appropriately
+    await hub.api.traffic_rules.update()
+
 
 async def async_wlan_control_fn(hub: UnifiHub, obj_id: str, target: bool) -> None:
     """Control outlet relay."""
@@ -263,29 +266,8 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         is_on_fn=lambda hub, traffic_rule: traffic_rule.enabled,
         name_fn=lambda traffic_rule: f"{traffic_rule.description}",
         object_fn=lambda api, obj_id: api.traffic_rules[obj_id],
-        should_poll=False,
         supported_fn=lambda hub, obj_id: True,
-        unique_id_fn=lambda hub, obj_id: f"traffic_rule-{obj_id}",
-    ),
-    UnifiSwitchEntityDescription[TrafficRules, TrafficRule](
-        key="Traffic rule control",
-        device_class=SwitchDeviceClass.SWITCH,
-        entity_category=EntityCategory.CONFIG,
-        has_entity_name=True,
-        icon="mdi:security-network",
-        allowed_fn=lambda controller, obj_id: True,
-        api_handler_fn=lambda api: api.traffic_rules,
-        available_fn=lambda controller, obj_id: controller.available,
-        control_fn=async_traffic_rule_control_fn,
-        device_info_fn=async_unifi_network_device_info_fn,
-        event_is_on=None,
-        event_to_subscribe=None,
-        is_on_fn=lambda controller, traffic_rule: traffic_rule.enabled,
-        name_fn=lambda traffic_rule: f"{traffic_rule.description}",
-        object_fn=lambda api, obj_id: api.traffic_rules[obj_id],
-        should_poll=False,
-        supported_fn=lambda controller, obj_id: True,
-        unique_id_fn=lambda controller, obj_id: f"traffic_rule-{obj_id}",
+        unique_id_fn=lambda hub, obj_id: f"trafficrule-{obj_id}",
     ),
     UnifiSwitchEntityDescription[Ports, Port](
         key="PoE port control",
@@ -344,6 +326,9 @@ def async_update_unique_id(hass: HomeAssistant, config_entry: UnifiConfigEntry) 
 
     for obj_id in hub.api.ports:
         update_unique_id(obj_id, "poe")
+
+    for obj_id in hub.api.traffic_rules:
+        update_unique_id(obj_id, "trafficrule")
 
 
 async def async_setup_entry(
