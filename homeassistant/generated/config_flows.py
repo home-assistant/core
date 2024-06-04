@@ -87,6 +87,7 @@ FLOWS = {
         "brother",
         "brottsplatskartan",
         "brunt",
+        "bryant_evolution",
         "bsblan",
         "bthome",
         "buienradar",

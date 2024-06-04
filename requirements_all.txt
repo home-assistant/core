@@ -842,6 +842,9 @@ eufylife-ble-client==0.1.8
 # homeassistant.components.evohome
 evohome-async==0.4.19
 
+# homeassistant.components.bryant_evolution
+evolutionhttp==0.0.1
+
 # homeassistant.components.faa_delays
 faadelays==2023.9.1
 
