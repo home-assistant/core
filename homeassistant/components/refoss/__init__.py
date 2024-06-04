@@ -15,6 +15,7 @@ from .const import COORDINATORS, DATA_DISCOVERY_SERVICE, DISCOVERY_SCAN_INTERVAL
 from .util import refoss_discovery_server
 
 PLATFORMS: Final = [
+    Platform.SENSOR,
     Platform.SWITCH,
 ]
 
@@ -54,4 +55,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(COORDINATORS)
 
-    return unload_ok
+    return unload_ok 
