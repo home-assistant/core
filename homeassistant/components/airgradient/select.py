@@ -33,7 +33,7 @@ CONFIG_CONTROL_ENTITY = AirGradientSelectEntityDescription(
     options=[ConfigurationControl.CLOUD.value, ConfigurationControl.LOCAL.value],
     entity_category=EntityCategory.CONFIG,
     value_fn=lambda config: config.configuration_control
-    if config.configuration_control is not ConfigurationControl.BOTH
+    if config.configuration_control is not ConfigurationControl.NOT_INITIALIZED
     else None,
     set_value_fn=lambda client, value: client.set_configuration_control(
         ConfigurationControl(value)
