@@ -6,8 +6,8 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Mapping
 import logging
-from typing import Any, Literal
 from time import time
+from typing import Any, Literal
 
 import aiohttp
 from aiohttp.web import Request
