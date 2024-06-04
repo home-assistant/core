@@ -26,11 +26,9 @@ from simplipy.websocket import (
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_CODE,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMING,
@@ -124,11 +122,12 @@ async def async_setup_entry(
 class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
     """Representation of a SimpliSafe alarm."""
 
+    _attr_code_arm_required = False
+    _attr_name = None
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
-    _attr_name = None
 
     def __init__(self, simplisafe: SimpliSafe, system: SystemType) -> None:
         """Initialize the SimpliSafe alarm."""
@@ -138,29 +137,8 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             additional_websocket_events=WEBSOCKET_EVENTS_TO_LISTEN_FOR,
         )
 
-        if code := self._simplisafe.entry.options.get(CONF_CODE):
-            if code.isdigit():
-                self._attr_code_format = CodeFormat.NUMBER
-            else:
-                self._attr_code_format = CodeFormat.TEXT
-
         self._last_event = None
-
         self._set_state_from_system_data()
-
-    @callback
-    def _is_code_valid(self, code: str | None, state: str) -> bool:
-        """Validate that a code matches the required one."""
-        if not self._simplisafe.entry.options.get(CONF_CODE):
-            return True
-
-        if not code or code != self._simplisafe.entry.options[CONF_CODE]:
-            LOGGER.warning(
-                "Incorrect alarm code entered (target state: %s): %s", state, code
-            )
-            return False
-
-        return True
 
     @callback
     def _set_state_from_system_data(self) -> None:
@@ -176,9 +154,6 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        if not self._is_code_valid(code, STATE_ALARM_DISARMED):
-            return
-
         try:
             await self._system.async_set_off()
         except SimplipyError as err:
@@ -191,9 +166,6 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        if not self._is_code_valid(code, STATE_ALARM_ARMED_HOME):
-            return
-
         try:
             await self._system.async_set_home()
         except SimplipyError as err:
@@ -206,9 +178,6 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        if not self._is_code_valid(code, STATE_ALARM_ARMED_AWAY):
-            return
-
         try:
             await self._system.async_set_away()
         except SimplipyError as err:
