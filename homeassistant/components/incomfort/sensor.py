@@ -12,15 +12,15 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPressure, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
+from . import InComfortConfigEntry
 from .const import DOMAIN
-from .coordinator import DATA_INCOMFORT, InComfortDataCoordinator
+from .coordinator import InComfortDataCoordinator
 from .entity import IncomfortEntity
 
 INCOMFORT_HEATER_TEMP = "CV Temp"
@@ -64,11 +64,11 @@ SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: InComfortConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up InComfort/InTouch sensor entities."""
-    incomfort_coordinator = hass.data[DATA_INCOMFORT][entry.entry_id]
+    incomfort_coordinator = entry.runtime_data
     heaters = incomfort_coordinator.data.heaters
     async_add_entities(
         IncomfortSensor(incomfort_coordinator, heater, description)

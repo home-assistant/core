@@ -11,24 +11,24 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import InComfortConfigEntry
 from .const import DOMAIN
-from .coordinator import DATA_INCOMFORT, InComfortDataCoordinator
+from .coordinator import InComfortDataCoordinator
 from .entity import IncomfortEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: InComfortConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up InComfort/InTouch climate devices."""
-    incomfort_coordinator = hass.data[DATA_INCOMFORT][entry.entry_id]
+    incomfort_coordinator = entry.runtime_data
     heaters = incomfort_coordinator.data.heaters
     async_add_entities(
         InComfortClimate(incomfort_coordinator, h, r) for h in heaters for r in h.rooms

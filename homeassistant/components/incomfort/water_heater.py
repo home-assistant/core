@@ -8,14 +8,14 @@ from typing import Any
 from incomfortclient import Heater as InComfortHeater
 
 from homeassistant.components.water_heater import WaterHeaterEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import InComfortConfigEntry
 from .const import DOMAIN
-from .coordinator import DATA_INCOMFORT, InComfortDataCoordinator
+from .coordinator import InComfortDataCoordinator
 from .entity import IncomfortEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,11 +25,11 @@ HEATER_ATTRS = ["display_code", "display_text", "is_burning"]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: InComfortConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up an InComfort/InTouch water_heater device."""
-    incomfort_coordinator = hass.data[DATA_INCOMFORT][entry.entry_id]
+    incomfort_coordinator = entry.runtime_data
     heaters = incomfort_coordinator.data.heaters
     async_add_entities(IncomfortWaterHeater(incomfort_coordinator, h) for h in heaters)
 

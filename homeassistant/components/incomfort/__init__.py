@@ -15,7 +15,7 @@ from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .coordinator import DATA_INCOMFORT, InComfortDataCoordinator, async_connect_gateway
+from .coordinator import InComfortDataCoordinator, async_connect_gateway
 from .errors import InConfortTimeout, InConfortUnknownError, NoHeaters, NotFound
 
 CONFIG_SCHEMA = vol.Schema(
@@ -39,6 +39,8 @@ PLATFORMS = (
 )
 
 INTEGRATION_TITLE = "Intergas InComfort/Intouch Lan2RF gateway"
+
+type InComfortConfigEntry = ConfigEntry[InComfortDataCoordinator]
 
 
 async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
@@ -107,8 +109,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise InConfortTimeout from exc
 
     coordinator = InComfortDataCoordinator(hass, data)
+    entry.runtime_data = coordinator
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DATA_INCOMFORT, {entry.entry_id: coordinator})
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

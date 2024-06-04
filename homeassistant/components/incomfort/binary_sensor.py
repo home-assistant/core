@@ -7,23 +7,23 @@ from typing import Any
 from incomfortclient import Heater as InComfortHeater
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import InComfortConfigEntry
 from .const import DOMAIN
-from .coordinator import DATA_INCOMFORT, InComfortDataCoordinator
+from .coordinator import InComfortDataCoordinator
 from .entity import IncomfortEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: InComfortConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up an InComfort/InTouch binary_sensor entity."""
-    incomfort_coordinator = hass.data[DATA_INCOMFORT][entry.entry_id]
+    incomfort_coordinator = entry.runtime_data
     heaters = incomfort_coordinator.data.heaters
     async_add_entities(IncomfortFailed(incomfort_coordinator, h) for h in heaters)
 
