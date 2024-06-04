@@ -1,13 +1,15 @@
-"""Tests for Intergas InComfort integration."""
+"""Sensor tests for Intergas InComfort integration."""
 
 from unittest.mock import MagicMock, patch
 
 from syrupy import SnapshotAssertion
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from tests.common import snapshot_platform
 
 
 @patch("homeassistant.components.incomfort.PLATFORMS", [Platform.SENSOR])
@@ -20,4 +22,4 @@ async def test_setup_platforms(
 ) -> None:
     """Test the incomfort integration is set up correctly."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
