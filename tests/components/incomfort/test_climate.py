@@ -13,13 +13,13 @@ from tests.common import snapshot_platform
 
 
 @patch("homeassistant.components.incomfort.PLATFORMS", [Platform.CLIMATE])
-async def test_setup_platforms(
+async def test_setup_platform(
     hass: HomeAssistant,
     mock_incomfort: MagicMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     mock_config_entry: ConfigEntry,
 ) -> None:
-    """Test the incomfort integration is set up correctly."""
+    """Test the incomfort entities are set up correctly."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
