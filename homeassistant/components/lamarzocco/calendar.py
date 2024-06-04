@@ -122,15 +122,12 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
         hour_on, minute_on = self.wake_up_sleep_entry.time_on.split(":")
         hour_off, minute_off = self.wake_up_sleep_entry.time_off.split(":")
 
-        # reformat 24:XX times
+        # if off time is 24:00, then it means the off time is the next day
+        # only for legacy schedules
         day_offset = 0
-        if hour_on == "24":
-            hour_on = "0"
         if hour_off == "24":
+            day_offset = 1
             hour_off = "0"
-            # if off time is 24:XX, but on time is not, then it means the off time is the next day
-            if hour_on != "0":
-                day_offset = 1
 
         end_date = date.replace(
             hour=int(hour_off),
