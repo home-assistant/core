@@ -1,0 +1,13 @@
+{
+  "country": "DE",
+  "pmStandard": "ugm3",
+  "ledBarMode": "co2",
+  "displayMode": "on",
+  "abcDays": 8,
+  "tvocLearningOffset": 12,
+  "noxLearningOffset": 12,
+  "mqttBrokerUrl": "",
+  "temperatureUnit": "c",
+  "configurationControl": "cloud",
+  "postDataToAirGradient": true
+}

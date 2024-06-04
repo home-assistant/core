@@ -1,6 +1,7 @@
 """Tests for Microsoft text-to-speech."""
 
 from http import HTTPStatus
+from pathlib import Path
 from unittest.mock import patch
 
 from pycsspeechtts import pycsspeechtts
@@ -24,7 +25,7 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> Path:
     """Mock the TTS cache dir with empty dir."""
     return mock_tts_cache_dir
 
