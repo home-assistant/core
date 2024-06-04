@@ -1,6 +1,5 @@
 """Test the Demo config flow."""
 
-from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
@@ -13,19 +12,10 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-def no_platforms() -> Generator[None, None, None]:
-    """Don't enable any platforms."""
-    with patch(
-        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
-        [],
-    ):
-        yield
-
-
+@pytest.mark.usefixtures("disable_platforms")
 async def test_import(hass: HomeAssistant) -> None:
     """Test that we can import a config entry."""
-    with patch("homeassistant.components.demo.async_setup_entry"):
+    with patch("homeassistant.components.demo.async_setup_entry", return_value=True):
         assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -34,6 +24,7 @@ async def test_import(hass: HomeAssistant) -> None:
     assert entry.data == {}
 
 
+@pytest.mark.usefixtures("disable_platforms")
 async def test_import_once(hass: HomeAssistant) -> None:
     """Test that we don't create multiple config entries."""
     with patch(
@@ -63,7 +54,7 @@ async def test_import_once(hass: HomeAssistant) -> None:
     mock_setup_entry.assert_not_called()
 
 
-@pytest.mark.usefixtures("no_platforms")
+@pytest.mark.usefixtures("disable_platforms")
 async def test_options_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     config_entry = MockConfigEntry(domain=DOMAIN)
