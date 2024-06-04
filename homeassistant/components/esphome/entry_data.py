@@ -248,7 +248,7 @@ class RuntimeEntryData:
     ) -> None:
         async with self.platform_load_lock:
             if needed := platforms - self.loaded_platforms:
-                await hass.config_entries.async_forward_entry_setups(entry, needed)
+                await hass.config_entries.async_late_forward_entry_setups(entry, needed)
             self.loaded_platforms |= needed
 
     async def async_update_static_infos(
