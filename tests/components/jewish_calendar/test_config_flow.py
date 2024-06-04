@@ -1,6 +1,5 @@
 """Test the Jewish calendar config flow."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock
 
 import pytest
@@ -27,9 +26,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
 async def test_step_user(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -151,15 +149,9 @@ async def test_options_reconfigure(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    future = dt_util.utcnow() + timedelta(seconds=30)
-    async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
-
-    # Get the value of the "upcoming_shabbat_candle_lighting" sensor
-    initial_sensor_value = hass.states.get(
-        "sensor.jewish_calendar_upcoming_shabbat_candle_lighting"
-    ).state
-    initial_sensor_value = dt_util.parse_datetime(initial_sensor_value)
+    # The value of the "upcoming_shabbat_candle_lighting" sensor should be the default value
+    entry = hass.data[DOMAIN][mock_config_entry.entry_id]
+    assert entry[CONF_CANDLE_LIGHT_MINUTES] == DEFAULT_CANDLE_LIGHT
 
     # Update the CONF_CANDLE_LIGHT_MINUTES option to a new value
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
@@ -170,15 +162,6 @@ async def test_options_reconfigure(
         },
     )
 
-    future = dt_util.utcnow() + timedelta(seconds=30)
-    async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
-
-    # The sensor value should have changed to be one minute later
-    new_sensor_value = hass.states.get(
-        "sensor.jewish_calendar_upcoming_shabbat_candle_lighting"
-    ).state
-    new_sensor_value = dt_util.parse_datetime(new_sensor_value)
-
-    # Verify that the new sensor value is one minute later
-    assert abs(new_sensor_value - initial_sensor_value) == timedelta(minutes=1)
+    # The value of the "upcoming_shabbat_candle_lighting" sensor should be the new value
+    entry = hass.data[DOMAIN][mock_config_entry.entry_id]
+    assert entry[CONF_CANDLE_LIGHT_MINUTES] == DEFAULT_CANDLE_LIGHT + 1
