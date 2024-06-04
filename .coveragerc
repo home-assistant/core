@@ -90,6 +90,7 @@ omit =
     homeassistant/components/apsystems/__init__.py
     homeassistant/components/apsystems/coordinator.py
     homeassistant/components/apsystems/entity.py
+    homeassistant/components/apsystems/number.py
     homeassistant/components/apsystems/sensor.py
     homeassistant/components/aqualogic/*
     homeassistant/components/aquostv/media_player.py
