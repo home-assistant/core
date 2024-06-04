@@ -112,26 +112,27 @@ def _mocked_device(
 ) -> Device:
     device = MagicMock(auto_spec=Device, name="Mocked device")
     device.update = AsyncMock()
+    device.turn_off = AsyncMock()
+    device.turn_on = AsyncMock()
+
     device.mac = mac
     device.alias = alias
     device.model = MODEL
     device.host = IP_ADDRESS
     device.device_id = device_id
     device.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
-    device.turn_off = AsyncMock()
-    device.turn_on = AsyncMock()
+    device.modules = {}
+    device.features = {}
 
-    device.modules = (
-        {module_name: MODULE_TO_MOCK_GEN[module_name]() for module_name in modules}
-        if modules
-        else {}
-    )
+    if modules:
+        device.modules = {
+            module_name: MODULE_TO_MOCK_GEN[module_name]() for module_name in modules
+        }
 
-    device.features = (
-        {feature_id: FEATURE_TO_MOCK_GEN[feature_id]() for feature_id in features}
-        if features
-        else {}
-    )
+    if features:
+        device.features = {
+            feature_id: FEATURE_TO_MOCK_GEN[feature_id]() for feature_id in features
+        }
 
     device.children = children if children else []
     device.device_type = device_type

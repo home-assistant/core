@@ -28,14 +28,30 @@ from . import legacy_device_id
 from .const import DOMAIN, PRIMARY_STATE_ID
 from .coordinator import TPLinkDataUpdateCoordinator
 
+_LOGGER = logging.getLogger(__name__)
+
+
+# Mapping from upstream category to homeassistant category
+FEATURE_CATEGORY_TO_ENTITY_CATEGORY = {
+    Feature.Category.Primary: None,  # Main controls have no category
+    Feature.Category.Config: EntityCategory.CONFIG,
+    Feature.Category.Info: EntityCategory.DIAGNOSTIC,
+    Feature.Category.Debug: EntityCategory.DIAGNOSTIC,
+}
+
+# Skips creating entities for primary features supported by a specialized platform.
+# For example, we do not need a separate "state" switch for light bulbs.
+DEVICETYPES_WITH_SPECIALIZED_PLATFORMS = {
+    DeviceType.Bulb,
+    DeviceType.LightStrip,
+    DeviceType.Dimmer,
+}
+
 
 class EntityDescriptionExtras(TypedDict, total=False):
     """Extra kwargs that can be provided to entity descriptions."""
 
     entity_registry_enabled_default: bool
-
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
@@ -139,14 +155,9 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
     def _category_for_feature(self, feature: Feature) -> EntityCategory | None:
         """Return entity category for a feature."""
-        category_map = {
-            # Main controls have no category
-            Feature.Category.Primary: None,
-            Feature.Category.Config: EntityCategory.CONFIG,
-            Feature.Category.Info: EntityCategory.DIAGNOSTIC,
-            Feature.Category.Debug: EntityCategory.DIAGNOSTIC,
-        }
-        if (entity_category := category_map.get(feature.category)) is None:
+        if (
+            entity_category := FEATURE_CATEGORY_TO_ENTITY_CATEGORY.get(feature.category)
+        ) is None:
             _LOGGER.error(
                 "Unhandled category %s, fallback to DIAGNOSTIC", feature.category
             )
@@ -165,7 +176,6 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         """Handle updated data from the coordinator."""
         try:
             self._async_update_attrs()
-            self._attr_available = True
         except Exception as ex:  # noqa: BLE001
             if self._attr_available:
                 _LOGGER.warning(
@@ -176,6 +186,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
                 )
             self._attr_available = False
 
+        self._attr_available = True
         super()._handle_coordinator_update()
 
 
@@ -197,16 +208,9 @@ def _entities_for_device[_E: CoordinatedTPLinkEntity](
         if feat.type != feature_type:
             return False
 
-        # We skip primary features for device types that have specialized platforms.
-        ignore_primary_controls_devicetypes = [
-            DeviceType.Bulb,
-            DeviceType.LightStrip,
-            DeviceType.Dimmer,
-            DeviceType.Thermostat,
-        ]
         if (
             feat.category == Feature.Category.Primary
-            and dev.device_type in ignore_primary_controls_devicetypes
+            and dev.device_type in DEVICETYPES_WITH_SPECIALIZED_PLATFORMS
         ):
             return False
 
@@ -230,7 +234,7 @@ def _entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
 
     This is a helper that calls *_entities_for_device* for the device and its children.
     """
-    entities = []
+    entities: list[_E] = []
     if device.children:
         _LOGGER.debug("Initializing device with %s children", len(device.children))
         for child in device.children:
