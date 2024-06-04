@@ -1,6 +1,5 @@
 """Cover Entity for Genie Garage Door."""
 
-from datetime import timedelta
 from typing import Any
 
 from genie_partner_sdk.client import AladdinConnectClient
@@ -15,9 +14,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import api
 from .const import DOMAIN, SUPPORTED_FEATURES
+from .entity import AladdinConnectEntity
 from .model import GarageDoor
-
-SCAN_INTERVAL = timedelta(seconds=15)
 
 
 async def async_setup_entry(
@@ -39,7 +37,7 @@ async def async_setup_entry(
             doors_to_add.append(door)
 
     async_add_entities(
-        (AladdinDevice(acc, door, config_entry) for door in doors_to_add),
+        (AladdinDevice(acc, door) for door in doors_to_add),
     )
     remove_stale_devices(hass, config_entry, doors)
 
@@ -71,17 +69,14 @@ def remove_stale_devices(
             )
 
 
-class AladdinDevice(CoverEntity):
+class AladdinDevice(AladdinConnectEntity, CoverEntity):
     """Representation of Aladdin Connect cover."""
 
     _attr_device_class = CoverDeviceClass.GARAGE
     _attr_supported_features = SUPPORTED_FEATURES
-    _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(
-        self, acc: AladdinConnectClient, device: GarageDoor, entry: ConfigEntry
-    ) -> None:
+    def __init__(self, acc: AladdinConnectClient, device: GarageDoor) -> None:
         """Initialize the Aladdin Connect cover."""
         self._acc = acc
         self._device_id = device.device_id
