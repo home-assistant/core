@@ -2183,7 +2183,11 @@ class ConfigEntries:
     async def async_forward_entry_unload(
         self, entry: ConfigEntry, domain: Platform | str
     ) -> bool:
-        """Forward the unloading of an entry to a different component."""
+        """Forward the unloading of an entry to a different component.
+
+        Its is preferred to call async_unload_platforms instead
+        of directly calling this method.
+        """
         # It was never loaded.
         if domain not in self.hass.config.components:
             return True
