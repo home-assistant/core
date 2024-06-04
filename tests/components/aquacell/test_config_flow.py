@@ -13,13 +13,11 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.components.aquacell import TEST_CONFIG_ENTRY, TEST_USER_INPUT
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-
-async def test_form(
+async def test_full_flow(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_aquacell_api: AsyncMock
 ) -> None:
-    """Test we get the form."""
+    """Test the full config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )

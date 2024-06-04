@@ -11,6 +11,7 @@ from homeassistant.components.aquacell.const import (
     CONF_REFRESH_TOKEN_CREATION_TIME,
     DOMAIN,
 )
+from homeassistant.const import CONF_EMAIL
 
 from tests.common import MockConfigEntry, load_json_array_fixture
 from tests.components.aquacell import TEST_CONFIG_ENTRY
@@ -54,7 +55,12 @@ def mock_aquacell_api() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_config_entry_expired() -> MockConfigEntry:
     """Mock a config entry."""
-    return MockConfigEntry(domain=DOMAIN, title="Aquacell", data=TEST_CONFIG_ENTRY)
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Aquacell",
+        unique_id=TEST_CONFIG_ENTRY[CONF_EMAIL],
+        data=TEST_CONFIG_ENTRY,
+    )
 
 
 @pytest.fixture
@@ -63,6 +69,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="Aquacell",
+        unique_id=TEST_CONFIG_ENTRY[CONF_EMAIL],
         data={
             **TEST_CONFIG_ENTRY,
             CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),

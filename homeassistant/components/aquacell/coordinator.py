@@ -81,10 +81,6 @@ class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
         _LOGGER.debug("Attempting to renew refresh token")
         refresh_token = await self.aquacell_api.authenticate(self.email, self.password)
         self.refresh_token = refresh_token
-        self._update_config_entry_refresh_token()
-
-    def _update_config_entry_refresh_token(self) -> None:
-        """Update or delete the refresh_token in the Config Entry."""
         data = {
             **self.config_entry.data,
             CONF_REFRESH_TOKEN: self.refresh_token,
