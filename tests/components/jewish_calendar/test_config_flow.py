@@ -9,9 +9,7 @@ from homeassistant.components.jewish_calendar.const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
-    DEFAULT_CANDLE_LIGHT,
     DEFAULT_DIASPORA,
-    DEFAULT_HAVDALAH_OFFSET_MINUTES,
     DEFAULT_LANGUAGE,
     DOMAIN,
 )
@@ -73,10 +71,8 @@ async def test_import_no_options(hass: HomeAssistant, language, diaspora) -> Non
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].data == conf[DOMAIN] | {
-        CONF_CANDLE_LIGHT_MINUTES: DEFAULT_CANDLE_LIGHT,
-        CONF_HAVDALAH_OFFSET_MINUTES: DEFAULT_HAVDALAH_OFFSET_MINUTES,
-    }
+    for entry_key, entry_val in entries[0].data.items():
+        assert entry_val == conf[DOMAIN][entry_key]
 
 
 async def test_import_with_options(hass: HomeAssistant) -> None:
@@ -99,7 +95,10 @@ async def test_import_with_options(hass: HomeAssistant) -> None:
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].data == conf[DOMAIN]
+    for entry_key, entry_val in entries[0].data.items():
+        assert entry_val == conf[DOMAIN][entry_key]
+    for entry_key, entry_val in entries[0].options.items():
+        assert entry_val == conf[DOMAIN][entry_key]
 
 
 async def test_single_instance_allowed(
@@ -135,5 +134,7 @@ async def test_options(hass: HomeAssistant, mock_config_entry: MockConfigEntry) 
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_CANDLE_LIGHT_MINUTES] == 25
-    assert result["data"][CONF_HAVDALAH_OFFSET_MINUTES] == 34
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].options[CONF_CANDLE_LIGHT_MINUTES] == 25
+    assert entries[0].options[CONF_HAVDALAH_OFFSET_MINUTES] == 34
