@@ -6,7 +6,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.components.incomfort import DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
+
+MOCK_CONFIG = {
+    "host": "192.168.1.12",
+    "username": "admin",
+    "password": "verysecret",
+}
 
 
 @pytest.fixture
@@ -17,6 +27,22 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         return_value=True,
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_entry_data() -> dict[str, Any]:
+    """Mock config entry data for fixture."""
+    return MOCK_CONFIG
+
+
+@pytest.fixture
+def mock_config_entry(
+    hass: HomeAssistant, mock_entry_data: dict[str, Any]
+) -> ConfigEntry:
+    """Mock a config entry setup for incomfort integration."""
+    entry = MockConfigEntry(domain=DOMAIN, data=mock_entry_data)
+    entry.add_to_hass(hass)
+    return entry
 
 
 @pytest.fixture
@@ -33,7 +59,7 @@ def mock_heater_status() -> dict[str, Any]:
         "heater_temp": 35.34,
         "tap_temp": 30.21,
         "pressure": 1.86,
-        "serial_no": "2404c08648",
+        "serial_no": "c0ffeec0ffee",
         "nodenr": 249,
         "rf_message_rssi": 30,
         "rfstatus_cntr": 0,
@@ -62,14 +88,25 @@ def mock_incomfort(
         room_temp: float
         setpoint: float
         status: dict[str, Any]
+        set_override: MagicMock
 
         def __init__(self) -> None:
             """Initialize mocked room."""
-            self.override = mock_room_status["override"]
             self.room_no = 1
-            self.room_temp = mock_room_status["room_temp"]
-            self.setpoint = mock_room_status["setpoint"]
             self.status = mock_room_status
+            self.set_override = MagicMock()
+
+        @property
+        def override(self) -> str:
+            return mock_room_status["override"]
+
+        @property
+        def room_temp(self) -> float:
+            return mock_room_status["room_temp"]
+
+        @property
+        def setpoint(self) -> float:
+            return mock_room_status["setpoint"]
 
     class MockHeater:
         """Mocked InComfort heater class."""
@@ -77,6 +114,20 @@ def mock_incomfort(
         serial_no: str
         status: dict[str, Any]
         rooms: list[MockRoom]
+        is_failed: bool
+        is_pumping: bool
+        display_code: int
+        display_text: str | None
+        fault_code: int | None
+        is_burning: bool
+        is_tapping: bool
+        heater_temp: float
+        tap_temp: float
+        pressure: float
+        serial_no: str
+        nodenr: int
+        rf_message_rssi: int
+        rfstatus_cntr: int
 
         def __init__(self) -> None:
             """Initialize mocked heater."""
@@ -84,11 +135,15 @@ def mock_incomfort(
 
         async def update(self) -> None:
             self.status = mock_heater_status
-            self.rooms = [MockRoom]
+            for key, value in mock_heater_status.items():
+                setattr(self, key, value)
+            self.rooms = [MockRoom()]
 
     with patch(
         "homeassistant.components.incomfort.models.InComfortGateway", MagicMock()
     ) as patch_gateway:
         patch_gateway().heaters = AsyncMock()
         patch_gateway().heaters.return_value = [MockHeater()]
+        patch_gateway().mock_heater_status = mock_heater_status
+        patch_gateway().mock_room_status = mock_room_status
         yield patch_gateway
