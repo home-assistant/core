@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientResponseError
+from freezegun.api import FrozenDateTimeFactory
 from incomfortclient import IncomfortError
 import pytest
 from syrupy import SnapshotAssertion
@@ -42,6 +43,7 @@ async def test_setup_platforms(
 async def test_coordinator_updates(
     hass: HomeAssistant,
     mock_incomfort: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the incomfort coordinator is updating."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
@@ -81,6 +83,7 @@ async def test_coordinator_updates(
 async def test_coordinator_update_fails(
     hass: HomeAssistant,
     mock_incomfort: MagicMock,
+    freezer: FrozenDateTimeFactory,
     exc: Exception,
 ) -> None:
     """Test the incomfort coordinator update fails."""
