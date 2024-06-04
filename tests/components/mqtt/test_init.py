@@ -928,9 +928,9 @@ def test_entity_device_info_schema() -> None:
         }
     ],
 )
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_handle_logging_on_writing_the_entity_state(
     hass: HomeAssistant,
-    mock_hass_config: None,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
