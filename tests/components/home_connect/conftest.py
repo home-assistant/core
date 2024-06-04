@@ -131,7 +131,7 @@ def mock_get_appliances() -> Generator[None, Any, None]:
 
 
 @pytest.fixture(name="appliance")
-def mock_appliance(request) -> Mock:
+def mock_appliance(request: pytest.FixtureRequest) -> MagicMock:
     """Fixture to mock Appliance."""
     app = "Washer"
     if hasattr(request, "param") and request.param:
