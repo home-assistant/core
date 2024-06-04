@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -293,8 +292,6 @@ async def async_setup_entry(
 class AmbientNetworkSensor(AmbientNetworkEntity, SensorEntity):
     """A sensor implementation for an Ambient Weather Network sensor."""
 
-    _extra_attributes: dict[str, Any] | None
-
     def __init__(
         self,
         coordinator: AmbientNetworkDataUpdateCoordinator,
@@ -303,11 +300,6 @@ class AmbientNetworkSensor(AmbientNetworkEntity, SensorEntity):
     ) -> None:
         """Initialize a sensor object."""
         super().__init__(coordinator, description, mac_address)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return entity specific state attributes."""
-        return self._extra_attributes
 
     def _update_attrs(self) -> None:
         """Update sensor attributes."""
@@ -323,6 +315,6 @@ class AmbientNetworkSensor(AmbientNetworkEntity, SensorEntity):
         self._attr_native_value = value
 
         if self.coordinator.last_measured is not None:
-            self._extra_attributes = {"last_measured": self.coordinator.last_measured}
-        else:
-            self._extra_attributes = None
+            self._attr_extra_state_attributes = {
+                "last_measured": self.coordinator.last_measured
+            }
