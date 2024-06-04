@@ -141,6 +141,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate config entry."""
+    if entry.version > 2:
+        # guard against downgrade from a future version
+        return False
+
     if entry.version == 1:
         cloud_client = LaMarzoccoCloudClient(
             username=entry.data[CONF_USERNAME],

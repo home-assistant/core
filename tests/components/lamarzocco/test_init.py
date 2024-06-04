@@ -132,6 +132,17 @@ async def test_migration_errors(
     assert entry_v1.state is ConfigEntryState.MIGRATION_ERROR
 
 
+async def test_config_flow_entry_migration_downgrade(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that config entry fails setup if the version is from the future."""
+    mock_config_entry.version = 3
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+
 async def test_bluetooth_is_set_from_discovery(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
