@@ -291,9 +291,7 @@ async def test_discovery_with_invalid_integration_info(
     state = hass.states.get("binary_sensor.beer")
 
     assert state is None
-    assert (
-        "Unable to parse origin information from discovery message, got" in caplog.text
-    )
+    assert "Unable to parse origin information from discovery message" in caplog.text
 
 
 async def test_discover_fan(
