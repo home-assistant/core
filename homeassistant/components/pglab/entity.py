@@ -13,7 +13,7 @@ from .const import DOMAIN
 from .discovery import PGLabDiscovery
 
 
-class PgLabEntity(Entity):
+class PGLabEntity(Entity):
     """Representation of a PGLab entity in Home Assistant."""
 
     _attr_has_entity_name = True
