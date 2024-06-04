@@ -3,6 +3,7 @@
   "name": "ista EcoTrend",
   "codeowners": ["@tr4nt0r"],
   "config_flow": true,
+  "dependencies": ["recorder"],
   "documentation": "https://www.home-assistant.io/integrations/ista_ecotrend",
   "iot_class": "cloud_polling",
   "loggers": ["pyecotrend_ista"],
