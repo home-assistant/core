@@ -4,6 +4,7 @@ from datetime import timedelta
 from typing import Any
 
 from genie_partner_sdk.client import AladdinConnectClient
+from genie_partner_sdk.model import GarageDoor
 
 from homeassistant.components.cover import (
     CoverDeviceClass,
@@ -19,7 +20,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import api
 from .const import DOMAIN
-from .model import GarageDoor
 
 SCAN_INTERVAL = timedelta(seconds=15)
 
