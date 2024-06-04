@@ -380,7 +380,9 @@ class WyomingSatellite:
 
         if self._conversation_id is None:
             self._conversation_id = str(uuid4())
-            self._conversation_id_time = time.monotonic()
+
+        # Update timeout
+        self._conversation_id_time = time.monotonic()
 
         self._is_pipeline_running = True
         self._pipeline_ended_event.clear()
