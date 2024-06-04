@@ -17,8 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 class AladdinConnectCoordinator(DataUpdateCoordinator[None]):
     """Aladdin Connect Data Update Coordinator."""
 
-    doors: list[GarageDoor] | None = None
-
     def __init__(self, hass: HomeAssistant, acc: AladdinConnectClient) -> None:
         """Initialize."""
         super().__init__(
@@ -28,6 +26,7 @@ class AladdinConnectCoordinator(DataUpdateCoordinator[None]):
             update_interval=timedelta(seconds=15),
         )
         self.acc = acc
+        self.doors: list[GarageDoor] = []
 
     async def async_setup(self) -> None:
         """Fetch initial data."""
