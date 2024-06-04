@@ -248,7 +248,6 @@ class EmonCmsSensor(SensorEntity):
             return
 
         self._update_attributes(elem)
-        self._update_value(elem)
 
 
 class EmonCmsData:
