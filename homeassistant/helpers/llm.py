@@ -409,7 +409,7 @@ def _get_exposed_entities(
         names = [state.name]
         area_names = []
         description: str | None = None
-        fields: dict[str] | None = None
+        fields: dict[str, str] | None = None
 
         if entity_entry is not None:
             names.extend(entity_entry.aliases)
