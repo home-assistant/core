@@ -43,6 +43,8 @@ class IncomfortFailed(IncomfortEntity, BinarySensorEntity):
         self._attr_unique_id = f"{heater.serial_no}_failed"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, heater.serial_no)},
+            manufacturer="Intergas",
+            name="Boiler",
         )
 
     @property
