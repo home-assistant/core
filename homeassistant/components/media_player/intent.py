@@ -11,7 +11,6 @@ from homeassistant.const import (
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_STOP,
     SERVICE_VOLUME_SET,
 )
 from homeassistant.core import Context, HomeAssistant, State
@@ -20,12 +19,10 @@ from homeassistant.helpers import intent
 from . import ATTR_MEDIA_VOLUME_LEVEL, DOMAIN
 from .const import MediaPlayerEntityFeature, MediaPlayerState
 
-INTENT_CLEAR_PLAYLIST = "HassMediaClearPlaylist"
 INTENT_MEDIA_PAUSE = "HassMediaPause"
 INTENT_MEDIA_UNPAUSE = "HassMediaUnpause"
 INTENT_MEDIA_NEXT = "HassMediaNext"
 INTENT_MEDIA_PREVIOUS = "HassMediaPrevious"
-INTENT_MEDIA_STOP = "HassMediaStop"
 INTENT_SET_VOLUME = "HassSetVolume"
 
 
@@ -79,10 +76,6 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
         intent.ServiceIntentHandler(
             INTENT_MEDIA_PREVIOUS, DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK
         ),
-    )
-    intent.async_register(
-        hass,
-        intent.ServiceIntentHandler(INTENT_MEDIA_STOP, DOMAIN, SERVICE_MEDIA_STOP),
     )
     intent.async_register(
         hass,
