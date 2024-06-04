@@ -51,6 +51,4 @@ class ApSystemsMaxOutputNumber(ApSystemsEntity, NumberEntity):
         """Set the desired output power."""
         value_as_int = int(value)
         await self._api.set_max_power(value_as_int)
-        self._attr_native_value = float(
-            value_as_int
-        )  # Doing that to eliminate the chance of rounding disparaties in contrast to using the input directly
+        self._attr_native_value = value
