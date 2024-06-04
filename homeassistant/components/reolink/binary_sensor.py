@@ -96,9 +96,9 @@ BINARY_PUSH_SENSORS = (
 
 BINARY_SENSORS = (
     ReolinkBinarySensorEntityDescription(
-        key="sleeping",
+        key="sleep",
         cmd_key="GetChannelstatus",
-        translation_key="sleeping",
+        translation_key="sleep",
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda api, ch: api.sleeping(ch),
         supported=lambda api, ch: api.supported(ch, "sleep"),

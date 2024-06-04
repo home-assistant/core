@@ -234,10 +234,10 @@
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
-      "sleeping": {
-        "name": "Sleeping",
+      "sleep": {
+        "name": "Sleep status",
         "state": {
-          "off": "Active",
+          "off": "Awake",
           "on": "Sleeping"
         }
       }
