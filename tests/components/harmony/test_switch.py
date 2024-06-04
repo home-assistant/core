@@ -2,6 +2,8 @@
 
 from datetime import timedelta
 
+import pytest
+
 from homeassistant.components import automation, script
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.harmony.const import DOMAIN
@@ -142,12 +144,12 @@ async def _toggle_switch_and_wait(hass, service_name, entity):
     await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_create_issue(
     harmony_client,
     mock_hc,
     hass: HomeAssistant,
     mock_write_config,
-    entity_registry_enabled_by_default: None,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we create an issue when an automation or script is using a deprecated entity."""
