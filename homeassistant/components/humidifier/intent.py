@@ -38,6 +38,7 @@ class HumidityHandler(intent.IntentHandler):
         vol.Required("name"): cv.string,
         vol.Required("humidity"): vol.All(vol.Coerce(int), vol.Range(0, 100)),
     }
+    platforms = {DOMAIN}
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the hass intent."""
@@ -91,6 +92,7 @@ class SetModeHandler(intent.IntentHandler):
         vol.Required("name"): cv.string,
         vol.Required("mode"): cv.string,
     }
+    platforms = {DOMAIN}
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the hass intent."""

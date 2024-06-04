@@ -1,6 +1,7 @@
 """Tests for Vallox sensor platform."""
 
 from datetime import datetime, timedelta, tzinfo
+from typing import Any
 
 import pytest
 from vallox_websocket_api import MetricData
@@ -12,7 +13,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def set_tz(request):
+def set_tz(request: pytest.FixtureRequest) -> Any:
     """Set the default TZ to the one requested."""
     request.getfixturevalue(request.param)
 

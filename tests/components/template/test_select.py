@@ -15,7 +15,7 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION as SELECT_SERVICE_SELECT_OPTION,
 )
 from homeassistant.const import ATTR_ICON, CONF_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers.entity_registry import async_get
 
 from tests.common import assert_setup_component, async_capture_events
@@ -132,7 +132,9 @@ async def test_missing_required_keys(hass: HomeAssistant) -> None:
     assert hass.states.async_all("select") == []
 
 
-async def test_templates_with_entities(hass: HomeAssistant, calls) -> None:
+async def test_templates_with_entities(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test templates with values from other entities."""
     with assert_setup_component(1, "input_select"):
         assert await setup.async_setup_component(

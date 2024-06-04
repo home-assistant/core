@@ -6,7 +6,6 @@ from datetime import timedelta
 import hmac
 import itertools
 from logging import getLogger
-import time
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
@@ -282,6 +281,21 @@ class AuthStore:
             )
         self._async_schedule_save()
 
+    @callback
+    def async_set_expiry(
+        self, refresh_token: models.RefreshToken, *, enable_expiry: bool
+    ) -> None:
+        """Enable or disable expiry of a refresh token."""
+        if enable_expiry:
+            if refresh_token.expire_at is None:
+                refresh_token.expire_at = (
+                    refresh_token.last_used_at or dt_util.utcnow()
+                ).timestamp() + REFRESH_TOKEN_EXPIRATION
+                self._async_schedule_save()
+        else:
+            refresh_token.expire_at = None
+            self._async_schedule_save()
+
     async def async_load(self) -> None:  # noqa: C901
         """Load the users."""
         if self._loaded:
@@ -294,8 +308,6 @@ class AuthStore:
 
         perm_lookup = PermissionLookup(ent_reg, dev_reg)
         self._perm_lookup = perm_lookup
-
-        now_ts = time.time()
 
         if data is None or not isinstance(data, dict):
             self._set_defaults()
@@ -450,14 +462,6 @@ class AuthStore:
             else:
                 last_used_at = None
 
-            if (
-                expire_at := rt_dict.get("expire_at")
-            ) is None and token_type == models.TOKEN_TYPE_NORMAL:
-                if last_used_at:
-                    expire_at = last_used_at.timestamp() + REFRESH_TOKEN_EXPIRATION
-                else:
-                    expire_at = now_ts + REFRESH_TOKEN_EXPIRATION
-
             token = models.RefreshToken(
                 id=rt_dict["id"],
                 user=users[rt_dict["user_id"]],
@@ -474,7 +478,7 @@ class AuthStore:
                 jwt_key=rt_dict["jwt_key"],
                 last_used_at=last_used_at,
                 last_used_ip=rt_dict.get("last_used_ip"),
-                expire_at=expire_at,
+                expire_at=rt_dict.get("expire_at"),
                 version=rt_dict.get("version"),
             )
             if "credential_id" in rt_dict:

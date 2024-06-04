@@ -737,7 +737,8 @@ def get_block_coordinator_by_device_id(
             entry = hass.config_entries.async_get_entry(config_entry)
             if (
                 entry
-                and entry.state == ConfigEntryState.LOADED
+                and entry.state is ConfigEntryState.LOADED
+                and hasattr(entry, "runtime_data")
                 and isinstance(entry.runtime_data, ShellyEntryData)
                 and (coordinator := entry.runtime_data.block)
             ):
@@ -756,7 +757,8 @@ def get_rpc_coordinator_by_device_id(
             entry = hass.config_entries.async_get_entry(config_entry)
             if (
                 entry
-                and entry.state == ConfigEntryState.LOADED
+                and entry.state is ConfigEntryState.LOADED
+                and hasattr(entry, "runtime_data")
                 and isinstance(entry.runtime_data, ShellyEntryData)
                 and (coordinator := entry.runtime_data.rpc)
             ):

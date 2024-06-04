@@ -7,6 +7,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     DeviceScanner,
     SourceType,
@@ -16,6 +17,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -78,8 +80,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Tado device scannery entity."""
     _LOGGER.debug("Setting up Tado device scanner entity")
-    tado = hass.data[DOMAIN][entry.entry_id][DATA]
+    tado: TadoConnector = hass.data[DOMAIN][entry.entry_id][DATA]
     tracked: set = set()
+
+    # Fix non-string unique_id for device trackers
+    # Can be removed in 2025.1
+    entity_registry = er.async_get(hass)
+    for device_key in tado.data["mobile_device"]:
+        if entity_id := entity_registry.async_get_entity_id(
+            DEVICE_TRACKER_DOMAIN, DOMAIN, device_key
+        ):
+            entity_registry.async_update_entity(
+                entity_id, new_unique_id=str(device_key)
+            )
 
     @callback
     def update_devices() -> None:
@@ -134,7 +147,7 @@ class TadoDeviceTrackerEntity(TrackerEntity):
     ) -> None:
         """Initialize a Tado Device Tracker entity."""
         super().__init__()
-        self._attr_unique_id = device_id
+        self._attr_unique_id = str(device_id)
         self._device_id = device_id
         self._device_name = device_name
         self._tado = tado

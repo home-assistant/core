@@ -13,7 +13,13 @@ async def async_pre_backup(hass: HomeAssistant) -> None:
     """Perform operations before a backup starts."""
     _LOGGER.debug("Performing coordinator backup")
 
-    zha_gateway = get_zha_gateway(hass)
+    try:
+        zha_gateway = get_zha_gateway(hass)
+    except ValueError:
+        # If ZHA config is in `configuration.yaml` and ZHA is not set up, do nothing
+        _LOGGER.warning("No ZHA gateway exists, skipping coordinator backup")
+        return
+
     await zha_gateway.application_controller.backups.create_backup(load_devices=True)
 
 
