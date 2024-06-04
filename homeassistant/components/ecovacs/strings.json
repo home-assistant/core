@@ -226,6 +226,12 @@
     },
     "vacuum_send_command_params_required": {
       "message": "Params are required for the command: {command}"
+    },
+    "vacuum_get_positions_not_supported": {
+      "message": "This device does not provide positions coordinates"
+    },
+    "vacuum_get_positions_invalid": {
+      "message": "Unable to retrieve bot and chargers positions"
     }
   },
   "issues": {
@@ -263,19 +269,9 @@
     }
   },
   "services": {
-    "send_custom_command": {
-      "name": "Send custom command",
-      "description": "Sends a custom command to the vacuum cleaner and optionally get the response.",
-      "fields": {
-        "command": {
-          "name": "Command",
-          "description": "Command to execute."
-        },
-        "params": {
-          "name": "Parameters",
-          "description": "Parameters for the command."
-        }
-      }
+    "get_positions": {
+      "name": "Get positions",
+      "description": "Get bot and chargers positions."
     }
   }
 }

@@ -8,14 +8,18 @@ from typing import Any
 
 from deebot_client.capabilities import VacuumCapabilities
 from deebot_client.device import Device
-from deebot_client.events import BatteryEvent, FanSpeedEvent, RoomsEvent, StateEvent
+from deebot_client.events import (
+    BatteryEvent,
+    FanSpeedEvent,
+    Position,
+    PositionType,
+    RoomsEvent,
+    StateEvent,
+)
 from deebot_client.models import CleanAction, CleanMode, Room, State
 import sucks
-import voluptuous as vol
 
 from homeassistant.components.vacuum import (
-    ATTR_COMMAND,
-    ATTR_PARAMS,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
@@ -28,7 +32,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
@@ -43,12 +47,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_ERROR = "error"
 ATTR_COMPONENT_PREFIX = "component_"
 
-SERVICE_SEND_CUSTOM_COMMAND = "send_custom_command"
-
-SERVICE_SEND_CUSTOM_COMMAND_SCHEMA = {
-    vol.Required(ATTR_COMMAND): cv.string,
-    vol.Optional(ATTR_PARAMS): vol.Any(dict, cv.ensure_list),
-}
+SERVICE_GET_POSITIONS = "get_positions"
 
 
 async def async_setup_entry(
@@ -70,9 +69,9 @@ async def async_setup_entry(
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
-        SERVICE_SEND_CUSTOM_COMMAND,
-        SERVICE_SEND_CUSTOM_COMMAND_SCHEMA,
-        "async_send_custom_command",
+        SERVICE_GET_POSITIONS,
+        {},
+        "async_get_positions",
         supports_response=SupportsResponse.OPTIONAL,
     )
 
@@ -217,13 +216,14 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
         """Send a command to a vacuum cleaner."""
         self.device.run(sucks.VacBotCommand(command, params))
 
-    async def async_send_custom_command(
+    async def async_get_positions(
         self,
-        command: str,
-        params: dict[str, Any] | list[Any] | None = None,
     ) -> None:
-        """Send a custom command to a vacumm cleaner and optionally return the response."""
-        self.send_command(command, params)
+        """Get bot and chargers positions."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="vacuum_get_positions_not_supported",
+        )
 
 
 _STATE_TO_VACUUM_STATE = {
@@ -360,26 +360,21 @@ class EcovacsVacuum(
         **kwargs: Any,
     ) -> None:
         """Send a command to a vacuum cleaner."""
-        await self.async_send_custom_command(command, params)
+        _LOGGER.debug("async_send_command %s with %s", command, params)
+        if params is None:
+            params = {}
+        elif isinstance(params, list):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="vacuum_send_command_params_dict",
+            )
 
-    async def async_send_custom_command(
-        self,
-        command: str,
-        params: dict[str, Any] | list[Any] | None = None,
-    ) -> dict[str, Any] | None:
-        """Send a custom command to a vacumm cleaner and optionally return the response."""
-        _LOGGER.debug("async_send_custom_command %s with %s", command, params)
         if command in ["spot_area", "custom_area"]:
             if params is None:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="vacuum_send_command_params_required",
                     translation_placeholders={"command": command},
-                )
-            if isinstance(params, list):
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="vacuum_send_command_params_dict",
                 )
             if self._capability.clean.action.area is None:
                 info = self._device.device_info
@@ -391,22 +386,78 @@ class EcovacsVacuum(
                 )
 
             if command in "spot_area":
-                return await self._device.execute_command(
+                await self._device.execute_command(
                     self._capability.clean.action.area(
                         CleanMode.SPOT_AREA,
                         str(params["rooms"]),
                         params.get("cleanings", 1),
                     )
                 )
-            if command == "custom_area":
-                return await self._device.execute_command(
+            elif command == "custom_area":
+                await self._device.execute_command(
                     self._capability.clean.action.area(
                         CleanMode.CUSTOM_AREA,
                         str(params["coordinates"]),
                         params.get("cleanings", 1),
                     )
                 )
+        else:
+            await self._device.execute_command(
+                self._capability.custom.set(command, params)
+            )
 
-        return await self._device.execute_command(
-            self._capability.custom.set(command, params if params is not None else {})
+    async def async_get_positions(
+        self,
+    ) -> list[Position]:
+        """Get bot and chargers positions."""
+        _LOGGER.debug("async_get_positions")
+
+        if (
+            not self._capability.map
+            or not self._capability.map.position
+            or not self._capability.map.position.get
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="vacuum_get_positions_not_supported",
+            )
+
+        positions = []
+        result = await self._device.execute_command(
+            self._capability.map.position.get[0]
         )
+        if isinstance(result, dict) and result.get("ret") == "ok":
+            data = result.get("resp", {}).get("body", {}).get("data", {})
+
+            for type_str in ("deebotPos", "chargePos"):
+                data_positions = data.get(type_str, [])
+
+                if isinstance(data_positions, dict):
+                    positions.append(
+                        Position(
+                            type=PositionType(type_str),
+                            x=data_positions["x"],
+                            y=data_positions["y"],
+                            a=data_positions.get("a", 0),
+                        )
+                    )
+                else:
+                    positions.extend(
+                        [
+                            Position(
+                                type=PositionType(type_str),
+                                x=entry["x"],
+                                y=entry["y"],
+                                a=entry.get("a", 0),
+                            )
+                            for entry in data_positions
+                        ]
+                    )
+
+        if not positions:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="vacuum_get_positions_invalid",
+            )
+
+        return positions

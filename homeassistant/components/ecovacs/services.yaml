@@ -1,16 +1,4 @@
-send_custom_command:
+get_positions:
   target:
     entity:
       domain: vacuum
-  fields:
-    command:
-      required: true
-      example: "getPos"
-      selector:
-        text:
-    params:
-      example:
-        key1: value1
-        key2: value2
-      selector:
-        object:

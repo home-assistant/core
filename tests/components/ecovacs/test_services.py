@@ -9,8 +9,7 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
-from homeassistant.components.ecovacs.vacuum import SERVICE_SEND_CUSTOM_COMMAND
-from homeassistant.components.vacuum import ATTR_COMMAND, ATTR_PARAMS
+from homeassistant.components.ecovacs.vacuum import SERVICE_GET_POSITIONS
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
@@ -19,9 +18,10 @@ pytestmark = [pytest.mark.usefixtures("init_integration")]
 
 @pytest.fixture
 def mock_device_execute_response(
-    command: str, params: dict[str, Any] | list[Any]
+    data: dict[str, Any],
 ) -> Generator[AsyncMock, None, None]:
     """Mock the device execute function response."""
+
     with patch.object(
         Device,
         "execute_command",
@@ -39,7 +39,7 @@ def mock_device_execute_response(
                 "body": {
                     "code": 0,
                     "msg": "ok",
-                    "data": {"command": command, "params": params},
+                    "data": data,
                 },
             },
             "id": "xRV3",
@@ -51,11 +51,16 @@ def mock_device_execute_response(
 
 @pytest.mark.usefixtures("mock_device_execute_response")
 @pytest.mark.parametrize(
-    ("command", "params"),
+    "data",
     [
-        ("test_command_list", ["param1", "param2"]),
-        ("test_command_dict", {"key1": "value1", "key2": "value2"}),
-        ("test_command_none", None),
+        {
+            "deebotPos": {"x": 1, "y": 5, "a": 85},
+            "chargePos": {"x": 5, "y": 9, "a": 85},
+        },
+        {
+            "deebotPos": {"x": 375, "y": 313, "a": 90},
+            "chargePos": [{"x": 112, "y": 768, "a": 32}, {"x": 489, "y": 322, "a": 0}],
+        },
     ],
 )
 @pytest.mark.parametrize(
@@ -65,27 +70,21 @@ def mock_device_execute_response(
     ],
     ids=["yna5x1"],
 )
-async def test_send_custom_command_service(
+async def test_get_positions_service(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_id: str,
-    command: str,
-    params: dict[str, Any] | list[Any] | None,
 ) -> None:
-    """Test that send_custom_command service response snapshots match."""
+    """Test that get_positions service response snapshots match."""
     vacuum = hass.states.get(entity_id)
     assert vacuum
 
     assert snapshot(
-        name=f"{entity_id}:custom-command-response"
+        name=f"{entity_id}:get-positions"
     ) == await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_CUSTOM_COMMAND,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_COMMAND: command,
-            ATTR_PARAMS: params,
-        },
+        SERVICE_GET_POSITIONS,
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
         return_response=True,
     )
