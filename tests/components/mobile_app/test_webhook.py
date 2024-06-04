@@ -24,6 +24,7 @@ from homeassistant.setup import async_setup_component
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
 from tests.common import async_capture_events, async_mock_service
+from tests.components.conversation import MockAgent
 
 
 @pytest.fixture
@@ -1023,7 +1024,7 @@ async def test_webhook_handle_conversation_process(
     homeassistant,
     create_registrations,
     webhook_client,
-    mock_conversation_agent,
+    mock_conversation_agent: MockAgent,
 ) -> None:
     """Test that we can converse."""
     webhook_client.server.app.router._frozen = False
