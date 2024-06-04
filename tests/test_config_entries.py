@@ -5545,3 +5545,73 @@ async def test_raise_wrong_exception_in_forwarded_platform(
         f"Instead raise {exc_type_name} before calling async_forward_entry_setups"
         in caplog.text
     )
+
+
+async def test_non_awaited_async_forward_entry_setups(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test async_forward_entry_setups not being awaited."""
+
+    async def mock_setup_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock setting up entry."""
+        # Call async_forward_entry_setups without awaiting it
+        # This is not allowed and will raise a warning
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setups(entry, ["light"])
+        )
+        return True
+
+    async def mock_unload_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock unloading an entry."""
+        result = await hass.config_entries.async_unload_platforms(entry, ["light"])
+        assert result
+        return result
+
+    mock_remove_entry = AsyncMock(return_value=None)
+
+    async def mock_setup_entry_platform(
+        hass: HomeAssistant,
+        entry: config_entries.ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Mock setting up platform."""
+        await asyncio.sleep(0)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=mock_unload_entry,
+            async_remove_entry=mock_remove_entry,
+        ),
+    )
+    mock_platform(
+        hass, "test.light", MockPlatform(async_setup_entry=mock_setup_entry_platform)
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    entry = MockConfigEntry(domain="test", entry_id="test2")
+    entry.add_to_manager(manager)
+
+    # Setup entry
+    await manager.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        "Detected code that calls async_forward_entry_setup after the "
+        "entry for integration, test with title: Mock Title and entry_id:"
+        " test2, has been set up, without holding the setup lock that "
+        "prevents the config entry from being set up multiple times. "
+        "Instead await hass.config_entries.async_forward_entry_setup "
+        "during setup of the config entry or call "
+        "hass.config_entries.async_late_forward_entry_setups "
+        "in a tracked task. This will stop working in Home Assistant"
+        " 2025.1. Please report this issue."
+    ) in caplog.text
