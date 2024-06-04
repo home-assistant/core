@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from incomfortclient import Gateway as InComfortGateway, Heater as InComfortHeater
+from incomfortclient import Heater as InComfortHeater
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -19,8 +19,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
-from . import DATA_INCOMFORT, IncomfortEntity
 from .const import DOMAIN
+from .coordinator import DATA_INCOMFORT, InComfortDataCoordinator, IncomfortEntity
 
 INCOMFORT_HEATER_TEMP = "CV Temp"
 INCOMFORT_PRESSURE = "CV Pressure"
@@ -67,10 +67,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up InComfort/InTouch sensor entities."""
-    incomfort_data = hass.data[DATA_INCOMFORT][entry.entry_id]
+    incomfort_coordinator = hass.data[DATA_INCOMFORT][entry.entry_id]
+    heaters = incomfort_coordinator.data.heaters
     async_add_entities(
-        IncomfortSensor(incomfort_data.client, heater, description)
-        for heater in incomfort_data.heaters
+        IncomfortSensor(incomfort_coordinator, heater, description)
+        for heater in heaters
         for description in SENSOR_TYPES
     )
 
@@ -82,15 +83,15 @@ class IncomfortSensor(IncomfortEntity, SensorEntity):
 
     def __init__(
         self,
-        client: InComfortGateway,
+        coordinator: InComfortDataCoordinator,
         heater: InComfortHeater,
         description: IncomfortSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__()
+        super().__init__(coordinator)
         self.entity_description = description
 
-        self._client = client
+        self._client = coordinator.data.client
         self._heater = heater
 
         self._attr_unique_id = f"{heater.serial_no}_{slugify(description.name)}"
