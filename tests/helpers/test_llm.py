@@ -494,10 +494,6 @@ async def test_assist_api_prompt(
         },
         "script.test_script": {
             "description": "This is a test script",
-            "fields": {
-                "beer": "Number of beers",
-                "wine": "",
-            },
             "names": "test_script",
             "state": "off",
         },
