@@ -76,16 +76,6 @@
           'time_off': '7:30',
           'time_on': '7:0',
         }),
-        'lFb3gfH': dict({
-          'days': list([
-            'tuesday',
-          ]),
-          'enabled': True,
-          'entry_id': 'lFb3gfH',
-          'steam': True,
-          'time_off': '7:30',
-          'time_on': '24:0',
-        }),
       }),
       'water_contact': True,
     }),
