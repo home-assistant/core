@@ -68,8 +68,8 @@ SENSORS: tuple[SoftenerSensorEntityDescription, ...] = (
         value_fn=lambda softener: softener.battery,
     ),
     SoftenerSensorEntityDescription(
-        key="wi_fi_level",
-        translation_key="wi_fi_level",
+        key="wi_fi_strength",
+        translation_key="wi_fi_strength",
         value_fn=lambda softener: softener.wifiLevel,
         device_class=SensorDeviceClass.ENUM,
         options=[

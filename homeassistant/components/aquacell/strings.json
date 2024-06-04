@@ -32,8 +32,8 @@
       "salt_right_side_time_remaining": {
         "name": "Salt right side time remaining"
       },
-      "wi_fi_level": {
-        "name": "Wi-Fi level",
+      "wi_fi_strength": {
+        "name": "Wi-Fi strength",
         "state": {
           "low": "Low",
           "medium": "Medium",

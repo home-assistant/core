@@ -7,7 +7,7 @@
       "salt_right_side_percentage": {
         "default": "mdi:basket-fill"
       },
-      "wi_fi_level": {
+      "wi_fi_strength": {
         "default": "mdi:wifi",
         "state": {
           "low": "mdi:wifi-strength-1",
