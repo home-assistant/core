@@ -1,8 +1,10 @@
 """Withings coordinator."""
 
+from __future__ import annotations
+
 from abc import abstractmethod
 from datetime import date, datetime, timedelta
-from typing import TypeVar
+from typing import TYPE_CHECKING
 
 from aiowithings import (
     Activity,
@@ -18,7 +20,6 @@ from aiowithings import (
     aggregate_measurements,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -26,15 +27,16 @@ from homeassistant.util import dt as dt_util
 
 from .const import LOGGER
 
-_T = TypeVar("_T")
+if TYPE_CHECKING:
+    from . import WithingsConfigEntry
 
 UPDATE_INTERVAL = timedelta(minutes=10)
 
 
-class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
+class WithingsDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Base coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: WithingsConfigEntry
     _default_update_interval: timedelta | None = UPDATE_INTERVAL
     _last_valid_update: datetime | None = None
     webhooks_connected: bool = False
@@ -71,14 +73,14 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
         )
         await self.async_request_refresh()
 
-    async def _async_update_data(self) -> _T:
+    async def _async_update_data(self) -> _DataT:
         try:
             return await self._internal_update_data()
         except (WithingsUnauthorizedError, WithingsAuthenticationFailedError) as exc:
             raise ConfigEntryAuthFailed from exc
 
     @abstractmethod
-    async def _internal_update_data(self) -> _T:
+    async def _internal_update_data(self) -> _DataT:
         """Update coordinator data."""
 
 

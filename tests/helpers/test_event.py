@@ -49,7 +49,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, async_fire_time_changed_exact
 
-DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
+DEFAULT_TIME_ZONE = dt_util.get_default_time_zone()
 
 
 async def test_track_point_in_time(hass: HomeAssistant) -> None:
@@ -4097,7 +4097,7 @@ async def test_periodic_task_entering_dst(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test periodic task behavior when entering dst."""
-    hass.config.set_time_zone("Europe/Vienna")
+    await hass.config.async_set_time_zone("Europe/Vienna")
     specific_runs = []
 
     today = date.today().isoformat()
@@ -4148,7 +4148,7 @@ async def test_periodic_task_entering_dst_2(
 
     This tests a task firing every second in the range 0..58 (not *:*:59)
     """
-    hass.config.set_time_zone("Europe/Vienna")
+    await hass.config.async_set_time_zone("Europe/Vienna")
     specific_runs = []
 
     today = date.today().isoformat()
@@ -4198,7 +4198,7 @@ async def test_periodic_task_leaving_dst(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test periodic task behavior when leaving dst."""
-    hass.config.set_time_zone("Europe/Vienna")
+    await hass.config.async_set_time_zone("Europe/Vienna")
     specific_runs = []
 
     today = date.today().isoformat()
@@ -4274,7 +4274,7 @@ async def test_periodic_task_leaving_dst_2(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test periodic task behavior when leaving dst."""
-    hass.config.set_time_zone("Europe/Vienna")
+    await hass.config.async_set_time_zone("Europe/Vienna")
     specific_runs = []
 
     today = date.today().isoformat()
@@ -4565,7 +4565,7 @@ async def test_async_track_point_in_time_cancel(hass: HomeAssistant) -> None:
     """Test cancel of async track point in time."""
 
     times = []
-    hass.config.set_time_zone("US/Hawaii")
+    await hass.config.async_set_time_zone("US/Hawaii")
     hst_tz = dt_util.get_time_zone("US/Hawaii")
 
     @ha.callback

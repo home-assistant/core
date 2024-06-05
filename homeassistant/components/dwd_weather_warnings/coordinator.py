@@ -19,14 +19,16 @@ from .const import (
 from .exceptions import EntityNotFoundError
 from .util import get_position_data
 
+type DwdWeatherWarningsConfigEntry = ConfigEntry[DwdWeatherWarningsCoordinator]
+
 
 class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
     """Custom coordinator for the dwd_weather_warnings integration."""
 
-    config_entry: ConfigEntry
+    config_entry: DwdWeatherWarningsConfigEntry
     api: DwdWeatherWarningsAPI
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the dwd_weather_warnings coordinator."""
         super().__init__(
             hass, LOGGER, name=DOMAIN, update_interval=DEFAULT_SCAN_INTERVAL
@@ -54,7 +56,7 @@ class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
             try:
                 position = get_position_data(self.hass, self._device_tracker)
             except (EntityNotFoundError, AttributeError) as err:
-                raise UpdateFailed(f"Error fetching position: {repr(err)}") from err
+                raise UpdateFailed(f"Error fetching position: {err!r}") from err
 
             distance = None
             if self._previous_position is not None:

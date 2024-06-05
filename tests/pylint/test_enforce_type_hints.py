@@ -1196,3 +1196,79 @@ def test_pytest_invalid_function(
         ),
     ):
         type_hint_checker.visit_asyncfunctiondef(func_node)
+
+
+@pytest.mark.parametrize(
+    "entry_annotation",
+    [
+        "ConfigEntry",
+        "ConfigEntry[AdGuardData]",
+        "AdGuardConfigEntry",  # prefix allowed for type aliases
+    ],
+)
+def test_valid_generic(
+    linter: UnittestLinter, type_hint_checker: BaseChecker, entry_annotation: str
+) -> None:
+    """Ensure valid hints are accepted for generic types."""
+    func_node = astroid.extract_node(
+        f"""
+    async def async_setup_entry( #@
+        hass: HomeAssistant,
+        entry: {entry_annotation},
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        pass
+    """,
+        "homeassistant.components.pylint_test.notify",
+    )
+    type_hint_checker.visit_module(func_node.parent)
+
+    with assert_no_messages(linter):
+        type_hint_checker.visit_asyncfunctiondef(func_node)
+
+
+@pytest.mark.parametrize(
+    ("entry_annotation", "end_col_offset"),
+    [
+        ("Config", 17),  # not generic
+        ("ConfigEntryXX[Data]", 30),  # generic type needs to match exactly
+        ("ConfigEntryData", 26),  # ConfigEntry should be the suffix
+    ],
+)
+def test_invalid_generic(
+    linter: UnittestLinter,
+    type_hint_checker: BaseChecker,
+    entry_annotation: str,
+    end_col_offset: int,
+) -> None:
+    """Ensure invalid hints are rejected for generic types."""
+    func_node, entry_node = astroid.extract_node(
+        f"""
+    async def async_setup_entry( #@
+        hass: HomeAssistant,
+        entry: {entry_annotation}, #@
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        pass
+    """,
+        "homeassistant.components.pylint_test.notify",
+    )
+    type_hint_checker.visit_module(func_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=entry_node,
+            args=(
+                2,
+                "ConfigEntry",
+                "async_setup_entry",
+            ),
+            line=4,
+            col_offset=4,
+            end_line=4,
+            end_col_offset=end_col_offset,
+        ),
+    ):
+        type_hint_checker.visit_asyncfunctiondef(func_node)

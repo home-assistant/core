@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
@@ -25,10 +24,10 @@ from homeassistant.const import (
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import PlugwiseConfigEntry
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
@@ -403,29 +402,39 @@ SENSORS: tuple[PlugwiseSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: PlugwiseConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Smile sensors from a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = entry.runtime_data
 
-    entities: list[PlugwiseSensorEntity] = []
-    for device_id, device in coordinator.data.devices.items():
-        if not (sensors := device.get("sensors")):
-            continue
-        for description in SENSORS:
-            if description.key not in sensors:
+    @callback
+    def _add_entities() -> None:
+        """Add Entities."""
+        if not coordinator.new_devices:
+            return
+
+        entities: list[PlugwiseSensorEntity] = []
+        for device_id, device in coordinator.data.devices.items():
+            if not (sensors := device.get("sensors")):
                 continue
+            for description in SENSORS:
+                if description.key not in sensors:
+                    continue
 
-            entities.append(
-                PlugwiseSensorEntity(
-                    coordinator,
-                    device_id,
-                    description,
+                entities.append(
+                    PlugwiseSensorEntity(
+                        coordinator,
+                        device_id,
+                        description,
+                    )
                 )
-            )
 
-    async_add_entities(entities)
+        async_add_entities(entities)
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
+
+    _add_entities()
 
 
 class PlugwiseSensorEntity(PlugwiseEntity, SensorEntity):

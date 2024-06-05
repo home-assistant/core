@@ -55,6 +55,17 @@
       "partition": {
         "name": "Partition {partition_id}"
       }
+    },
+    "button": {
+      "clear_bypass": {
+        "name": "Clear bypass"
+      },
+      "bypass_all": {
+        "name": "Bypass all"
+      },
+      "bypass": {
+        "name": "Bypass"
+      }
     }
   }
 }

@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 from pydiscovergy.models import Reading
 import pytest
 
-from homeassistant.components.discovergy import DOMAIN
+from homeassistant.components.discovergy.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

@@ -94,7 +94,7 @@ class RadioThermConfigFlow(ConfigFlow, domain=DOMAIN):
                 init_data = await validate_connection(self.hass, user_input[CONF_HOST])
             except CannotConnect:
                 errors[CONF_HOST] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

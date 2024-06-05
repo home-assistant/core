@@ -8,7 +8,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
-from habluetooth import scanner
+from habluetooth import scanner, set_manager
 from habluetooth.wrappers import HaBleakScannerWrapper
 import pytest
 
@@ -40,7 +40,7 @@ from homeassistant.components.bluetooth.match import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -1154,6 +1154,7 @@ async def test_async_discovered_device_api(
 ) -> None:
     """Test the async_discovered_device API."""
     mock_bt = []
+    set_manager(None)
     with (
         patch(
             "homeassistant.components.bluetooth.async_get_bluetooth",
@@ -1169,8 +1170,10 @@ async def test_async_discovered_device_api(
             },
         ),
     ):
-        assert not bluetooth.async_discovered_service_info(hass)
-        assert not bluetooth.async_address_present(hass, "44:44:22:22:11:22")
+        with pytest.raises(RuntimeError, match="BluetoothManager has not been set"):
+            assert not bluetooth.async_discovered_service_info(hass)
+        with pytest.raises(RuntimeError, match="BluetoothManager has not been set"):
+            assert not bluetooth.async_address_present(hass, "44:44:22:22:11:22")
         await async_setup_with_default_adapter(hass)
 
         with patch.object(hass.config_entries.flow, "async_init"):
@@ -2744,6 +2747,7 @@ async def test_async_ble_device_from_address(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock, macos_adapter: None
 ) -> None:
     """Test the async_ble_device_from_address api."""
+    set_manager(None)
     mock_bt = []
     with (
         patch(
@@ -2760,11 +2764,15 @@ async def test_async_ble_device_from_address(
             },
         ),
     ):
-        assert not bluetooth.async_discovered_service_info(hass)
-        assert not bluetooth.async_address_present(hass, "44:44:22:22:11:22")
-        assert (
-            bluetooth.async_ble_device_from_address(hass, "44:44:33:11:23:45") is None
-        )
+        with pytest.raises(RuntimeError, match="BluetoothManager has not been set"):
+            assert not bluetooth.async_discovered_service_info(hass)
+        with pytest.raises(RuntimeError, match="BluetoothManager has not been set"):
+            assert not bluetooth.async_address_present(hass, "44:44:22:22:11:22")
+        with pytest.raises(RuntimeError, match="BluetoothManager has not been set"):
+            assert (
+                bluetooth.async_ble_device_from_address(hass, "44:44:33:11:23:45")
+                is None
+            )
 
         await async_setup_with_default_adapter(hass)
 
@@ -3143,6 +3151,7 @@ async def test_issue_outdated_haos_removed(
     mock_bleak_scanner_start: MagicMock,
     no_adapters: None,
     operating_system_85: None,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we do not create an issue on outdated haos anymore."""
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
@@ -3150,8 +3159,7 @@ async def test_issue_outdated_haos_removed(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "haos_outdated")
+    issue = issue_registry.async_get_issue(DOMAIN, "haos_outdated")
     assert issue is None
 
 
@@ -3160,6 +3168,7 @@ async def test_haos_9_or_later(
     mock_bleak_scanner_start: MagicMock,
     one_adapter: None,
     operating_system_90: None,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we do not create issues for haos 9.x or later."""
     entry = MockConfigEntry(
@@ -3170,8 +3179,7 @@ async def test_haos_9_or_later(
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "haos_outdated")
+    issue = issue_registry.async_get_issue(DOMAIN, "haos_outdated")
     assert issue is None
 
 

@@ -40,7 +40,9 @@ DATASET_NO_CHANNEL = bytes.fromhex(
 )
 
 
-async def test_import_dataset(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
+async def test_import_dataset(
+    hass: HomeAssistant, mock_async_zeroconf: None, issue_registry: ir.IssueRegistry
+) -> None:
     """Test the active dataset is imported at setup."""
     add_service_listener_called = asyncio.Event()
 
@@ -53,7 +55,6 @@ async def test_import_dataset(hass: HomeAssistant, mock_async_zeroconf: None) ->
     mock_async_zeroconf.async_remove_service_listener = AsyncMock()
     mock_async_zeroconf.async_get_service_info = AsyncMock()
 
-    issue_registry = ir.async_get(hass)
     assert await thread.async_get_preferred_dataset(hass) is None
 
     config_entry = MockConfigEntry(
@@ -123,15 +124,15 @@ async def test_import_dataset(hass: HomeAssistant, mock_async_zeroconf: None) ->
 
 
 async def test_import_share_radio_channel_collision(
-    hass: HomeAssistant, multiprotocol_addon_manager_mock
+    hass: HomeAssistant,
+    multiprotocol_addon_manager_mock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the active dataset is imported at setup.
 
     This imports a dataset with different channel than ZHA when ZHA and OTBR share
     the radio.
     """
-    issue_registry = ir.async_get(hass)
-
     multiprotocol_addon_manager_mock.async_get_channel.return_value = 15
 
     config_entry = MockConfigEntry(
@@ -173,14 +174,15 @@ async def test_import_share_radio_channel_collision(
 
 @pytest.mark.parametrize("dataset", [DATASET_CH15, DATASET_NO_CHANNEL])
 async def test_import_share_radio_no_channel_collision(
-    hass: HomeAssistant, multiprotocol_addon_manager_mock, dataset: bytes
+    hass: HomeAssistant,
+    multiprotocol_addon_manager_mock,
+    dataset: bytes,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the active dataset is imported at setup.
 
     This imports a dataset when ZHA and OTBR share the radio.
     """
-    issue_registry = ir.async_get(hass)
-
     multiprotocol_addon_manager_mock.async_get_channel.return_value = 15
 
     config_entry = MockConfigEntry(
@@ -221,13 +223,13 @@ async def test_import_share_radio_no_channel_collision(
 @pytest.mark.parametrize(
     "dataset", [DATASET_INSECURE_NW_KEY, DATASET_INSECURE_PASSPHRASE]
 )
-async def test_import_insecure_dataset(hass: HomeAssistant, dataset: bytes) -> None:
+async def test_import_insecure_dataset(
+    hass: HomeAssistant, dataset: bytes, issue_registry: ir.IssueRegistry
+) -> None:
     """Test the active dataset is imported at setup.
 
     This imports a dataset with insecure settings.
     """
-    issue_registry = ir.async_get(hass)
-
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA_MULTIPAN,
         domain=otbr.DOMAIN,

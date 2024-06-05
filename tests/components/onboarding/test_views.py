@@ -80,6 +80,16 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
             },
         },
     )
+    aioclient_mock.get(
+        "http://127.0.0.1/network/info",
+        json={
+            "result": "ok",
+            "data": {
+                "host_internet": True,
+                "supervisor_internet": True,
+            },
+        },
+    )
     with (
         patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
         patch(
@@ -192,10 +202,9 @@ async def test_onboarding_user(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     hass_client_no_auth: ClientSessionGenerator,
+    area_registry: ar.AreaRegistry,
 ) -> None:
     """Test creating a new user."""
-    area_registry = ar.async_get(hass)
-
     # Create an existing area to mimic an integration creating an area
     # before onboarding is done.
     area_registry.async_create("Living Room")

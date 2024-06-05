@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_CUBIC_METER,
     PERCENTAGE,
@@ -28,7 +27,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AccuWeatherData
+from . import AccuWeatherConfigEntry
 from .const import (
     API_METRIC,
     ATTR_CATEGORY,
@@ -38,7 +37,6 @@ from .const import (
     ATTR_SPEED,
     ATTR_VALUE,
     ATTRIBUTION,
-    DOMAIN,
     MAX_FORECAST_DAYS,
 )
 from .coordinator import (
@@ -458,17 +456,16 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AccuWeatherConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add AccuWeather entities from a config_entry."""
-
-    accuweather_data: AccuWeatherData = hass.data[DOMAIN][entry.entry_id]
-
     observation_coordinator: AccuWeatherObservationDataUpdateCoordinator = (
-        accuweather_data.coordinator_observation
+        entry.runtime_data.coordinator_observation
     )
     forecast_daily_coordinator: AccuWeatherDailyForecastDataUpdateCoordinator = (
-        accuweather_data.coordinator_daily_forecast
+        entry.runtime_data.coordinator_daily_forecast
     )
 
     sensors: list[AccuWeatherSensor | AccuWeatherForecastSensor] = [

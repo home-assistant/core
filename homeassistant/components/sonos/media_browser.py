@@ -43,7 +43,7 @@ from .speaker import SonosMedia, SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
 
-GetBrowseImageUrlType = Callable[[str, str, "str | None"], str]
+type GetBrowseImageUrlType = Callable[[str, str, str | None], str]
 
 
 def get_thumbnail_url_full(

@@ -9,13 +9,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import UpnpDataUpdateCoordinator
-from .const import DOMAIN, LOGGER, WAN_STATUS
+from . import UpnpConfigEntry, UpnpDataUpdateCoordinator
+from .const import LOGGER, WAN_STATUS
 from .entity import UpnpEntity, UpnpEntityDescription
 
 
@@ -38,11 +37,11 @@ SENSOR_DESCRIPTIONS: tuple[UpnpBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: UpnpConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the UPnP/IGD sensors."""
-    coordinator: UpnpDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     entities = [
         UpnpStatusBinarySensor(

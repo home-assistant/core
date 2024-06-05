@@ -16,7 +16,6 @@ def _class_fields(cls: type, kw_only: bool) -> list[tuple[str, Any, Any]]:
 
     Extracted from dataclasses._process_class.
     """
-    # pylint: disable=protected-access
     cls_annotations = cls.__dict__.get("__annotations__", {})
 
     cls_fields: list[dataclasses.Field[Any]] = []
@@ -24,20 +23,20 @@ def _class_fields(cls: type, kw_only: bool) -> list[tuple[str, Any, Any]]:
     _dataclasses = sys.modules[dataclasses.__name__]
     for name, _type in cls_annotations.items():
         # See if this is a marker to change the value of kw_only.
-        if dataclasses._is_kw_only(type, _dataclasses) or (  # type: ignore[attr-defined]
+        if dataclasses._is_kw_only(type, _dataclasses) or (  # type: ignore[attr-defined]  # noqa: SLF001
             isinstance(_type, str)
-            and dataclasses._is_type(  # type: ignore[attr-defined]
+            and dataclasses._is_type(  # type: ignore[attr-defined]  # noqa: SLF001
                 _type,
                 cls,
                 _dataclasses,
                 dataclasses.KW_ONLY,
-                dataclasses._is_kw_only,  # type: ignore[attr-defined]
+                dataclasses._is_kw_only,  # type: ignore[attr-defined]  # noqa: SLF001
             )
         ):
             kw_only = True
         else:
             # Otherwise it's a field of some type.
-            cls_fields.append(dataclasses._get_field(cls, name, _type, kw_only))  # type: ignore[attr-defined]
+            cls_fields.append(dataclasses._get_field(cls, name, _type, kw_only))  # type: ignore[attr-defined]  # noqa: SLF001
 
     return [(field.name, field.type, field) for field in cls_fields]
 

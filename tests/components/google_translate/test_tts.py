@@ -39,7 +39,7 @@ def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
 
 
 @pytest.fixture
-async def calls(hass: HomeAssistant) -> list[ServiceCall]:
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Mock media player calls."""
     return async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
