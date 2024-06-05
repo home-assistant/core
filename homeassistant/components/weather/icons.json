@@ -10,6 +10,7 @@
         "hail": "mdi:weather-hail",
         "lightning": "mdi:weather-lightning",
         "lightning-rainy": "mdi:weather-lightning-rainy",
+        "partlycloudy-night": "mdi:weather-night-partly-cloudy",
         "pouring": "mdi:weather-pouring",
         "rainy": "mdi:weather-rainy",
         "snowy": "mdi:weather-snowy",
