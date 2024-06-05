@@ -32,6 +32,7 @@ class ApSystemsMaxOutputNumber(ApSystemsEntity, NumberEntity):
     _attr_device_class = NumberDeviceClass.POWER
     _attr_mode = NumberMode.BOX
     _attr_native_unit_of_measurement = UnitOfPower.WATT
+    _attr_translation_key = "max_output"
 
     def __init__(
         self,
