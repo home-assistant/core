@@ -2,16 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass
 from typing import Any
 
 from incomfortclient import Heater as InComfortHeater
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorEntity,
-    BinarySensorEntityDescription,
-)
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,24 +17,6 @@ from .coordinator import InComfortDataCoordinator
 from .entity import IncomfortEntity
 
 
-@dataclass(frozen=True, kw_only=True)
-class IncomfortBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Describes Incomfort binary sensor entity."""
-
-    value_key: str
-    extra_state_attributes_fn: Callable[[dict[str, Any]], dict[str, Any]] | None = None
-
-
-SENSOR_TYPES: tuple[IncomfortBinarySensorEntityDescription, ...] = (
-    IncomfortBinarySensorEntityDescription(
-        key="failed",
-        name="Fault",
-        value_key="is_failed",
-        extra_state_attributes_fn=lambda status: {"fault_code": status["fault_code"]},
-    ),
-)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: InComfortConfigEntry,
@@ -48,31 +25,23 @@ async def async_setup_entry(
     """Set up an InComfort/InTouch binary_sensor entity."""
     incomfort_coordinator = entry.runtime_data
     heaters = incomfort_coordinator.data.heaters
-    async_add_entities(
-        IncomfortBinarySensor(incomfort_coordinator, h, description)
-        for h in heaters
-        for description in SENSOR_TYPES
-    )
+    async_add_entities(IncomfortFailed(incomfort_coordinator, h) for h in heaters)
 
 
-class IncomfortBinarySensor(IncomfortEntity, BinarySensorEntity):
-    """Representation of an InComfort binary sensor."""
+class IncomfortFailed(IncomfortEntity, BinarySensorEntity):
+    """Representation of an InComfort Failed sensor."""
 
-    entity_description: IncomfortBinarySensorEntityDescription
+    _attr_name = "Fault"
 
     def __init__(
-        self,
-        coordinator: InComfortDataCoordinator,
-        heater: InComfortHeater,
-        description: IncomfortBinarySensorEntityDescription,
+        self, coordinator: InComfortDataCoordinator, heater: InComfortHeater
     ) -> None:
         """Initialize the binary sensor."""
         super().__init__(coordinator)
-        self.entity_description = description
 
         self._heater = heater
 
-        self._attr_unique_id = f"{heater.serial_no}_{description.key}"
+        self._attr_unique_id = f"{heater.serial_no}_failed"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, heater.serial_no)},
             manufacturer="Intergas",
@@ -82,13 +51,9 @@ class IncomfortBinarySensor(IncomfortEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the status of the sensor."""
-        return self._heater.status[self.entity_description.value_key]
+        return self._heater.status["is_failed"]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes."""
-        if self.entity_description.extra_state_attributes_fn:
-            return self.entity_description.extra_state_attributes_fn(
-                self._heater.status
-            )
-        return None
+        return {"fault_code": self._heater.status["fault_code"]}
