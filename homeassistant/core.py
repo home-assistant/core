@@ -1773,6 +1773,7 @@ class State:
         context: Context | None = None,
         validate_entity_id: bool | None = True,
         state_info: StateInfo | None = None,
+        last_updated_timestamp: float | None = None,
     ) -> None:
         """Initialize a new state."""
         state = str(state)
@@ -1804,7 +1805,8 @@ class State:
         # so we will set the timestamp values here to avoid the overhead of
         # the function call in the property we know will always be called.
         last_updated = self.last_updated
-        last_updated_timestamp = last_updated.timestamp()
+        if not last_updated_timestamp:
+            last_updated_timestamp = last_updated.timestamp()
         self.last_updated_timestamp = last_updated_timestamp
         if self.last_changed == last_updated:
             self.__dict__["last_changed_timestamp"] = last_updated_timestamp
@@ -2320,6 +2322,7 @@ class StateMachine:
             context,
             old_state is None,
             state_info,
+            timestamp,
         )
         if old_state is not None:
             old_state.expire()
