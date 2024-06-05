@@ -45,6 +45,7 @@ async def test_lock_remove(
 
 async def test_lock_setup(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
@@ -57,7 +58,6 @@ async def test_lock_setup(
     unique_id = f"{doorlock.mac}_lock"
     entity_id = "lock.test_lock_lock"
 
-    entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(entity_id)
     assert entity
     assert entity.unique_id == unique_id

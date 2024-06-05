@@ -17,6 +17,7 @@ import homeassistant.util.dt as dt_util
 
 async def test_setting_rising(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     entity_registry_enabled_by_default: None,
 ) -> None:
@@ -112,8 +113,7 @@ async def test_setting_rising(
 
     entry_ids = hass.config_entries.async_entries("sun")
 
-    entity_reg = er.async_get(hass)
-    entity = entity_reg.async_get("sensor.sun_next_dawn")
+    entity = entity_registry.async_get("sensor.sun_next_dawn")
 
     assert entity
     assert entity.entity_category is EntityCategory.DIAGNOSTIC
@@ -140,42 +140,42 @@ async def test_setting_rising(
         solar_azimuth_state.state != hass.states.get("sensor.sun_solar_azimuth").state
     )
 
-    entity = entity_reg.async_get("sensor.sun_next_dusk")
+    entity = entity_registry.async_get("sensor.sun_next_dusk")
     assert entity
     assert entity.entity_category is EntityCategory.DIAGNOSTIC
     assert entity.unique_id == f"{entry_ids[0].entry_id}-next_dusk"
 
-    entity = entity_reg.async_get("sensor.sun_next_midnight")
+    entity = entity_registry.async_get("sensor.sun_next_midnight")
     assert entity
     assert entity.entity_category is EntityCategory.DIAGNOSTIC
     assert entity.unique_id == f"{entry_ids[0].entry_id}-next_midnight"
 
-    entity = entity_reg.async_get("sensor.sun_next_noon")
+    entity = entity_registry.async_get("sensor.sun_next_noon")
     assert entity
     assert entity.entity_category is EntityCategory.DIAGNOSTIC
     assert entity.unique_id == f"{entry_ids[0].entry_id}-next_noon"
 
-    entity = entity_reg.async_get("sensor.sun_next_rising")
+    entity = entity_registry.async_get("sensor.sun_next_rising")
     assert entity
     assert entity.entity_category is EntityCategory.DIAGNOSTIC
     assert entity.unique_id == f"{entry_ids[0].entry_id}-next_rising"
 
-    entity = entity_reg.async_get("sensor.sun_next_setting")
+    entity = entity_registry.async_get("sensor.sun_next_setting")
     assert entity
     assert entity.entity_category is EntityCategory.DIAGNOSTIC
     assert entity.unique_id == f"{entry_ids[0].entry_id}-next_setting"
 
-    entity = entity_reg.async_get("sensor.sun_solar_elevation")
+    entity = entity_registry.async_get("sensor.sun_solar_elevation")
     assert entity
     assert entity.entity_category is EntityCategory.DIAGNOSTIC
     assert entity.unique_id == f"{entry_ids[0].entry_id}-solar_elevation"
 
-    entity = entity_reg.async_get("sensor.sun_solar_azimuth")
+    entity = entity_registry.async_get("sensor.sun_solar_azimuth")
     assert entity
     assert entity.entity_category is EntityCategory.DIAGNOSTIC
     assert entity.unique_id == f"{entry_ids[0].entry_id}-solar_azimuth"
 
-    entity = entity_reg.async_get("sensor.sun_solar_rising")
+    entity = entity_registry.async_get("sensor.sun_solar_rising")
     assert entity
     assert entity.entity_category is EntityCategory.DIAGNOSTIC
     assert entity.unique_id == f"{entry_ids[0].entry_id}-solar_rising"

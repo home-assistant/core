@@ -1118,7 +1118,7 @@ async def test_unload_entry(
             '{"state":"ON","tone":"siren"}',
             '{"state":"OFF","tone":"siren"}',
         ),
-        # Attriute volume_level 2 is invalid, but the state is valid and should update
+        # Attribute volume_level 2 is invalid, but the state is valid and should update
         (
             "test-topic",
             '{"state":"ON","volume_level":0.5}',

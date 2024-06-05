@@ -1,11 +1,13 @@
 """Describe group states."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
-from homeassistant.const import STATE_OFF
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 
-from .const import HVAC_MODES, HVACMode
+from .const import DOMAIN, HVACMode
 
 if TYPE_CHECKING:
     from homeassistant.components.group import GroupIntegrationRegistry
@@ -13,10 +15,19 @@ if TYPE_CHECKING:
 
 @callback
 def async_describe_on_off_states(
-    hass: HomeAssistant, registry: "GroupIntegrationRegistry"
+    hass: HomeAssistant, registry: GroupIntegrationRegistry
 ) -> None:
     """Describe group on off states."""
     registry.on_off_states(
-        set(HVAC_MODES) - {HVACMode.OFF},
+        DOMAIN,
+        {
+            STATE_ON,
+            HVACMode.HEAT,
+            HVACMode.COOL,
+            HVACMode.HEAT_COOL,
+            HVACMode.AUTO,
+            HVACMode.FAN_ONLY,
+        },
+        STATE_ON,
         STATE_OFF,
     )

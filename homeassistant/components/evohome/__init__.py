@@ -6,7 +6,7 @@ Such systems include evohome, Round Thermostat, and others.
 from __future__ import annotations
 
 from collections.abc import Awaitable
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 import logging
 import re
@@ -451,8 +451,8 @@ class EvoBroker:
         self._location: evo.Location = client.locations[loc_idx]
 
         self.config = client.installation_info[loc_idx][GWS][0][TCS][0]
-        self.tcs: evo.ControlSystem = self._location._gateways[0]._control_systems[0]
-        self.tcs_utc_offset = timedelta(minutes=self._location.timeZone[UTC_OFFSET])
+        self.tcs: evo.ControlSystem = self._location._gateways[0]._control_systems[0]  # noqa: SLF001
+        self.loc_utc_offset = timedelta(minutes=self._location.timeZone[UTC_OFFSET])
         self.temps: dict[str, float | None] = {}
 
     async def save_auth_tokens(self) -> None:
@@ -685,7 +685,8 @@ class EvoChild(EvoDevice):
         if not (schedule := self._schedule.get("DailySchedules")):
             return {}  # no scheduled setpoints when {'DailySchedules': []}
 
-        day_time = dt_util.now()
+        # get dt in the same TZ as the TCS location, so we can compare schedule times
+        day_time = dt_util.now().astimezone(timezone(self._evo_broker.loc_utc_offset))
         day_of_week = day_time.weekday()  # for evohome, 0 is Monday
         time_of_day = day_time.strftime("%H:%M:%S")
 
@@ -699,7 +700,7 @@ class EvoChild(EvoDevice):
                 else:
                     break
 
-            # Did the current SP start yesterday? Does the next start SP tomorrow?
+            # Did this setpoint start yesterday? Does the next setpoint start tomorrow?
             this_sp_day = -1 if sp_idx == -1 else 0
             next_sp_day = 1 if sp_idx + 1 == len(day["Switchpoints"]) else 0
 
@@ -716,7 +717,7 @@ class EvoChild(EvoDevice):
                 )
                 assert switchpoint_time_of_day is not None  # mypy check
                 dt_aware = _dt_evo_to_aware(
-                    switchpoint_time_of_day, self._evo_broker.tcs_utc_offset
+                    switchpoint_time_of_day, self._evo_broker.loc_utc_offset
                 )
 
                 self._setpoints[f"{key}_sp_from"] = dt_aware.isoformat()
@@ -740,16 +741,18 @@ class EvoChild(EvoDevice):
         assert isinstance(self._evo_device, evo.HotWater | evo.Zone)  # mypy check
 
         try:
-            self._schedule = await self._evo_broker.call_client_api(  # type: ignore[assignment]
+            schedule = await self._evo_broker.call_client_api(
                 self._evo_device.get_schedule(), update_state=False
             )
         except evo.InvalidSchedule as err:
             _LOGGER.warning(
-                "%s: Unable to retrieve the schedule: %s",
+                "%s: Unable to retrieve a valid schedule: %s",
                 self._evo_device,
                 err,
             )
             self._schedule = {}
+        else:
+            self._schedule = schedule or {}
 
         _LOGGER.debug("Schedule['%s'] = %s", self.name, self._schedule)
 

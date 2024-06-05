@@ -18,7 +18,6 @@ from homeassistant.components.deconz.services import (
     SERVICE_ENTITY,
     SERVICE_FIELD,
     SERVICE_REMOVE_ORPHANED_ENTRIES,
-    SUPPORTED_SERVICES,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
@@ -35,40 +34,6 @@ from .test_gateway import (
 
 from tests.common import async_capture_events
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-async def test_service_setup_and_unload(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Verify service setup works."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-    for service in SUPPORTED_SERVICES:
-        assert hass.services.has_service(DECONZ_DOMAIN, service)
-
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
-    for service in SUPPORTED_SERVICES:
-        assert not hass.services.has_service(DECONZ_DOMAIN, service)
-
-
-@patch("homeassistant.core.ServiceRegistry.async_remove")
-@patch("homeassistant.core.ServiceRegistry.async_register")
-async def test_service_setup_and_unload_not_called_if_multiple_integrations_detected(
-    register_service_mock,
-    remove_service_mock,
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Make sure that services are only setup and removed once."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-    register_service_mock.reset_mock()
-    config_entry_2 = await setup_deconz_integration(hass, aioclient_mock, entry_id=2)
-    register_service_mock.assert_not_called()
-
-    register_service_mock.assert_not_called()
-    assert await hass.config_entries.async_unload(config_entry_2.entry_id)
-    remove_service_mock.assert_not_called()
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
-    assert remove_service_mock.call_count == 3
 
 
 async def test_configure_service_with_field(

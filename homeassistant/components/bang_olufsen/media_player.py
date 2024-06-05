@@ -43,7 +43,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -138,7 +138,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{CONNECTION_STATUS}",
-                self._update_connection_state,
+                self._async_update_connection_state,
             )
         )
 
@@ -146,7 +146,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WebsocketNotification.PLAYBACK_ERROR}",
-                self._update_playback_error,
+                self._async_update_playback_error,
             )
         )
 
@@ -154,7 +154,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WebsocketNotification.PLAYBACK_METADATA}",
-                self._update_playback_metadata,
+                self._async_update_playback_metadata,
             )
         )
 
@@ -162,14 +162,14 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WebsocketNotification.PLAYBACK_PROGRESS}",
-                self._update_playback_progress,
+                self._async_update_playback_progress,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WebsocketNotification.PLAYBACK_STATE}",
-                self._update_playback_state,
+                self._async_update_playback_state,
             )
         )
         self.async_on_remove(
@@ -183,14 +183,14 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WebsocketNotification.SOURCE_CHANGE}",
-                self._update_source_change,
+                self._async_update_source_change,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WebsocketNotification.VOLUME}",
-                self._update_volume,
+                self._async_update_volume,
             )
         )
 
@@ -300,7 +300,8 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         if self.hass.is_running:
             self.async_write_ha_state()
 
-    async def _update_playback_metadata(self, data: PlaybackContentMetadata) -> None:
+    @callback
+    def _async_update_playback_metadata(self, data: PlaybackContentMetadata) -> None:
         """Update _playback_metadata and related."""
         self._playback_metadata = data
 
@@ -309,18 +310,21 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         self.async_write_ha_state()
 
-    async def _update_playback_error(self, data: PlaybackError) -> None:
+    @callback
+    def _async_update_playback_error(self, data: PlaybackError) -> None:
         """Show playback error."""
         _LOGGER.error(data.error)
 
-    async def _update_playback_progress(self, data: PlaybackProgress) -> None:
+    @callback
+    def _async_update_playback_progress(self, data: PlaybackProgress) -> None:
         """Update _playback_progress and last update."""
         self._playback_progress = data
         self._attr_media_position_updated_at = utcnow()
 
         self.async_write_ha_state()
 
-    async def _update_playback_state(self, data: RenderingState) -> None:
+    @callback
+    def _async_update_playback_state(self, data: RenderingState) -> None:
         """Update _playback_state and related."""
         self._playback_state = data
 
@@ -330,7 +334,8 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
             self.async_write_ha_state()
 
-    async def _update_source_change(self, data: Source) -> None:
+    @callback
+    def _async_update_source_change(self, data: Source) -> None:
         """Update _source_change and related."""
         self._source_change = data
 
@@ -341,7 +346,10 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         ):
             self._playback_progress = PlaybackProgress(progress=0)
 
-    async def _update_volume(self, data: VolumeState) -> None:
+        self.async_write_ha_state()
+
+    @callback
+    def _async_update_volume(self, data: VolumeState) -> None:
         """Update _volume."""
         self._volume = data
 
@@ -363,9 +371,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
         if self._volume.muted and self._volume.muted.muted:
-            # The any return here is side effect of pydantic v2 compatibility
-            # This will be fixed in the future.
-            return self._volume.muted.muted  # type: ignore[no-any-return]
+            return self._volume.muted.muted
         return None
 
     @property

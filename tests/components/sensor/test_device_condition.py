@@ -466,7 +466,7 @@ async def test_if_state_not_above_below(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
 ) -> None:
@@ -509,7 +509,7 @@ async def test_if_state_above(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
     enable_custom_integrations: None,
 ) -> None:
     """Test for value conditions."""
@@ -578,7 +578,7 @@ async def test_if_state_above_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
     enable_custom_integrations: None,
 ) -> None:
     """Test for value conditions."""
@@ -647,7 +647,7 @@ async def test_if_state_below(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
     enable_custom_integrations: None,
 ) -> None:
     """Test for value conditions."""
@@ -716,7 +716,7 @@ async def test_if_state_between(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
     enable_custom_integrations: None,
 ) -> None:
     """Test for value conditions."""

@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_USE_HTTPS, DOMAIN
@@ -60,7 +60,24 @@ class ReolinkOptionsFlowHandler(OptionsFlow):
                     vol.Required(
                         CONF_PROTOCOL,
                         default=self.config_entry.options[CONF_PROTOCOL],
-                    ): vol.In(["rtsp", "rtmp", "flv"]),
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[
+                                selector.SelectOptionDict(
+                                    value="rtsp",
+                                    label="RTSP",
+                                ),
+                                selector.SelectOptionDict(
+                                    value="rtmp",
+                                    label="RTMP",
+                                ),
+                                selector.SelectOptionDict(
+                                    value="flv",
+                                    label="FLV",
+                                ),
+                            ],
+                        ),
+                    ),
                 }
             ),
         )
@@ -200,7 +217,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
             except (ReolinkError, ReolinkException) as err:
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "cannot_connect"
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception as err:
                 _LOGGER.exception("Unexpected exception")
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "unknown"

@@ -9,8 +9,11 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import mqtt
-import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
+    CodeFormat,
+)
 from homeassistant.const import (
     CONF_CODE,
     CONF_DELAY_TIME,
@@ -224,7 +227,7 @@ async def async_setup_platform(
     )
 
 
-class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
+class ManualMQTTAlarm(AlarmControlPanelEntity):
     """Representation of an alarm status.
 
     When armed, will be pending for 'pending_time', after that armed.
@@ -342,20 +345,20 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         return self._state_ts + self._pending_time(state) > dt_util.utcnow()
 
     @property
-    def code_format(self) -> alarm.CodeFormat | None:
+    def code_format(self) -> CodeFormat | None:
         """Return one or more digits/characters."""
         if self._code is None:
             return None
         if isinstance(self._code, str) and self._code.isdigit():
-            return alarm.CodeFormat.NUMBER
-        return alarm.CodeFormat.TEXT
+            return CodeFormat.NUMBER
+        return CodeFormat.TEXT
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._async_validate_code(code, STATE_ALARM_DISARMED)
         self._state = STATE_ALARM_DISARMED
         self._state_ts = dt_util.utcnow()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""

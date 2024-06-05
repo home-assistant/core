@@ -9,6 +9,7 @@ from homeassistant.components.notify import (
     ATTR_TARGET,
     BaseNotificationService,
     NotifyEntity,
+    migrate_notify_issue,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -18,7 +19,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import Ecobee, EcobeeData
 from .const import DOMAIN
 from .entity import EcobeeBaseEntity
-from .repairs import migrate_notify_issue
 
 
 def get_service(
@@ -43,7 +43,9 @@ class EcobeeNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message and raise issue."""
-        migrate_notify_issue(self.hass)
+        migrate_notify_issue(
+            self.hass, DOMAIN, "Ecobee", "2024.11.0", service_name=self._service_name
+        )
         await self.hass.async_add_executor_job(
             partial(self.send_message, message, **kwargs)
         )
@@ -85,6 +87,6 @@ class EcobeeNotifyEntity(EcobeeBaseEntity, NotifyEntity):
             f"{self.thermostat["identifier"]}_notify_{thermostat_index}"
         )
 
-    def send_message(self, message: str) -> None:
+    def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
         self.data.ecobee.send_message(self.thermostat_index, message)

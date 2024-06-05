@@ -23,7 +23,6 @@ from homeassistant.components.weather import (
     Forecast,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -35,9 +34,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConverter
 
-from . import NWSData, base_unique_id, device_info
+from . import NWSConfigEntry, NWSData, base_unique_id, device_info
 from .const import (
     ATTR_FORECAST_DETAILED_DESCRIPTION,
     ATTRIBUTION,
@@ -78,11 +78,11 @@ def convert_condition(time: str, weather: tuple[tuple[str, int | None], ...]) ->
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: NWSConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the NWS weather platform."""
     entity_registry = er.async_get(hass)
-    nws_data: NWSData = hass.data[DOMAIN][entry.entry_id]
+    nws_data = entry.runtime_data
 
     # Remove hourly entity from legacy config entries
     if entity_id := entity_registry.async_get_entity_id(
@@ -110,7 +110,7 @@ def _calculate_unique_id(entry_data: MappingProxyType[str, Any], mode: str) -> s
     return f"{base_unique_id(latitude, longitude)}_{mode}"
 
 
-class NWSWeather(CoordinatorWeatherEntity):
+class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]]):
     """Representation of a weather condition."""
 
     _attr_attribution = ATTRIBUTION

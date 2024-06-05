@@ -10,12 +10,15 @@ from pyfritzhome.devicetypes import FritzhomeTemplate
 from requests.exceptions import ConnectionError as RequestConnectionError, HTTPError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_CONNECTIONS, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
+
+type FritzboxConfigEntry = ConfigEntry[FritzboxDataUpdateCoordinator]
 
 
 @dataclass
@@ -29,10 +32,12 @@ class FritzboxCoordinatorData:
 class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorData]):
     """Fritzbox Smarthome device data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: FritzboxConfigEntry
     configuration_url: str
+    fritz: Fritzhome
+    has_templates: bool
 
-    def __init__(self, hass: HomeAssistant, name: str, has_templates: bool) -> None:
+    def __init__(self, hass: HomeAssistant, name: str) -> None:
         """Initialize the Fritzbox Smarthome device coordinator."""
         super().__init__(
             hass,
@@ -41,11 +46,6 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             update_interval=timedelta(seconds=30),
         )
 
-        self.fritz: Fritzhome = hass.data[DOMAIN][self.config_entry.entry_id][
-            CONF_CONNECTIONS
-        ]
-        self.configuration_url = self.fritz.get_prefixed_host()
-        self.has_templates = has_templates
         self.new_devices: set[str] = set()
         self.new_templates: set[str] = set()
 
@@ -53,6 +53,27 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
 
     async def async_setup(self) -> None:
         """Set up the coordinator."""
+
+        self.fritz = Fritzhome(
+            host=self.config_entry.data[CONF_HOST],
+            user=self.config_entry.data[CONF_USERNAME],
+            password=self.config_entry.data[CONF_PASSWORD],
+        )
+
+        try:
+            await self.hass.async_add_executor_job(self.fritz.login)
+        except RequestConnectionError as err:
+            raise ConfigEntryNotReady from err
+        except LoginError as err:
+            raise ConfigEntryAuthFailed from err
+
+        self.has_templates = await self.hass.async_add_executor_job(
+            self.fritz.has_templates
+        )
+        LOGGER.debug("enable smarthome templates: %s", self.has_templates)
+
+        self.configuration_url = self.fritz.get_prefixed_host()
+
         await self.async_config_entry_first_refresh()
         self.cleanup_removed_devices(
             list(self.data.devices) + list(self.data.templates)

@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import datetime
 import logging
 from typing import Any
-from zoneinfo import ZoneInfo
 
 from fyta_cli.fyta_connector import FytaConnector
 
@@ -17,6 +16,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.util.dt import async_get_time_zone
 
 from .const import CONF_EXPIRATION, DOMAIN
 from .coordinator import FytaCoordinator
@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     access_token: str = entry.data[CONF_ACCESS_TOKEN]
     expiration: datetime = datetime.fromisoformat(
         entry.data[CONF_EXPIRATION]
-    ).astimezone(ZoneInfo(tz))
+    ).astimezone(await async_get_time_zone(tz))
 
     fyta = FytaConnector(username, password, access_token, expiration, tz)
 
@@ -71,8 +71,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         return False
 
     if config_entry.version == 1:
-        new = {**config_entry.data}
         if config_entry.minor_version < 2:
+            new = {**config_entry.data}
             fyta = FytaConnector(
                 config_entry.data[CONF_USERNAME], config_entry.data[CONF_PASSWORD]
             )
@@ -82,9 +82,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             new[CONF_ACCESS_TOKEN] = credentials[CONF_ACCESS_TOKEN]
             new[CONF_EXPIRATION] = credentials[CONF_EXPIRATION].isoformat()
 
-        hass.config_entries.async_update_entry(
-            config_entry, data=new, minor_version=2, version=1
-        )
+            hass.config_entries.async_update_entry(
+                config_entry, data=new, minor_version=2, version=1
+            )
 
     _LOGGER.debug(
         "Migration to version %s.%s successful",

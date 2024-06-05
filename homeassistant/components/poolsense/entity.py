@@ -17,14 +17,13 @@ class PoolSenseEntity(CoordinatorEntity[PoolSenseDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: PoolSenseDataUpdateCoordinator,
-        email: str,
         description: EntityDescription,
     ) -> None:
-        """Initialize poolsense sensor."""
+        """Initialize poolsense entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{email}-{description.key}"
+        self._attr_unique_id = f"{coordinator.email}-{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, email)},
+            identifiers={(DOMAIN, coordinator.email)},
             model="PoolSense",
         )

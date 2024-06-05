@@ -24,11 +24,10 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import TessieConfigEntry
 from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
@@ -71,17 +70,19 @@ DESCRIPTIONS: tuple[TessieSwitchEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TessieConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Tessie Switch platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
         [
-            TessieSwitchEntity(vehicle.state_coordinator, description)
-            for vehicle in data
+            TessieSwitchEntity(vehicle, description)
+            for vehicle in data.vehicles
             for description in DESCRIPTIONS
-            if description.key in vehicle.state_coordinator.data
+            if description.key in vehicle.data
         ]
     )
 

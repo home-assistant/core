@@ -5,6 +5,22 @@
       'battery_percent': 100,
     }),
     'calendar': dict({
+      'events': list([
+        dict({
+          'end': '2024-03-02T00:00:00+00:00',
+          'rrule': 'FREQ=WEEKLY;BYDAY=MO,WE,FR',
+          'start': '2024-03-01T19:00:00+00:00',
+          'uid': '1140_300_MO,WE,FR',
+          'work_area_id': None,
+        }),
+        dict({
+          'end': '2024-03-02T08:00:00+00:00',
+          'rrule': 'FREQ=WEEKLY;BYDAY=TU,TH,SA',
+          'start': '2024-03-02T00:00:00+00:00',
+          'uid': '0_480_TU,TH,SA',
+          'work_area_id': None,
+        }),
+      ]),
       'tasks': list([
         dict({
           'duration': 300,
@@ -35,12 +51,8 @@
     'capabilities': dict({
       'headlights': True,
       'position': True,
-      'stay_out_zones': False,
-      'work_areas': False,
-    }),
-    'cutting_height': 4,
-    'headlight': dict({
-      'mode': 'EVENING_ONLY',
+      'stay_out_zones': True,
+      'work_areas': True,
     }),
     'metadata': dict({
       'connected': True,
@@ -64,6 +76,12 @@
       'restricted_reason': 'WEEK_SCHEDULE',
     }),
     'positions': '**REDACTED**',
+    'settings': dict({
+      'cutting_height': 4,
+      'headlight': dict({
+        'mode': 'EVENING_ONLY',
+      }),
+    }),
     'statistics': dict({
       'cutting_blade_usage_time': 123,
       'number_of_charging_cycles': 1380,
@@ -81,6 +99,10 @@
           'enabled': True,
           'name': 'Springflowers',
         }),
+        'AAAAAAAA-BBBB-CCCC-DDDD-123456789101': dict({
+          'enabled': False,
+          'name': 'Danger Zone',
+        }),
       }),
     }),
     'system': dict({
@@ -91,11 +113,15 @@
     'work_areas': dict({
       '0': dict({
         'cutting_height': 50,
-        'name': None,
+        'name': 'my_lawn',
       }),
       '123456': dict({
         'cutting_height': 50,
         'name': 'Front lawn',
+      }),
+      '654321': dict({
+        'cutting_height': 25,
+        'name': 'Back lawn',
       }),
     }),
   })

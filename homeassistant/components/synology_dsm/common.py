@@ -29,7 +29,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
@@ -105,6 +104,11 @@ class SynoApi:
         except BaseException as err:
             if not self._login_future.done():
                 self._login_future.set_exception(err)
+            with suppress(BaseException):
+                # Clear the flag as its normal that nothing
+                # will wait for this future to be resolved
+                # if there are no concurrent login attempts
+                await self._login_future
             raise
         finally:
             self._login_future = None
@@ -119,7 +123,7 @@ class SynoApi:
             self._entry.data[CONF_USERNAME],
             self._entry.data[CONF_PASSWORD],
             self._entry.data[CONF_SSL],
-            timeout=self._entry.options.get(CONF_TIMEOUT) or DEFAULT_TIMEOUT,
+            timeout=DEFAULT_TIMEOUT,
             device_token=self._entry.data.get(CONF_DEVICE_TOKEN),
         )
         await self.async_login()
