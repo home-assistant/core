@@ -90,7 +90,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "Unknown error connecting to the Matter server"
         ) from err
 
-    if matter_client.server_info.schema_version < SCHEMA_VERSION:
+    if (
+        matter_client.server_info is not None
+        and matter_client.server_info.schema_version < SCHEMA_VERSION
+    ):
         if use_addon and addon_info.update_available:
             LOGGER.info(
                 "Matter server schema version is too old (%d < %d), scheduling add-on update",
