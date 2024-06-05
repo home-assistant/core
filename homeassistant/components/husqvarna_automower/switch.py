@@ -5,13 +5,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from aioautomower.exceptions import ApiException
-from aioautomower.model import (
-    MowerActivities,
-    MowerStates,
-    RestrictedReasons,
-    StayOutZones,
-    Zone,
-)
+from aioautomower.model import MowerActivities, MowerStates, StayOutZones, Zone
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -79,21 +73,12 @@ class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):
     ) -> None:
         """Set up Automower switch."""
         super().__init__(mower_id, coordinator)
-        self._attr_unique_id: str = f"{self.mower_id}_{self._attr_translation_key}"
-        self.turn_off_helper: bool = False
+        self._attr_unique_id = f"{self.mower_id}_{self._attr_translation_key}"
 
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        attributes = self.mower_attributes
-        if attributes.mower.activity != MowerActivities.GOING_HOME:
-            self.turn_off_helper = False
-        if self.turn_off_helper:
-            return False
-        return not (
-            attributes.mower.state == MowerStates.RESTRICTED
-            and attributes.planner.restricted_reason == RestrictedReasons.NOT_APPLICABLE
-        )
+        return self.mower_attributes.mower.mode != "HOME"
 
     @property
     def available(self) -> bool:
@@ -107,7 +92,6 @@ class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):
         """Turn the entity off."""
         try:
             await self.coordinator.api.commands.park_until_further_notice(self.mower_id)
-            self.turn_off_helper = True
         except ApiException as exception:
             raise HomeAssistantError(
                 f"Command couldn't be sent to the command queue: {exception}"
