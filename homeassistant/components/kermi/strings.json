@@ -1,13 +1,28 @@
 {
   "config": {
     "step": {
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      "user": {
+        "title": "Configure Kermi",
+        "description": "Please enter the configuration details for your Kermi device.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "heatpump_device_address": "Heatpump Device Address",
+          "climate_device_address": "Climate Device Address",
+          "water_heater_device_address": "Water Heater Device Address",
+          "type": "Type"
+        }
       }
     },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "invalid_heatpump_device_address": "Invalid heatpump device address",
+      "invalid_climate_device_address": "Invalid climate device address",
+      "invalid_water_heater_device_address": "Invalid water heater device address"
+    },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
 }

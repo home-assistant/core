@@ -8,7 +8,7 @@ from pymodbus.client import AsyncModbusTcpClient
 from pymodbus.exceptions import ConnectionException, ModbusIOException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -26,9 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     # Create a ModbusTcpClient
-    client = AsyncModbusTcpClient(
-        host=entry.data[CONF_HOST], port=entry.data[CONF_PORT]
-    )
+    client = AsyncModbusTcpClient(host=entry.data[CONF_HOST], port=502)
 
     # Connect to the client
     try:

@@ -4,8 +4,30 @@ from unittest.mock import Mock
 
 import pytest
 
+from homeassistant.components.kermi.water_heater import KermiWaterHeater
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+
+
+@pytest.fixture
+def mock_coordinator():
+    """Return a mock DataUpdateCoordinator."""
+    return Mock()
+
+
+@pytest.fixture
+def mock_entry():
+    """Return a mock ConfigEntry."""
+    entry = Mock()
+    entry.entry_id = "test_entry_id"
+    entry.data = {"water_heater_device_address": "test_address"}
+    return entry
+
+
+@pytest.fixture
+def kermi_water_heater(mock_entry, mock_coordinator):
+    """Return a KermiWaterHeater instance."""
+    return KermiWaterHeater("Test Heater", mock_entry, mock_coordinator)
 
 
 @pytest.fixture

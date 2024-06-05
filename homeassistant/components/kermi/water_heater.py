@@ -75,10 +75,11 @@ class KermiWaterHeater(WaterHeaterEntity, CoordinatorEntity):
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return device information about this entity."""
+        name = self.name if isinstance(self.name, str) else None
         return {
             "identifiers": {(DOMAIN, self.entry.entry_id)},
-            "name": "Kermi Water Heater",
-            "model": "x-change dynamic pro ac",
+            "name": name,
+            "model": "x-buffer",
             "manufacturer": "Kermi",
         }
 
