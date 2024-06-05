@@ -6,6 +6,7 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Mapping
 import logging
+from time import time
 from typing import Any, Literal
 
 import aiohttp
@@ -40,6 +41,10 @@ POLL_INTERVAL_NO_PUSH = 5
 LONG_POLL_COOLDOWN = 0.75
 LONG_POLL_ERROR_COOLDOWN = 30
 
+# Conserve battery by not waking the battery cameras each minute during normal update
+# Most props are cached in the Home Hub and updated, but some are skipped
+BATTERY_WAKE_UPDATE_INTERVAL = 3600  # seconds
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -68,6 +73,7 @@ class ReolinkHost:
             timeout=DEFAULT_TIMEOUT,
         )
 
+        self.last_wake: float = 0
         self._update_cmd: defaultdict[str, defaultdict[int | None, int]] = defaultdict(
             lambda: defaultdict(int)
         )
@@ -337,7 +343,13 @@ class ReolinkHost:
 
     async def update_states(self) -> None:
         """Call the API of the camera device to update the internal states."""
-        await self._api.get_states(cmd_list=self._update_cmd)
+        wake = False
+        if time() - self.last_wake > BATTERY_WAKE_UPDATE_INTERVAL:
+            # wake the battery cameras for a complete update
+            wake = True
+            self.last_wake = time()
+
+        await self._api.get_states(cmd_list=self._update_cmd, wake=wake)
 
     async def disconnect(self) -> None:
         """Disconnect from the API, so the connection will be released."""
