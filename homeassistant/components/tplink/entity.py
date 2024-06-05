@@ -33,7 +33,6 @@ _LOGGER = logging.getLogger(__name__)
 
 # Mapping from upstream category to homeassistant category
 FEATURE_CATEGORY_TO_ENTITY_CATEGORY = {
-    Feature.Category.Primary: None,  # Main controls have no category
     Feature.Category.Config: EntityCategory.CONFIG,
     Feature.Category.Info: EntityCategory.DIAGNOSTIC,
     Feature.Category.Debug: EntityCategory.DIAGNOSTIC,
@@ -155,6 +154,10 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
     def _category_for_feature(self, feature: Feature) -> EntityCategory | None:
         """Return entity category for a feature."""
+        # Main controls have no category
+        if feature.category is Feature.Category.Primary:
+            return None
+
         if (
             entity_category := FEATURE_CATEGORY_TO_ENTITY_CATEGORY.get(feature.category)
         ) is None:
