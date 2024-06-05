@@ -121,7 +121,9 @@ def mock_try_connection_success() -> Generator[MqttMockPahoClient, None, None]:
         mock_client().on_unsubscribe(mock_client, 0, mid)
         return (0, mid)
 
-    with patch("paho.mqtt.client.Client") as mock_client:
+    with patch(
+        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
+    ) as mock_client:
         mock_client().loop_start = loop_start
         mock_client().subscribe = _subscribe
         mock_client().unsubscribe = _unsubscribe
@@ -135,7 +137,9 @@ def mock_try_connection_time_out() -> Generator[MagicMock, None, None]:
 
     # Patch prevent waiting 5 sec for a timeout
     with (
-        patch("paho.mqtt.client.Client") as mock_client,
+        patch(
+            "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
+        ) as mock_client,
         patch("homeassistant.components.mqtt.config_flow.MQTT_TIMEOUT", 0),
     ):
         mock_client().loop_start = lambda *args: 1

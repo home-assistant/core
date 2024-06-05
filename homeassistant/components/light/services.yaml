@@ -5,7 +5,7 @@ turn_on:
     entity:
       domain: light
   fields:
-    transition:
+    transition: &transition
       filter:
         supported_features:
           - light.LightEntityFeature.TRANSITION
@@ -14,8 +14,8 @@ turn_on:
           min: 0
           max: 300
           unit_of_measurement: seconds
-    rgb_color:
-      filter:
+    rgb_color: &rgb_color
+      filter: &color_support
         attribute:
           supported_color_modes:
             - light.ColorMode.HS
@@ -23,48 +23,28 @@ turn_on:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
+      example: "[255, 100, 100]"
       selector:
         color_rgb:
-    rgbw_color:
-      filter:
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.HS
-            - light.ColorMode.XY
-            - light.ColorMode.RGB
-            - light.ColorMode.RGBW
-            - light.ColorMode.RGBWW
+    rgbw_color: &rgbw_color
+      filter: *color_support
       advanced: true
       example: "[255, 100, 100, 50]"
       selector:
         object:
-    rgbww_color:
-      filter:
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.HS
-            - light.ColorMode.XY
-            - light.ColorMode.RGB
-            - light.ColorMode.RGBW
-            - light.ColorMode.RGBWW
+    rgbww_color: &rgbww_color
+      filter: *color_support
       advanced: true
       example: "[255, 100, 100, 50, 70]"
       selector:
         object:
-    color_name:
-      filter:
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.HS
-            - light.ColorMode.XY
-            - light.ColorMode.RGB
-            - light.ColorMode.RGBW
-            - light.ColorMode.RGBWW
+    color_name: &color_name
+      filter: *color_support
       advanced: true
       selector:
         select:
           translation_key: color_name
-          options:
+          options: &named_colors
             - "homeassistant"
             - "aliceblue"
             - "antiquewhite"
@@ -214,34 +194,20 @@ turn_on:
             - "whitesmoke"
             - "yellow"
             - "yellowgreen"
-    hs_color:
-      filter:
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.HS
-            - light.ColorMode.XY
-            - light.ColorMode.RGB
-            - light.ColorMode.RGBW
-            - light.ColorMode.RGBWW
+    hs_color: &hs_color
+      filter: *color_support
       advanced: true
       example: "[300, 70]"
       selector:
         object:
-    xy_color:
-      filter:
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.HS
-            - light.ColorMode.XY
-            - light.ColorMode.RGB
-            - light.ColorMode.RGBW
-            - light.ColorMode.RGBWW
+    xy_color: &xy_color
+      filter: *color_support
       advanced: true
       example: "[0.52, 0.43]"
       selector:
         object:
-    color_temp:
-      filter:
+    color_temp: &color_temp
+      filter: &color_temp_support
         attribute:
           supported_color_modes:
             - light.ColorMode.COLOR_TEMP
@@ -250,29 +216,21 @@ turn_on:
             - light.ColorMode.RGB
             - light.ColorMode.RGBW
             - light.ColorMode.RGBWW
+      advanced: true
       selector:
         color_temp:
           unit: "mired"
           min: 153
           max: 500
-    kelvin:
-      filter:
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.COLOR_TEMP
-            - light.ColorMode.HS
-            - light.ColorMode.XY
-            - light.ColorMode.RGB
-            - light.ColorMode.RGBW
-            - light.ColorMode.RGBWW
-      advanced: true
+    kelvin: &kelvin
+      filter: *color_temp_support
       selector:
         color_temp:
           unit: "kelvin"
           min: 2000
           max: 6500
-    brightness:
-      filter:
+    brightness: &brightness
+      filter: &brightness_support
         attribute:
           supported_color_modes:
             - light.ColorMode.BRIGHTNESS
@@ -287,55 +245,28 @@ turn_on:
         number:
           min: 0
           max: 255
-    brightness_pct:
-      filter:
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.BRIGHTNESS
-            - light.ColorMode.COLOR_TEMP
-            - light.ColorMode.HS
-            - light.ColorMode.XY
-            - light.ColorMode.RGB
-            - light.ColorMode.RGBW
-            - light.ColorMode.RGBWW
+    brightness_pct: &brightness_pct
+      filter: *brightness_support
       selector:
         number:
           min: 0
           max: 100
           unit_of_measurement: "%"
     brightness_step:
-      filter:
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.BRIGHTNESS
-            - light.ColorMode.COLOR_TEMP
-            - light.ColorMode.HS
-            - light.ColorMode.XY
-            - light.ColorMode.RGB
-            - light.ColorMode.RGBW
-            - light.ColorMode.RGBWW
+      filter: *brightness_support
       advanced: true
       selector:
         number:
           min: -225
           max: 255
     brightness_step_pct:
-      filter:
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.BRIGHTNESS
-            - light.ColorMode.COLOR_TEMP
-            - light.ColorMode.HS
-            - light.ColorMode.XY
-            - light.ColorMode.RGB
-            - light.ColorMode.RGBW
-            - light.ColorMode.RGBWW
+      filter: *brightness_support
       selector:
         number:
           min: -100
           max: 100
           unit_of_measurement: "%"
-    white:
+    white: &white
       filter:
         attribute:
           supported_color_modes:
@@ -345,12 +276,12 @@ turn_on:
         constant:
           value: true
           label: Enabled
-    profile:
+    profile: &profile
       advanced: true
       example: relax
       selector:
         text:
-    flash:
+    flash: &flash
       filter:
         supported_features:
           - light.LightEntityFeature.FLASH
@@ -362,7 +293,7 @@ turn_on:
               value: "long"
             - label: "Short"
               value: "short"
-    effect:
+    effect: &effect
       filter:
         supported_features:
           - light.LightEntityFeature.EFFECT
@@ -374,335 +305,26 @@ turn_off:
     entity:
       domain: light
   fields:
-    transition:
-      filter:
-        supported_features:
-          - light.LightEntityFeature.TRANSITION
-      selector:
-        number:
-          min: 0
-          max: 300
-          unit_of_measurement: seconds
-    flash:
-      filter:
-        supported_features:
-          - light.LightEntityFeature.FLASH
-      advanced: true
-      selector:
-        select:
-          options:
-            - label: "Long"
-              value: "long"
-            - label: "Short"
-              value: "short"
+    transition: *transition
+    flash: *flash
 
 toggle:
   target:
     entity:
       domain: light
   fields:
-    transition:
-      filter:
-        supported_features:
-          - light.LightEntityFeature.TRANSITION
-      selector:
-        number:
-          min: 0
-          max: 300
-          unit_of_measurement: seconds
-    rgb_color:
-      filter:
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.HS
-            - light.ColorMode.XY
-            - light.ColorMode.RGB
-            - light.ColorMode.RGBW
-            - light.ColorMode.RGBWW
-      advanced: true
-      example: "[255, 100, 100]"
-      selector:
-        color_rgb:
-    color_name:
-      filter:
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.HS
-            - light.ColorMode.XY
-            - light.ColorMode.RGB
-            - light.ColorMode.RGBW
-            - light.ColorMode.RGBWW
-      advanced: true
-      selector:
-        select:
-          translation_key: color_name
-          options:
-            - "homeassistant"
-            - "aliceblue"
-            - "antiquewhite"
-            - "aqua"
-            - "aquamarine"
-            - "azure"
-            - "beige"
-            - "bisque"
-            # Black is omitted from this list as nonsensical for lights
-            - "blanchedalmond"
-            - "blue"
-            - "blueviolet"
-            - "brown"
-            - "burlywood"
-            - "cadetblue"
-            - "chartreuse"
-            - "chocolate"
-            - "coral"
-            - "cornflowerblue"
-            - "cornsilk"
-            - "crimson"
-            - "cyan"
-            - "darkblue"
-            - "darkcyan"
-            - "darkgoldenrod"
-            - "darkgray"
-            - "darkgreen"
-            - "darkgrey"
-            - "darkkhaki"
-            - "darkmagenta"
-            - "darkolivegreen"
-            - "darkorange"
-            - "darkorchid"
-            - "darkred"
-            - "darksalmon"
-            - "darkseagreen"
-            - "darkslateblue"
-            - "darkslategray"
-            - "darkslategrey"
-            - "darkturquoise"
-            - "darkviolet"
-            - "deeppink"
-            - "deepskyblue"
-            - "dimgray"
-            - "dimgrey"
-            - "dodgerblue"
-            - "firebrick"
-            - "floralwhite"
-            - "forestgreen"
-            - "fuchsia"
-            - "gainsboro"
-            - "ghostwhite"
-            - "gold"
-            - "goldenrod"
-            - "gray"
-            - "green"
-            - "greenyellow"
-            - "grey"
-            - "honeydew"
-            - "hotpink"
-            - "indianred"
-            - "indigo"
-            - "ivory"
-            - "khaki"
-            - "lavender"
-            - "lavenderblush"
-            - "lawngreen"
-            - "lemonchiffon"
-            - "lightblue"
-            - "lightcoral"
-            - "lightcyan"
-            - "lightgoldenrodyellow"
-            - "lightgray"
-            - "lightgreen"
-            - "lightgrey"
-            - "lightpink"
-            - "lightsalmon"
-            - "lightseagreen"
-            - "lightskyblue"
-            - "lightslategray"
-            - "lightslategrey"
-            - "lightsteelblue"
-            - "lightyellow"
-            - "lime"
-            - "limegreen"
-            - "linen"
-            - "magenta"
-            - "maroon"
-            - "mediumaquamarine"
-            - "mediumblue"
-            - "mediumorchid"
-            - "mediumpurple"
-            - "mediumseagreen"
-            - "mediumslateblue"
-            - "mediumspringgreen"
-            - "mediumturquoise"
-            - "mediumvioletred"
-            - "midnightblue"
-            - "mintcream"
-            - "mistyrose"
-            - "moccasin"
-            - "navajowhite"
-            - "navy"
-            - "navyblue"
-            - "oldlace"
-            - "olive"
-            - "olivedrab"
-            - "orange"
-            - "orangered"
-            - "orchid"
-            - "palegoldenrod"
-            - "palegreen"
-            - "paleturquoise"
-            - "palevioletred"
-            - "papayawhip"
-            - "peachpuff"
-            - "peru"
-            - "pink"
-            - "plum"
-            - "powderblue"
-            - "purple"
-            - "red"
-            - "rosybrown"
-            - "royalblue"
-            - "saddlebrown"
-            - "salmon"
-            - "sandybrown"
-            - "seagreen"
-            - "seashell"
-            - "sienna"
-            - "silver"
-            - "skyblue"
-            - "slateblue"
-            - "slategray"
-            - "slategrey"
-            - "snow"
-            - "springgreen"
-            - "steelblue"
-            - "tan"
-            - "teal"
-            - "thistle"
-            - "tomato"
-            - "turquoise"
-            - "violet"
-            - "wheat"
-            - "white"
-            - "whitesmoke"
-            - "yellow"
-            - "yellowgreen"
-    hs_color:
-      filter:
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.HS
-            - light.ColorMode.XY
-            - light.ColorMode.RGB
-            - light.ColorMode.RGBW
-            - light.ColorMode.RGBWW
-      advanced: true
-      example: "[300, 70]"
-      selector:
-        object:
-    xy_color:
-      filter:
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.HS
-            - light.ColorMode.XY
-            - light.ColorMode.RGB
-            - light.ColorMode.RGBW
-            - light.ColorMode.RGBWW
-      advanced: true
-      example: "[0.52, 0.43]"
-      selector:
-        object:
-    color_temp:
-      filter:
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.COLOR_TEMP
-            - light.ColorMode.HS
-            - light.ColorMode.XY
-            - light.ColorMode.RGB
-            - light.ColorMode.RGBW
-            - light.ColorMode.RGBWW
-      advanced: true
-      selector:
-        color_temp:
-    kelvin:
-      filter:
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.COLOR_TEMP
-            - light.ColorMode.HS
-            - light.ColorMode.XY
-            - light.ColorMode.RGB
-            - light.ColorMode.RGBW
-            - light.ColorMode.RGBWW
-      advanced: true
-      selector:
-        color_temp:
-          unit: "kelvin"
-          min: 2000
-          max: 6500
-    brightness:
-      filter:
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.BRIGHTNESS
-            - light.ColorMode.COLOR_TEMP
-            - light.ColorMode.HS
-            - light.ColorMode.XY
-            - light.ColorMode.RGB
-            - light.ColorMode.RGBW
-            - light.ColorMode.RGBWW
-      advanced: true
-      selector:
-        number:
-          min: 0
-          max: 255
-    brightness_pct:
-      filter:
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.BRIGHTNESS
-            - light.ColorMode.COLOR_TEMP
-            - light.ColorMode.HS
-            - light.ColorMode.XY
-            - light.ColorMode.RGB
-            - light.ColorMode.RGBW
-            - light.ColorMode.RGBWW
-      selector:
-        number:
-          min: 0
-          max: 100
-          unit_of_measurement: "%"
-    white:
-      filter:
-        attribute:
-          supported_color_modes:
-            - light.ColorMode.WHITE
-      advanced: true
-      selector:
-        constant:
-          value: true
-          label: Enabled
-    profile:
-      advanced: true
-      example: relax
-      selector:
-        text:
-    flash:
-      filter:
-        supported_features:
-          - light.LightEntityFeature.FLASH
-      advanced: true
-      selector:
-        select:
-          options:
-            - label: "Long"
-              value: "long"
-            - label: "Short"
-              value: "short"
-    effect:
-      filter:
-        supported_features:
-          - light.LightEntityFeature.EFFECT
-      selector:
-        text:
+    transition: *transition
+    rgb_color: *rgb_color
+    rgbw_color: *rgbw_color
+    rgbww_color: *rgbww_color
+    color_name: *color_name
+    hs_color: *hs_color
+    xy_color: *xy_color
+    color_temp: *color_temp
+    kelvin: *kelvin
+    brightness: *brightness
+    brightness_pct: *brightness_pct
+    white: *white
+    profile: *profile
+    flash: *flash
+    effect: *effect

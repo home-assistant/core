@@ -4,46 +4,49 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR_DOMAIN,
-    BinarySensorEntity,
-)
+from incomfortclient import Heater as InComfortHeater
+
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, IncomfortChild
+from . import InComfortConfigEntry
+from .const import DOMAIN
+from .coordinator import InComfortDataCoordinator
+from .entity import IncomfortEntity
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: InComfortConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up an InComfort/InTouch binary_sensor device."""
-    if discovery_info is None:
-        return
-
-    client = hass.data[DOMAIN]["client"]
-    heaters = hass.data[DOMAIN]["heaters"]
-
-    async_add_entities([IncomfortFailed(client, h) for h in heaters])
+    """Set up an InComfort/InTouch binary_sensor entity."""
+    incomfort_coordinator = entry.runtime_data
+    heaters = incomfort_coordinator.data.heaters
+    async_add_entities(IncomfortFailed(incomfort_coordinator, h) for h in heaters)
 
 
-class IncomfortFailed(IncomfortChild, BinarySensorEntity):
+class IncomfortFailed(IncomfortEntity, BinarySensorEntity):
     """Representation of an InComfort Failed sensor."""
 
-    def __init__(self, client, heater) -> None:
+    _attr_name = "Fault"
+
+    def __init__(
+        self, coordinator: InComfortDataCoordinator, heater: InComfortHeater
+    ) -> None:
         """Initialize the binary sensor."""
-        super().__init__()
+        super().__init__(coordinator)
 
-        self._unique_id = f"{heater.serial_no}_failed"
-        self.entity_id = f"{BINARY_SENSOR_DOMAIN}.{DOMAIN}_failed"
-        self._name = "Boiler Fault"
-
-        self._client = client
         self._heater = heater
+
+        self._attr_unique_id = f"{heater.serial_no}_failed"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, heater.serial_no)},
+            manufacturer="Intergas",
+            name="Boiler",
+        )
 
     @property
     def is_on(self) -> bool:

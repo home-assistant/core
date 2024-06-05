@@ -658,7 +658,9 @@ async def test_dst1(
     assert state.state == STATE_OFF
 
 
-async def test_dst2(hass, freezer, hass_tz_info):
+async def test_dst2(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
+) -> None:
     """Test DST when there's a time switch in the East."""
     hass.config.time_zone = "CET"
     dt_util.set_default_time_zone(dt_util.get_time_zone("CET"))
@@ -684,7 +686,9 @@ async def test_dst2(hass, freezer, hass_tz_info):
     assert state.state == STATE_OFF
 
 
-async def test_dst3(hass, freezer, hass_tz_info):
+async def test_dst3(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
+) -> None:
     """Test DST when there's a time switch forward in the West."""
     hass.config.time_zone = "US/Pacific"
     dt_util.set_default_time_zone(dt_util.get_time_zone("US/Pacific"))
@@ -712,7 +716,9 @@ async def test_dst3(hass, freezer, hass_tz_info):
     assert state.state == STATE_OFF
 
 
-async def test_dst4(hass, freezer, hass_tz_info):
+async def test_dst4(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
+) -> None:
     """Test DST when there's a time switch backward in the West."""
     hass.config.time_zone = "US/Pacific"
     dt_util.set_default_time_zone(dt_util.get_time_zone("US/Pacific"))

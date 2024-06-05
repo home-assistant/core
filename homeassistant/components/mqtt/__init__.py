@@ -244,7 +244,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             websocket_api.async_register_command(hass, websocket_subscribe)
             websocket_api.async_register_command(hass, websocket_mqtt_info)
             hass.data[DATA_MQTT] = mqtt_data = MqttData(config=mqtt_yaml, client=client)
-        client.start(mqtt_data)
+        await client.async_start(mqtt_data)
 
         # Restore saved subscriptions
         if mqtt_data.subscriptions_to_restore:
@@ -379,7 +379,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         new_config: list[ConfigType] = config_yaml.get(DOMAIN, [])
         platforms_used = platforms_from_config(new_config)
         new_platforms = platforms_used - mqtt_data.platforms_loaded
-        await async_forward_entry_setup_and_setup_discovery(hass, entry, new_platforms)
+        await async_forward_entry_setup_and_setup_discovery(
+            hass, entry, new_platforms, late=True
+        )
         # Check the schema before continuing reload
         await async_check_config_schema(hass, config_yaml)
 

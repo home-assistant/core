@@ -6,6 +6,7 @@ import re
 from typing import Any
 from unittest.mock import patch
 
+from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -99,25 +100,33 @@ def aiohttp_client(
 
 
 @pytest.fixture
-async def mock_http_client(hass, aiohttp_client, frontend):
+async def mock_http_client(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, frontend
+) -> TestClient:
     """Start the Home Assistant HTTP component."""
     return await aiohttp_client(hass.http.app)
 
 
 @pytest.fixture
-async def themes_ws_client(hass, hass_ws_client, frontend_themes):
+async def themes_ws_client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, frontend_themes
+) -> MockHAClientWebSocket:
     """Start the Home Assistant HTTP component."""
     return await hass_ws_client(hass)
 
 
 @pytest.fixture
-async def ws_client(hass, hass_ws_client, frontend):
+async def ws_client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, frontend
+) -> MockHAClientWebSocket:
     """Start the Home Assistant HTTP component."""
     return await hass_ws_client(hass)
 
 
 @pytest.fixture
-async def mock_http_client_with_extra_js(hass, aiohttp_client, ignore_frontend_deps):
+async def mock_http_client_with_extra_js(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, ignore_frontend_deps
+) -> TestClient:
     """Start the Home Assistant HTTP component."""
     assert await async_setup_component(
         hass,
