@@ -385,7 +385,7 @@ def zha_device_restored(hass, zigpy_app_controller, setup_zha):
 
 
 @pytest.fixture(params=["zha_device_joined", "zha_device_restored"])
-def zha_device_joined_restored(request):
+def zha_device_joined_restored(request: pytest.FixtureRequest):
     """Join or restore ZHA device."""
     named_method = request.getfixturevalue(request.param)
     named_method.name = request.param

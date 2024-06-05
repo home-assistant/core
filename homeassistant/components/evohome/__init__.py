@@ -657,16 +657,18 @@ class EvoChild(EvoDevice):
         assert isinstance(self._evo_device, evo.HotWater | evo.Zone)  # mypy check
 
         try:
-            self._schedule = await self._evo_broker.call_client_api(  # type: ignore[assignment]
+            schedule = await self._evo_broker.call_client_api(
                 self._evo_device.get_schedule(), update_state=False
             )
         except evo.InvalidSchedule as err:
             _LOGGER.warning(
-                "%s: Unable to retrieve the schedule: %s",
+                "%s: Unable to retrieve a valid schedule: %s",
                 self._evo_device,
                 err,
             )
             self._schedule = {}
+        else:
+            self._schedule = schedule or {}
 
         _LOGGER.debug("Schedule['%s'] = %s", self.name, self._schedule)
 

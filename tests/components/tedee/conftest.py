@@ -46,7 +46,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_tedee(request) -> Generator[MagicMock, None, None]:
+def mock_tedee() -> Generator[MagicMock, None, None]:
     """Return a mocked Tedee client."""
     with (
         patch(

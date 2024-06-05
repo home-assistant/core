@@ -29,6 +29,7 @@ from . import (
     entity_registry as er,
     floor_registry as fr,
     intent,
+    service,
 )
 from .singleton import singleton
 
@@ -407,6 +408,7 @@ def _get_exposed_entities(
         entity_entry = entity_registry.async_get(state.entity_id)
         names = [state.name]
         area_names = []
+        description: str | None = None
 
         if entity_entry is not None:
             names.extend(entity_entry.aliases)
@@ -426,10 +428,24 @@ def _get_exposed_entities(
                     area_names.append(area.name)
                     area_names.extend(area.aliases)
 
+            if (
+                state.domain == "script"
+                and entity_entry.unique_id
+                and (
+                    service_desc := service.async_get_cached_service_description(
+                        hass, "script", entity_entry.unique_id
+                    )
+                )
+            ):
+                description = service_desc.get("description")
+
         info: dict[str, Any] = {
             "names": ", ".join(names),
             "state": state.state,
         }
+
+        if description:
+            info["description"] = description
 
         if area_names:
             info["areas"] = ", ".join(area_names)
