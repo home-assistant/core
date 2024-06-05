@@ -101,6 +101,11 @@ class ReolinkHostCoordinatorEntity(ReolinkBaseCoordinatorEntity[None]):
 
         await super().async_will_remove_from_hass()
 
+    async def async_update(self) -> None:
+        """Force full update from the generic entity update service."""
+        self._host.last_wake = 0
+        await super().async_update()
+
 
 class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
     """Parent class for Reolink hardware camera entities connected to a channel of the NVR."""
