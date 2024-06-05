@@ -5,19 +5,18 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aiohttp import ClientResponseError
-from incomfortclient import Gateway as InComfortGateway, Heater as InComfortHeater
+from incomfortclient import Heater as InComfortHeater
 
 from homeassistant.components.water_heater import WaterHeaterEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DATA_INCOMFORT, IncomfortEntity
+from . import InComfortConfigEntry
 from .const import DOMAIN
+from .coordinator import InComfortDataCoordinator
+from .entity import IncomfortEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,14 +25,13 @@ HEATER_ATTRS = ["display_code", "display_text", "is_burning"]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: InComfortConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up an InComfort/InTouch water_heater device."""
-    incomfort_data = hass.data[DATA_INCOMFORT][entry.entry_id]
-    async_add_entities(
-        IncomfortWaterHeater(incomfort_data.client, h) for h in incomfort_data.heaters
-    )
+    incomfort_coordinator = entry.runtime_data
+    heaters = incomfort_coordinator.data.heaters
+    async_add_entities(IncomfortWaterHeater(incomfort_coordinator, h) for h in heaters)
 
 
 class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
@@ -45,11 +43,12 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
     _attr_should_poll = True
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, client: InComfortGateway, heater: InComfortHeater) -> None:
+    def __init__(
+        self, coordinator: InComfortDataCoordinator, heater: InComfortHeater
+    ) -> None:
         """Initialize the water_heater device."""
-        super().__init__()
+        super().__init__(coordinator)
 
-        self._client = client
         self._heater = heater
 
         self._attr_unique_id = heater.serial_no
@@ -85,14 +84,3 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
             return f"Fault code: {self._heater.fault_code}"
 
         return self._heater.display_text
-
-    async def async_update(self) -> None:
-        """Get the latest state data from the gateway."""
-        try:
-            await self._heater.update()
-
-        except (ClientResponseError, TimeoutError) as err:
-            _LOGGER.warning("Update failed, message is: %s", err)
-
-        else:
-            async_dispatcher_send(self.hass, f"{DOMAIN}_{self.unique_id}")

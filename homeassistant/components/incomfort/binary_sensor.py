@@ -4,28 +4,28 @@ from __future__ import annotations
 
 from typing import Any
 
-from incomfortclient import Gateway as InComfortGateway, Heater as InComfortHeater
+from incomfortclient import Heater as InComfortHeater
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DATA_INCOMFORT, IncomfortEntity
+from . import InComfortConfigEntry
 from .const import DOMAIN
+from .coordinator import InComfortDataCoordinator
+from .entity import IncomfortEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: InComfortConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up an InComfort/InTouch binary_sensor entity."""
-    incomfort_data = hass.data[DATA_INCOMFORT][entry.entry_id]
-    async_add_entities(
-        IncomfortFailed(incomfort_data.client, h) for h in incomfort_data.heaters
-    )
+    incomfort_coordinator = entry.runtime_data
+    heaters = incomfort_coordinator.data.heaters
+    async_add_entities(IncomfortFailed(incomfort_coordinator, h) for h in heaters)
 
 
 class IncomfortFailed(IncomfortEntity, BinarySensorEntity):
@@ -33,11 +33,12 @@ class IncomfortFailed(IncomfortEntity, BinarySensorEntity):
 
     _attr_name = "Fault"
 
-    def __init__(self, client: InComfortGateway, heater: InComfortHeater) -> None:
+    def __init__(
+        self, coordinator: InComfortDataCoordinator, heater: InComfortHeater
+    ) -> None:
         """Initialize the binary sensor."""
-        super().__init__()
+        super().__init__(coordinator)
 
-        self._client = client
         self._heater = heater
 
         self._attr_unique_id = f"{heater.serial_no}_failed"
