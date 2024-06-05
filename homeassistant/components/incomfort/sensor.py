@@ -22,10 +22,6 @@ from . import InComfortConfigEntry
 from .coordinator import InComfortDataCoordinator
 from .entity import IncomfortBoilerEntity
 
-INCOMFORT_HEATER_TEMP = "CV Temp"
-INCOMFORT_PRESSURE = "CV Pressure"
-INCOMFORT_TAP_TEMP = "Tap Temp"
-
 
 @dataclass(frozen=True, kw_only=True)
 class IncomfortSensorEntityDescription(SensorEntityDescription):
@@ -33,15 +29,11 @@ class IncomfortSensorEntityDescription(SensorEntityDescription):
 
     value_key: str
     extra_key: str | None = None
-    # IncomfortSensor does not support UNDEFINED or None,
-    # restrict the type to str
-    name: str = ""
 
 
 SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
     IncomfortSensorEntityDescription(
         key="cv_pressure",
-        name=INCOMFORT_PRESSURE,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.BAR,
@@ -49,7 +41,6 @@ SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
     ),
     IncomfortSensorEntityDescription(
         key="cv_temp",
-        name=INCOMFORT_HEATER_TEMP,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -58,7 +49,7 @@ SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
     ),
     IncomfortSensorEntityDescription(
         key="tap_temp",
-        name=INCOMFORT_TAP_TEMP,
+        translation_key="tap_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
