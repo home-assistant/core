@@ -9,6 +9,7 @@ from typing import Any
 from incomfortclient import Heater as InComfortHeater
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -32,6 +33,7 @@ SENSOR_TYPES: tuple[IncomfortBinarySensorEntityDescription, ...] = (
     IncomfortBinarySensorEntityDescription(
         key="failed",
         translation_key="fault",
+        device_class=BinarySensorDeviceClass.PROBLEM,
         value_key="is_failed",
         extra_state_attributes_fn=lambda status: {"fault_code": status["fault_code"]},
     ),
