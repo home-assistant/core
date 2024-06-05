@@ -19,11 +19,11 @@ from .const import DOMAIN, PRINTER_TYPES
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST, default=""): str,
+        vol.Required(CONF_HOST): str,
         vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES),
     }
 )
-RECONFIGURE_SCHEMA = vol.Schema({vol.Required(CONF_HOST, default=""): str})
+RECONFIGURE_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 
 async def validate_input(
@@ -176,10 +176,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 self.hass.config_entries.async_update_entry(
                     self.entry,
-                    data={
-                        CONF_HOST: user_input[CONF_HOST],
-                        CONF_TYPE: self.entry.data[CONF_TYPE],
-                    },
+                    data=self.entry.data | {CONF_HOST: user_input[CONF_HOST]},
                 )
                 await self.hass.config_entries.async_reload(self.entry.entry_id)
                 return self.async_abort(reason="reconfigure_successful")
@@ -188,7 +185,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure_confirm",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=RECONFIGURE_SCHEMA,
-                suggested_values=self.entry.data,
+                suggested_values=self.entry.data | (user_input or {}),
             ),
             description_placeholders={"printer_name": self.entry.title},
             errors=errors,
