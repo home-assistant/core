@@ -13,13 +13,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import InComfortConfigEntry
-from .const import DOMAIN
 from .coordinator import InComfortDataCoordinator
-from .entity import IncomfortEntity
+from .entity import IncomfortBoilerEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -55,7 +53,7 @@ async def async_setup_entry(
     )
 
 
-class IncomfortBinarySensor(IncomfortEntity, BinarySensorEntity):
+class IncomfortBinarySensor(IncomfortBoilerEntity, BinarySensorEntity):
     """Representation of an InComfort binary sensor."""
 
     entity_description: IncomfortBinarySensorEntityDescription
@@ -67,17 +65,9 @@ class IncomfortBinarySensor(IncomfortEntity, BinarySensorEntity):
         description: IncomfortBinarySensorEntityDescription,
     ) -> None:
         """Initialize the binary sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, heater)
         self.entity_description = description
-
-        self._heater = heater
-
         self._attr_unique_id = f"{heater.serial_no}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, heater.serial_no)},
-            manufacturer="Intergas",
-            name="Boiler",
-        )
 
     @property
     def is_on(self) -> bool:
