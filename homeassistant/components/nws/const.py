@@ -76,7 +76,12 @@ CONDITION_CLASSES: dict[str, list[str]] = {
 DAYNIGHT = "daynight"
 HOURLY = "hourly"
 
-OBSERVATION_VALID_TIME = timedelta(minutes=20)
+OBSERVATION_VALID_TIME = timedelta(minutes=60)
 FORECAST_VALID_TIME = timedelta(minutes=45)
 # A lot of stations update once hourly plus some wiggle room
 UPDATE_TIME_PERIOD = timedelta(minutes=70)
+
+DEBOUNCE_TIME = 10 * 60  # in seconds
+DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
+RETRY_INTERVAL = timedelta(minutes=1)
+RETRY_STOP = timedelta(minutes=10)

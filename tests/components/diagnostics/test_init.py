@@ -1,7 +1,7 @@
 """Test the Diagnostics integration."""
 
 from http import HTTPStatus
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -9,6 +9,7 @@ from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get
 from homeassistant.helpers.system_info import async_get_system_info
+from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
 from . import _get_diagnostics_for_config_entry, _get_diagnostics_for_device
@@ -79,10 +80,9 @@ async def test_websocket(
     }
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_download_diagnostics(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    enable_custom_integrations: None,
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test download diagnostics."""
     config_entry = MockConfigEntry(domain="fake_integration")
@@ -90,9 +90,16 @@ async def test_download_diagnostics(
     hass_sys_info = await async_get_system_info(hass)
     hass_sys_info["run_as_root"] = hass_sys_info["user"] == "root"
     del hass_sys_info["user"]
-
-    assert await _get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
+    integration = await async_get_integration(hass, "fake_integration")
+    original_manifest = integration.manifest.copy()
+    original_manifest["codeowners"] = ["@test"]
+    with patch.object(integration, "manifest", original_manifest):
+        response = await _get_diagnostics_for_config_entry(
+            hass, hass_client, config_entry
+        )
+    assert response == {
         "home_assistant": hass_sys_info,
+        "setup_times": {},
         "custom_components": {
             "test": {
                 "documentation": "http://example.com",
@@ -161,7 +168,7 @@ async def test_download_diagnostics(
             },
         },
         "integration_manifest": {
-            "codeowners": [],
+            "codeowners": ["test"],
             "dependencies": [],
             "domain": "fake_integration",
             "is_built_in": True,
@@ -256,6 +263,7 @@ async def test_download_diagnostics(
             "requirements": [],
         },
         "data": {"device": "info"},
+        "setup_times": {},
     }
 
 

@@ -16,6 +16,7 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
 )
+from homeassistant.helpers.device_registry import DeviceEntry
 
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN, OAUTH2_SCOPES
@@ -96,3 +97,14 @@ def create_devices(
                     sw_version=device.firmwareCurrent,
                     serial_number=device.product_serial_number,
                 )
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove myuplink config entry from a device."""
+
+    myuplink_data: MyUplinkDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    return not device_entry.identifiers.intersection(
+        (DOMAIN, device_id) for device_id in myuplink_data.data.devices
+    )

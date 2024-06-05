@@ -6,12 +6,13 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import owntracks
+from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.const import STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message
-from tests.typing import ClientSessionGenerator
+from tests.typing import ClientSessionGenerator, MqttMockHAClient
 
 USER = "greg"
 DEVICE = "phone"
@@ -284,7 +285,9 @@ BAD_JSON_SUFFIX = "** and it ends here ^^"
 
 
 @pytest.fixture
-def setup_comp(hass, mock_device_tracker_conf, mqtt_mock):
+def setup_comp(
+    hass, mock_device_tracker_conf: list[Device], mqtt_mock: MqttMockHAClient
+):
     """Initialize components."""
     hass.loop.run_until_complete(async_setup_component(hass, "device_tracker", {}))
 

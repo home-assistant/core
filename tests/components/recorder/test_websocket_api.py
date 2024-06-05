@@ -1119,7 +1119,7 @@ async def test_statistics_during_period_in_the_past(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test statistics_during_period in the past."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     now = dt_util.utcnow().replace()
 
     hass.config.units = US_CUSTOMARY_SYSTEM
@@ -3177,3 +3177,81 @@ async def test_adjust_sum_statistics_errors(
         stats = statistics_during_period(hass, zero, period="hour")
         assert stats != previous_stats
         previous_stats = stats
+
+
+async def test_import_statistics_with_last_reset(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test importing external statistics with last_reset can be fetched via websocket api."""
+    client = await hass_ws_client()
+
+    assert "Compiling statistics for" not in caplog.text
+    assert "Statistics already compiled" not in caplog.text
+
+    zero = dt_util.utcnow()
+    last_reset = dt_util.parse_datetime("2022-01-01T00:00:00+02:00")
+    period1 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+    period2 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=2)
+
+    external_statistics1 = {
+        "start": period1,
+        "last_reset": last_reset,
+        "state": 0,
+        "sum": 2,
+    }
+    external_statistics2 = {
+        "start": period2,
+        "last_reset": last_reset,
+        "state": 1,
+        "sum": 3,
+    }
+
+    external_metadata = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import",
+        "unit_of_measurement": "kWh",
+    }
+
+    async_add_external_statistics(
+        hass, external_metadata, (external_statistics1, external_statistics2)
+    )
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/statistics_during_period",
+            "start_time": zero.isoformat(),
+            "end_time": (zero + timedelta(hours=48)).isoformat(),
+            "statistic_ids": ["test:total_energy_import"],
+            "period": "hour",
+            "types": ["change", "last_reset", "max", "mean", "min", "state", "sum"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["result"] == {
+        "test:total_energy_import": [
+            {
+                "change": 2.0,
+                "end": (period1.timestamp() * 1000) + (3600 * 1000),
+                "last_reset": last_reset.timestamp() * 1000,
+                "start": period1.timestamp() * 1000,
+                "state": 0.0,
+                "sum": 2.0,
+            },
+            {
+                "change": 1.0,
+                "end": (period2.timestamp() * 1000 + (3600 * 1000)),
+                "last_reset": last_reset.timestamp() * 1000,
+                "start": period2.timestamp() * 1000,
+                "state": 1.0,
+                "sum": 3.0,
+            },
+        ]
+    }

@@ -4,7 +4,7 @@
   "after_dependencies": ["zeroconf", "tag"],
   "codeowners": ["@OttoWinter", "@jesserockz", "@kbx81", "@bdraco"],
   "config_flow": true,
-  "dependencies": ["assist_pipeline", "bluetooth"],
+  "dependencies": ["assist_pipeline", "bluetooth", "intent"],
   "dhcp": [
     {
       "registered_devices": true
@@ -14,8 +14,9 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["aioesphomeapi", "noiseprotocol", "bleak_esphome"],
+  "mqtt": ["esphome/discover/#"],
   "requirements": [
-    "aioesphomeapi==24.3.0",
+    "aioesphomeapi==24.5.0",
     "esphome-dashboard-api==1.2.3",
     "bleak-esphome==1.0.0"
   ],

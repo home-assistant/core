@@ -5,7 +5,7 @@ import pytest
 from homeassistant.components import automation
 from homeassistant.components.arcam_fmj.const import DOMAIN
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -22,7 +22,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -67,7 +67,11 @@ async def test_get_triggers(
 
 
 async def test_if_fires_on_turn_on_request(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls, player_setup, state
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    calls: list[ServiceCall],
+    player_setup,
+    state,
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     entry = entity_registry.async_get(player_setup)
@@ -113,7 +117,11 @@ async def test_if_fires_on_turn_on_request(
 
 
 async def test_if_fires_on_turn_on_request_legacy(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls, player_setup, state
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    calls: list[ServiceCall],
+    player_setup,
+    state,
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     entry = entity_registry.async_get(player_setup)

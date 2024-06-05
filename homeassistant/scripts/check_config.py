@@ -236,7 +236,7 @@ def check(config_dir, secrets=False):
             if err.config:
                 res["warn"].setdefault(domain, []).append(err.config)
 
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         print(color("red", "Fatal error while loading config:"), str(err))
         res["except"].setdefault(ERROR_STR, []).append(str(err))
     finally:

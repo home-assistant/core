@@ -597,11 +597,14 @@ async def test_set_turn_on(hass: HomeAssistant, air_conditioner) -> None:
     assert state.state == HVACMode.HEAT_COOL
 
 
-async def test_entity_and_device_attributes(hass: HomeAssistant, thermostat) -> None:
+async def test_entity_and_device_attributes(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    thermostat,
+) -> None:
     """Test the attributes of the entries are correct."""
     await setup_platform(hass, CLIMATE_DOMAIN, devices=[thermostat])
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     entry = entity_registry.async_get("climate.thermostat")
     assert entry

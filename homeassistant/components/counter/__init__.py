@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Self, TypeVar
+from typing import Any, Self
 
 import voluptuous as vol
 
@@ -22,8 +22,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
-
-_T = TypeVar("_T")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +60,7 @@ STORAGE_FIELDS = {
 }
 
 
-def _none_to_empty_dict(value: _T | None) -> _T | dict[str, Any]:
+def _none_to_empty_dict[_T](value: _T | None) -> _T | dict[str, Any]:
     if value is None:
         return {}
     return value

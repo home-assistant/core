@@ -1,5 +1,6 @@
 """The tests for the Xiaomi vacuum platform."""
 
+from collections.abc import Generator
 from datetime import datetime, time, timedelta
 from unittest import mock
 from unittest.mock import MagicMock, patch
@@ -140,7 +141,9 @@ new_fanspeeds = {
 
 
 @pytest.fixture(name="mock_mirobo_fanspeeds", params=[old_fanspeeds, new_fanspeeds])
-def mirobo_old_speeds_fixture(request):
+def mirobo_old_speeds_fixture(
+    request: pytest.FixtureRequest,
+) -> Generator[MagicMock, None, None]:
     """Fixture for testing both types of fanspeeds."""
     mock_vacuum = MagicMock()
     mock_vacuum.status().battery = 32

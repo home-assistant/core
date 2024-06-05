@@ -70,11 +70,13 @@ MAIN_ENTITY_ID = f"{MP_DOMAIN}.my_roku_3"
 TV_ENTITY_ID = f"{MP_DOMAIN}.58_onn_roku_tv"
 
 
-async def test_setup(hass: HomeAssistant, init_integration: MockConfigEntry) -> None:
+async def test_setup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
     """Test setup with basic config."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     state = hass.states.get(MAIN_ENTITY_ID)
     entry = entity_registry.async_get(MAIN_ENTITY_ID)
 
@@ -115,13 +117,12 @@ async def test_idle_setup(
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_tv_setup(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
 ) -> None:
     """Test Roku TV setup."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     state = hass.states.get(TV_ENTITY_ID)
     entry = entity_registry.async_get(TV_ENTITY_ID)
 

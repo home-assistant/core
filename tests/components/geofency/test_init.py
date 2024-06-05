@@ -3,10 +3,12 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import zone
+from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.geofency import CONF_MOBILE_BEACONS, DOMAIN
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
@@ -20,6 +22,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
+
+from tests.typing import ClientSessionGenerator
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
@@ -113,12 +117,14 @@ BEACON_EXIT_CAR = {
 
 
 @pytest.fixture(autouse=True)
-def mock_dev_track(mock_device_tracker_conf):
+def mock_dev_track(mock_device_tracker_conf: list[Device]) -> None:
     """Mock device tracker config loading."""
 
 
 @pytest.fixture
-async def geofency_client(hass, hass_client_no_auth):
+async def geofency_client(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> TestClient:
     """Geofency mock client (unauthenticated)."""
 
     assert await async_setup_component(

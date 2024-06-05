@@ -103,7 +103,7 @@ class Client:
         return resp.get("result")
 
 
-ClientFixture = Callable[[], Awaitable[Client]]
+type ClientFixture = Callable[[], Awaitable[Client]]
 
 
 @pytest.fixture
@@ -474,7 +474,7 @@ async def test_http_api_event(
     component_setup,
 ) -> None:
     """Test querying the API and fetching events from the server."""
-    hass.config.set_time_zone("Asia/Baghdad")
+    await hass.config.async_set_time_zone("Asia/Baghdad")
     event = {
         **TEST_EVENT,
         **upcoming(),
@@ -788,7 +788,7 @@ async def test_all_day_iter_order(
     event_order,
 ) -> None:
     """Test the sort order of an all day events depending on the time zone."""
-    hass.config.set_time_zone(time_zone)
+    await hass.config.async_set_time_zone(time_zone)
     mock_events_list_items(
         [
             {
