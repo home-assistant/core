@@ -24,7 +24,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TeslemetryConfigEntry
-from .const import TeslemetryClimateSide
+from .const import DOMAIN, TeslemetryClimateSide
 from .entity import TeslemetryVehicleEntity
 from .models import TeslemetryVehicleData
 
@@ -253,7 +253,11 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryVehicleEntity, ClimateEn
             elif temp == 40:
                 cop_mode = CabinOverheatProtectionTemp.HIGH
             else:
-                raise ServiceValidationError("Invalid temperature")
+                raise ServiceValidationError(
+                    "Cabin overheat protection does not support that temperature",
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_cop_temp",
+                )
 
             await self.wake_up_if_asleep()
             await self.handle_command(self.api.set_cop_temp(cop_mode))
