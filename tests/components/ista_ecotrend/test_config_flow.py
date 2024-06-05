@@ -47,7 +47,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         (IndexError, "unknown"),
     ],
 )
-@pytest.mark.usefixtures("recorder_mock")
 async def test_form_invalid_auth(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,

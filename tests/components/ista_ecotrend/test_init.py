@@ -35,7 +35,6 @@ async def test_entry_setup_unload(
     ("side_effect"),
     [ServerError, ParserError],
 )
-@pytest.mark.usefixtures("recorder_mock")
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
     ista_config_entry: MockConfigEntry,
