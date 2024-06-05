@@ -41,7 +41,7 @@ async def test_coordinator_updates(
     assert state.attributes["current_temperature"] == 21.4
     mock_incomfort().mock_room_status["room_temp"] = 20.91
 
-    state = hass.states.get("sensor.boiler_cv_pressure")
+    state = hass.states.get("sensor.boiler_pressure")
     assert state is not None
     assert state.state == "1.86"
     mock_incomfort().mock_heater_status["pressure"] = 1.84
@@ -54,7 +54,7 @@ async def test_coordinator_updates(
     assert state is not None
     assert state.attributes["current_temperature"] == 20.9
 
-    state = hass.states.get("sensor.boiler_cv_pressure")
+    state = hass.states.get("sensor.boiler_pressure")
     assert state is not None
     assert state.state == "1.84"
 
@@ -77,7 +77,7 @@ async def test_coordinator_update_fails(
 ) -> None:
     """Test the incomfort coordinator update fails."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    state = hass.states.get("sensor.boiler_cv_pressure")
+    state = hass.states.get("sensor.boiler_pressure")
     assert state is not None
     assert state.state == "1.86"
 
@@ -88,6 +88,6 @@ async def test_coordinator_update_fails(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("sensor.boiler_cv_pressure")
+    state = hass.states.get("sensor.boiler_pressure")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE

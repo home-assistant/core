@@ -31,7 +31,7 @@ class IncomfortBinarySensorEntityDescription(BinarySensorEntityDescription):
 SENSOR_TYPES: tuple[IncomfortBinarySensorEntityDescription, ...] = (
     IncomfortBinarySensorEntityDescription(
         key="failed",
-        name="Fault",
+        translation_key="fault",
         value_key="is_failed",
         extra_state_attributes_fn=lambda status: {"fault_code": status["fault_code"]},
     ),
