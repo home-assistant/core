@@ -6,6 +6,7 @@ from collections import defaultdict
 from collections.abc import Callable, Coroutine
 from functools import partial
 import logging
+import threading
 from typing import Any, overload
 
 from homeassistant.core import (
@@ -21,6 +22,8 @@ from homeassistant.util.logging import catch_log_exception, log_exception
 
 # Explicit reexport of 'SignalType' for backwards compatibility
 from homeassistant.util.signal_type import SignalType as SignalType  # noqa: PLC0414
+
+from .frame import report_non_thread_safe_operation
 
 _LOGGER = logging.getLogger(__name__)
 DATA_DISPATCHER = "dispatcher"
@@ -202,16 +205,8 @@ def async_dispatcher_send[*_Ts](
 
     This method must be run in the event loop.
     """
-    # We turned on asyncio debug in April 2024 in the dev containers
-    # in the hope of catching some of the issues that have been
-    # reported. It will take a while to get all the issues fixed in
-    # custom components.
-    #
-    # In 2025.5 we should guard the `verify_event_loop_thread`
-    # check with a check for the `hass.config.debug` flag being set as
-    # long term we don't want to be checking this in production
-    # environments since it is a performance hit.
-    hass.verify_event_loop_thread("async_dispatcher_send")
+    if hass.loop_thread_id != threading.get_ident():
+        report_non_thread_safe_operation("async_dispatcher_send")
     async_dispatcher_send_internal(hass, signal, *args)
 
 

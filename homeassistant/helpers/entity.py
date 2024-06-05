@@ -14,6 +14,7 @@ import logging
 import math
 from operator import attrgetter
 import sys
+import threading
 import time
 from types import FunctionType
 from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypedDict, final
@@ -63,6 +64,7 @@ from .event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
+from .frame import report_non_thread_safe_operation
 from .typing import UNDEFINED, StateType, UndefinedType
 
 timer = time.time
@@ -512,7 +514,6 @@ class Entity(
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
     _state_info: StateInfo = None  # type: ignore[assignment]
-    _is_custom_component: bool = False
 
     __capabilities_updated_at: deque[float]
     __capabilities_updated_at_reported: bool = False
@@ -995,8 +996,8 @@ class Entity(
     def async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
         self._async_verify_state_writable()
-        if self._is_custom_component or self.hass.config.debug:
-            self.hass.verify_event_loop_thread("async_write_ha_state")
+        if self.hass.loop_thread_id != threading.get_ident():
+            report_non_thread_safe_operation("async_write_ha_state")
         self._async_write_ha_state()
 
     def _stringify_state(self, available: bool) -> str:
@@ -1440,8 +1441,6 @@ class Entity(
             "domain": self.platform.platform_name,
             "custom_component": is_custom_component,
         }
-        self._is_custom_component = is_custom_component
-
         if self.platform.config_entry:
             entity_info["config_entry"] = self.platform.config_entry.entry_id
 
