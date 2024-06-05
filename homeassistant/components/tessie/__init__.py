@@ -12,9 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
 from .coordinator import TessieStateUpdateCoordinator
-from .models import TessieVehicle
+from .models import TessieData
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -33,8 +32,10 @@ PLATFORMS = [
 
 _LOGGER = logging.getLogger(__name__)
 
+type TessieConfigEntry = ConfigEntry[TessieData]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bool:
     """Set up Tessie config."""
     api_key = entry.data[CONF_ACCESS_TOKEN]
 
@@ -52,28 +53,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ClientError as e:
         raise ConfigEntryNotReady from e
 
-    data = [
-        TessieVehicle(
-            state_coordinator=TessieStateUpdateCoordinator(
-                hass,
-                api_key=api_key,
-                vin=vehicle["vin"],
-                data=vehicle["last_state"],
-            )
+    vehicles = [
+        TessieStateUpdateCoordinator(
+            hass,
+            api_key=api_key,
+            vin=vehicle["vin"],
+            data=vehicle["last_state"],
         )
         for vehicle in vehicles["results"]
         if vehicle["last_state"] is not None
     ]
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
+    entry.runtime_data = TessieData(vehicles=vehicles)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bool:
     """Unload Tessie Config."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

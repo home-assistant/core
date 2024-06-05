@@ -181,10 +181,13 @@ async def test_new_entity_on_value_added(
 
 
 async def test_on_node_added_ready(
-    hass: HomeAssistant, multisensor_6_state, client, integration
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    multisensor_6_state,
+    client,
+    integration,
 ) -> None:
     """Test we handle a node added event with a ready node."""
-    dev_reg = dr.async_get(hass)
     node = Node(client, deepcopy(multisensor_6_state))
     event = {"node": node}
     air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
@@ -192,7 +195,7 @@ async def test_on_node_added_ready(
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
     assert not state  # entity and device not yet added
-    assert not dev_reg.async_get_device(
+    assert not device_registry.async_get_device(
         identifiers={(DOMAIN, air_temperature_device_id)}
     )
 
@@ -203,18 +206,24 @@ async def test_on_node_added_ready(
 
     assert state  # entity and device added
     assert state.state != STATE_UNAVAILABLE
-    assert dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
+    assert device_registry.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id)}
+    )
 
 
 async def test_on_node_added_not_ready(
-    hass: HomeAssistant, zp3111_not_ready_state, client, integration
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    zp3111_not_ready_state,
+    client,
+    integration,
 ) -> None:
     """Test we handle a node added event with a non-ready node."""
-    dev_reg = dr.async_get(hass)
     device_id = f"{client.driver.controller.home_id}-{zp3111_not_ready_state['nodeId']}"
 
     assert len(hass.states.async_all()) == 1
-    assert len(dev_reg.devices) == 1
+    assert len(device_registry.devices) == 1
 
     node_state = deepcopy(zp3111_not_ready_state)
     node_state["isSecure"] = False
@@ -231,22 +240,24 @@ async def test_on_node_added_not_ready(
     client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
     # no extended device identifier yet
     assert len(device.identifiers) == 1
 
-    ent_reg = er.async_get(hass)
-    entities = er.async_entries_for_device(ent_reg, device.id)
+    entities = er.async_entries_for_device(entity_registry, device.id)
     # the only entities are the node status sensor, last_seen sensor, and ping button
     assert len(entities) == 3
 
 
 async def test_existing_node_ready(
-    hass: HomeAssistant, client, multisensor_6, integration
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client,
+    multisensor_6,
+    integration,
 ) -> None:
     """Test we handle a ready node that exists during integration setup."""
-    dev_reg = dr.async_get(hass)
     node = multisensor_6
     air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
     air_temperature_device_id_ext = (
@@ -259,22 +270,24 @@ async def test_existing_node_ready(
     assert state  # entity and device added
     assert state.state != STATE_UNAVAILABLE
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id)}
+    )
     assert device
-    assert device == dev_reg.async_get_device(
+    assert device == device_registry.async_get_device(
         identifiers={(DOMAIN, air_temperature_device_id_ext)}
     )
 
 
 async def test_existing_node_reinterview(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     client: Client,
     multisensor_6_state: dict,
     multisensor_6: Node,
     integration: MockConfigEntry,
 ) -> None:
     """Test we handle a node re-interview firing a node ready event."""
-    dev_reg = dr.async_get(hass)
     node = multisensor_6
     assert client.driver is not None
     air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
@@ -288,9 +301,11 @@ async def test_existing_node_reinterview(
     assert state  # entity and device added
     assert state.state != STATE_UNAVAILABLE
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id)}
+    )
     assert device
-    assert device == dev_reg.async_get_device(
+    assert device == device_registry.async_get_device(
         identifiers={(DOMAIN, air_temperature_device_id_ext)}
     )
     assert device.sw_version == "1.12"
@@ -313,54 +328,60 @@ async def test_existing_node_reinterview(
 
     assert state
     assert state.state != STATE_UNAVAILABLE
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id)}
+    )
     assert device
-    assert device == dev_reg.async_get_device(
+    assert device == device_registry.async_get_device(
         identifiers={(DOMAIN, air_temperature_device_id_ext)}
     )
     assert device.sw_version == "1.13"
 
 
 async def test_existing_node_not_ready(
-    hass: HomeAssistant, zp3111_not_ready, client, integration
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    zp3111_not_ready,
+    client,
+    integration,
 ) -> None:
     """Test we handle a non-ready node that exists during integration setup."""
-    dev_reg = dr.async_get(hass)
     node = zp3111_not_ready
     device_id = f"{client.driver.controller.home_id}-{node.node_id}"
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device.name == f"Node {node.node_id}"
     assert not device.manufacturer
     assert not device.model
     assert not device.sw_version
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
     # no extended device identifier yet
     assert len(device.identifiers) == 1
 
-    ent_reg = er.async_get(hass)
-    entities = er.async_entries_for_device(ent_reg, device.id)
+    entities = er.async_entries_for_device(entity_registry, device.id)
     # the only entities are the node status sensor, last_seen sensor, and ping button
     assert len(entities) == 3
 
 
 async def test_existing_node_not_replaced_when_not_ready(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     zp3111,
     zp3111_not_ready_state,
     zp3111_state,
     client,
     integration,
+    area_registry: ar.AreaRegistry,
 ) -> None:
     """Test when a node added event with a non-ready node is received.
 
     The existing node should not be replaced, and no customization should be lost.
     """
-    dev_reg = dr.async_get(hass)
-    er_reg = er.async_get(hass)
-    kitchen_area = ar.async_get(hass).async_create("Kitchen")
+    kitchen_area = area_registry.async_create("Kitchen")
 
     device_id = f"{client.driver.controller.home_id}-{zp3111.node_id}"
     device_id_ext = (
@@ -368,7 +389,7 @@ async def test_existing_node_not_replaced_when_not_ready(
         f"{zp3111.product_type}:{zp3111.product_id}"
     )
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
     assert device.name == "4-in-1 Sensor"
     assert not device.name_by_user
@@ -376,18 +397,20 @@ async def test_existing_node_not_replaced_when_not_ready(
     assert device.model == "ZP3111-5"
     assert device.sw_version == "5.1"
     assert not device.area_id
-    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
+    assert device == device_registry.async_get_device(
+        identifiers={(DOMAIN, device_id_ext)}
+    )
 
     motion_entity = "binary_sensor.4_in_1_sensor_motion_detection"
     state = hass.states.get(motion_entity)
     assert state
     assert state.name == "4-in-1 Sensor Motion detection"
 
-    dev_reg.async_update_device(
+    device_registry.async_update_device(
         device.id, name_by_user="Custom Device Name", area_id=kitchen_area.id
     )
 
-    custom_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    custom_device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert custom_device
     assert custom_device.name == "4-in-1 Sensor"
     assert custom_device.name_by_user == "Custom Device Name"
@@ -395,12 +418,12 @@ async def test_existing_node_not_replaced_when_not_ready(
     assert custom_device.model == "ZP3111-5"
     assert device.sw_version == "5.1"
     assert custom_device.area_id == kitchen_area.id
-    assert custom_device == dev_reg.async_get_device(
+    assert custom_device == device_registry.async_get_device(
         identifiers={(DOMAIN, device_id_ext)}
     )
 
     custom_entity = "binary_sensor.custom_motion_sensor"
-    er_reg.async_update_entity(
+    entity_registry.async_update_entity(
         motion_entity, new_entity_id=custom_entity, name="Custom Entity Name"
     )
     await hass.async_block_till_done()
@@ -424,9 +447,11 @@ async def test_existing_node_not_replaced_when_not_ready(
     client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
-    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
+    assert device == device_registry.async_get_device(
+        identifiers={(DOMAIN, device_id_ext)}
+    )
     assert device.id == custom_device.id
     assert device.identifiers == custom_device.identifiers
     assert device.name == f"Node {zp3111.node_id}"
@@ -452,9 +477,11 @@ async def test_existing_node_not_replaced_when_not_ready(
     client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
-    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
+    assert device == device_registry.async_get_device(
+        identifiers={(DOMAIN, device_id_ext)}
+    )
     assert device.id == custom_device.id
     assert device.identifiers == custom_device.identifiers
     assert device.name == "4-in-1 Sensor"
@@ -748,7 +775,9 @@ async def test_update_addon(
     assert update_addon.call_count == update_calls
 
 
-async def test_issue_registry(hass: HomeAssistant, client, version_state) -> None:
+async def test_issue_registry(
+    hass: HomeAssistant, client, version_state, issue_registry: ir.IssueRegistry
+) -> None:
     """Test issue registry."""
     device = "/test"
     network_key = "abc123"
@@ -774,8 +803,7 @@ async def test_issue_registry(hass: HomeAssistant, client, version_state) -> Non
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
-    issue_reg = ir.async_get(hass)
-    assert issue_reg.async_get_issue(DOMAIN, "invalid_server_version")
+    assert issue_registry.async_get_issue(DOMAIN, "invalid_server_version")
 
     async def connect():
         await asyncio.sleep(0)
@@ -786,7 +814,7 @@ async def test_issue_registry(hass: HomeAssistant, client, version_state) -> Non
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
-    assert not issue_reg.async_get_issue(DOMAIN, "invalid_server_version")
+    assert not issue_registry.async_get_issue(DOMAIN, "invalid_server_version")
 
 
 @pytest.mark.parametrize(
@@ -957,6 +985,7 @@ async def test_remove_entry(
 
 async def test_removed_device(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     client,
     climate_radio_thermostat_ct100_plus,
     lock_schlage_be469,
@@ -969,8 +998,9 @@ async def test_removed_device(
     assert len(driver.controller.nodes) == 3
 
     # Make sure there are the same number of devices
-    dev_reg = dr.async_get(hass)
-    device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, integration.entry_id
+    )
     assert len(device_entries) == 3
 
     # Remove a node and reload the entry
@@ -979,32 +1009,41 @@ async def test_removed_device(
     await hass.async_block_till_done()
 
     # Assert that the node was removed from the device registry
-    device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, integration.entry_id
+    )
     assert len(device_entries) == 2
     assert (
-        dev_reg.async_get_device(identifiers={get_device_id(driver, old_node)}) is None
+        device_registry.async_get_device(identifiers={get_device_id(driver, old_node)})
+        is None
     )
 
 
-async def test_suggested_area(hass: HomeAssistant, client, eaton_rf9640_dimmer) -> None:
+async def test_suggested_area(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client,
+    eaton_rf9640_dimmer,
+) -> None:
     """Test that suggested area works."""
-    dev_reg = dr.async_get(hass)
-    ent_reg = er.async_get(hass)
-
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entity = ent_reg.async_get(EATON_RF9640_ENTITY)
-    assert dev_reg.async_get(entity.device_id).area_id is not None
+    entity = entity_registry.async_get(EATON_RF9640_ENTITY)
+    assert device_registry.async_get(entity.device_id).area_id is not None
 
 
 async def test_node_removed(
-    hass: HomeAssistant, multisensor_6_state, client, integration
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    multisensor_6_state,
+    client,
+    integration,
 ) -> None:
     """Test that device gets removed when node gets removed."""
-    dev_reg = dr.async_get(hass)
     node = Node(client, deepcopy(multisensor_6_state))
     device_id = f"{client.driver.controller.home_id}-{node.node_id}"
     event = {
@@ -1016,7 +1055,7 @@ async def test_node_removed(
 
     client.driver.controller.receive_event(Event("node added", event))
     await hass.async_block_till_done()
-    old_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    old_device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert old_device
     assert old_device.id
 
@@ -1025,14 +1064,18 @@ async def test_node_removed(
     client.driver.controller.emit("node removed", event)
     await hass.async_block_till_done()
     # Assert device has been removed
-    assert not dev_reg.async_get(old_device.id)
+    assert not device_registry.async_get(old_device.id)
 
 
 async def test_replace_same_node(
-    hass: HomeAssistant, multisensor_6, multisensor_6_state, client, integration
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    multisensor_6,
+    multisensor_6_state,
+    client,
+    integration,
 ) -> None:
     """Test when a node is replaced with itself that the device remains."""
-    dev_reg = dr.async_get(hass)
     node_id = multisensor_6.node_id
     multisensor_6_state = deepcopy(multisensor_6_state)
 
@@ -1042,9 +1085,9 @@ async def test_replace_same_node(
         f"{multisensor_6.product_type}:{multisensor_6.product_id}"
     )
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
-    assert device == dev_reg.async_get_device(
+    assert device == device_registry.async_get_device(
         identifiers={(DOMAIN, multisensor_6_device_id)}
     )
     assert device.manufacturer == "AEON Labs"
@@ -1068,7 +1111,7 @@ async def test_replace_same_node(
     await hass.async_block_till_done()
 
     # Device should still be there after the node was removed
-    device = dev_reg.async_get(dev_id)
+    device = device_registry.async_get(dev_id)
     assert device
 
     # When the node is replaced, a non-ready node added event is emitted
@@ -1106,7 +1149,7 @@ async def test_replace_same_node(
     client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    device = dev_reg.async_get(dev_id)
+    device = device_registry.async_get(dev_id)
     assert device
 
     event = Event(
@@ -1122,10 +1165,10 @@ async def test_replace_same_node(
     await hass.async_block_till_done()
 
     # Device is the same
-    device = dev_reg.async_get(dev_id)
+    device = device_registry.async_get(dev_id)
     assert device
-    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
-    assert device == dev_reg.async_get_device(
+    assert device == device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device == device_registry.async_get_device(
         identifiers={(DOMAIN, multisensor_6_device_id)}
     )
     assert device.manufacturer == "AEON Labs"
@@ -1136,6 +1179,7 @@ async def test_replace_same_node(
 
 async def test_replace_different_node(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     multisensor_6,
     multisensor_6_state,
     hank_binary_switch_state,
@@ -1144,7 +1188,6 @@ async def test_replace_different_node(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test when a node is replaced with a different node."""
-    dev_reg = dr.async_get(hass)
     node_id = multisensor_6.node_id
     state = deepcopy(hank_binary_switch_state)
     state["nodeId"] = node_id
@@ -1160,9 +1203,9 @@ async def test_replace_different_node(
         f"{state['productId']}"
     )
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
-    assert device == dev_reg.async_get_device(
+    assert device == device_registry.async_get_device(
         identifiers={(DOMAIN, multisensor_6_device_id_ext)}
     )
     assert device.manufacturer == "AEON Labs"
@@ -1185,7 +1228,7 @@ async def test_replace_different_node(
     await hass.async_block_till_done()
 
     # Device should still be there after the node was removed
-    device = dev_reg.async_get_device(
+    device = device_registry.async_get_device(
         identifiers={(DOMAIN, multisensor_6_device_id_ext)}
     )
     assert device
@@ -1228,7 +1271,7 @@ async def test_replace_different_node(
     client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    device = dev_reg.async_get(dev_id)
+    device = device_registry.async_get(dev_id)
     assert device
 
     event = Event(
@@ -1245,16 +1288,18 @@ async def test_replace_different_node(
 
     # node ID based device identifier should be moved from the old multisensor device
     # to the new hank device and both the old and new devices should exist.
-    new_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    new_device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert new_device
-    hank_device = dev_reg.async_get_device(identifiers={(DOMAIN, hank_device_id_ext)})
+    hank_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, hank_device_id_ext)}
+    )
     assert hank_device
     assert hank_device == new_device
     assert hank_device.identifiers == {
         (DOMAIN, device_id),
         (DOMAIN, hank_device_id_ext),
     }
-    multisensor_6_device = dev_reg.async_get_device(
+    multisensor_6_device = device_registry.async_get_device(
         identifiers={(DOMAIN, multisensor_6_device_id_ext)}
     )
     assert multisensor_6_device
@@ -1285,7 +1330,9 @@ async def test_replace_different_node(
     await hass.async_block_till_done()
 
     # Device should still be there after the node was removed
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, hank_device_id_ext)})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, hank_device_id_ext)}
+    )
     assert device
     assert len(device.identifiers) == 2
 
@@ -1342,13 +1389,15 @@ async def test_replace_different_node(
 
     # node ID based device identifier should be moved from the new hank device
     # to the old multisensor device and both the old and new devices should exist.
-    old_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    old_device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert old_device
-    hank_device = dev_reg.async_get_device(identifiers={(DOMAIN, hank_device_id_ext)})
+    hank_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, hank_device_id_ext)}
+    )
     assert hank_device
     assert hank_device != old_device
     assert hank_device.identifiers == {(DOMAIN, hank_device_id_ext)}
-    multisensor_6_device = dev_reg.async_get_device(
+    multisensor_6_device = device_registry.async_get_device(
         identifiers={(DOMAIN, multisensor_6_device_id_ext)}
     )
     assert multisensor_6_device
@@ -1381,15 +1430,17 @@ async def test_replace_different_node(
 
 
 async def test_node_model_change(
-    hass: HomeAssistant, zp3111, client, integration
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    zp3111,
+    client,
+    integration,
 ) -> None:
     """Test when a node's model is changed due to an updated device config file.
 
     The device and entities should not be removed.
     """
-    dev_reg = dr.async_get(hass)
-    er_reg = er.async_get(hass)
-
     device_id = f"{client.driver.controller.home_id}-{zp3111.node_id}"
     device_id_ext = (
         f"{device_id}-{zp3111.manufacturer_id}:"
@@ -1397,9 +1448,11 @@ async def test_node_model_change(
     )
 
     # Verify device and entities have default names/ids
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
-    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
+    assert device == device_registry.async_get_device(
+        identifiers={(DOMAIN, device_id_ext)}
+    )
     assert device.manufacturer == "Vision Security"
     assert device.model == "ZP3111-5"
     assert device.name == "4-in-1 Sensor"
@@ -1413,18 +1466,20 @@ async def test_node_model_change(
     assert state.name == "4-in-1 Sensor Motion detection"
 
     # Customize device and entity names/ids
-    dev_reg.async_update_device(device.id, name_by_user="Custom Device Name")
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    device_registry.async_update_device(device.id, name_by_user="Custom Device Name")
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
     assert device.id == dev_id
-    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
+    assert device == device_registry.async_get_device(
+        identifiers={(DOMAIN, device_id_ext)}
+    )
     assert device.manufacturer == "Vision Security"
     assert device.model == "ZP3111-5"
     assert device.name == "4-in-1 Sensor"
     assert device.name_by_user == "Custom Device Name"
 
     custom_entity = "binary_sensor.custom_motion_sensor"
-    er_reg.async_update_entity(
+    entity_registry.async_update_entity(
         motion_entity, new_entity_id=custom_entity, name="Custom Entity Name"
     )
     await hass.async_block_till_done()
@@ -1450,7 +1505,7 @@ async def test_node_model_change(
     await hass.async_block_till_done()
 
     # Device name changes, but the customization is the same
-    device = dev_reg.async_get(dev_id)
+    device = device_registry.async_get(dev_id)
     assert device
     assert device.id == dev_id
     assert device.manufacturer == "New Device Manufacturer"
@@ -1491,17 +1546,15 @@ async def test_disabled_node_status_entity_on_node_replaced(
 
 
 async def test_disabled_entity_on_value_removed(
-    hass: HomeAssistant, zp3111, client, integration
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, zp3111, client, integration
 ) -> None:
     """Test that when entity primary values are removed the entity is removed."""
-    er_reg = er.async_get(hass)
-
     # re-enable this default-disabled entity
     sensor_cover_entity = "sensor.4_in_1_sensor_home_security_cover_status"
     idle_cover_status_button_entity = (
         "button.4_in_1_sensor_idle_home_security_cover_status"
     )
-    er_reg.async_update_entity(entity_id=sensor_cover_entity, disabled_by=None)
+    entity_registry.async_update_entity(entity_id=sensor_cover_entity, disabled_by=None)
     await hass.async_block_till_done()
 
     # must reload the integration when enabling an entity
@@ -1776,10 +1829,14 @@ async def test_server_logging(hass: HomeAssistant, client) -> None:
 
 
 async def test_factory_reset_node(
-    hass: HomeAssistant, client, multisensor_6, multisensor_6_state, integration
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client,
+    multisensor_6,
+    multisensor_6_state,
+    integration,
 ) -> None:
     """Test when a node is removed because it was reset."""
-    dev_reg = dr.async_get(hass)
     # One config entry scenario
     remove_event = Event(
         type="node removed",
@@ -1801,7 +1858,7 @@ async def test_factory_reset_node(
     assert "with the home ID" not in notifications[msg_id]["message"]
     async_dismiss(hass, msg_id)
     await hass.async_block_till_done()
-    assert not dev_reg.async_get_device(identifiers={dev_id})
+    assert not device_registry.async_get_device(identifiers={dev_id})
 
     # Add mock config entry to simulate having multiple entries
     new_entry = MockConfigEntry(domain=DOMAIN)

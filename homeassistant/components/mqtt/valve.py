@@ -40,13 +40,11 @@ from .config import MQTT_BASE_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
     CONF_PAYLOAD_CLOSE,
     CONF_PAYLOAD_OPEN,
     CONF_PAYLOAD_STOP,
     CONF_POSITION_CLOSED,
     CONF_POSITION_OPEN,
-    CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
@@ -59,13 +57,9 @@ from .const import (
     DEFAULT_POSITION_CLOSED,
     DEFAULT_POSITION_OPEN,
     DEFAULT_RETAIN,
+    PAYLOAD_NONE,
 )
-from .debug_info import log_messages
-from .mixins import (
-    MqttEntity,
-    async_setup_entity_entry_helper,
-    write_state_on_attr_change,
-)
+from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
@@ -146,7 +140,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT valve through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttValve,
@@ -220,13 +214,16 @@ class MqttValve(MqttEntity, ValveEntity):
         self._attr_supported_features = supported_features
 
     @callback
-    def _update_state(self, state: str) -> None:
+    def _update_state(self, state: str | None) -> None:
         """Update the valve state properties."""
         self._attr_is_opening = state == STATE_OPENING
         self._attr_is_closing = state == STATE_CLOSING
         if self.reports_position:
             return
-        self._attr_is_closed = state == STATE_CLOSED
+        if state is None:
+            self._attr_is_closed = None
+        else:
+            self._attr_is_closed = state == STATE_CLOSED
 
     @callback
     def _process_binary_valve_update(
@@ -242,7 +239,9 @@ class MqttValve(MqttEntity, ValveEntity):
             state = STATE_OPEN
         elif state_payload == self._config[CONF_STATE_CLOSED]:
             state = STATE_CLOSED
-        if state is None:
+        elif state_payload == PAYLOAD_NONE:
+            state = None
+        else:
             _LOGGER.warning(
                 "Payload received on topic '%s' is not one of "
                 "[open, closed, opening, closing], got: %s",
@@ -263,6 +262,9 @@ class MqttValve(MqttEntity, ValveEntity):
             state = STATE_OPENING
         elif state_payload == self._config[CONF_STATE_CLOSING]:
             state = STATE_CLOSING
+        elif state_payload == PAYLOAD_NONE:
+            self._attr_current_valve_position = None
+            return
         if state is None or position_payload != state_payload:
             try:
                 percentage_payload = ranged_value_to_percentage(
@@ -293,14 +295,51 @@ class MqttValve(MqttEntity, ValveEntity):
             return
         self._update_state(state)
 
+    @callback
+    def _state_message_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT state messages."""
+        payload = self._value_template(msg.payload)
+        payload_dict: Any = None
+        position_payload: Any = payload
+        state_payload: Any = payload
+
+        if not payload:
+            _LOGGER.debug("Ignoring empty state message from '%s'", msg.topic)
+            return
+
+        with suppress(*JSON_DECODE_EXCEPTIONS):
+            payload_dict = json_loads(payload)
+            if isinstance(payload_dict, dict):
+                if self.reports_position and "position" not in payload_dict:
+                    _LOGGER.warning(
+                        "Missing required `position` attribute in json payload "
+                        "on topic '%s', got: %s",
+                        msg.topic,
+                        payload,
+                    )
+                    return
+                if not self.reports_position and "state" not in payload_dict:
+                    _LOGGER.warning(
+                        "Missing required `state` attribute in json payload "
+                        " on topic '%s', got: %s",
+                        msg.topic,
+                        payload,
+                    )
+                    return
+                position_payload = payload_dict.get("position")
+                state_payload = payload_dict.get("state")
+
+        if self._config[CONF_REPORTS_POSITION]:
+            self._process_position_valve_update(msg, position_payload, state_payload)
+        else:
+            self._process_binary_valve_update(msg, state_payload)
+
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        topics = {}
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(
-            self,
+        self.add_subscription(
+            CONF_STATE_TOPIC,
+            self._state_message_received,
             {
                 "_attr_current_valve_position",
                 "_attr_is_closed",
@@ -308,61 +347,10 @@ class MqttValve(MqttEntity, ValveEntity):
                 "_attr_is_opening",
             },
         )
-        def state_message_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT state messages."""
-            payload = self._value_template(msg.payload)
-            payload_dict: Any = None
-            position_payload: Any = payload
-            state_payload: Any = payload
-
-            if not payload:
-                _LOGGER.debug("Ignoring empty state message from '%s'", msg.topic)
-                return
-
-            with suppress(*JSON_DECODE_EXCEPTIONS):
-                payload_dict = json_loads(payload)
-                if isinstance(payload_dict, dict):
-                    if self.reports_position and "position" not in payload_dict:
-                        _LOGGER.warning(
-                            "Missing required `position` attribute in json payload "
-                            "on topic '%s', got: %s",
-                            msg.topic,
-                            payload,
-                        )
-                        return
-                    if not self.reports_position and "state" not in payload_dict:
-                        _LOGGER.warning(
-                            "Missing required `state` attribute in json payload "
-                            " on topic '%s', got: %s",
-                            msg.topic,
-                            payload,
-                        )
-                        return
-                    position_payload = payload_dict.get("position")
-                    state_payload = payload_dict.get("state")
-
-            if self._config[CONF_REPORTS_POSITION]:
-                self._process_position_valve_update(
-                    msg, position_payload, state_payload
-                )
-            else:
-                self._process_binary_valve_update(msg, state_payload)
-
-        if self._config.get(CONF_STATE_TOPIC):
-            topics["state_topic"] = {
-                "topic": self._config.get(CONF_STATE_TOPIC),
-                "msg_callback": state_message_received,
-                "qos": self._config[CONF_QOS],
-                "encoding": self._config[CONF_ENCODING] or None,
-            }
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
-        )
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     async def async_open_valve(self) -> None:
         """Move the valve up.
@@ -372,13 +360,7 @@ class MqttValve(MqttEntity, ValveEntity):
         payload = self._command_template(
             self._config.get(CONF_PAYLOAD_OPEN, DEFAULT_PAYLOAD_OPEN)
         )
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
         if self._optimistic:
             # Optimistically assume that valve has changed state.
             self._update_state(STATE_OPEN)
@@ -392,13 +374,7 @@ class MqttValve(MqttEntity, ValveEntity):
         payload = self._command_template(
             self._config.get(CONF_PAYLOAD_CLOSE, DEFAULT_PAYLOAD_CLOSE)
         )
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
         if self._optimistic:
             # Optimistically assume that valve has changed state.
             self._update_state(STATE_CLOSED)
@@ -410,13 +386,7 @@ class MqttValve(MqttEntity, ValveEntity):
         This method is a coroutine.
         """
         payload = self._command_template(self._config[CONF_PAYLOAD_STOP])
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
 
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
@@ -430,13 +400,8 @@ class MqttValve(MqttEntity, ValveEntity):
             "position_closed": self._config[CONF_POSITION_CLOSED],
         }
         rendered_position = self._command_template(scaled_position, variables=variables)
-
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            rendered_position,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_COMMAND_TOPIC], rendered_position
         )
         if self._optimistic:
             self._update_state(

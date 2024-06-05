@@ -74,6 +74,7 @@ from .const import (
     EVENT_STATE_CHANGED,
     EVENT_STATE_REPORTED,
     MATCH_ALL,
+    MAX_EXPECTED_ENTITY_IDS,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_STATE_STATE,
     UnitOfLength,
@@ -177,7 +178,6 @@ _DEPRECATED_SOURCE_YAML = DeprecatedConstantEnum(ConfigSource.YAML, "2025.1")
 # How long to wait until things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
 
-MAX_EXPECTED_ENTITY_IDS = 16384
 
 EVENTS_EXCLUDED_FROM_MATCH_ALL = {
     EVENT_HOMEASSISTANT_CLOSE,
@@ -268,8 +268,16 @@ def async_get_hass() -> HomeAssistant:
     This should be used where it's very cumbersome or downright impossible to pass
     hass to the code which needs it.
     """
-    if not _hass.hass:
+    if not (hass := async_get_hass_or_none()):
         raise HomeAssistantError("async_get_hass called from the wrong thread")
+    return hass
+
+
+def async_get_hass_or_none() -> HomeAssistant | None:
+    """Return the HomeAssistant instance or None.
+
+    Returns None when called from the wrong thread.
+    """
     return _hass.hass
 
 
@@ -322,12 +330,15 @@ class HassJob[**_P, _R_co]:
         self.target: Final = target
         self.name = name
         self._cancel_on_shutdown = cancel_on_shutdown
-        self._job_type = job_type
+        if job_type:
+            # Pre-set the cached_property so we
+            # avoid the function call
+            self.__dict__["job_type"] = job_type
 
     @cached_property
     def job_type(self) -> HassJobType:
         """Return the job type."""
-        return self._job_type or get_hassjob_callable_job_type(self.target)
+        return get_hassjob_callable_job_type(self.target)
 
     @property
     def cancel_on_shutdown(self) -> bool | None:
@@ -423,12 +434,13 @@ class HomeAssistant:
         self.import_executor = InterruptibleThreadPoolExecutor(
             max_workers=1, thread_name_prefix="ImportExecutor"
         )
+        self._loop_thread_id = getattr(
+            self.loop, "_thread_ident", getattr(self.loop, "_thread_id")
+        )
 
     def verify_event_loop_thread(self, what: str) -> None:
         """Report and raise if we are not running in the event loop thread."""
-        if (
-            loop_thread_ident := self.loop.__dict__.get("_thread_ident")
-        ) and loop_thread_ident != threading.get_ident():
+        if self._loop_thread_id != threading.get_ident():
             from .helpers import frame  # pylint: disable=import-outside-toplevel
 
             # frame is a circular import, so we import it here
@@ -1248,6 +1260,14 @@ class Context:
         """Compare contexts."""
         return isinstance(other, Context) and self.id == other.id
 
+    def __copy__(self) -> Context:
+        """Create a shallow copy of this context."""
+        return Context(user_id=self.user_id, parent_id=self.parent_id, id=self.id)
+
+    def __deepcopy__(self, memo: dict[int, Any]) -> Context:
+        """Create a deep copy of this context."""
+        return Context(user_id=self.user_id, parent_id=self.parent_id, id=self.id)
+
     @cached_property
     def _as_dict(self) -> dict[str, str | None]:
         """Return a dictionary representation of the context.
@@ -1783,9 +1803,16 @@ class State:
         # The recorder or the websocket_api will always call the timestamps,
         # so we will set the timestamp values here to avoid the overhead of
         # the function call in the property we know will always be called.
-        self.last_updated_timestamp = self.last_updated.timestamp()
-        if self.last_changed == self.last_updated:
-            self.__dict__["last_changed_timestamp"] = self.last_updated_timestamp
+        last_updated = self.last_updated
+        last_updated_timestamp = last_updated.timestamp()
+        self.last_updated_timestamp = last_updated_timestamp
+        if self.last_changed == last_updated:
+            self.__dict__["last_changed_timestamp"] = last_updated_timestamp
+        # If last_reported is the same as last_updated async_set will pass
+        # the same datetime object for both values so we can use an identity
+        # check here.
+        if self.last_reported is last_updated:
+            self.__dict__["last_reported_timestamp"] = last_updated_timestamp
 
     @cached_property
     def name(self) -> str:
@@ -1802,8 +1829,6 @@ class State:
     @cached_property
     def last_reported_timestamp(self) -> float:
         """Timestamp of last report."""
-        if self.last_reported == self.last_updated:
-            return self.last_updated_timestamp
         return self.last_reported.timestamp()
 
     @cached_property
@@ -2262,6 +2287,7 @@ class StateMachine:
             # mypy does not understand this is only possible if old_state is not None
             old_last_reported = old_state.last_reported  # type: ignore[union-attr]
             old_state.last_reported = now  # type: ignore[union-attr]
+            old_state.last_reported_timestamp = timestamp  # type: ignore[union-attr]
             self._bus.async_fire_internal(
                 EVENT_STATE_REPORTED,
                 {

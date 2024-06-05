@@ -4,11 +4,7 @@ from datetime import timedelta
 
 import pytest
 
-from homeassistant.components.switcher_kis.const import (
-    DATA_DEVICE,
-    DOMAIN,
-    MAX_UPDATE_INTERVAL_SEC,
-)
+from homeassistant.components.switcher_kis.const import MAX_UPDATE_INTERVAL_SEC
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -24,15 +20,14 @@ async def test_update_fail(
     hass: HomeAssistant, mock_bridge, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test entities state unavailable when updates fail.."""
-    await init_integration(hass)
+    entry = await init_integration(hass)
     assert mock_bridge
 
     mock_bridge.mock_callbacks(DUMMY_SWITCHER_DEVICES)
     await hass.async_block_till_done()
 
     assert mock_bridge.is_running is True
-    assert len(hass.data[DOMAIN]) == 2
-    assert len(hass.data[DOMAIN][DATA_DEVICE]) == 2
+    assert len(entry.runtime_data) == 2
 
     async_fire_time_changed(
         hass, dt_util.utcnow() + timedelta(seconds=MAX_UPDATE_INTERVAL_SEC + 1)
@@ -77,11 +72,9 @@ async def test_entry_unload(hass: HomeAssistant, mock_bridge) -> None:
 
     assert entry.state is ConfigEntryState.LOADED
     assert mock_bridge.is_running is True
-    assert len(hass.data[DOMAIN]) == 2
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert mock_bridge.is_running is False
-    assert len(hass.data[DOMAIN]) == 0

@@ -1560,7 +1560,9 @@ def test_empty_schema_cant_find_module() -> None:
 
 
 def test_config_entry_only_schema(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test config_entry_only_config_schema."""
     expected_issue = "config_entry_only_test_domain"
@@ -1568,7 +1570,6 @@ def test_config_entry_only_schema(
         "The test_domain integration does not support YAML setup, please remove "
         "it from your configuration"
     )
-    issue_registry = ir.async_get(hass)
 
     cv.config_entry_only_config_schema("test_domain")({})
     assert expected_message not in caplog.text
@@ -1590,7 +1591,9 @@ def test_config_entry_only_schema_cant_find_module() -> None:
 
 
 def test_config_entry_only_schema_no_hass(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test if the hass context is not set in our context."""
     with patch(
@@ -1605,12 +1608,13 @@ def test_config_entry_only_schema_no_hass(
         "it from your configuration"
     )
     assert expected_message in caplog.text
-    issue_registry = ir.async_get(hass)
     assert not issue_registry.issues
 
 
 def test_platform_only_schema(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test config_entry_only_config_schema."""
     expected_issue = "platform_only_test_domain"
@@ -1618,8 +1622,6 @@ def test_platform_only_schema(
         "The test_domain integration does not support YAML setup, please remove "
         "it from your configuration"
     )
-    issue_registry = ir.async_get(hass)
-
     cv.platform_only_config_schema("test_domain")({})
     assert expected_message not in caplog.text
     assert not issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
