@@ -152,8 +152,8 @@ def mock_config_entry(hass) -> tuple[MockConfigEntry, list[ValveEntity]]:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(
-            config_entry, Platform.VALVE
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.VALVE]
         )
         return True
 

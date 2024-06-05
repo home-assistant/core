@@ -200,7 +200,9 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             self.hass.config_entries.async_update_entry(self.entry, data=data)
 
         # Resume platform setup
-        await self.hass.config_entries.async_forward_entry_setups(self.entry, platforms)
+        await self.hass.config_entries.async_late_forward_entry_setups(
+            self.entry, platforms
+        )
 
         return True
 
@@ -737,7 +739,8 @@ def get_block_coordinator_by_device_id(
             entry = hass.config_entries.async_get_entry(config_entry)
             if (
                 entry
-                and entry.state == ConfigEntryState.LOADED
+                and entry.state is ConfigEntryState.LOADED
+                and hasattr(entry, "runtime_data")
                 and isinstance(entry.runtime_data, ShellyEntryData)
                 and (coordinator := entry.runtime_data.block)
             ):
@@ -756,7 +759,8 @@ def get_rpc_coordinator_by_device_id(
             entry = hass.config_entries.async_get_entry(config_entry)
             if (
                 entry
-                and entry.state == ConfigEntryState.LOADED
+                and entry.state is ConfigEntryState.LOADED
+                and hasattr(entry, "runtime_data")
                 and isinstance(entry.runtime_data, ShellyEntryData)
                 and (coordinator := entry.runtime_data.rpc)
             ):
