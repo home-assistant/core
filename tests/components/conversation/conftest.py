@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_agent_support_all(hass: HomeAssistant):
+def mock_agent_support_all(hass: HomeAssistant) -> MockAgent:
     """Mock agent that supports all languages."""
     entry = MockConfigEntry(entry_id="mock-entry-support-all")
     entry.add_to_hass(hass)

@@ -275,7 +275,7 @@ async def test_protect_loop_scandir(
     caplog.clear()
     with contextlib.suppress(FileNotFoundError):
         await hass.async_add_executor_job(os.scandir, "/path/that/does/not/exists")
-    assert "Detected blocking call to listdir with args" not in caplog.text
+    assert "Detected blocking call to scandir with args" not in caplog.text
 
 
 async def test_protect_loop_listdir(
@@ -290,3 +290,17 @@ async def test_protect_loop_listdir(
     with contextlib.suppress(FileNotFoundError):
         await hass.async_add_executor_job(os.listdir, "/path/that/does/not/exists")
     assert "Detected blocking call to listdir with args" not in caplog.text
+
+
+async def test_protect_loop_walk(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test glob calls in the loop are logged."""
+    block_async_io.enable()
+    with contextlib.suppress(FileNotFoundError):
+        os.walk("/path/that/does/not/exists")
+    assert "Detected blocking call to walk with args" in caplog.text
+    caplog.clear()
+    with contextlib.suppress(FileNotFoundError):
+        await hass.async_add_executor_job(os.walk, "/path/that/does/not/exists")
+    assert "Detected blocking call to walk with args" not in caplog.text

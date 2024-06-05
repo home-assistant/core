@@ -205,8 +205,8 @@ class MinutPointClient:
             config_entries_key = f"{platform}.{DOMAIN}"
             async with self._hass.data[DATA_CONFIG_ENTRY_LOCK]:
                 if config_entries_key not in self._hass.data[CONFIG_ENTRY_IS_SETUP]:
-                    await self._hass.config_entries.async_forward_entry_setup(
-                        self._config_entry, platform
+                    await self._hass.config_entries.async_forward_entry_setups(
+                        self._config_entry, [platform]
                     )
                     self._hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
 
