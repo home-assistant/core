@@ -63,8 +63,8 @@ async def test_name(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(
-            config_entry, binary_sensor.DOMAIN
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [binary_sensor.DOMAIN]
         )
         return True
 
@@ -143,8 +143,8 @@ async def test_entity_category_config_raises_error(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(
-            config_entry, binary_sensor.DOMAIN
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [binary_sensor.DOMAIN]
         )
         return True
 

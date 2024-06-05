@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Generator
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock, patch
 
@@ -50,7 +51,7 @@ def entity_registry_enabled_by_default() -> Generator[None, None, None]:
 
 # Blueprint test fixtures
 @pytest.fixture(name="stub_blueprint_populate")
-def stub_blueprint_populate_fixture() -> Generator[None, Any, None]:
+def stub_blueprint_populate_fixture() -> Generator[None, None, None]:
     """Stub copying the blueprints to the config folder."""
     from tests.components.blueprint.common import stub_blueprint_populate_fixture_helper
 
@@ -59,7 +60,7 @@ def stub_blueprint_populate_fixture() -> Generator[None, Any, None]:
 
 # TTS test fixtures
 @pytest.fixture(name="mock_tts_get_cache_files")
-def mock_tts_get_cache_files_fixture():
+def mock_tts_get_cache_files_fixture() -> Generator[MagicMock, None, None]:
     """Mock the list TTS cache function."""
     from tests.components.tts.common import mock_tts_get_cache_files_fixture_helper
 
@@ -88,8 +89,11 @@ def init_tts_cache_dir_side_effect_fixture() -> Any:
 
 @pytest.fixture(name="mock_tts_cache_dir")
 def mock_tts_cache_dir_fixture(
-    tmp_path, mock_tts_init_cache_dir, mock_tts_get_cache_files, request
-):
+    tmp_path: Path,
+    mock_tts_init_cache_dir: MagicMock,
+    mock_tts_get_cache_files: MagicMock,
+    request: pytest.FixtureRequest,
+) -> Generator[Path, None, None]:
     """Mock the TTS cache dir with empty dir."""
     from tests.components.tts.common import mock_tts_cache_dir_fixture_helper
 
@@ -99,7 +103,7 @@ def mock_tts_cache_dir_fixture(
 
 
 @pytest.fixture(name="tts_mutagen_mock")
-def tts_mutagen_mock_fixture():
+def tts_mutagen_mock_fixture() -> Generator[MagicMock, None, None]:
     """Mock writing tags."""
     from tests.components.tts.common import tts_mutagen_mock_fixture_helper
 

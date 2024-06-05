@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
+import pytest
 from pytrafikverket.trafikverket_camera import CameraInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     get_camera: CameraInfo,
 ) -> None:

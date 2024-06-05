@@ -1,8 +1,9 @@
 """The tests for MQTT tag scanner."""
 
+from collections.abc import Generator
 import copy
 import json
-from unittest.mock import ANY, AsyncMock
+from unittest.mock import ANY, AsyncMock, patch
 
 import pytest
 
@@ -43,6 +44,13 @@ DEFAULT_TAG_SCAN = "E9F35959"
 DEFAULT_TAG_SCAN_JSON = (
     '{"Time":"2020-09-28T17:02:10","PN532":{"UID":"E9F35959", "DATA":"ILOVETASMOTA"}}'
 )
+
+
+@pytest.fixture
+def tag_mock() -> Generator[AsyncMock, None, None]:
+    """Fixture to mock tag."""
+    with patch("homeassistant.components.tag.async_scan_tag") as mock_tag:
+        yield mock_tag
 
 
 @pytest.mark.no_fail_on_log_exception
