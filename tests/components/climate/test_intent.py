@@ -5,13 +5,15 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components import conversation
 from homeassistant.components.climate import (
     DOMAIN,
     ClimateEntity,
     HVACMode,
     intent as climate_intent,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, async_setup_component
 from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, entity_registry as er, intent
@@ -298,3 +300,140 @@ async def test_get_temperature_no_state(
     assert constraints.area_name == "Living Room"
     assert constraints.domains == {DOMAIN}
     assert constraints.device_classes is None
+
+
+async def test_not_exposed(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test HassClimateGetTemperature intent when entities aren't exposed."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    await climate_intent.async_setup_intents(hass)
+
+    climate_1 = MockClimateEntity()
+    climate_1._attr_name = "Climate 1"
+    climate_1._attr_unique_id = "1234"
+    climate_1._attr_current_temperature = 10.0
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "1234", suggested_object_id="climate_1"
+    )
+
+    climate_2 = MockClimateEntity()
+    climate_2._attr_name = "Climate 2"
+    climate_2._attr_unique_id = "5678"
+    climate_2._attr_current_temperature = 22.0
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", suggested_object_id="climate_2"
+    )
+
+    await create_mock_platform(hass, [climate_1, climate_2])
+
+    # Add climate entities to same area
+    living_room_area = area_registry.async_create(name="Living Room")
+    entity_registry.async_update_entity(
+        climate_1.entity_id, area_id=living_room_area.id
+    )
+    entity_registry.async_update_entity(
+        climate_2.entity_id, area_id=living_room_area.id
+    )
+
+    # Expose second, hide first
+    async_expose_entity(hass, conversation.DOMAIN, climate_1.entity_id, False)
+    async_expose_entity(hass, conversation.DOMAIN, climate_2.entity_id, True)
+
+    # Second climate entity is exposed
+    response = await intent.async_handle(
+        hass,
+        "test",
+        climate_intent.INTENT_GET_TEMPERATURE,
+        {},
+        assistant=conversation.DOMAIN,
+    )
+    assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert len(response.matched_states) == 1
+    assert response.matched_states[0].entity_id == climate_2.entity_id
+
+    # Using the area should work
+    response = await intent.async_handle(
+        hass,
+        "test",
+        climate_intent.INTENT_GET_TEMPERATURE,
+        {"area": {"value": living_room_area.name}},
+        assistant=conversation.DOMAIN,
+    )
+    assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert len(response.matched_states) == 1
+    assert response.matched_states[0].entity_id == climate_2.entity_id
+
+    # Using the name of the exposed entity should work
+    response = await intent.async_handle(
+        hass,
+        "test",
+        climate_intent.INTENT_GET_TEMPERATURE,
+        {"name": {"value": climate_2.name}},
+        assistant=conversation.DOMAIN,
+    )
+    assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert len(response.matched_states) == 1
+    assert response.matched_states[0].entity_id == climate_2.entity_id
+
+    # Using the name of the *unexposed* entity should fail
+    with pytest.raises(intent.NoStatesMatchedError):
+        await intent.async_handle(
+            hass,
+            "test",
+            climate_intent.INTENT_GET_TEMPERATURE,
+            {"name": {"value": climate_1.name}},
+            assistant=conversation.DOMAIN,
+        )
+
+    # Expose first, hide second
+    async_expose_entity(hass, conversation.DOMAIN, climate_1.entity_id, True)
+    async_expose_entity(hass, conversation.DOMAIN, climate_2.entity_id, False)
+
+    # Second climate entity is exposed
+    response = await intent.async_handle(
+        hass,
+        "test",
+        climate_intent.INTENT_GET_TEMPERATURE,
+        {},
+        assistant=conversation.DOMAIN,
+    )
+    assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert len(response.matched_states) == 1
+    assert response.matched_states[0].entity_id == climate_1.entity_id
+
+    # Neither are exposed
+    async_expose_entity(hass, conversation.DOMAIN, climate_1.entity_id, False)
+    async_expose_entity(hass, conversation.DOMAIN, climate_2.entity_id, False)
+
+    with pytest.raises(intent.NoStatesMatchedError):
+        await intent.async_handle(
+            hass,
+            "test",
+            climate_intent.INTENT_GET_TEMPERATURE,
+            {},
+            assistant=conversation.DOMAIN,
+        )
+
+    # Should fail with area
+    with pytest.raises(intent.NoStatesMatchedError):
+        await intent.async_handle(
+            hass,
+            "test",
+            climate_intent.INTENT_GET_TEMPERATURE,
+            {"area": {"value": living_room_area.name}},
+            assistant=conversation.DOMAIN,
+        )
+
+    # Should fail with both names
+    for name in (climate_1.name, climate_2.name):
+        with pytest.raises(intent.NoStatesMatchedError):
+            await intent.async_handle(
+                hass,
+                "test",
+                climate_intent.INTENT_GET_TEMPERATURE,
+                {"name": {"value": name}},
+                assistant=conversation.DOMAIN,
+            )

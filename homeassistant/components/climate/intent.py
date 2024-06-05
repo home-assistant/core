@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import voluptuous as vol
 
+from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import intent
 from homeassistant.helpers.entity_component import EntityComponent
@@ -51,7 +52,11 @@ class GetTemperatureIntent(intent.IntentHandler):
             area_name = area_slot.get("text")
 
             for maybe_climate in intent.async_match_states(
-                hass, name=entity_name, area_name=area_id, domains=[DOMAIN]
+                hass,
+                name=entity_name,
+                area_name=area_id,
+                domains=[DOMAIN],
+                assistant=intent_obj.assistant,
             ):
                 climate_state = maybe_climate
                 break
@@ -70,7 +75,7 @@ class GetTemperatureIntent(intent.IntentHandler):
         elif entity_name:
             # Filter by name
             for maybe_climate in intent.async_match_states(
-                hass, name=entity_name, domains=[DOMAIN]
+                hass, name=entity_name, domains=[DOMAIN], assistant=intent_obj.assistant
             ):
                 climate_state = maybe_climate
                 break
@@ -88,7 +93,24 @@ class GetTemperatureIntent(intent.IntentHandler):
             climate_entity = component.get_entity(climate_state.entity_id)
         else:
             # First entity
-            climate_entity = entities[0]
+            if intent_obj.assistant:
+                # Check only exposed entities
+                for entity in entities:
+                    if async_should_expose(
+                        hass, intent_obj.assistant, entity.entity_id
+                    ):
+                        climate_entity = entity
+                        break
+
+                if climate_entity is None:
+                    raise intent.NoStatesMatchedError(
+                        reason=intent.MatchFailedReason.ASSISTANT,
+                        domains={DOMAIN},
+                    )
+            else:
+                # No assistant set
+                climate_entity = entities[0]
+
             climate_state = hass.states.get(climate_entity.entity_id)
 
         assert climate_entity is not None
