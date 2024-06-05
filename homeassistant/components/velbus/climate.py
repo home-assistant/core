@@ -19,10 +19,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN, PRESET_MODES
 from .entity import VelbusEntity, api_call
 
-THERMOSTAT_MODE_MAP: dict[str, HVACMode] = {}
-
-THERMOSTAT_INV_MODE_MAP = {v: k for k, v in THERMOSTAT_MODE_MAP.items()}
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
