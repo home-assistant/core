@@ -46,7 +46,6 @@ async def test_send_message(hass: HomeAssistant, webhook_platform) -> None:
     assert events[0].context == context
 
 
-
 async def test_send_message_thread(hass: HomeAssistant, webhook_platform) -> None:
     """Test the send_message service for threads."""
     context = Context()
@@ -55,10 +54,7 @@ async def test_send_message_thread(hass: HomeAssistant, webhook_platform) -> Non
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SEND_MESSAGE,
-        {
-            ATTR_MESSAGE: "test_message",
-            ATTR_MESSAGE_THREAD_ID: "123"
-        },
+        {ATTR_MESSAGE: "test_message", ATTR_MESSAGE_THREAD_ID: "123"},
         blocking=True,
         context=context,
     )
