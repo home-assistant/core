@@ -40,7 +40,6 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
     _attr_min_temp = 30.0
     _attr_max_temp = 80.0
     _attr_name = None
-    _attr_should_poll = True
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
