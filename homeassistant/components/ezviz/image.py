@@ -57,14 +57,14 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
         )
         camera = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, serial)
         self.alarm_image_password = (
-            camera.data[CONF_PASSWORD] if camera is not None else ""
+            camera.data[CONF_PASSWORD] if camera is not None else None
         )
 
     async def _async_load_image_from_url(self, url: str) -> Image | None:
         """Load an image by url."""
         if response := await self._fetch_url(url):
             image_data = response.content
-            if self.data["encrypted"] and self.alarm_image_password:
+            if self.data["encrypted"] and self.alarm_image_password is not None:
                 try:
                     image_data = decrypt_image(
                         response.content, self.alarm_image_password
