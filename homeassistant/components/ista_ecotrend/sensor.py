@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 import datetime
 from enum import StrEnum
@@ -202,12 +203,12 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
         """When added to hass."""
         # perform initial statistics import when sensor is added, otherwise it would take
         # 1 day when _handle_coordinator_update is triggered for the first time.
-        self.hass.async_create_task(self.update_statistics())
+        await self.update_statistics()
         await super().async_added_to_hass()
 
     def _handle_coordinator_update(self) -> None:
         """Handle coordinator update."""
-        self.hass.async_create_task(self.update_statistics())
+        asyncio.run_coroutine_threadsafe(self.update_statistics(), self.hass.loop)
 
     async def update_statistics(self) -> None:
         """Import ista EcoTrend historical statistics."""

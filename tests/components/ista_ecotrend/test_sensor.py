@@ -3,7 +3,6 @@
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -13,7 +12,6 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 @pytest.mark.usefixtures("mock_ista", "entity_registry_enabled_by_default")
 async def test_setup(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     ista_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,

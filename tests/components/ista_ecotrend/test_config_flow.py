@@ -6,7 +6,6 @@ from pyecotrend_ista import LoginError, ServerError
 import pytest
 
 from homeassistant.components.ista_ecotrend.const import DOMAIN
-from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -48,8 +47,8 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         (IndexError, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("recorder_mock")
 async def test_form_invalid_auth(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_ista: MagicMock,

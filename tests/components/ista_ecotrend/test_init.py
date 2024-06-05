@@ -6,7 +6,6 @@ from pyecotrend_ista import KeycloakError, LoginError, ParserError, ServerError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -36,8 +35,8 @@ async def test_entry_setup_unload(
     ("side_effect"),
     [ServerError, ParserError],
 )
+@pytest.mark.usefixtures("recorder_mock")
 async def test_config_entry_not_ready(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     ista_config_entry: MockConfigEntry,
     mock_ista: MagicMock,
@@ -74,7 +73,6 @@ async def test_config_entry_auth_failed(
 
 @pytest.mark.usefixtures("mock_ista")
 async def test_device_registry(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     ista_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
