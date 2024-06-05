@@ -137,16 +137,18 @@ def _async_loop_exception_handler(_: Any, context: dict[str, Any]) -> None:
     if source_traceback := context.get("source_traceback"):
         stack_summary = "".join(traceback.format_list(source_traceback))
         logger.error(
-            "Error doing job: %s: %s",
+            "Error doing job: %s (%s): %s",
             context["message"],
+            context.get("task"),
             stack_summary,
             **kwargs,  # type: ignore[arg-type]
         )
         return
 
     logger.error(
-        "Error doing job: %s",
+        "Error doing job: %s (%s)",
         context["message"],
+        context.get("task"),
         **kwargs,  # type: ignore[arg-type]
     )
 

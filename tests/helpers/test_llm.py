@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 import voluptuous as vol
 
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -293,6 +294,26 @@ async def test_assist_api_prompt(
     )
 
     # Expose entities
+
+    # Create a script with a unique ID
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "test_script": {
+                    "description": "This is a test script",
+                    "sequence": [],
+                    "fields": {
+                        "beer": {"description": "Number of beers"},
+                        "wine": {},
+                    },
+                }
+            }
+        },
+    )
+    async_expose_entity(hass, "conversation", "script.test_script", True)
+
     entry = MockConfigEntry(title=None)
     entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(
@@ -470,6 +491,11 @@ async def test_assist_api_prompt(
             "areas": "Test Area 2",
             "names": "Unnamed Device",
             "state": "unavailable",
+        },
+        "script.test_script": {
+            "description": "This is a test script",
+            "names": "test_script",
+            "state": "off",
         },
     }
     exposed_entities_prompt = (

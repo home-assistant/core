@@ -472,10 +472,10 @@ async def test_wall_display_relay_mode(
     assert entry.unique_id == "123456789ABC-switch:0"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_create_issue_valve_switch(
     hass: HomeAssistant,
     mock_block_device: Mock,
-    entity_registry_enabled_by_default: None,
     monkeypatch: pytest.MonkeyPatch,
     issue_registry: ir.IssueRegistry,
 ) -> None:

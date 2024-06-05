@@ -404,7 +404,7 @@ aiowithings==2.1.0
 aioymaps==1.2.2
 
 # homeassistant.components.airgradient
-airgradient==0.4.2
+airgradient==0.4.3
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -1087,7 +1087,7 @@ hole==0.8.0
 holidays==0.49
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240603.0
+home-assistant-frontend==20240604.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.6.3
@@ -1808,6 +1808,9 @@ pyecoforest==0.4.0
 # homeassistant.components.econet
 pyeconet==0.1.22
 
+# homeassistant.components.ista_ecotrend
+pyecotrend-ista==3.1.1
+
 # homeassistant.components.edimax
 pyedimax==0.2.1
 
@@ -2272,7 +2275,7 @@ python-kasa[speedups]==0.6.2.1
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==6.1.0b1
+python-matter-server==6.1.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2939,7 +2942,7 @@ yeelightsunflower==0.0.10
 yolink-api==0.4.4
 
 # homeassistant.components.youless
-youless-api==1.1.1
+youless-api==2.1.0
 
 # homeassistant.components.youtube
 youtubeaio==1.1.5

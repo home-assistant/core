@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -13,13 +14,13 @@ from . import init_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     mock_v2c_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test states of the sensor."""
     with patch("homeassistant.components.v2c.PLATFORMS", [Platform.SENSOR]):
