@@ -36,6 +36,7 @@ INFO_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="date",
         name="Date",
         icon="mdi:star-david",
+        translation_key="hebrew_date",
     ),
     SensorEntityDescription(
         key="weekly_portion",
