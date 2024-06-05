@@ -66,5 +66,5 @@ async def test_controller_offline(
     await hass.async_block_till_done()
 
     connectivity = hass.states.get("binary_sensor.home_controller_connectivity")
-    assert connectivity is not None
+    assert connectivity
     assert connectivity.state == STATE_OFF
