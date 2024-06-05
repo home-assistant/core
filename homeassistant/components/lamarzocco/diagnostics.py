@@ -8,9 +8,11 @@ from typing import Any, TypedDict
 from lmcloud.const import FirmwareType
 
 from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import LaMarzoccoConfigEntry
+from .const import DOMAIN
+from .coordinator import LaMarzoccoUpdateCoordinator
 
 TO_REDACT = {
     "serial_number",
@@ -27,10 +29,10 @@ class DiagnosticsData(TypedDict):
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: LaMarzoccoConfigEntry
+    hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = entry.runtime_data
+    coordinator: LaMarzoccoUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     device = coordinator.device
     # collect all data sources
     diagnostics_data = DiagnosticsData(

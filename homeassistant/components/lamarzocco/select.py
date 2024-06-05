@@ -9,11 +9,12 @@ from lmcloud.lm_machine import LaMarzoccoMachine
 from lmcloud.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LaMarzoccoConfigEntry
+from .const import DOMAIN
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 STEAM_LEVEL_HA_TO_LM = {
@@ -85,11 +86,11 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: LaMarzoccoConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up select entities."""
-    coordinator = entry.runtime_data
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
         LaMarzoccoSelectEntity(coordinator, description)
