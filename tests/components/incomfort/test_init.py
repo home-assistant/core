@@ -13,7 +13,6 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.dt import utcnow
 
 
 async def test_setup_platforms(
@@ -45,7 +44,7 @@ async def test_coordinator_updates(
     assert state.state == "1.86"
     mock_incomfort().mock_heater_status["pressure"] = 1.84
 
-    freezer.move_to(utcnow() + timedelta(seconds=UPDATE_INTERVAL + 5))
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL + 5))
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
@@ -83,7 +82,7 @@ async def test_coordinator_update_fails(
     with patch.object(
         mock_incomfort().heaters.return_value[0], "update", side_effect=exc
     ):
-        freezer.move_to(utcnow() + timedelta(seconds=UPDATE_INTERVAL + 5))
+        freezer.tick(timedelta(seconds=UPDATE_INTERVAL + 5))
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
