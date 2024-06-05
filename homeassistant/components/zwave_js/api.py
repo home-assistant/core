@@ -815,6 +815,7 @@ async def websocket_add_node(
         controller.on("inclusion stopped", forward_event),
         controller.on("validate dsk and enter pin", forward_dsk),
         controller.on("grant security classes", forward_requested_grant),
+        controller.on("node found", forward_event),
         controller.on("node added", node_added),
         async_dispatcher_connect(
             hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device_registered
@@ -1352,6 +1353,7 @@ async def websocket_replace_failed_node(
         controller.on("validate dsk and enter pin", forward_dsk),
         controller.on("grant security classes", forward_requested_grant),
         controller.on("node removed", node_removed),
+        controller.on("node found", forward_event),
         controller.on("node added", node_added),
         async_dispatcher_connect(
             hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device_registered
