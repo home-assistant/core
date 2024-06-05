@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import UnitOfPressure, UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -42,6 +43,7 @@ SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
         key="cv_pressure",
         name=INCOMFORT_PRESSURE,
         device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.BAR,
         value_key="pressure",
     ),
@@ -49,6 +51,7 @@ SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
         key="cv_temp",
         name=INCOMFORT_HEATER_TEMP,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         extra_key="is_pumping",
         value_key="heater_temp",
@@ -57,6 +60,7 @@ SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
         key="tap_temp",
         name=INCOMFORT_TAP_TEMP,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         extra_key="is_tapping",
         value_key="tap_temp",
