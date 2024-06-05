@@ -310,7 +310,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '10',
+    'state': '3.87',
   })
 # ---
 # name: test_all_entities[sensor.henk_breathing_disturbances_intensity-entry]
@@ -908,7 +908,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '21.75',
   })
 # ---
 # name: test_all_entities[sensor.henk_fat_free_mass-entry]
@@ -962,7 +962,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '60',
+    'state': '78.63',
   })
 # ---
 # name: test_all_entities[sensor.henk_fat_mass-entry]
@@ -1016,7 +1016,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5',
+    'state': '17.8',
   })
 # ---
 # name: test_all_entities[sensor.henk_fat_ratio-entry]
@@ -1069,7 +1069,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.07',
+    'state': '18.457',
   })
 # ---
 # name: test_all_entities[sensor.henk_heart_pulse-entry]
@@ -1224,7 +1224,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.95',
+    'state': '52.96',
   })
 # ---
 # name: test_all_entities[sensor.henk_intense_activity_today-entry]
@@ -1330,7 +1330,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '31.2',
   })
 # ---
 # name: test_all_entities[sensor.henk_last_workout_duration-entry]
@@ -1937,7 +1937,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50',
+    'state': '74.75',
   })
 # ---
 # name: test_all_entities[sensor.henk_pause_during_last_workout-entry]
@@ -2898,7 +2898,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '102',
+    'state': '3.1',
   })
 # ---
 # name: test_all_entities[sensor.henk_vo2_max-entry]
@@ -3103,7 +3103,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '70',
+    'state': '96.44',
   })
 # ---
 # name: test_all_entities[sensor.henk_weight_goal-entry]
