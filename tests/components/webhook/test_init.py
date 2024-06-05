@@ -249,11 +249,11 @@ async def test_webhook_local_only(hass: HomeAssistant, mock_client) -> None:
     assert len(hooks) == 1
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_listing_webhook(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_access_token: str,
-    enable_custom_integrations: None,
 ) -> None:
     """Test unregistering a webhook."""
     assert await async_setup_component(hass, "webhook", {})
