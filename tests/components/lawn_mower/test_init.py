@@ -67,8 +67,8 @@ async def test_lawn_mower_setup(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(
-            config_entry, Platform.LAWN_MOWER
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.LAWN_MOWER]
         )
         return True
 

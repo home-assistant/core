@@ -8,6 +8,7 @@ from pytrydan.models.trydan import TrydanData
 
 from homeassistant.components.v2c import DOMAIN
 from homeassistant.const import CONF_HOST
+from homeassistant.helpers.json import json_dumps
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -47,6 +48,11 @@ def mock_v2c_client() -> Generator[AsyncMock, None, None]:
     ):
         client = mock_client.return_value
         get_data_json = load_json_object_fixture("get_data.json", DOMAIN)
+        client.raw_data = {
+            "content": json_dumps(get_data_json).encode("utf-8"),
+            "status_code": 200,
+        }
         client.get_data.return_value = TrydanData.from_api(get_data_json)
+        client.data = client.get_data.return_value
         client.firmware_version = get_data_json["FirmwareVersion"]
         yield client
