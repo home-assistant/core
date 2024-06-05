@@ -8,9 +8,11 @@ from functools import cache
 
 from matter_server.client import MatterClient
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
+from matter_server.common.const import SCHEMA_VERSION
 from matter_server.common.errors import MatterError, NodeNotExists
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
+from homeassistant.components.hassio.addon_manager import AddonInfo
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
@@ -62,7 +64,7 @@ def get_matter_device_info(
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Matter from a config entry."""
     if use_addon := entry.data.get(CONF_USE_ADDON):
-        await _async_ensure_addon_running(hass, entry)
+        addon_info = await _async_ensure_addon_running(hass, entry)
 
     matter_client = MatterClient(entry.data[CONF_URL], async_get_clientsession(hass))
     try:
@@ -71,25 +73,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (CannotConnect, TimeoutError) as err:
         raise ConfigEntryNotReady("Failed to connect to matter server") from err
     except InvalidServerVersion as err:
-        if use_addon:
-            addon_manager = _get_addon_manager(hass)
-            addon_manager.async_schedule_update_addon(catch_error=True)
-        else:
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "invalid_server_version",
-                is_fixable=False,
-                severity=IssueSeverity.ERROR,
-                translation_key="invalid_server_version",
-            )
+        # This is raised when the Server requires a newer client than we are :(
+        # We can't do anything about it even in the add-on case.
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "invalid_server_version",
+            is_fixable=False,
+            severity=IssueSeverity.ERROR,
+            translation_key="invalid_server_version",
+        )
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
-
     except Exception as err:
         LOGGER.exception("Failed to connect to matter server")
         raise ConfigEntryNotReady(
             "Unknown error connecting to the Matter server"
         ) from err
+
+    if matter_client.server_info.schema_version < SCHEMA_VERSION:
+        if use_addon and addon_info.update_available:
+            LOGGER.info(
+                "Matter server schema version is too old (%d < %d), scheduling add-on update",
+                matter_client.server_info.schema_version,
+                SCHEMA_VERSION,
+            )
+            await matter_client.disconnect()
+            addon_manager = _get_addon_manager(hass)
+            addon_manager.async_schedule_update_addon(catch_error=True)
+            raise ConfigEntryNotReady("Matter server version too old")
+
+        LOGGER.warning(
+            "Matter server schema version is too old (%d < %d)",
+            matter_client.server_info.schema_version,
+            SCHEMA_VERSION,
+        )
 
     async_delete_issue(hass, DOMAIN, "invalid_server_version")
 
@@ -238,8 +255,13 @@ async def async_remove_config_entry_device(
     return True
 
 
-async def _async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Ensure that Matter Server add-on is installed and running."""
+async def _async_ensure_addon_running(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> AddonInfo:
+    """Ensure that Matter Server add-on is installed and running.
+
+    Returns add-on information if successful, raises ConfigEntryNotReady otherwise.
+    """
     addon_manager = _get_addon_manager(hass)
     try:
         addon_info = await addon_manager.async_get_addon_info()
@@ -258,6 +280,8 @@ async def _async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -
     if addon_state == AddonState.NOT_RUNNING:
         addon_manager.async_schedule_start_addon(catch_error=True)
         raise ConfigEntryNotReady
+
+    return addon_info
 
 
 @callback
