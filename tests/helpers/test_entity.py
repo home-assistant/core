@@ -1662,11 +1662,6 @@ async def test_warn_no_platform(
     ent.entity_id = "hello.world"
     error_message = "does not have a platform"
 
-    # No warning if the entity has a platform
-    caplog.clear()
-    ent.async_write_ha_state()
-    assert error_message not in caplog.text
-
     # Without a platform, it should trigger the warning
     ent.platform = None
     caplog.clear()
@@ -1674,6 +1669,11 @@ async def test_warn_no_platform(
     assert error_message in caplog.text
 
     # Without a platform, it should not trigger the warning again
+    caplog.clear()
+    ent.async_write_ha_state()
+    assert error_message not in caplog.text
+
+    # No warning if the entity has a platform
     caplog.clear()
     ent.async_write_ha_state()
     assert error_message not in caplog.text
