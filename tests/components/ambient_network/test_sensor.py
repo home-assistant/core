@@ -46,10 +46,11 @@ async def test_sensors_with_no_data(
     config_entry: ConfigEntry,
 ) -> None:
     """Test that the sensors are not populated if the last data is absent."""
-    await setup_platform(False, hass, config_entry)
+    await setup_platform(True, hass, config_entry)
 
-    sensor = hass.states.get("sensor.station_b_last_update")
-    assert sensor is None
+    sensor = hass.states.get("sensor.station_b_temperature")
+    assert sensor is not None
+    assert "last_measured" not in sensor.attributes
 
 
 @pytest.mark.parametrize("config_entry", ["AA:AA:AA:AA:AA:AA"], indirect=True)
