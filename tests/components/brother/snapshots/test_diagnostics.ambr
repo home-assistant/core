@@ -52,7 +52,7 @@
       'pf_kit_mp_remaining_life': None,
       'pf_kit_mp_remaining_pages': None,
       'status': 'waiting',
-      'uptime': '2019-09-24T12:14:56+00:00',
+      'uptime': '2024-03-03T15:04:24+00:00',
       'yellow_counter': None,
       'yellow_drum_counter': 1611,
       'yellow_drum_remaining_life': 92,
@@ -64,7 +64,7 @@
       'yellow_toner_remaining': 2,
       'yellow_toner_status': 2,
     }),
-    'firmware': '1.17',
+    'firmware': '1.2.3',
     'info': dict({
       'host': 'localhost',
       'type': 'laser',

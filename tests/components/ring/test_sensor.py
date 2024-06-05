@@ -152,10 +152,10 @@ async def test_only_chime_devices(
     mock_ring_client,
     mock_ring_devices,
     freezer: FrozenDateTimeFactory,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Tests the update service works correctly if only chimes are returned."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
 
     mock_ring_devices.all_devices = mock_ring_devices.chimes

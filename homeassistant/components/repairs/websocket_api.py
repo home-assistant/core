@@ -15,13 +15,10 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.decorators import require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
-)
-from homeassistant.helpers.issue_registry import (
-    async_get as async_get_issue_registry,
-    async_ignore_issue,
 )
 
 from .const import DOMAIN
@@ -50,7 +47,7 @@ def ws_get_issue_data(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Fix an issue."""
-    issue_registry = async_get_issue_registry(hass)
+    issue_registry = ir.async_get(hass)
     if not (issue := issue_registry.async_get_issue(msg["domain"], msg["issue_id"])):
         connection.send_error(
             msg["id"],
@@ -74,7 +71,7 @@ def ws_ignore_issue(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Fix an issue."""
-    async_ignore_issue(hass, msg["domain"], msg["issue_id"], msg["ignore"])
+    ir.async_ignore_issue(hass, msg["domain"], msg["issue_id"], msg["ignore"])
 
     connection.send_result(msg["id"])
 
@@ -89,7 +86,7 @@ def ws_list_issues(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Return a list of issues."""
-    issue_registry = async_get_issue_registry(hass)
+    issue_registry = ir.async_get(hass)
     issues = [
         {
             "breaks_in_ha_version": issue.breaks_in_ha_version,

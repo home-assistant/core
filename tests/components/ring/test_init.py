@@ -12,8 +12,7 @@ from homeassistant.components.ring.const import SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.issue_registry import IssueRegistry
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -91,7 +90,7 @@ async def test_error_on_setup(
     hass: HomeAssistant,
     mock_ring_client,
     mock_config_entry: MockConfigEntry,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     error_type,
     log_msg,
 ) -> None:
@@ -113,7 +112,7 @@ async def test_auth_failure_on_global_update(
     mock_ring_client,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test authentication failure on global data update."""
     mock_config_entry.add_to_hass(hass)
@@ -138,7 +137,7 @@ async def test_auth_failure_on_device_update(
     mock_ring_devices,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test authentication failure on device data update."""
     mock_config_entry.add_to_hass(hass)
@@ -177,7 +176,7 @@ async def test_error_on_global_update(
     mock_ring_client,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     error_type,
     log_msg,
 ) -> None:
@@ -217,7 +216,7 @@ async def test_error_on_device_update(
     mock_ring_devices,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     error_type,
     log_msg,
 ) -> None:
@@ -239,7 +238,7 @@ async def test_error_on_device_update(
 
 async def test_issue_deprecated_service_ring_update(
     hass: HomeAssistant,
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
     caplog: pytest.LogCaptureFixture,
     mock_ring_client,
     mock_config_entry: MockConfigEntry,

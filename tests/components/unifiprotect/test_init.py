@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-import aiohttp
 from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
 from pyunifiprotect.data import NVR, Bootstrap, CloudAccount, Light
 
@@ -24,22 +23,6 @@ from .utils import MockUFPFixture, init_entry, time_changed
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
-
-
-async def remove_device(
-    ws_client: aiohttp.ClientWebSocketResponse, device_id: str, config_entry_id: str
-) -> bool:
-    """Remove config entry from a device."""
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": config_entry_id,
-            "device_id": device_id,
-        }
-    )
-    response = await ws_client.receive_json()
-    return response["success"]
 
 
 async def test_setup(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
@@ -258,6 +241,8 @@ async def test_setup_starts_discovery(
 
 async def test_device_remove_devices(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     light: Light,
     hass_ws_client: WebSocketGenerator,
@@ -269,29 +254,25 @@ async def test_device_remove_devices(
     entity_id = "light.test_light"
     entry_id = ufp.entry.entry_id
 
-    registry: er.EntityRegistry = er.async_get(hass)
-    entity = registry.async_get(entity_id)
+    entity = entity_registry.async_get(entity_id)
     assert entity is not None
-    device_registry = dr.async_get(hass)
 
     live_device_entry = device_registry.async_get(entity.device_id)
-    assert (
-        await remove_device(await hass_ws_client(hass), live_device_entry.id, entry_id)
-        is False
-    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(live_device_entry.id, entry_id)
+    assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "e9:88:e7:b8:b4:40")},
     )
-    assert (
-        await remove_device(await hass_ws_client(hass), dead_device_entry.id, entry_id)
-        is True
-    )
+    response = await client.remove_device(dead_device_entry.id, entry_id)
+    assert response["success"]
 
 
 async def test_device_remove_devices_nvr(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     ufp: MockUFPFixture,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
@@ -303,10 +284,7 @@ async def test_device_remove_devices_nvr(
     await hass.async_block_till_done()
     entry_id = ufp.entry.entry_id
 
-    device_registry = dr.async_get(hass)
-
     live_device_entry = list(device_registry.devices.values())[0]
-    assert (
-        await remove_device(await hass_ws_client(hass), live_device_entry.id, entry_id)
-        is False
-    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(live_device_entry.id, entry_id)
+    assert not response["success"]

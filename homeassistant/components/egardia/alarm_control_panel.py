@@ -6,8 +6,10 @@ import logging
 
 import requests
 
-import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
+)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -61,7 +63,7 @@ def setup_platform(
     add_entities([device], True)
 
 
-class EgardiaAlarm(alarm.AlarmControlPanelEntity):
+class EgardiaAlarm(AlarmControlPanelEntity):
     """Representation of a Egardia alarm."""
 
     _attr_state: str | None

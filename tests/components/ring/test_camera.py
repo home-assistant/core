@@ -14,10 +14,13 @@ from homeassistant.helpers import entity_registry as er
 from .common import setup_platform
 
 
-async def test_entity_registry(hass: HomeAssistant, mock_ring_client) -> None:
+async def test_entity_registry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_ring_client,
+) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, Platform.CAMERA)
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get("camera.front")
     assert entry.unique_id == "765432"

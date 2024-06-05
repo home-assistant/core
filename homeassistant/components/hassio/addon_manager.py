@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import partial, wraps
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -28,15 +28,13 @@ from .handler import (
     async_update_addon,
 )
 
-_AddonManagerT = TypeVar("_AddonManagerT", bound="AddonManager")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-
-_FuncType = Callable[Concatenate[_AddonManagerT, _P], Awaitable[_R]]
-_ReturnFuncType = Callable[Concatenate[_AddonManagerT, _P], Coroutine[Any, Any, _R]]
+type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], Awaitable[_R]]
+type _ReturnFuncType[_T, **_P, _R] = Callable[
+    Concatenate[_T, _P], Coroutine[Any, Any, _R]
+]
 
 
-def api_error(
+def api_error[_AddonManagerT: AddonManager, **_P, _R](
     error_message: str,
 ) -> Callable[
     [_FuncType[_AddonManagerT, _P, _R]], _ReturnFuncType[_AddonManagerT, _P, _R]
@@ -185,13 +183,18 @@ class AddonManager:
         options = {"options": config}
         await async_set_addon_options(self._hass, self.addon_slug, options)
 
+    def _check_addon_available(self, addon_info: AddonInfo) -> None:
+        """Check if the managed add-on is available."""
+
+        if not addon_info.available:
+            raise AddonError(f"{self.addon_name} add-on is not available")
+
     @api_error("Failed to install the {addon_name} add-on")
     async def async_install_addon(self) -> None:
         """Install the managed add-on."""
         addon_info = await self.async_get_addon_info()
 
-        if not addon_info.available:
-            raise AddonError(f"{self.addon_name} add-on is not available anymore")
+        self._check_addon_available(addon_info)
 
         await async_install_addon(self._hass, self.addon_slug)
 
@@ -205,8 +208,7 @@ class AddonManager:
         """Update the managed add-on if needed."""
         addon_info = await self.async_get_addon_info()
 
-        if not addon_info.available:
-            raise AddonError(f"{self.addon_name} add-on is not available anymore")
+        self._check_addon_available(addon_info)
 
         if addon_info.state is AddonState.NOT_INSTALLED:
             raise AddonError(f"{self.addon_name} add-on is not installed")

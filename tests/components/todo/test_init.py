@@ -91,7 +91,7 @@ def mock_setup_integration(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
         return True
 
     async def async_unload_entry_init(
@@ -113,9 +113,9 @@ def mock_setup_integration(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture(autouse=True)
-def set_time_zone(hass: HomeAssistant) -> None:
+async def set_time_zone(hass: HomeAssistant) -> None:
     """Set the time zone for the tests that keesp UTC-6 all year round."""
-    hass.config.set_time_zone("America/Regina")
+    await hass.config.async_set_time_zone("America/Regina")
 
 
 async def create_mock_platform(
