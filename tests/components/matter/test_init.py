@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
 from matter_server.client.models.node import MatterNode
+from matter_server.common.const import SCHEMA_VERSION
 from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import dataclass_from_dict
 from matter_server.common.models import MatterNodeData
@@ -356,18 +357,36 @@ async def test_addon_info_failure(
 
 @pytest.mark.parametrize(
     (
-        "addon_version",
         "update_available",
         "update_calls",
         "backup_calls",
         "update_addon_side_effect",
         "create_backup_side_effect",
+        "matter_client_connect_side_effect",
+        "matter_client_server_info_schema_version",
     ),
     [
-        ("1.0.0", True, 1, 1, None, None),
-        ("1.0.0", False, 0, 0, None, None),
-        ("1.0.0", True, 1, 1, HassioAPIError("Boom"), None),
-        ("1.0.0", True, 0, 1, None, HassioAPIError("Boom")),
+        (True, 1, 1, None, None, None, 1),
+        (
+            False,
+            0,
+            0,
+            None,
+            None,
+            InvalidServerVersion("Invalid version"),
+            1,
+        ),
+        (
+            False,
+            0,
+            0,
+            None,
+            None,
+            InvalidServerVersion("Invalid version"),
+            SCHEMA_VERSION,
+        ),
+        (True, 1, 1, HassioAPIError("Boom"), None, None, 1),
+        (True, 0, 1, None, HassioAPIError("Boom"), None, 1),
     ],
 )
 async def test_update_addon(
@@ -380,19 +399,20 @@ async def test_update_addon(
     create_backup: AsyncMock,
     update_addon: AsyncMock,
     matter_client: MagicMock,
-    addon_version: str,
     update_available: bool,
     update_calls: int,
     backup_calls: int,
     update_addon_side_effect: Exception | None,
     create_backup_side_effect: Exception | None,
+    matter_client_connect_side_effect: Exception | None,
+    matter_client_server_info_schema_version: int,
 ):
     """Test update the Matter add-on during entry setup."""
-    addon_info.return_value["version"] = addon_version
     addon_info.return_value["update_available"] = update_available
     create_backup.side_effect = create_backup_side_effect
     update_addon.side_effect = update_addon_side_effect
-    matter_client.connect.side_effect = InvalidServerVersion("Invalid version")
+    matter_client.connect.side_effect = matter_client_connect_side_effect
+    matter_client.server_info.schema_version = matter_client_server_info_schema_version
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Matter",
