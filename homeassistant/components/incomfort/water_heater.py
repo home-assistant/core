@@ -10,13 +10,11 @@ from incomfortclient import Heater as InComfortHeater
 from homeassistant.components.water_heater import WaterHeaterEntity
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import InComfortConfigEntry
-from .const import DOMAIN
 from .coordinator import InComfortDataCoordinator
-from .entity import IncomfortEntity
+from .entity import IncomfortBoilerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,29 +32,20 @@ async def async_setup_entry(
     async_add_entities(IncomfortWaterHeater(incomfort_coordinator, h) for h in heaters)
 
 
-class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
+class IncomfortWaterHeater(IncomfortBoilerEntity, WaterHeaterEntity):
     """Representation of an InComfort/Intouch water_heater device."""
 
     _attr_min_temp = 30.0
     _attr_max_temp = 80.0
     _attr_name = None
-    _attr_should_poll = True
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self, coordinator: InComfortDataCoordinator, heater: InComfortHeater
     ) -> None:
         """Initialize the water_heater device."""
-        super().__init__(coordinator)
-
-        self._heater = heater
-
+        super().__init__(coordinator, heater)
         self._attr_unique_id = heater.serial_no
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, heater.serial_no)},
-            manufacturer="Intergas",
-            name="Boiler",
-        )
 
     @property
     def icon(self) -> str:
