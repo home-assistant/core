@@ -93,7 +93,7 @@ DEVICE_CAPABILITIES = {
 
 def _mocked_ring_device(device_dict, device_family, device_class, capabilities):
     """Return a mocked device."""
-    mock_device = MagicMock(spec=device_class, name=f"Mocked {str(device_family)}")
+    mock_device = MagicMock(spec=device_class, name=f"Mocked {device_family!s}")
 
     def has_capability(capability):
         return (
