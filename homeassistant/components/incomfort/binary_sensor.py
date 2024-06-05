@@ -27,7 +27,7 @@ class IncomfortBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Incomfort binary sensor entity."""
 
     value_key: str
-    extra_state_attributes_fn: Callable[[dict[str, Any]], dict[str, Any]] | None = None
+    extra_state_attributes_fn: Callable[[dict[str, Any]], dict[str, Any]]
 
 
 SENSOR_TYPES: tuple[IncomfortBinarySensorEntityDescription, ...] = (
@@ -85,10 +85,6 @@ class IncomfortBinarySensor(IncomfortEntity, BinarySensorEntity):
         return self._heater.status[self.entity_description.value_key]
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        if self.entity_description.extra_state_attributes_fn:
-            return self.entity_description.extra_state_attributes_fn(
-                self._heater.status
-            )
-        return None
+        return self.entity_description.extra_state_attributes_fn(self._heater.status)
