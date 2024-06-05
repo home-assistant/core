@@ -1,6 +1,5 @@
 """The Strip Controller integration.
 
-Based on homeassistant/components/upnp
 Based on homeassistant/components/sun/sensor.py to associate entities to devices
 Based on homeassistant/components/wled/button.py to create a configuration like WLED "Restart"
 Based on homeassistant/components/wled/number.py to create a configuration like WLED "Intensity"
@@ -32,9 +31,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # hass.data[DOMAIN][entry.entry_id] = MyApi()
 
     # TOD set name for device
+    # Most code here is based on upnp integration
 
     try:
-        device = await async_create_sc_rpi_device(hass)
+        device = await async_create_sc_rpi_device(hass, entry)
     except Exception as err:
         raise ConfigEntryNotReady(
             f"Error connecting to device at location: - , err: {err}"

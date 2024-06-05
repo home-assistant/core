@@ -1,6 +1,7 @@
 """Config flow for Strip Controller integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any, Optional
 
@@ -95,6 +96,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             )
 
+            await self._async_get_device(
+                user_input[CONF_IP_ADDRESS], user_input[CONF_PORT]
+            )
+
             self._number_of_sections = user_input[CONF_NUMBER_OF_SECTIONS]
             self._device_name = user_input[CONF_NAME]
             self._device_address = user_input[CONF_IP_ADDRESS]
@@ -108,6 +113,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors={},
             last_step=False,
         )
+
+    async def _async_get_device(self, host: str, port: int):
+        """Get device information from WLED device."""
+        reader, writer = await asyncio.open_connection(host, port)
+        # implement similar to wled but using websockets with the session for HTTP obtained as in _async_get_device of wled config flow
+        # wled = WLED(host, session=session)
+        # TOD: CONTINUE https://developers.home-assistant.io/docs/integration_fetching_data/
+        # TOD: check only one TCP socket is open
 
     async def _get_number_of_led(self):
         # TOD: obtain number of led to set default section length with it (0 to number_of_led)
