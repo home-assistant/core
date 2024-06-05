@@ -132,6 +132,7 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
                 model=self._host.api.camera_model(dev_ch),
                 manufacturer=self._host.api.manufacturer,
                 sw_version=self._host.api.camera_sw_version(dev_ch),
+                serial_number=self._host.api.camera_uid(dev_ch),
                 configuration_url=self._conf_url,
             )
 
