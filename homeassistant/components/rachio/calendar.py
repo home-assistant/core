@@ -25,6 +25,7 @@ from .const import (
     KEY_PROGRAM_ID,
     KEY_PROGRAM_NAME,
     KEY_RUN_SUMMARIES,
+    KEY_SERIAL_NUMBER,
     KEY_SKIP,
     KEY_SKIPPABLE,
     KEY_START_TIME,
@@ -66,9 +67,10 @@ class RachioCalendarEntity(
         super().__init__(coordinator)
         self.base_station = base_station
         self._event: CalendarEvent | None = None
-        self._attr_name = "Rachio Smart Hose Timer Events"
+        self._serial_number = coordinator.base_station[KEY_SERIAL_NUMBER]
+        self._location = coordinator.base_station[KEY_ADDRESS][KEY_LOCALITY]
+        self._attr_name = f"Rachio Smart Hose Timer Events - {self._serial_number}"
         self._attr_unique_id = f"{coordinator.base_station[KEY_ID]}-calendar"
-        self.location = coordinator.base_station[KEY_ADDRESS][KEY_LOCALITY]
         self._previous_event: dict[str, Any] | None = None
 
     @property
@@ -87,14 +89,14 @@ class RachioCalendarEntity(
             end=dt_util.as_local(start_time)
             + timedelta(seconds=int(event[KEY_TOTAL_RUN_DURATION])),
             description=valves,
-            location=self.location,
+            location=self._location,
         )
 
     def _handle_upcoming_event(self) -> dict[str, Any] | None:
         """Handle current or next event."""
-        # Currently when an event starts, the event disappears from the
-        # API until the event ends. So we store it and use it
-        # if it's within the time window.
+        # Currently when an event starts, it disappears from the
+        # API until the event ends. So we store the upcoming event and use
+        # the stored version if it's within the event time window.
         if self._previous_event:
             start_time = dt_util.parse_datetime(
                 self._previous_event[KEY_START_TIME], raise_on_error=True
@@ -104,6 +106,7 @@ class RachioCalendarEntity(
             )
             if start_time <= dt_util.now() <= end_time:
                 return self._previous_event
+
         schedule = iter(self.coordinator.data)
         event = next(schedule, None)
         if not event:  # Schedule is empty
@@ -112,7 +115,7 @@ class RachioCalendarEntity(
             not event[KEY_SKIPPABLE] or KEY_SKIP in event[KEY_RUN_SUMMARIES][0]
         ):  # Not being skippable indicates the event is in the past
             event = next(schedule, None)
-            self._previous_event = event
+            self._previous_event = event  # Store for future use
             if not event:  # Schedule only has past or skipped events
                 return None
         return event
@@ -154,7 +157,7 @@ class RachioCalendarEntity(
                     start=event_start,
                     end=event_end,
                     description=valves,
-                    location=self.location,
+                    location=self._location,
                     uid=f"{run[KEY_PROGRAM_ID]}/{run[KEY_START_TIME]}",
                 )
                 event_list.append(event)
