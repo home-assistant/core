@@ -2532,10 +2532,9 @@ async def test_validate_config_works(
     websocket_client: MockHAClientWebSocket, key, config
 ) -> None:
     """Test config validation."""
-    await websocket_client.send_json({"id": 7, "type": "validate_config", key: config})
+    await websocket_client.send_json_auto_id({"type": "validate_config", key: config})
 
     msg = await websocket_client.receive_json()
-    assert msg["id"] == 7
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {key: {"valid": True, "error": None}}
@@ -2544,11 +2543,13 @@ async def test_validate_config_works(
 @pytest.mark.parametrize(
     ("key", "config", "error"),
     [
+        # Raises vol.Invalid
         (
             "trigger",
             {"platform": "non_existing", "event_type": "hello"},
             "Invalid platform 'non_existing' specified",
         ),
+        # Raises vol.Invalid
         (
             "condition",
             {
@@ -2562,6 +2563,20 @@ async def test_validate_config_works(
                 "@ data[0]"
             ),
         ),
+        # Raises HomeAssistantError
+        (
+            "condition",
+            {
+                "above": 50,
+                "condition": "device",
+                "device_id": "a51a57e5af051eb403d56eb9e6fd691c",
+                "domain": "sensor",
+                "entity_id": "7d18a157b7c00adbf2982ea7de0d0362",
+                "type": "is_carbon_dioxide",
+            },
+            "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+        ),
+        # Raises vol.Invalid
         (
             "action",
             {"non_existing": "domain_test.test_service"},
@@ -2573,10 +2588,9 @@ async def test_validate_config_invalid(
     websocket_client: MockHAClientWebSocket, key, config, error
 ) -> None:
     """Test config validation."""
-    await websocket_client.send_json({"id": 7, "type": "validate_config", key: config})
+    await websocket_client.send_json_auto_id({"type": "validate_config", key: config})
 
     msg = await websocket_client.receive_json()
-    assert msg["id"] == 7
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {key: {"valid": False, "error": error}}
