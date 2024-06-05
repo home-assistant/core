@@ -3,6 +3,7 @@
 import asyncio
 from copy import deepcopy
 import logging
+from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
@@ -2529,7 +2530,9 @@ async def test_integration_setup_info(
     ],
 )
 async def test_validate_config_works(
-    websocket_client: MockHAClientWebSocket, key: str, config: dict[str, Any] | list[dict[str, Any]]
+    websocket_client: MockHAClientWebSocket,
+    key: str,
+    config: dict[str, Any] | list[dict[str, Any]],
 ) -> None:
     """Test config validation."""
     await websocket_client.send_json_auto_id({"type": "validate_config", key: config})
@@ -2585,7 +2588,10 @@ async def test_validate_config_works(
     ],
 )
 async def test_validate_config_invalid(
-    websocket_client: MockHAClientWebSocket, key: str, config: dict[str, Any], error: str
+    websocket_client: MockHAClientWebSocket,
+    key: str,
+    config: dict[str, Any],
+    error: str,
 ) -> None:
     """Test config validation."""
     await websocket_client.send_json_auto_id({"type": "validate_config", key: config})
