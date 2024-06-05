@@ -45,7 +45,7 @@ SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
-        key="powerMeasurement",
+        key="powerConsumption",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
@@ -56,7 +56,7 @@ SENSOR_TYPES = (
         native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
-        key="wind_speed",
+        key="wind",
         device_class=SensorDeviceClass.WIND_SPEED,
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
     ),
