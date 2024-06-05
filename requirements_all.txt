@@ -566,7 +566,7 @@ bleak-retry-connector==3.5.0
 bleak==0.22.1
 
 # homeassistant.components.blebox
-blebox-uniapi==2.2.2
+blebox-uniapi==2.4.2
 
 # homeassistant.components.blink
 blinkpy==0.22.6
@@ -2309,7 +2309,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.2.2
+python-roborock==2.2.3
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
