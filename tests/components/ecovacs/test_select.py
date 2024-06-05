@@ -1,6 +1,5 @@
 """Tests for Ecovacs select entities."""
 
-from deebot_client.capabilities import Capabilities
 from deebot_client.command import Command
 from deebot_client.commands.json import SetWaterInfo
 from deebot_client.event_bus import EventBus
@@ -64,7 +63,7 @@ async def test_selects(
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
         assert state.state == STATE_UNKNOWN
 
-    device = next(controller.devices(Capabilities))
+    device = controller.devices[0]
     await notify_events(hass, device.events)
     for entity_id in entity_ids:
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
@@ -100,7 +99,7 @@ async def test_selects_change(
     command: Command,
 ) -> None:
     """Test that changing select entities works."""
-    device = next(controller.devices(Capabilities))
+    device = controller.devices[0]
     await notify_events(hass, device.events)
 
     assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"

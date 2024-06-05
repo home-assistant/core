@@ -6,7 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from deebot_client.capabilities import VacuumCapabilities
+from deebot_client.capabilities import Capabilities, DeviceType
 from deebot_client.device import Device
 from deebot_client.events import BatteryEvent, FanSpeedEvent, RoomsEvent, StateEvent
 from deebot_client.models import CleanAction, CleanMode, Room, State
@@ -48,7 +48,9 @@ async def async_setup_entry(
     """Set up the Ecovacs vacuums."""
     controller = config_entry.runtime_data
     vacuums: list[EcovacsVacuum | EcovacsLegacyVacuum] = [
-        EcovacsVacuum(device) for device in controller.devices(VacuumCapabilities)
+        EcovacsVacuum(device)
+        for device in controller.devices
+        if device.capabilities.device_type is DeviceType.VACUUM
     ]
     for device in controller.legacy_devices:
         await hass.async_add_executor_job(device.connect_and_wait_until_ready)
@@ -211,7 +213,7 @@ _ATTR_ROOMS = "rooms"
 
 
 class EcovacsVacuum(
-    EcovacsEntity[VacuumCapabilities, VacuumCapabilities],
+    EcovacsEntity[Capabilities],
     StateVacuumEntity,
 ):
     """Ecovacs vacuum."""
@@ -222,7 +224,6 @@ class EcovacsVacuum(
         VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.RETURN_HOME
-        | VacuumEntityFeature.FAN_SPEED
         | VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.SEND_COMMAND
         | VacuumEntityFeature.LOCATE
@@ -234,16 +235,17 @@ class EcovacsVacuum(
         key="vacuum", translation_key="vacuum", name=None
     )
 
-    def __init__(self, device: Device[VacuumCapabilities]) -> None:
+    def __init__(self, device: Device) -> None:
         """Initialize the vacuum."""
-        capabilities = device.capabilities
-        super().__init__(device, capabilities)
+        super().__init__(device, device.capabilities)
 
         self._rooms: list[Room] = []
 
-        self._attr_fan_speed_list = [
-            get_name_key(level) for level in capabilities.fan_speed.types
-        ]
+        if fan_speed := self._capability.fan_speed:
+            self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
+            self._attr_fan_speed_list = [
+                get_name_key(level) for level in fan_speed.types
+            ]
 
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
@@ -251,10 +253,6 @@ class EcovacsVacuum(
 
         async def on_battery(event: BatteryEvent) -> None:
             self._attr_battery_level = event.value
-            self.async_write_ha_state()
-
-        async def on_fan_speed(event: FanSpeedEvent) -> None:
-            self._attr_fan_speed = get_name_key(event.speed)
             self.async_write_ha_state()
 
         async def on_rooms(event: RoomsEvent) -> None:
@@ -266,8 +264,15 @@ class EcovacsVacuum(
             self.async_write_ha_state()
 
         self._subscribe(self._capability.battery.event, on_battery)
-        self._subscribe(self._capability.fan_speed.event, on_fan_speed)
         self._subscribe(self._capability.state.event, on_status)
+
+        if self._capability.fan_speed:
+
+            async def on_fan_speed(event: FanSpeedEvent) -> None:
+                self._attr_fan_speed = get_name_key(event.speed)
+                self.async_write_ha_state()
+
+            self._subscribe(self._capability.fan_speed.event, on_fan_speed)
 
         if map_caps := self._capability.map:
             self._subscribe(map_caps.rooms.event, on_rooms)
