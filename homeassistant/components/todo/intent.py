@@ -37,13 +37,16 @@ class ListAddItemIntent(intent.IntentHandler):
         target_list: TodoListEntity | None = None
 
         # Find matching list
-        for list_state in intent.async_match_states(
-            hass, name=list_name, domains=[DOMAIN]
-        ):
-            target_list = component.get_entity(list_state.entity_id)
-            if target_list is not None:
-                break
+        match_constraints = intent.MatchTargetsConstraints(
+            name=list_name, domains=[DOMAIN], assistant=intent_obj.assistant
+        )
+        match_result = intent.async_match_targets(hass, match_constraints)
+        if not match_result.is_match:
+            raise intent.MatchFailedError(
+                result=match_result, constraints=match_constraints
+            )
 
+        target_list = component.get_entity(match_result.states[0].entity_id)
         if target_list is None:
             raise intent.IntentHandleError(f"No to-do list: {list_name}")
 
