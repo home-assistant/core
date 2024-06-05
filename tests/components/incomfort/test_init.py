@@ -13,6 +13,9 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.dt import utcnow
+
+from tests.common import async_fire_time_changed
 
 
 async def test_setup_platforms(
@@ -44,9 +47,8 @@ async def test_coordinator_updates(
     assert state.state == "1.86"
     mock_incomfort().mock_heater_status["pressure"] = 1.84
 
-    freezer.tick(timedelta(seconds=UPDATE_INTERVAL + 5))
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow(), timedelta(seconds=UPDATE_INTERVAL + 5))
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("climate.thermostat_1")
     assert state is not None
@@ -82,9 +84,8 @@ async def test_coordinator_update_fails(
     with patch.object(
         mock_incomfort().heaters.return_value[0], "update", side_effect=exc
     ):
-        freezer.tick(timedelta(seconds=UPDATE_INTERVAL + 5))
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+        async_fire_time_changed(hass, utcnow(), timedelta(seconds=UPDATE_INTERVAL + 5))
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.boiler_cv_pressure")
     assert state is not None
