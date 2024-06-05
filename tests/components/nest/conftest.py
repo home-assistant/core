@@ -196,7 +196,7 @@ def subscriber_id() -> str:
 
 
 @pytest.fixture
-def nest_test_config(request) -> NestTestConfig:
+def nest_test_config() -> NestTestConfig:
     """Fixture that sets up the configuration used for the test."""
     return TEST_CONFIG_APP_CREDS
 

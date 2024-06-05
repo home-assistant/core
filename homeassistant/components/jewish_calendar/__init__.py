@@ -119,10 +119,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Set up a configuration entry for Jewish calendar."""
     language = config_entry.data.get(CONF_LANGUAGE, DEFAULT_LANGUAGE)
     diaspora = config_entry.data.get(CONF_DIASPORA, DEFAULT_DIASPORA)
-    candle_lighting_offset = config_entry.data.get(
+    candle_lighting_offset = config_entry.options.get(
         CONF_CANDLE_LIGHT_MINUTES, DEFAULT_CANDLE_LIGHT
     )
-    havdalah_offset = config_entry.data.get(
+    havdalah_offset = config_entry.options.get(
         CONF_HAVDALAH_OFFSET_MINUTES, DEFAULT_HAVDALAH_OFFSET_MINUTES
     )
 
@@ -154,6 +154,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         async_update_unique_ids(ent_reg, config_entry.entry_id, old_prefix)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+        # Trigger update of states for all platforms
+        await hass.config_entries.async_reload(config_entry.entry_id)
+
+    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
     return True
 
 

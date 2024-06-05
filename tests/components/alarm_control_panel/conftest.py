@@ -155,8 +155,8 @@ async def setup_lock_platform_test_entity(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(
-            config_entry, ALARM_CONTROL_PANEL_DOMAIN
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [ALARM_CONTROL_PANEL_DOMAIN]
         )
         return True
 
