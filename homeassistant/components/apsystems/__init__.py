@@ -20,7 +20,6 @@ class ApSystemsData:
     """Store runtime data."""
 
     coordinator: ApSystemsDataCoordinator
-    api: APsystemsEZ1M
     device_id: str
 
 
@@ -34,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ApSystemsConfigEntry) ->
     await coordinator.async_config_entry_first_refresh()
     assert entry.unique_id
     entry.runtime_data = ApSystemsData(
-        coordinator=coordinator, api=api, device_id=entry.unique_id
+        coordinator=coordinator, device_id=entry.unique_id
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
