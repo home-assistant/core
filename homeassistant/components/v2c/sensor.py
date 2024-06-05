@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import logging
 
 from pytrydan import TrydanData
+from pytrydan.models.trydan import SlaveCommunicationState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,6 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import V2CUpdateCoordinator
@@ -30,8 +32,15 @@ _LOGGER = logging.getLogger(__name__)
 class V2CSensorEntityDescription(SensorEntityDescription):
     """Describes an EVSE Power sensor entity."""
 
-    value_fn: Callable[[TrydanData], float]
+    value_fn: Callable[[TrydanData], StateType]
 
+
+def get_meter_value(value: SlaveCommunicationState) -> str:
+    """Return the value of the enum and replace slave by meter."""
+    return value.name.lower().replace("slave", "meter")
+
+
+_METER_ERROR_OPTIONS = [get_meter_value(error) for error in SlaveCommunicationState]
 
 TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
@@ -75,6 +84,23 @@ TRYDAN_SENSORS = (
         device_class=SensorDeviceClass.POWER,
         value_fn=lambda evse_data: evse_data.fv_power,
     ),
+    V2CSensorEntityDescription(
+        key="meter_error",
+        translation_key="meter_error",
+        value_fn=lambda evse_data: get_meter_value(evse_data.slave_error),
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=_METER_ERROR_OPTIONS,
+    ),
+    V2CSensorEntityDescription(
+        key="battery_power",
+        translation_key="battery_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        value_fn=lambda evse_data: evse_data.battery_power,
+        entity_registry_enabled_default=False,
+    ),
 )
 
 
@@ -108,6 +134,6 @@ class V2CSensorBaseEntity(V2CBaseEntity, SensorEntity):
         self._attr_unique_id = f"{entry_id}_{description.key}"
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.data)

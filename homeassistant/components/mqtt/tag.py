@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components import tag
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_VALUE_TEMPLATE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HassJobType, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -20,7 +20,7 @@ from .config import MQTT_BASE_SCHEMA
 from .const import ATTR_DISCOVERY_HASH, CONF_QOS, CONF_TOPIC
 from .discovery import MQTTDiscoveryPayload
 from .mixins import (
-    MqttDiscoveryDeviceUpdate,
+    MqttDiscoveryDeviceUpdateMixin,
     async_handle_schema_error,
     async_setup_non_entity_entry_helper,
     send_discovery_done,
@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
     """Set up MQTT tag scanner dynamically through MQTT discovery."""
 
     setup = functools.partial(_async_setup_tag, hass, config_entry=config_entry)
-    await async_setup_non_entity_entry_helper(hass, TAG, setup, DISCOVERY_SCHEMA)
+    async_setup_non_entity_entry_helper(hass, TAG, setup, DISCOVERY_SCHEMA)
 
 
 async def _async_setup_tag(
@@ -97,7 +97,7 @@ def async_has_tags(hass: HomeAssistant, device_id: str) -> bool:
     return tags[device_id] != {}
 
 
-class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
+class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
     """MQTT Tag scanner."""
 
     _value_template: Callable[[ReceivePayloadType, str], ReceivePayloadType]
@@ -122,7 +122,7 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
             hass=self.hass,
         ).async_render_with_possible_json_value
 
-        MqttDiscoveryDeviceUpdate.__init__(
+        MqttDiscoveryDeviceUpdateMixin.__init__(
             self, hass, discovery_data, device_id, config_entry, LOG_NAME
         )
 
@@ -142,32 +142,36 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
         update_device(self.hass, self._config_entry, config)
         await self.subscribe_topics()
 
+    @callback
+    def _async_tag_scanned(self, msg: ReceiveMessage) -> None:
+        """Handle new tag scanned."""
+        try:
+            tag_id = str(self._value_template(msg.payload, "")).strip()
+        except MqttValueTemplateException as exc:
+            _LOGGER.warning(exc)
+            return
+        if not tag_id:  # No output from template, ignore
+            return
+
+        self.hass.async_create_task(
+            tag.async_scan_tag(self.hass, tag_id, self.device_id)
+        )
+
     async def subscribe_topics(self) -> None:
         """Subscribe to MQTT topics."""
-
-        async def tag_scanned(msg: ReceiveMessage) -> None:
-            try:
-                tag_id = str(self._value_template(msg.payload, "")).strip()
-            except MqttValueTemplateException as exc:
-                _LOGGER.warning(exc)
-                return
-            if not tag_id:  # No output from template, ignore
-                return
-
-            await tag.async_scan_tag(self.hass, tag_id, self.device_id)
-
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
             self._sub_state,
             {
                 "state_topic": {
                     "topic": self._config[CONF_TOPIC],
-                    "msg_callback": tag_scanned,
+                    "msg_callback": self._async_tag_scanned,
                     "qos": self._config[CONF_QOS],
+                    "job_type": HassJobType.Callback,
                 }
             },
         )
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     async def async_tear_down(self) -> None:
         """Cleanup tag scanner."""
@@ -177,4 +181,4 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
             self.hass, self._sub_state
         )
         if self.device_id:
-            self.hass.data[DATA_MQTT].tags[self.device_id].pop(discovery_id)
+            del self.hass.data[DATA_MQTT].tags[self.device_id][discovery_id]

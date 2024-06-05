@@ -623,7 +623,7 @@ async def test_cleanup_tag(
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/tag/bla1/config", "", 0, True
+        "homeassistant/tag/bla1/config", None, 0, True
     )
 
 

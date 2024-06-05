@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -63,9 +63,9 @@ from .const import (
     CONF_TEMP_STATE_TEMPLATE,
     CONF_TEMP_STATE_TOPIC,
     DEFAULT_OPTIMISTIC,
+    PAYLOAD_NONE,
 )
-from .debug_info import log_messages
-from .mixins import async_setup_entity_entry_helper, write_state_on_attr_change
+from .mixins import async_setup_entity_entry_helper
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
@@ -167,7 +167,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT water heater device through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttWaterHeater,
@@ -257,39 +257,41 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
 
         self._attr_supported_features = support
 
+    @callback
+    def _handle_current_mode_received(self, msg: ReceiveMessage) -> None:
+        """Handle receiving operation mode via MQTT."""
+
+        payload = self.render_template(msg, CONF_MODE_STATE_TEMPLATE)
+
+        if not payload.strip():  # No output from template, ignore
+            _LOGGER.debug(
+                "Ignoring empty payload '%s' for current operation "
+                "after rendering for topic %s",
+                payload,
+                msg.topic,
+            )
+            return
+
+        if payload == PAYLOAD_NONE:
+            self._attr_current_operation = None
+        elif payload not in self._config[CONF_MODE_LIST]:
+            _LOGGER.warning("Invalid %s mode: %s", CONF_MODE_LIST, payload)
+        else:
+            if TYPE_CHECKING:
+                assert isinstance(payload, str)
+            self._attr_current_operation = payload
+
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        topics: dict[str, dict[str, Any]] = {}
-
-        @callback
-        def handle_mode_received(
-            msg: ReceiveMessage, template_name: str, attr: str, mode_list: str
-        ) -> None:
-            """Handle receiving listed mode via MQTT."""
-            payload = self.render_template(msg, template_name)
-
-            if payload not in self._config[mode_list]:
-                _LOGGER.error("Invalid %s mode: %s", mode_list, payload)
-            else:
-                setattr(self, attr, payload)
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_current_operation"})
-        def handle_current_mode_received(msg: ReceiveMessage) -> None:
-            """Handle receiving operation mode via MQTT."""
-            handle_mode_received(
-                msg,
-                CONF_MODE_STATE_TEMPLATE,
-                "_attr_current_operation",
-                CONF_MODE_LIST,
-            )
-
+        # add subscriptions for WaterHeaterEntity
         self.add_subscription(
-            topics, CONF_MODE_STATE_TOPIC, handle_current_mode_received
+            CONF_MODE_STATE_TOPIC,
+            self._handle_current_mode_received,
+            {"_attr_current_operation"},
         )
-
-        self.prepare_subscribe_topics(topics)
+        # add subscriptions for MqttTemperatureControlEntity
+        self.prepare_subscribe_topics()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

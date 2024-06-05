@@ -302,6 +302,37 @@ def test_aprs_listener_rx_msg_no_position(mock_ais: MagicMock) -> None:
     see.assert_not_called()
 
 
+def test_aprs_listener_rx_msg_object(mock_ais: MagicMock) -> None:
+    """Test rx_msg with object."""
+    callsign = TEST_CALLSIGN
+    password = TEST_PASSWORD
+    host = TEST_HOST
+    server_filter = TEST_FILTER
+    see = Mock()
+
+    sample_msg = aprslib.parse(
+        "CEEWO2-14>APLWS2,qAU,CEEWO2-15:;V4310251 *121203h5105.72N/00131.89WO085/024/A=033178!w&,!Clb=3.5m/s calibration 21% 404.40MHz Type=RS41 batt=2.7V Details on http://radiosondy.info/"
+    )
+
+    listener = device_tracker.AprsListenerThread(
+        callsign, password, host, server_filter, see
+    )
+    listener.run()
+    listener.rx_msg(sample_msg)
+
+    see.assert_called_with(
+        dev_id=device_tracker.slugify("V4310251"),
+        gps=(51.09534249084249, -1.5315201465201465),
+        attributes={
+            "gps_accuracy": 0,
+            "altitude": 10112.654400000001,
+            "comment": "Clb=3.5m/s calibration 21% 404.40MHz Type=RS41 batt=2.7V Details on http://radiosondy.info/",
+            "course": 85,
+            "speed": 44.448,
+        },
+    )
+
+
 async def test_setup_scanner(hass: HomeAssistant) -> None:
     """Test setup_scanner."""
     with patch(

@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "default": "mdi:fan",
+            "state": {
+              "low": "mdi:fan-speed-1",
+              "medium": "mdi:fan-speed-2",
+              "high": "mdi:fan-speed-3",
+              "auto": "mdi:fan-auto",
+              "natural_wind": "mdi:tailwind",
+              "sleep_wind": "mdi:sleep"
+            }
+          }
+        }
+      }
+    }
+  }
+}

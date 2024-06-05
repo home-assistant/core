@@ -12,6 +12,7 @@ import pytest
 from homeassistant.components.lcn.const import DOMAIN
 from homeassistant.components.lcn.helpers import generate_unique_id
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -78,7 +79,7 @@ def create_config_entry(name):
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 

@@ -26,22 +26,9 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import subscription
 from .config import MQTT_RW_SCHEMA
-from .const import (
-    CONF_COMMAND_TEMPLATE,
-    CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_RETAIN,
-    CONF_STATE_TOPIC,
-)
-from .debug_info import log_messages
-from .mixins import (
-    MqttEntity,
-    async_setup_entity_entry_helper,
-    write_state_on_attr_change,
-)
+from .const import CONF_COMMAND_TEMPLATE, CONF_COMMAND_TOPIC, CONF_STATE_TOPIC
+from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import (
-    MessageCallbackType,
     MqttCommandTemplate,
     MqttValueTemplate,
     PublishPayloadType,
@@ -49,6 +36,7 @@ from .models import (
     ReceivePayloadType,
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+from .util import check_state_too_long
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,7 +96,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT text through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttTextEntity,
@@ -159,50 +147,31 @@ class MqttTextEntity(MqttEntity, TextEntity):
         self._optimistic = optimistic or config.get(CONF_STATE_TOPIC) is None
         self._attr_assumed_state = bool(self._optimistic)
 
+    @callback
+    def _handle_state_message_received(self, msg: ReceiveMessage) -> None:
+        """Handle receiving state message via MQTT."""
+        payload = str(self._value_template(msg.payload))
+        if check_state_too_long(_LOGGER, payload, self.entity_id, msg):
+            return
+        self._attr_native_value = payload
+
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        topics: dict[str, Any] = {}
-
-        def add_subscription(
-            topics: dict[str, Any], topic: str, msg_callback: MessageCallbackType
-        ) -> None:
-            if self._config.get(topic) is not None:
-                topics[topic] = {
-                    "topic": self._config[topic],
-                    "msg_callback": msg_callback,
-                    "qos": self._config[CONF_QOS],
-                    "encoding": self._config[CONF_ENCODING] or None,
-                }
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_native_value"})
-        def handle_state_message_received(msg: ReceiveMessage) -> None:
-            """Handle receiving state message via MQTT."""
-            payload = str(self._value_template(msg.payload))
-            self._attr_native_value = payload
-
-        add_subscription(topics, CONF_STATE_TOPIC, handle_state_message_received)
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
+        self.add_subscription(
+            CONF_STATE_TOPIC,
+            self._handle_state_message_received,
+            {"_attr_native_value"},
         )
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     async def async_set_value(self, value: str) -> None:
         """Change the text."""
         payload = self._command_template(value)
-
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
         if self._optimistic:
             self._attr_native_value = value
             self.async_write_ha_state()
