@@ -10,20 +10,7 @@ from homeassistant.components.rainforest_raven.coordinator import RAVEnDataCoord
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from . import create_mock_device, create_mock_entry
-
-from tests.common import patch
-
-
-@pytest.fixture
-def mock_device():
-    """Mock a functioning RAVEn device."""
-    mock_device = create_mock_device()
-    with patch(
-        "homeassistant.components.rainforest_raven.coordinator.RAVEnSerialDevice",
-        return_value=mock_device,
-    ):
-        yield mock_device
+from . import create_mock_entry
 
 
 async def test_coordinator_device_info(hass: HomeAssistant, mock_device):
