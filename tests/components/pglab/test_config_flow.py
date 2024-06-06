@@ -1,7 +1,7 @@
 """Test the PG LAB Electronics config flow."""
 
-from homeassistant import config_entries
 from homeassistant.components.pglab.const import DOMAIN
+from homeassistant.config_entries import SOURCE_MQTT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
@@ -16,7 +16,7 @@ async def test_mqtt_abort_if_existing_entry(
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_MQTT}
+        DOMAIN, context={"source": SOURCE_MQTT}
     )
 
     assert result["type"] == "abort"
@@ -38,7 +38,7 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
         timestamp=None,
     )
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
+        DOMAIN, context={"source": SOURCE_MQTT}, data=discovery_info
     )
     assert result["type"] == "form"
 
@@ -65,7 +65,7 @@ async def test_mqtt_abort_invalid_topic(
         timestamp=None,
     )
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
+        DOMAIN, context={"source": SOURCE_MQTT}, data=discovery_info
     )
     assert result["type"] == "abort"
     assert result["reason"] == "invalid_discovery_info"
@@ -79,7 +79,7 @@ async def test_mqtt_abort_invalid_topic(
         timestamp=None,
     )
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
+        DOMAIN, context={"source": SOURCE_MQTT}, data=discovery_info
     )
     assert result["type"] == "abort"
     assert result["reason"] == "invalid_discovery_info"
@@ -88,7 +88,7 @@ async def test_mqtt_abort_invalid_topic(
 async def test_user_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == "form"
 
@@ -107,7 +107,7 @@ async def test_user_single_instance(
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == "abort"
     assert result["reason"] == "single_instance_allowed"
