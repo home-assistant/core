@@ -1,9 +1,9 @@
 """Fixtures for the Rainforest RAVEn tests."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.core import HomeAssistant
 
@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_device() -> Generator[AsyncMock, None, None]:
+def mock_device() -> Generator[AsyncMock]:
     """Mock a functioning RAVEn device."""
     mock_device = create_mock_device()
     with patch(
