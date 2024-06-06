@@ -496,7 +496,10 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 await self.imap_client.wait_server_push()
                 self.imap_client.idle_done()
                 async with asyncio.timeout(10):
-                    await idle
+                    try:
+                        await idle
+                    except asyncio.CancelledError as exc:
+                        raise AioImapException from exc
 
             except (AioImapException, TimeoutError):
                 _LOGGER.debug(
