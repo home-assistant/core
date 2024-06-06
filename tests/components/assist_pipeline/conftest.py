@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterable, Generator
+from collections.abc import AsyncIterable
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components import stt, tts, wake_word
 from homeassistant.components.assist_pipeline import DOMAIN, select as assist_select
@@ -272,7 +273,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, "test.config_flow")
 
