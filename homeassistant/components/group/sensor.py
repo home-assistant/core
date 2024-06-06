@@ -36,7 +36,14 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import (
@@ -355,7 +362,9 @@ class SensorGroup(GroupEntity, SensorEntity):
         await self.calculate_state_attributes()
         await super().async_added_to_hass()
 
-    async def calculate_state_attributes(self, event: Event | None = None) -> None:
+    async def calculate_state_attributes(
+        self, event: Event[EventStateChangedData] | None = None
+    ) -> None:
         """Calculate state attributes."""
         for entity_id in self._entity_ids:
             if self.hass.states.get(entity_id) is None:
