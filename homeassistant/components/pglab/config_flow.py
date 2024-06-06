@@ -12,7 +12,7 @@ from .const import DISCOVERY_TOPIC, DOMAIN
 CONF_DISCOVERY_PREFIX = "discovery_prefix"
 
 
-class FlowHandler(ConfigFlow, domain=DOMAIN):
+class PGLabFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
