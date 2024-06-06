@@ -36,6 +36,21 @@ DEFAULT_HOST = "1.2.3.4"
 DEFAULT_PORT = 1234
 DEFAULT_SITE = "site_id"
 
+CONTROLLER_HOST = {
+    "hostname": "controller_host",
+    "ip": DEFAULT_HOST,
+    "is_wired": True,
+    "last_seen": 1562600145,
+    "mac": "10:00:00:00:00:01",
+    "name": "Controller host",
+    "oui": "Producer",
+    "sw_mac": "00:00:00:00:01:01",
+    "sw_port": 1,
+    "wired-rx_bytes": 1234000000,
+    "wired-tx_bytes": 5678000000,
+    "uptime": 1562600160,
+}
+
 
 @pytest.fixture(autouse=True)
 def mock_discovery():
