@@ -195,7 +195,7 @@ class ImapMessage:
             ):
                 message_untyped_text = str(part.get_payload())
 
-        if message_text:
+        if message_text is not None and message_text.strip():
             return message_text
 
         if message_html:
