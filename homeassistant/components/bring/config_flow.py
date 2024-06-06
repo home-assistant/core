@@ -52,7 +52,9 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
-        if user_input is not None and not (errors := await self.async_auth(user_input)):
+        if user_input is not None and not (
+            errors := await self.validate_input(user_input)
+        ):
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=self.info["name"] or user_input[CONF_EMAIL], data=user_input
@@ -80,7 +82,7 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.reauth_entry
 
         if user_input is not None:
-            if not (errors := await self.async_auth(user_input)):
+            if not (errors := await self.validate_input(user_input)):
                 return self.async_update_reload_and_abort(
                     self.reauth_entry, data=user_input
                 )
@@ -95,7 +97,7 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_auth(self, user_input: Mapping[str, Any]) -> dict[str, str]:
+    async def validate_input(self, user_input: Mapping[str, Any]) -> dict[str, str]:
         """Auth Helper."""
 
         errors: dict[str, str] = {}
