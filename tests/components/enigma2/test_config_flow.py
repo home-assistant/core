@@ -41,7 +41,7 @@ async def user_flow(hass: HomeAssistant) -> str:
 )
 async def test_form_user(
     hass: HomeAssistant, user_flow: str, test_config: dict[str, Any]
-):
+) -> None:
     """Test a successful user initiated flow."""
     with (
         patch(
