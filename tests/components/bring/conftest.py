@@ -40,7 +40,7 @@ def mock_bring_client() -> Generator[AsyncMock]:
     ):
         client = mock_client.return_value
         client.uuid = UUID
-        client.login.return_value = True
+        client.login.return_value = {"name": "Bring"}
         client.load_lists.return_value = {"lists": []}
         yield client
 
