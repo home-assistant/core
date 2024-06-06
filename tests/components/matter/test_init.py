@@ -386,7 +386,7 @@ async def test_update_addon(
     backup_calls: int,
     update_addon_side_effect: Exception | None,
     create_backup_side_effect: Exception | None,
-):
+) -> None:
     """Test update the Matter add-on during entry setup."""
     addon_info.return_value["version"] = addon_version
     addon_info.return_value["update_available"] = update_available
@@ -453,7 +453,7 @@ async def test_issue_registry_invalid_version(
     ],
 )
 async def test_stop_addon(
-    hass,
+    hass: HomeAssistant,
     matter_client: MagicMock,
     addon_installed: AsyncMock,
     addon_running: AsyncMock,
@@ -461,7 +461,7 @@ async def test_stop_addon(
     stop_addon: AsyncMock,
     stop_addon_side_effect: Exception | None,
     entry_state: ConfigEntryState,
-):
+) -> None:
     """Test stop the Matter add-on on entry unload if entry is disabled."""
     stop_addon.side_effect = stop_addon_side_effect
     entry = MockConfigEntry(
