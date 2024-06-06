@@ -100,6 +100,7 @@ class NX584Alarm(AlarmControlPanelEntity):
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
+    _attr_code_arm_required = False
 
     def __init__(self, name: str, alarm_client: client.Client, url: str) -> None:
         """Init the nx584 alarm panel."""
