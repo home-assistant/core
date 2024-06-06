@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Collection, Generator, Sequence
+from collections.abc import Collection, Sequence
 import logging
 import math
 from typing import Any
 
+from typing_extensions import Generator
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import SET_VALUE_SUCCESS, CommandClass, CommandStatus
@@ -83,7 +84,7 @@ def broadcast_command(val: dict[str, Any]) -> dict[str, Any]:
 
 def get_valid_responses_from_results[_T: ZwaveNode | Endpoint](
     zwave_objects: Sequence[_T], results: Sequence[Any]
-) -> Generator[tuple[_T, Any], None, None]:
+) -> Generator[tuple[_T, Any]]:
     """Return valid responses from a list of results."""
     for zwave_object, result in zip(zwave_objects, results, strict=False):
         if not isinstance(result, Exception):
