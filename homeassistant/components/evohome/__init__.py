@@ -50,7 +50,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
@@ -74,7 +73,7 @@ from .const import (
     USER_DATA,
     EvoService,
 )
-from .coordinator import EvoBroker
+from .coordinator import EvoBroker, EvoCoordinator
 from .helpers import (
     convert_dict,
     convert_until,
@@ -200,9 +199,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN]["broker"] = broker = EvoBroker(
         hass, client_v2, client_v1, store, config[DOMAIN]
     )
-
     await broker.save_auth_tokens()
-    await broker.async_update()  # get initial state
+
+    hass.data[DOMAIN]["coordinator"] = coordinator = EvoCoordinator(
+        hass,
+        _LOGGER,
+        name=f"{DOMAIN}_coordinator",
+        update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
+        update_method=broker.async_update,
+    )
+    await coordinator.async_refresh()  # get initial state now
 
     hass.async_create_task(
         async_load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
@@ -211,10 +217,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.async_create_task(
             async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
         )
-
-    async_track_time_interval(
-        hass, broker.async_update, config[DOMAIN][CONF_SCAN_INTERVAL]
-    )
 
     setup_service_functions(hass, broker)
 

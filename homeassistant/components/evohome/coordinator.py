@@ -17,6 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     ACCESS_TOKEN,
@@ -189,3 +190,14 @@ class EvoBroker:
 
         if self.client_v1:
             await self._update_v1_api_temps()
+
+
+class EvoCoordinator(DataUpdateCoordinator):
+    """Class to manage fetching data from the TCC API."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the coordinator."""
+        super().__init__(*args, **kwargs)
+
+        # without a listener, _schedule_refresh() won't be invoked by _async_refresh()
+        self.async_add_listener(lambda: None)
