@@ -26,13 +26,10 @@ async def test_setup(hass: HomeAssistant, mock_ring_client) -> None:
 async def test_setup_entry(
     hass: HomeAssistant,
     mock_ring_client,
-    mock_config_entry: MockConfigEntry,
+    mock_added_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup entry."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_added_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_setup_entry_device_update(
@@ -40,13 +37,10 @@ async def test_setup_entry_device_update(
     mock_ring_client,
     mock_ring_devices,
     freezer: FrozenDateTimeFactory,
-    mock_config_entry: MockConfigEntry,
+    mock_added_config_entry: MockConfigEntry,
     caplog,
 ) -> None:
     """Test devices are updating after setup entry."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
 
     front_door_doorbell = mock_ring_devices.get_device(987654)
     front_door_doorbell.history.assert_not_called()

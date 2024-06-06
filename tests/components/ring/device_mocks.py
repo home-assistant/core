@@ -20,16 +20,17 @@ from ring_doorbell import (
     RingStickUpCam,
 )
 
+from homeassistant.components.ring.const import DOMAIN
 from homeassistant.util import dt as dt_util
 
 from tests.common import load_json_value_fixture
 
-DEVICES_FIXTURE = load_json_value_fixture("devices.json", "ring")
-DOORBOT_HISTORY = load_json_value_fixture("doorbot_history.json", "ring")
-INTERCOM_HISTORY = load_json_value_fixture("intercom_history.json", "ring")
-DOORBOT_HEALTH = load_json_value_fixture("doorbot_health_attrs.json", "ring")
-CHIME_HEALTH = load_json_value_fixture("chime_health_attrs.json", "ring")
-DEVICE_ALERTS = load_json_value_fixture("ding_active.json", "ring")
+DEVICES_FIXTURE = load_json_value_fixture("devices.json", DOMAIN)
+DOORBOT_HISTORY = load_json_value_fixture("doorbot_history.json", DOMAIN)
+INTERCOM_HISTORY = load_json_value_fixture("intercom_history.json", DOMAIN)
+DOORBOT_HEALTH = load_json_value_fixture("doorbot_health_attrs.json", DOMAIN)
+CHIME_HEALTH = load_json_value_fixture("chime_health_attrs.json", DOMAIN)
+DEVICE_ALERTS = load_json_value_fixture("ding_active.json", DOMAIN)
 
 
 def get_mock_devices():

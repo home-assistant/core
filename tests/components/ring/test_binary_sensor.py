@@ -1,5 +1,6 @@
 """The tests for the Ring binary sensor platform."""
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .common import setup_platform
@@ -7,7 +8,7 @@ from .common import setup_platform
 
 async def test_binary_sensor(hass: HomeAssistant, mock_ring_client) -> None:
     """Test the Ring binary sensors."""
-    await setup_platform(hass, "binary_sensor")
+    await setup_platform(hass, Platform.BINARY_SENSOR)
 
     motion_state = hass.states.get("binary_sensor.front_door_motion")
     assert motion_state is not None

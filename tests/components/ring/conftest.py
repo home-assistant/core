@@ -122,7 +122,6 @@ async def mock_added_config_entry(
 ) -> MockConfigEntry:
     """Mock ConfigEntry that's been added to HA."""
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert DOMAIN in hass.config_entries.async_domains()
     return mock_config_entry
