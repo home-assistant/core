@@ -7,7 +7,13 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 
 from tests.common import async_fire_mqtt_message
@@ -19,7 +25,7 @@ async def call_service(hass: HomeAssistant, entity_id, service, **kwargs):
     await hass.services.async_call(
         SWITCH_DOMAIN,
         service,
-        {"entity_id": entity_id, **kwargs},
+        {ATTR_ENTITY_ID: entity_id, **kwargs},
         blocking=True,
     )
 
