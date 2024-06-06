@@ -79,14 +79,26 @@ async def test_get_weather_wrong_name(hass: HomeAssistant) -> None:
     await hass.data[DOMAIN].async_add_entities([entity1])
 
     await weather_intent.async_setup_intents(hass)
+    async_expose_entity(hass, conversation.DOMAIN, entity1.entity_id, True)
 
     # Incorrect name
-    with pytest.raises(intent.MatchFailedError):
+    with pytest.raises(intent.MatchFailedError) as err:
         await intent.async_handle(
             hass,
             "test",
             weather_intent.INTENT_GET_WEATHER,
             {"name": {"value": "not the right name"}},
+            assistant=conversation.DOMAIN,
+        )
+    assert err.value.result.no_match_reason == intent.MatchFailedReason.NAME
+
+    # Empty name
+    with pytest.raises(intent.InvalidSlotInfo):
+        await intent.async_handle(
+            hass,
+            "test",
+            weather_intent.INTENT_GET_WEATHER,
+            {"name": {"value": ""}},
             assistant=conversation.DOMAIN,
         )
 
@@ -98,7 +110,7 @@ async def test_get_weather_no_entities(hass: HomeAssistant) -> None:
     await weather_intent.async_setup_intents(hass)
 
     # No weather entities
-    with pytest.raises(intent.MatchFailedError):
+    with pytest.raises(intent.MatchFailedError) as err:
         await intent.async_handle(
             hass,
             "test",
@@ -106,3 +118,4 @@ async def test_get_weather_no_entities(hass: HomeAssistant) -> None:
             {},
             assistant=conversation.DOMAIN,
         )
+    assert err.value.result.no_match_reason == intent.MatchFailedReason.DOMAIN

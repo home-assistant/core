@@ -6,7 +6,6 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import intent
-import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN
 
@@ -23,7 +22,7 @@ class GetWeatherIntent(intent.IntentHandler):
 
     intent_type = INTENT_GET_WEATHER
     description = "Gets the current weather"
-    slot_schema = {vol.Optional("name"): cv.string}
+    slot_schema = {vol.Optional("name"): intent.non_empty_string}
     platforms = {DOMAIN}
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
