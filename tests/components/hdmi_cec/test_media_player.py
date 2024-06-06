@@ -56,6 +56,8 @@ from homeassistant.core import HomeAssistant
 
 from . import MockHDMIDevice, assert_key_press_release
 
+type AssertState = Callable[[str, str], bool]
+
 
 @pytest.fixture(
     name="assert_state",
@@ -72,14 +74,14 @@ from . import MockHDMIDevice, assert_key_press_release
     ],
     ids=["skip_assert_state", "run_assert_state"],
 )
-def assert_state_fixture(request: pytest.FixtureRequest) -> Callable[[str, str], bool]:
+def assert_state_fixture(request: pytest.FixtureRequest) -> AssertState:
     """Allow for skipping the assert state changes.
 
     This is broken in this entity, but we still want to test that
     the rest of the code works as expected.
     """
 
-    def _test_state(state: str, expected: str) -> bool:
+    def _test_state(state: str, expected: str) -> None:
         if request.param:
             assert state == expected
         else:
@@ -133,7 +135,7 @@ async def test_service_on(
     hass: HomeAssistant,
     create_hdmi_network,
     create_cec_entity,
-    assert_state: Callable[[str, str], bool],
+    assert_state: AssertState,
 ) -> None:
     """Test that media_player triggers on `on` service."""
     hdmi_network = await create_hdmi_network({"platform": "media_player"})
@@ -160,7 +162,7 @@ async def test_service_off(
     hass: HomeAssistant,
     create_hdmi_network,
     create_cec_entity,
-    assert_state: Callable[[str, str], bool],
+    assert_state: AssertState,
 ) -> None:
     """Test that media_player triggers on `off` service."""
     hdmi_network = await create_hdmi_network({"platform": "media_player"})
@@ -360,7 +362,7 @@ async def test_playback_services(
     hass: HomeAssistant,
     create_hdmi_network,
     create_cec_entity,
-    assert_state: Callable[[str, str], bool],
+    assert_state: AssertState,
     service: str,
     key: int,
     expected_state: str,
@@ -390,7 +392,7 @@ async def test_play_pause_service(
     hass: HomeAssistant,
     create_hdmi_network,
     create_cec_entity,
-    assert_state: Callable[[str, str], bool],
+    assert_state: AssertState,
 ) -> None:
     """Test play pause service."""
     hdmi_network = await create_hdmi_network({"platform": "media_player"})
