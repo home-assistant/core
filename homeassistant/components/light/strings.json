@@ -342,6 +342,14 @@
           "name": "[%key:component::light::services::turn_on::fields::rgb_color::name%]",
           "description": "[%key:component::light::services::turn_on::fields::rgb_color::description%]"
         },
+        "rgbw_color": {
+          "name": "[%key:component::light::services::turn_on::fields::rgbw_color::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::rgbw_color::description%]"
+        },
+        "rgbww_color": {
+          "name": "[%key:component::light::services::turn_on::fields::rgbww_color::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::rgbww_color::description%]"
+        },
         "color_name": {
           "name": "[%key:component::light::services::turn_on::fields::color_name::name%]",
           "description": "[%key:component::light::services::turn_on::fields::color_name::description%]"

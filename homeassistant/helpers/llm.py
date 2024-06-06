@@ -29,14 +29,15 @@ from . import (
     entity_registry as er,
     floor_registry as fr,
     intent,
+    service,
 )
 from .singleton import singleton
 
 LLM_API_ASSIST = "assist"
 
 BASE_PROMPT = (
-    'Current time is {{ now().strftime("%X") }}. '
-    'Today\'s date is {{ now().strftime("%x") }}.\n'
+    'Current time is {{ now().strftime("%H:%M:%S") }}. '
+    'Today\'s date is {{ now().strftime("%Y-%m-%d") }}.\n'
 )
 
 DEFAULT_INSTRUCTIONS_PROMPT = """You are a voice assistant for Home Assistant.
@@ -181,14 +182,48 @@ class IntentTool(Tool):
         self.description = (
             intent_handler.description or f"Execute Home Assistant {self.name} intent"
         )
-        if slot_schema := intent_handler.slot_schema:
-            self.parameters = vol.Schema(slot_schema)
+        self.extra_slots = None
+        if not (slot_schema := intent_handler.slot_schema):
+            return
+
+        slot_schema = {**slot_schema}
+        extra_slots = set()
+
+        for field in ("preferred_area_id", "preferred_floor_id"):
+            if field in slot_schema:
+                extra_slots.add(field)
+                del slot_schema[field]
+
+        self.parameters = vol.Schema(slot_schema)
+        if extra_slots:
+            self.extra_slots = extra_slots
 
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
         """Handle the intent."""
         slots = {key: {"value": val} for key, val in tool_input.tool_args.items()}
+
+        if self.extra_slots and llm_context.device_id:
+            device_reg = dr.async_get(hass)
+            device = device_reg.async_get(llm_context.device_id)
+
+            area: ar.AreaEntry | None = None
+            floor: fr.FloorEntry | None = None
+            if device:
+                area_reg = ar.async_get(hass)
+                if device.area_id and (area := area_reg.async_get_area(device.area_id)):
+                    if area.floor_id:
+                        floor_reg = fr.async_get(hass)
+                        floor = floor_reg.async_get_floor(area.floor_id)
+
+            for slot_name, slot_value in (
+                ("preferred_area_id", area.id if area else None),
+                ("preferred_floor_id", floor.floor_id if floor else None),
+            ):
+                if slot_value and slot_name in self.extra_slots:
+                    slots[slot_name] = {"value": slot_value}
+
         intent_response = await intent.async_handle(
             hass=hass,
             platform=llm_context.platform,
@@ -373,6 +408,7 @@ def _get_exposed_entities(
         entity_entry = entity_registry.async_get(state.entity_id)
         names = [state.name]
         area_names = []
+        description: str | None = None
 
         if entity_entry is not None:
             names.extend(entity_entry.aliases)
@@ -392,10 +428,24 @@ def _get_exposed_entities(
                     area_names.append(area.name)
                     area_names.extend(area.aliases)
 
+            if (
+                state.domain == "script"
+                and entity_entry.unique_id
+                and (
+                    service_desc := service.async_get_cached_service_description(
+                        hass, "script", entity_entry.unique_id
+                    )
+                )
+            ):
+                description = service_desc.get("description")
+
         info: dict[str, Any] = {
             "names": ", ".join(names),
             "state": state.state,
         }
+
+        if description:
+            info["description"] = description
 
         if area_names:
             info["areas"] = ", ".join(area_names)

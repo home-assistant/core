@@ -95,8 +95,8 @@ class FakeOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandler):
 
 @pytest.fixture(autouse=True)
 def config_flow_handler(
-    hass: HomeAssistant, current_request_with_host: Any
-) -> Generator[FakeConfigFlow, None, None]:
+    hass: HomeAssistant, current_request_with_host: None
+) -> Generator[None, None, None]:
     """Fixture for a test config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     with mock_config_flow(TEST_DOMAIN, FakeConfigFlow):
@@ -171,13 +171,10 @@ def get_suggested(schema, key):
     "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.ADDON_STATE_POLL_INTERVAL",
     0,
 )
-async def test_uninstall_addon_waiting(
-    hass: HomeAssistant,
-    addon_store_info,
-    addon_info,
-    install_addon,
-    uninstall_addon,
-):
+@pytest.mark.usefixtures(
+    "addon_store_info", "addon_info", "install_addon", "uninstall_addon"
+)
+async def test_uninstall_addon_waiting(hass: HomeAssistant) -> None:
     """Test the synchronous addon uninstall helper."""
 
     multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(

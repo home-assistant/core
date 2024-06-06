@@ -134,7 +134,7 @@ def session_scope(
     need_rollback = False
     try:
         yield session
-        if session.get_transaction() and not read_only:
+        if not read_only and session.get_transaction():
             need_rollback = True
             session.commit()
     except Exception as err:
@@ -739,8 +739,7 @@ def async_migration_in_progress(hass: HomeAssistant) -> bool:
     """
     if DATA_INSTANCE not in hass.data:
         return False
-    instance = get_instance(hass)
-    return instance.migration_in_progress
+    return hass.data[DATA_INSTANCE].migration_in_progress
 
 
 def async_migration_is_live(hass: HomeAssistant) -> bool:
@@ -751,8 +750,7 @@ def async_migration_is_live(hass: HomeAssistant) -> bool:
     """
     if DATA_INSTANCE not in hass.data:
         return False
-    instance: Recorder = hass.data[DATA_INSTANCE]
-    return instance.migration_is_live
+    return hass.data[DATA_INSTANCE].migration_is_live
 
 
 def second_sunday(year: int, month: int) -> date:
@@ -771,10 +769,10 @@ def is_second_sunday(date_time: datetime) -> bool:
     return bool(second_sunday(date_time.year, date_time.month).day == date_time.day)
 
 
+@functools.lru_cache(maxsize=1)
 def get_instance(hass: HomeAssistant) -> Recorder:
     """Get the recorder instance."""
-    instance: Recorder = hass.data[DATA_INSTANCE]
-    return instance
+    return hass.data[DATA_INSTANCE]
 
 
 PERIOD_SCHEMA = vol.Schema(
