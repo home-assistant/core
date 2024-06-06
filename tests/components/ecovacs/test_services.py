@@ -9,7 +9,7 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
-from homeassistant.components.ecovacs.vacuum import SERVICE__RAW_GET_POSITIONS
+from homeassistant.components.ecovacs.vacuum import SERVICE_RAW_GET_POSITIONS
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
@@ -83,7 +83,7 @@ async def test_get_positions_service(
         name=f"{entity_id}:get-positions"
     ) == await hass.services.async_call(
         DOMAIN,
-        SERVICE__RAW_GET_POSITIONS,
+        SERVICE_RAW_GET_POSITIONS,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
         return_response=True,

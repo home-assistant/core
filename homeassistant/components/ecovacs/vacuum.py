@@ -40,7 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_ERROR = "error"
 ATTR_COMPONENT_PREFIX = "component_"
 
-SERVICE__RAW_GET_POSITIONS = "raw_get_positions"
+SERVICE_RAW_GET_POSITIONS = "raw_get_positions"
 
 
 async def async_setup_entry(
@@ -62,7 +62,7 @@ async def async_setup_entry(
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
-        SERVICE__RAW_GET_POSITIONS,
+        SERVICE_RAW_GET_POSITIONS,
         {},
         "async_raw_get_positions",
         supports_response=SupportsResponse.ONLY,
