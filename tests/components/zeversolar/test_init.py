@@ -26,7 +26,7 @@ async def test_async_setup_entry_fails(
         pytest.raises(ConfigEntryNotReady),
     ):
         await init.async_setup_entry(hass, config_entry)
-        assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
     with (
         patch("homeassistant.components.zeversolar.PLATFORMS", []),
@@ -41,6 +41,6 @@ async def test_async_setup_entry_fails(
     with (
         patch("homeassistant.components.zeversolar.PLATFORMS", []),
     ):
-        result = await init.async_unload_entry(hass, config_entry)
-        await hass.async_block_till_done()
-        assert result is True
+        result = await hass.config_entries.async_unload(config_entry.entry_id)
+    assert result is True
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
