@@ -50,7 +50,7 @@ async def async_setup_entry(
     """Set up a media player from a config entry."""
 
     @callback
-    def add_entity(bridge: LinkPlayBridge):
+    def add_entity(bridge: LinkPlayBridge) -> None:
         async_add_entities([LinkPlayMediaPlayerEntity(bridge)])
 
     entry.async_on_unload(async_dispatcher_connect(hass, BRIDGE_DISCOVERED, add_entity))

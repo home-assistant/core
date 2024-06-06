@@ -1,6 +1,6 @@
 """Support for LinkPlay devices."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from linkplay.controller import LinkPlayController
 
@@ -28,9 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][CONTROLLER] = controller
     bridge_uuids = []
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    async def _async_scan_update(_=None):
+    async def _async_scan_update(now: datetime | None) -> None:
         await controller.discover_bridges()
         await controller.discover_multirooms()
 
@@ -41,7 +39,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             bridge_uuids.append(bridge.device.uuid)
             async_dispatcher_send(hass, BRIDGE_DISCOVERED, bridge)
 
-    await _async_scan_update()
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    hass.async_create_task(_async_scan_update(None), eager_start=True)
 
     entry.async_on_unload(
         async_track_time_interval(
