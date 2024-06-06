@@ -12,6 +12,8 @@ from .coordinator import AquacellCoordinator
 class AquacellEntity(CoordinatorEntity[AquacellCoordinator]):
     """Representation of an aquacell entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: AquacellCoordinator,
