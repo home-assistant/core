@@ -1,5 +1,6 @@
 """LCN Websocket Tests."""
 
+from pypck.lcn_addr import LcnAddr
 import pytest
 
 from homeassistant.components.lcn.const import CONF_DOMAIN_DATA
@@ -113,12 +114,15 @@ async def test_lcn_devices_scan_command(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, entry, lcn_connection
 ) -> None:
     """Test lcn/devices/scan command."""
-    client = await hass_ws_client(hass)
+    # add new module which is not stored in config_entry
+    lcn_connection.get_address_conn(LcnAddr(0, 10, False))
 
+    client = await hass_ws_client(hass)
     await client.send_json({**SCAN_PAYLOAD, "host_id": entry.entry_id})
 
     res = await client.receive_json()
     assert res["success"], res
+
     lcn_connection.scan_modules.assert_awaited()
     assert len(res["result"]) == len(entry.data[CONF_DEVICES])
     assert all(
