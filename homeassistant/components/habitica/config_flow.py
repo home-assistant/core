@@ -21,6 +21,11 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import CONF_API_USER, DEFAULT_URL, DOMAIN
 
@@ -35,8 +40,18 @@ STEP_ADVANCED_DATA_SCHEMA = vol.Schema(
 
 STEP_LOGIN_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.EMAIL,
+                autocomplete="email",
+            )
+        ),
+        vol.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            )
+        ),
     }
 )
 
