@@ -1,4 +1,4 @@
-"""Common fixtures for the ista Ecotrend tests."""
+"""Common fixtures for the ista EcoTrend tests."""
 
 from collections.abc import Generator
 from typing import Any
