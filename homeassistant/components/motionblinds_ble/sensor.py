@@ -153,7 +153,6 @@ class BatterySensor(MotionblindsBLEEntity, SensorEntity):
         """Initialize the sensor entity."""
         entity_description = SensorEntityDescription(
             key=ATTR_BATTERY,
-            translation_key=ATTR_BATTERY,
             native_unit_of_measurement=PERCENTAGE,
             device_class=SensorDeviceClass.BATTERY,
             state_class=SensorStateClass.MEASUREMENT,
