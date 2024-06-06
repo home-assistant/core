@@ -134,7 +134,9 @@ COOLDOWN_TIME = 60
 
 
 DEBUGGER_INTEGRATIONS = {"debugpy"}
-CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
+# isal is loaded right away before `http` to ensure if its
+# enabled, that `isal` is up to date.
+CORE_INTEGRATIONS = {"homeassistant", "isal", "persistent_notification"}
 LOGGING_INTEGRATIONS = {
     # Set log levels
     "logger",
