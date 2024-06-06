@@ -179,7 +179,7 @@ async def test_reauth_errors(
 async def test_unique_id_abort(
     hass: HomeAssistant,
 ) -> None:
-    """Test we get the form."""
+    """Test duplicate unique ID in config."""
 
     result1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=CONFIG
@@ -194,7 +194,7 @@ async def test_unique_id_abort(
 
 
 async def test_migrate_from_1_1(hass: HomeAssistant, mock_metadata) -> None:
-    """Test we get the form."""
+    """Test config migration."""
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -215,7 +215,7 @@ async def test_migrate_from_1_1(hass: HomeAssistant, mock_metadata) -> None:
 
 
 async def test_migrate_error_from_1_1(hass: HomeAssistant, mock_metadata) -> None:
-    """Test we get the form."""
+    """Test config migration handles errors."""
 
     mock_metadata.side_effect = TeslaFleetError
 
@@ -224,6 +224,27 @@ async def test_migrate_error_from_1_1(hass: HomeAssistant, mock_metadata) -> Non
         version=1,
         minor_version=1,
         unique_id=None,
+        data=CONFIG,
+    )
+
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
+async def test_migrate_error_from_future(hass: HomeAssistant, mock_metadata) -> None:
+    """Test a future version isn't migrated."""
+
+    mock_metadata.side_effect = TeslaFleetError
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        minor_version=1,
+        unique_id="abc-123",
         data=CONFIG,
     )
 
