@@ -498,7 +498,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 async with asyncio.timeout(10):
                     try:
                         await idle
-                    except asyncio.CancelledError as exc:
+                    except asyncio.CancelledError:
                         _LOGGER.debug(
                             "Connection canceled with %s (will attempt to reconnect after %s s)",
                             self.config_entry.data[CONF_SERVER],
@@ -506,7 +506,6 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                         )
                         await self._cleanup()
                         await asyncio.sleep(BACKOFF_TIME)
-                        raise AioImapException from exc
 
             except (AioImapException, TimeoutError):
                 _LOGGER.debug(
