@@ -74,8 +74,8 @@
         "state": {
           "connected": "Connected",
           "disconnected": "Disconnected",
-          "connecting": "Connecting...",
-          "disconnecting": "Disconnecting..."
+          "connecting": "Connecting",
+          "disconnecting": "Disconnecting"
         }
       },
       "calibration": {
