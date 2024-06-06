@@ -50,7 +50,7 @@
       "message": "Authentication failed for {email}, check your login credentials"
     },
     "connection_exception": {
-      "message": "Unable to connect and retrieve data from ista EcoTrends, try again later"
+      "message": "Unable to connect and retrieve data from ista EcoTrend, try again later"
     }
   }
 }

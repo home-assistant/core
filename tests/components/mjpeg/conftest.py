@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from requests_mock import Mocker
+from typing_extensions import Generator
 
 from homeassistant.components.mjpeg.const import (
     CONF_MJPEG_URL,
@@ -44,7 +44,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.mjpeg.async_setup_entry", return_value=True
@@ -53,7 +53,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_reload_entry() -> Generator[AsyncMock, None, None]:
+def mock_reload_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch("homeassistant.components.mjpeg.async_reload_entry") as mock_reload:
         yield mock_reload

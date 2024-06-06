@@ -8,7 +8,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     REVOLUTIONS_PER_MINUTE,
     Platform,
@@ -25,8 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import MyUplinkDataCoordinator
-from .const import DOMAIN
+from . import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .entity import MyUplinkEntity
 from .helpers import find_matching_platform, skip_entity
 
@@ -187,13 +185,13 @@ def get_description(device_point: DevicePoint) -> SensorEntityDescription | None
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MyUplinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up myUplink sensor."""
 
     entities: list[SensorEntity] = []
-    coordinator: MyUplinkDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     # Setup device point sensors
     for device_id, point_data in coordinator.data.points.items():

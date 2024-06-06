@@ -1,10 +1,10 @@
 """Define test fixtures for AirVisual."""
 
-from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.airvisual import (
     CONF_CITY,
@@ -152,7 +152,7 @@ async def setup_config_entry_fixture(hass, config_entry, mock_pyairvisual):
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.airvisual.async_setup_entry", return_value=True

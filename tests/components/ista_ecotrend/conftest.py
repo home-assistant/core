@@ -1,10 +1,10 @@
-"""Common fixtures for the ista Ecotrend tests."""
+"""Common fixtures for the ista EcoTrend tests."""
 
-from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.ista_ecotrend.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -26,7 +26,7 @@ def mock_ista_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.ista_ecotrend.async_setup_entry", return_value=True
@@ -35,7 +35,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_ista() -> Generator[MagicMock, None, None]:
+def mock_ista() -> Generator[MagicMock]:
     """Mock Pyecotrend_ista client."""
 
     with (

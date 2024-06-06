@@ -1,9 +1,9 @@
 """Setup the Reolink tests."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.reolink import const
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
@@ -38,7 +38,7 @@ TEST_CAM_MODEL = "RLC-123"
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.reolink.async_setup_entry", return_value=True
@@ -47,7 +47,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def reolink_connect_class() -> Generator[MagicMock, None, None]:
+def reolink_connect_class() -> Generator[MagicMock]:
     """Mock reolink connection and return both the host_mock and host_mock_class."""
     with (
         patch(
@@ -105,13 +105,13 @@ def reolink_connect_class() -> Generator[MagicMock, None, None]:
 @pytest.fixture
 def reolink_connect(
     reolink_connect_class: MagicMock,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Mock reolink connection."""
     return reolink_connect_class.return_value
 
 
 @pytest.fixture
-def reolink_platforms() -> Generator[None, None, None]:
+def reolink_platforms() -> Generator[None]:
     """Mock reolink entry setup."""
     with patch("homeassistant.components.reolink.PLATFORMS", return_value=[]):
         yield
