@@ -10,18 +10,33 @@ from tests.common import MockConfigEntry
 from tests.typing import MqttMockHAClient
 
 
-async def test_mqtt_abort_if_existing_entry(
-    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
-) -> None:
-    """Check MQTT flow aborts when an entry already exist."""
+async def check_single_instance_configuration(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, source: str
+):
+    """Check if PGLab configuration is allowed for multiple instances."""
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_MQTT}
+        DOMAIN, context={"source": source}
     )
 
+    # Be sure that result is abort. Only single instance is allowed.
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+async def test_mqtt_config_single_instance(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
+    """Test MQTT flow aborts when an entry already exist."""
+    await check_single_instance_configuration(hass, mqtt_mock, SOURCE_MQTT)
+
+
+async def test_user_config_single_instance(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
+    """Test USER flow aborts when an entry already exist."""
+    await check_single_instance_configuration(hass, mqtt_mock, SOURCE_USER)
 
 
 async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
@@ -99,16 +114,3 @@ async def test_user_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
     assert result["result"].data == {
         "discovery_prefix": "pglab/discovery",
     }
-
-
-async def test_user_single_instance(
-    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
-) -> None:
-    """Test we only allow a single config flow."""
-    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
