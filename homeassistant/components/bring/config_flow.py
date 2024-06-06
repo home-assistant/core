@@ -80,15 +80,10 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.reauth_entry
 
         if user_input is not None:
-            new_input = self.reauth_entry.data | user_input
-
-            if not (errors := await self.async_auth(new_input)):
-                self.hass.config_entries.async_update_entry(
-                    self.reauth_entry, data=new_input
+            if not (errors := await self.async_auth(user_input)):
+                return self.async_update_reload_and_abort(
+                    self.reauth_entry, data=user_input
                 )
-
-                await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
