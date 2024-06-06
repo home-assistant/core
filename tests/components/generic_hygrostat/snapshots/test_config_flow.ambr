@@ -1,0 +1,157 @@
+# serializer version: 1
+# name: test_config_flow[create]
+  FlowResultSnapshot({
+    'context': dict({
+      'source': 'user',
+    }),
+    'data': dict({
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'generic_hygrostat',
+    'minor_version': 1,
+    'options': dict({
+      'away_humidity': 35.0,
+      'device_class': 'dehumidifier',
+      'dry_tolerance': 2.0,
+      'humidifier': 'switch.run',
+      'initial_state': 1.0,
+      'name': 'My dehumidifier',
+      'target_sensor': 'sensor.humidity',
+      'wet_tolerance': 4.0,
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+      }),
+      'disabled_by': None,
+      'domain': 'generic_hygrostat',
+      'entry_id': <ANY>,
+      'minor_version': 1,
+      'options': dict({
+        'away_humidity': 35.0,
+        'device_class': 'dehumidifier',
+        'dry_tolerance': 2.0,
+        'humidifier': 'switch.run',
+        'initial_state': 1.0,
+        'name': 'My dehumidifier',
+        'target_sensor': 'sensor.humidity',
+        'wet_tolerance': 4.0,
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'My dehumidifier',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'title': 'My dehumidifier',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---
+# name: test_config_flow[init]
+  FlowResultSnapshot({
+    'description_placeholders': None,
+    'errors': None,
+    'flow_id': <ANY>,
+    'handler': 'generic_hygrostat',
+    'last_step': True,
+    'preview': None,
+    'step_id': 'user',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_config_flow[options]
+  FlowResultSnapshot({
+    'context': dict({
+      'source': 'user',
+    }),
+    'data': dict({
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'generic_hygrostat',
+    'minor_version': 1,
+    'options': dict({
+      'away_humidity': 35.0,
+      'device_class': 'dehumidifier',
+      'dry_tolerance': 2.0,
+      'humidifier': 'switch.run',
+      'initial_state': 1.0,
+      'name': 'My dehumidifier',
+      'target_sensor': 'sensor.humidity',
+      'wet_tolerance': 4.0,
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+      }),
+      'disabled_by': None,
+      'domain': 'generic_hygrostat',
+      'entry_id': <ANY>,
+      'minor_version': 1,
+      'options': dict({
+        'away_humidity': 35.0,
+        'device_class': 'dehumidifier',
+        'dry_tolerance': 2.0,
+        'humidifier': 'switch.run',
+        'initial_state': 1.0,
+        'name': 'My dehumidifier',
+        'target_sensor': 'sensor.humidity',
+        'wet_tolerance': 4.0,
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'My dehumidifier',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'title': 'My dehumidifier',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---
+# name: test_options[create_entry]
+  FlowResultSnapshot({
+    'context': dict({
+    }),
+    'data': dict({
+      'device_class': 'dehumidifier',
+      'dry_tolerance': 2.0,
+      'humidifier': 'switch.run',
+      'initial_state': 1.0,
+      'name': 'test',
+      'target_sensor': 'sensor.humidity',
+      'wet_tolerance': 4.0,
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'result': True,
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+  })
+# ---
+# name: test_options[init]
+  FlowResultSnapshot({
+    'description_placeholders': None,
+    'errors': None,
+    'flow_id': <ANY>,
+    'last_step': True,
+    'preview': None,
+    'step_id': 'init',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---
+# name: test_options[options]
+  dict({
+    'device_class': 'dehumidifier',
+    'dry_tolerance': 2.0,
+    'humidifier': 'switch.run',
+    'initial_state': 1.0,
+    'name': 'test',
+    'target_sensor': 'sensor.humidity',
+    'wet_tolerance': 4.0,
+  })
+# ---
