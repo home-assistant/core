@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from aiohttp.client_exceptions import ClientConnectionError
 import aiosomecomfort
 
 from homeassistant.config_entries import ConfigEntry
@@ -68,6 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         aiosomecomfort.device.ConnectionError,
         aiosomecomfort.device.ConnectionTimeout,
         aiosomecomfort.device.SomeComfortError,
+        ClientConnectionError,
         TimeoutError,
     ) as ex:
         raise ConfigEntryNotReady(

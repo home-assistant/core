@@ -3346,7 +3346,9 @@ async def test_statemachine_report_state(hass: HomeAssistant) -> None:
     hass.states.async_set("light.bowl", "on", {})
     state_changed_events = async_capture_events(hass, EVENT_STATE_CHANGED)
     state_reported_events = []
-    hass.bus.async_listen(EVENT_STATE_REPORTED, listener, event_filter=mock_filter)
+    unsub = hass.bus.async_listen(
+        EVENT_STATE_REPORTED, listener, event_filter=mock_filter
+    )
 
     hass.states.async_set("light.bowl", "on")
     await hass.async_block_till_done()
@@ -3366,6 +3368,13 @@ async def test_statemachine_report_state(hass: HomeAssistant) -> None:
     hass.states.async_remove("light.bowl")
     await hass.async_block_till_done()
     assert len(state_changed_events) == 3
+    assert len(state_reported_events) == 4
+
+    unsub()
+
+    hass.states.async_set("light.bowl", "on")
+    await hass.async_block_till_done()
+    assert len(state_changed_events) == 4
     assert len(state_reported_events) == 4
 
 
@@ -3515,3 +3524,18 @@ async def test_set_time_zone_deprecated(hass: HomeAssistant) -> None:
         ),
     ):
         await hass.config.set_time_zone("America/New_York")
+
+
+async def test_async_set_updates_last_reported(hass: HomeAssistant) -> None:
+    """Test async_set method updates last_reported AND last_reported_timestamp."""
+    hass.states.async_set("light.bowl", "on", {})
+    state = hass.states.get("light.bowl")
+    last_reported = state.last_reported
+    last_reported_timestamp = state.last_reported_timestamp
+
+    for _ in range(2):
+        hass.states.async_set("light.bowl", "on", {})
+        assert state.last_reported != last_reported
+        assert state.last_reported_timestamp != last_reported_timestamp
+        last_reported = state.last_reported
+        last_reported_timestamp = state.last_reported_timestamp

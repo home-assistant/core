@@ -234,7 +234,7 @@ async def test_media_player_intents(
 
     response = result.response
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert response.speech["plain"]["speech"] == "Unpaused"
+    assert response.speech["plain"]["speech"] == "Resumed"
     assert len(calls) == 1
     call = calls[0]
     assert call.data == {"entity_id": entity_id}

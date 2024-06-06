@@ -24,6 +24,7 @@ from homeassistant.setup import async_setup_component
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
 from tests.common import async_capture_events, async_mock_service
+from tests.components.conversation import MockAgent
 
 
 @pytest.fixture
@@ -39,7 +40,6 @@ def encrypt_payload(secret_key, payload, encode_json=True):
         from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
-        return
 
     import json
 
@@ -61,7 +61,6 @@ def encrypt_payload_legacy(secret_key, payload, encode_json=True):
         from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
-        return
 
     import json
 
@@ -86,7 +85,6 @@ def decrypt_payload(secret_key, encrypted_data):
         from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
-        return
 
     import json
 
@@ -107,7 +105,6 @@ def decrypt_payload_legacy(secret_key, encrypted_data):
         from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
-        return
 
     import json
 
@@ -1027,7 +1024,7 @@ async def test_webhook_handle_conversation_process(
     homeassistant,
     create_registrations,
     webhook_client,
-    mock_conversation_agent,
+    mock_conversation_agent: MockAgent,
 ) -> None:
     """Test that we can converse."""
     webhook_client.server.app.router._frozen = False

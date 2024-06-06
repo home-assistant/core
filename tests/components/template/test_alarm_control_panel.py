@@ -18,20 +18,20 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 
 TEMPLATE_NAME = "alarm_control_panel.test_template_panel"
 PANEL_NAME = "alarm_control_panel.test"
 
 
 @pytest.fixture
-def service_calls(hass):
+def call_service_events(hass: HomeAssistant) -> list[Event]:
     """Track service call events for alarm_control_panel.test."""
-    events = []
+    events: list[Event] = []
     entity_id = "alarm_control_panel.test"
 
     @callback
-    def capture_events(event):
+    def capture_events(event: Event) -> None:
         if event.data[ATTR_DOMAIN] != ALARM_DOMAIN:
             return
         if event.data[ATTR_SERVICE_DATA][ATTR_ENTITY_ID] != [entity_id]:
@@ -154,7 +154,10 @@ async def test_optimistic_states(hass: HomeAssistant, start_ha) -> None:
         ("alarm_trigger", STATE_ALARM_TRIGGERED),
     ]:
         await hass.services.async_call(
-            ALARM_DOMAIN, service, {"entity_id": TEMPLATE_NAME}, blocking=True
+            ALARM_DOMAIN,
+            service,
+            {"entity_id": TEMPLATE_NAME, "code": "1234"},
+            blocking=True,
         )
         await hass.async_block_till_done()
         assert hass.states.get(TEMPLATE_NAME).state == set_state
@@ -281,15 +284,20 @@ async def test_name(hass: HomeAssistant, start_ha) -> None:
         "alarm_trigger",
     ],
 )
-async def test_actions(hass: HomeAssistant, service, start_ha, service_calls) -> None:
+async def test_actions(
+    hass: HomeAssistant, service, start_ha, call_service_events: list[Event]
+) -> None:
     """Test alarm actions."""
     await hass.services.async_call(
-        ALARM_DOMAIN, service, {"entity_id": TEMPLATE_NAME}, blocking=True
+        ALARM_DOMAIN,
+        service,
+        {"entity_id": TEMPLATE_NAME, "code": "1234"},
+        blocking=True,
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    assert service_calls[0].data["service"] == service
-    assert service_calls[0].data["service_data"]["code"] == TEMPLATE_NAME
+    assert len(call_service_events) == 1
+    assert call_service_events[0].data["service"] == service
+    assert call_service_events[0].data["service_data"]["code"] == TEMPLATE_NAME
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "alarm_control_panel")])

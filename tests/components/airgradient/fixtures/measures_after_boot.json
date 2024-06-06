@@ -1,8 +1,8 @@
 {
   "wifi": -59,
   "serialno": "84fce612f5b8",
-  "boot": 0,
+  "bootCount": 0,
   "ledMode": "co2",
-  "firmwareVersion": "3.0.8",
-  "fwMode": "I-9PSL"
+  "firmware": "3.0.8",
+  "model": "I-9PSL"
 }

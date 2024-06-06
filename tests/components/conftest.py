@@ -1,6 +1,9 @@
 """Fixtures for component testing."""
 
+from __future__ import annotations
+
 from collections.abc import Callable, Generator
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock, patch
 
@@ -9,13 +12,12 @@ import pytest
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
-from tests.components.conversation import MockAgent
-
 if TYPE_CHECKING:
-    from tests.components.device_tracker.common import MockScanner
-    from tests.components.light.common import MockLight
-    from tests.components.sensor.common import MockSensor
-    from tests.components.switch.common import MockSwitch
+    from .conversation import MockAgent
+    from .device_tracker.common import MockScanner
+    from .light.common import MockLight
+    from .sensor.common import MockSensor
+    from .switch.common import MockSwitch
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -49,7 +51,7 @@ def entity_registry_enabled_by_default() -> Generator[None, None, None]:
 
 # Blueprint test fixtures
 @pytest.fixture(name="stub_blueprint_populate")
-def stub_blueprint_populate_fixture() -> Generator[None, Any, None]:
+def stub_blueprint_populate_fixture() -> Generator[None, None, None]:
     """Stub copying the blueprints to the config folder."""
     from tests.components.blueprint.common import stub_blueprint_populate_fixture_helper
 
@@ -58,7 +60,7 @@ def stub_blueprint_populate_fixture() -> Generator[None, Any, None]:
 
 # TTS test fixtures
 @pytest.fixture(name="mock_tts_get_cache_files")
-def mock_tts_get_cache_files_fixture():
+def mock_tts_get_cache_files_fixture() -> Generator[MagicMock, None, None]:
     """Mock the list TTS cache function."""
     from tests.components.tts.common import mock_tts_get_cache_files_fixture_helper
 
@@ -87,8 +89,11 @@ def init_tts_cache_dir_side_effect_fixture() -> Any:
 
 @pytest.fixture(name="mock_tts_cache_dir")
 def mock_tts_cache_dir_fixture(
-    tmp_path, mock_tts_init_cache_dir, mock_tts_get_cache_files, request
-):
+    tmp_path: Path,
+    mock_tts_init_cache_dir: MagicMock,
+    mock_tts_get_cache_files: MagicMock,
+    request: pytest.FixtureRequest,
+) -> Generator[Path, None, None]:
     """Mock the TTS cache dir with empty dir."""
     from tests.components.tts.common import mock_tts_cache_dir_fixture_helper
 
@@ -98,7 +103,7 @@ def mock_tts_cache_dir_fixture(
 
 
 @pytest.fixture(name="tts_mutagen_mock")
-def tts_mutagen_mock_fixture():
+def tts_mutagen_mock_fixture() -> Generator[MagicMock, None, None]:
     """Mock writing tags."""
     from tests.components.tts.common import tts_mutagen_mock_fixture_helper
 
@@ -125,7 +130,7 @@ def prevent_ffmpeg_subprocess() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def mock_light_entities() -> list["MockLight"]:
+def mock_light_entities() -> list[MockLight]:
     """Return mocked light entities."""
     from tests.components.light.common import MockLight
 
@@ -137,7 +142,7 @@ def mock_light_entities() -> list["MockLight"]:
 
 
 @pytest.fixture
-def mock_sensor_entities() -> dict[str, "MockSensor"]:
+def mock_sensor_entities() -> dict[str, MockSensor]:
     """Return mocked sensor entities."""
     from tests.components.sensor.common import get_mock_sensor_entities
 
@@ -145,7 +150,7 @@ def mock_sensor_entities() -> dict[str, "MockSensor"]:
 
 
 @pytest.fixture
-def mock_switch_entities() -> list["MockSwitch"]:
+def mock_switch_entities() -> list[MockSwitch]:
     """Return mocked toggle entities."""
     from tests.components.switch.common import get_mock_switch_entities
 
@@ -153,7 +158,7 @@ def mock_switch_entities() -> list["MockSwitch"]:
 
 
 @pytest.fixture
-def mock_legacy_device_scanner() -> "MockScanner":
+def mock_legacy_device_scanner() -> MockScanner:
     """Return mocked legacy device scanner entity."""
     from tests.components.device_tracker.common import MockScanner
 
@@ -161,9 +166,7 @@ def mock_legacy_device_scanner() -> "MockScanner":
 
 
 @pytest.fixture
-def mock_legacy_device_tracker_setup() -> (
-    Callable[[HomeAssistant, "MockScanner"], None]
-):
+def mock_legacy_device_tracker_setup() -> Callable[[HomeAssistant, MockScanner], None]:
     """Return setup callable for legacy device tracker setup."""
     from tests.components.device_tracker.common import mock_legacy_device_tracker_setup
 

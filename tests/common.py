@@ -95,8 +95,8 @@ from homeassistant.util.json import (
     json_loads_object,
 )
 from homeassistant.util.signal_type import SignalType
+import homeassistant.util.ulid as ulid_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
-import homeassistant.util.uuid as uuid_util
 import homeassistant.util.yaml.loader as yaml_loader
 
 from tests.testing_config.custom_components.test_constant_deprecation import (
@@ -174,6 +174,7 @@ def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
         """Run event loop."""
 
         loop._thread_ident = threading.get_ident()
+        hass._loop_thread_id = loop._thread_ident
         loop.run_forever()
         loop_stop_event.set()
 
@@ -998,7 +999,7 @@ class MockConfigEntry(config_entries.ConfigEntry[_DataT]):
             "data": data or {},
             "disabled_by": disabled_by,
             "domain": domain,
-            "entry_id": entry_id or uuid_util.random_uuid_hex(),
+            "entry_id": entry_id or ulid_util.ulid_now(),
             "minor_version": minor_version,
             "options": options or {},
             "pref_disable_new_entities": pref_disable_new_entities,
@@ -1688,8 +1689,10 @@ def help_test_all(module: ModuleType) -> None:
 def extract_stack_to_frame(extract_stack: list[Mock]) -> FrameType:
     """Convert an extract stack to a frame list."""
     stack = list(extract_stack)
+    _globals = globals()
     for frame in stack:
         frame.f_back = None
+        frame.f_globals = _globals
         frame.f_code.co_filename = frame.filename
         frame.f_lineno = int(frame.lineno)
 
@@ -1757,5 +1760,6 @@ async def snapshot_platform(
     for entity_entry in entity_entries:
         assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
         assert entity_entry.disabled_by is None, "Please enable all entities."
-        assert (state := hass.states.get(entity_entry.entity_id))
+        state = hass.states.get(entity_entry.entity_id)
+        assert state, f"State not found for {entity_entry.entity_id}"
         assert state == snapshot(name=f"{entity_entry.entity_id}-state")
