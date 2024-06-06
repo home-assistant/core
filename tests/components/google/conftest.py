@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable
 import datetime
 import http
 import time
@@ -13,6 +13,7 @@ from aiohttp.client_exceptions import ClientError
 from gcal_sync.auth import API_BASE_URL
 from oauth2client.client import OAuth2Credentials
 import pytest
+from typing_extensions import AsyncGenerator, Generator
 import yaml
 
 from homeassistant.components.application_credentials import (
@@ -29,7 +30,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 type ApiResult = Callable[[dict[str, Any]], None]
 type ComponentSetup = Callable[[], Awaitable[bool]]
-type AsyncYieldFixture[_T] = AsyncGenerator[_T, None]
+type AsyncYieldFixture[_T] = AsyncGenerator[_T]
 
 
 CALENDAR_ID = "qwertyuiopasdfghjklzxcvbnm@import.calendar.google.com"
@@ -150,7 +151,7 @@ def calendars_config(calendars_config_entity: dict[str, Any]) -> list[dict[str, 
 def mock_calendars_yaml(
     hass: HomeAssistant,
     calendars_config: list[dict[str, Any]],
-) -> Generator[Mock, None, None]:
+) -> Generator[Mock]:
     """Fixture that prepares the google_calendars.yaml mocks."""
     mocked_open_function = mock_open(
         read_data=yaml.dump(calendars_config) if calendars_config else None

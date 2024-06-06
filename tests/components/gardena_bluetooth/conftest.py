@@ -1,6 +1,6 @@
 """Common fixtures for the Gardena Bluetooth tests."""
 
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -10,6 +10,7 @@ from gardena_bluetooth.const import DeviceInformation
 from gardena_bluetooth.exceptions import CharacteristicNotFound
 from gardena_bluetooth.parse import Characteristic
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.gardena_bluetooth.const import DOMAIN
 from homeassistant.components.gardena_bluetooth.coordinator import SCAN_INTERVAL
@@ -30,7 +31,7 @@ def mock_entry():
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.gardena_bluetooth.async_setup_entry",

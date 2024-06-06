@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
@@ -12,6 +11,7 @@ from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import dataclass_from_dict
 from matter_server.common.models import MatterNodeData
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.hassio import HassioAPIError
 from homeassistant.components.matter.const import DOMAIN
@@ -32,14 +32,14 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(name="connect_timeout")
-def connect_timeout_fixture() -> Generator[int, None, None]:
+def connect_timeout_fixture() -> Generator[int]:
     """Mock the connect timeout."""
     with patch("homeassistant.components.matter.CONNECT_TIMEOUT", new=0) as timeout:
         yield timeout
 
 
 @pytest.fixture(name="listen_ready_timeout")
-def listen_ready_timeout_fixture() -> Generator[int, None, None]:
+def listen_ready_timeout_fixture() -> Generator[int]:
     """Mock the listen ready timeout."""
     with patch(
         "homeassistant.components.matter.LISTEN_READY_TIMEOUT", new=0
