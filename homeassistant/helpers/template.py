@@ -2401,9 +2401,9 @@ def base64_encode(value: str) -> str:
     return base64.b64encode(value.encode("utf-8")).decode("utf-8")
 
 
-def base64_decode(value: str, encoding: str = "utf-8") -> str | bytes:
+def base64_decode(value: str, encoding: str | None = "utf-8") -> str | bytes:
     """Perform base64 decode."""
-    if encoding == "raw":
+    if encoding is None:
         return base64.b64decode(value)
 
     return base64.b64decode(value).decode(encoding)

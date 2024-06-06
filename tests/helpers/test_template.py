@@ -1649,7 +1649,7 @@ def test_base64_decode_raw(hass: HomeAssistant) -> None:
     """Test the base64_decode with encoding filter."""
     assert (
         template.Template(
-            '{{ "aG9tZWFzc2lzdGFudA==" | base64_decode("raw") }}', hass
+            '{{ "aG9tZWFzc2lzdGFudA==" | base64_decode(None) }}', hass
         ).async_render()
         == b"homeassistant"
     )
