@@ -1,6 +1,5 @@
 """Test Home Assistant yaml loader."""
 
-from collections.abc import Generator
 import importlib
 import io
 import os
@@ -10,6 +9,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 import pytest
+from typing_extensions import Generator
 import voluptuous as vol
 import yaml as pyyaml
 
@@ -604,7 +604,7 @@ async def test_loading_actual_file_with_syntax_error(
 
 
 @pytest.fixture
-def mock_integration_frame() -> Generator[Mock, None, None]:
+def mock_integration_frame() -> Generator[Mock]:
     """Mock as if we're calling code from inside an integration."""
     correct_frame = Mock(
         filename="/home/paulus/homeassistant/components/hue/light.py",

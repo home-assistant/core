@@ -1,8 +1,10 @@
 """Test climate intents."""
 
 from collections.abc import Generator
+from unittest.mock import patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components import conversation
 from homeassistant.components.climate import (
@@ -36,7 +38,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 

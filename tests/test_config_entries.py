@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator
 from datetime import timedelta
 from functools import cached_property
 import logging
@@ -13,6 +12,7 @@ from unittest.mock import ANY, AsyncMock, Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from typing_extensions import Generator
 
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.components import dhcp
@@ -53,7 +53,7 @@ from tests.common import async_get_persistent_notifications
 
 
 @pytest.fixture(autouse=True)
-def mock_handlers() -> Generator[None, None, None]:
+def mock_handlers() -> Generator[None]:
     """Mock config flows."""
 
     class MockFlowHandler(config_entries.ConfigFlow):

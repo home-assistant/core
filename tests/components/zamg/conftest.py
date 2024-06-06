@@ -1,10 +1,10 @@
 """Fixtures for Zamg integration tests."""
 
-from collections.abc import Generator
 import json
 from unittest.mock import MagicMock, patch
 
 import pytest
+from typing_extensions import Generator
 from zamg import ZamgData as ZamgDevice
 
 from homeassistant.components.zamg.const import CONF_STATION_ID, DOMAIN
@@ -30,7 +30,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[None, None, None]:
+def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch("homeassistant.components.zamg.async_setup_entry", return_value=True):
         yield

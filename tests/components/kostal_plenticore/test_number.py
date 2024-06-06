@@ -1,11 +1,11 @@
 """Test Kostal Plenticore number."""
 
-from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import patch
 
 from pykoplenti import ApiClient, SettingsData
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.number import (
     ATTR_MAX,
@@ -23,7 +23,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
-def mock_plenticore_client() -> Generator[ApiClient, None, None]:
+def mock_plenticore_client() -> Generator[ApiClient]:
     """Return a patched ExtendedApiClient."""
     with patch(
         "homeassistant.components.kostal_plenticore.coordinator.ExtendedApiClient",

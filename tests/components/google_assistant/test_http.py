@@ -577,6 +577,8 @@ async def test_async_get_users_from_store(tmpdir: py.path.local) -> None:
 
         assert await async_get_users(hass) == ["agent_1"]
 
+        await hass.async_stop()
+
 
 VALID_STORE_DATA = json.dumps(
     {

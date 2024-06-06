@@ -3,6 +3,7 @@
 from collections.abc import Callable
 import logging
 import math
+import threading
 from types import NoneType
 from unittest import mock
 from unittest.mock import AsyncMock, patch
@@ -86,6 +87,7 @@ def endpoint(zigpy_coordinator_device):
     type(endpoint_mock.device).skip_configuration = mock.PropertyMock(
         return_value=False
     )
+    endpoint_mock.device.hass.loop_thread_id = threading.get_ident()
     endpoint_mock.id = 1
     return endpoint_mock
 
