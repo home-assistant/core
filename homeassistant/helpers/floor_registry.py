@@ -93,8 +93,19 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
 
     @callback
     def async_get_floor_by_name(self, name: str) -> FloorEntry | None:
-        """Get floor by name."""
-        return self.floors.get_by_name(name)
+        """Get floor by name or alias."""
+        if floor := self.floors.get_by_name(name):
+            return floor
+
+        # Check aliases
+        normalized_name = normalize_name(name)
+        for floor in self.async_list_floors():
+            for alias in floor.aliases:
+                normalized_alias = normalize_name(alias)
+                if normalized_name == normalized_alias:
+                    return floor
+
+        return None
 
     @callback
     def async_list_floors(self) -> Iterable[FloorEntry]:

@@ -197,8 +197,19 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
 
     @callback
     def async_get_area_by_name(self, name: str) -> AreaEntry | None:
-        """Get area by name."""
-        return self.areas.get_by_name(name)
+        """Get area by name or alias."""
+        if area := self.areas.get_by_name(name):
+            return area
+
+        # Check aliases
+        normalized_name = normalize_name(name)
+        for area in self.async_list_areas():
+            for alias in area.aliases:
+                normalized_alias = normalize_name(alias)
+                if normalized_name == normalized_alias:
+                    return area
+
+        return None
 
     @callback
     def async_list_areas(self) -> Iterable[AreaEntry]:
@@ -404,8 +415,9 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
 
         @callback
         def _removed_from_registry_filter(
-            event_data: fr.EventFloorRegistryUpdatedData
-            | lr.EventLabelRegistryUpdatedData,
+            event_data: (
+                fr.EventFloorRegistryUpdatedData | lr.EventLabelRegistryUpdatedData
+            ),
         ) -> bool:
             """Filter all except for the item removed from registry events."""
             return event_data["action"] == "remove"

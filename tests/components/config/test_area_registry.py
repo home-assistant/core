@@ -260,3 +260,9 @@ async def test_update_area_with_name_already_in_use(
     assert msg["error"]["code"] == "invalid_info"
     assert msg["error"]["message"] == "The name mock 2 (mock2) is already in use"
     assert len(area_registry.areas) == 2
+
+
+async def test_get_area_by_alias(area_registry: ar.AreaRegistry) -> None:
+    """Test async_get_area_by_name also works with aliases."""
+    area = area_registry.async_create("area 1", aliases={"alias 1"})
+    assert area_registry.async_get_area_by_name("alias 1") == area

@@ -239,3 +239,9 @@ async def test_update_with_name_already_in_use(
         == "The name Second floor (secondfloor) is already in use"
     )
     assert len(floor_registry.floors) == 2
+
+
+async def test_get_floor_by_alias(floor_registry: fr.FloorRegistry) -> None:
+    """Test async_get_floor_by_name also works with aliases."""
+    floor = floor_registry.async_create("floor 1", aliases={"alias 1"})
+    assert floor_registry.async_get_floor_by_name("alias 1") == floor
