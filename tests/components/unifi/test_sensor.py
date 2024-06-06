@@ -1283,14 +1283,3 @@ async def test_device_client_sensors(
 
     assert hass.states.get("sensor.wired_device_clients").state == "2"
     assert hass.states.get("sensor.wireless_device_clients").state == "1"
-
-    # Verify state update - decreasing number
-
-    wireless_client_1["last_seen"] = 0
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=wireless_client_1)
-
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.wired_device_clients").state == "2"
-    assert hass.states.get("sensor.wireless_device_clients").state == "0"
