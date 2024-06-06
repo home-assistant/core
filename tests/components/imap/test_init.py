@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aioimaplib import AUTH, NONAUTH, SELECTED, AioImapException, Response
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.imap import DOMAIN
@@ -984,22 +985,37 @@ async def test_services(hass: HomeAssistant, mock_imap_protocol: MagicMock) -> N
 )
 @pytest.mark.parametrize("imap_has_capability", [True], ids=["push"])
 async def test_handle_pushed_connection_reset(
-    hass: HomeAssistant, mock_imap_protocol: MagicMock, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    mock_imap_protocol: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test handling a connection reset."""
-    mock_imap_protocol.idle_start.return_value = asyncio.Future()
-    mock_imap_protocol.wait_server_push.side_effect = AsyncMock()
+    event = asyncio.Event()  # needed for pushed coordinator to make a new loop
+
+    async def _sleep_till_event() -> None:
+        """Simulate imap server waiting for pushes message and keep the push loop going.
+
+        Needed for pushed coordinator only.
+        """
+        nonlocal event
+        if event.done():
+            return
+        await event.wait()
+        raise AioImapException("disconnect")
+
+    # Simulate and error direct after the imap service as start up
+    mock_imap_protocol.idle_start.side_effect = _sleep_till_event
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=15))
-    for task in hass._background_tasks:
-        task.cancel()
-    await hass.async_block_till_done()
     with caplog.at_level(logging.DEBUG):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        event.set()
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=15))
-        mock_imap_protocol.idle_start.return_value = AsyncMock()
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=15))
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert "Connection canceled with" in caplog.text
+        assert (
+            "Lost imap.server.com (will attempt to reconnect after 10 s)" in caplog.text
+        )

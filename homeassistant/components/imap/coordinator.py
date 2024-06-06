@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Awaitable, Mapping
 from datetime import datetime, timedelta
 import email
 from email.header import decode_header, make_header
@@ -436,6 +436,8 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
 class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
     """Class for imap client."""
 
+    _idle: Awaitable[Any]
+
     def __init__(
         self, hass: HomeAssistant, imap_client: IMAP4_SSL, entry: ConfigEntry
     ) -> None:
@@ -492,20 +494,11 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 self.auth_errors = 0
                 self.async_set_updated_data(self.number_of_messages)
             try:
-                idle: asyncio.Future = await self.imap_client.idle_start()
+                self._idle = await self.imap_client.idle_start()
                 await self.imap_client.wait_server_push()
                 self.imap_client.idle_done()
                 async with asyncio.timeout(10):
-                    try:
-                        await idle
-                    except asyncio.CancelledError:
-                        _LOGGER.debug(
-                            "Connection canceled with %s (will attempt to reconnect after %s s)",
-                            self.config_entry.data[CONF_SERVER],
-                            BACKOFF_TIME,
-                        )
-                        await self._cleanup()
-                        await asyncio.sleep(BACKOFF_TIME)
+                    await self._idle
 
             except (AioImapException, TimeoutError):
                 _LOGGER.debug(
