@@ -1,11 +1,11 @@
 """Configuration for Ring tests."""
 
-from collections.abc import Generator
 import re
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import requests_mock
+from typing_extensions import Generator
 
 from homeassistant.components.ring import DOMAIN
 from homeassistant.const import CONF_USERNAME
@@ -16,7 +16,7 @@ from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.ring.async_setup_entry", return_value=True
