@@ -1,9 +1,9 @@
 """Test the NextBus config flow."""
 
-from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant import config_entries, setup
 from homeassistant.components.nextbus.const import CONF_AGENCY, CONF_ROUTE, DOMAIN
@@ -13,7 +13,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[MagicMock, None, None]:
+def mock_setup_entry() -> Generator[MagicMock]:
     """Create a mock for the nextbus component setup."""
     with patch(
         "homeassistant.components.nextbus.async_setup_entry",
@@ -23,7 +23,7 @@ def mock_setup_entry() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_nextbus() -> Generator[MagicMock, None, None]:
+def mock_nextbus() -> Generator[MagicMock]:
     """Create a mock py_nextbus module."""
     with patch("homeassistant.components.nextbus.config_flow.NextBusClient") as client:
         yield client
