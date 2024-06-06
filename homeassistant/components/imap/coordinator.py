@@ -359,7 +359,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 await self.imap_client.stop_wait_server_push()
                 await self.imap_client.close()
                 await self.imap_client.logout()
-            except (AioImapException, asyncio.CancelledError, TimeoutError):
+            except (AioImapException, TimeoutError):
                 if log_error:
                     _LOGGER.debug("Error while cleaning up imap connection")
             finally:
