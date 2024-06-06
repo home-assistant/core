@@ -43,5 +43,33 @@
         }
       }
     }
+  },
+  "services": {
+    "cognitive_task": {
+      "name": "Cognitive Task",
+      "description": "This service provides a convenient and efficient way to send multimodal prompts to Antropic Claude models through the Amazon Bedrock platform. It supports both generic text-based prompts as well as prompts that include multiple images, allowing for a more comprehensive and engaging interaction with the AI models.",
+      "fields": {
+        "prompt": {
+          "name": "Prompt",
+          "description": "Textual input that the model uses to generate or continue output.",
+          "example": "Describe what you see in these images"
+        },
+        "model_id": {
+          "name": "Model ID",
+          "description": "Unique identifier assigned to a specific LLM. Default: anthropic.claude-3-haiku-20240307-v1:0",
+          "example": "anthropic.claude-3-haiku-20240307-v1:0"
+        },
+        "image_filenames": {
+          "name": "Image filenames",
+          "description": "One or multiple file names.",
+          "example": "- /config/www/image.jpg"
+        },
+        "image_urls": {
+          "name": "Image URLS",
+          "description": "URLs that point to images.",
+          "example": "- https://localhost:8123/local/image.jpg"
+        }
+      }
+    }
   }
 }

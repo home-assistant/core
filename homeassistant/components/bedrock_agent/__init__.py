@@ -2,19 +2,33 @@
 
 from __future__ import annotations
 
+import base64
 from functools import partial
+from io import BytesIO
 import json
 import logging
+import mimetypes
+from pathlib import Path
 from typing import Literal
+from urllib.error import HTTPError
+from urllib.request import urlopen
 
 import boto3
+from PIL import Image
+import voluptuous as vol
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import agent_manager
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import intent
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, intent
 
 from .const import (
     CONST_KEY_ID,
@@ -24,6 +38,10 @@ from .const import (
     CONST_MODEL_LIST,
     CONST_PROMPT_CONTEXT,
     CONST_REGION,
+    CONST_SERVICE_PARAM_FILENAMES,
+    CONST_SERVICE_PARAM_IMAGE_URLS,
+    CONST_SERVICE_PARAM_MODEL_ID,
+    CONST_SERVICE_PARAM_PROMPT,
     DOMAIN,
 )
 
@@ -59,6 +77,123 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Store a reference to the unsubscribe function to cleanup if an entry is unloaded.
     hass_data["unsub_options_update_listener"] = unsub_options_update_listener
     hass.data[DOMAIN][entry.entry_id] = hass_data
+
+    async def async_cognitive_task(call: ServiceCall) -> ServiceResponse:
+        """Return answer to prompt and description of image."""
+        param_model_id = call.data.get(
+            CONST_SERVICE_PARAM_MODEL_ID, "anthropic.claude-3-haiku-20240307-v1:0"
+        )
+        param_prompt = call.data.get(CONST_SERVICE_PARAM_PROMPT)
+        prompt_content = [{"type": "text", "text": param_prompt}]
+
+        image_filenames = call.data.get(CONST_SERVICE_PARAM_FILENAMES)
+        for image_filename in image_filenames or []:
+            if not hass.config.is_allowed_path(image_filename):
+                raise HomeAssistantError(
+                    f"Cannot read `{image_filename}`, no access to path; "
+                    "`allowlist_external_dirs` may need to be adjusted in "
+                    "`configuration.yaml`"
+                )
+            if not Path(image_filename).exists():
+                raise HomeAssistantError(f"`{image_filename}` does not exist")
+            mime_type, _ = mimetypes.guess_type(image_filename)
+            if mime_type is None or not mime_type.startswith("image"):
+                raise HomeAssistantError(f"`{image_filename}` is not an image")
+            file_image_data = await hass.async_add_executor_job(
+                Path(image_filename).read_bytes
+            )
+            file_image_data_base64 = base64.b64encode(file_image_data)
+            file_image_data_str = file_image_data_base64.decode("utf-8")
+            prompt_content.append(
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": "image/jpeg",
+                        "data": file_image_data_str,
+                    },
+                }
+            )
+
+        param_image_urls = call.data.get(CONST_SERVICE_PARAM_IMAGE_URLS)
+        for param_image_url in param_image_urls or []:
+            try:
+                opened_url = await hass.async_add_executor_job(urlopen, param_image_url)
+                url_image = Image.open(opened_url)
+                buffered = BytesIO()
+                url_image.save(buffered, format="JPEG")
+                url_image_base64 = base64.b64encode(buffered.getvalue())
+                url_image_str = url_image_base64.decode("utf-8")
+                prompt_content.append(
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/jpeg",
+                            "data": url_image_str,
+                        },
+                    }
+                )
+            except HTTPError as error:  # status reason
+                raise HomeAssistantError(
+                    f"Cannot access file from `{param_image_url}`."
+                    f"Status: `{error.status}`, Reason: `{error.reason}`"
+                ) from error
+
+        bedrock = boto3.client(
+            service_name="bedrock-runtime",
+            region_name=entry.data[CONST_REGION],
+            aws_access_key_id=entry.data[CONST_KEY_ID],
+            aws_secret_access_key=entry.data[CONST_KEY_SECRET],
+        )
+
+        body = json.dumps(
+            {
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": 1024,
+                "messages": [{"role": "user", "content": prompt_content}],
+            }
+        )
+
+        accept = "application/json"
+        contentType = "application/json"
+
+        bedrock_response = await hass.async_add_executor_job(
+            partial(
+                bedrock.invoke_model,
+                body=body,
+                modelId=param_model_id,
+                accept=accept,
+                contentType=contentType,
+            ),
+        )
+
+        response_body = json.loads(bedrock_response.get("body").read())
+        description = response_body.get("content")[0].get("text")
+
+        return {"text": f"{description}"}
+
+    IMAGE_DESCRIPTION_SCHEMA = vol.Schema(
+        {
+            vol.Required(CONST_SERVICE_PARAM_PROMPT): str,
+            vol.Optional(CONST_SERVICE_PARAM_MODEL_ID): str,
+            vol.Optional(CONST_SERVICE_PARAM_IMAGE_URLS, default=[]): vol.All(
+                cv.ensure_list, [cv.string]
+            ),
+            vol.Optional(CONST_SERVICE_PARAM_FILENAMES, default=[]): vol.All(
+                cv.ensure_list, [cv.string]
+            ),
+        }
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        "cognitive_task",
+        async_cognitive_task,
+        schema=IMAGE_DESCRIPTION_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
     return True
 
 

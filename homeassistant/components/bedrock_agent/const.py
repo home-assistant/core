@@ -22,3 +22,8 @@ CONST_MODEL_LIST: Final = [
     "mistral.mistral-7b-instruct-v0:2",
     "mistral.mixtral-8x7b-instruct-v0:1",
 ]
+
+CONST_SERVICE_PARAM_PROMPT: Final = "prompt"
+CONST_SERVICE_PARAM_MODEL_ID: Final = "model_id"
+CONST_SERVICE_PARAM_IMAGE_URLS: Final = "image_urls"
+CONST_SERVICE_PARAM_FILENAMES: Final = "image_filenames"

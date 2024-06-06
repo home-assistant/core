@@ -1,0 +1,24 @@
+cognitive_task:
+  # This services allows you to interact with Claude 3. This multimodal LLM can answer questions about images.
+  fields:
+    prompt:
+      required: true
+      selector:
+        text:
+          multiline: true
+    model_id:
+      required: false
+      selector:
+        select:
+          options:
+            - "anthropic.claude-3-opus-20240229-v1:0"
+            - "anthropic.claude-3-haiku-20240307-v1:0"
+            - "anthropic.claude-3-sonnet-20240229-v1:0"
+    image_filenames:
+      required: false
+      selector:
+        object:
+    image_urls:
+      required: false
+      selector:
+        object:
