@@ -92,14 +92,14 @@ CLIENT_ID = "client-id"
 CLIENT_SECRET = "client-secret"
 
 
-@pytest.fixture(name="calendar_access_role")
-def test_calendar_access_role() -> str:
-    """Default access role to use for test_api_calendar in tests."""
+@pytest.fixture
+def calendar_access_role() -> str:
+    """Set default access role to use for test_api_calendar in tests."""
     return "owner"
 
 
-@pytest.fixture
-def test_api_calendar(calendar_access_role: str) -> None:
+@pytest.fixture(name="test_api_calendar")
+def api_calendar(calendar_access_role: str) -> dict[str, Any]:
     """Return a test calendar object used in API responses."""
     return {
         **TEST_API_CALENDAR,

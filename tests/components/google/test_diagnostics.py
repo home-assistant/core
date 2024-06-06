@@ -13,7 +13,7 @@ from homeassistant.auth.models import Credentials
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .conftest import TEST_EVENT, ComponentSetup
+from .conftest import TEST_EVENT, ApiResult, ComponentSetup
 
 from tests.common import CLIENT_ID, MockConfigEntry, MockUser
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -23,9 +23,9 @@ from tests.typing import ClientSessionGenerator
 
 @pytest.fixture(autouse=True)
 def mock_test_setup(
-    test_api_calendar,
-    mock_calendars_list,
-):
+    test_api_calendar: dict[str, Any],
+    mock_calendars_list: ApiResult,
+) -> None:
     """Fixture that sets up the default API responses during integration setup."""
     mock_calendars_list({"items": [test_api_calendar]})
 
