@@ -171,13 +171,10 @@ def get_suggested(schema, key):
     "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.ADDON_STATE_POLL_INTERVAL",
     0,
 )
-async def test_uninstall_addon_waiting(
-    hass: HomeAssistant,
-    addon_store_info,
-    addon_info,
-    install_addon,
-    uninstall_addon,
-):
+@pytest.mark.usefixtures(
+    "addon_store_info", "addon_info", "install_addon", "uninstall_addon"
+)
+async def test_uninstall_addon_waiting(hass: HomeAssistant) -> None:
     """Test the synchronous addon uninstall helper."""
 
     multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
