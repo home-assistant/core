@@ -52,5 +52,17 @@
       "title": "YAML import failed because of timeout issues",
       "description": "Configuring {integration_title} using YAML is being removed but there was a timeout while connecting to your {integration_title} while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "fault": {
+        "name": "Fault"
+      }
+    },
+    "sensor": {
+      "tap_temperature": {
+        "name": "Tap temperature"
+      }
+    }
   }
 }
