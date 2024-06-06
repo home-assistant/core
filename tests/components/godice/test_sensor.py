@@ -124,7 +124,7 @@ async def test_reloading_on_connection_lost(
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        disconnect_cb = dice_constructor.call_args.kwargs["disconnected_callback"]
+        disconnect_cb = dice_constructor.call_args.kwargs["disconnect_cb"]
 
         # no reloading when disconnected by request
         config_entry.runtime_data.disconnected_by_request_flag = True

@@ -29,25 +29,27 @@ class DiceData:
     disconnected_by_request_flag: bool
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DiceConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: DiceConfigEntry) -> bool:
     """Set up godice from a config entry."""
     _LOGGER.debug("Setup started")
 
     def on_disconnect_callback(_ble_data):
         _LOGGER.debug("on_disconnect_callback called")
-        is_disconnected_by_request = entry.runtime_data.disconnected_by_request_flag
+        is_disconnected_by_request = (
+            config_entry.runtime_data.disconnected_by_request_flag
+        )
         if not is_disconnected_by_request:
-            hass.create_task(hass.config_entries.async_reload(entry.entry_id))
+            hass.create_task(hass.config_entries.async_reload(config_entry.entry_id))
 
     try:
         ble_device = bluetooth.async_ble_device_from_address(
-            hass, entry.data[CONF_ADDRESS]
+            hass, config_entry.data[CONF_ADDRESS]
         )
         assert ble_device is not None
         dice = godice.create(
             ble_device,
-            godice.Shell[entry.data[CONF_SHELL]],
-            disconnected_callback=on_disconnect_callback,
+            godice.Shell[config_entry.data[CONF_SHELL]],
+            disconnect_cb=on_disconnect_callback,
             timeout=20,
         )
         await dice.connect()
@@ -57,8 +59,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DiceConfigEntry) -> bool
     except Exception as err:
         raise ConfigEntryNotReady("Device not found") from err
 
-    entry.runtime_data = DiceData(dice, False)
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    config_entry.runtime_data = DiceData(dice, False)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 

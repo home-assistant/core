@@ -12,11 +12,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import DiceConfigEntry
 from .const import DOMAIN, MANUFACTURER, MODEL
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,13 +40,14 @@ BATTERY_SENSOR_DESCR = SensorEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: DiceConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Setups Dice sensors."""
     dice = config_entry.runtime_data.dice
+    device_address = config_entry.data[const.CONF_ADDRESS]
     device_info = DeviceInfo(
-        identifiers={(DOMAIN, config_entry.data[const.CONF_ADDRESS])},
+        identifiers={(DOMAIN, device_address)},
         name=config_entry.data[const.CONF_NAME],
         manufacturer=MANUFACTURER,
         model=MODEL,
@@ -60,7 +61,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            entity_class(device_info, entity_description, dice)
+            entity_class(device_info, device_address, entity_description, dice)
             for entity_class, entity_description in entities
         ]
     )
@@ -77,6 +78,7 @@ class BaseSensor(SensorEntity):
     def __init__(
         self,
         device_info: DeviceInfo,
+        device_address: str,
         entity_description: SensorEntityDescription,
         dice: godice.Dice,
     ) -> None:
@@ -84,9 +86,7 @@ class BaseSensor(SensorEntity):
         self.entity_description = entity_description
         self.dice = dice
         self._attr_device_info = device_info
-        self._attr_unique_id = (
-            f"{device_info[const.CONF_NAME]}_{self.entity_description.key}"
-        )
+        self._attr_unique_id = f"{device_address}_{self.entity_description.key}"
         self._attr_translation_key = entity_description.key
 
 

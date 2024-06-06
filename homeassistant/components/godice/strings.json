@@ -22,12 +22,6 @@
   },
   "entity": {
     "sensor": {
-      "battery_level": {
-        "name": "Battery level"
-      },
-      "connection": {
-        "name": "Connection"
-      },
       "color": {
         "name": "Color"
       },
