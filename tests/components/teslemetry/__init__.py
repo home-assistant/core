@@ -18,8 +18,7 @@ async def setup_platform(hass: HomeAssistant, platforms: list[Platform] | None =
     """Set up the Teslemetry platform."""
 
     mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONFIG,
+        domain=DOMAIN, data=CONFIG, minor_version=2, unique_id="abc-123"
     )
     mock_entry.add_to_hass(hass)
 

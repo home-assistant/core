@@ -12,11 +12,12 @@ from tesla_fleet_api.exceptions import (
 
 from homeassistant import config_entries
 from homeassistant.components.teslemetry.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import CONFIG
+from .const import CONFIG, METADATA
 
 from tests.common import MockConfigEntry
 
@@ -89,8 +90,7 @@ async def test_reauth(hass: HomeAssistant, mock_metadata) -> None:
     """Test reauth flow."""
 
     mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=BAD_CONFIG,
+        domain=DOMAIN, data=BAD_CONFIG, minor_version=2, unique_id="abc-123"
     )
     mock_entry.add_to_hass(hass)
 
@@ -140,8 +140,7 @@ async def test_reauth_errors(
 
     # Start the reauth
     mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=BAD_CONFIG,
+        domain=DOMAIN, data=BAD_CONFIG, minor_version=2, unique_id="abc-123"
     )
     mock_entry.add_to_hass(hass)
 
@@ -192,3 +191,45 @@ async def test_unique_id_abort(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=CONFIG
     )
     assert result2["type"] is FlowResultType.ABORT
+
+
+async def test_migrate_from_1_1(hass: HomeAssistant, mock_metadata) -> None:
+    """Test we get the form."""
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        minor_version=1,
+        unique_id=None,
+        data=CONFIG,
+    )
+
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert entry.version == 1
+    assert entry.minor_version == 2
+    assert entry.unique_id == METADATA["uid"]
+
+
+async def test_migrate_error_from_1_1(hass: HomeAssistant, mock_metadata) -> None:
+    """Test we get the form."""
+
+    mock_metadata.side_effect = TeslaFleetError
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        minor_version=1,
+        unique_id=None,
+        data=CONFIG,
+    )
+
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR

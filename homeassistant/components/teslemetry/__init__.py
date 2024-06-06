@@ -18,7 +18,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, LOGGER, MODELS
+from .const import DOMAIN, MODELS
 from .coordinator import (
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
@@ -56,9 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         access_token=access_token,
     )
     try:
-        metadata = await teslemetry.metadata()
-        scopes = metadata["scopes"]
-        uid = metadata["uid"]
+        scopes = (await teslemetry.metadata())["scopes"]
         products = (await teslemetry.products())["response"]
     except InvalidToken as e:
         raise ConfigEntryAuthFailed from e
@@ -66,11 +64,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         raise ConfigEntryAuthFailed from e
     except TeslaFleetError as e:
         raise ConfigEntryNotReady from e
-
-    # Update unique_id if not set
-    if entry.unique_id is None:
-        LOGGER.debug("Setting unique_id to %s", uid)
-        hass.config_entries.async_update_entry(entry, unique_id=uid)
 
     # Create array of classes
     vehicles: list[TeslemetryVehicleData] = []
@@ -159,3 +152,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Unload Teslemetry Config."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate config entry."""
+    if config_entry.version == 1 and config_entry.minor_version == 1:
+        # Add unique_id to existing entry
+        teslemetry = Teslemetry(
+            session=async_get_clientsession(hass),
+            access_token=config_entry.data[CONF_ACCESS_TOKEN],
+        )
+        try:
+            metadata = await teslemetry.metadata()
+        except TeslaFleetError:
+            return False
+
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=metadata["uid"], version=1, minor_version=2
+        )
+        return True
+    return True
