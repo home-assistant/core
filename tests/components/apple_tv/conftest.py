@@ -55,7 +55,7 @@ def pairing() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def pairing_mock() -> Generator[AsyncMock, None, None]:
+def pairing_mock() -> Generator[AsyncMock]:
     """Mock pyatv.scan."""
     with patch("homeassistant.components.apple_tv.config_flow.pair") as mock_pair:
 
