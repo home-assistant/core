@@ -3,6 +3,7 @@
 from homeassistant.components.pglab.const import DOMAIN
 from homeassistant.config_entries import SOURCE_MQTT, SOURCE_USER
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from tests.common import MockConfigEntry
@@ -19,7 +20,7 @@ async def test_mqtt_abort_if_existing_entry(
         DOMAIN, context={"source": SOURCE_MQTT}
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -67,7 +68,7 @@ async def test_mqtt_abort_invalid_topic(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_MQTT}, data=discovery_info
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_discovery_info"
 
     discovery_info = MqttServiceInfo(
@@ -81,7 +82,7 @@ async def test_mqtt_abort_invalid_topic(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_MQTT}, data=discovery_info
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_discovery_info"
 
 
@@ -109,5 +110,5 @@ async def test_user_single_instance(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
