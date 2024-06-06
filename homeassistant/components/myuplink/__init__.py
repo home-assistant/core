@@ -37,7 +37,6 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: MyUplinkConfigEntry
 ) -> bool:
     """Set up myUplink from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
 
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -105,7 +104,7 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove myuplink config entry from a device."""
 
-    myuplink_data: MyUplinkDataCoordinator = config_entry.runtime_data
+    myuplink_data = config_entry.runtime_data
     return not device_entry.identifiers.intersection(
         (DOMAIN, device_id) for device_id in myuplink_data.data.devices
     )

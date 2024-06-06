@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from myuplink import MyUplinkAPI
-
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
@@ -21,7 +19,7 @@ async def async_get_config_entry_diagnostics(
 
     Pick up fresh data from API and dump it.
     """
-    api: MyUplinkAPI = config_entry.runtime_data.api
+    api = config_entry.runtime_data.api
     myuplink_data = {}
     myuplink_data["my_systems"] = await api.async_get_systems_json()
     myuplink_data["my_systems"]["devices"] = []
