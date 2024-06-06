@@ -171,9 +171,11 @@ class PGLabDiscovery:
             """Received a new discovery message."""
 
             # Create a PGLab device and add entities.
-            pglab_device = await self.__build_device(mqtt, msg)
+            try:
+                pglab_device = await self.__build_device(mqtt, msg)
+            except PGLabDiscoveryError as err:
+                _LOGGER.info("Can't create PGLabDiscovery instance(%s) ", str(err))
 
-            if not pglab_device:
                 # For some reason it's not possible to create the device with the discovery message,
                 # be sure that any previous device with the same topic is now destroyed.
                 device_id = get_device_id_from_discovery_topic(msg.topic)
