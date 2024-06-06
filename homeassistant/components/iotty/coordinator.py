@@ -1,5 +1,7 @@
 """DataUpdateCoordinator for iotty."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -73,23 +75,7 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
         """Fetch data from iottyCloud device."""
         _LOGGER.debug("Fetching devices status from iottyCloud")
 
-        all_devices = await self.iotty.get_devices()
-        new_devices = [
-            d
-            for d in all_devices
-            if not any(x.device_id == d.device_id for x in self._devices)
-        ]
-        removed_devices = [
-            d
-            for d in self._devices
-            if not any(x.device_id == d.device_id for x in all_devices)
-        ]
-
-        for new_device in new_devices:
-            self._devices.append(new_device)
-
-        for removed_device in removed_devices:
-            self._devices.remove(removed_device)
+        self._devices = await self.iotty.get_devices()
 
         for device in self._devices:
             res = await self.iotty.get_status(device.device_id)

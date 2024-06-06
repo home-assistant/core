@@ -46,11 +46,16 @@ async def async_setup_entry(
 
     async_add_entities(entities)
 
+    known_devices: set = hass.data[DOMAIN][KNOWN_DEVICES]
+    for known_device in coordinator.data.devices:
+        if known_device.device_type == LS_DEVICE_TYPE_UID:
+            known_devices.add(known_device)
+
     @callback
     def async_update_data():
         """Handle updated data from the API endpoint."""
         if not coordinator.last_update_success:
-            return
+            return None
 
         devices = coordinator.data.devices
         entities = []
@@ -58,7 +63,10 @@ async def async_setup_entry(
 
         # Add entities for devices which we've not yet seen
         for device in devices:
-            if device in known_devices:
+            if (
+                any(d.device_id == device.device_id for d in known_devices)
+                or device.device_type != LS_DEVICE_TYPE_UID
+            ):
                 continue
 
             entities.extend(
@@ -66,11 +74,8 @@ async def async_setup_entry(
                     IottyLightSwitch(
                         coordinator=coordinator,
                         iotty_cloud=coordinator.iotty,
-                        iotty_device=d,
+                        iotty_device=device,
                     )
-                    for d in coordinator.data.devices
-                    if d.device_type == LS_DEVICE_TYPE_UID
-                    and d.device_id == device.device_id
                 ]
             )
             known_devices.add(device)
