@@ -933,7 +933,7 @@ idasen-ha==2.5.3
 ifaddr==0.2.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.3
+imgw_pib==1.0.4
 
 # homeassistant.components.incomfort
 incomfort-client==0.5.0
