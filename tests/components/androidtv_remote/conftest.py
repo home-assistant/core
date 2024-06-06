@@ -33,7 +33,7 @@ def mock_unload_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_api() -> Generator[None, MagicMock, None]:
+def mock_api() -> Generator[MagicMock]:
     """Return a mocked AndroidTVRemote."""
     with patch(
         "homeassistant.components.androidtv_remote.helpers.AndroidTVRemote",
