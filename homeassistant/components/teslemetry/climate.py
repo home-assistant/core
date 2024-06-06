@@ -245,34 +245,31 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryVehicleEntity, ClimateEn
         """Set the climate temperature."""
         self.raise_for_scope()
 
-        if temp := kwargs.get(ATTR_TEMPERATURE):
-            if temp == 30:
-                cop_mode = CabinOverheatProtectionTemp.LOW
-            elif temp == 35:
-                cop_mode = CabinOverheatProtectionTemp.MEDIUM
-            elif temp == 40:
-                cop_mode = CabinOverheatProtectionTemp.HIGH
-            else:
-                raise ServiceValidationError(
-                    "Cabin overheat protection does not support that temperature",
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_cop_temp",
-                )
+        if not (temp := kwargs.get(ATTR_TEMPERATURE)):
+            return
 
-            await self.wake_up_if_asleep()
-            await self.handle_command(self.api.set_cop_temp(cop_mode))
-            self._attr_target_temperature = temp
+        if temp == 30:
+            cop_mode = CabinOverheatProtectionTemp.LOW
+        elif temp == 35:
+            cop_mode = CabinOverheatProtectionTemp.MEDIUM
+        elif temp == 40:
+            cop_mode = CabinOverheatProtectionTemp.HIGH
+        else:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_cop_temp",
+            )
+
+        await self.wake_up_if_asleep()
+        await self.handle_command(self.api.set_cop_temp(cop_mode))
+        self._attr_target_temperature = temp
 
         if mode := kwargs.get(ATTR_HVAC_MODE):
-            # Set HVAC mode will call write_ha_state
-            await self.async_set_hvac_mode(mode)
-        else:
-            self.async_write_ha_state()
+            await self._async_set_cop(mode)
 
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set the climate mode and state."""
-        self.raise_for_scope()
-        await self.wake_up_if_asleep()
+        self.async_write_ha_state()
+
+    async def _async_set_cop(self, hvac_mode: HVACMode) -> None:
         if hvac_mode == HVACMode.OFF:
             await self.handle_command(
                 self.api.set_cabin_overheat_protection(on=False, fan_only=False)
@@ -287,4 +284,10 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryVehicleEntity, ClimateEn
             )
 
         self._attr_hvac_mode = hvac_mode
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set the climate mode and state."""
+        self.raise_for_scope()
+        await self.wake_up_if_asleep()
+        await self._async_set_cop(hvac_mode)
         self.async_write_ha_state()
