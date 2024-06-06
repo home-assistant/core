@@ -1,4 +1,4 @@
-"""Test the ista Ecotrend config flow."""
+"""Test the ista EcoTrend config flow."""
 
 from unittest.mock import AsyncMock, MagicMock
 

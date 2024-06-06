@@ -1,4 +1,4 @@
-"""Test the ista Ecotrend init."""
+"""Test the ista EcoTrend init."""
 
 from unittest.mock import MagicMock
 
