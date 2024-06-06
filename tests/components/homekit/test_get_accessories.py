@@ -353,6 +353,21 @@ def test_type_switches(type_name, entity_id, state, attrs, config) -> None:
 @pytest.mark.parametrize(
     ("type_name", "entity_id", "state", "attrs"),
     [
+        ("Valve", "valve.test", "on", {}),
+    ],
+)
+def test_type_valve(type_name, entity_id, state, attrs) -> None:
+    """Test if valve types are associated correctly."""
+    mock_type = Mock()
+    with patch.dict(TYPES, {type_name: mock_type}):
+        entity_state = State(entity_id, state, attrs)
+        get_accessory(None, None, entity_state, 2, {})
+    assert mock_type.called
+
+
+@pytest.mark.parametrize(
+    ("type_name", "entity_id", "state", "attrs"),
+    [
         (
             "Vacuum",
             "vacuum.dock_vacuum",
