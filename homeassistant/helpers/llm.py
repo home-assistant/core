@@ -8,6 +8,7 @@ from enum import Enum
 from typing import Any
 
 import voluptuous as vol
+from voluptuous_openapi import UNSUPPORTED, convert
 
 from homeassistant.components.climate.intent import INTENT_GET_TEMPERATURE
 from homeassistant.components.conversation.trace import (
@@ -17,18 +18,22 @@ from homeassistant.components.conversation.trace import (
 from homeassistant.components.cover.intent import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
+from homeassistant.components.script import ATTR_VARIABLES, DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.weather.intent import INTENT_GET_WEATHER
-from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
+from homeassistant.core import Context, HomeAssistant, State, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import yaml
 from homeassistant.util.json import JsonObjectType
 
 from . import (
     area_registry as ar,
+    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
     intent,
+    selector,
     service,
 )
 from .singleton import singleton
@@ -364,7 +369,7 @@ class AssistAPI(API):
         exposed_domains: set[str] | None = None
         if exposed_entities is not None:
             exposed_domains = {
-                entity_id.split(".")[0] for entity_id in exposed_entities
+                split_entity_id(entity_id)[0] for entity_id in exposed_entities
             }
             intent_handlers = [
                 intent_handler
@@ -373,7 +378,20 @@ class AssistAPI(API):
                 or intent_handler.platforms & exposed_domains
             ]
 
-        return [IntentTool(intent_handler) for intent_handler in intent_handlers]
+        tools: list[Tool] = [
+            IntentTool(intent_handler) for intent_handler in intent_handlers
+        ]
+
+        if llm_context.assistant is not None:
+            for state in self.hass.states.async_all(SCRIPT_DOMAIN):
+                if not async_should_expose(
+                    self.hass, llm_context.assistant, state.entity_id
+                ):
+                    continue
+
+                tools.append(ScriptTool(self.hass, state))
+
+        return tools
 
 
 def _get_exposed_entities(
@@ -402,13 +420,15 @@ def _get_exposed_entities(
     entities = {}
 
     for state in hass.states.async_all():
+        if state.domain == SCRIPT_DOMAIN:
+            continue
+
         if not async_should_expose(hass, assistant, state.entity_id):
             continue
 
         entity_entry = entity_registry.async_get(state.entity_id)
         names = [state.name]
         area_names = []
-        description: str | None = None
 
         if entity_entry is not None:
             names.extend(entity_entry.aliases)
@@ -428,24 +448,10 @@ def _get_exposed_entities(
                     area_names.append(area.name)
                     area_names.extend(area.aliases)
 
-            if (
-                state.domain == "script"
-                and entity_entry.unique_id
-                and (
-                    service_desc := service.async_get_cached_service_description(
-                        hass, "script", entity_entry.unique_id
-                    )
-                )
-            ):
-                description = service_desc.get("description")
-
         info: dict[str, Any] = {
             "names": ", ".join(names),
             "state": state.state,
         }
-
-        if description:
-            info["description"] = description
 
         if area_names:
             info["areas"] = ", ".join(area_names)
@@ -460,3 +466,156 @@ def _get_exposed_entities(
         entities[state.entity_id] = info
 
     return entities
+
+
+def selector_serializer(schema: Any) -> Any:
+    """Convert selectors into OpenAPI schema."""
+    if not isinstance(schema, selector.Selector):
+        return UNSUPPORTED
+
+    if isinstance(schema, selector.BackupLocationSelector):
+        return {"type": "string", "pattern": "^(?:\\/backup|\\w+)$"}
+
+    if isinstance(schema, selector.BooleanSelector):
+        return {"type": "boolean"}
+
+    if isinstance(schema, selector.ColorRGBSelector):
+        return {
+            "type": "array",
+            "items": {"type": "number"},
+            "minItems": 3,
+            "maxItems": 3,
+            "format": "RGB",
+        }
+
+    if isinstance(schema, selector.ConditionSelector):
+        return convert(cv.CONDITIONS_SCHEMA)
+
+    if isinstance(schema, selector.ConstantSelector):
+        return {"enum": [schema.config["value"]]}
+
+    if isinstance(schema, (selector.NumberSelector, selector.ColorTempSelector)):
+        result: dict[str, Any] = {"type": "number"}
+        if "min" in schema.config or "min_mireds" in schema.config:
+            result["minimum"] = schema.config.get("min") or schema.config.get(
+                "min_mireds"
+            )
+        if "max" in schema.config or "max_mireds" in schema.config:
+            result["maximum"] = schema.config.get("max") or schema.config.get(
+                "max_mireds"
+            )
+        return result
+
+    if isinstance(schema, selector.CountrySelector):
+        return {"type": "string", "format": "ISO 3166-1 alpha-2"}
+
+    if isinstance(schema, selector.DateSelector):
+        return {"type": "string", "format": "date"}
+
+    if isinstance(schema, selector.DateTimeSelector):
+        return {"type": "string", "format": "date-time"}
+
+    if isinstance(schema, selector.DurationSelector):
+        return convert(cv.time_period_dict)
+
+    if isinstance(schema, selector.LanguageSelector):
+        if schema.config.get("languages"):
+            return {"type": "string", "enum": schema.config["languages"]}
+        return {"type": "string", "format": "RFC 5646"}
+
+    if isinstance(schema, (selector.LocationSelector, selector.MediaSelector)):
+        return convert(schema.DATA_SCHEMA)
+
+    if isinstance(schema, selector.ObjectSelector):
+        return {"type": "object"}
+
+    if isinstance(schema, selector.SelectSelector):
+        options = [
+            x["value"] if isinstance(x, dict) else x for x in schema.config["options"]
+        ]
+        if schema.config.get("multiselect"):
+            return {
+                "type": "array",
+                "items": {"type": "string", "enum": options},
+                "uniqueItems": True,
+            }
+        return {"type": "string", "enum": options}
+
+    if isinstance(schema, selector.TargetSelector):
+        return convert(cv.TARGET_SERVICE_FIELDS)
+
+    if isinstance(schema, selector.TemplateSelector):
+        return {"type": "string", "format": "jinja2"}
+
+    if isinstance(schema, selector.TimeSelector):
+        return {"type": "string", "format": "time"}
+
+    if isinstance(schema, selector.TriggerSelector):
+        return convert(cv.TRIGGER_SCHEMA)
+
+    if schema.config.get("multiple"):
+        return {"type": "array", "items": {"type": "string"}}
+
+    return {"type": "string"}
+
+
+class ScriptTool(Tool):
+    """LLM Tool representing a Script."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        script_state: State,
+    ) -> None:
+        """Init the class."""
+        entity_registry = er.async_get(hass)
+
+        self.name = split_entity_id(script_state.entity_id)[1]
+        schema = {}
+        entity_entry = entity_registry.async_get(script_state.entity_id)
+        if (
+            entity_entry
+            and entity_entry.unique_id
+            and (
+                service_desc := service.async_get_cached_service_description(
+                    hass, SCRIPT_DOMAIN, entity_entry.unique_id
+                )
+            )
+        ):
+            self.description = service_desc.get("description")
+            fields = service_desc.get("fields", {})
+
+            for field, config in fields.items():
+                description = config.get("description")
+                if not description:
+                    description = config.get("name")
+                if config.get("required"):
+                    key = vol.Required(field, description=description)
+                else:
+                    key = vol.Optional(field, description=description)
+                schema[key] = selector.selector(config.get("selector"))
+
+        self.parameters = vol.Schema(schema)
+
+        if not self.description:
+            self.description = script_state.attributes.get("friendly_name")
+
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> JsonObjectType:
+        """Run the script."""
+
+        await hass.services.async_call(
+            SCRIPT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: SCRIPT_DOMAIN + "." + self.name,
+                ATTR_VARIABLES: tool_input.tool_args,
+            },
+            context=llm_context.context,
+        )
+
+        return {
+            "success": True,
+            "message": "The script is scheduled to execute in background",
+        }

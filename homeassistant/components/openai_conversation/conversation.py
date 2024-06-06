@@ -60,7 +60,10 @@ async def async_setup_entry(
 
 def _format_tool(tool: llm.Tool) -> ChatCompletionToolParam:
     """Format tool specification."""
-    tool_spec = FunctionDefinition(name=tool.name, parameters=convert(tool.parameters))
+    tool_spec = FunctionDefinition(
+        name=tool.name,
+        parameters=convert(tool.parameters, custom_serializer=llm.selector_serializer),
+    )
     if tool.description:
         tool_spec["description"] = tool.description
     return ChatCompletionToolParam(type="function", function=tool_spec)

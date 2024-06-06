@@ -91,7 +91,9 @@ def _format_schema(schema: dict[str, Any]) -> dict[str, Any]:
 def _format_tool(tool: llm.Tool) -> dict[str, Any]:
     """Format tool specification."""
 
-    parameters = _format_schema(convert(tool.parameters))
+    parameters = _format_schema(
+        convert(tool.parameters, custom_serializer=llm.selector_serializer)
+    )
 
     return glm.Tool(
         {
