@@ -744,8 +744,9 @@ async def test_switching_adapters_when_one_stop_scanning(
     cancel_hci2()
 
 
+@pytest.mark.usefixtures("mock_bluetooth_adapters")
 async def test_goes_unavailable_connectable_only_and_recovers(
-    hass: HomeAssistant, mock_bluetooth_adapters: None
+    hass: HomeAssistant,
 ) -> None:
     """Test all connectable scanners go unavailable, and than recover when there is a non-connectable scanner."""
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
@@ -907,8 +908,9 @@ async def test_goes_unavailable_connectable_only_and_recovers(
     unsetup_not_connectable_scanner()
 
 
+@pytest.mark.usefixtures("mock_bluetooth_adapters")
 async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
-    hass: HomeAssistant, mock_bluetooth_adapters: None
+    hass: HomeAssistant,
 ) -> None:
     """Test that unavailable will dismiss any active discoveries and make device discoverable again."""
     mock_bt = [
