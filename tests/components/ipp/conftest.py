@@ -1,11 +1,11 @@
 """Fixtures for IPP integration tests."""
 
-from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyipp import Printer
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.ipp.const import CONF_BASE_PATH, DOMAIN
 from homeassistant.const import (
@@ -39,7 +39,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.ipp.async_setup_entry", return_value=True
