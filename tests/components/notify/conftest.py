@@ -1,8 +1,7 @@
 """Fixtures for Notify platform tests."""
 
-from collections.abc import Generator
-
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.core import HomeAssistant
@@ -15,7 +14,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, "test.config_flow")
 
