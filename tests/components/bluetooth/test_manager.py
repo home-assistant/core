@@ -1,6 +1,5 @@
 """Tests for the Bluetooth integration manager."""
 
-from collections.abc import Generator
 from datetime import timedelta
 import time
 from typing import Any
@@ -10,6 +9,7 @@ from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import AdvertisementHistory
 from habluetooth.advertisement_tracker import TRACKER_BUFFERING_WOBBLE_SECONDS
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -54,7 +54,7 @@ from tests.common import async_fire_time_changed, load_fixture
 
 
 @pytest.fixture
-def register_hci0_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
+def register_hci0_scanner(hass: HomeAssistant) -> Generator[None]:
     """Register an hci0 scanner."""
     hci0_scanner = FakeScanner("hci0", "hci0")
     cancel = bluetooth.async_register_scanner(hass, hci0_scanner)
@@ -63,7 +63,7 @@ def register_hci0_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def register_hci1_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
+def register_hci1_scanner(hass: HomeAssistant) -> Generator[None]:
     """Register an hci1 scanner."""
     hci1_scanner = FakeScanner("hci1", "hci1")
     cancel = bluetooth.async_register_scanner(hass, hci1_scanner)
