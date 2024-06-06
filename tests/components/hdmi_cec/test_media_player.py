@@ -56,7 +56,7 @@ from homeassistant.core import HomeAssistant
 
 from . import MockHDMIDevice, assert_key_press_release
 
-type AssertState = Callable[[str, str], bool]
+type AssertState = Callable[[str, str], None]
 
 
 @pytest.fixture(
