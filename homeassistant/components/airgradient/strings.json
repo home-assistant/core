@@ -48,7 +48,7 @@
         "name": "Nitrogen index"
       },
       "pm003_count": {
-        "name": "PM0.3 count"
+        "name": "Particles with diameter >0.3um"
       },
       "raw_total_volatile_organic_component": {
         "name": "Raw total VOC"
