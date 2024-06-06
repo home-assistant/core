@@ -1,9 +1,12 @@
 """Tests for the Rainforest RAVEn sensors."""
 
+import pytest
+
 from homeassistant.core import HomeAssistant
 
 
-async def test_sensors(hass: HomeAssistant, mock_device, mock_entry):
+@pytest.mark.usefixtures("mock_entry")
+async def test_sensors(hass: HomeAssistant) -> None:
     """Test the sensors."""
     assert len(hass.states.async_all()) == 5
 
