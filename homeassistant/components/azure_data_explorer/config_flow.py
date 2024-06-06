@@ -19,7 +19,7 @@ from .const import (
     CONF_APP_REG_ID,
     CONF_APP_REG_SECRET,
     CONF_AUTHORITY_ID,
-    CONF_USE_FREE,
+    CONF_USE_QUEUED_CLIENT,
     DEFAULT_OPTIONS,
     DOMAIN,
 )
@@ -34,7 +34,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_APP_REG_ID): str,
         vol.Required(CONF_APP_REG_SECRET): str,
         vol.Required(CONF_AUTHORITY_ID): str,
-        vol.Optional(CONF_USE_FREE, default=False): bool,
+        vol.Optional(CONF_USE_QUEUED_CLIENT, default=False): bool,
     }
 )
 
