@@ -1,7 +1,7 @@
 """Test the PG LAB Electronics config flow."""
 
 from homeassistant.components.pglab.const import DOMAIN
-from homeassistant.config_entries import SOURCE_MQTT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_MQTT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
@@ -30,13 +30,6 @@ async def test_mqtt_config_single_instance(
 ) -> None:
     """Test MQTT flow aborts when an entry already exist."""
     await check_single_instance_configuration(hass, mqtt_mock, SOURCE_MQTT)
-
-
-async def test_user_config_single_instance(
-    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
-) -> None:
-    """Test USER flow aborts when an entry already exist."""
-    await check_single_instance_configuration(hass, mqtt_mock, SOURCE_USER)
 
 
 async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
@@ -99,18 +92,3 @@ async def test_mqtt_abort_invalid_topic(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_discovery_info"
-
-
-async def test_user_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
-    """Test we can finish a config flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] == "form"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    assert result["type"] == "create_entry"
-    assert result["result"].data == {
-        "discovery_prefix": "pglab/discovery",
-    }

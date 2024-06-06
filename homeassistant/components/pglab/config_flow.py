@@ -40,8 +40,7 @@ class PGLabFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-
-        return await self.async_step_confirm()
+        return self.async_abort(reason="not_supported")
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
