@@ -88,7 +88,7 @@ async def test_setup_and_update(
 async def test_import_issue_creation(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-):
+) -> None:
     """Test if import issue is raised."""
 
     await async_setup_component(
@@ -107,10 +107,7 @@ async def test_import_issue_creation(
     assert issue
 
 
-async def test_import_delete_known_devices(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-):
+async def test_import_delete_known_devices(hass: HomeAssistant) -> None:
     """Test if import deletes known devices."""
     yaml_devices = {
         "test": {
@@ -147,7 +144,7 @@ async def test_reload_not_triggering_home(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     config_entry: MockConfigEntry,
-):
+) -> None:
     """Test if reload/restart does not trigger home when device is unavailable."""
     assert hass.states.get("device_tracker.10_10_10_10").state == "home"
 
