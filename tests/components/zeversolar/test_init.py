@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry
 async def test_async_setup_entry_fails(
     hass: HomeAssistant, config_entry: MockConfigEntry, zeversolar_data: ZeverSolarData
 ) -> None:
-    """Test to start the integration when inverter is offline (e.g. at night). Must raise a ConfigEntryNotReady error."""
+    """Test to load/unload the integration."""
 
     config_entry.add_to_hass(hass)
 
@@ -29,7 +29,7 @@ async def test_async_setup_entry_fails(
         patch("zeversolar.ZeverSolarClient.get_data", return_value=zeversolar_data),
     ):
         hass.config_entries.async_schedule_reload(config_entry.entry_id)
-        assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     with (
         patch("homeassistant.components.zeversolar.PLATFORMS", []),
