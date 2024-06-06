@@ -29,7 +29,7 @@ type IstaConfigEntry = ConfigEntry[IstaCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IstaConfigEntry) -> bool:
-    """Set up ista Ecotrend from a config entry."""
+    """Set up ista EcoTrend from a config entry."""
     ista = PyEcotrendIsta(
         entry.data[CONF_EMAIL],
         entry.data[CONF_PASSWORD],

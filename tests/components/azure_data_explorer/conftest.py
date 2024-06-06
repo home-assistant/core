@@ -1,12 +1,12 @@
 """Test fixtures for Azure Data Explorer."""
 
-from collections.abc import Generator
 from datetime import timedelta
 import logging
 from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.azure_data_explorer.const import (
     CONF_FILTER,
@@ -94,7 +94,7 @@ async def mock_entry_with_one_event(
 
 # Fixtures for config_flow tests
 @pytest.fixture
-def mock_setup_entry() -> Generator[MockConfigEntry, None, None]:
+def mock_setup_entry() -> Generator[MockConfigEntry]:
     """Mock the setup entry call, used for config flow tests."""
     with patch(
         f"{AZURE_DATA_EXPLORER_PATH}.async_setup_entry", return_value=True

@@ -625,7 +625,7 @@ brunt==1.2.0
 bt-proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==3.8.1
+bthome-ble==3.9.1
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -1084,13 +1084,13 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.49
+holidays==0.50
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240605.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.6.3
+home-assistant-intents==2024.6.5
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1146,7 +1146,7 @@ iglo==1.2.7
 ihcsdk==2.8.5
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.1
+imgw_pib==1.0.4
 
 # homeassistant.components.incomfort
 incomfort-client==0.5.0
@@ -1794,7 +1794,7 @@ pydiscovergy==3.0.1
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2024.6.2
+pydrawise==2024.6.3
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
@@ -1809,7 +1809,7 @@ pyecoforest==0.4.0
 pyeconet==0.1.22
 
 # homeassistant.components.ista_ecotrend
-pyecotrend-ista==3.1.1
+pyecotrend-ista==3.2.0
 
 # homeassistant.components.edimax
 pyedimax==0.2.1
@@ -2903,7 +2903,7 @@ wyoming==1.5.4
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.28.0
+xiaomi-ble==0.29.0
 
 # homeassistant.components.knx
 xknx==2.12.2

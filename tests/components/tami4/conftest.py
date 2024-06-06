@@ -1,12 +1,12 @@
 """Common fixutres with default mocks as well as common test helper methods."""
 
-from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from Tami4EdgeAPI.device import Device
 from Tami4EdgeAPI.water_quality import UV, Filter, WaterQuality
+from typing_extensions import Generator
 
 from homeassistant.components.tami4.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.core import HomeAssistant
@@ -37,7 +37,7 @@ def mock_api(mock__get_devices, mock_get_water_quality):
 
 
 @pytest.fixture
-def mock__get_devices(request: pytest.FixtureRequest) -> Generator[None, None, None]:
+def mock__get_devices(request: pytest.FixtureRequest) -> Generator[None]:
     """Fixture to mock _get_devices which makes a call to the API."""
 
     side_effect = getattr(request, "param", None)
@@ -62,7 +62,7 @@ def mock__get_devices(request: pytest.FixtureRequest) -> Generator[None, None, N
 @pytest.fixture
 def mock_get_water_quality(
     request: pytest.FixtureRequest,
-) -> Generator[None, None, None]:
+) -> Generator[None]:
     """Fixture to mock get_water_quality which makes a call to the API."""
 
     side_effect = getattr(request, "param", None)
@@ -90,7 +90,7 @@ def mock_get_water_quality(
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
 
     with patch(
@@ -102,7 +102,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_request_otp(
     request: pytest.FixtureRequest,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Mock request_otp."""
 
     side_effect = getattr(request, "param", None)
@@ -116,7 +116,7 @@ def mock_request_otp(
 
 
 @pytest.fixture
-def mock_submit_otp(request: pytest.FixtureRequest) -> Generator[MagicMock, None, None]:
+def mock_submit_otp(request: pytest.FixtureRequest) -> Generator[MagicMock]:
     """Mock submit_otp."""
 
     side_effect = getattr(request, "param", None)
