@@ -2,6 +2,8 @@
 
 import json
 
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -55,6 +57,7 @@ async def test_device_update(
     device_reg,
     entity_reg,
     setup_pglab,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test update a device."""
     topic = "pglab/discovery/E-Board-DD53AC85/config"
@@ -99,12 +102,7 @@ async def test_device_update(
         connections={(dr.CONNECTION_NETWORK_MAC, payload["mac"])}
     )
     assert device_entry is not None
-    assert device_entry.configuration_url == f"http://{payload['ip']}/"
-    assert device_entry.manufacturer == "PG LAB Electronics"
-    assert device_entry.model == payload["type"]
-    assert device_entry.name == payload["name"]
-    assert device_entry.sw_version == "1.0.1"
-    assert device_entry.hw_version == "1.0.8"
+    assert device_entry == snapshot
 
 
 async def test_device_remove(
