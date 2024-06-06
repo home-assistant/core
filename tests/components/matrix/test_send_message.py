@@ -21,7 +21,7 @@ async def test_send_message(
     image_path,
     matrix_events,
     caplog: pytest.LogCaptureFixture,
-):
+) -> None:
     """Test the send_message service."""
 
     await hass.async_start()
@@ -65,7 +65,7 @@ async def test_unsendable_message(
     matrix_bot: MatrixBot,
     matrix_events,
     caplog: pytest.LogCaptureFixture,
-):
+) -> None:
     """Test the send_message service with an invalid room."""
     assert len(matrix_events) == 0
     await matrix_bot._login()

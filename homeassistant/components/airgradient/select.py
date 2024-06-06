@@ -22,7 +22,7 @@ from .entity import AirGradientEntity
 class AirGradientSelectEntityDescription(SelectEntityDescription):
     """Describes AirGradient select entity."""
 
-    value_fn: Callable[[Config], str]
+    value_fn: Callable[[Config], str | None]
     set_value_fn: Callable[[AirGradientClient, str], Awaitable[None]]
     requires_display: bool = False
 
@@ -30,9 +30,11 @@ class AirGradientSelectEntityDescription(SelectEntityDescription):
 CONFIG_CONTROL_ENTITY = AirGradientSelectEntityDescription(
     key="configuration_control",
     translation_key="configuration_control",
-    options=[x.value for x in ConfigurationControl],
+    options=[ConfigurationControl.CLOUD.value, ConfigurationControl.LOCAL.value],
     entity_category=EntityCategory.CONFIG,
-    value_fn=lambda config: config.configuration_control,
+    value_fn=lambda config: config.configuration_control
+    if config.configuration_control is not ConfigurationControl.NOT_INITIALIZED
+    else None,
     set_value_fn=lambda client, value: client.set_configuration_control(
         ConfigurationControl(value)
     ),
@@ -96,7 +98,7 @@ class AirGradientSelect(AirGradientEntity, SelectEntity):
         self._attr_unique_id = f"{coordinator.serial_number}-{description.key}"
 
     @property
-    def current_option(self) -> str:
+    def current_option(self) -> str | None:
         """Return the state of the select."""
         return self.entity_description.value_fn(self.coordinator.data)
 

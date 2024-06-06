@@ -1,6 +1,6 @@
 """Fixtures for local calendar."""
 
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
@@ -9,6 +9,7 @@ import urllib
 
 from aiohttp import ClientWebSocketResponse
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.local_calendar import LocalCalendarStore
 from homeassistant.components.local_calendar.const import CONF_CALENDAR_NAME, DOMAIN
@@ -60,9 +61,7 @@ def mock_store_read_side_effect() -> Any | None:
 
 
 @pytest.fixture(name="store", autouse=True)
-def mock_store(
-    ics_content: str, store_read_side_effect: Any | None
-) -> Generator[None, None, None]:
+def mock_store(ics_content: str, store_read_side_effect: Any | None) -> Generator[None]:
     """Test cleanup, remove any media storage persisted during the test."""
 
     stores: dict[Path, FakeStore] = {}

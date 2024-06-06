@@ -1,7 +1,6 @@
 """The tests for the emulated Hue component."""
 
 from asyncio import AbstractEventLoop
-from collections.abc import Generator
 from http import HTTPStatus
 import json
 import unittest
@@ -11,6 +10,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient
 import defusedxml.ElementTree as ET
 import pytest
+from typing_extensions import Generator
 
 from homeassistant import setup
 from homeassistant.components import emulated_hue
@@ -49,7 +49,7 @@ def aiohttp_client(
 @pytest.fixture
 def hue_client(
     aiohttp_client: ClientSessionGenerator,
-) -> Generator[TestClient, None, None]:
+) -> Generator[TestClient]:
     """Return a hue API client."""
     app = web.Application()
     with unittest.mock.patch(

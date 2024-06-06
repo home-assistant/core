@@ -1,12 +1,12 @@
 """Common fixtures for the Tractive tests."""
 
-from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiotractive.trackable_object import TrackableObject
 from aiotractive.tracker import Tracker
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.tractive.const import DOMAIN, SERVER_UNAVAILABLE
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
-def mock_tractive_client() -> Generator[AsyncMock, None, None]:
+def mock_tractive_client() -> Generator[AsyncMock]:
     """Mock a Tractive client."""
 
     def send_hardware_event(

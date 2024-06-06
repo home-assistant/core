@@ -15,7 +15,7 @@ from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture(autouse=True)
-def _disable_translations_once(disable_translations_once):
+def _disable_translations_once(disable_translations_once: None) -> None:
     """Override loading translations once."""
 
 

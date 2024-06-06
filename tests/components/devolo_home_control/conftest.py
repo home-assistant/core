@@ -1,9 +1,9 @@
 """Fixtures for tests."""
 
-from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from typing_extensions import Generator
 
 
 @pytest.fixture
@@ -19,9 +19,7 @@ def maintenance() -> bool:
 
 
 @pytest.fixture(autouse=True)
-def patch_mydevolo(
-    credentials_valid: bool, maintenance: bool
-) -> Generator[None, None, None]:
+def patch_mydevolo(credentials_valid: bool, maintenance: bool) -> Generator[None]:
     """Fixture to patch mydevolo into a desired state."""
     with (
         patch(
