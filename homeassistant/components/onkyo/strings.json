@@ -3,10 +3,16 @@
     "flow_title": "{name} ({host})",
     "step": {
       "user": {
+        "menu_options": {
+          "pick_device": "Use Onkyo discovery",
+          "manual": "Manual entry"
+        }
+      },
+      "manual": {
         "data": {
           "host": "[%key:common::config_flow::data::ip%]"
         },
-        "description": "If you leave the IP Address empty, discovery will be used to find devices."
+        "description": "Manual device entry."
       }
     },
     "error": {

@@ -76,19 +76,27 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
+
+        return self.async_show_menu(
+            step_id="user", menu_options=["pick_device", "manual"]
+        )
+
+    async def async_step_manual(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle manual device entry."""
         errors = {}
 
         if user_input is not None:
-            if not (host := user_input[CONF_HOST]):
-                _LOGGER.debug("Manual input: %s", host)
-                return await self.async_step_pick_device()
-
             if not is_ip_address(user_input[CONF_HOST]):
                 errors["base"] = "no_ip"
             else:
                 try:
                     receiver = eiscp.eISCP(user_input[CONF_HOST], user_input[CONF_PORT])
                     info = receiver.info
+                except Exception:
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
                 finally:
                     if receiver:
                         receiver.disconnect()
@@ -105,7 +113,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
 
         return self.async_show_form(
-            step_id="user",
+            step_id="manual",
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_HOST, default=""): str,
@@ -118,7 +126,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_pick_device(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the step to pick discovered device."""
+        """Handle the step to discover or pick discovered device."""
 
         if user_input is not None:
             receiver = self._discovered_devices[user_input[CONF_DEVICE]]
