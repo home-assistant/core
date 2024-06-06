@@ -11,7 +11,36 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
 from tests.components.aquacell import TEST_CONFIG_ENTRY, TEST_USER_INPUT
+
+
+async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
+    """Test already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            **TEST_CONFIG_ENTRY,
+        },
+        unique_id=TEST_CONFIG_ENTRY[CONF_EMAIL],
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        TEST_USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_full_flow(

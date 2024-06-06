@@ -36,6 +36,11 @@ class AquaCellConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            await self.async_set_unique_id(
+                user_input[CONF_EMAIL].lower(), raise_on_progress=False
+            )
+            self._abort_if_unique_id_configured()
+
             session = async_get_clientsession(self.hass)
             api = AquacellApi(session)
             try:
@@ -50,10 +55,6 @@ class AquaCellConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(
-                    user_input[CONF_EMAIL].lower(), raise_on_progress=False
-                )
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL],
                     data={
