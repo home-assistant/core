@@ -1172,9 +1172,10 @@ async def test_add_item_intent(
     assert entity2.items[1].summary == "wine"
     assert entity2.items[1].status == TodoItemStatus.NEEDS_ACTION
 
-    # Should fail if list is not exposed
+    # Should fail if lists are not exposed
     async_expose_entity(hass, conversation.DOMAIN, entity1.entity_id, False)
-    with pytest.raises(intent.MatchFailedError):
+    async_expose_entity(hass, conversation.DOMAIN, entity2.entity_id, False)
+    with pytest.raises(intent.MatchFailedError) as err:
         await intent.async_handle(
             hass,
             "test",
@@ -1182,6 +1183,7 @@ async def test_add_item_intent(
             {"item": {"value": "cookies"}, "name": {"value": "list 1"}},
             assistant=conversation.DOMAIN,
         )
+    assert err.value.result.no_match_reason == intent.MatchFailedReason.ASSISTANT
 
     # Missing list
     with pytest.raises(intent.MatchFailedError):
@@ -1190,6 +1192,25 @@ async def test_add_item_intent(
             "test",
             todo_intent.INTENT_LIST_ADD_ITEM,
             {"item": {"value": "wine"}, "name": {"value": "This list does not exist"}},
+            assistant=conversation.DOMAIN,
+        )
+
+    # Fail with empty name/item
+    with pytest.raises(intent.InvalidSlotInfo):
+        await intent.async_handle(
+            hass,
+            "test",
+            todo_intent.INTENT_LIST_ADD_ITEM,
+            {"item": {"value": "wine"}, "name": {"value": ""}},
+            assistant=conversation.DOMAIN,
+        )
+
+    with pytest.raises(intent.InvalidSlotInfo):
+        await intent.async_handle(
+            hass,
+            "test",
+            todo_intent.INTENT_LIST_ADD_ITEM,
+            {"item": {"value": ""}, "name": {"value": "list 1"}},
             assistant=conversation.DOMAIN,
         )
 

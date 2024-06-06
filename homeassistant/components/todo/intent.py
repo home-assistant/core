@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 
 from . import DOMAIN, TodoItem, TodoItemStatus, TodoListEntity
@@ -22,7 +21,7 @@ class ListAddItemIntent(intent.IntentHandler):
 
     intent_type = INTENT_LIST_ADD_ITEM
     description = "Add item to a todo list"
-    slot_schema = {"item": cv.string, "name": cv.string}
+    slot_schema = {"item": intent.non_empty_string, "name": intent.non_empty_string}
     platforms = {DOMAIN}
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:

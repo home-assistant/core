@@ -56,15 +56,18 @@ async def test_get_weather(hass: HomeAssistant) -> None:
     assert state.entity_id == entity2.entity_id
 
     # Should fail if not exposed
+    async_expose_entity(hass, conversation.DOMAIN, entity1.entity_id, False)
     async_expose_entity(hass, conversation.DOMAIN, entity2.entity_id, False)
-    with pytest.raises(intent.MatchFailedError):
-        await intent.async_handle(
-            hass,
-            "test",
-            weather_intent.INTENT_GET_WEATHER,
-            {"name": {"value": "Weather 2"}},
-            assistant=conversation.DOMAIN,
-        )
+    for name in (entity1.name, entity2.name):
+        with pytest.raises(intent.MatchFailedError) as err:
+            await intent.async_handle(
+                hass,
+                "test",
+                weather_intent.INTENT_GET_WEATHER,
+                {"name": {"value": name}},
+                assistant=conversation.DOMAIN,
+            )
+        assert err.value.result.no_match_reason == intent.MatchFailedReason.ASSISTANT
 
 
 async def test_get_weather_wrong_name(hass: HomeAssistant) -> None:
