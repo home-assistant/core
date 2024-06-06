@@ -1,12 +1,12 @@
 """Test config flow."""
 
-from collections.abc import Generator
 from ipaddress import IPv4Address, ip_address
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 
 from pyatv import exceptions
 from pyatv.const import PairingRequirement, Protocol
 import pytest
+from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
@@ -46,7 +46,7 @@ RAOP_SERVICE = zeroconf.ZeroconfServiceInfo(
 
 
 @pytest.fixture(autouse=True)
-def zero_aggregation_time() -> Generator[None, None, None]:
+def zero_aggregation_time() -> Generator[None]:
     """Prevent the aggregation time from delaying the tests."""
     with patch.object(config_flow, "DISCOVERY_AGGREGATION_TIME", 0):
         yield
@@ -58,7 +58,7 @@ def use_mocked_zeroconf(mock_async_zeroconf: MagicMock) -> None:
 
 
 @pytest.fixture(autouse=True)
-def mock_setup_entry() -> Generator[None, None, None]:
+def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.apple_tv.async_setup_entry", return_value=True

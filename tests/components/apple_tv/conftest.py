@@ -1,18 +1,18 @@
 """Fixtures for component."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyatv import conf
 from pyatv.const import PairingRequirement, Protocol
 from pyatv.support import http
 import pytest
+from typing_extensions import Generator
 
 from .common import MockPairingHandler, airplay_service, create_conf, mrp_service
 
 
 @pytest.fixture(autouse=True, name="mock_scan")
-def mock_scan_fixture() -> Generator[AsyncMock, None, None]:
+def mock_scan_fixture() -> Generator[AsyncMock]:
     """Mock pyatv.scan."""
     with patch("homeassistant.components.apple_tv.config_flow.scan") as mock_scan:
 
@@ -30,7 +30,7 @@ def mock_scan_fixture() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture(name="dmap_pin")
-def dmap_pin_fixture() -> Generator[MagicMock, None, None]:
+def dmap_pin_fixture() -> Generator[MagicMock]:
     """Mock pyatv.scan."""
     with patch("homeassistant.components.apple_tv.config_flow.randrange") as mock_pin:
         mock_pin.side_effect = lambda start, stop: 1111
@@ -38,7 +38,7 @@ def dmap_pin_fixture() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def pairing() -> Generator[AsyncMock, None, None]:
+def pairing() -> Generator[AsyncMock]:
     """Mock pyatv.scan."""
     with patch("homeassistant.components.apple_tv.config_flow.pair") as mock_pair:
 
