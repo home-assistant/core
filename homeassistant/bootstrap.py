@@ -134,10 +134,15 @@ COOLDOWN_TIME = 60
 
 
 DEBUGGER_INTEGRATIONS = {"debugpy"}
-# isal is loaded right away before `http` to ensure if its
-# enabled, that `isal` is up to date.
-CORE_INTEGRATIONS = {"homeassistant", "isal", "persistent_notification"}
-LOGGING_INTEGRATIONS = {
+
+# Core integrations are unconditionally loaded
+CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
+
+# Integrations that are loaded right after the core is set up
+LOGGING_AND_HTTP_DEPS_INTEGRATIONS = {
+    # isal is loaded right away before `http` to ensure if its
+    # enabled, that `isal` is up to date.
+    "isal",
     # Set log levels
     "logger",
     # Error logging
@@ -216,8 +221,8 @@ CRITICAL_INTEGRATIONS = {
 }
 
 SETUP_ORDER = (
-    # Load logging as soon as possible
-    ("logging", LOGGING_INTEGRATIONS),
+    # Load logging and http deps as soon as possible
+    ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS),
     # Setup frontend and recorder
     ("frontend, recorder", {*FRONTEND_INTEGRATIONS, *RECORDER_INTEGRATIONS}),
     # Start up debuggers. Start these first in case they want to wait.
