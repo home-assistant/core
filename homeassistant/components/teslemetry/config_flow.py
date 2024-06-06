@@ -31,6 +31,7 @@ class TeslemetryConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config Teslemetry API connection."""
 
     VERSION = 1
+    MINOR_VERSION = 1
     _entry: ConfigEntry | None = None
 
     async def async_auth(self, user_input: Mapping[str, Any]) -> dict[str, str]:
