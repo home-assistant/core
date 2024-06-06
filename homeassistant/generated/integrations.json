@@ -3204,6 +3204,12 @@
       "integration_type": "virtual",
       "supported_by": "netatmo"
     },
+    "leslies_pool": {
+      "name": "Leslie's Pool Water Tests",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "leviton": {
       "name": "Leviton",
       "iot_standards": [

@@ -296,6 +296,7 @@ FLOWS = {
         "ld2410_ble",
         "leaone",
         "led_ble",
+        "leslies_pool",
         "lg_netcast",
         "lg_soundbar",
         "lidarr",

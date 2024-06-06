@@ -468,6 +468,7 @@ babel==2.13.1
 # homeassistant.components.homekit
 base36==0.1.1
 
+# homeassistant.components.leslies_pool
 # homeassistant.components.scrape
 beautifulsoup4==4.12.3
 
@@ -1919,6 +1920,9 @@ renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
 reolink-aio==0.9.1
+
+# homeassistant.components.leslies_pool
+requests==2.31.0
 
 # homeassistant.components.rflink
 rflink==0.0.66

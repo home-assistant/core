@@ -1,0 +1,15 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Leslie's Pool",
+        "data": {
+          "username": "Username",
+          "password": "Password",
+          "water_test_url": "Water Test URL",
+          "scan_interval": "Scan Interval"
+        }
+      }
+    }
+  }
+}

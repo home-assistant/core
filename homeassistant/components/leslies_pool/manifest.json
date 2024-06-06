@@ -1,0 +1,9 @@
+{
+  "domain": "leslies_pool",
+  "name": "Leslie's Pool Water Tests",
+  "codeowners": ["@connorgallopo"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/leslies_pool",
+  "iot_class": "cloud_polling",
+  "requirements": ["beautifulsoup4==4.12.3", "requests==2.31.0"]
+}
