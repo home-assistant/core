@@ -206,8 +206,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER,
         name=f"{DOMAIN}_coordinator",
         update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
-        update_method=broker.async_update,
+        update_method=broker.async_update,  # type: ignore[arg-type]
     )
+    # without a listener, _schedule_refresh() won't be invoked by _async_refresh()
+    coordinator.async_add_listener(lambda: None)
     await coordinator.async_refresh()  # get initial state now
 
     hass.async_create_task(

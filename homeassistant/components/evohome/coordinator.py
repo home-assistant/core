@@ -194,10 +194,3 @@ class EvoBroker:
 
 class EvoCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the TCC API."""
-
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the coordinator."""
-        super().__init__(*args, **kwargs)
-
-        # without a listener, _schedule_refresh() won't be invoked by _async_refresh()
-        self.async_add_listener(lambda: None)
