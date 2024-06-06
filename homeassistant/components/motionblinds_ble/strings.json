@@ -86,7 +86,7 @@
         "state": {
           "calibrated": "Calibrated",
           "uncalibrated": "Uncalibrated",
-          "calibrating": "Calibrating..."
+          "calibrating": "Calibration in progress"
         }
       }
     }
