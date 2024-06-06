@@ -170,5 +170,4 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         hass.config_entries.async_update_entry(
             config_entry, unique_id=metadata["uid"], version=1, minor_version=2
         )
-        return True
     return True
