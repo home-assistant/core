@@ -463,7 +463,7 @@ azure-kusto-data[aio]==3.1.0
 azure-kusto-ingest==3.1.0
 
 # homeassistant.components.holiday
-babel==2.13.1
+babel==2.15.0
 
 # homeassistant.components.homekit
 base36==0.1.1
