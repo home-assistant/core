@@ -49,8 +49,6 @@ class ListAddItemIntent(intent.IntentHandler):
         if target_list is None:
             raise intent.IntentHandleError(f"No to-do list: {list_name}")
 
-        assert target_list is not None
-
         # Add to list
         await target_list.async_create_todo_item(
             TodoItem(summary=item, status=TodoItemStatus.NEEDS_ACTION)
