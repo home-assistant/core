@@ -227,11 +227,8 @@
     "vacuum_send_command_params_required": {
       "message": "Params are required for the command: {command}"
     },
-    "vacuum_get_positions_not_supported": {
+    "vacuum_raw_get_positions_not_supported": {
       "message": "This device does not provide positions coordinates"
-    },
-    "vacuum_get_positions_invalid": {
-      "message": "Unable to retrieve bot and chargers positions"
     }
   },
   "issues": {
@@ -269,8 +266,8 @@
     }
   },
   "services": {
-    "get_positions": {
-      "name": "Get positions",
+    "raw_get_positions": {
+      "name": "Get raw positions",
       "description": "Get bot and chargers positions."
     }
   }

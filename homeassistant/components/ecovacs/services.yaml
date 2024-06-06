@@ -1,4 +1,4 @@
-get_positions:
+raw_get_positions:
   target:
     entity:
       domain: vacuum

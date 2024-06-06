@@ -8,14 +8,7 @@ from typing import Any
 
 from deebot_client.capabilities import VacuumCapabilities
 from deebot_client.device import Device
-from deebot_client.events import (
-    BatteryEvent,
-    FanSpeedEvent,
-    Position,
-    PositionType,
-    RoomsEvent,
-    StateEvent,
-)
+from deebot_client.events import BatteryEvent, FanSpeedEvent, RoomsEvent, StateEvent
 from deebot_client.models import CleanAction, CleanMode, Room, State
 import sucks
 
@@ -47,7 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_ERROR = "error"
 ATTR_COMPONENT_PREFIX = "component_"
 
-SERVICE_GET_POSITIONS = "get_positions"
+SERVICE__RAW_GET_POSITIONS = "raw_get_positions"
 
 
 async def async_setup_entry(
@@ -69,10 +62,10 @@ async def async_setup_entry(
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
-        SERVICE_GET_POSITIONS,
+        SERVICE__RAW_GET_POSITIONS,
         {},
-        "async_get_positions",
-        supports_response=SupportsResponse.OPTIONAL,
+        "async_raw_get_positions",
+        supports_response=SupportsResponse.ONLY,
     )
 
 
@@ -216,13 +209,13 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
         """Send a command to a vacuum cleaner."""
         self.device.run(sucks.VacBotCommand(command, params))
 
-    async def async_get_positions(
+    async def async_raw_get_positions(
         self,
     ) -> None:
         """Get bot and chargers positions."""
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="vacuum_get_positions_not_supported",
+            translation_key="vacuum_raw_get_positions_not_supported",
         )
 
 
@@ -406,11 +399,11 @@ class EcovacsVacuum(
                 self._capability.custom.set(command, params)
             )
 
-    async def async_get_positions(
+    async def async_raw_get_positions(
         self,
-    ) -> list[Position]:
+    ) -> dict[str, Any]:
         """Get bot and chargers positions."""
-        _LOGGER.debug("async_get_positions")
+        _LOGGER.debug("async_raw_get_positions")
 
         if (
             not self._capability.map
@@ -419,45 +412,7 @@ class EcovacsVacuum(
         ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="vacuum_get_positions_not_supported",
+                translation_key="vacuum_raw_get_positions_not_supported",
             )
 
-        positions = []
-        result = await self._device.execute_command(
-            self._capability.map.position.get[0]
-        )
-        if isinstance(result, dict) and result.get("ret") == "ok":
-            data = result.get("resp", {}).get("body", {}).get("data", {})
-
-            for type_str in ("deebotPos", "chargePos"):
-                data_positions = data.get(type_str, [])
-
-                if isinstance(data_positions, dict):
-                    positions.append(
-                        Position(
-                            type=PositionType(type_str),
-                            x=data_positions["x"],
-                            y=data_positions["y"],
-                            a=data_positions.get("a", 0),
-                        )
-                    )
-                else:
-                    positions.extend(
-                        [
-                            Position(
-                                type=PositionType(type_str),
-                                x=entry["x"],
-                                y=entry["y"],
-                                a=entry.get("a", 0),
-                            )
-                            for entry in data_positions
-                        ]
-                    )
-
-        if not positions:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="vacuum_get_positions_invalid",
-            )
-
-        return positions
+        return await self._device.execute_command(self._capability.map.position.get[0])
