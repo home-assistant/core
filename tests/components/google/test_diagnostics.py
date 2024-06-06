@@ -62,6 +62,7 @@ async def setup_diag(hass):
 
 
 @freeze_time("2023-03-13 12:05:00-07:00")
+@pytest.mark.usefixtures("socket_enabled")
 async def test_diagnostics(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
@@ -70,7 +71,6 @@ async def test_diagnostics(
     hass_admin_credential: Credentials,
     config_entry: MockConfigEntry,
     aiohttp_client: ClientSessionGenerator,
-    socket_enabled: None,
     snapshot: SnapshotAssertion,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
