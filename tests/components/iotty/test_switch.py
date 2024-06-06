@@ -6,7 +6,7 @@ from aiohttp import ClientSession
 import pytest
 
 from homeassistant.components.iotty.api import IottyProxy
-from homeassistant.components.iotty.const import DOMAIN, KNOWN_DEVICES
+from homeassistant.components.iotty.const import DOMAIN
 from homeassistant.components.iotty.coordinator import (
     IottyData,
     IottyDataUpdateCoordinator,
@@ -127,7 +127,6 @@ async def test_setup_entry_ok_nodevices(
 
     mock_coordinator.data = IottyData
     mock_coordinator.data.devices = {}
-    hass.data[DOMAIN].setdefault(KNOWN_DEVICES, set())
 
     await async_setup_entry(hass, mock_config_entry, mock_async_add_entities)
 
@@ -154,7 +153,6 @@ async def test_setup_entry_ok_twodevices(
 
     mock_coordinator.data = IottyData
     mock_coordinator.data.devices = test_ls
-    hass.data[DOMAIN].setdefault(KNOWN_DEVICES, set())
     mock_coordinator.iotty = IottyProxy
 
     await async_setup_entry(hass, mock_config_entry, mock_async_add_entities)

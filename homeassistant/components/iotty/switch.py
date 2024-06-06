@@ -10,14 +10,14 @@ from iottycloud.lightswitch import LightSwitch
 from iottycloud.verbs import LS_DEVICE_TYPE_UID
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import IottyConfigEntry
 from .api import IottyProxy
-from .const import DOMAIN, KNOWN_DEVICES
+from .const import DOMAIN
 from .coordinator import IottyDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: IottyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Activate the iotty LightSwitch component."""
@@ -46,7 +46,7 @@ async def async_setup_entry(
 
     async_add_entities(entities)
 
-    known_devices: set = hass.data[DOMAIN][KNOWN_DEVICES]
+    known_devices: set = config_entry.runtime_data.known_devices
     for known_device in coordinator.data.devices:
         if known_device.device_type == LS_DEVICE_TYPE_UID:
             known_devices.add(known_device)
@@ -59,7 +59,7 @@ async def async_setup_entry(
 
         devices = coordinator.data.devices
         entities = []
-        known_devices: set = hass.data[DOMAIN][KNOWN_DEVICES]
+        known_devices: set = config_entry.runtime_data.known_devices
 
         # Add entities for devices which we've not yet seen
         for device in devices:

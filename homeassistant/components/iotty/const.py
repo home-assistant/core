@@ -7,7 +7,6 @@ import logging
 from homeassistant.const import Platform
 
 DOMAIN = "iotty"
-KNOWN_DEVICES = "known_devices"
 
 OAUTH2_AUTHORIZE = "https://auth.iotty.com/.auth/oauth2/login"
 OAUTH2_TOKEN = "https://auth.iotty.com/.auth/oauth2/token"

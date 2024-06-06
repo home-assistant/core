@@ -10,7 +10,7 @@ from iottycloud.verbs import LS_DEVICE_TYPE_UID, RESULT, STATUS, STATUS_ON
 import pytest
 
 from homeassistant import setup
-from homeassistant.components.iotty import DOMAIN
+from homeassistant.components.iotty import DOMAIN, KnownDevicesData
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -59,9 +59,9 @@ def mock_aioclient() -> Generator[AiohttpClientMocker, None, None]:
 
 
 @pytest.fixture
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry[KnownDevicesData]:
     """Return the default mocked config entry."""
-    return MockConfigEntry(
+    mock = MockConfigEntry[KnownDevicesData](
         title="IOTTY00001",
         domain=DOMAIN,
         data={
@@ -80,6 +80,8 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         },
         unique_id="IOTTY00001",
     )
+    mock.runtime_data = KnownDevicesData(set())
+    return mock
 
 
 @pytest.fixture
