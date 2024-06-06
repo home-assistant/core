@@ -8,7 +8,7 @@ from pyW215.pyW215 import SmartPlug
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -55,7 +55,7 @@ class DlinkCoordinator(DataUpdateCoordinator[SmartPlug]):
             self._n_tried += 1
             self.available = False
             _LOGGER.warning("Failed to connect to D-Link switch")
-            return None
+            raise UpdateFailed("Failed to update D-Link switch")
 
         self.available = True
 

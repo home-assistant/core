@@ -31,7 +31,6 @@ class DLinkEntity(CoordinatorEntity[DlinkCoordinator]):
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer=MANUFACTURER,
             model=coordinator.smartplug.model_name,
-            name=coordinator.config_entry.title,
         )
         if coordinator.config_entry.unique_id:
             self._attr_device_info[ATTR_CONNECTIONS] = {
