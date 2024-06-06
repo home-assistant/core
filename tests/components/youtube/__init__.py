@@ -1,8 +1,8 @@
 """Tests for the YouTube integration."""
 
-from collections.abc import AsyncGenerator
 import json
 
+from typing_extensions import AsyncGenerator
 from youtubeaio.models import YouTubeChannel, YouTubePlaylistItem, YouTubeSubscription
 from youtubeaio.types import AuthScope
 
@@ -30,7 +30,7 @@ class MockYouTube:
     ) -> None:
         """Authenticate the user."""
 
-    async def get_user_channels(self) -> AsyncGenerator[YouTubeChannel, None]:
+    async def get_user_channels(self) -> AsyncGenerator[YouTubeChannel]:
         """Get channels for authenticated user."""
         channels = json.loads(load_fixture(self._channel_fixture))
         for item in channels["items"]:
@@ -38,7 +38,7 @@ class MockYouTube:
 
     async def get_channels(
         self, channel_ids: list[str]
-    ) -> AsyncGenerator[YouTubeChannel, None]:
+    ) -> AsyncGenerator[YouTubeChannel]:
         """Get channels."""
         if self._thrown_error is not None:
             raise self._thrown_error
@@ -48,13 +48,13 @@ class MockYouTube:
 
     async def get_playlist_items(
         self, playlist_id: str, amount: int
-    ) -> AsyncGenerator[YouTubePlaylistItem, None]:
+    ) -> AsyncGenerator[YouTubePlaylistItem]:
         """Get channels."""
         channels = json.loads(load_fixture(self._playlist_items_fixture))
         for item in channels["items"]:
             yield YouTubePlaylistItem(**item)
 
-    async def get_user_subscriptions(self) -> AsyncGenerator[YouTubeSubscription, None]:
+    async def get_user_subscriptions(self) -> AsyncGenerator[YouTubeSubscription]:
         """Get channels for authenticated user."""
         channels = json.loads(load_fixture(self._subscriptions_fixture))
         for item in channels["items"]:

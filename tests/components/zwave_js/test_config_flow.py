@@ -1,7 +1,6 @@
 """Test the Z-Wave JS config flow."""
 
 import asyncio
-from collections.abc import Generator
 from copy import copy
 from ipaddress import ip_address
 from unittest.mock import DEFAULT, MagicMock, call, patch
@@ -9,6 +8,7 @@ from unittest.mock import DEFAULT, MagicMock, call, patch
 import aiohttp
 import pytest
 from serial.tools.list_ports_common import ListPortInfo
+from typing_extensions import Generator
 from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries
@@ -159,7 +159,7 @@ def serial_port_fixture() -> ListPortInfo:
 
 
 @pytest.fixture(name="mock_list_ports", autouse=True)
-def mock_list_ports_fixture(serial_port) -> Generator[MagicMock, None, None]:
+def mock_list_ports_fixture(serial_port) -> Generator[MagicMock]:
     """Mock list ports."""
     with patch(
         "homeassistant.components.zwave_js.config_flow.list_ports.comports"
@@ -179,7 +179,7 @@ def mock_list_ports_fixture(serial_port) -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture(name="mock_usb_serial_by_id", autouse=True)
-def mock_usb_serial_by_id_fixture() -> Generator[MagicMock, None, None]:
+def mock_usb_serial_by_id_fixture() -> Generator[MagicMock]:
     """Mock usb serial by id."""
     with patch(
         "homeassistant.components.zwave_js.config_flow.usb.get_serial_by_id"
