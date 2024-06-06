@@ -359,7 +359,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 await self.imap_client.stop_wait_server_push()
                 await self.imap_client.close()
                 await self.imap_client.logout()
-            except (AioImapException, TimeoutError):
+            except (AioImapException, asyncio.CancelledError, TimeoutError):
                 if log_error:
                     _LOGGER.debug("Error while cleaning up imap connection")
             finally:
@@ -499,6 +499,13 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                     try:
                         await idle
                     except asyncio.CancelledError as exc:
+                        _LOGGER.debug(
+                            "Connection canceled with %s (will attempt to reconnect after %s s)",
+                            self.config_entry.data[CONF_SERVER],
+                            BACKOFF_TIME,
+                        )
+                        await self._cleanup()
+                        await asyncio.sleep(BACKOFF_TIME)
                         raise AioImapException from exc
 
             except (AioImapException, TimeoutError):
