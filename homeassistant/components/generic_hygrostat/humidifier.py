@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
@@ -40,7 +40,7 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.helpers import condition
+from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_state_change_event,
@@ -100,6 +100,12 @@ async def async_setup_entry(
     )
 
 
+def _time_period_or_none(value: Any) -> timedelta | None:
+    if value is None:
+        return None
+    return cast(timedelta, cv.time_period(value))
+
+
 async def _async_setup_config(
     hass: HomeAssistant,
     config: Mapping[str, Any],
@@ -113,11 +119,15 @@ async def _async_setup_config(
     max_humidity: float | None = config.get(CONF_MAX_HUMIDITY)
     target_humidity: float | None = config.get(CONF_TARGET_HUMIDITY)
     device_class: HumidifierDeviceClass | None = config.get(CONF_DEVICE_CLASS)
-    min_cycle_duration: timedelta | None = config.get(CONF_MIN_DUR)
-    sensor_stale_duration: timedelta | None = config.get(CONF_STALE_DURATION)
+    min_cycle_duration: timedelta | None = _time_period_or_none(
+        config.get(CONF_MIN_DUR)
+    )
+    sensor_stale_duration: timedelta | None = _time_period_or_none(
+        config.get(CONF_STALE_DURATION)
+    )
     dry_tolerance: float = config[CONF_DRY_TOLERANCE]
     wet_tolerance: float = config[CONF_WET_TOLERANCE]
-    keep_alive: timedelta | None = config.get(CONF_KEEP_ALIVE)
+    keep_alive: timedelta | None = _time_period_or_none(config.get(CONF_KEEP_ALIVE))
     initial_state: bool | None = config.get(CONF_INITIAL_STATE)
     away_humidity: int | None = config.get(CONF_AWAY_HUMIDITY)
     away_fixed: bool | None = config.get(CONF_AWAY_FIXED)
