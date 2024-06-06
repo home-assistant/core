@@ -52,10 +52,10 @@ from tests.test_util.aiohttp import AiohttpClientMocker
         ),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    entity_registry_enabled_by_default: None,
     windows: bool,
     single: bool,
     root_folder: str,

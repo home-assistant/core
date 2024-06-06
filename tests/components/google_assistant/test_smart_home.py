@@ -1076,7 +1076,7 @@ async def test_device_class_binary_sensor(
         ("non_existing_class", "action.devices.types.BLINDS"),
         ("door", "action.devices.types.DOOR"),
         ("garage", "action.devices.types.GARAGE"),
-        ("gate", "action.devices.types.GARAGE"),
+        ("gate", "action.devices.types.GATE"),
         ("awning", "action.devices.types.AWNING"),
         ("shutter", "action.devices.types.SHUTTER"),
         ("curtain", "action.devices.types.CURTAIN"),
@@ -1281,7 +1281,7 @@ async def test_identify(hass: HomeAssistant) -> None:
                     "payload": {
                         "device": {
                             "mdnsScanData": {
-                                "additionals": [
+                                "additionals": [  # codespell:ignore additionals
                                     {
                                         "type": "TXT",
                                         "class": "IN",

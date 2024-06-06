@@ -111,7 +111,7 @@ def always_patch_driver(hk_driver):
 
 
 @pytest.fixture(autouse=True)
-def patch_source_ip(mock_get_source_ip):
+def patch_source_ip():
     """Patch homeassistant and pyhap functions for getting local address."""
     with patch("pyhap.util.get_local_address", return_value="10.10.10.10"):
         yield
@@ -297,7 +297,7 @@ async def test_homekit_setup(
 
 
 async def test_homekit_setup_ip_address(
-    hass: HomeAssistant, hk_driver, mock_async_zeroconf: None
+    hass: HomeAssistant, hk_driver, mock_async_zeroconf: MagicMock
 ) -> None:
     """Test setup with given IP address."""
     entry = MockConfigEntry(
@@ -344,7 +344,7 @@ async def test_homekit_setup_ip_address(
 async def test_homekit_with_single_advertise_ips(
     hass: HomeAssistant,
     hk_driver,
-    mock_async_zeroconf: None,
+    mock_async_zeroconf: MagicMock,
     hass_storage: dict[str, Any],
 ) -> None:
     """Test setup with a single advertise ips."""
@@ -379,7 +379,7 @@ async def test_homekit_with_single_advertise_ips(
 async def test_homekit_with_many_advertise_ips(
     hass: HomeAssistant,
     hk_driver,
-    mock_async_zeroconf: None,
+    mock_async_zeroconf: MagicMock,
     hass_storage: dict[str, Any],
 ) -> None:
     """Test setup with many advertise ips."""

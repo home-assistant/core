@@ -14,7 +14,7 @@ MOCK_BASE_HOST = "fake-base-host"
 
 
 async def mock_update_data(self):
-    """Mock moehlenhoff_alpha2.Alpha2Base.update_data."""
+    """Mock Alpha2Base.update_data."""
     data = xmltodict.parse(load_fixture("static2.xml", DOMAIN))
     for _type in ("HEATAREA", "HEATCTRL", "IODEVICE"):
         if not isinstance(data["Devices"]["Device"][_type], list):
@@ -25,7 +25,7 @@ async def mock_update_data(self):
 async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Mock integration setup."""
     with patch(
-        "homeassistant.components.moehlenhoff_alpha2.Alpha2Base.update_data",
+        "homeassistant.components.moehlenhoff_alpha2.coordinator.Alpha2Base.update_data",
         mock_update_data,
     ):
         entry = MockConfigEntry(
