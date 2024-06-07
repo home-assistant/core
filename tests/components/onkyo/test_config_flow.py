@@ -47,7 +47,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def test_no_manual_entry_and_no_devices_discovered(hass: HomeAssistant) -> None:
-    """Test the full user configuration flow."""
+    """Test no devices found."""
 
     # eISCP discovery shows no devices discovered
     with patch.object(eiscp.eISCP, "discover", return_value=[]):
@@ -59,7 +59,7 @@ async def test_no_manual_entry_and_no_devices_discovered(hass: HomeAssistant) ->
         # Empty form triggers manual discovery
         configure_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],
-            user_input={},
+            {"next_step_id": "pick_device"},
         )
 
         assert configure_result["type"] is FlowResultType.ABORT
@@ -67,20 +67,25 @@ async def test_no_manual_entry_and_no_devices_discovered(hass: HomeAssistant) ->
 
 
 async def test_manual_entry_invalid_ip(hass: HomeAssistant) -> None:
-    """Test the full user configuration flow."""
+    """Test invalid or Nno ip entered."""
 
-    init_result = await hass.config_entries.flow.async_init(
+    menu_result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
 
+    form_result = await hass.config_entries.flow.async_configure(
+        menu_result["flow_id"],
+        {"next_step_id": "manual"},
+    )
+
     configure_result = await hass.config_entries.flow.async_configure(
-        init_result["flow_id"],
+        form_result["flow_id"],
         user_input={CONF_HOST: "xxx"},
     )
 
     assert configure_result["type"] is FlowResultType.FORM
-    assert configure_result["step_id"] == "user"
+    assert configure_result["step_id"] == "manual"
     assert configure_result["errors"]["base"] == "no_ip"
 
 
@@ -88,26 +93,31 @@ async def test_manual_entry_invalid_ip(hass: HomeAssistant) -> None:
 async def test_manual_entry_valid_ip_fails_connection(
     mock_receiver: MagicMock, hass: HomeAssistant
 ) -> None:
-    """Test the full user configuration flow."""
+    """Test when connection fails."""
 
     client = mock_receiver.return_value
     client.host = "fake_host"
     client.port = 1337
     client.info = None
 
-    init_result = await hass.config_entries.flow.async_init(
+    menu_result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
 
+    form_result = await hass.config_entries.flow.async_configure(
+        menu_result["flow_id"],
+        {"next_step_id": "manual"},
+    )
+
     configure_result = await hass.config_entries.flow.async_configure(
-        init_result["flow_id"],
+        form_result["flow_id"],
         user_input={CONF_HOST: "127.0.0.1"},
     )
 
     client.disconnect.assert_called()
     assert configure_result["type"] is FlowResultType.FORM
-    assert configure_result["step_id"] == "user"
+    assert configure_result["step_id"] == "manual"
     assert configure_result["errors"]["base"] == "cannot_connect"
 
 
@@ -115,20 +125,25 @@ async def test_manual_entry_valid_ip_fails_connection(
 async def test_manual_entry_valid_ip(
     mock_receiver: MagicMock, hass: HomeAssistant
 ) -> None:
-    """Test the full user configuration flow."""
+    """Test the when connection succeeds."""
 
     client = mock_receiver.return_value
     client.host = "fake_host"
     client.port = 1337
     client.info = {EISCP_IDENTIFIER: "001122334455", EISCP_MODEL_NAME: "fake_model"}
 
-    init_result = await hass.config_entries.flow.async_init(
+    menu_result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
 
+    form_result = await hass.config_entries.flow.async_configure(
+        menu_result["flow_id"],
+        {"next_step_id": "manual"},
+    )
+
     configure_result = await hass.config_entries.flow.async_configure(
-        init_result["flow_id"],
+        form_result["flow_id"],
         user_input={CONF_HOST: "127.0.0.1"},
     )
 
@@ -140,6 +155,48 @@ async def test_manual_entry_valid_ip(
     assert configure_result["data"][CONF_NAME] == "fake_model 001122334455"
     assert configure_result["data"][CONF_MODEL] == "fake_model"
     assert configure_result["data"][CONF_MAC] == "001122334455"
+
+
+async def test_manual_with_unexpected_error(hass: HomeAssistant) -> None:
+    """Test the when connection succeeds."""
+
+    eiscp.eISCP.side_effect = Exception
+
+    menu_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    form_result = await hass.config_entries.flow.async_configure(
+        menu_result["flow_id"],
+        {"next_step_id": "manual"},
+    )
+
+    configure_result = await hass.config_entries.flow.async_configure(
+        form_result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1"},
+    )
+
+    assert configure_result["type"] is FlowResultType.FORM
+    assert configure_result["errors"]["base"] == "unknown"
+
+
+async def test_show_initial_menu(hass: HomeAssistant) -> None:
+    """Test the initial selection menu."""
+
+    init_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    # Empty form triggers manual discovery
+    configure_result = await hass.config_entries.flow.async_configure(
+        init_result["flow_id"],
+        user_input={},
+    )
+
+    assert configure_result["type"] is FlowResultType.MENU
+    assert configure_result["menu_options"] == ["pick_device", "manual"]
 
 
 async def test_select_manually_discovered_device(hass: HomeAssistant) -> None:
@@ -155,22 +212,20 @@ async def test_select_manually_discovered_device(hass: HomeAssistant) -> None:
 
     # eISCP discovery shows 1 devices discovered
     with patch.object(eiscp.eISCP, "discover", return_value=[receiver]):
-        init_result = await hass.config_entries.flow.async_init(
+        menu_result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
         )
 
-        # Empty form triggers manual discovery
-        configure_result = await hass.config_entries.flow.async_configure(
-            init_result["flow_id"],
-            user_input={},
+        form_result = await hass.config_entries.flow.async_configure(
+            menu_result["flow_id"],
+            {"next_step_id": "pick_device"},
         )
 
-        assert configure_result["type"] is FlowResultType.FORM
+        assert form_result["type"] is FlowResultType.FORM
 
-        # Empty form triggers manual discovery
         configure_result = await hass.config_entries.flow.async_configure(
-            init_result["flow_id"],
+            form_result["flow_id"],
             user_input={CONF_DEVICE: "004815162342"},
         )
 
