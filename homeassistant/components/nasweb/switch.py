@@ -59,6 +59,7 @@ class RelaySwitch(SwitchEntity, CoordinatorEntity):
         self._attr_icon = "mdi:export"
         self._attr_has_entity_name = True
         self._attr_translation_key = OUTPUT_TRANSLATION_KEY
+        self._attr_translation_placeholders = {"index": f"{nasweb_output.index:2d}"}
         self._attr_unique_id = (
             f"{DOMAIN}.{self._output.webio_serial}.relay_switch.{self._output.index}"
         )
@@ -86,12 +87,6 @@ class RelaySwitch(SwitchEntity, CoordinatorEntity):
             er.async_remove(self.entity_id)
             return
         self.async_write_ha_state()
-
-    @property
-    def name(self) -> str:
-        """Return name of RelaySwitch."""
-        translated_name = super().name
-        return f"{translated_name} {self._output.index:2d}"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn On RelaySwitch."""

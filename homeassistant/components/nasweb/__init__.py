@@ -21,6 +21,7 @@ from .const import (
     ISSUE_NO_STATUS_UPDATE,
     MANUFACTURER,
     NASWEB_CONFIG_URL,
+    SUPPORT_EMAIL,
 )
 from .coordinator import NASwebCoordinator
 from .nasweb_data import NASwebData
@@ -95,6 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_placeholders={
                 "domain_name": DOMAIN_DISPLAY_NAME,
                 "device_name": entry.title,
+                "support_email": SUPPORT_EMAIL,
             },
         )
         return False
