@@ -109,7 +109,7 @@ def mock_setup_entry() -> Generator[None]:
 
 
 @pytest.fixture
-def mock_sonarr_config_flow() -> Generator[None, MagicMock, None]:
+def mock_sonarr_config_flow() -> Generator[MagicMock]:
     """Return a mocked Sonarr client."""
     with patch(
         "homeassistant.components.sonarr.config_flow.SonarrClient", autospec=True
@@ -127,7 +127,7 @@ def mock_sonarr_config_flow() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_sonarr() -> Generator[None, MagicMock, None]:
+def mock_sonarr() -> Generator[MagicMock]:
     """Return a mocked Sonarr client."""
     with patch(
         "homeassistant.components.sonarr.SonarrClient", autospec=True
