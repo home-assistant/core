@@ -2403,10 +2403,11 @@ def base64_encode(value: str) -> str:
 
 def base64_decode(value: str, encoding: str | None = "utf-8") -> str | bytes:
     """Perform base64 decode."""
-    if encoding is None:
-        return base64.b64decode(value)
+    value = base64.b64decode(value)
+    if encoding:
+        value = value.decode(encoding)
 
-    return base64.b64decode(value).decode(encoding)
+    return value
 
 
 def ordinal(value):
