@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
 from functools import partial
 import logging
@@ -22,6 +22,7 @@ from pyunifiprotect.data import (
 )
 from pyunifiprotect.exceptions import ClientError, NotAuthorized
 from pyunifiprotect.utils import log_event
+from typing_extensions import Generator
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -94,7 +95,7 @@ class ProtectData:
 
     def get_by_types(
         self, device_types: Iterable[ModelType], ignore_unadopted: bool = True
-    ) -> Generator[ProtectAdoptableDeviceModel, None, None]:
+    ) -> Generator[ProtectAdoptableDeviceModel]:
         """Get all devices matching types."""
         for device_type in device_types:
             devices = async_get_devices_by_type(

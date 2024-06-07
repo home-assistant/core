@@ -1,9 +1,9 @@
 """Configuration for Deutscher Wetterdienst (DWD) Weather Warnings tests."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.dwd_weather_warnings.const import (
     ADVANCE_WARNING_SENSOR,
@@ -23,7 +23,7 @@ MOCK_CONDITIONS = [CURRENT_WARNING_SENSOR, ADVANCE_WARNING_SENSOR]
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.dwd_weather_warnings.async_setup_entry",
@@ -59,7 +59,7 @@ def mock_tracker_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_dwdwfsapi() -> Generator[MagicMock, None, None]:
+def mock_dwdwfsapi() -> Generator[MagicMock]:
     """Return a mocked dwdwfsapi API client."""
     with (
         patch(

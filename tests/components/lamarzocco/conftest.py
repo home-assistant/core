@@ -9,6 +9,7 @@ from lmcloud.const import FirmwareType, MachineModel, SteamLevel
 from lmcloud.lm_machine import LaMarzoccoMachine
 from lmcloud.models import LaMarzoccoDeviceInfo
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.lamarzocco.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME, CONF_TOKEN
@@ -91,9 +92,7 @@ def mock_cloud_client(
 
 
 @pytest.fixture
-def mock_lamarzocco(
-    request: pytest.FixtureRequest, device_fixture: MachineModel
-) -> Generator[MagicMock, None, None]:
+def mock_lamarzocco(device_fixture: MachineModel) -> Generator[MagicMock]:
     """Return a mocked LM client."""
     model = device_fixture
 

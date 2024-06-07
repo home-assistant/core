@@ -200,7 +200,9 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             self.hass.config_entries.async_update_entry(self.entry, data=data)
 
         # Resume platform setup
-        await self.hass.config_entries.async_forward_entry_setups(self.entry, platforms)
+        await self.hass.config_entries.async_late_forward_entry_setups(
+            self.entry, platforms
+        )
 
         return True
 
@@ -584,11 +586,13 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             raise UpdateFailed(
                 f"Sleeping device did not update within {self.sleep_period} seconds interval"
             )
-        if self.device.connected:
-            return
 
-        if not await self._async_device_connect_task():
-            raise UpdateFailed("Device reconnect error")
+        async with self._connection_lock:
+            if self.device.connected:  # Already connected
+                return
+
+            if not await self._async_device_connect_task():
+                raise UpdateFailed("Device reconnect error")
 
     async def _async_disconnected(self, reconnect: bool) -> None:
         """Handle device disconnected."""
@@ -737,7 +741,8 @@ def get_block_coordinator_by_device_id(
             entry = hass.config_entries.async_get_entry(config_entry)
             if (
                 entry
-                and entry.state == ConfigEntryState.LOADED
+                and entry.state is ConfigEntryState.LOADED
+                and hasattr(entry, "runtime_data")
                 and isinstance(entry.runtime_data, ShellyEntryData)
                 and (coordinator := entry.runtime_data.block)
             ):
@@ -756,7 +761,8 @@ def get_rpc_coordinator_by_device_id(
             entry = hass.config_entries.async_get_entry(config_entry)
             if (
                 entry
-                and entry.state == ConfigEntryState.LOADED
+                and entry.state is ConfigEntryState.LOADED
+                and hasattr(entry, "runtime_data")
                 and isinstance(entry.runtime_data, ShellyEntryData)
                 and (coordinator := entry.runtime_data.rpc)
             ):

@@ -1,12 +1,12 @@
 """The tests for the nexbus sensor component."""
 
-from collections.abc import Generator
 from copy import deepcopy
 from unittest.mock import MagicMock, patch
 from urllib.error import HTTPError
 
 from py_nextbus.client import NextBusFormatError, NextBusHTTPError
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components import sensor
 from homeassistant.components.nextbus.const import CONF_AGENCY, CONF_ROUTE, DOMAIN
@@ -66,7 +66,7 @@ BASIC_RESULTS = {
 
 
 @pytest.fixture
-def mock_nextbus() -> Generator[MagicMock, None, None]:
+def mock_nextbus() -> Generator[MagicMock]:
     """Create a mock py_nextbus module."""
     with patch("homeassistant.components.nextbus.coordinator.NextBusClient") as client:
         yield client
@@ -75,7 +75,7 @@ def mock_nextbus() -> Generator[MagicMock, None, None]:
 @pytest.fixture
 def mock_nextbus_predictions(
     mock_nextbus: MagicMock,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Create a mock of NextBusClient predictions."""
     instance = mock_nextbus.return_value
     instance.get_predictions_for_multi_stops.return_value = BASIC_RESULTS

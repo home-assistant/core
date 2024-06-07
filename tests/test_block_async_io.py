@@ -43,7 +43,7 @@ async def test_protect_loop_debugger_sleep(caplog: pytest.LogCaptureFixture) -> 
     assert "Detected blocking call inside the event loop" not in caplog.text
 
 
-async def test_protect_loop_sleep(caplog: pytest.LogCaptureFixture) -> None:
+async def test_protect_loop_sleep() -> None:
     """Test time.sleep not injected by the debugger raises."""
     block_async_io.enable()
     frames = extract_stack_to_frame(
@@ -71,9 +71,7 @@ async def test_protect_loop_sleep(caplog: pytest.LogCaptureFixture) -> None:
         time.sleep(0)
 
 
-async def test_protect_loop_sleep_get_current_frame_raises(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
+async def test_protect_loop_sleep_get_current_frame_raises() -> None:
     """Test time.sleep when get_current_frame raises ValueError."""
     block_async_io.enable()
     frames = extract_stack_to_frame(
@@ -275,7 +273,7 @@ async def test_protect_loop_scandir(
     caplog.clear()
     with contextlib.suppress(FileNotFoundError):
         await hass.async_add_executor_job(os.scandir, "/path/that/does/not/exists")
-    assert "Detected blocking call to listdir with args" not in caplog.text
+    assert "Detected blocking call to scandir with args" not in caplog.text
 
 
 async def test_protect_loop_listdir(
@@ -290,3 +288,17 @@ async def test_protect_loop_listdir(
     with contextlib.suppress(FileNotFoundError):
         await hass.async_add_executor_job(os.listdir, "/path/that/does/not/exists")
     assert "Detected blocking call to listdir with args" not in caplog.text
+
+
+async def test_protect_loop_walk(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test glob calls in the loop are logged."""
+    block_async_io.enable()
+    with contextlib.suppress(FileNotFoundError):
+        os.walk("/path/that/does/not/exists")
+    assert "Detected blocking call to walk with args" in caplog.text
+    caplog.clear()
+    with contextlib.suppress(FileNotFoundError):
+        await hass.async_add_executor_job(os.walk, "/path/that/does/not/exists")
+    assert "Detected blocking call to walk with args" not in caplog.text
