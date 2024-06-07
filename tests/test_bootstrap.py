@@ -1171,9 +1171,7 @@ async def test_bootstrap_is_cancellation_safe(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_bootstrap_empty_integrations(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_bootstrap_empty_integrations(hass: HomeAssistant) -> None:
     """Test setting up an empty integrations does not raise."""
     await bootstrap.async_setup_multi_components(hass, set(), {})
     await hass.async_block_till_done()
