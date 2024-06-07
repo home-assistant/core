@@ -414,6 +414,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "aquacell": {
+      "name": "Aquacell",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "aqualogic": {
       "name": "AquaLogic",
       "integration_type": "hub",
