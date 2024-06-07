@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Final
+from collections.abc import Awaitable, Callable
+from functools import wraps
+from typing import TYPE_CHECKING, Any, Final
 
 import lcn_frontend as lcn_panel
 import voluptuous as vol
 
 from homeassistant.components import panel_custom, websocket_api
+from homeassistant.components.websocket_api import AsyncWebSocketCommandHandler
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -18,7 +21,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_RESOURCE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 
@@ -53,6 +56,13 @@ from .schemas import (
     DOMAIN_DATA_SWITCH,
 )
 
+if TYPE_CHECKING:
+    from homeassistant.components.websocket_api import ActiveConnection
+
+type AsyncLcnWebSocketCommandHandler = Callable[
+    [HomeAssistant, ActiveConnection, dict[str, Any], ConfigEntry], Awaitable[None]
+]
+
 URL_BASE: Final = "/lcn_static"
 
 
@@ -83,19 +93,38 @@ async def register_panel(hass: HomeAssistant) -> None:
         )
 
 
+def get_config_entry(
+    func: AsyncLcnWebSocketCommandHandler,
+) -> AsyncWebSocketCommandHandler:
+    """Websocket decorator to ensure the config_entry exists and return it."""
+
+    @callback
+    @wraps(func)
+    async def get_entry(
+        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        """Get config_entry."""
+        if not (config_entry := hass.config_entries.async_get_entry(msg["host_id"])):
+            connection.send_result(msg["id"], False)
+        else:
+            await func(hass, connection, msg, config_entry)
+
+    return get_entry
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {vol.Required("type"): "lcn/devices", vol.Required("host_id"): cv.string}
 )
 @websocket_api.async_response
+@get_config_entry
 async def websocket_get_device_configs(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+    config_entry: ConfigEntry,
 ) -> None:
     """Get device configs."""
-    if not (config_entry := hass.config_entries.async_get_entry(msg["host_id"])):
-        connection.send_result(msg["id"], False)
-        return
-
     connection.send_result(msg["id"], config_entry.data[CONF_DEVICES])
 
 
@@ -108,14 +137,14 @@ async def websocket_get_device_configs(
     }
 )
 @websocket_api.async_response
+@get_config_entry
 async def websocket_get_entity_configs(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+    config_entry: ConfigEntry,
 ) -> None:
     """Get entities configs."""
-    if not (config_entry := hass.config_entries.async_get_entry(msg["host_id"])):
-        connection.send_result(msg["id"], False)
-        return
-
     if CONF_ADDRESS in msg:
         entity_configs = [
             entity_config
@@ -146,14 +175,14 @@ async def websocket_get_entity_configs(
     {vol.Required("type"): "lcn/devices/scan", vol.Required("host_id"): cv.string}
 )
 @websocket_api.async_response
+@get_config_entry
 async def websocket_scan_devices(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+    config_entry: ConfigEntry,
 ) -> None:
     """Scan for new devices."""
-    if not (config_entry := hass.config_entries.async_get_entry(msg["host_id"])):
-        connection.send_result(msg["id"], False)
-        return
-
     host_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
     await host_connection.scan_modules()
 
@@ -178,14 +207,14 @@ async def websocket_scan_devices(
     }
 )
 @websocket_api.async_response
+@get_config_entry
 async def websocket_add_device(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+    config_entry: ConfigEntry,
 ) -> None:
     """Add a device."""
-    if not (config_entry := hass.config_entries.async_get_entry(msg["host_id"])):
-        connection.send_result(msg["id"], False)
-        return
-
     if get_device_config(msg[CONF_ADDRESS], config_entry):
         connection.send_result(
             msg["id"], False
@@ -224,14 +253,14 @@ async def websocket_add_device(
     }
 )
 @websocket_api.async_response
+@get_config_entry
 async def websocket_delete_device(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+    config_entry: ConfigEntry,
 ) -> None:
     """Delete a device."""
-    if not (config_entry := hass.config_entries.async_get_entry(msg["host_id"])):
-        connection.send_result(msg["id"], False)
-        return
-
     device_config = get_device_config(msg[CONF_ADDRESS], config_entry)
 
     device_registry = dr.async_get(hass)
@@ -286,14 +315,14 @@ async def websocket_delete_device(
     }
 )
 @websocket_api.async_response
+@get_config_entry
 async def websocket_add_entity(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+    config_entry: ConfigEntry,
 ) -> None:
     """Add an entity."""
-    if not (config_entry := hass.config_entries.async_get_entry(msg["host_id"])):
-        connection.send_result(msg["id"], False)
-        return
-
     if not (device_config := get_device_config(msg[CONF_ADDRESS], config_entry)):
         connection.send_result(msg["id"], False)
         return
@@ -348,14 +377,14 @@ async def websocket_add_entity(
     }
 )
 @websocket_api.async_response
+@get_config_entry
 async def websocket_delete_entity(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+    config_entry: ConfigEntry,
 ) -> None:
     """Delete an entity."""
-    if not (config_entry := hass.config_entries.async_get_entry(msg["host_id"])):
-        connection.send_result(msg["id"], False)
-        return
-
     entity_config = next(
         (
             entity_config
