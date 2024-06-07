@@ -2818,7 +2818,10 @@ async def test_recursive_automation_starting_script(
         assert script_warning_msg in caplog.text
 
 
-@pytest.mark.parametrize("automation_mode", SCRIPT_MODE_CHOICES)
+@pytest.mark.parametrize(
+    "automation_mode",
+    [mode for mode in SCRIPT_MODE_CHOICES if mode != SCRIPT_MODE_RESTART],
+)
 @pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
 async def test_recursive_automation(
     hass: HomeAssistant, automation_mode, caplog: pytest.LogCaptureFixture
@@ -2866,6 +2869,68 @@ async def test_recursive_automation(
 
         hass.bus.async_fire("trigger_automation")
         await asyncio.wait_for(service_called.wait(), 1)
+
+        # Trigger 1st stage script shutdown
+        hass.set_state(CoreState.stopping)
+        hass.bus.async_fire("homeassistant_stop")
+        await asyncio.wait_for(stop_scripts_at_shutdown_called.wait(), 1)
+
+        # Trigger 2nd stage script shutdown
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=90))
+        await hass.async_block_till_done()
+
+        assert "Disallowed recursion detected" not in caplog.text
+
+
+@pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
+async def test_recursive_automation_restart_mode(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test automation restarting itself.
+
+    The automation is an infinite loop since it keeps restarting itself
+
+    - Illegal recursion detection should not be triggered
+    - Home Assistant should not hang on shut down
+    """
+    stop_scripts_at_shutdown_called = asyncio.Event()
+    real_stop_scripts_at_shutdown = _async_stop_scripts_at_shutdown
+
+    async def stop_scripts_at_shutdown(*args):
+        await real_stop_scripts_at_shutdown(*args)
+        stop_scripts_at_shutdown_called.set()
+
+    with patch(
+        "homeassistant.helpers.script._async_stop_scripts_at_shutdown",
+        wraps=stop_scripts_at_shutdown,
+    ):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "mode": SCRIPT_MODE_RESTART,
+                    "trigger": [
+                        {"platform": "event", "event_type": "trigger_automation"},
+                    ],
+                    "action": [
+                        {"event": "trigger_automation"},
+                        {"service": "test.automation_done"},
+                    ],
+                }
+            },
+        )
+
+        service_called = asyncio.Event()
+
+        async def async_service_handler(service):
+            if service.service == "automation_done":
+                service_called.set()
+
+        hass.services.async_register("test", "automation_done", async_service_handler)
+
+        hass.bus.async_fire("trigger_automation")
+        await asyncio.sleep(0)
 
         # Trigger 1st stage script shutdown
         hass.set_state(CoreState.stopping)
