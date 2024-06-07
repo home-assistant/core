@@ -111,11 +111,11 @@ def async_emeter_from_device(
 def _async_sensors_for_device(
     device: Device,
     coordinator: TPLinkDataUpdateCoordinator,
-    has_parent: bool = False,
+    parent: Device | None = None,
 ) -> list[SmartPlugSensor]:
     """Generate the sensors for the device."""
     return [
-        SmartPlugSensor(device, coordinator, description, has_parent)
+        SmartPlugSensor(device, coordinator, description, parent)
         for description in ENERGY_SENSORS
         if async_emeter_from_device(device, description) is not None
     ]
@@ -139,7 +139,7 @@ async def async_setup_entry(
         # Historically we only add the children if the device is a strip
         for idx, child in enumerate(parent.children):
             entities.extend(
-                _async_sensors_for_device(child, children_coordinators[idx], True)
+                _async_sensors_for_device(child, children_coordinators[idx], parent)
             )
     else:
         entities.extend(_async_sensors_for_device(parent, parent_coordinator))
@@ -157,13 +157,13 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
         description: TPLinkSensorEntityDescription,
-        has_parent: bool = False,
+        parent: Device | None = None,
     ) -> None:
         """Initialize the switch."""
         self.entity_description = description
         self._attr_unique_id = f"{legacy_device_id(device)}_{description.key}"
-        super().__init__(device, coordinator)
-        if has_parent:
+        super().__init__(device, coordinator, parent=parent)
+        if parent is not None:
             assert device.alias
             self._attr_translation_placeholders = {"device_name": device.alias}
             if description.translation_key:
