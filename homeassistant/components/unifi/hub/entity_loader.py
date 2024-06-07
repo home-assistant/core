@@ -46,8 +46,8 @@ class UnifiEntityLoader:
             hub.api.port_forwarding.update,
             hub.api.sites.update,
             hub.api.system_information.update,
-            hub.api.wlans.update,
             hub.api.traffic_rules.update,
+            hub.api.wlans.update,
         )
         self.polling_api_updaters = (hub.api.traffic_rules.update,)
         self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
@@ -79,7 +79,6 @@ class UnifiEntityLoader:
     async def initialize(self) -> None:
         """Initialize API data and extra client support."""
         await self._refresh_api_data()
-        await self._dataUpdateCoordinator.async_refresh()
         self._restore_inactive_clients()
         self.wireless_clients.update_clients(set(self.hub.api.clients.values()))
 

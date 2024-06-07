@@ -254,19 +254,15 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         key="Traffic rule control",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
-        has_entity_name=True,
         icon="mdi:security-network",
-        allowed_fn=lambda hub, obj_id: True,
         api_handler_fn=lambda api: api.traffic_rules,
         available_fn=lambda hub, obj_id: hub.available,
         control_fn=async_traffic_rule_control_fn,
         device_info_fn=async_unifi_network_device_info_fn,
         event_is_on=None,
-        event_to_subscribe=None,
         is_on_fn=lambda hub, traffic_rule: traffic_rule.enabled,
         name_fn=lambda traffic_rule: f"{traffic_rule.description}",
         object_fn=lambda api, obj_id: api.traffic_rules[obj_id],
-        supported_fn=lambda hub, obj_id: True,
         unique_id_fn=lambda hub, obj_id: f"trafficrule-{obj_id}",
     ),
     UnifiSwitchEntityDescription[Ports, Port](
@@ -326,9 +322,6 @@ def async_update_unique_id(hass: HomeAssistant, config_entry: UnifiConfigEntry) 
 
     for obj_id in hub.api.ports:
         update_unique_id(obj_id, "poe")
-
-    for obj_id in hub.api.traffic_rules:
-        update_unique_id(obj_id, "trafficrule")
 
 
 async def async_setup_entry(
