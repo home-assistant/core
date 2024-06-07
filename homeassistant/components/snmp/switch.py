@@ -162,15 +162,9 @@ async def async_setup_platform(
     request_args = await async_create_request_cmd_args(
         hass, auth_data, UdpTransportTarget((host, port)), baseoid
     )
-    # Switches are read-only if command OID is not set which means they can't be turned on or off
-    # however since CONF_COMMAND_OID is marked as optional, we need to check if it is set
-    command_args: RequestArgsType | None
-    if command_oid:
-        command_args = await async_create_request_cmd_args(
-            hass, auth_data, UdpTransportTarget((host, port)), command_oid
-        )
-    else:
-        command_args = None
+    command_args = await async_create_request_cmd_args(
+        hass, auth_data, UdpTransportTarget((host, port)), command_oid or baseoid
+    )
 
     async_add_entities(
         [
@@ -209,7 +203,7 @@ class SnmpSwitch(SwitchEntity):
         command_payload_off: str | None,
         vartype: str,
         request_args: RequestArgsType,
-        command_args: RequestArgsType | None,
+        command_args: RequestArgsType,
     ) -> None:
         """Initialize the switch."""
 
