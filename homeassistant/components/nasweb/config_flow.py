@@ -81,19 +81,7 @@ class NASwebConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
-        filled_schema = None
         if user_input is not None:
-            filled_schema = vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
-                    vol.Required(
-                        CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
-                    ): str,
-                    vol.Required(
-                        CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
-                    ): str,
-                }
-            )
             try:
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
@@ -110,8 +98,8 @@ class NASwebConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=(
-                STEP_USER_DATA_SCHEMA if filled_schema is None else filled_schema
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
             ),
             errors=errors,
             description_placeholders={
