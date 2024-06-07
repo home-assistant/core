@@ -1,9 +1,9 @@
 """conftest for the GitHub integration."""
 
-from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.github.const import CONF_REPOSITORIES, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -27,7 +27,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[None, None, None]:
+def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch("homeassistant.components.github.async_setup_entry", return_value=True):
         yield

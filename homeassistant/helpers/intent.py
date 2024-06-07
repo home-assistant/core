@@ -712,6 +712,7 @@ def async_match_states(
     domains: Collection[str] | None = None,
     device_classes: Collection[str] | None = None,
     states: list[State] | None = None,
+    assistant: str | None = None,
 ) -> Iterable[State]:
     """Simplified interface to async_match_targets that returns states matching the constraints."""
     result = async_match_targets(
@@ -722,6 +723,7 @@ def async_match_states(
             floor_name=floor_name,
             domains=domains,
             device_classes=device_classes,
+            assistant=assistant,
         ),
         states=states,
     )

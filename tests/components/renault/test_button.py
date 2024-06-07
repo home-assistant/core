@@ -1,11 +1,11 @@
 """Tests for Renault sensors."""
 
-from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
 from renault_api.kamereon import schemas
 from syrupy.assertion import SnapshotAssertion
+from typing_extensions import Generator
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.config_entries import ConfigEntry
@@ -22,7 +22,7 @@ pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicle
 
 
 @pytest.fixture(autouse=True)
-def override_platforms() -> Generator[None, None, None]:
+def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.renault.PLATFORMS", [Platform.BUTTON]):
         yield
