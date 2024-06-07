@@ -34,10 +34,10 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CONF_TYPE,
     SERVICE_SELECT_OPTION,
+    STATE_CLOSED,
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
-    STATE_CLOSED,
 )
 from homeassistant.core import HomeAssistant, split_entity_id
 import homeassistant.util.dt as dt_util
@@ -149,9 +149,18 @@ async def test_switch_set_state(
         ("valve", "open_valve", "close_valve", STATE_OPEN, STATE_CLOSED),
     ],
 )
-async def test_valve_set_state(hass: HomeAssistant, hk_driver, events, domain, service_on, service_off, state_on, state_off) -> None:
+async def test_valve_set_state(
+    hass: HomeAssistant,
+    hk_driver,
+    events,
+    domain,
+    service_on,
+    service_off,
+    state_on,
+    state_off,
+) -> None:
     """Test if Valve accessory and HA are updated accordingly."""
-    entity_id = "%s.valve_test" % domain
+    entity_id = f"{domain}.valve_test"
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
