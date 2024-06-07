@@ -37,9 +37,9 @@ async def async_setup_entry(
 
     entities = _entities_for_device_and_its_children(
         device,
+        coordinator=parent_coordinator,
         feature_type=Feature.Switch,
         entity_class=TPLinkSwitch,
-        coordinator=parent_coordinator,
     )
 
     async_add_entities(entities)

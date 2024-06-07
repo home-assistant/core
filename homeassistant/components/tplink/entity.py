@@ -196,10 +196,10 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
 def _entities_for_device[_E: CoordinatedTPLinkEntity](
     device: Device,
+    coordinator: TPLinkDataUpdateCoordinator,
     *,
     feature_type: Feature.Type,
     entity_class: type[_E],
-    coordinator: TPLinkDataUpdateCoordinator,
     parent: Device | None = None,
 ) -> list[_E]:
     """Return a list of entities to add.
@@ -229,10 +229,10 @@ def _entities_for_device[_E: CoordinatedTPLinkEntity](
 
 def _entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
     device: Device,
+    coordinator: TPLinkDataUpdateCoordinator,
     *,
     feature_type: Feature.Type,
     entity_class: type[_E],
-    coordinator: TPLinkDataUpdateCoordinator,
 ) -> list[_E]:
     """Create entities for device and its children.
 
@@ -245,9 +245,9 @@ def _entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
             entities.extend(
                 _entities_for_device(
                     child,
+                    coordinator=coordinator,
                     feature_type=feature_type,
                     entity_class=entity_class,
-                    coordinator=coordinator,
                     parent=device,
                 )
             )
@@ -255,9 +255,9 @@ def _entities_for_device_and_its_children[_E: CoordinatedTPLinkEntity](
     entities.extend(
         _entities_for_device(
             device,
+            coordinator=coordinator,
             feature_type=feature_type,
             entity_class=entity_class,
-            coordinator=coordinator,
         )
     )
 
