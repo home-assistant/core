@@ -106,6 +106,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         *,
         feature: Feature | None = None,
         parent: Device | None = None,
+        unique_id: str | None = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -130,8 +131,9 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         # The rest of the initialization takes care of setting a proper unique_id
         # This is transitional and will become cleaner as future platforms get converted.
 
-        # If the unique id is already defined, we don't need to do anything.
-        if self._attr_unique_id is not None:
+        # Specialized platforms define their own unique ids.
+        if unique_id is not None:
+            self._attr_unique_id = unique_id
             return
 
         # If no unique id is defined and we have no feature, it's a bug.
@@ -207,23 +209,14 @@ def _entities_for_device[_E: CoordinatedTPLinkEntity](
     This filters out unwanted features to avoid creating unnecessary entities
     for device features that are implemented by specialized platforms like light.
     """
-
-    def _filter(dev: Device, feat: Feature) -> bool:
-        if feat.type != feature_type:
-            return False
-
-        if (
-            feat.category == Feature.Category.Primary
-            and dev.device_type in DEVICETYPES_WITH_SPECIALIZED_PLATFORMS
-        ):
-            return False
-
-        return True
-
     return [
         entity_class(device, coordinator, feature=feat, parent=parent)
         for feat in device.features.values()
-        if _filter(device, feat)
+        if feat.type == feature_type
+        and (
+            feat.category != Feature.Category.Primary
+            or device.device_type not in DEVICETYPES_WITH_SPECIALIZED_PLATFORMS
+        )
     ]
 
 
