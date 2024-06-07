@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from azure.eventhub.aio import EventHubProducerClient
 import pytest
-from typing_extensions import Generator
+from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components.azure_event_hub.const import (
     CONF_FILTER,
@@ -48,7 +48,7 @@ async def mock_entry_fixture(
     filter_schema: dict[str, Any],
     mock_create_batch: MagicMock,
     mock_send_batch: AsyncMock,
-) -> Generator[MockConfigEntry]:
+) -> AsyncGenerator[MockConfigEntry]:
     """Create the setup in HA."""
     entry = MockConfigEntry(
         domain=DOMAIN,
