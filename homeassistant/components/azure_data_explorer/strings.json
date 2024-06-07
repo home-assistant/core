@@ -9,11 +9,11 @@
           "client_secret": "Client secret",
           "database": "Database name",
           "table": "Table name",
-          "use_queued_ingestion": "Use Queued ingestion (not for free cluster)"
+          "use_queued_ingestion": "Use Queued ingestion (Mandotory for free cluster)"
         },
         "data_description": {
-          "cluster_ingest_uri": "Ingest URI of the cluster, user the 'ingest-' URI",
-          "use_queued_ingestion": "Uncheck if using free cluster"
+          "cluster_ingest_uri": "Ingest-URI of the cluster, use the 'https://ingest-xxxx.xx.xx' URI",
+          "use_queued_ingestion": "Check if using free cluster"
         },
         "description": "Enter connection details.",
         "title": "Setup your Azure Data Explorer integration"

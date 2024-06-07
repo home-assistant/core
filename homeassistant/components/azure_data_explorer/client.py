@@ -62,8 +62,8 @@ class AzureDataExplorerClient:
             )
         )
 
-        # Create cLient for reading data
-        kcsb_queri = (
+        # Create cLient for querying data
+        kcsb_query = (
             KustoConnectionStringBuilder.with_aad_application_key_authentication(
                 self._cluster_query_uri,
                 data[CONF_APP_REG_ID],
@@ -78,7 +78,7 @@ class AzureDataExplorerClient:
         else:
             self.write_client = ManagedStreamingIngestClient.from_dm_kcsb(kcsb_ingest)
 
-        self.query_client = KustoClient(kcsb_queri)
+        self.query_client = KustoClient(kcsb_query)
 
     def test_connection(self) -> None:
         """Test connection, will throw Exception if it cannot connect."""
