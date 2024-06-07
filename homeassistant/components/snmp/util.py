@@ -25,6 +25,14 @@ DATA_SNMP_ENGINE = "snmp_engine"
 
 _LOGGER = logging.getLogger(__name__)
 
+type CommandArgsType = tuple[
+    SnmpEngine,
+    UsmUserData | CommunityData,
+    UdpTransportTarget | Udp6TransportTarget,
+    ContextData,
+]
+
+
 type RequestArgsType = tuple[
     SnmpEngine,
     UsmUserData | CommunityData,
@@ -34,6 +42,16 @@ type RequestArgsType = tuple[
 ]
 
 
+async def async_create_command_cmd_args(
+    hass: HomeAssistant,
+    auth_data: UsmUserData | CommunityData,
+    target: UdpTransportTarget | Udp6TransportTarget,
+) -> CommandArgsType:
+    """Create request arguments."""
+    engine = await async_get_snmp_engine(hass)
+    return (engine, auth_data, target, ContextData())
+
+
 async def async_create_request_cmd_args(
     hass: HomeAssistant,
     auth_data: UsmUserData | CommunityData,
@@ -41,11 +59,14 @@ async def async_create_request_cmd_args(
     object_id: str,
 ) -> RequestArgsType:
     """Create request arguments."""
+    engine, auth_data, target, context_data = await async_create_command_cmd_args(
+        hass, auth_data, target
+    )
     return (
-        await async_get_snmp_engine(hass),
+        engine,
         auth_data,
         target,
-        ContextData(),
+        context_data,
         ObjectType(ObjectIdentity(object_id)),
     )
 
