@@ -5,7 +5,7 @@ import pytest
 from homeassistant import setup
 from homeassistant.components import lock
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 
 OPTIMISTIC_LOCK_CONFIG = {
     "platform": "template",
@@ -180,7 +180,9 @@ async def test_template_static(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_lock_action(hass: HomeAssistant, start_ha, calls) -> None:
+async def test_lock_action(
+    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+) -> None:
     """Test lock action."""
     await setup.async_setup_component(hass, "switch", {})
     hass.states.async_set("switch.test_state", STATE_OFF)
@@ -211,7 +213,9 @@ async def test_lock_action(hass: HomeAssistant, start_ha, calls) -> None:
         },
     ],
 )
-async def test_unlock_action(hass: HomeAssistant, start_ha, calls) -> None:
+async def test_unlock_action(
+    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+) -> None:
     """Test unlock action."""
     await setup.async_setup_component(hass, "switch", {})
     hass.states.async_set("switch.test_state", STATE_ON)

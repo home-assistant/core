@@ -19,10 +19,11 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11, tzinfo=datetime.UTC))
+@pytest.mark.usefixtures("bmw_fixture")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_config_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    bmw_fixture,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
@@ -37,11 +38,12 @@ async def test_config_entry_diagnostics(
 
 
 @pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11, tzinfo=datetime.UTC))
+@pytest.mark.usefixtures("bmw_fixture")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_device_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     device_registry: dr.DeviceRegistry,
-    bmw_fixture,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device diagnostics."""
@@ -61,11 +63,12 @@ async def test_device_diagnostics(
 
 
 @pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11, tzinfo=datetime.UTC))
+@pytest.mark.usefixtures("bmw_fixture")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_device_diagnostics_vehicle_not_found(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     device_registry: dr.DeviceRegistry,
-    bmw_fixture,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device diagnostics when the vehicle cannot be found."""

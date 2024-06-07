@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterable, Generator
+from collections.abc import AsyncIterable
+from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components import stt, tts, wake_word
 from homeassistant.components.assist_pipeline import DOMAIN, select as assist_select
@@ -34,7 +36,7 @@ _TRANSCRIPT = "test transcript"
 
 
 @pytest.fixture(autouse=True)
-def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> Path:
     """Mock the TTS cache dir with empty dir."""
     return mock_tts_cache_dir
 
@@ -271,7 +273,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, "test.config_flow")
 
@@ -378,13 +380,14 @@ async def init_components(hass: HomeAssistant, init_supporting_components):
 
 
 @pytest.fixture
-async def assist_device(hass: HomeAssistant, init_components) -> dr.DeviceEntry:
+async def assist_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, init_components
+) -> dr.DeviceEntry:
     """Create an assist device."""
     config_entry = MockConfigEntry(domain="test_assist_device")
     config_entry.add_to_hass(hass)
 
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_or_create(
+    device = device_registry.async_get_or_create(
         name="Test Device",
         config_entry_id=config_entry.entry_id,
         identifiers={("test_assist_device", "test")},

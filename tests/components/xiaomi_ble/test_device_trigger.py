@@ -7,7 +7,7 @@ from homeassistant.components.bluetooth.const import DOMAIN as BLUETOOTH_DOMAIN
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.xiaomi_ble.const import CONF_SUBTYPE, DOMAIN
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     async_get as async_get_dev_reg,
@@ -33,7 +33,7 @@ def get_device_id(mac: str) -> tuple[str, str]:
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -394,7 +394,9 @@ async def test_get_triggers_for_invalid_device_id(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_if_fires_on_button_press(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_button_press(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test for button press event trigger firing."""
     mac = "54:EF:44:E3:9C:BC"
     data = {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
@@ -454,7 +456,9 @@ async def test_if_fires_on_button_press(hass: HomeAssistant, calls) -> None:
     await hass.async_block_till_done()
 
 
-async def test_if_fires_on_double_button_long_press(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_double_button_long_press(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test for button press event trigger firing."""
     mac = "DC:ED:83:87:12:73"
     data = {"bindkey": "b93eb3787eabda352edd94b667f5d5a9"}
@@ -514,7 +518,9 @@ async def test_if_fires_on_double_button_long_press(hass: HomeAssistant, calls) 
     await hass.async_block_till_done()
 
 
-async def test_if_fires_on_motion_detected(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_motion_detected(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test for motion event trigger firing."""
     mac = "DE:70:E8:B2:39:0C"
     entry = await _async_setup_xiaomi_device(hass, mac)
@@ -668,7 +674,9 @@ async def test_automation_with_invalid_trigger_event_property(
     await hass.async_block_till_done()
 
 
-async def test_triggers_for_invalid__model(hass: HomeAssistant, calls) -> None:
+async def test_triggers_for_invalid__model(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test invalid model doesn't return triggers."""
     mac = "DE:70:E8:B2:39:0C"
     entry = await _async_setup_xiaomi_device(hass, mac)

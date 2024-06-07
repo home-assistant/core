@@ -17,11 +17,16 @@
     "step": {
       "init": {
         "data": {
-          "prompt": "Prompt Template",
-          "model": "Completion Model",
+          "prompt": "Instructions",
+          "chat_model": "[%key:common::generic::model%]",
           "max_tokens": "Maximum tokens to return in response",
           "temperature": "Temperature",
-          "top_p": "Top P"
+          "top_p": "Top P",
+          "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+          "recommended": "Recommended model settings"
+        },
+        "data_description": {
+          "prompt": "Instruct how the LLM should respond. This can be a template."
         }
       }
     }
@@ -53,6 +58,11 @@
           "description": "The style of the generated image"
         }
       }
+    }
+  },
+  "exceptions": {
+    "invalid_config_entry": {
+      "message": "Invalid config entry provided. Got {config_entry}"
     }
   },
   "issues": {
