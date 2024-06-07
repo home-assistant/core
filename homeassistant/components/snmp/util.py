@@ -62,13 +62,8 @@ async def async_create_request_cmd_args(
     engine, auth_data, target, context_data = await async_create_command_cmd_args(
         hass, auth_data, target
     )
-    return (
-        engine,
-        auth_data,
-        target,
-        context_data,
-        ObjectType(ObjectIdentity(object_id)),
-    )
+    object_type = ObjectType(ObjectIdentity(object_id))
+    return (engine, auth_data, target, context_data, object_type)
 
 
 @singleton(DATA_SNMP_ENGINE)
