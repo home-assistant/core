@@ -1,11 +1,11 @@
 """Fixtures for Kaleidescape integration."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from kaleidescape import Dispatcher
 from kaleidescape.device import Automation, Movie, Power, System
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.kaleidescape.const import DOMAIN
 from homeassistant.const import CONF_HOST
@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_device")
-def fixture_mock_device() -> Generator[None, AsyncMock, None]:
+def fixture_mock_device() -> Generator[AsyncMock]:
     """Return a mocked Kaleidescape device."""
     with patch(
         "homeassistant.components.kaleidescape.KaleidescapeDevice", autospec=True

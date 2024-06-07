@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 
+import pytest
 from pyunifiprotect.data import (
     NVR,
     Camera,
@@ -399,10 +400,10 @@ async def test_sensor_setup_camera(
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_setup_camera_with_last_trip_time(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    entity_registry_enabled_by_default: None,
     ufp: MockUFPFixture,
     doorbell: Camera,
     fixed_now: datetime,
@@ -474,10 +475,10 @@ async def test_sensor_update_alarm(
     await time_changed(hass, 10)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_update_alarm_with_last_trip_time(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    entity_registry_enabled_by_default: None,
     ufp: MockUFPFixture,
     sensor_all: Sensor,
     fixed_now: datetime,

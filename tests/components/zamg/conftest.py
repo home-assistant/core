@@ -1,10 +1,10 @@
 """Fixtures for Zamg integration tests."""
 
-from collections.abc import Generator
 import json
 from unittest.mock import MagicMock, patch
 
 import pytest
+from typing_extensions import Generator
 from zamg import ZamgData as ZamgDevice
 
 from homeassistant.components.zamg.const import CONF_STATION_ID, DOMAIN
@@ -30,16 +30,14 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[None, None, None]:
+def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch("homeassistant.components.zamg.async_setup_entry", return_value=True):
         yield
 
 
 @pytest.fixture
-def mock_zamg_config_flow(
-    request: pytest.FixtureRequest,
-) -> Generator[None, MagicMock, None]:
+def mock_zamg_config_flow(request: pytest.FixtureRequest) -> Generator[MagicMock]:
     """Return a mocked Zamg client."""
     with patch(
         "homeassistant.components.zamg.sensor.ZamgData", autospec=True
@@ -53,7 +51,7 @@ def mock_zamg_config_flow(
 
 
 @pytest.fixture
-def mock_zamg(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None]:
+def mock_zamg(request: pytest.FixtureRequest) -> Generator[MagicMock]:
     """Return a mocked Zamg client."""
 
     with patch(
@@ -72,9 +70,7 @@ def mock_zamg(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None
 
 
 @pytest.fixture
-def mock_zamg_coordinator(
-    request: pytest.FixtureRequest,
-) -> Generator[None, MagicMock, None]:
+def mock_zamg_coordinator(request: pytest.FixtureRequest) -> Generator[MagicMock]:
     """Return a mocked Zamg client."""
 
     with patch(
@@ -93,9 +89,7 @@ def mock_zamg_coordinator(
 
 
 @pytest.fixture
-def mock_zamg_stations(
-    request: pytest.FixtureRequest,
-) -> Generator[None, MagicMock, None]:
+def mock_zamg_stations(request: pytest.FixtureRequest) -> Generator[MagicMock]:
     """Return a mocked Zamg client."""
     with patch(
         "homeassistant.components.zamg.config_flow.ZamgData.zamg_stations"

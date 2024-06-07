@@ -10,6 +10,7 @@ import pytest
 from sqlalchemy import text, update
 from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
+from typing_extensions import Generator
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import migration
@@ -54,7 +55,7 @@ def db_schema_32():
 
 
 @pytest.fixture(name="use_sqlite")
-def mock_use_sqlite(request):
+def mock_use_sqlite(request: pytest.FixtureRequest) -> Generator[None]:
     """Pytest fixture to switch purge method."""
     with patch(
         "homeassistant.components.recorder.core.Recorder.dialect_name",

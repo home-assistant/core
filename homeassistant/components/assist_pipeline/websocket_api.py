@@ -5,12 +5,13 @@ import asyncio
 # Suppressing disable=deprecated-module is needed for Python 3.11
 import audioop  # pylint: disable=deprecated-module
 import base64
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import Callable
 import contextlib
 import logging
 import math
 from typing import Any, Final
 
+from typing_extensions import AsyncGenerator
 import voluptuous as vol
 
 from homeassistant.components import conversation, stt, tts, websocket_api
@@ -165,7 +166,7 @@ async def websocket_run(
         elif start_stage == PipelineStage.STT:
             wake_word_phrase = msg["input"].get("wake_word_phrase")
 
-        async def stt_stream() -> AsyncGenerator[bytes, None]:
+        async def stt_stream() -> AsyncGenerator[bytes]:
             state = None
 
             # Yield until we receive an empty chunk

@@ -4,38 +4,34 @@ from __future__ import annotations
 
 from typing import Any
 
-from incomfortclient import (
-    Gateway as InComfortGateway,
-    Heater as InComfortHeater,
-    Room as InComfortRoom,
-)
+from incomfortclient import Heater as InComfortHeater, Room as InComfortRoom
 
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DATA_INCOMFORT, IncomfortEntity
+from . import InComfortConfigEntry
 from .const import DOMAIN
+from .coordinator import InComfortDataCoordinator
+from .entity import IncomfortEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: InComfortConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up InComfort/InTouch climate devices."""
-    incomfort_data = hass.data[DATA_INCOMFORT][entry.entry_id]
+    incomfort_coordinator = entry.runtime_data
+    heaters = incomfort_coordinator.data.heaters
     async_add_entities(
-        InComfortClimate(incomfort_data.client, h, r)
-        for h in incomfort_data.heaters
-        for r in h.rooms
+        InComfortClimate(incomfort_coordinator, h, r) for h in heaters for r in h.rooms
     )
 
 
@@ -52,12 +48,14 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
     _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
-        self, client: InComfortGateway, heater: InComfortHeater, room: InComfortRoom
+        self,
+        coordinator: InComfortDataCoordinator,
+        heater: InComfortHeater,
+        room: InComfortRoom,
     ) -> None:
         """Initialize the climate device."""
-        super().__init__()
+        super().__init__(coordinator)
 
-        self._client = client
         self._room = room
 
         self._attr_unique_id = f"{heater.serial_no}_{room.room_no}"
@@ -86,6 +84,7 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
         """Set a new target temperature for this zone."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         await self._room.set_override(temperature)
+        await self.coordinator.async_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""

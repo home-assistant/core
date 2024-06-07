@@ -1,6 +1,5 @@
 """Test helpers for Husqvarna Automower."""
 
-from collections.abc import Generator
 import time
 from unittest.mock import AsyncMock, patch
 
@@ -8,6 +7,7 @@ from aioautomower.session import AutomowerSession, _MowerCommands
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from aiohttp import ClientWebSocketResponse
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -81,7 +81,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-def mock_automower_client() -> Generator[AsyncMock, None, None]:
+def mock_automower_client() -> Generator[AsyncMock]:
     """Mock a Husqvarna Automower client."""
 
     mower_dict = mower_list_to_dictionary_dataclass(
