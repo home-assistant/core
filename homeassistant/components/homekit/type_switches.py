@@ -251,11 +251,11 @@ class Valve(HomeAccessory):
         self.char_in_use.set_value(value)
         params = {ATTR_ENTITY_ID: self.entity_id}
 
-        service = (
-            (SERVICE_OPEN_VALVE if value else SERVICE_CLOSE_VALVE)
-            if self.domain == VALVE_DOMAIN
-            else (SERVICE_TURN_ON if value else SERVICE_TURN_OFF)
-        )
+        if self.domain == VALVE_DOMAIN:
+            service = SERVICE_OPEN_VALVE if value else SERVICE_CLOSE_VALVE
+        else:
+            service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
+
         self.async_call_service(self.domain, service, params)
 
     @callback
