@@ -1,6 +1,6 @@
 {
   "domain": "airgradient",
-  "name": "Airgradient",
+  "name": "AirGradient",
   "codeowners": ["@airgradienthq", "@joostlek"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airgradient",

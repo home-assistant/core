@@ -237,12 +237,11 @@ async def test_diagnostics(
 
 
 @patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner)
-@pytest.mark.usefixtures("macos_adapter")
+@pytest.mark.usefixtures(
+    "macos_adapter", "mock_bleak_scanner_start", "mock_bluetooth_adapters"
+)
 async def test_diagnostics_macos(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test diagnostics for macos."""
     # Normally we do not want to patch our classes, but since bleak will import
@@ -414,12 +413,14 @@ async def test_diagnostics_macos(
 
 
 @patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner)
-@pytest.mark.usefixtures("enable_bluetooth", "one_adapter")
+@pytest.mark.usefixtures(
+    "enable_bluetooth",
+    "one_adapter",
+    "mock_bleak_scanner_start",
+    "mock_bluetooth_adapters",
+)
 async def test_diagnostics_remote_adapter(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test diagnostics for remote adapter."""
     manager = _get_manager()

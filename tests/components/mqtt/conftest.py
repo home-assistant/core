@@ -1,10 +1,10 @@
 """Test fixtures for mqtt component."""
 
-from collections.abc import Generator
 from random import getrandbits
 from unittest.mock import patch
 
 import pytest
+from typing_extensions import Generator
 
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
@@ -21,7 +21,7 @@ def temp_dir_prefix() -> str:
 
 
 @pytest.fixture
-def mock_temp_dir(temp_dir_prefix: str) -> Generator[None, None, str]:
+def mock_temp_dir(temp_dir_prefix: str) -> Generator[str]:
     """Mock the certificate temp directory."""
     with patch(
         # Patch temp dir name to avoid tests fail running in parallel
