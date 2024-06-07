@@ -46,6 +46,7 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     reauth_entry: BringConfigEntry | None = None
+    info: BringAuthResponse
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
