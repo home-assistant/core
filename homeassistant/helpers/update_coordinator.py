@@ -325,7 +325,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         or load resources that only need to be loaded once.
         """
         if self.setup_method is None:
-            return
+            return None
         return await self.setup_method()
 
     async def async_refresh(self) -> None:
@@ -437,7 +437,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 self.logger.debug(
                     "Finished fetching %s data in %.3f seconds (success: %s)",
                     self.name,
-                    monotonic() - start,  # pylint: disable=possibly-used-before-assignment
+                    monotonic()
+                    - start,  # pylint: disable=possibly-used-before-assignment
                     self.last_update_success,
                 )
             if not auth_failed and self._listeners and not self.hass.is_stopping:
