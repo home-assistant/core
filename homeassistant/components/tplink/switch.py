@@ -38,14 +38,14 @@ async def async_setup_entry(
     entities = _entities_for_device_and_its_children(
         device,
         feature_type=Feature.Switch,
-        entity_class=Switch,
+        entity_class=TPLinkSwitch,
         coordinator=parent_coordinator,
     )
 
     async_add_entities(entities)
 
 
-class Switch(CoordinatedTPLinkEntity, SwitchEntity):
+class TPLinkSwitch(CoordinatedTPLinkEntity, SwitchEntity):
     """Representation of a feature-based TPLink sensor."""
 
     def __init__(
