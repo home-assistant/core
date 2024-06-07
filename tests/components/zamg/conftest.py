@@ -1,7 +1,7 @@
 """Fixtures for Zamg integration tests."""
 
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from typing_extensions import Generator
@@ -86,19 +86,6 @@ def mock_zamg_coordinator() -> Generator[MagicMock]:
         zamg.get_data.return_value = TEST_STATION_ID
         zamg.get_station_name = TEST_STATION_NAME
         yield zamg
-
-
-@pytest.fixture
-def mock_zamg_stations() -> Generator[AsyncMock]:
-    """Return a mocked Zamg client."""
-    with patch(
-        "homeassistant.components.zamg.config_flow.ZamgData.zamg_stations"
-    ) as zamg_mock:
-        zamg_mock.return_value = {
-            "11240": (46.99305556, 15.43916667, "GRAZ-FLUGHAFEN"),
-            "11244": (46.87222222, 15.90361111, "BAD GLEICHENBERG"),
-        }
-        yield zamg_mock
 
 
 @pytest.fixture
