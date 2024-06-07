@@ -473,6 +473,10 @@ class Entity(
     # Protect for multiple updates
     _update_staged = False
 
+    # _verified_state_writable is set to True if the entity has been verified
+    # to be writable. This is used to avoid repeated checks.
+    _verified_state_writable = False
+
     # Process updates in parallel
     parallel_updates: asyncio.Semaphore | None = None
 
@@ -986,16 +990,20 @@ class Entity(
                 f"No entity id specified for entity {self.name}"
             )
 
+        self._verified_state_writable = True
+
     @callback
     def _async_write_ha_state_from_call_soon_threadsafe(self) -> None:
         """Write the state to the state machine from the event loop thread."""
-        self._async_verify_state_writable()
+        if not self.hass or not self._verified_state_writable:
+            self._async_verify_state_writable()
         self._async_write_ha_state()
 
     @callback
     def async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
-        self._async_verify_state_writable()
+        if not self.hass or not self._verified_state_writable:
+            self._async_verify_state_writable()
         if self.hass.loop_thread_id != threading.get_ident():
             report_non_thread_safe_operation("async_write_ha_state")
         self._async_write_ha_state()

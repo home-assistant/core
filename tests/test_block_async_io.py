@@ -43,7 +43,7 @@ async def test_protect_loop_debugger_sleep(caplog: pytest.LogCaptureFixture) -> 
     assert "Detected blocking call inside the event loop" not in caplog.text
 
 
-async def test_protect_loop_sleep(caplog: pytest.LogCaptureFixture) -> None:
+async def test_protect_loop_sleep() -> None:
     """Test time.sleep not injected by the debugger raises."""
     block_async_io.enable()
     frames = extract_stack_to_frame(
@@ -71,9 +71,7 @@ async def test_protect_loop_sleep(caplog: pytest.LogCaptureFixture) -> None:
         time.sleep(0)
 
 
-async def test_protect_loop_sleep_get_current_frame_raises(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
+async def test_protect_loop_sleep_get_current_frame_raises() -> None:
     """Test time.sleep when get_current_frame raises ValueError."""
     block_async_io.enable()
     frames = extract_stack_to_frame(

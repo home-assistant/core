@@ -1,10 +1,10 @@
 """Websocket tests for Voice Assistant integration."""
 
-from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import ANY, patch
 
 import pytest
+from typing_extensions import AsyncGenerator
 
 from homeassistant.components import conversation
 from homeassistant.components.assist_pipeline.const import DOMAIN
@@ -32,7 +32,7 @@ from tests.common import flush_store
 
 
 @pytest.fixture(autouse=True)
-async def delay_save_fixture() -> AsyncGenerator[None, None]:
+async def delay_save_fixture() -> AsyncGenerator[None]:
     """Load the homeassistant integration."""
     with patch("homeassistant.helpers.collection.SAVE_DELAY", new=0):
         yield

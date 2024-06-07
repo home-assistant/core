@@ -87,7 +87,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.46.1
+PySwitchbot==0.47.2
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -190,6 +190,9 @@ aioambient==2024.01.0
 
 # homeassistant.components.apcupsd
 aioapcaccess==0.4.2
+
+# homeassistant.components.aquacell
+aioaquacell==0.1.7
 
 # homeassistant.components.aseko_pool_live
 aioaseko==0.1.1
@@ -398,7 +401,7 @@ aiowatttime==0.1.1
 aiowebostv==0.4.0
 
 # homeassistant.components.withings
-aiowithings==2.1.0
+aiowithings==3.0.1
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -526,7 +529,7 @@ azure-kusto-ingest==3.1.0
 azure-servicebus==7.10.0
 
 # homeassistant.components.holiday
-babel==2.13.1
+babel==2.15.0
 
 # homeassistant.components.baidu
 baidu-aip==1.6.6
@@ -912,7 +915,7 @@ fyta_cli==0.4.1
 gTTS==2.2.4
 
 # homeassistant.components.gardena_bluetooth
-gardena-bluetooth==1.4.1
+gardena-bluetooth==1.4.2
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.11
@@ -1084,7 +1087,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.49
+holidays==0.50
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240605.0
@@ -1146,7 +1149,7 @@ iglo==1.2.7
 ihcsdk==2.8.5
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.2
+imgw_pib==1.0.4
 
 # homeassistant.components.incomfort
 incomfort-client==0.5.0
@@ -1794,7 +1797,7 @@ pydiscovergy==3.0.1
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2024.6.2
+pydrawise==2024.6.3
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
