@@ -923,7 +923,7 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
 async def test_async_get_all_descriptions_dot_keys(hass: HomeAssistant) -> None:
     """Test async_get_all_descriptions with keys starting with a period."""
     service_descriptions = """
-        .anchor": &anchor
+        .anchor: &anchor
           selector:
             text:
         test_service:
