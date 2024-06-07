@@ -45,7 +45,7 @@ async def test_form(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == MOCK_DATA_STEP["email"]
+    assert result["title"] == "Bring"
     assert result["data"] == MOCK_DATA_STEP
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -87,7 +87,7 @@ async def test_flow_user_init_data_unknown_error_and_recover(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].title == MOCK_DATA_STEP["email"]
+    assert result["result"].title == "Bring"
 
     assert result["data"] == MOCK_DATA_STEP
 
