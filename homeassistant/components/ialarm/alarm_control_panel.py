@@ -37,6 +37,7 @@ class IAlarmPanel(
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
+    _attr_code_arm_required = False
 
     def __init__(self, coordinator: IAlarmDataUpdateCoordinator) -> None:
         """Create the entity with a DataUpdateCoordinator."""

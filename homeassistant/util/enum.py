@@ -3,13 +3,12 @@
 from collections.abc import Callable
 import contextlib
 from enum import Enum
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
 # https://github.com/python/mypy/issues/5107
 if TYPE_CHECKING:
-    _LruCacheT = TypeVar("_LruCacheT", bound=Callable)
 
-    def lru_cache(func: _LruCacheT) -> _LruCacheT:
+    def lru_cache[_T: Callable[..., Any]](func: _T) -> _T:
         """Stub for lru_cache."""
 
 else:

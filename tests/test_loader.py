@@ -2,6 +2,7 @@
 
 import asyncio
 import os
+import pathlib
 import sys
 import threading
 from typing import Any
@@ -15,6 +16,8 @@ from homeassistant.components import http, hue
 from homeassistant.components.hue import light as hue_light
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import frame
+from homeassistant.helpers.json import json_dumps
+from homeassistant.util.json import json_loads
 
 from .common import MockModule, async_get_persistent_notifications, mock_integration
 
@@ -1031,9 +1034,7 @@ async def test_get_custom_components_recovery_mode(hass: HomeAssistant) -> None:
     assert await loader.async_get_custom_components(hass) == {}
 
 
-async def test_custom_integration_missing_version(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_custom_integration_missing_version(hass: HomeAssistant) -> None:
     """Test trying to load a custom integration without a version twice does not deadlock."""
     with pytest.raises(loader.IntegrationNotFound):
         await loader.async_get_integration(hass, "test_no_version")
@@ -1042,9 +1043,7 @@ async def test_custom_integration_missing_version(
         await loader.async_get_integration(hass, "test_no_version")
 
 
-async def test_custom_integration_missing(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_custom_integration_missing(hass: HomeAssistant) -> None:
     """Test trying to load a custom integration that is missing twice not deadlock."""
     with patch("homeassistant.loader.async_get_custom_components") as mock_get:
         mock_get.return_value = {}
@@ -1108,14 +1107,18 @@ CUSTOM_ISSUE_TRACKER = "https://blablabla.com"
         # Integration domain is not currently deduced from module
         (None, "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER),
         ("hue", "homeassistant.components.mqtt.sensor", CORE_ISSUE_TRACKER_HUE),
-        # Custom integration with known issue tracker
+        # Loaded custom integration with known issue tracker
         ("bla_custom", "custom_components.bla_custom.sensor", CUSTOM_ISSUE_TRACKER),
         ("bla_custom", None, CUSTOM_ISSUE_TRACKER),
-        # Custom integration without known issue tracker
+        # Loaded custom integration without known issue tracker
         (None, "custom_components.bla.sensor", None),
         ("bla_custom_no_tracker", "custom_components.bla_custom.sensor", None),
         ("bla_custom_no_tracker", None, None),
         ("hue", "custom_components.bla.sensor", None),
+        # Unloaded custom integration with known issue tracker
+        ("bla_custom_not_loaded", None, CUSTOM_ISSUE_TRACKER),
+        # Unloaded custom integration without known issue tracker
+        ("bla_custom_not_loaded_no_tracker", None, None),
         # Integration domain has priority over module
         ("bla_custom_no_tracker", "homeassistant.components.bla_custom.sensor", None),
     ],
@@ -1133,6 +1136,32 @@ async def test_async_get_issue_tracker(
         built_in=False,
     )
     mock_integration(hass, MockModule("bla_custom_no_tracker"), built_in=False)
+
+    cust_unloaded_module = MockModule(
+        "bla_custom_not_loaded",
+        partial_manifest={"issue_tracker": CUSTOM_ISSUE_TRACKER},
+    )
+    cust_unloaded = loader.Integration(
+        hass,
+        f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{cust_unloaded_module.DOMAIN}",
+        pathlib.Path(""),
+        cust_unloaded_module.mock_manifest(),
+        set(),
+    )
+
+    cust_unloaded_no_tracker_module = MockModule("bla_custom_not_loaded_no_tracker")
+    cust_unloaded_no_tracker = loader.Integration(
+        hass,
+        f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{cust_unloaded_no_tracker_module.DOMAIN}",
+        pathlib.Path(""),
+        cust_unloaded_no_tracker_module.mock_manifest(),
+        set(),
+    )
+    hass.data["custom_components"] = {
+        "bla_custom_not_loaded": cust_unloaded,
+        "bla_custom_not_loaded_no_tracker": cust_unloaded_no_tracker,
+    }
+
     assert (
         loader.async_get_issue_tracker(hass, integration_domain=domain, module=module)
         == issue_tracker
@@ -1238,7 +1267,7 @@ async def test_hass_components_use_reported(
     )
     integration_frame = frame.IntegrationFrame(
         custom_integration=True,
-        _frame=mock_integration_frame,
+        frame=mock_integration_frame,
         integration="test_integration_frame",
         module="custom_components.test_integration_frame",
         relative_filename="custom_components/test_integration_frame/__init__.py",
@@ -1263,7 +1292,7 @@ async def test_hass_components_use_reported(
 
 
 async def test_async_get_component_preloads_config_and_config_flow(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
 ) -> None:
     """Verify async_get_component will try to preload the config and config_flow platform."""
     executor_import_integration = _get_test_integration(
@@ -1374,7 +1403,6 @@ async def test_async_get_component_loads_loop_if_already_in_sys_modules(
 
 async def test_async_get_component_concurrent_loads(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
 ) -> None:
     """Verify async_get_component waits if the first load if called again when still in progress."""
@@ -1849,7 +1877,6 @@ async def test_async_get_platforms_loads_loop_if_already_in_sys_modules(
 
 async def test_async_get_platforms_concurrent_loads(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
 ) -> None:
     """Verify async_get_platforms waits if the first load if called again.
@@ -1936,7 +1963,7 @@ async def test_hass_helpers_use_reported(
     """Test that use of hass.components is reported."""
     integration_frame = frame.IntegrationFrame(
         custom_integration=True,
-        _frame=mock_integration_frame,
+        frame=mock_integration_frame,
         integration="test_integration_frame",
         module="custom_components.test_integration_frame",
         relative_filename="custom_components/test_integration_frame/__init__.py",
@@ -1959,3 +1986,12 @@ async def test_hass_helpers_use_reported(
             "Detected that custom integration 'test_integration_frame' "
             "accesses hass.helpers.aiohttp_client. This is deprecated"
         ) in caplog.text
+
+
+async def test_manifest_json_fragment_round_trip(hass: HomeAssistant) -> None:
+    """Test json_fragment roundtrip."""
+    integration = await loader.async_get_integration(hass, "hue")
+    assert (
+        json_loads(json_dumps(integration.manifest_json_fragment))
+        == integration.manifest
+    )

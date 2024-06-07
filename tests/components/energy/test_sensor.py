@@ -4,9 +4,11 @@ import copy
 from datetime import timedelta
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.energy import data
+from homeassistant.components.recorder.core import Recorder
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
@@ -35,7 +37,7 @@ TEST_TIME_ADVANCE_INTERVAL = timedelta(milliseconds=10)
 
 
 @pytest.fixture
-async def setup_integration(recorder_mock):
+async def setup_integration(recorder_mock: Recorder):
     """Set up the integration."""
 
     async def setup_integration(hass):
@@ -46,7 +48,7 @@ async def setup_integration(recorder_mock):
 
 
 @pytest.fixture(autouse=True)
-def frozen_time(freezer):
+def frozen_time(freezer: FrozenDateTimeFactory) -> FrozenDateTimeFactory:
     """Freeze clock for tests."""
     freezer.move_to("2022-04-19 07:53:05")
     return freezer

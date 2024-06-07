@@ -1,6 +1,7 @@
 """Fixtures for cloud tests."""
 
-from collections.abc import AsyncGenerator, Callable, Coroutine
+from collections.abc import Callable, Coroutine
+from pathlib import Path
 from typing import Any
 from unittest.mock import DEFAULT, MagicMock, PropertyMock, patch
 
@@ -14,6 +15,7 @@ from hass_nabucasa.remote import RemoteUI
 from hass_nabucasa.voice import Voice
 import jwt
 import pytest
+from typing_extensions import AsyncGenerator
 
 from homeassistant.components.cloud import CloudClient, const, prefs
 from homeassistant.core import HomeAssistant
@@ -33,7 +35,7 @@ async def load_homeassistant(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture(name="cloud")
-async def cloud_fixture() -> AsyncGenerator[MagicMock, None]:
+async def cloud_fixture() -> AsyncGenerator[MagicMock]:
     """Mock the cloud object.
 
     See the real hass_nabucasa.Cloud class for how to configure the mock.
@@ -180,13 +182,13 @@ def set_cloud_prefs_fixture(
 
 
 @pytest.fixture(autouse=True)
-def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> Path:
     """Mock the TTS cache dir with empty dir."""
     return mock_tts_cache_dir
 
 
 @pytest.fixture(autouse=True)
-def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock):
+def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock: MagicMock) -> None:
     """Mock writing tags."""
 
 

@@ -128,10 +128,14 @@ async def websocket_list_agents(
                 language, supported_languages, country
             )
 
+        name = entity.entity_id
+        if state := hass.states.get(entity.entity_id):
+            name = state.name
+
         agents.append(
             {
                 "id": entity.entity_id,
-                "name": entity.name or entity.entity_id,
+                "name": name,
                 "supported_languages": supported_languages,
             }
         )
@@ -184,6 +188,7 @@ async def websocket_hass_agent_debug(
                 conversation_id=None,
                 device_id=msg.get("device_id"),
                 language=msg.get("language", hass.config.language),
+                agent_id=None,
             )
         )
         for sentence in msg["sentences"]
