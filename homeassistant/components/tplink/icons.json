@@ -6,6 +6,12 @@
         "state": {
           "on": "mdi:led-on"
         }
+      },
+      "auto_update_enabled": {
+        "default": "mdi:update"
+      },
+      "auto_off_enabled": {
+        "default": "mdi:sleep"
       }
     }
   },
