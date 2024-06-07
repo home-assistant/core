@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -36,9 +36,9 @@ SENSOR_TYPE_INACTIVE_TORRENTS = "inactive_torrents"
 
 def get_state(coordinator: QBittorrentDataCoordinator) -> str:
     """Get current download/upload state."""
-    server_state: Any = coordinator.data.get("server_state")
-    upload = server_state.get("up_info_speed")
-    download = server_state.get("dl_info_speed")
+    server_state = cast(Mapping, coordinator.data.get("server_state"))
+    upload = cast(int, server_state.get("up_info_speed"))
+    download = cast(int, server_state.get("dl_info_speed"))
 
     if upload > 0 and download > 0:
         return STATE_UP_DOWN
@@ -49,16 +49,16 @@ def get_state(coordinator: QBittorrentDataCoordinator) -> str:
     return STATE_IDLE
 
 
-def get_dl(coordinator: QBittorrentDataCoordinator) -> float:
+def get_dl(coordinator: QBittorrentDataCoordinator) -> int:
     """Get current download speed."""
-    server_state: Any = coordinator.data.get("server_state")
-    return float(server_state.get("dl_info_speed"))
+    server_state = cast(Mapping, coordinator.data.get("server_state"))
+    return cast(int, server_state.get("dl_info_speed"))
 
 
-def get_up(coordinator: QBittorrentDataCoordinator) -> float:
+def get_up(coordinator: QBittorrentDataCoordinator) -> int:
     """Get current upload speed."""
-    server_state: Any = coordinator.data.get("server_state")
-    return float(server_state.get("up_info_speed"))
+    server_state = cast(Mapping[str, Any], coordinator.data.get("server_state"))
+    return cast(int, server_state.get("up_info_speed"))
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -176,7 +176,7 @@ def count_torrents_in_states(
     """Count the number of torrents in specified states."""
     # When torrents are not in the returned data, there are none, return 0.
     try:
-        torrents: Any = coordinator.data.get("torrents")
+        torrents = cast(Mapping[str, Mapping], coordinator.data.get("torrents"))
         if not states:
             return len(torrents)
         return len(

@@ -1,7 +1,7 @@
 """Helper functions for qBittorrent."""
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, cast
 
 from qbittorrentapi import Client, TorrentDictionary, TorrentInfoList
 
@@ -34,8 +34,7 @@ def format_unix_timestamp(timestamp) -> str:
 
 def format_progress(torrent: TorrentDictionary) -> str:
     """Format the progress of a torrent."""
-    progress: Any = torrent["progress"]
-    progress = float(progress) * 100
+    progress = cast(float, torrent["progress"]) * 100
     return f"{progress:.2f}"
 
 
@@ -58,7 +57,7 @@ def format_torrent(torrent: TorrentDictionary) -> dict[str, Any]:
     value["percent_done"] = format_progress(torrent)
     value["status"] = torrent["state"]
     value["eta"] = seconds_to_hhmmss(torrent["eta"])
-    ratio: Any = torrent["ratio"]
-    value["ratio"] = f"{float(ratio):.2f}"
+    ratio = cast(float, torrent["ratio"])
+    value["ratio"] = f"{ratio:.2f}"
 
     return value
