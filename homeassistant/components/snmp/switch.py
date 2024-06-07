@@ -8,6 +8,7 @@ from typing import Any
 import pysnmp.hlapi.asyncio as hlapi
 from pysnmp.hlapi.asyncio import (
     CommunityData,
+    ObjectIdentity,
     ObjectType,
     UdpTransportTarget,
     UsmUserData,
@@ -283,5 +284,5 @@ class SnmpSwitch(SwitchEntity):
     async def _set(self, value: Any) -> None:
         """Set the state of the switch."""
         await setCmd(
-            *self._command_args, ObjectType(ObjectIdentifier(self._commandoid), value)
+            *self._command_args, ObjectType(ObjectIdentity(self._commandoid), value)
         )
