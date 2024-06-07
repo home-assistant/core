@@ -31,8 +31,20 @@ def mock_config_flow_get_state_of_all_vehicles():
         yield mock_config_flow_get_state_of_all_vehicles
 
 
+@pytest.fixture(autouse=True)
+def mock_async_setup_entry():
+    """Mock async_setup_entry."""
+    with patch(
+        "homeassistant.components.tessie.async_setup_entry",
+        return_value=True,
+    ) as mock_async_setup_entry:
+        yield mock_async_setup_entry
+
+
 async def test_form(
-    hass: HomeAssistant, mock_config_flow_get_state_of_all_vehicles
+    hass: HomeAssistant,
+    mock_config_flow_get_state_of_all_vehicles,
+    mock_async_setup_entry,
 ) -> None:
     """Test we get the form."""
 
@@ -42,17 +54,13 @@ async def test_form(
     assert result1["type"] is FlowResultType.FORM
     assert not result1["errors"]
 
-    with patch(
-        "homeassistant.components.tessie.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result1["flow_id"],
-            TEST_CONFIG,
-        )
-        await hass.async_block_till_done()
-        assert len(mock_setup_entry.mock_calls) == 1
-        assert len(mock_config_flow_get_state_of_all_vehicles.mock_calls) == 1
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        TEST_CONFIG,
+    )
+    await hass.async_block_till_done()
+    assert len(mock_async_setup_entry.mock_calls) == 1
+    assert len(mock_config_flow_get_state_of_all_vehicles.mock_calls) == 1
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Tessie"
@@ -96,7 +104,9 @@ async def test_form_errors(
 
 
 async def test_reauth(
-    hass: HomeAssistant, mock_config_flow_get_state_of_all_vehicles
+    hass: HomeAssistant,
+    mock_config_flow_get_state_of_all_vehicles,
+    mock_async_setup_entry,
 ) -> None:
     """Test reauth flow."""
 
@@ -119,17 +129,13 @@ async def test_reauth(
     assert result1["step_id"] == "reauth_confirm"
     assert not result1["errors"]
 
-    with patch(
-        "homeassistant.components.tessie.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result1["flow_id"],
-            TEST_CONFIG,
-        )
-        await hass.async_block_till_done()
-        assert len(mock_setup_entry.mock_calls) == 1
-        assert len(mock_config_flow_get_state_of_all_vehicles.mock_calls) == 1
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        TEST_CONFIG,
+    )
+    await hass.async_block_till_done()
+    assert len(mock_async_setup_entry.mock_calls) == 1
+    assert len(mock_config_flow_get_state_of_all_vehicles.mock_calls) == 1
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
@@ -145,7 +151,11 @@ async def test_reauth(
     ],
 )
 async def test_reauth_errors(
-    hass: HomeAssistant, mock_config_flow_get_state_of_all_vehicles, side_effect, error
+    hass: HomeAssistant,
+    mock_config_flow_get_state_of_all_vehicles,
+    mock_async_setup_entry,
+    side_effect,
+    error,
 ) -> None:
     """Test reauth flows that fail."""
 
@@ -186,3 +196,4 @@ async def test_reauth_errors(
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
     assert mock_entry.data == TEST_CONFIG
+    assert len(mock_async_setup_entry.mock_calls) == 1
