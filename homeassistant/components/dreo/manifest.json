@@ -4,12 +4,7 @@
   "version": "1.0.0",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/dreo",
-  "requirements": ["hscloud==1.0.0"],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
-  "codeowners": [
-    "@kane"
-  ]
+  "requirements": ["hscloud==1.0.1"],
+  "codeowners": ["@dreo-team"],
+  "single_config_entry": true
 }

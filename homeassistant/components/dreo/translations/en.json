@@ -3,12 +3,19 @@
     "step": {
       "user": {
         "title": "Dreo",
-        "description": "",
         "data": {
           "username": "E-mail",
           "password": "Password"
         }
       }
+    },
+    "error": {
+      "cannot_connect": "unable to connect",
+      "invalid_auth": "invalid username or password",
+      "unknown": "Unexpected exception"
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   }
 }

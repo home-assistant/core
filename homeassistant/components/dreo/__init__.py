@@ -1,58 +1,64 @@
 """Dreo for Integration."""
 import logging
+from dataclasses import dataclass
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from .const import DOMAIN, PLATFORMS_CONFIG, MANAGER, PLATFORMS, FAN, FAN_DEVICE
+from .const import DOMAIN, PLATFORMS, DEVICE_TYPE, FAN_DEVICE
 from hscloud.hscloud import HsCloud
+from hscloud.hscloudexception import HsCloudException, HsCloudBusinessException
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.setLevel(logging.INFO)
+
+type MyConfigEntry = ConfigEntry[MyData]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+@dataclass
+class MyData:
+    client: HsCloud
+    fans: []
+
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry):
     """Set up Dreo from as config entry."""
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
 
     manager = HsCloud(username, password)
-    login = await hass.async_add_executor_job(manager.login)
-    if not login:
-        _LOGGER.error("Unable to login to the Dreo server")
+    try:
+        await hass.async_add_executor_job(manager.login)
+
+    except HsCloudException as exc:
+        _LOGGER.exception("unable to connect")
         return False
 
-    platforms = []
-    fan_devices = []
+    except HsCloudBusinessException as exc:
+        _LOGGER.exception("invalid username or password")
+        return False
+
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Unexpected exception")
+        return False
+
+    fans = []
+
     devices = await hass.async_add_executor_job(manager.get_devices)
     for device in devices:
-        _platforms = PLATFORMS_CONFIG.get(device.get("model"))
-        for platform in _platforms:
-            if platform == FAN:
-                fan_devices.append(device)
+        _device_type = DEVICE_TYPE.get(device.get("model"))
+        if _device_type == FAN_DEVICE.get("type"):
+            fans.append(device)
 
-        platforms.extend(_platforms)
+    config_entry.runtime_data = MyData(manager, fans)
 
-    platforms = list(set(platforms))
-
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][config_entry.entry_id] = {
-        MANAGER: manager,
-        PLATFORMS: platforms,
-        FAN_DEVICE: fan_devices
-    }
-
-    await hass.config_entries.async_forward_entry_setups(config_entry, platforms)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    platforms = hass.data[DOMAIN][config_entry.entry_id].get(PLATFORMS)
     unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, platforms
+        config_entry, PLATFORMS
     )
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok

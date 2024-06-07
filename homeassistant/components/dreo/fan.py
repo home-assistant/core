@@ -4,33 +4,28 @@ from __future__ import annotations
 import logging
 import math
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage, int_states_in_range
 )
-from .const import DOMAIN, MANAGER, FAN_DEVICE, FAN_CONFIG
-from .device import DreoEntity
+from .const import FAN_DEVICE
+from .entity import DreoEntity
 from typing import Any
+from . import MyConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.setLevel(logging.INFO)
 
 
 async def async_setup_entry(
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: MyConfigEntry,
         async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Fan from a config entry."""
 
-    devices = hass.data[DOMAIN][config_entry.entry_id].get(FAN_DEVICE)
-
-    fans = [DreoFanHA(device.get("deviceName"), device, config_entry, device.get("deviceSn")) for device in devices]
-
-    async_add_entities(fans)
+    async_add_entities([DreoFanHA(device, config_entry) for device in config_entry.runtime_data.fans])
 
 
 class DreoFanHA(DreoEntity, FanEntity):
@@ -39,11 +34,10 @@ class DreoFanHA(DreoEntity, FanEntity):
     _attr_supported_features = (FanEntityFeature.PRESET_MODE
                                 | FanEntityFeature.SET_SPEED
                                 | FanEntityFeature.OSCILLATE)
-    _attr_name = None
 
-    def __init__(self, name, device, entry, unique_id) -> None:
+    def __init__(self, device, config_entry) -> None:
         """Initialize the Dreo fan."""
-        super().__init__(name, device, entry, unique_id)
+        super().__init__(device, config_entry)
 
         self._state = False
         self._mode = None
@@ -60,7 +54,7 @@ class DreoFanHA(DreoEntity, FanEntity):
     @property
     def preset_modes(self) -> list[str]:
         """Get the list of available preset modes."""
-        return FAN_CONFIG.get(self._model).get("preset_modes")
+        return FAN_DEVICE.get("config").get(self._model).get("preset_modes")
 
     @property
     def preset_mode(self) -> str | None:
@@ -71,14 +65,14 @@ class DreoFanHA(DreoEntity, FanEntity):
     def speed_count(self) -> int:
         """Get the number of speeds the fan supports."""
         return int_states_in_range(
-            FAN_CONFIG.get(self._model).get("speed_range")
+            FAN_DEVICE.get("config").get(self._model).get("speed_range")
         )
 
     @property
     def percentage(self) -> int | None:
         """Get the current speed."""
         return ranged_value_to_percentage(
-            FAN_CONFIG.get(self._model).get("speed_range"),
+            FAN_DEVICE.get("config").get(self._model).get("speed_range"),
             self._speed
         )
 
@@ -100,7 +94,6 @@ class DreoFanHA(DreoEntity, FanEntity):
 
         if result:
             self._state = True
-            self.async_write_ha_state()
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
@@ -110,7 +103,6 @@ class DreoFanHA(DreoEntity, FanEntity):
 
         if result:
             self._state = False
-            self.async_write_ha_state()
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of fan."""
@@ -120,13 +112,12 @@ class DreoFanHA(DreoEntity, FanEntity):
 
         if result:
             self._mode = preset_mode
-            self.async_write_ha_state()
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of fan."""
         speed = math.ceil(
             percentage_to_ranged_value(
-                FAN_CONFIG.get(self._model).get("speed_range"), percentage
+                FAN_DEVICE.get("config").get(self._model).get("speed_range"), percentage
             )
         )
 
@@ -139,7 +130,6 @@ class DreoFanHA(DreoEntity, FanEntity):
 
         if result:
             self._speed = speed
-            self.async_write_ha_state()
 
     def oscillate(self, oscillating: bool) -> None:
         """Set the Oscillate of fan."""
@@ -149,14 +139,10 @@ class DreoFanHA(DreoEntity, FanEntity):
 
         if result:
             self._oscillate = oscillating
-            self.async_write_ha_state()
 
     def update(self) -> None:
         """Update Dreo fan."""
-        _entry_id = self._config_entry.entry_id
-        manager = self.hass.data[DOMAIN][_entry_id].get(MANAGER)
-
-        status = manager.get_status(self._device_id)
+        status = self._config_entry.runtime_data.client.get_status(self._device_id)
         if status is not None:
             self._state = status.get('power_switch')
             self._mode = status.get('mode')

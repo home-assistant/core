@@ -256,6 +256,7 @@ omit =
     homeassistant/components/dormakaba_dkey/sensor.py
     homeassistant/components/dovado/*
     homeassistant/components/downloader/__init__.py
+    homeassistant/components/dreo/fan.py
     homeassistant/components/dsmr_reader/__init__.py
     homeassistant/components/dsmr_reader/definitions.py
     homeassistant/components/dsmr_reader/sensor.py
@@ -1733,7 +1734,6 @@ omit =
     homeassistant/components/zwave_me/sensor.py
     homeassistant/components/zwave_me/siren.py
     homeassistant/components/zwave_me/switch.py
-    homeassistant/components/dreo/fan.py
 
 
 [report]
