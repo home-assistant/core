@@ -62,13 +62,13 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
 
     Adds an empty filter to hass data.
     Tries to get a filter from yaml, if present set to hass data.
-    If config is empty after getting the filter, return, otherwise emit
-    deprecated warning and pass the rest to the config flow.
     """
 
-    hass.data.setdefault(DOMAIN, {DATA_FILTER: {}})
-    if DOMAIN in yaml_config:
-        hass.data[DOMAIN][DATA_FILTER] = yaml_config[DOMAIN][CONF_FILTER]
+    hass.data.setdefault(DOMAIN, {DATA_FILTER: FILTER_SCHEMA({})})
+    if DOMAIN not in yaml_config:
+        return True
+    hass.data[DOMAIN][DATA_FILTER] = yaml_config[DOMAIN].pop(CONF_FILTER)
+
     return True
 
 
