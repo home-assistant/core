@@ -1,6 +1,7 @@
 """Tests for the Entity Registry."""
 
 from datetime import timedelta
+from functools import partial
 from typing import Any
 from unittest.mock import patch
 
@@ -397,13 +398,6 @@ async def test_filter_on_load(
                     "unique_id": "disabled-hass",
                     "disabled_by": "hass",  # We store the string representation
                 },
-                # This entry should have the entity_category reset to None
-                {
-                    "entity_id": "test.system_entity",
-                    "platform": "super_platform",
-                    "unique_id": "system-entity",
-                    "entity_category": "system",
-                },
             ]
         },
     }
@@ -411,13 +405,12 @@ async def test_filter_on_load(
     await er.async_load(hass)
     registry = er.async_get(hass)
 
-    assert len(registry.entities) == 5
+    assert len(registry.entities) == 4
     assert set(registry.entities.keys()) == {
         "test.disabled_hass",
         "test.disabled_user",
         "test.named",
         "test.no_name",
-        "test.system_entity",
     }
 
     entry_with_name = registry.async_get_or_create(
@@ -440,11 +433,6 @@ async def test_filter_on_load(
     assert entry_disabled_hass.disabled_by is er.RegistryEntryDisabler.HASS
     assert entry_disabled_user.disabled
     assert entry_disabled_user.disabled_by is er.RegistryEntryDisabler.USER
-
-    entry_system_category = registry.async_get_or_create(
-        "test", "system_entity", "system-entity"
-    )
-    assert entry_system_category.entity_category is None
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -523,7 +511,7 @@ async def test_load_bad_data(
                     "id": "00003",
                     "orphaned_timestamp": None,
                     "platform": "super_platform",
-                    "unique_id": 234,  # Should trigger warning
+                    "unique_id": 234,  # Should not load
                 },
                 {
                     "config_entry_id": None,
@@ -548,7 +536,11 @@ async def test_load_bad_data(
 
     assert (
         "'test' from integration super_platform has a non string unique_id '123', "
-        "please create a bug report" in caplog.text
+        "please create a bug report" not in caplog.text
+    )
+    assert (
+        "'test' from integration super_platform has a non string unique_id '234', "
+        "please create a bug report" not in caplog.text
     )
     assert (
         "Entity registry entry 'test.test2' from integration super_platform could not "
@@ -1988,3 +1980,46 @@ async def test_entries_for_category(entity_registry: er.EntityRegistry) -> None:
     assert not er.async_entries_for_category(entity_registry, "", "id")
     assert not er.async_entries_for_category(entity_registry, "scope1", "unknown")
     assert not er.async_entries_for_category(entity_registry, "scope1", "")
+
+
+async def test_get_or_create_thread_safety(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test call async_get_or_create_from a thread."""
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls entity_registry.async_get_or_create from a thread.",
+    ):
+        await hass.async_add_executor_job(
+            entity_registry.async_get_or_create, "light", "hue", "1234"
+        )
+
+
+async def test_async_update_entity_thread_safety(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test call async_get_or_create from a thread."""
+    entry = entity_registry.async_get_or_create("light", "hue", "1234")
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls entity_registry.async_update_entity from a thread.",
+    ):
+        await hass.async_add_executor_job(
+            partial(
+                entity_registry.async_update_entity,
+                entry.entity_id,
+                new_unique_id="5678",
+            )
+        )
+
+
+async def test_async_remove_thread_safety(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test call async_remove from a thread."""
+    entry = entity_registry.async_get_or_create("light", "hue", "1234")
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls entity_registry.async_remove from a thread.",
+    ):
+        await hass.async_add_executor_job(entity_registry.async_remove, entry.entity_id)

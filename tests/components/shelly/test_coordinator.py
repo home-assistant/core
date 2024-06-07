@@ -24,10 +24,11 @@ from homeassistant.components.shelly.const import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
+    DeviceRegistry,
     async_entries_for_config_entry,
     async_get as async_get_dev_reg,
     format_mac,
@@ -40,10 +41,11 @@ from . import (
     inject_rpc_device_event,
     mock_polling_rpc_update,
     mock_rest_update,
+    register_device,
     register_entity,
 )
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, mock_restore_cache
 
 RELAY_BLOCK_ID = 0
 LIGHT_BLOCK_ID = 2
@@ -224,7 +226,7 @@ async def test_block_sleeping_device_firmware_unsupported(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
     assert (
@@ -299,7 +301,7 @@ async def test_block_sleeping_device_no_periodic_updates(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert get_entity_state(hass, entity_id) == "22.1"
 
@@ -542,7 +544,7 @@ async def test_rpc_update_entry_sleep_period(
 
     # Make device online
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.data["sleep_period"] == 600
 
@@ -550,7 +552,7 @@ async def test_rpc_update_entry_sleep_period(
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 3600)
     freezer.tick(timedelta(seconds=600 * SLEEP_PERIOD_MULTIPLIER))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.data["sleep_period"] == 3600
 
@@ -575,14 +577,14 @@ async def test_rpc_sleeping_device_no_periodic_updates(
 
     # Make device online
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert get_entity_state(hass, entity_id) == "22.9"
 
     # Move time to generate polling
     freezer.tick(timedelta(seconds=SLEEP_PERIOD_MULTIPLIER * 1000))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert get_entity_state(hass, entity_id) is STATE_UNAVAILABLE
 
@@ -599,7 +601,7 @@ async def test_rpc_sleeping_device_firmware_unsupported(
 
     # Make device online
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
     assert (
@@ -765,7 +767,7 @@ async def test_rpc_update_entry_fw_ver(
 
     # Make device online
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.unique_id
     device = dev_reg.async_get_device(
@@ -806,3 +808,93 @@ async def test_rpc_runs_connected_events_when_initialized(
 
     # BLE script list is called during connected events
     assert call.script_list() in mock_rpc_device.mock_calls
+
+
+async def test_block_sleeping_device_connection_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_block_device: Mock,
+    device_reg: DeviceRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test block sleeping device connection error during initialize."""
+    sleep_period = 1000
+    entry = await init_integration(hass, 1, sleep_period=sleep_period, skip_setup=True)
+    register_device(device_reg, entry)
+    entity_id = register_entity(
+        hass, BINARY_SENSOR_DOMAIN, "test_name_motion", "sensor_0-motion", entry
+    )
+    mock_restore_cache(hass, [State(entity_id, STATE_ON)])
+    monkeypatch.setattr(mock_block_device, "initialized", False)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert get_entity_state(hass, entity_id) == STATE_ON
+
+    # Make device online event with connection error
+    monkeypatch.setattr(
+        mock_block_device,
+        "initialize",
+        AsyncMock(
+            side_effect=DeviceConnectionError,
+        ),
+    )
+    mock_block_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Error connecting to Shelly device" in caplog.text
+    assert get_entity_state(hass, entity_id) == STATE_ON
+
+    # Move time to generate sleep period update
+    freezer.tick(timedelta(seconds=sleep_period * SLEEP_PERIOD_MULTIPLIER))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Sleeping device did not update" in caplog.text
+    assert get_entity_state(hass, entity_id) == STATE_UNAVAILABLE
+
+
+async def test_rpc_sleeping_device_connection_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    device_reg: DeviceRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test RPC sleeping device connection error during initialize."""
+    sleep_period = 1000
+    entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
+    register_device(device_reg, entry)
+    entity_id = register_entity(
+        hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud-cloud", entry
+    )
+    mock_restore_cache(hass, [State(entity_id, STATE_ON)])
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert get_entity_state(hass, entity_id) == STATE_ON
+
+    # Make device online event with connection error
+    monkeypatch.setattr(
+        mock_rpc_device,
+        "initialize",
+        AsyncMock(
+            side_effect=DeviceConnectionError,
+        ),
+    )
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Error connecting to Shelly device" in caplog.text
+    assert get_entity_state(hass, entity_id) == STATE_ON
+
+    # Move time to generate sleep period update
+    freezer.tick(timedelta(seconds=sleep_period * SLEEP_PERIOD_MULTIPLIER))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Sleeping device did not update" in caplog.text
+    assert get_entity_state(hass, entity_id) == STATE_UNAVAILABLE

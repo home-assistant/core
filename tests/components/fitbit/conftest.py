@@ -1,6 +1,6 @@
 """Test fixtures for fitbit."""
 
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable
 import datetime
 from http import HTTPStatus
 import time
@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 import pytest
 from requests_mock.mocker import Mocker
+from typing_extensions import Generator
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -122,7 +123,7 @@ def mock_fitbit_config_yaml(token_expiration_time: float) -> dict[str, Any] | No
 @pytest.fixture(name="fitbit_config_setup")
 def mock_fitbit_config_setup(
     fitbit_config_yaml: dict[str, Any] | None,
-) -> Generator[None, None, None]:
+) -> Generator[None]:
     """Fixture to mock out fitbit.conf file data loading and persistence."""
     has_config = fitbit_config_yaml is not None
     with (

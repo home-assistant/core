@@ -15,7 +15,13 @@ from homeassistant.components.mqtt.abbreviations import (
     ABBREVIATIONS,
     DEVICE_ABBREVIATIONS,
 )
-from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.components.mqtt.discovery import (
+    MQTT_DISCOVERY_DONE,
+    MQTT_DISCOVERY_NEW,
+    MQTT_DISCOVERY_UPDATED,
+    MQTTDiscoveryPayload,
+    async_start,
+)
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_ON,
@@ -26,8 +32,13 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.setup import async_setup_component
+from homeassistant.util.signal_type import SignalTypeFormat
 
 from .test_common import help_all_subscribe_calls, help_test_unload_config_entry
 
@@ -280,9 +291,7 @@ async def test_discovery_with_invalid_integration_info(
     state = hass.states.get("binary_sensor.beer")
 
     assert state is None
-    assert (
-        "Unable to parse origin information from discovery message, got" in caplog.text
-    )
+    assert "Unable to parse origin information from discovery message" in caplog.text
 
 
 async def test_discover_fan(
@@ -818,7 +827,7 @@ async def test_cleanup_device(
     entity_registry: er.EntityRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
-    """Test discvered device is cleaned up when entry removed from device."""
+    """Test discovered device is cleaned up when entry removed from device."""
     mqtt_mock = await mqtt_mock_entry()
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
@@ -843,15 +852,9 @@ async def test_cleanup_device(
 
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mqtt_config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
+    response = await ws_client.remove_device(
+        device_entry.id, mqtt_config_entry.entry_id
     )
-    response = await ws_client.receive_json()
     assert response["success"]
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -869,7 +872,7 @@ async def test_cleanup_device(
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/sensor/bla/config", "", 0, True
+        "homeassistant/sensor/bla/config", None, 0, True
     )
 
 
@@ -985,15 +988,9 @@ async def test_cleanup_device_multiple_config_entries(
 
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mqtt_config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
+    response = await ws_client.remove_device(
+        device_entry.id, mqtt_config_entry.entry_id
     )
-    response = await ws_client.receive_json()
     assert response["success"]
 
     await hass.async_block_till_done()
@@ -1016,9 +1013,9 @@ async def test_cleanup_device_multiple_config_entries(
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("homeassistant/sensor/bla/config", "", 0, True),
-            call("homeassistant/tag/bla/config", "", 0, True),
-            call("homeassistant/device_automation/bla/config", "", 0, True),
+            call("homeassistant/sensor/bla/config", None, 0, True),
+            call("homeassistant/tag/bla/config", None, 0, True),
+            call("homeassistant/device_automation/bla/config", None, 0, True),
         ],
         any_order=True,
     )
@@ -1350,22 +1347,6 @@ async def test_discovery_expansion_without_encoding_and_value_template_2(
 
 ABBREVIATIONS_WHITE_LIST = [
     # MQTT client/server/trigger settings
-    "CONF_BIRTH_MESSAGE",
-    "CONF_BROKER",
-    "CONF_CERTIFICATE",
-    "CONF_CLIENT_CERT",
-    "CONF_CLIENT_ID",
-    "CONF_CLIENT_KEY",
-    "CONF_DISCOVERY",
-    "CONF_DISCOVERY_ID",
-    "CONF_DISCOVERY_PREFIX",
-    "CONF_EMBEDDED",
-    "CONF_KEEPALIVE",
-    "CONF_TLS_INSECURE",
-    "CONF_TRANSPORT",
-    "CONF_WILL_MESSAGE",
-    "CONF_WS_PATH",
-    "CONF_WS_HEADERS",
     # Integration info
     "CONF_SUPPORT_URL",
     # Undocumented device configuration
@@ -1385,6 +1366,14 @@ ABBREVIATIONS_WHITE_LIST = [
     "CONF_WHITE_VALUE",
 ]
 
+EXCLUDED_MODULES = {
+    "const.py",
+    "config.py",
+    "config_flow.py",
+    "device_trigger.py",
+    "trigger.py",
+}
+
 
 async def test_missing_discover_abbreviations(
     hass: HomeAssistant,
@@ -1395,7 +1384,7 @@ async def test_missing_discover_abbreviations(
     missing = []
     regex = re.compile(r"(CONF_[a-zA-Z\d_]*) *= *[\'\"]([a-zA-Z\d_]*)[\'\"]")
     for fil in Path(mqtt.__file__).parent.rglob("*.py"):
-        if fil.name == "trigger.py":
+        if fil.name in EXCLUDED_MODULES:
             continue
         with open(fil, encoding="utf-8") as file:
             matches = re.findall(regex, file.read())
@@ -1625,11 +1614,11 @@ async def test_clear_config_topic_disabled_entity(
     # Assert all valid discovery topics are cleared
     assert mqtt_mock.async_publish.call_count == 2
     assert (
-        call("homeassistant/sensor/sbfspot_0/sbfspot_12345/config", "", 0, True)
+        call("homeassistant/sensor/sbfspot_0/sbfspot_12345/config", None, 0, True)
         in mqtt_mock.async_publish.mock_calls
     )
     assert (
-        call("homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config", "", 0, True)
+        call("homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config", None, 0, True)
         in mqtt_mock.async_publish.mock_calls
     )
 
@@ -1785,3 +1774,33 @@ async def test_update_with_bad_config_not_breaks_discovery(
 
     state = hass.states.get("sensor.sbfspot_12345")
     assert state and state.state == "new_value"
+
+
+@pytest.mark.parametrize(
+    "signal_message",
+    [
+        MQTT_DISCOVERY_NEW,
+        MQTT_DISCOVERY_UPDATED,
+        MQTT_DISCOVERY_DONE,
+    ],
+)
+async def test_discovery_dispatcher_signal_type_messages(
+    hass: HomeAssistant, signal_message: SignalTypeFormat[MQTTDiscoveryPayload]
+) -> None:
+    """Test discovery dispatcher messages."""
+
+    domain_id_tuple = ("sensor", "very_unique")
+    test_data = {"name": "test", "state_topic": "test-topic"}
+    calls = []
+
+    def _callback(*args) -> None:
+        calls.append(*args)
+
+    unsub = async_dispatcher_connect(
+        hass, signal_message.format(*domain_id_tuple), _callback
+    )
+    async_dispatcher_send(hass, signal_message.format(*domain_id_tuple), test_data)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0] == test_data
+    unsub()

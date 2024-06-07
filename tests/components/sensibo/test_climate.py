@@ -121,6 +121,32 @@ async def test_climate_fan(
     state1 = hass.states.get("climate.hallway")
     assert state1.attributes["fan_mode"] == "high"
 
+    monkeypatch.setattr(
+        get_data.parsed["ABC999111"],
+        "fan_modes",
+        ["quiet", "low", "medium", "not_in_ha"],
+    )
+    monkeypatch.setattr(
+        get_data.parsed["ABC999111"],
+        "fan_modes_translated",
+        {
+            "low": "low",
+            "medium": "medium",
+            "quiet": "quiet",
+            "not_in_ha": "not_in_ha",
+        },
+    )
+    with pytest.raises(
+        HomeAssistantError,
+        match="Climate fan mode not_in_ha is not supported by the integration",
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: state1.entity_id, ATTR_FAN_MODE: "not_in_ha"},
+            blocking=True,
+        )
+
     with (
         patch(
             "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
@@ -193,6 +219,42 @@ async def test_climate_swing(
 
     state1 = hass.states.get("climate.hallway")
     assert state1.attributes["swing_mode"] == "stopped"
+
+    monkeypatch.setattr(
+        get_data.parsed["ABC999111"],
+        "swing_modes",
+        ["stopped", "fixedtop", "fixedmiddletop", "not_in_ha"],
+    )
+    monkeypatch.setattr(
+        get_data.parsed["ABC999111"],
+        "swing_modes_translated",
+        {
+            "fixedmiddletop": "fixedMiddleTop",
+            "fixedtop": "fixedTop",
+            "stopped": "stopped",
+            "not_in_ha": "not_in_ha",
+        },
+    )
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Climate swing mode not_in_ha is not supported by the integration",
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_SWING_MODE,
+            {ATTR_ENTITY_ID: state1.entity_id, ATTR_SWING_MODE: "not_in_ha"},
+            blocking=True,
+        )
 
     with (
         patch(
@@ -770,9 +832,9 @@ async def test_climate_no_fan_no_swing(
     assert state.attributes["swing_modes"] is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_climate_set_timer(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
@@ -885,9 +947,9 @@ async def test_climate_set_timer(
     )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_climate_pure_boost(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
@@ -996,9 +1058,9 @@ async def test_climate_pure_boost(
     assert state4.state == "s"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_climate_climate_react(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
@@ -1166,9 +1228,9 @@ async def test_climate_climate_react(
     assert state4.state == "temperature"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_climate_climate_react_fahrenheit(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
@@ -1312,9 +1374,9 @@ async def test_climate_climate_react_fahrenheit(
     assert state4.state == "temperature"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_climate_full_ac_state(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,

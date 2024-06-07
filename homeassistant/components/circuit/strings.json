@@ -1,0 +1,8 @@
+{
+  "issues": {
+    "service_removal": {
+      "title": "The {integration} integration is being removed",
+      "description": "The {integration} integration will be removed, as the service is no longer maintained.\n\n\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
+  }
+}

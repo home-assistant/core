@@ -29,6 +29,7 @@ from .const import (
     TEST_FETCH_RESPONSE_MULTIPART,
     TEST_FETCH_RESPONSE_MULTIPART_BASE64,
     TEST_FETCH_RESPONSE_MULTIPART_BASE64_INVALID,
+    TEST_FETCH_RESPONSE_MULTIPART_EMPTY_PLAIN,
     TEST_FETCH_RESPONSE_NO_SUBJECT_TO_FROM,
     TEST_FETCH_RESPONSE_TEXT_BARE,
     TEST_FETCH_RESPONSE_TEXT_OTHER,
@@ -76,7 +77,7 @@ async def test_entry_startup_and_unload(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert await config_entry.async_unload(hass)
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -116,6 +117,7 @@ async def test_entry_startup_fails(
         (TEST_FETCH_RESPONSE_TEXT_OTHER, True),
         (TEST_FETCH_RESPONSE_HTML, True),
         (TEST_FETCH_RESPONSE_MULTIPART, True),
+        (TEST_FETCH_RESPONSE_MULTIPART_EMPTY_PLAIN, True),
         (TEST_FETCH_RESPONSE_MULTIPART_BASE64, True),
         (TEST_FETCH_RESPONSE_BINARY, True),
     ],
@@ -129,6 +131,7 @@ async def test_entry_startup_fails(
         "other",
         "html",
         "multipart",
+        "multipart_empty_plain",
         "multipart_base64",
         "binary",
     ],
@@ -449,7 +452,7 @@ async def test_handle_cleanup_exception(
     # Fail cleaning up
     mock_imap_protocol.close.side_effect = imap_close
 
-    assert await config_entry.async_unload(hass)
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert "Error while cleaning up imap connection" in caplog.text
 

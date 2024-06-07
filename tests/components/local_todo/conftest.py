@@ -1,11 +1,11 @@
 """Common fixtures for the local_todo tests."""
 
-from collections.abc import Generator
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.local_todo import LocalTodoListStore
 from homeassistant.components.local_todo.const import (
@@ -24,7 +24,7 @@ TEST_ENTITY = "todo.my_tasks"
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.local_todo.async_setup_entry", return_value=True
@@ -72,9 +72,7 @@ def mock_store_read_side_effect() -> Any | None:
 
 
 @pytest.fixture(name="store", autouse=True)
-def mock_store(
-    ics_content: str, store_read_side_effect: Any | None
-) -> Generator[None, None, None]:
+def mock_store(ics_content: str, store_read_side_effect: Any | None) -> Generator[None]:
     """Fixture that sets up a fake local storage object."""
 
     stores: dict[Path, FakeStore] = {}

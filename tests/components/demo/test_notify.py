@@ -1,22 +1,22 @@
 """The tests for the notify demo platform."""
 
-from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components import notify
 from homeassistant.components.demo import DOMAIN
 import homeassistant.components.demo.notify as demo
 from homeassistant.const import Platform
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_capture_events
 
 
 @pytest.fixture
-def notify_only() -> Generator[None, None]:
+def notify_only() -> Generator[None]:
     """Enable only the notify platform."""
     with patch(
         "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
@@ -42,24 +42,6 @@ def events(hass: HomeAssistant) -> list[Event]:
     return async_capture_events(hass, demo.EVENT_NOTIFY)
 
 
-@pytest.fixture
-def calls():
-    """Fixture to calls."""
-    return []
-
-
-@pytest.fixture
-def record_calls(calls):
-    """Fixture to record calls."""
-
-    @callback
-    def record_calls(*args):
-        """Record calls."""
-        calls.append(args)
-
-    return record_calls
-
-
 async def test_sending_message(hass: HomeAssistant, events: list[Event]) -> None:
     """Test sending a message."""
     data = {
@@ -69,7 +51,17 @@ async def test_sending_message(hass: HomeAssistant, events: list[Event]) -> None
     await hass.services.async_call(notify.DOMAIN, notify.SERVICE_SEND_MESSAGE, data)
     await hass.async_block_till_done()
     last_event = events[-1]
-    assert last_event.data[notify.ATTR_MESSAGE] == "Test message"
+    assert last_event.data == {notify.ATTR_MESSAGE: "Test message"}
+
+    data[notify.ATTR_TITLE] = "My title"
+    # Test with Title
+    await hass.services.async_call(notify.DOMAIN, notify.SERVICE_SEND_MESSAGE, data)
+    await hass.async_block_till_done()
+    last_event = events[-1]
+    assert last_event.data == {
+        notify.ATTR_MESSAGE: "Test message",
+        notify.ATTR_TITLE: "My title",
+    }
 
 
 async def test_calling_notify_from_script_loaded_from_yaml(

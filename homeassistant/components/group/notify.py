@@ -34,12 +34,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def add_defaults(
-    input_data: dict[str, Any], default_data: dict[str, Any]
+    input_data: dict[str, Any], default_data: Mapping[str, Any]
 ) -> dict[str, Any]:
     """Deep update a dictionary with default values."""
     for key, val in default_data.items():
         if isinstance(val, Mapping):
-            input_data[key] = add_defaults(input_data.get(key, {}), val)  # type: ignore[arg-type]
+            input_data[key] = add_defaults(input_data.get(key, {}), val)
         elif key not in input_data:
             input_data[key] = val
     return input_data

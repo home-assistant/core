@@ -64,7 +64,7 @@ class SentryConfigFlow(ConfigFlow, domain=DOMAIN):
                 Dsn(user_input["dsn"])
             except BadDsn:
                 errors["base"] = "bad_dsn"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

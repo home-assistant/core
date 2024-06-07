@@ -247,8 +247,7 @@ class UnifiVideoCamera(Camera):
                     (
                         uri
                         for i, uri in enumerate(channel["rtspUris"])
-                        # pylint: disable-next=protected-access
-                        if re.search(self._nvr._host, uri)
+                        if re.search(self._nvr._host, uri)  # noqa: SLF001
                     )
                 )
 

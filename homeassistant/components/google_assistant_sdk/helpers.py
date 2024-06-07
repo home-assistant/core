@@ -72,14 +72,14 @@ async def async_send_text_commands(
             entry.async_start_reauth(hass)
         raise
 
-    credentials = Credentials(session.token[CONF_ACCESS_TOKEN])
+    credentials = Credentials(session.token[CONF_ACCESS_TOKEN])  # type: ignore[no-untyped-call]
     language_code = entry.options.get(CONF_LANGUAGE_CODE, default_language_code(hass))
     with TextAssistant(
         credentials, language_code, audio_out=bool(media_players)
     ) as assistant:
         command_response_list = []
         for command in commands:
-            resp = assistant.assist(command)
+            resp = await hass.async_add_executor_job(assistant.assist, command)
             text_response = resp[0]
             _LOGGER.debug("command: %s\nresponse: %s", command, text_response)
             audio_response = resp[2]
