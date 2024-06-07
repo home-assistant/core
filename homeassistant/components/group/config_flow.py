@@ -35,14 +35,15 @@ from .sensor import async_create_preview_sensor
 from .switch import async_create_preview_switch
 
 _STATISTIC_MEASURES = [
-    "min",
+    "last",
     "max",
     "mean",
     "median",
-    "last",
-    "range",
-    "sum",
+    "min",
     "product",
+    "range",
+    "stdev",
+    "sum",
 ]
 
 

@@ -1,5 +1,6 @@
 """Test ZHA select entities."""
 
+from typing import Any
 from unittest.mock import call, patch
 
 import pytest
@@ -11,13 +12,12 @@ from zhaquirks import (
     PROFILE_ID,
 )
 from zigpy.const import SIG_EP_PROFILE
-import zigpy.profiles.zha as zha
+from zigpy.profiles import zha
 from zigpy.quirks import CustomCluster, CustomDevice
 from zigpy.quirks.v2 import CustomDeviceV2, add_to_registry_v2
 import zigpy.types as t
-import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters import general, security
 from zigpy.zcl.clusters.manufacturer_specific import ManufacturerSpecificCluster
-import zigpy.zcl.clusters.security as security
 
 from homeassistant.components.zha.select import AqaraMotionSensitivities
 from homeassistant.const import STATE_UNKNOWN, EntityCategory, Platform
@@ -73,7 +73,7 @@ async def siren(hass, zigpy_device_mock, zha_device_joined_restored):
 async def light(hass, zigpy_device_mock):
     """Siren fixture."""
 
-    zigpy_device = zigpy_device_mock(
+    return zigpy_device_mock(
         {
             1: {
                 SIG_EP_PROFILE: zha.PROFILE_ID,
@@ -89,11 +89,9 @@ async def light(hass, zigpy_device_mock):
         node_descriptor=b"\x02@\x84_\x11\x7fd\x00\x00,d\x00\x00",
     )
 
-    return zigpy_device
-
 
 @pytest.fixture
-def core_rs(hass_storage):
+def core_rs(hass_storage: dict[str, Any]):
     """Core.restore_state fixture."""
 
     def _storage(entity_id, state):
@@ -122,10 +120,10 @@ def core_rs(hass_storage):
     return _storage
 
 
-async def test_select(hass: HomeAssistant, siren) -> None:
+async def test_select(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, siren
+) -> None:
     """Test ZHA select platform."""
-
-    entity_registry = er.async_get(hass)
     zha_device, cluster = siren
     assert cluster is not None
     entity_id = find_entity_id(
@@ -209,11 +207,9 @@ async def test_select_restore_state(
 
 
 async def test_on_off_select_new_join(
-    hass: HomeAssistant, light, zha_device_joined
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, light, zha_device_joined
 ) -> None:
     """Test ZHA on off select - new join."""
-
-    entity_registry = er.async_get(hass)
     on_off_cluster = light.endpoints[1].on_off
     on_off_cluster.PLUGGED_ATTR_READS = {
         "start_up_on_off": general.OnOff.StartUpOnOff.On
@@ -270,11 +266,9 @@ async def test_on_off_select_new_join(
 
 
 async def test_on_off_select_restored(
-    hass: HomeAssistant, light, zha_device_restored
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, light, zha_device_restored
 ) -> None:
     """Test ZHA on off select - restored."""
-
-    entity_registry = er.async_get(hass)
     on_off_cluster = light.endpoints[1].on_off
     on_off_cluster.PLUGGED_ATTR_READS = {
         "start_up_on_off": general.OnOff.StartUpOnOff.On
@@ -435,7 +429,7 @@ async def test_on_off_select_attribute_report(
         "motion_sensitivity_disabled",
         AqaraMotionSensitivities,
         MotionSensitivityQuirk.OppleCluster.cluster_id,
-        translation_key="motion_sensitivity_translation_key",
+        translation_key="motion_sensitivity",
         initially_disabled=True,
     )
 )
@@ -467,7 +461,9 @@ async def zigpy_device_aqara_sensor_v2(
 
 
 async def test_on_off_select_attribute_report_v2(
-    hass: HomeAssistant, zigpy_device_aqara_sensor_v2
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    zigpy_device_aqara_sensor_v2,
 ) -> None:
     """Test ZHA attribute report parsing for select platform."""
 
@@ -490,10 +486,8 @@ async def test_on_off_select_attribute_report_v2(
     )
     assert hass.states.get(entity_id).state == AqaraMotionSensitivities.Low.name
 
-    entity_registry = er.async_get(hass)
-    # none in id because the translation key does not exist
-    entity_entry = entity_registry.async_get("select.fake_manufacturer_fake_model_none")
+    entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
     assert entity_entry.entity_category == EntityCategory.CONFIG
-    assert entity_entry.disabled is True
-    assert entity_entry.translation_key == "motion_sensitivity_translation_key"
+    assert entity_entry.disabled is False
+    assert entity_entry.translation_key == "motion_sensitivity"

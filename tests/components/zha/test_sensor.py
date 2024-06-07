@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import math
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -646,7 +647,7 @@ def hass_ms(hass: HomeAssistant):
 
 
 @pytest.fixture
-def core_rs(hass_storage):
+def core_rs(hass_storage: dict[str, Any]):
     """Core.restore_state fixture."""
 
     def _storage(entity_id, uom, state):
@@ -672,7 +673,6 @@ def core_rs(hass_storage):
                 }
             ],
         }
-        return
 
     return _storage
 
@@ -1260,10 +1260,10 @@ async def test_last_feeding_size_sensor_v2(
     assert entity_id is not None
 
     await send_attributes_report(hass, cluster, {0x010C: 1})
-    assert_state(hass, entity_id, "1.0", UnitOfMass.GRAMS)
+    assert_state(hass, entity_id, "1.0", UnitOfMass.GRAMS.value)
 
     await send_attributes_report(hass, cluster, {0x010C: 5})
-    assert_state(hass, entity_id, "5.0", UnitOfMass.GRAMS)
+    assert_state(hass, entity_id, "5.0", UnitOfMass.GRAMS.value)
 
 
 @pytest.fixture

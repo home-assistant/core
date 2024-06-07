@@ -55,7 +55,7 @@ def set_update_interval(instances_count: int, requests_remaining: int) -> timede
     return interval
 
 
-class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
+class AirlyDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
     """Define an object to hold Airly data."""
 
     def __init__(

@@ -85,7 +85,7 @@ class NOAATidesData(TypedDict):
     """Representation of a single tide."""
 
     time_stamp: list[Timestamp]
-    hi_lo: list[Literal["L"] | Literal["H"]]
+    hi_lo: list[Literal["L", "H"]]
     predicted_wl: list[float]
 
 

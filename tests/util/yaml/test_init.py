@@ -1,6 +1,5 @@
 """Test Home Assistant yaml loader."""
 
-from collections.abc import Generator
 import importlib
 import io
 import os
@@ -10,13 +9,14 @@ import unittest
 from unittest.mock import Mock, patch
 
 import pytest
+from typing_extensions import Generator
 import voluptuous as vol
 import yaml as pyyaml
 
 from homeassistant.config import YAML_CONFIG_FILE, load_yaml_config_file
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.util.yaml as yaml
+from homeassistant.util import yaml
 from homeassistant.util.yaml import loader as yaml_loader
 
 from tests.common import extract_stack_to_frame, get_test_config_dir, patch_yaml_files
@@ -568,13 +568,13 @@ def test_no_recursive_secrets(
 
 def test_input_class() -> None:
     """Test input class."""
-    input = yaml_loader.Input("hello")
-    input2 = yaml_loader.Input("hello")
+    yaml_input = yaml_loader.Input("hello")
+    yaml_input2 = yaml_loader.Input("hello")
 
-    assert input.name == "hello"
-    assert input == input2
+    assert yaml_input.name == "hello"
+    assert yaml_input == yaml_input2
 
-    assert len({input, input2}) == 1
+    assert len({yaml_input, yaml_input2}) == 1
 
 
 def test_input(try_both_loaders, try_both_dumpers) -> None:
@@ -604,7 +604,7 @@ async def test_loading_actual_file_with_syntax_error(
 
 
 @pytest.fixture
-def mock_integration_frame() -> Generator[Mock, None, None]:
+def mock_integration_frame() -> Generator[Mock]:
     """Mock as if we're calling code from inside an integration."""
     correct_frame = Mock(
         filename="/home/paulus/homeassistant/components/hue/light.py",

@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 
 from synology_dsm.exceptions import SynologyDSMLoginInvalidException
 
-from homeassistant import data_entry_flow
 from homeassistant.components.synology_dsm.const import DOMAIN, SERVICES
 from homeassistant.const import (
     CONF_HOST,
@@ -15,6 +14,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
 
@@ -57,7 +57,7 @@ async def test_reauth_triggered(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.synology_dsm.config_flow.SynologyDSMFlowHandler.async_step_reauth",
             return_value={
-                "type": data_entry_flow.FlowResultType.FORM,
+                "type": FlowResultType.FORM,
                 "flow_id": "mock_flow",
                 "step_id": "reauth_confirm",
             },

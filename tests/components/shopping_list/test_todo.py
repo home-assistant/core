@@ -53,8 +53,7 @@ async def ws_move_item(
         if previous_uid is not None:
             data["previous_uid"] = previous_uid
         await client.send_json_auto_id(data)
-        resp = await client.receive_json()
-        return resp
+        return await client.receive_json()
 
     return move
 

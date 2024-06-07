@@ -33,7 +33,7 @@ class HVACMode(StrEnum):
     # Device is in Dry/Humidity mode
     DRY = "dry"
 
-    # Only the fan is on, not fan and another mode like cool
+    # Only the fan is on, not fan and another mode like cool
     FAN_ONLY = "fan_only"
 
 

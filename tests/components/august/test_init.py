@@ -3,6 +3,7 @@
 from unittest.mock import Mock, patch
 
 from aiohttp import ClientResponseError
+import pytest
 from yalexs.authenticator_common import AuthenticationState
 from yalexs.exceptions import AugustApiAIOHTTPError
 
@@ -12,6 +13,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_LOCK,
+    SERVICE_OPEN,
     SERVICE_UNLOCK,
     STATE_LOCKED,
     STATE_ON,
@@ -160,6 +162,17 @@ async def test_lock_throws_august_api_http_error(hass: HomeAssistant) -> None:
         "A6697750D607098BAE8D6BAA11EF8063 Name: This should bubble up as its user"
         " consumable"
     )
+
+
+async def test_open_throws_hass_service_not_supported_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test open throws correct error on entity does not support this service error."""
+    mocked_lock_detail = await _mock_operative_august_lock_detail(hass)
+    await _create_august_with_devices(hass, [mocked_lock_detail])
+    data = {ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name"}
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(LOCK_DOMAIN, SERVICE_OPEN, data, blocking=True)
 
 
 async def test_inoperative_locks_are_filtered_out(hass: HomeAssistant) -> None:
@@ -384,20 +397,6 @@ async def test_load_triggers_ble_discovery(
     }
 
 
-async def remove_device(ws_client, device_id, config_entry_id):
-    """Remove config entry from a device."""
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": config_entry_id,
-            "device_id": device_id,
-        }
-    )
-    response = await ws_client.receive_json()
-    return response["success"]
-
-
 async def test_device_remove_devices(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -411,20 +410,13 @@ async def test_device_remove_devices(
     entity = entity_registry.entities["lock.a6697750d607098bae8d6baa11ef8063_name"]
 
     device_entry = device_registry.async_get(entity.device_id)
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), device_entry.id, config_entry.entry_id
-        )
-        is False
-    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "remove-device-id")},
     )
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), dead_device_entry.id, config_entry.entry_id
-        )
-        is True
-    )
+    response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
+    assert response["success"]

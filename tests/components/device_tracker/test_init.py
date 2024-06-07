@@ -5,12 +5,11 @@ import json
 import logging
 import os
 from types import ModuleType
-from unittest.mock import Mock, call, patch
+from unittest.mock import call, patch
 
 import pytest
 
-from homeassistant.components import zone
-import homeassistant.components.device_tracker as device_tracker
+from homeassistant.components import device_tracker, zone
 from homeassistant.components.device_tracker import SourceType, const, legacy
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
@@ -26,11 +25,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from . import common
+from .common import MockScanner, mock_legacy_device_tracker_setup
 
 from tests.common import (
     assert_setup_component,
@@ -56,6 +57,14 @@ def mock_yaml_devices(hass):
     yield yaml_devices
     if os.path.isfile(yaml_devices):
         os.remove(yaml_devices)
+
+
+@pytest.fixture(autouse=True)
+def _mock_legacy_device_tracker_setup(
+    hass: HomeAssistant, mock_legacy_device_scanner: MockScanner
+) -> None:
+    """Mock legacy device tracker setup."""
+    mock_legacy_device_tracker_setup(hass, mock_legacy_device_scanner)
 
 
 async def test_is_on(hass: HomeAssistant) -> None:
@@ -99,9 +108,7 @@ async def test_reading_broken_yaml_config(hass: HomeAssistant) -> None:
         assert res[0].dev_id == "my_device"
 
 
-async def test_reading_yaml_config(
-    hass: HomeAssistant, yaml_devices, enable_custom_integrations: None
-) -> None:
+async def test_reading_yaml_config(hass: HomeAssistant, yaml_devices) -> None:
     """Test the rendering of the YAML configuration."""
     dev_id = "test"
     device = legacy.Device(
@@ -179,9 +186,7 @@ async def test_duplicate_mac_dev_id(mock_warning, hass: HomeAssistant) -> None:
     assert "Duplicate device IDs" in args[0], "Duplicate device IDs warning expected"
 
 
-async def test_setup_without_yaml_file(
-    hass: HomeAssistant, yaml_devices, enable_custom_integrations: None
-) -> None:
+async def test_setup_without_yaml_file(hass: HomeAssistant, yaml_devices) -> None:
     """Test with no YAML file."""
     with assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
@@ -280,13 +285,11 @@ async def test_discover_platform_missing_platform(
 async def test_update_stale(
     hass: HomeAssistant,
     mock_device_tracker_conf: list[legacy.Device],
-    enable_custom_integrations: None,
+    mock_legacy_device_scanner: MockScanner,
 ) -> None:
     """Test stalled update."""
-
-    scanner = getattr(hass.components, "test.device_tracker").SCANNER
-    scanner.reset()
-    scanner.come_home("DEV1")
+    mock_legacy_device_scanner.reset()
+    mock_legacy_device_scanner.come_home("DEV1")
 
     now = dt_util.utcnow()
     register_time = datetime(now.year + 1, 9, 15, 23, tzinfo=dt_util.UTC)
@@ -313,7 +316,7 @@ async def test_update_stale(
 
     assert hass.states.get("device_tracker.dev1").state == STATE_HOME
 
-    scanner.leave_home("DEV1")
+    mock_legacy_device_scanner.leave_home("DEV1")
 
     with patch(
         "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
@@ -328,7 +331,6 @@ async def test_update_stale(
 async def test_entity_attributes(
     hass: HomeAssistant,
     mock_device_tracker_conf: list[legacy.Device],
-    enable_custom_integrations: None,
 ) -> None:
     """Test the entity attributes."""
     devices = mock_device_tracker_conf
@@ -362,9 +364,7 @@ async def test_entity_attributes(
 
 
 @patch("homeassistant.components.device_tracker.legacy.DeviceTracker.async_see")
-async def test_see_service(
-    mock_see, hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
+async def test_see_service(mock_see, hass: HomeAssistant) -> None:
     """Test the see service with a unicode dev_id and NO MAC."""
     with assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
@@ -395,13 +395,18 @@ async def test_see_service(
 async def test_see_service_guard_config_entry(
     hass: HomeAssistant,
     mock_device_tracker_conf: list[legacy.Device],
-    enable_custom_integrations: None,
 ) -> None:
     """Test the guard if the device is registered in the entity registry."""
-    mock_entry = Mock()
     dev_id = "test"
     entity_id = f"{const.DOMAIN}.{dev_id}"
-    mock_registry(hass, {entity_id: mock_entry})
+    mock_registry(
+        hass,
+        {
+            entity_id: RegistryEntry(
+                entity_id=entity_id, unique_id=1, platform=const.DOMAIN
+            )
+        },
+    )
     devices = mock_device_tracker_conf
     assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
     await hass.async_block_till_done()
@@ -416,7 +421,6 @@ async def test_see_service_guard_config_entry(
 async def test_new_device_event_fired(
     hass: HomeAssistant,
     mock_device_tracker_conf: list[legacy.Device],
-    enable_custom_integrations: None,
 ) -> None:
     """Test that the device tracker will fire an event."""
     with assert_setup_component(1, device_tracker.DOMAIN):
@@ -451,7 +455,6 @@ async def test_new_device_event_fired(
 async def test_duplicate_yaml_keys(
     hass: HomeAssistant,
     mock_device_tracker_conf: list[legacy.Device],
-    enable_custom_integrations: None,
 ) -> None:
     """Test that the device tracker will not generate invalid YAML."""
     devices = mock_device_tracker_conf
@@ -471,7 +474,6 @@ async def test_duplicate_yaml_keys(
 async def test_invalid_dev_id(
     hass: HomeAssistant,
     mock_device_tracker_conf: list[legacy.Device],
-    enable_custom_integrations: None,
 ) -> None:
     """Test that the device tracker will not allow invalid dev ids."""
     devices = mock_device_tracker_conf
@@ -485,9 +487,7 @@ async def test_invalid_dev_id(
     assert not devices
 
 
-async def test_see_state(
-    hass: HomeAssistant, yaml_devices, enable_custom_integrations: None
-) -> None:
+async def test_see_state(hass: HomeAssistant, yaml_devices) -> None:
     """Test device tracker see records state correctly."""
     assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
     await hass.async_block_till_done()
@@ -527,7 +527,7 @@ async def test_see_state(
 async def test_see_passive_zone_state(
     hass: HomeAssistant,
     mock_device_tracker_conf: list[legacy.Device],
-    enable_custom_integrations: None,
+    mock_legacy_device_scanner: MockScanner,
 ) -> None:
     """Test that the device tracker sets gps for passive trackers."""
     now = dt_util.utcnow()
@@ -547,9 +547,8 @@ async def test_see_passive_zone_state(
         await async_setup_component(hass, zone.DOMAIN, {"zone": zone_info})
         await hass.async_block_till_done()
 
-    scanner = getattr(hass.components, "test.device_tracker").SCANNER
-    scanner.reset()
-    scanner.come_home("dev1")
+    mock_legacy_device_scanner.reset()
+    mock_legacy_device_scanner.come_home("dev1")
 
     with (
         patch(
@@ -581,7 +580,7 @@ async def test_see_passive_zone_state(
     assert attrs.get("gps_accuracy") == 0
     assert attrs.get("source_type") == SourceType.ROUTER
 
-    scanner.leave_home("dev1")
+    mock_legacy_device_scanner.leave_home("dev1")
 
     with patch(
         "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
@@ -668,12 +667,11 @@ async def test_bad_platform(hass: HomeAssistant) -> None:
 async def test_adding_unknown_device_to_config(
     mock_device_tracker_conf: list[legacy.Device],
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    mock_legacy_device_scanner: MockScanner,
 ) -> None:
     """Test the adding of unknown devices to configuration file."""
-    scanner = getattr(hass.components, "test.device_tracker").SCANNER
-    scanner.reset()
-    scanner.come_home("DEV1")
+    mock_legacy_device_scanner.reset()
+    mock_legacy_device_scanner.come_home("DEV1")
 
     await async_setup_component(
         hass, device_tracker.DOMAIN, {device_tracker.DOMAIN: {CONF_PLATFORM: "test"}}

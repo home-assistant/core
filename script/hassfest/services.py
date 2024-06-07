@@ -168,7 +168,8 @@ def validate_services(config: Config, integration: Integration) -> None:
     # 2. Check if the service has an icon set in icons.json.
     #    raise an error if not.,
     for service_name, service_schema in services.items():
-        if service_name not in service_icons:
+        if integration.core and service_name not in service_icons:
+            # This is enforced for Core integrations only
             integration.add_error(
                 "services",
                 f"Service {service_name} has no icon in icons.json.",

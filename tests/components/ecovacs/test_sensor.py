@@ -69,7 +69,25 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
                 "sensor.ozmo_950_error",
             ],
         ),
+        (
+            "5xu9h3",
+            [
+                "sensor.goat_g1_area_cleaned",
+                "sensor.goat_g1_cleaning_duration",
+                "sensor.goat_g1_total_area_cleaned",
+                "sensor.goat_g1_total_cleaning_duration",
+                "sensor.goat_g1_total_cleanings",
+                "sensor.goat_g1_battery",
+                "sensor.goat_g1_ip_address",
+                "sensor.goat_g1_wi_fi_rssi",
+                "sensor.goat_g1_wi_fi_ssid",
+                "sensor.goat_g1_blade_lifespan",
+                "sensor.goat_g1_lens_brush_lifespan",
+                "sensor.goat_g1_error",
+            ],
+        ),
     ],
+    ids=["yna5x1", "5xu9h3"],
 )
 async def test_sensors(
     hass: HomeAssistant,
@@ -111,7 +129,17 @@ async def test_sensors(
                 "sensor.ozmo_950_wi_fi_ssid",
             ],
         ),
+        (
+            "5xu9h3",
+            [
+                "sensor.goat_g1_error",
+                "sensor.goat_g1_ip_address",
+                "sensor.goat_g1_wi_fi_rssi",
+                "sensor.goat_g1_wi_fi_ssid",
+            ],
+        ),
     ],
+    ids=["yna5x1", "5xu9h3"],
 )
 async def test_disabled_by_default_sensors(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, entity_ids: list[str]

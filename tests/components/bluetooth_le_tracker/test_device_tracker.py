@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from bleak import BleakError
 from freezegun import freeze_time
+import pytest
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.bluetooth_le_tracker import device_tracker
@@ -17,7 +18,6 @@ from homeassistant.components.device_tracker import (
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
     DOMAIN,
-    legacy,
 )
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
@@ -66,11 +66,8 @@ class MockBleakClientBattery5(MockBleakClient):
         return b"\x05"
 
 
-async def test_do_not_see_device_if_time_not_updated(
-    hass: HomeAssistant,
-    mock_bluetooth: None,
-    mock_device_tracker_conf: list[legacy.Device],
-) -> None:
+@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+async def test_do_not_see_device_if_time_not_updated(hass: HomeAssistant) -> None:
     """Test device going not_home after consider_home threshold from first scan if the subsequent scans have not incremented last seen time."""
 
     address = "DE:AD:BE:EF:13:37"
@@ -92,6 +89,7 @@ async def test_do_not_see_device_if_time_not_updated(
             advertisement=generate_advertisement_data(local_name="empty"),
             time=0,
             connectable=False,
+            tx_power=-127,
         )
         # Return with name with time = 0 for all the updates
         mock_async_discovered_service_info.return_value = [device]
@@ -131,11 +129,8 @@ async def test_do_not_see_device_if_time_not_updated(
     assert state.state == "not_home"
 
 
-async def test_see_device_if_time_updated(
-    hass: HomeAssistant,
-    mock_bluetooth: None,
-    mock_device_tracker_conf: list[legacy.Device],
-) -> None:
+@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+async def test_see_device_if_time_updated(hass: HomeAssistant) -> None:
     """Test device remaining home after consider_home threshold from first scan if the subsequent scans have incremented last seen time."""
 
     address = "DE:AD:BE:EF:13:37"
@@ -157,6 +152,7 @@ async def test_see_device_if_time_updated(
             advertisement=generate_advertisement_data(local_name="empty"),
             time=0,
             connectable=False,
+            tx_power=-127,
         )
         # Return with name with time = 0 initially
         mock_async_discovered_service_info.return_value = [device]
@@ -191,6 +187,7 @@ async def test_see_device_if_time_updated(
             advertisement=generate_advertisement_data(local_name="empty"),
             time=1,
             connectable=False,
+            tx_power=-127,
         )
         # Return with name with time = 0 initially
         mock_async_discovered_service_info.return_value = [device]
@@ -211,11 +208,8 @@ async def test_see_device_if_time_updated(
     assert state.state == "home"
 
 
-async def test_preserve_new_tracked_device_name(
-    hass: HomeAssistant,
-    mock_bluetooth: None,
-    mock_device_tracker_conf: list[legacy.Device],
-) -> None:
+@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+async def test_preserve_new_tracked_device_name(hass: HomeAssistant) -> None:
     """Test preserving tracked device name across new seens."""
 
     address = "DE:AD:BE:EF:13:37"
@@ -237,6 +231,7 @@ async def test_preserve_new_tracked_device_name(
             advertisement=generate_advertisement_data(local_name="empty"),
             time=0,
             connectable=False,
+            tx_power=-127,
         )
         # Return with name when seen first time
         mock_async_discovered_service_info.return_value = [device]
@@ -262,6 +257,7 @@ async def test_preserve_new_tracked_device_name(
             advertisement=generate_advertisement_data(local_name="empty"),
             time=0,
             connectable=False,
+            tx_power=-127,
         )
         # Return with name when seen first time
         mock_async_discovered_service_info.return_value = [device]
@@ -279,11 +275,8 @@ async def test_preserve_new_tracked_device_name(
     assert state.name == name
 
 
-async def test_tracking_battery_times_out(
-    hass: HomeAssistant,
-    mock_bluetooth: None,
-    mock_device_tracker_conf: list[legacy.Device],
-) -> None:
+@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+async def test_tracking_battery_times_out(hass: HomeAssistant) -> None:
     """Test tracking the battery times out."""
 
     address = "DE:AD:BE:EF:13:37"
@@ -305,6 +298,7 @@ async def test_tracking_battery_times_out(
             advertisement=generate_advertisement_data(local_name="empty"),
             time=0,
             connectable=False,
+            tx_power=-127,
         )
         # Return with name when seen first time
         mock_async_discovered_service_info.return_value = [device]
@@ -347,11 +341,8 @@ async def test_tracking_battery_times_out(
     assert "battery" not in state.attributes
 
 
-async def test_tracking_battery_fails(
-    hass: HomeAssistant,
-    mock_bluetooth: None,
-    mock_device_tracker_conf: list[legacy.Device],
-) -> None:
+@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+async def test_tracking_battery_fails(hass: HomeAssistant) -> None:
     """Test tracking the battery fails."""
 
     address = "DE:AD:BE:EF:13:37"
@@ -373,6 +364,7 @@ async def test_tracking_battery_fails(
             advertisement=generate_advertisement_data(local_name="empty"),
             time=0,
             connectable=False,
+            tx_power=-127,
         )
         # Return with name when seen first time
         mock_async_discovered_service_info.return_value = [device]
@@ -414,11 +406,8 @@ async def test_tracking_battery_fails(
     assert "battery" not in state.attributes
 
 
-async def test_tracking_battery_successful(
-    hass: HomeAssistant,
-    mock_bluetooth: None,
-    mock_device_tracker_conf: list[legacy.Device],
-) -> None:
+@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+async def test_tracking_battery_successful(hass: HomeAssistant) -> None:
     """Test tracking the battery gets a value."""
 
     address = "DE:AD:BE:EF:13:37"
@@ -440,6 +429,7 @@ async def test_tracking_battery_successful(
             advertisement=generate_advertisement_data(local_name="empty"),
             time=0,
             connectable=True,
+            tx_power=-127,
         )
         # Return with name when seen first time
         mock_async_discovered_service_info.return_value = [device]

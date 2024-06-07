@@ -1,10 +1,10 @@
 """Fixtures for the lock entity platform tests."""
 
-from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
@@ -65,7 +65,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -98,7 +98,9 @@ async def setup_lock_platform_test_entity(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, LOCK_DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [LOCK_DOMAIN]
+        )
         return True
 
     MockPlatform(hass, f"{TEST_DOMAIN}.config_flow")

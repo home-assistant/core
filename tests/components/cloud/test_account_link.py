@@ -7,9 +7,10 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.cloud import account_link
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.dt import utcnow
 
@@ -177,9 +178,8 @@ async def test_get_services_error(hass: HomeAssistant) -> None:
         assert account_link.DATA_SERVICES not in hass.data
 
 
-async def test_implementation(
-    hass: HomeAssistant, flow_handler, current_request_with_host: None
-) -> None:
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_implementation(hass: HomeAssistant, flow_handler) -> None:
     """Test Cloud OAuth2 implementation."""
     hass.data["cloud"] = None
 
@@ -203,7 +203,7 @@ async def test_implementation(
             TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["url"] == "http://example.com/auth"
 
     flow_finished.set_result(

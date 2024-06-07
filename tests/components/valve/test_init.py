@@ -1,9 +1,8 @@
 """The tests for Valve."""
 
-from collections.abc import Generator
-
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from typing_extensions import Generator
 
 from homeassistant.components.valve import (
     DOMAIN,
@@ -54,7 +53,7 @@ class MockValveEntity(ValveEntity):
         unique_id: str = "mock_valve",
         name: str = "Valve",
         features: ValveEntityFeature = ValveEntityFeature(0),
-        current_position: int = None,
+        current_position: int | None = None,
         device_class: ValveDeviceClass = None,
         reports_position: bool = True,
     ) -> None:
@@ -104,7 +103,7 @@ class MockBinaryValveEntity(ValveEntity):
         unique_id: str = "mock_valve_2",
         name: str = "Valve",
         features: ValveEntityFeature = ValveEntityFeature(0),
-        is_closed: bool = None,
+        is_closed: bool | None = None,
     ) -> None:
         """Initialize the valve."""
         self._attr_name = name
@@ -123,7 +122,7 @@ class MockBinaryValveEntity(ValveEntity):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -152,8 +151,8 @@ def mock_config_entry(hass) -> tuple[MockConfigEntry, list[ValveEntity]]:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(
-            config_entry, Platform.VALVE
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.VALVE]
         )
         return True
 
@@ -205,7 +204,7 @@ async def test_valve_setup(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     for entity in mock_config_entry[1]:
         entity_id = entity.entity_id
         state = hass.states.get(entity_id)
@@ -215,7 +214,7 @@ async def test_valve_setup(
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     for entity in mock_config_entry[1]:
         entity_id = entity.entity_id

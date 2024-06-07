@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 from open_meteo import Forecast
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.open_meteo.const import DOMAIN
 from homeassistant.const import CONF_ZONE
@@ -26,7 +26,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[None, None, None]:
+def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.open_meteo.async_setup_entry", return_value=True

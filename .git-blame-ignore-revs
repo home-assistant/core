@@ -9,3 +9,6 @@
 
 # Prettify json (tests) (#68888)
 496d90bf00429d9d924caeb0155edc0bf54e86b9
+
+# Bump ruff to 0.3.4 (#112690)
+6bb4e7d62c60389608acf4a7d7dacd8f029307dd

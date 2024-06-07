@@ -15,12 +15,11 @@ import pytest
 
 from homeassistant.const import MATCH_ALL
 import homeassistant.core as ha
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     TrackStates,
     TrackTemplate,
     TrackTemplateResult,
@@ -50,7 +49,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, async_fire_time_changed_exact
 
-DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
+DEFAULT_TIME_ZONE = dt_util.get_default_time_zone()
 
 
 async def test_track_point_in_time(hass: HomeAssistant) -> None:
@@ -4098,7 +4097,7 @@ async def test_periodic_task_entering_dst(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test periodic task behavior when entering dst."""
-    hass.config.set_time_zone("Europe/Vienna")
+    await hass.config.async_set_time_zone("Europe/Vienna")
     specific_runs = []
 
     today = date.today().isoformat()
@@ -4149,7 +4148,7 @@ async def test_periodic_task_entering_dst_2(
 
     This tests a task firing every second in the range 0..58 (not *:*:59)
     """
-    hass.config.set_time_zone("Europe/Vienna")
+    await hass.config.async_set_time_zone("Europe/Vienna")
     specific_runs = []
 
     today = date.today().isoformat()
@@ -4199,7 +4198,7 @@ async def test_periodic_task_leaving_dst(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test periodic task behavior when leaving dst."""
-    hass.config.set_time_zone("Europe/Vienna")
+    await hass.config.async_set_time_zone("Europe/Vienna")
     specific_runs = []
 
     today = date.today().isoformat()
@@ -4275,7 +4274,7 @@ async def test_periodic_task_leaving_dst_2(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test periodic task behavior when leaving dst."""
-    hass.config.set_time_zone("Europe/Vienna")
+    await hass.config.async_set_time_zone("Europe/Vienna")
     specific_runs = []
 
     today = date.today().isoformat()
@@ -4566,7 +4565,7 @@ async def test_async_track_point_in_time_cancel(hass: HomeAssistant) -> None:
     """Test cancel of async track point in time."""
 
     times = []
-    hass.config.set_time_zone("US/Hawaii")
+    await hass.config.async_set_time_zone("US/Hawaii")
     hst_tz = dt_util.get_time_zone("US/Hawaii")
 
     @ha.callback
@@ -4588,6 +4587,40 @@ async def test_async_track_point_in_time_cancel(hass: HomeAssistant) -> None:
 
     assert len(times) == 1
     assert "US/Hawaii" in str(times[0].tzinfo)
+
+
+async def test_async_track_point_in_time_cancel_in_job(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test cancel of async track point in time during job execution."""
+
+    now = dt_util.utcnow()
+    times = []
+
+    time_that_will_not_match_right_away = datetime(
+        now.year + 1, 5, 24, 11, 59, 55, tzinfo=dt_util.UTC
+    )
+    freezer.move_to(time_that_will_not_match_right_away)
+
+    @callback
+    def action(x: datetime):
+        nonlocal times
+        times.append(x)
+        unsub()
+
+    unsub = async_track_utc_time_change(hass, action, minute=0, second="*")
+
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 12, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
+    await hass.async_block_till_done()
+    assert len(times) == 1
+
+    async_fire_time_changed(
+        hass, datetime(now.year + 1, 5, 24, 13, 0, 0, 999999, tzinfo=dt_util.UTC)
+    )
+    await hass.async_block_till_done()
+    assert len(times) == 1
 
 
 async def test_async_track_entity_registry_updated_event(hass: HomeAssistant) -> None:
@@ -4805,3 +4838,36 @@ async def test_async_track_device_registry_updated_event_with_a_callback_that_th
     unsub2()
 
     assert event_data[0] == {"action": "create", "device_id": device_id}
+
+
+async def test_track_state_change_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test track_state_change is deprecated."""
+    async_track_state_change(
+        hass, "light.Bowl", lambda entity_id, old_state, new_state: None, "on", "off"
+    )
+
+    assert (
+        "Detected code that calls `async_track_state_change` instead "
+        "of `async_track_state_change_event` which is deprecated and "
+        "will be removed in Home Assistant 2025.5. Please report this issue."
+    ) in caplog.text
+
+
+async def test_track_point_in_time_repr(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test track point in time."""
+
+    @ha.callback
+    def _raise_exception(_):
+        raise RuntimeError("something happened and its poorly described")
+
+    async_track_point_in_utc_time(hass, _raise_exception, dt_util.utcnow())
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Exception in callback _TrackPointUTCTime" in caplog.text
+    assert "._raise_exception" in caplog.text
+    await hass.async_block_till_done(wait_background_tasks=True)

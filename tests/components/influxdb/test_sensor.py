@@ -10,8 +10,10 @@ from unittest.mock import MagicMock, patch
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from influxdb_client.rest import ApiException
 import pytest
+from typing_extensions import Generator
 from voluptuous import Invalid
 
+from homeassistant.components import sensor
 from homeassistant.components.influxdb.const import (
     API_VERSION_2,
     DEFAULT_API_VERSION,
@@ -22,7 +24,6 @@ from homeassistant.components.influxdb.const import (
     TEST_QUERY_V2,
 )
 from homeassistant.components.influxdb.sensor import PLATFORM_SCHEMA
-import homeassistant.components.sensor as sensor
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import PLATFORM_NOT_READY_BASE_WAIT_TIME
@@ -79,7 +80,9 @@ class Table:
 
 
 @pytest.fixture(name="mock_client")
-def mock_client_fixture(request):
+def mock_client_fixture(
+    request: pytest.FixtureRequest,
+) -> Generator[MagicMock]:
     """Patch the InfluxDBClient object with mock for version under test."""
     if request.param == API_VERSION_2:
         client_target = f"{INFLUXDB_CLIENT_PATH}V2"

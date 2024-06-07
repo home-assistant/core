@@ -51,12 +51,10 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
         except ValueError:
             total_consumption = None
 
-        attrs = {
+        return {
             ATTR_TOTAL_CONSUMPTION: total_consumption,
             ATTR_TEMPERATURE: temperature,
         }
-
-        return attrs
 
     @property
     def is_on(self) -> bool:

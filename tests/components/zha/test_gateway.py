@@ -5,10 +5,9 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 from zigpy.application import ControllerApplication
-import zigpy.profiles.zha as zha
+from zigpy.profiles import zha
 import zigpy.types
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.lighting as lighting
+from zigpy.zcl.clusters import general, lighting
 import zigpy.zdo.types
 
 from homeassistant.components.zha.core.gateway import ZHAGateway
@@ -61,8 +60,7 @@ def required_platform_only():
 async def zha_dev_basic(hass, zha_device_restored, zigpy_dev_basic):
     """ZHA device with just a basic cluster."""
 
-    zha_device = await zha_device_restored(zigpy_dev_basic)
-    return zha_device
+    return await zha_device_restored(zigpy_dev_basic)
 
 
 @pytest.fixture
@@ -302,7 +300,7 @@ async def test_single_reload_on_multiple_connection_loss(
     hass: HomeAssistant,
     zigpy_app_controller: ControllerApplication,
     config_entry: MockConfigEntry,
-):
+) -> None:
     """Test that we only reload once when we lose the connection multiple times."""
     config_entry.add_to_hass(hass)
 
@@ -335,7 +333,7 @@ async def test_startup_concurrency_limit(
     zigpy_app_controller: ControllerApplication,
     config_entry: MockConfigEntry,
     zigpy_device_mock,
-):
+) -> None:
     """Test ZHA gateway limits concurrency on startup."""
     config_entry.add_to_hass(hass)
     zha_gateway = ZHAGateway(hass, {}, config_entry)

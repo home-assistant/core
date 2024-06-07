@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from miio import DeviceException
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_ICON,
@@ -140,7 +141,9 @@ new_fanspeeds = {
 
 
 @pytest.fixture(name="mock_mirobo_fanspeeds", params=[old_fanspeeds, new_fanspeeds])
-def mirobo_old_speeds_fixture(request):
+def mirobo_old_speeds_fixture(
+    request: pytest.FixtureRequest,
+) -> Generator[MagicMock]:
     """Fixture for testing both types of fanspeeds."""
     mock_vacuum = MagicMock()
     mock_vacuum.status().battery = 32
@@ -238,7 +241,7 @@ async def test_xiaomi_exceptions(hass: HomeAssistant, mock_mirobo_is_on) -> None
     mock_mirobo_is_on.status.side_effect = DeviceException("dummy exception")
     future = dt_util.utcnow() + timedelta(seconds=60)
     async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not is_available()
 
@@ -247,7 +250,7 @@ async def test_xiaomi_exceptions(hass: HomeAssistant, mock_mirobo_is_on) -> None
     mock_mirobo_is_on.status.reset_mock()
     future += timedelta(seconds=60)
     async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not is_available()
     assert mock_mirobo_is_on.status.call_count == 1

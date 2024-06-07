@@ -26,24 +26,38 @@ def blueprint_1():
     )
 
 
-@pytest.fixture
-def blueprint_2():
+@pytest.fixture(params=[False, True])
+def blueprint_2(request: pytest.FixtureRequest) -> models.Blueprint:
     """Blueprint fixture with default inputs."""
-    return models.Blueprint(
-        {
-            "blueprint": {
-                "name": "Hello",
-                "domain": "automation",
-                "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+    blueprint = {
+        "blueprint": {
+            "name": "Hello",
+            "domain": "automation",
+            "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+            "input": {
+                "test-input": {"name": "Name", "description": "Description"},
+                "test-input-default": {"default": "test"},
+            },
+        },
+        "example": Input("test-input"),
+        "example-default": Input("test-input-default"),
+    }
+    if request.param:
+        # Replace the inputs with inputs in sections. Test should otherwise behave the same.
+        blueprint["blueprint"]["input"] = {
+            "section-1": {
+                "name": "Section 1",
                 "input": {
                     "test-input": {"name": "Name", "description": "Description"},
-                    "test-input-default": {"default": "test"},
                 },
             },
-            "example": Input("test-input"),
-            "example-default": Input("test-input-default"),
+            "section-2": {
+                "input": {
+                    "test-input-default": {"default": "test"},
+                }
+            },
         }
-    )
+    return models.Blueprint(blueprint)
 
 
 @pytest.fixture

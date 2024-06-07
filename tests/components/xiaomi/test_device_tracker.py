@@ -48,7 +48,7 @@ def mocked_requests(*args, **kwargs):
                 raise requests.HTTPError(self.status_code)
 
     data = kwargs.get("data")
-    global FIRST_CALL
+    global FIRST_CALL  # noqa: PLW0603
 
     if data and data.get("username", None) == INVALID_USERNAME:
         # deliver an invalid token

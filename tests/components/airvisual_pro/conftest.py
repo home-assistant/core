@@ -1,10 +1,10 @@
 """Define test fixtures for AirVisual Pro."""
 
-from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.airvisual_pro.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.airvisual_pro.async_setup_entry", return_value=True
@@ -56,7 +56,7 @@ def disconnect_fixture():
     return AsyncMock()
 
 
-@pytest.fixture(name="data", scope="session")
+@pytest.fixture(name="data", scope="package")
 def data_fixture():
     """Define an update coordinator data example."""
     return json.loads(load_fixture("data.json", "airvisual_pro"))
@@ -81,7 +81,7 @@ async def setup_airvisual_pro_fixture(hass, config, pro):
             return_value=pro,
         ),
         patch("homeassistant.components.airvisual_pro.NodeSamba", return_value=pro),
-        patch("homeassistant.components.airvisual.PLATFORMS", []),
+        patch("homeassistant.components.airvisual_pro.PLATFORMS", []),
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

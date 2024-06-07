@@ -173,11 +173,6 @@ class MetEireannWeather(
             ha_forecast.append(ha_item)
         return ha_forecast
 
-    @property
-    def forecast(self) -> list[Forecast]:
-        """Return the forecast array."""
-        return self._forecast(False)
-
     @callback
     def _async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""

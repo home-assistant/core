@@ -8,7 +8,7 @@ from io import StringIO, TextIOWrapper
 import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TextIO, TypeVar, overload
+from typing import Any, TextIO, overload
 
 import yaml
 
@@ -22,22 +22,17 @@ except ImportError:
         SafeLoader as FastestAvailableSafeLoader,
     )
 
+from functools import cached_property
+
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.frame import report
 
 from .const import SECRET_YAML
 from .objects import Input, NodeDictClass, NodeListClass, NodeStrClass
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
-
 # mypy: allow-untyped-calls, no-warn-return-any
 
 JSON_TYPE = list | dict | str
-_DictT = TypeVar("_DictT", bound=dict)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -220,7 +215,7 @@ class SafeLineLoader(PythonSafeLoader):
         )
 
 
-LoaderType = FastSafeLoader | PythonSafeLoader
+type LoaderType = FastSafeLoader | PythonSafeLoader
 
 
 def load_yaml(
@@ -280,7 +275,7 @@ def _parse_yaml_python(
 
 
 def _parse_yaml(
-    loader: type[FastSafeLoader] | type[PythonSafeLoader],
+    loader: type[FastSafeLoader | PythonSafeLoader],
     content: str | TextIO,
     secrets: Secrets | None = None,
 ) -> JSON_TYPE:
@@ -290,37 +285,64 @@ def _parse_yaml(
 
 @overload
 def _add_reference(
-    obj: list | NodeListClass,
-    loader: LoaderType,
-    node: yaml.nodes.Node,
+    obj: list | NodeListClass, loader: LoaderType, node: yaml.nodes.Node
 ) -> NodeListClass: ...
 
 
 @overload
 def _add_reference(
-    obj: str | NodeStrClass,
-    loader: LoaderType,
-    node: yaml.nodes.Node,
+    obj: str | NodeStrClass, loader: LoaderType, node: yaml.nodes.Node
 ) -> NodeStrClass: ...
 
 
 @overload
 def _add_reference(
-    obj: _DictT, loader: LoaderType, node: yaml.nodes.Node
-) -> _DictT: ...
+    obj: dict | NodeDictClass, loader: LoaderType, node: yaml.nodes.Node
+) -> NodeDictClass: ...
 
 
-def _add_reference(  # type: ignore[no-untyped-def]
-    obj, loader: LoaderType, node: yaml.nodes.Node
-):
+def _add_reference(
+    obj: dict | list | str | NodeDictClass | NodeListClass | NodeStrClass,
+    loader: LoaderType,
+    node: yaml.nodes.Node,
+) -> NodeDictClass | NodeListClass | NodeStrClass:
     """Add file reference information to an object."""
     if isinstance(obj, list):
         obj = NodeListClass(obj)
-    if isinstance(obj, str):
+    elif isinstance(obj, str):
         obj = NodeStrClass(obj)
+    elif isinstance(obj, dict):
+        obj = NodeDictClass(obj)
+    return _add_reference_to_node_class(obj, loader, node)
+
+
+@overload
+def _add_reference_to_node_class(
+    obj: NodeListClass, loader: LoaderType, node: yaml.nodes.Node
+) -> NodeListClass: ...
+
+
+@overload
+def _add_reference_to_node_class(
+    obj: NodeStrClass, loader: LoaderType, node: yaml.nodes.Node
+) -> NodeStrClass: ...
+
+
+@overload
+def _add_reference_to_node_class(
+    obj: NodeDictClass, loader: LoaderType, node: yaml.nodes.Node
+) -> NodeDictClass: ...
+
+
+def _add_reference_to_node_class(
+    obj: NodeDictClass | NodeListClass | NodeStrClass,
+    loader: LoaderType,
+    node: yaml.nodes.Node,
+) -> NodeDictClass | NodeListClass | NodeStrClass:
+    """Add file reference information to a node class object."""
     try:  # suppress is much slower
-        setattr(obj, "__config_file__", loader.get_name)
-        setattr(obj, "__line__", node.start_mark.line + 1)
+        obj.__config_file__ = loader.get_name
+        obj.__line__ = node.start_mark.line + 1
     except AttributeError:
         pass
     return obj
@@ -374,7 +396,7 @@ def _include_dir_named_yaml(loader: LoaderType, node: yaml.nodes.Node) -> NodeDi
             # as an empty dictionary
             loaded_yaml = NodeDictClass()
         mapping[filename] = loaded_yaml
-    return _add_reference(mapping, loader, node)
+    return _add_reference_to_node_class(mapping, loader, node)
 
 
 def _include_dir_merge_named_yaml(
@@ -389,7 +411,7 @@ def _include_dir_merge_named_yaml(
         loaded_yaml = load_yaml(fname, loader.secrets)
         if isinstance(loaded_yaml, dict):
             mapping.update(loaded_yaml)
-    return _add_reference(mapping, loader, node)
+    return _add_reference_to_node_class(mapping, loader, node)
 
 
 def _include_dir_list_yaml(
@@ -428,7 +450,7 @@ def _handle_mapping_tag(
     nodes = loader.construct_pairs(node)
 
     seen: dict = {}
-    for (key, _), (child_node, _) in zip(nodes, node.value):
+    for (key, _), (child_node, _) in zip(nodes, node.value, strict=False):
         line = child_node.start_mark.line
 
         try:
@@ -458,7 +480,7 @@ def _handle_mapping_tag(
             )
         seen[key] = line
 
-    return _add_reference(NodeDictClass(nodes), loader, node)
+    return _add_reference_to_node_class(NodeDictClass(nodes), loader, node)
 
 
 def _construct_seq(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
@@ -474,7 +496,7 @@ def _handle_scalar_tag(
     obj = node.value
     if not isinstance(obj, str):
         return obj
-    return _add_reference(obj, loader, node)
+    return _add_reference_to_node_class(NodeStrClass(obj), loader, node)
 
 
 def _env_var_yaml(loader: LoaderType, node: yaml.nodes.Node) -> str:

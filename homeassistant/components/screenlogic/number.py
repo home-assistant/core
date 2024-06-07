@@ -5,12 +5,14 @@ import logging
 
 from screenlogicpy.const.common import ScreenLogicCommunicationError, ScreenLogicError
 from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
+from screenlogicpy.const.msg import CODE
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
 from homeassistant.components.number import (
     DOMAIN,
     NumberEntity,
     NumberEntityDescription,
+    NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
@@ -20,7 +22,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as SL_DOMAIN
 from .coordinator import ScreenlogicDataUpdateCoordinator
-from .entity import ScreenLogicEntity, ScreenLogicEntityDescription
+from .entity import (
+    ScreenLogicEntity,
+    ScreenLogicEntityDescription,
+    ScreenLogicPushEntity,
+    ScreenLogicPushEntityDescription,
+)
 from .util import cleanup_excluded_entity, get_ha_unit
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,6 +42,45 @@ class ScreenLogicNumberDescription(
 ):
     """Describes a ScreenLogic number entity."""
 
+
+@dataclass(frozen=True, kw_only=True)
+class ScreenLogicPushNumberDescription(
+    ScreenLogicNumberDescription,
+    ScreenLogicPushEntityDescription,
+):
+    """Describes a ScreenLogic push number entity."""
+
+
+SUPPORTED_INTELLICHEM_NUMBERS = [
+    ScreenLogicPushNumberDescription(
+        subscription_code=CODE.CHEMISTRY_CHANGED,
+        data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
+        key=VALUE.CALCIUM_HARDNESS,
+        entity_category=EntityCategory.CONFIG,
+        mode=NumberMode.BOX,
+    ),
+    ScreenLogicPushNumberDescription(
+        subscription_code=CODE.CHEMISTRY_CHANGED,
+        data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
+        key=VALUE.CYA,
+        entity_category=EntityCategory.CONFIG,
+        mode=NumberMode.BOX,
+    ),
+    ScreenLogicPushNumberDescription(
+        subscription_code=CODE.CHEMISTRY_CHANGED,
+        data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
+        key=VALUE.TOTAL_ALKALINITY,
+        entity_category=EntityCategory.CONFIG,
+        mode=NumberMode.BOX,
+    ),
+    ScreenLogicPushNumberDescription(
+        subscription_code=CODE.CHEMISTRY_CHANGED,
+        data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
+        key=VALUE.SALT_TDS_PPM,
+        entity_category=EntityCategory.CONFIG,
+        mode=NumberMode.BOX,
+    ),
+]
 
 SUPPORTED_SCG_NUMBERS = [
     ScreenLogicNumberDescription(
@@ -61,6 +107,19 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
     gateway = coordinator.gateway
+
+    for chem_number_description in SUPPORTED_INTELLICHEM_NUMBERS:
+        chem_number_data_path = (
+            *chem_number_description.data_root,
+            chem_number_description.key,
+        )
+        if EQUIPMENT_FLAG.INTELLICHEM not in gateway.equipment_flags:
+            cleanup_excluded_entity(coordinator, DOMAIN, chem_number_data_path)
+            continue
+        if gateway.get_data(*chem_number_data_path):
+            entities.append(
+                ScreenLogicChemistryNumber(coordinator, chem_number_description)
+            )
 
     for scg_number_description in SUPPORTED_SCG_NUMBERS:
         scg_number_data_path = (
@@ -113,6 +172,31 @@ class ScreenLogicNumber(ScreenLogicEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         raise NotImplementedError
+
+
+class ScreenLogicPushNumber(ScreenLogicPushEntity, ScreenLogicNumber):
+    """Base class to preresent a ScreenLogic Push Number entity."""
+
+    entity_description: ScreenLogicPushNumberDescription
+
+
+class ScreenLogicChemistryNumber(ScreenLogicPushNumber):
+    """Class to represent a ScreenLogic Chemistry Number entity."""
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+
+        # Current API requires int values for the currently supported numbers.
+        value = int(value)
+
+        try:
+            await self.gateway.async_set_chem_data(**{self._data_key: value})
+        except (ScreenLogicCommunicationError, ScreenLogicError) as sle:
+            raise HomeAssistantError(
+                f"Failed to set '{self._data_key}' to {value}: {sle.msg}"
+            ) from sle
+        _LOGGER.debug("Set '%s' to %s", self._data_key, value)
+        await self._async_refresh()
 
 
 class ScreenLogicSCGNumber(ScreenLogicNumber):

@@ -198,15 +198,16 @@ async def async_check_ha_config_file(  # noqa: C901
 
         # Check if the integration has a custom config validator
         config_validator = None
-        try:
-            config_validator = await integration.async_get_platform("config")
-        except ImportError as err:
-            # Filter out import error of the config platform.
-            # If the config platform contains bad imports, make sure
-            # that still fails.
-            if err.name != f"{integration.pkg_path}.config":
-                result.add_error(f"Error importing config platform {domain}: {err}")
-                continue
+        if integration.platforms_exists(("config",)):
+            try:
+                config_validator = await integration.async_get_platform("config")
+            except ImportError as err:
+                # Filter out import error of the config platform.
+                # If the config platform contains bad imports, make sure
+                # that still fails.
+                if err.name != f"{integration.pkg_path}.config":
+                    result.add_error(f"Error importing config platform {domain}: {err}")
+                    continue
 
         if config_validator is not None and hasattr(
             config_validator, "async_validate_config"
@@ -219,7 +220,7 @@ async def async_check_ha_config_file(  # noqa: C901
             except (vol.Invalid, HomeAssistantError) as ex:
                 _comp_error(ex, domain, config, config[domain])
                 continue
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception as err:  # noqa: BLE001
                 logging.getLogger(__name__).exception(
                     "Unexpected error validating config"
                 )

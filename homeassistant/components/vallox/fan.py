@@ -14,7 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import ValloxDataUpdateCoordinator, ValloxEntity
+from . import ValloxEntity
 from .const import (
     DOMAIN,
     METRIC_KEY_MODE,
@@ -26,6 +26,7 @@ from .const import (
     PRESET_MODE_TO_VALLOX_PROFILE_SETTABLE,
     VALLOX_PROFILE_TO_PRESET_MODE_REPORTABLE,
 )
+from .coordinator import ValloxDataUpdateCoordinator
 
 
 class ExtraStateAttributeDetails(NamedTuple):

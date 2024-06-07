@@ -5,18 +5,38 @@ from __future__ import annotations
 from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass, field
-from typing import Literal, TypedDict, cast
+from typing import Literal, TypedDict
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.util.event_type import EventType
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ulid import ulid_now
 
 from .registry import BaseRegistry
-from .typing import UNDEFINED, EventType, UndefinedType
+from .singleton import singleton
+from .storage import Store
+from .typing import UNDEFINED, UndefinedType
 
-DATA_REGISTRY = "category_registry"
-EVENT_CATEGORY_REGISTRY_UPDATED = "category_registry_updated"
+DATA_REGISTRY: HassKey[CategoryRegistry] = HassKey("category_registry")
+EVENT_CATEGORY_REGISTRY_UPDATED: EventType[EventCategoryRegistryUpdatedData] = (
+    EventType("category_registry_updated")
+)
 STORAGE_KEY = "core.category_registry"
 STORAGE_VERSION_MAJOR = 1
+
+
+class _CategoryStoreData(TypedDict):
+    """Data type for individual category. Used in CategoryRegistryStoreData."""
+
+    category_id: str
+    icon: str | None
+    name: str
+
+
+class CategoryRegistryStoreData(TypedDict):
+    """Store data type for CategoryRegistry."""
+
+    categories: dict[str, list[_CategoryStoreData]]
 
 
 class EventCategoryRegistryUpdatedData(TypedDict):
@@ -27,7 +47,7 @@ class EventCategoryRegistryUpdatedData(TypedDict):
     category_id: str
 
 
-EventCategoryRegistryUpdated = EventType[EventCategoryRegistryUpdatedData]
+type EventCategoryRegistryUpdated = Event[EventCategoryRegistryUpdatedData]
 
 
 @dataclass(slots=True, kw_only=True, frozen=True)
@@ -39,14 +59,15 @@ class CategoryEntry:
     name: str
 
 
-class CategoryRegistry(BaseRegistry):
+class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
     """Class to hold a registry of categories by scope."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the category registry."""
         self.hass = hass
         self.categories: dict[str, dict[str, CategoryEntry]] = {}
-        self._store = hass.helpers.storage.Store(
+        self._store = Store(
+            hass,
             STORAGE_VERSION_MAJOR,
             STORAGE_KEY,
             atomic_writes=True,
@@ -77,6 +98,7 @@ class CategoryRegistry(BaseRegistry):
         icon: str | None = None,
     ) -> CategoryEntry:
         """Create a new category."""
+        self.hass.verify_event_loop_thread("category_registry.async_create")
         self._async_ensure_name_is_available(scope, name)
         category = CategoryEntry(
             icon=icon,
@@ -89,7 +111,7 @@ class CategoryRegistry(BaseRegistry):
         self.categories[scope][category.category_id] = category
 
         self.async_schedule_save()
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_CATEGORY_REGISTRY_UPDATED,
             EventCategoryRegistryUpdatedData(
                 action="create", scope=scope, category_id=category.category_id
@@ -100,8 +122,9 @@ class CategoryRegistry(BaseRegistry):
     @callback
     def async_delete(self, *, scope: str, category_id: str) -> None:
         """Delete category."""
+        self.hass.verify_event_loop_thread("category_registry.async_delete")
         del self.categories[scope][category_id]
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_CATEGORY_REGISTRY_UPDATED,
             EventCategoryRegistryUpdatedData(
                 action="remove",
@@ -134,10 +157,11 @@ class CategoryRegistry(BaseRegistry):
         if not changes:
             return old
 
+        self.hass.verify_event_loop_thread("category_registry.async_update")
         new = self.categories[scope][category_id] = dataclasses.replace(old, **changes)  # type: ignore[arg-type]
 
         self.async_schedule_save()
-        self.hass.bus.async_fire(
+        self.hass.bus.async_fire_internal(
             EVENT_CATEGORY_REGISTRY_UPDATED,
             EventCategoryRegistryUpdatedData(
                 action="update", scope=scope, category_id=category_id
@@ -165,7 +189,7 @@ class CategoryRegistry(BaseRegistry):
         self.categories = category_entries
 
     @callback
-    def _data_to_save(self) -> dict[str, dict[str, list[dict[str, str | None]]]]:
+    def _data_to_save(self) -> CategoryRegistryStoreData:
         """Return data of category registry to store in a file."""
         return {
             "categories": {
@@ -197,13 +221,13 @@ class CategoryRegistry(BaseRegistry):
 
 
 @callback
+@singleton(DATA_REGISTRY)
 def async_get(hass: HomeAssistant) -> CategoryRegistry:
     """Get category registry."""
-    return cast(CategoryRegistry, hass.data[DATA_REGISTRY])
+    return CategoryRegistry(hass)
 
 
 async def async_load(hass: HomeAssistant) -> None:
     """Load category registry."""
     assert DATA_REGISTRY not in hass.data
-    hass.data[DATA_REGISTRY] = CategoryRegistry(hass)
-    await hass.data[DATA_REGISTRY].async_load()
+    await async_get(hass).async_load()

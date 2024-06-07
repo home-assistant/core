@@ -1,6 +1,7 @@
 """Tests for Vallox sensor platform."""
 
 from datetime import datetime, timedelta, tzinfo
+from typing import Any
 
 import pytest
 from vallox_websocket_api import MetricData
@@ -12,27 +13,27 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def set_tz(request):
+def set_tz(request: pytest.FixtureRequest) -> Any:
     """Set the default TZ to the one requested."""
     request.getfixturevalue(request.param)
 
 
 @pytest.fixture
-def utc(hass: HomeAssistant) -> None:
+async def utc(hass: HomeAssistant) -> None:
     """Set the default TZ to UTC."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
 
 
 @pytest.fixture
-def helsinki(hass: HomeAssistant) -> None:
+async def helsinki(hass: HomeAssistant) -> None:
     """Set the default TZ to Europe/Helsinki."""
-    hass.config.set_time_zone("Europe/Helsinki")
+    await hass.config.async_set_time_zone("Europe/Helsinki")
 
 
 @pytest.fixture
-def new_york(hass: HomeAssistant) -> None:
+async def new_york(hass: HomeAssistant) -> None:
     """Set the default TZ to America/New_York."""
-    hass.config.set_time_zone("America/New_York")
+    await hass.config.async_set_time_zone("America/New_York")
 
 
 def _sensor_to_datetime(sensor):

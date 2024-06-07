@@ -60,7 +60,7 @@ async def async_validate_credentials(
     except NodeProError as err:
         LOGGER.error("Unknown Pro error while connecting to %s: %s", ip_address, err)
         errors["base"] = "unknown"
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         LOGGER.exception("Unknown error while connecting to %s: %s", ip_address, err)
         errors["base"] = "unknown"
     else:

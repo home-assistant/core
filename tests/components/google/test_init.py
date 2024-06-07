@@ -39,7 +39,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 EXPIRED_TOKEN_TIMESTAMP = datetime.datetime(2022, 4, 8).timestamp()
 
 # Typing helpers
-HassApi = Callable[[], Awaitable[dict[str, Any]]]
+type HassApi = Callable[[], Awaitable[dict[str, Any]]]
 
 TEST_EVENT_SUMMARY = "Test Summary"
 TEST_EVENT_DESCRIPTION = "Test Description"
@@ -81,7 +81,7 @@ def assert_state(actual: State | None, expected: State | None) -> None:
 )
 def add_event_call_service(
     hass: HomeAssistant,
-    request: Any,
+    request: pytest.FixtureRequest,
 ) -> Callable[dict[str, Any], Awaitable[None]]:
     """Fixture for calling the add or create event service."""
     (domain, service_call, data, target) = request.param
@@ -116,7 +116,7 @@ async def test_unload_entry(
     assert entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(
@@ -959,4 +959,4 @@ async def test_remove_entry(
     assert entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_remove(entry.entry_id)
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
