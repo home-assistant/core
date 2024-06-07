@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from contextlib import suppress
-from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
@@ -61,7 +60,6 @@ from .. import subscription
 from ..config import DEFAULT_QOS, DEFAULT_RETAIN, MQTT_RW_SCHEMA
 from ..const import (
     CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
@@ -490,39 +488,23 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             with suppress(KeyError):
                 self._attr_effect = cast(str, values["effect"])
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-        #
-        if self._topic[CONF_STATE_TOPIC] is None:
-            return
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass,
-            self._sub_state,
+        self.add_subscription(
+            CONF_STATE_TOPIC,
+            self._state_received,
             {
-                CONF_STATE_TOPIC: {
-                    "topic": self._topic[CONF_STATE_TOPIC],
-                    "msg_callback": partial(
-                        self._message_callback,
-                        self._state_received,
-                        {
-                            "_attr_brightness",
-                            "_attr_color_temp",
-                            "_attr_effect",
-                            "_attr_hs_color",
-                            "_attr_is_on",
-                            "_attr_rgb_color",
-                            "_attr_rgbw_color",
-                            "_attr_rgbww_color",
-                            "_attr_xy_color",
-                            "color_mode",
-                        },
-                    ),
-                    "entity_id": self.entity_id,
-                    "qos": self._config[CONF_QOS],
-                    "encoding": self._config[CONF_ENCODING] or None,
-                }
+                "_attr_brightness",
+                "_attr_color_temp",
+                "_attr_effect",
+                "_attr_hs_color",
+                "_attr_is_on",
+                "_attr_rgb_color",
+                "_attr_rgbw_color",
+                "_attr_rgbww_color",
+                "_attr_xy_color",
+                "color_mode",
             },
         )
 
@@ -737,12 +719,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._attr_brightness = kwargs[ATTR_WHITE]
                 should_update = True
 
-        await self.async_publish(
-            str(self._topic[CONF_COMMAND_TOPIC]),
-            json_dumps(message),
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            str(self._topic[CONF_COMMAND_TOPIC]), json_dumps(message)
         )
 
         if self._optimistic:
@@ -762,12 +740,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
         self._set_flash_and_transition(message, **kwargs)
 
-        await self.async_publish(
-            str(self._topic[CONF_COMMAND_TOPIC]),
-            json_dumps(message),
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            str(self._topic[CONF_COMMAND_TOPIC]), json_dumps(message)
         )
 
         if self._optimistic:

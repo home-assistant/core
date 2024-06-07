@@ -72,7 +72,7 @@ async def async_send_text_commands(
             entry.async_start_reauth(hass)
         raise
 
-    credentials = Credentials(session.token[CONF_ACCESS_TOKEN])
+    credentials = Credentials(session.token[CONF_ACCESS_TOKEN])  # type: ignore[no-untyped-call]
     language_code = entry.options.get(CONF_LANGUAGE_CODE, default_language_code(hass))
     with TextAssistant(
         credentials, language_code, audio_out=bool(media_players)

@@ -6,7 +6,7 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Iterable
 from contextlib import AbstractContextManager
 from contextvars import ContextVar
 from datetime import date, datetime, time, timedelta
@@ -34,6 +34,7 @@ from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 from lru import LRU
 import orjson
+from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -327,7 +328,33 @@ def _false(arg: str) -> bool:
     return False
 
 
-_cached_literal_eval = lru_cache(maxsize=EVAL_CACHE_SIZE)(literal_eval)
+@lru_cache(maxsize=EVAL_CACHE_SIZE)
+def _cached_parse_result(render_result: str) -> Any:
+    """Parse a result and cache the result."""
+    result = literal_eval(render_result)
+    if type(result) in RESULT_WRAPPERS:
+        result = RESULT_WRAPPERS[type(result)](result, render_result=render_result)
+
+    # If the literal_eval result is a string, use the original
+    # render, by not returning right here. The evaluation of strings
+    # resulting in strings impacts quotes, to avoid unexpected
+    # output; use the original render instead of the evaluated one.
+    # Complex and scientific values are also unexpected. Filter them out.
+    if (
+        # Filter out string and complex numbers
+        not isinstance(result, (str, complex))
+        and (
+            # Pass if not numeric and not a boolean
+            not isinstance(result, (int, float))
+            # Or it's a boolean (inherit from int)
+            or isinstance(result, bool)
+            # Or if it's a digit
+            or _IS_NUMERIC.match(render_result) is not None
+        )
+    ):
+        return result
+
+    return render_result
 
 
 class RenderInfo:
@@ -588,31 +615,7 @@ class Template:
     def _parse_result(self, render_result: str) -> Any:
         """Parse the result."""
         try:
-            result = _cached_literal_eval(render_result)
-
-            if type(result) in RESULT_WRAPPERS:
-                result = RESULT_WRAPPERS[type(result)](
-                    result, render_result=render_result
-                )
-
-            # If the literal_eval result is a string, use the original
-            # render, by not returning right here. The evaluation of strings
-            # resulting in strings impacts quotes, to avoid unexpected
-            # output; use the original render instead of the evaluated one.
-            # Complex and scientific values are also unexpected. Filter them out.
-            if (
-                # Filter out string and complex numbers
-                not isinstance(result, (str, complex))
-                and (
-                    # Pass if not numeric and not a boolean
-                    not isinstance(result, (int, float))
-                    # Or it's a boolean (inherit from int)
-                    or isinstance(result, bool)
-                    # Or if it's a digit
-                    or _IS_NUMERIC.match(render_result) is not None
-                )
-            ):
-                return result
+            return _cached_parse_result(render_result)
         except (ValueError, TypeError, SyntaxError, MemoryError):
             pass
 
@@ -880,7 +883,7 @@ class AllStates:
         if (render_info := _render_info.get()) is not None:
             render_info.all_states_lifecycle = True
 
-    def __iter__(self) -> Generator[TemplateState, None, None]:
+    def __iter__(self) -> Generator[TemplateState]:
         """Return all states."""
         self._collect_all()
         return _state_generator(self._hass, None)
@@ -970,7 +973,7 @@ class DomainStates:
         if (entity_collect := _render_info.get()) is not None:
             entity_collect.domains_lifecycle.add(self._domain)  # type: ignore[attr-defined]
 
-    def __iter__(self) -> Generator[TemplateState, None, None]:
+    def __iter__(self) -> Generator[TemplateState]:
         """Return the iteration over all the states."""
         self._collect_domain()
         return _state_generator(self._hass, self._domain)
@@ -1158,7 +1161,7 @@ def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
 
 def _state_generator(
     hass: HomeAssistant, domain: str | None
-) -> Generator[TemplateState, None, None]:
+) -> Generator[TemplateState]:
     """State generator for a domain or all states."""
     states = hass.states
     # If domain is None, we want to iterate over all states, but making
@@ -2394,14 +2397,18 @@ def struct_unpack(value: bytes, format_string: str, offset: int = 0) -> Any | No
         return None
 
 
-def base64_encode(value):
+def base64_encode(value: str) -> str:
     """Perform base64 encode."""
     return base64.b64encode(value.encode("utf-8")).decode("utf-8")
 
 
-def base64_decode(value):
-    """Perform base64 denode."""
-    return base64.b64decode(value).decode("utf-8")
+def base64_decode(value: str, encoding: str | None = "utf-8") -> str | bytes:
+    """Perform base64 decode."""
+    decoded = base64.b64decode(value)
+    if encoding:
+        return decoded.decode(encoding)
+
+    return decoded
 
 
 def ordinal(value):

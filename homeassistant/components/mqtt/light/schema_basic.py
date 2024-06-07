@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import partial
 import logging
 from typing import Any, cast
 
@@ -47,16 +46,12 @@ from .. import subscription
 from ..config import MQTT_RW_SCHEMA
 from ..const import (
     CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_RETAIN,
     CONF_STATE_TOPIC,
     CONF_STATE_VALUE_TEMPLATE,
     PAYLOAD_NONE,
 )
 from ..mixins import MqttEntity
 from ..models import (
-    MessageCallbackType,
     MqttCommandTemplate,
     MqttValueTemplate,
     PayloadSentinel,
@@ -563,66 +558,48 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self._attr_color_mode = ColorMode.XY
         self._attr_xy_color = cast(tuple[float, float], xy_color)
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:  # noqa: C901
         """(Re)Subscribe to topics."""
-        topics: dict[str, dict[str, Any]] = {}
-
-        def add_topic(
-            topic: str, msg_callback: MessageCallbackType, tracked_attributes: set[str]
-        ) -> None:
-            """Add a topic."""
-            if self._topic[topic] is not None:
-                topics[topic] = {
-                    "topic": self._topic[topic],
-                    "msg_callback": partial(
-                        self._message_callback, msg_callback, tracked_attributes
-                    ),
-                    "entity_id": self.entity_id,
-                    "qos": self._config[CONF_QOS],
-                    "encoding": self._config[CONF_ENCODING] or None,
-                }
-
-        add_topic(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
-        add_topic(
+        self.add_subscription(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
+        self.add_subscription(
             CONF_BRIGHTNESS_STATE_TOPIC, self._brightness_received, {"_attr_brightness"}
         )
-        add_topic(
+        self.add_subscription(
             CONF_RGB_STATE_TOPIC,
             self._rgb_received,
             {"_attr_brightness", "_attr_color_mode", "_attr_rgb_color"},
         )
-        add_topic(
+        self.add_subscription(
             CONF_RGBW_STATE_TOPIC,
             self._rgbw_received,
             {"_attr_brightness", "_attr_color_mode", "_attr_rgbw_color"},
         )
-        add_topic(
+        self.add_subscription(
             CONF_RGBWW_STATE_TOPIC,
             self._rgbww_received,
             {"_attr_brightness", "_attr_color_mode", "_attr_rgbww_color"},
         )
-        add_topic(
+        self.add_subscription(
             CONF_COLOR_MODE_STATE_TOPIC, self._color_mode_received, {"_attr_color_mode"}
         )
-        add_topic(
+        self.add_subscription(
             CONF_COLOR_TEMP_STATE_TOPIC,
             self._color_temp_received,
             {"_attr_color_mode", "_attr_color_temp"},
         )
-        add_topic(CONF_EFFECT_STATE_TOPIC, self._effect_received, {"_attr_effect"})
-        add_topic(
+        self.add_subscription(
+            CONF_EFFECT_STATE_TOPIC, self._effect_received, {"_attr_effect"}
+        )
+        self.add_subscription(
             CONF_HS_STATE_TOPIC,
             self._hs_received,
             {"_attr_color_mode", "_attr_hs_color"},
         )
-        add_topic(
+        self.add_subscription(
             CONF_XY_STATE_TOPIC,
             self._xy_received,
             {"_attr_color_mode", "_attr_xy_color"},
-        )
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
         )
 
     async def _subscribe_topics(self) -> None:
@@ -664,13 +641,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         async def publish(topic: str, payload: PublishPayloadType) -> None:
             """Publish an MQTT message."""
-            await self.async_publish(
-                str(self._topic[topic]),
-                payload,
-                self._config[CONF_QOS],
-                self._config[CONF_RETAIN],
-                self._config[CONF_ENCODING],
-            )
+            await self.async_publish_with_config(str(self._topic[topic]), payload)
 
         def scale_rgbx(
             color: tuple[int, ...],
@@ -875,12 +846,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         This method is a coroutine.
         """
-        await self.async_publish(
-            str(self._topic[CONF_COMMAND_TOPIC]),
-            self._payload["off"],
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            str(self._topic[CONF_COMMAND_TOPIC]), self._payload["off"]
         )
 
         if self._optimistic:

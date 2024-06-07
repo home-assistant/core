@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from contextlib import suppress
-from functools import partial
 import logging
 from typing import Any
 
@@ -41,13 +40,11 @@ from .config import MQTT_BASE_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
     CONF_PAYLOAD_CLOSE,
     CONF_PAYLOAD_OPEN,
     CONF_PAYLOAD_STOP,
     CONF_POSITION_CLOSED,
     CONF_POSITION_OPEN,
-    CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
@@ -143,7 +140,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT valve through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttValve,
@@ -337,30 +334,18 @@ class MqttValve(MqttEntity, ValveEntity):
         else:
             self._process_binary_valve_update(msg, state_payload)
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        topics = {}
-
-        if self._config.get(CONF_STATE_TOPIC):
-            topics["state_topic"] = {
-                "topic": self._config.get(CONF_STATE_TOPIC),
-                "msg_callback": partial(
-                    self._message_callback,
-                    self._state_message_received,
-                    {
-                        "_attr_current_valve_position",
-                        "_attr_is_closed",
-                        "_attr_is_closing",
-                        "_attr_is_opening",
-                    },
-                ),
-                "entity_id": self.entity_id,
-                "qos": self._config[CONF_QOS],
-                "encoding": self._config[CONF_ENCODING] or None,
-            }
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
+        self.add_subscription(
+            CONF_STATE_TOPIC,
+            self._state_message_received,
+            {
+                "_attr_current_valve_position",
+                "_attr_is_closed",
+                "_attr_is_closing",
+                "_attr_is_opening",
+            },
         )
 
     async def _subscribe_topics(self) -> None:
@@ -375,13 +360,7 @@ class MqttValve(MqttEntity, ValveEntity):
         payload = self._command_template(
             self._config.get(CONF_PAYLOAD_OPEN, DEFAULT_PAYLOAD_OPEN)
         )
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
         if self._optimistic:
             # Optimistically assume that valve has changed state.
             self._update_state(STATE_OPEN)
@@ -395,13 +374,7 @@ class MqttValve(MqttEntity, ValveEntity):
         payload = self._command_template(
             self._config.get(CONF_PAYLOAD_CLOSE, DEFAULT_PAYLOAD_CLOSE)
         )
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
         if self._optimistic:
             # Optimistically assume that valve has changed state.
             self._update_state(STATE_CLOSED)
@@ -413,13 +386,7 @@ class MqttValve(MqttEntity, ValveEntity):
         This method is a coroutine.
         """
         payload = self._command_template(self._config[CONF_PAYLOAD_STOP])
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
 
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
@@ -433,13 +400,8 @@ class MqttValve(MqttEntity, ValveEntity):
             "position_closed": self._config[CONF_POSITION_CLOSED],
         }
         rendered_position = self._command_template(scaled_position, variables=variables)
-
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            rendered_position,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_COMMAND_TOPIC], rendered_position
         )
         if self._optimistic:
             self._update_state(

@@ -324,8 +324,8 @@ class DriverEvents:
         """Set up platform if needed."""
         if platform not in self.platform_setup_tasks:
             self.platform_setup_tasks[platform] = self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, platform
+                self.hass.config_entries.async_late_forward_entry_setups(
+                    self.config_entry, [platform]
                 )
             )
         await self.platform_setup_tasks[platform]

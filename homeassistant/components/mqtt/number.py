@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import partial
 import logging
 
 import voluptuous as vol
@@ -36,10 +35,7 @@ from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
     CONF_PAYLOAD_RESET,
-    CONF_QOS,
-    CONF_RETAIN,
     CONF_STATE_TOPIC,
 )
 from .mixins import MqttEntity, async_setup_entity_entry_helper
@@ -114,7 +110,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT number through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttNumber,
@@ -194,29 +190,15 @@ class MqttNumber(MqttEntity, RestoreNumber):
 
         self._attr_native_value = num_value
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        if self._config.get(CONF_STATE_TOPIC) is None:
+        if not self.add_subscription(
+            CONF_STATE_TOPIC, self._message_received, {"_attr_native_value"}
+        ):
             # Force into optimistic mode.
             self._attr_assumed_state = True
             return
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass,
-            self._sub_state,
-            {
-                "state_topic": {
-                    "topic": self._config.get(CONF_STATE_TOPIC),
-                    "msg_callback": partial(
-                        self._message_callback,
-                        self._message_received,
-                        {"_attr_native_value"},
-                    ),
-                    "entity_id": self.entity_id,
-                    "qos": self._config[CONF_QOS],
-                    "encoding": self._config[CONF_ENCODING] or None,
-                }
-            },
-        )
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
@@ -238,11 +220,4 @@ class MqttNumber(MqttEntity, RestoreNumber):
         if self._attr_assumed_state:
             self._attr_native_value = current_number
             self.async_write_ha_state()
-
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)

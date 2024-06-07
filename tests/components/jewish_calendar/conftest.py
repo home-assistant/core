@@ -1,11 +1,11 @@
 """Common fixtures for the jewish_calendar tests."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from typing_extensions import Generator
 
-from homeassistant.components.jewish_calendar import config_flow
+from homeassistant.components.jewish_calendar.const import DEFAULT_NAME, DOMAIN
 
 from tests.common import MockConfigEntry
 
@@ -14,13 +14,13 @@ from tests.common import MockConfigEntry
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title=config_flow.DEFAULT_NAME,
-        domain=config_flow.DOMAIN,
+        title=DEFAULT_NAME,
+        domain=DOMAIN,
     )
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.jewish_calendar.async_setup_entry", return_value=True
