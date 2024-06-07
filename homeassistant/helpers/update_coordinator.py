@@ -70,6 +70,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         name: str,
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[_DataT]] | None = None,
+        setup_method: Callable[[], Awaitable[None]] | None = None,
         request_refresh_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
         always_update: bool = True,
     ) -> None:
@@ -78,6 +79,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self.logger = logger
         self.name = name
         self.update_method = update_method
+        self.setup_method = setup_method
         self._update_interval_seconds: float | None = None
         self.update_interval = update_interval
         self._shutdown_requested = False
@@ -274,7 +276,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         fails. Additionally logging is handled by config entry setup
         to ensure that multiple retries do not cause log spam.
         """
-        if await self._handle_async_setup():
+        if await self.__wrap_async_setup():
             await self._async_refresh(
                 log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
             )
@@ -284,7 +286,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         ex.__cause__ = self.last_exception
         raise ex
 
-    async def _handle_async_setup(self) -> bool:
+    async def __wrap_async_setup(self) -> bool:
         """Error handling for _async_setup."""
         try:
             await self._async_setup()
@@ -299,10 +301,12 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self.last_exception = err
 
         except (ConfigEntryError, ConfigEntryAuthFailed):
+            self.last_update_success = False
             raise
 
         except NotImplementedError as err:
             self.last_exception = err
+            self.last_update_success = False
             raise
 
         except Exception as err:  # pylint: disable=broad-except
@@ -310,14 +314,19 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self.logger.exception("Unexpected error fetching %s data", self.name)
         else:
             return True
+
+        self.last_update_success = False
         return False
 
     async def _async_setup(self) -> None:
-        """Prepare the coordinator for the first refresh.
+        """Set up the coordinator.
 
         Can be overwritten by integrations to setup their coordinators,
-        or resources that only need to be loaded once.
+        or load resources that only need to be loaded once.
         """
+        if self.setup_method is None:
+            return
+        return await self.setup_method()
 
     async def async_refresh(self) -> None:
         """Refresh data and log errors."""
