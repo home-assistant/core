@@ -12,4 +12,5 @@ NASWEB_SCHEMA_IMG_URL = (
 )
 OUTPUT_TRANSLATION_KEY = "switch_output"
 STATUS_UPDATE_MAX_TIME_INTERVAL = 60
+SUPPORT_EMAIL = "support@chomtech.eu"
 WEBHOOK_URL = "{internal_url}/api/webhook/{webhook_id}"
