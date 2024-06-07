@@ -212,7 +212,7 @@ class SnapcastBaseDevice(MediaPlayerEntity):
         if metadata := self._server.stream(self.current_group.stream).metadata:
             return metadata.get(key, default)
 
-        return None
+        return default
 
     @property
     def media_title(self) -> str | None:
