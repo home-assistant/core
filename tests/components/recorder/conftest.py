@@ -1,18 +1,16 @@
 """Fixtures for the recorder component tests."""
 
-from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components import recorder
 from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
-def recorder_dialect_name(
-    hass: HomeAssistant, db_engine: str
-) -> Generator[None, None, None]:
+def recorder_dialect_name(hass: HomeAssistant, db_engine: str) -> Generator[None]:
     """Patch the recorder dialect."""
     if instance := hass.data.get(recorder.DATA_INSTANCE):
         instance.__dict__.pop("dialect_name", None)

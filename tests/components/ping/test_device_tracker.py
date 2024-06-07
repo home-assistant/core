@@ -1,12 +1,12 @@
 """Test the binary sensor platform of ping."""
 
-from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from icmplib import Host
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.device_tracker import legacy
 from homeassistant.components.ping.const import DOMAIN
@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed, patch_yaml_fi
 
 
 @pytest.fixture
-def entity_registry_enabled_by_default() -> Generator[None, None, None]:
+def entity_registry_enabled_by_default() -> Generator[None]:
     """Test fixture that ensures ping device_tracker entities are enabled in the registry."""
     with patch(
         "homeassistant.components.ping.device_tracker.PingDeviceTracker.entity_registry_enabled_default",
