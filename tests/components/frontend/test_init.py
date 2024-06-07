@@ -405,9 +405,8 @@ async def test_missing_themes(hass: HomeAssistant, ws_client) -> None:
     assert msg["result"]["themes"] == {}
 
 
-async def test_extra_js(
-    hass: HomeAssistant, mock_http_client_with_extra_js, mock_onboarded
-):
+@pytest.mark.usefixtures("mock_onboarded")
+async def test_extra_js(hass: HomeAssistant, mock_http_client_with_extra_js) -> None:
     """Test that extra javascript is loaded."""
     resp = await mock_http_client_with_extra_js.get("")
     assert resp.status == 200
