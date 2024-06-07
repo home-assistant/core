@@ -91,7 +91,5 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
     @api_call
     async def async_set_hvac_mode(self, **kwargs: str) -> None:
         """Set the new hvac mode."""
-        if (mode := kwargs.get("hvac_mode")) is None:
-            return
         await self._channel.set_mode(mode)
         self.async_write_ha_state()
