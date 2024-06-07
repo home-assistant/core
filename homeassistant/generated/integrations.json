@@ -94,7 +94,7 @@
       "iot_class": "local_polling"
     },
     "airgradient": {
-      "name": "Airgradient",
+      "name": "AirGradient",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
