@@ -1,10 +1,10 @@
 """Test the Map initialization."""
 
-from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.map import DOMAIN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -15,7 +15,7 @@ from tests.common import MockModule, mock_integration
 
 
 @pytest.fixture
-def mock_onboarding_not_done() -> Generator[MagicMock, None, None]:
+def mock_onboarding_not_done() -> Generator[MagicMock]:
     """Mock that Home Assistant is currently onboarding."""
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded",
@@ -25,7 +25,7 @@ def mock_onboarding_not_done() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_onboarding_done() -> Generator[MagicMock, None, None]:
+def mock_onboarding_done() -> Generator[MagicMock]:
     """Mock that Home Assistant is currently onboarding."""
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded",
@@ -35,7 +35,7 @@ def mock_onboarding_done() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_create_map_dashboard() -> Generator[MagicMock, None, None]:
+def mock_create_map_dashboard() -> Generator[MagicMock]:
     """Mock the create map dashboard function."""
     with patch(
         "homeassistant.components.map._create_map_dashboard",
@@ -98,19 +98,21 @@ async def test_create_dashboards_when_not_onboarded(
     assert hass_storage[DOMAIN]["data"] == {"migrated": True}
 
 
-async def test_create_issue_when_not_manually_configured(hass: HomeAssistant) -> None:
+async def test_create_issue_when_not_manually_configured(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test creating issue registry issues."""
     assert await async_setup_component(hass, DOMAIN, {})
 
-    issue_registry = ir.async_get(hass)
     assert not issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, "deprecated_yaml_map"
     )
 
 
-async def test_create_issue_when_manually_configured(hass: HomeAssistant) -> None:
+async def test_create_issue_when_manually_configured(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test creating issue registry issues."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    issue_registry = ir.async_get(hass)
     assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml_map")

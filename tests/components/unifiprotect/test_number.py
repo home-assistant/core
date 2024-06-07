@@ -69,14 +69,16 @@ async def test_number_lock_remove(
 
 
 async def test_number_setup_light(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    light: Light,
 ) -> None:
     """Test number entity setup for light devices."""
 
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.NUMBER, 2, 2)
 
-    entity_registry = er.async_get(hass)
     for description in LIGHT_NUMBERS:
         unique_id, entity_id = ids_from_device_description(
             Platform.NUMBER, light, description
@@ -93,7 +95,10 @@ async def test_number_setup_light(
 
 
 async def test_number_setup_camera_all(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    camera: Camera,
 ) -> None:
     """Test number entity setup for camera devices (all features)."""
 
@@ -104,8 +109,6 @@ async def test_number_setup_camera_all(
     camera.isp_settings.ir_led_mode = IRLEDMode.CUSTOM
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.NUMBER, 5, 5)
-
-    entity_registry = er.async_get(hass)
 
     for description in CAMERA_NUMBERS:
         unique_id, entity_id = ids_from_device_description(

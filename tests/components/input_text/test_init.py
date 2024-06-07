@@ -1,5 +1,6 @@
 """The tests for the Input text component."""
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -36,7 +37,7 @@ TEST_VAL_MAX = 22
 
 
 @pytest.fixture
-def storage_setup(hass, hass_storage):
+def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage setup."""
 
     async def _storage(items=None, config=None):

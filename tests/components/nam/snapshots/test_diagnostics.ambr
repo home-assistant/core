@@ -11,6 +11,7 @@
       'bmp280_temperature': 5.6,
       'dht22_humidity': 46.2,
       'dht22_temperature': 6.3,
+      'ds18b20_temperature': 12.6,
       'heca_humidity': 50.0,
       'heca_temperature': 8.0,
       'mhz14a_carbon_dioxide': 865.0,

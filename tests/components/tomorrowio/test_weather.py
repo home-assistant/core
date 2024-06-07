@@ -116,22 +116,24 @@ async def _setup_legacy(hass: HomeAssistant, config: dict[str, Any]) -> State:
     return hass.states.get("weather.tomorrow_io_daily")
 
 
-async def test_new_config_entry(hass: HomeAssistant) -> None:
+async def test_new_config_entry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the expected entities are created."""
-    registry = er.async_get(hass)
     await _setup(hass, API_V4_ENTRY_DATA)
     assert len(hass.states.async_entity_ids("weather")) == 1
 
     entry = hass.config_entries.async_entries()[0]
-    assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 28
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 28
 
 
-async def test_legacy_config_entry(hass: HomeAssistant) -> None:
+async def test_legacy_config_entry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the expected entities are created."""
-    registry = er.async_get(hass)
     data = _get_config_schema(hass, SOURCE_USER)(API_V4_ENTRY_DATA)
     for entity_name in ("hourly", "nowcast"):
-        registry.async_get_or_create(
+        entity_registry.async_get_or_create(
             WEATHER_DOMAIN,
             DOMAIN,
             f"{_get_unique_id(hass, data)}_{entity_name}",
@@ -140,7 +142,7 @@ async def test_legacy_config_entry(hass: HomeAssistant) -> None:
     assert len(hass.states.async_entity_ids("weather")) == 3
 
     entry = hass.config_entries.async_entries()[0]
-    assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 30
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 30
 
 
 async def test_v4_weather(hass: HomeAssistant, tomorrowio_config_entry_update) -> None:

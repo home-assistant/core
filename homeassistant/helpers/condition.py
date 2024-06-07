@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
-from collections.abc import Callable, Container, Generator
+from collections.abc import Callable, Container
 from contextlib import contextmanager
 from datetime import datetime, time as dt_time, timedelta
 import functools as ft
@@ -12,6 +12,7 @@ import re
 import sys
 from typing import Any, Protocol, cast
 
+from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.components import zone as zone_cmp
@@ -150,7 +151,7 @@ def condition_trace_update_result(**kwargs: Any) -> None:
 
 
 @contextmanager
-def trace_condition(variables: TemplateVarsType) -> Generator[TraceElement, None, None]:
+def trace_condition(variables: TemplateVarsType) -> Generator[TraceElement]:
     """Trace condition evaluation."""
     should_pop = True
     trace_element = trace_stack_top(trace_stack_cv)
@@ -352,7 +353,7 @@ async def async_not_from_config(
 
 def numeric_state(
     hass: HomeAssistant,
-    entity: None | str | State,
+    entity: str | State | None,
     below: float | str | None = None,
     above: float | str | None = None,
     value_template: Template | None = None,
@@ -373,7 +374,7 @@ def numeric_state(
 
 def async_numeric_state(
     hass: HomeAssistant,
-    entity: None | str | State,
+    entity: str | State | None,
     below: float | str | None = None,
     above: float | str | None = None,
     value_template: Template | None = None,
@@ -545,7 +546,7 @@ def async_numeric_state_from_config(config: ConfigType) -> ConditionCheckerType:
 
 def state(
     hass: HomeAssistant,
-    entity: None | str | State,
+    entity: str | State | None,
     req_state: Any,
     for_period: timedelta | None = None,
     attribute: str | None = None,
@@ -803,7 +804,7 @@ def time(
     hass: HomeAssistant,
     before: dt_time | str | None = None,
     after: dt_time | str | None = None,
-    weekday: None | str | Container[str] = None,
+    weekday: str | Container[str] | None = None,
 ) -> bool:
     """Test if local time condition matches.
 
@@ -902,8 +903,8 @@ def time_from_config(config: ConfigType) -> ConditionCheckerType:
 
 def zone(
     hass: HomeAssistant,
-    zone_ent: None | str | State,
-    entity: None | str | State,
+    zone_ent: str | State | None,
+    entity: str | State | None,
 ) -> bool:
     """Test if zone-condition matches.
 
