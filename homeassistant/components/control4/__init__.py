@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import logging
 from typing import Any
-from xml.parsers.expat import ExpatError
 
 from aiohttp import client_exceptions
 from pyControl4.account import C4Account
