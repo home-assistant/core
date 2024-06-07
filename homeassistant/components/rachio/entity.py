@@ -12,9 +12,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     DEFAULT_NAME,
     DOMAIN,
+    KEY_BATTERY_STATUS,
     KEY_CONNECTED,
+    KEY_CURRENT_STATUS,
+    KEY_FLOW_DETECTED,
     KEY_ID,
+    KEY_LOW,
     KEY_NAME,
+    KEY_REPLACE,
     KEY_REPORTED_STATE,
     KEY_STATE,
 )
@@ -70,7 +75,6 @@ class RachioHoseTimerEntity(CoordinatorEntity[RachioUpdateCoordinator]):
             manufacturer=DEFAULT_NAME,
             configuration_url="https://app.rach.io",
         )
-        self._update_attr()
 
     @property
     def available(self) -> bool:
@@ -81,6 +85,28 @@ class RachioHoseTimerEntity(CoordinatorEntity[RachioUpdateCoordinator]):
                 KEY_CONNECTED
             ]
         )
+
+    @property
+    def battery(self) -> bool:
+        """Return the battery status."""
+        return self.coordinator.data[self.id][KEY_STATE][KEY_REPORTED_STATE][
+            KEY_BATTERY_STATUS
+        ] in [
+            KEY_LOW,
+            KEY_REPLACE,
+        ]
+
+    @property
+    def flow_detected(self) -> bool:
+        """Return true if valve is on and flow is not detected."""
+        status = self.coordinator.data[self.id][KEY_STATE][KEY_REPORTED_STATE].get(
+            KEY_CURRENT_STATUS
+        )
+        if status:
+            return not status.get(
+                KEY_FLOW_DETECTED, True
+            )  # Since this is a problem indicator we need the opposite of the API state
+        return False
 
     @abstractmethod
     def _update_attr(self) -> None:
