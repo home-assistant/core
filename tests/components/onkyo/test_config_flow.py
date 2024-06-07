@@ -1,6 +1,5 @@
 """Test Onkyo config flow."""
 
-import logging
 from typing import Any
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -42,8 +41,6 @@ MOCK_ONKYO_CONFIG = {
         "Key_two": "Value-B",
     },
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def test_no_manual_entry_and_no_devices_discovered(hass: HomeAssistant) -> None:

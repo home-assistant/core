@@ -45,9 +45,6 @@ _LOGGER = logging.getLogger(__name__)
 class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Onkyo config flow."""
 
-    VERSION = 2
-    MINOR_VERSION = 0
-
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovered_devices: dict[str, eiscp.eISCP] = {}
