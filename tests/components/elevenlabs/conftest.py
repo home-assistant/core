@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from elevenlabs.core import ApiError
-from elevenlabs.types import GetVoicesResponse, Model, Voice
+from elevenlabs.types import GetVoicesResponse, LanguageResponse, Model, Voice
 import pytest
 
 
@@ -25,29 +25,32 @@ def mock_async_client() -> Generator[AsyncMock, None, None]:
         voices=[
             Voice(
                 voice_id="voice1",
-                name="voice1",
+                name="Voice 1",
             ),
             Voice(
                 voice_id="voice2",
-                name="voice2",
+                name="Voice 2",
             ),
         ]
     )
 
     client_mock.models.get_all.return_value = [
         Model(
-            model_id="model1",
-            name="model1",
-        ),
-        Model(
-            model_id="model2",
-            name="model2",
-        ),
+            model_id=f"model{i+1}",
+            name=f"Model {i+1}",
+            can_do_text_to_speech=True,
+            languages=[
+                LanguageResponse(language_id="en", name="English"),
+                LanguageResponse(language_id="de", name="German"),
+                LanguageResponse(language_id="es", name="Spanish"),
+                LanguageResponse(language_id="ja", name="Japanese"),
+            ],
+        )
+        for i in range(2)
     ]
 
     with patch(
-        "homeassistant.components.elevenlabs.config_flow.AsyncElevenLabs",
-        return_value=client_mock,
+        "elevenlabs.client.AsyncElevenLabs", return_value=client_mock
     ) as mock_async_client:
         yield mock_async_client
 

@@ -2,24 +2,24 @@
 
 from __future__ import annotations
 
+from functools import cached_property
 import logging
 from typing import Any
 
 from elevenlabs.client import AsyncElevenLabs
 from elevenlabs.core import ApiError
+from elevenlabs.types import Model, Voice
 
-from homeassistant.components.tts import TextToSpeechEntity, TtsAudioType
+from homeassistant.components import tts
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_MODEL, CONF_VOICE, DEFAULT_LANG, SUPPORT_LANGUAGES
+from .const import CONF_MODEL, CONF_VOICE
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_OPTIONS = ["voice", "model"]
 
 
 async def async_setup_entry(
@@ -28,46 +28,82 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ElevenLabs tts platform via config entry."""
-    voice = config_entry.data[CONF_VOICE]
-    model = config_entry.data[CONF_MODEL]
-    async_add_entities([ElevenLabsTTSEntity(config_entry, model, voice)])
+    model_id = config_entry.options.get(CONF_MODEL, config_entry.data[CONF_MODEL])
+    default_voice_id = config_entry.options.get(
+        CONF_VOICE, config_entry.data[CONF_VOICE]
+    )
+    client = AsyncElevenLabs(api_key=config_entry.data[CONF_API_KEY])
+
+    # Load model and voices here in async context
+    model: Model | None = None
+    models = await client.models.get_all()
+    for maybe_model in models:
+        if maybe_model.model_id == model_id:
+            model = maybe_model
+            break
+
+    if (model is None) or (not model.languages):
+        raise ValueError(f"Failed to load model for id: {model_id}")
+
+    voices = (await client.voices.get_all()).voices
+
+    async_add_entities(
+        [ElevenLabsTTSEntity(config_entry, client, model, voices, default_voice_id)]
+    )
 
 
-class ElevenLabsTTSEntity(TextToSpeechEntity):
+class ElevenLabsTTSEntity(tts.TextToSpeechEntity):
     """The ElevenLabs API entity."""
 
-    def __init__(self, config_entry: ConfigEntry, model: str, voice: str) -> None:
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        client: AsyncElevenLabs,
+        model: Model,
+        voices: list[Voice],
+        default_voice_id: str,
+    ) -> None:
         """Init ElevenLabs TTS service."""
+        self._client = client
         self._model = model
-        self._voice = voice
-        self._api_key = config_entry.data[CONF_API_KEY]
-        self._client = AsyncElevenLabs(api_key=self._api_key)
-        self._attr_name = f"ElevenLabs {model} {voice}"
+        self._default_voice_id = default_voice_id
+        self._voices = sorted(
+            (tts.Voice(v.voice_id, v.name) for v in voices if v.name),
+            key=lambda v: v.name,
+        )
+        self._attr_name = f"ElevenLabs {self._model.model_id}"
         self._attr_unique_id = config_entry.entry_id
+        self._config_entry = config_entry
 
-    @property
+    @cached_property
     def default_language(self) -> str:
         """Return the default language."""
-        return DEFAULT_LANG
+        return self.supported_languages[0]
 
-    @property
+    @cached_property
     def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
-        return SUPPORT_LANGUAGES
+        return [lang.language_id for lang in self._model.languages or []]
 
     @property
     def supported_options(self) -> list[str]:
         """Return a list of supported options."""
-        return SUPPORT_OPTIONS
+        return [tts.ATTR_VOICE]
+
+    def async_get_supported_voices(self, language: str) -> list[tts.Voice] | None:
+        """Return a list of supported voices for a language."""
+        return self._voices
 
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
-    ) -> TtsAudioType:
+    ) -> tts.TtsAudioType:
         """Load tts audio file from the engine."""
         _LOGGER.debug("Getting TTS audio for %s", message)
         try:
             audio = await self._client.generate(
-                text=message, voice=self._voice, model=self._model
+                text=message,
+                voice=options.get(tts.ATTR_VOICE, self._default_voice_id),
+                model=self._model.model_id,
             )
             bytes_combined = b"".join([byte_seg async for byte_seg in audio])
         except ApiError as exc:

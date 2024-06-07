@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from elevenlabs.core import ApiError
 import pytest
@@ -55,15 +55,16 @@ async def setup_fixture(
     hass: HomeAssistant,
     config: dict[str, Any],
     request: pytest.FixtureRequest,
+    mock_async_client: AsyncMock,
 ) -> AsyncMock:
     """Set up the test environment."""
     if request.param == "mock_config_entry_setup":
-        eleven_mock = await mock_config_entry_setup(hass, config)
+        await mock_config_entry_setup(hass, config)
     else:
         raise RuntimeError("Invalid setup fixture")
 
     await hass.async_block_till_done()
-    return eleven_mock
+    return mock_async_client
 
 
 @pytest.fixture(name="config")
@@ -73,23 +74,18 @@ def config_fixture() -> dict[str, Any]:
 
 
 async def mock_config_entry_setup(
-    hass: HomeAssistant, config: dict[str, Any]
-) -> AsyncMock:
+    hass: HomeAssistant,
+    config: dict[str, Any],
+) -> None:
     """Mock config entry setup."""
     default_config = {
         CONF_VOICE: "voice1",
         CONF_MODEL: "model1",
         CONF_API_KEY: "api_key",
     }
-    mock_eleven = AsyncMock()
-    with patch(
-        "homeassistant.components.elevenlabs.tts.AsyncElevenLabs",
-        return_value=mock_eleven,
-    ):
-        config_entry = MockConfigEntry(domain=DOMAIN, data=default_config | config)
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        return mock_eleven
+    config_entry = MockConfigEntry(domain=DOMAIN, data=default_config | config)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -108,9 +104,10 @@ async def mock_config_entry_setup(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.elevenlabs_model1_voice1",
+                ATTR_ENTITY_ID: "tts.elevenlabs_model1",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
+                tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice2"},
             },
         ),
     ],
@@ -125,6 +122,9 @@ async def test_tts_service_speak(
     service_data: dict[str, Any],
 ) -> None:
     """Test tts service."""
+    tts_entity = hass.data[tts.DOMAIN].get_entity(service_data[ATTR_ENTITY_ID])
+    tts_entity._client.generate.reset_mock()
+
     await hass.services.async_call(
         tts.DOMAIN,
         tts_service,
@@ -137,8 +137,9 @@ async def test_tts_service_speak(
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
         == HTTPStatus.OK
     )
-    setup.generate.assert_called_once_with(
-        text="There is a person at the front door.", voice="voice1", model="model1"
+
+    tts_entity._client.generate.assert_called_once_with(
+        text="There is a person at the front door.", voice="voice2", model="model1"
     )
 
 
@@ -149,7 +150,7 @@ async def test_tts_service_speak(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.elevenlabs_model1_voice1",
+                ATTR_ENTITY_ID: "tts.elevenlabs_model1",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_LANGUAGE: "de",
@@ -159,7 +160,7 @@ async def test_tts_service_speak(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.elevenlabs_model1_voice1",
+                ATTR_ENTITY_ID: "tts.elevenlabs_model1",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_LANGUAGE: "es",
@@ -177,6 +178,9 @@ async def test_tts_service_speak_lang_config(
     service_data: dict[str, Any],
 ) -> None:
     """Test service call say with other langcodes in the config."""
+    tts_entity = hass.data[tts.DOMAIN].get_entity(service_data[ATTR_ENTITY_ID])
+    tts_entity._client.generate.reset_mock()
+
     await hass.services.async_call(
         tts.DOMAIN,
         tts_service,
@@ -190,7 +194,7 @@ async def test_tts_service_speak_lang_config(
         == HTTPStatus.OK
     )
 
-    setup.generate.assert_called_once_with(
+    tts_entity._client.generate.assert_called_once_with(
         text="There is a person at the front door.", voice="voice1", model="model1"
     )
 
@@ -202,7 +206,7 @@ async def test_tts_service_speak_lang_config(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.elevenlabs_model1_voice1",
+                ATTR_ENTITY_ID: "tts.elevenlabs_model1",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
             },
@@ -219,7 +223,10 @@ async def test_tts_service_speak_error(
     service_data: dict[str, Any],
 ) -> None:
     """Test service call say with http response 400."""
-    setup.generate.side_effect = ApiError
+    tts_entity = hass.data[tts.DOMAIN].get_entity(service_data[ATTR_ENTITY_ID])
+    tts_entity._client.generate.reset_mock()
+    tts_entity._client.generate.side_effect = ApiError
+
     await hass.services.async_call(
         tts.DOMAIN,
         tts_service,
@@ -233,6 +240,6 @@ async def test_tts_service_speak_error(
         == HTTPStatus.NOT_FOUND
     )
 
-    setup.generate.assert_called_once_with(
+    tts_entity._client.generate.assert_called_once_with(
         text="There is a person at the front door.", voice="voice1", model="model1"
     )

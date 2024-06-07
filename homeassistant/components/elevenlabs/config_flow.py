@@ -7,18 +7,45 @@ from typing import Any
 
 from elevenlabs.client import AsyncElevenLabs
 from elevenlabs.core import ApiError
-from elevenlabs.types import Model, Voice
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_API_KEY
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+)
 
-from .const import CONF_MODEL, CONF_VOICE, DOMAIN
+from .const import CONF_MODEL, CONF_VOICE, DEFAULT_MODEL, DOMAIN
 
 STEP_USER_DATA_SCHEMA_NO_AUTH = vol.Schema({vol.Required(CONF_API_KEY): str})
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def get_voices_models(api_key: str) -> tuple[dict[str, str], dict[str, str]]:
+    """Get available voices and models as dicts."""
+    client = AsyncElevenLabs(api_key=api_key)
+    voices = (await client.voices.get_all()).voices
+    models = await client.models.get_all()
+    voices_dict = {
+        voice.voice_id: voice.name
+        for voice in sorted(voices, key=lambda v: v.name or "")
+        if voice.name
+    }
+    models_dict = {
+        model.model_id: model.name
+        for model in sorted(models, key=lambda m: m.name or "")
+        if model.name and model.can_do_text_to_speech
+    }
+    return voices_dict, models_dict
 
 
 class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -27,30 +54,37 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     user_info: dict[str, Any] | None = None
-    voices: list[str] | None = None
-    models: list[str] | None = None
 
-    async def _get_voices_models(self, user_input: dict[str, Any]) -> None:
-        client = AsyncElevenLabs(api_key=user_input[CONF_API_KEY])
-        voices_async = client.voices.get_all()
-        models_async = client.models.get_all()
-        voices: list[Voice] = (await voices_async).voices
-        models: list[Model] = await models_async
-        voice_names = [voice.name if voice.name else "Unknown" for voice in voices]
-        self.voices = voice_names
-        model_names = [
-            model.model_id if model.model_id else "Unknown" for model in models
-        ]
-        self.models = model_names
+    # id -> name
+    voices: dict[str, str] = {}
+    models: dict[str, str] = {}
 
     def _get_user_schema_authenticated(self) -> vol.Schema:
-        assert self.voices is not None and self.models is not None
-        default_voice = sorted(self.voices)[0]
-        default_model = sorted(self.models)[0]
+        assert self.voices and self.models
+        first_voice_id = next(iter(self.voices.keys()))
+
         return vol.Schema(
             {
-                vol.Optional(CONF_VOICE, default=default_voice): vol.In(self.voices),
-                vol.Optional(CONF_MODEL, default=default_model): vol.In(self.models),
+                vol.Required(
+                    CONF_VOICE, description={"suggested_value": first_voice_id}
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        options=[
+                            SelectOptionDict(label=voice_name, value=voice_id)
+                            for voice_id, voice_name in self.voices.items()
+                        ]
+                    )
+                ),
+                vol.Required(
+                    CONF_MODEL, description={"suggested_value": DEFAULT_MODEL}
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        options=[
+                            SelectOptionDict(label=model_name, value=model_id)
+                            for model_id, model_name in self.models.items()
+                        ]
+                    )
+                ),
             },
         )
 
@@ -65,7 +99,7 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         # Validate auth, get voices
         try:
-            await self._get_voices_models(user_input)
+            self.voices, self.models = await get_voices_models(user_input[CONF_API_KEY])
         except ApiError:
             errors[CONF_API_KEY] = "ElevenLabs API responded with an Error!"
         if errors:
@@ -86,7 +120,86 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         # Add api_key to user input
         assert self.user_info is not None
-        user_input[CONF_API_KEY] = self.user_info.get(CONF_API_KEY)
+        user_input[CONF_API_KEY] = self.user_info[CONF_API_KEY]
+
         return self.async_create_entry(
-            title=user_input[CONF_VOICE], data=user_input
+            title=self.models[user_input[CONF_MODEL]], data=user_input
         )
+
+    @staticmethod
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
+        """Create the options flow."""
+        return ElevenLabsOptionsFlow(config_entry)
+
+
+class ElevenLabsOptionsFlow(OptionsFlow):
+    """ElevenLabs options flow."""
+
+    # id -> name
+    voices: dict[str, str] = {}
+    models: dict[str, str] = {}
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+        self.api_key: str = self.config_entry.data[CONF_API_KEY]
+        self.voices_models_loaded = False
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if not self.voices_models_loaded:
+            self.voices, self.models = await get_voices_models(self.api_key)
+            self.voices_models_loaded = True
+
+        assert self.models and self.voices
+
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self.models[user_input[CONF_MODEL]], data=user_input
+            )
+
+        options: dict[str, str] = {
+            CONF_MODEL: self.config_entry.options.get(
+                CONF_MODEL, self.config_entry.data[CONF_MODEL]
+            ),
+            CONF_VOICE: self.config_entry.options.get(
+                CONF_VOICE, self.config_entry.data[CONF_VOICE]
+            ),
+        }
+
+        schema = self.elevenlabs_config_option_schema(options)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(schema),
+        )
+
+    def elevenlabs_config_option_schema(self, options: dict[str, str]) -> dict:
+        """Elevenlabs options schema."""
+        return {
+            vol.Required(
+                CONF_MODEL,
+                description={"suggested_value": options[CONF_MODEL]},
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=[
+                        SelectOptionDict(label=model_name, value=model_id)
+                        for model_id, model_name in self.models.items()
+                    ]
+                )
+            ),
+            vol.Required(
+                CONF_VOICE,
+                description={"suggested_value": options[CONF_VOICE]},
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=[
+                        SelectOptionDict(label=voice_name, value=voice_id)
+                        for voice_id, voice_name in self.voices.items()
+                    ]
+                )
+            ),
+        }
