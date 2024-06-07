@@ -1360,8 +1360,8 @@ class IntentResponse:
 
         if self.reprompt:
             response_dict["reprompt"] = self.reprompt
-        if self.speech:
-            response_dict["speech_slots"] = self.speech
+        if self.speech_slots:
+            response_dict["speech_slots"] = self.speech_slots
 
         response_data: dict[str, Any] = {}
 
