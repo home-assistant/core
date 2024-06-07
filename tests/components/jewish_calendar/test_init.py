@@ -58,7 +58,10 @@ async def test_import_unique_id_migration(hass: HomeAssistant) -> None:
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].data == yaml_conf[DOMAIN]
+    for entry_key, entry_val in entries[0].data.items():
+        assert entry_val == yaml_conf[DOMAIN][entry_key]
+    for entry_key, entry_val in entries[0].options.items():
+        assert entry_val == yaml_conf[DOMAIN][entry_key]
 
     # Assert that the unique_id was updated
     new_unique_id = ent_reg.async_get(sample_entity.entity_id).unique_id

@@ -1,6 +1,6 @@
 """Test config flow."""
 
-from collections.abc import Generator, Iterator
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from ssl import SSLError
@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
+from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -33,7 +34,7 @@ MOCK_CLIENT_KEY = b"## mock key file ##"
 
 
 @pytest.fixture(autouse=True)
-def mock_finish_setup() -> Generator[MagicMock, None, None]:
+def mock_finish_setup() -> Generator[MagicMock]:
     """Mock out the finish setup method."""
     with patch(
         "homeassistant.components.mqtt.MQTT.async_connect", return_value=True
@@ -42,7 +43,7 @@ def mock_finish_setup() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_client_cert_check_fail() -> Generator[MagicMock, None, None]:
+def mock_client_cert_check_fail() -> Generator[MagicMock]:
     """Mock the client certificate check."""
     with patch(
         "homeassistant.components.mqtt.config_flow.load_pem_x509_certificate",
@@ -52,7 +53,7 @@ def mock_client_cert_check_fail() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_client_key_check_fail() -> Generator[MagicMock, None, None]:
+def mock_client_key_check_fail() -> Generator[MagicMock]:
     """Mock the client key file check."""
     with patch(
         "homeassistant.components.mqtt.config_flow.load_pem_private_key",
@@ -62,7 +63,7 @@ def mock_client_key_check_fail() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_ssl_context() -> Generator[dict[str, MagicMock], None, None]:
+def mock_ssl_context() -> Generator[dict[str, MagicMock]]:
     """Mock the SSL context used to load the cert chain and to load verify locations."""
     with (
         patch("homeassistant.components.mqtt.config_flow.SSLContext") as mock_context,
@@ -81,7 +82,7 @@ def mock_ssl_context() -> Generator[dict[str, MagicMock], None, None]:
 
 
 @pytest.fixture
-def mock_reload_after_entry_update() -> Generator[MagicMock, None, None]:
+def mock_reload_after_entry_update() -> Generator[MagicMock]:
     """Mock out the reload after updating the entry."""
     with patch(
         "homeassistant.components.mqtt._async_config_entry_updated"
@@ -90,14 +91,14 @@ def mock_reload_after_entry_update() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_try_connection() -> Generator[MagicMock, None, None]:
+def mock_try_connection() -> Generator[MagicMock]:
     """Mock the try connection method."""
     with patch("homeassistant.components.mqtt.config_flow.try_connection") as mock_try:
         yield mock_try
 
 
 @pytest.fixture
-def mock_try_connection_success() -> Generator[MqttMockPahoClient, None, None]:
+def mock_try_connection_success() -> Generator[MqttMockPahoClient]:
     """Mock the try connection method with success."""
 
     _mid = 1
@@ -121,7 +122,9 @@ def mock_try_connection_success() -> Generator[MqttMockPahoClient, None, None]:
         mock_client().on_unsubscribe(mock_client, 0, mid)
         return (0, mid)
 
-    with patch("paho.mqtt.client.Client") as mock_client:
+    with patch(
+        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
+    ) as mock_client:
         mock_client().loop_start = loop_start
         mock_client().subscribe = _subscribe
         mock_client().unsubscribe = _unsubscribe
@@ -130,12 +133,14 @@ def mock_try_connection_success() -> Generator[MqttMockPahoClient, None, None]:
 
 
 @pytest.fixture
-def mock_try_connection_time_out() -> Generator[MagicMock, None, None]:
+def mock_try_connection_time_out() -> Generator[MagicMock]:
     """Mock the try connection method with a time out."""
 
     # Patch prevent waiting 5 sec for a timeout
     with (
-        patch("paho.mqtt.client.Client") as mock_client,
+        patch(
+            "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
+        ) as mock_client,
         patch("homeassistant.components.mqtt.config_flow.MQTT_TIMEOUT", 0),
     ):
         mock_client().loop_start = lambda *args: 1
@@ -145,7 +150,7 @@ def mock_try_connection_time_out() -> Generator[MagicMock, None, None]:
 @pytest.fixture
 def mock_process_uploaded_file(
     tmp_path: Path, mock_temp_dir: str
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Mock upload certificate files."""
     file_id_ca = str(uuid4())
     file_id_cert = str(uuid4())

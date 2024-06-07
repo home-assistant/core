@@ -4,7 +4,6 @@ These tests simulate recent camera events received by the subscriber exposed
 as media in the media source.
 """
 
-from collections.abc import Generator
 import datetime
 from http import HTTPStatus
 import io
@@ -16,6 +15,7 @@ import av
 from google_nest_sdm.event import EventMessage
 import numpy as np
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source import (
@@ -1097,7 +1097,7 @@ async def test_multiple_devices(
 
 
 @pytest.fixture
-def event_store() -> Generator[None, None, None]:
+def event_store() -> Generator[None]:
     """Persist changes to event store immediately."""
     with patch(
         "homeassistant.components.nest.media_source.STORAGE_SAVE_DELAY_SECONDS",
