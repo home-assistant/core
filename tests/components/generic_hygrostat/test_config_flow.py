@@ -62,7 +62,7 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
             "dry_tolerance": 2.0,
             "humidifier": "switch.run",
             "initial_state": True,
-            "name": "test",
+            "name": "My dehumidifier",
             "target_sensor": "sensor.humidity",
             "wet_tolerance": 4.0,
         },
@@ -88,6 +88,11 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result == snapshot(name="init", exclude=props("data_schema", "handler"))
 
+    # check that it is setup
+    await hass.async_block_till_done()
+    assert hass.states.get("humidifier.my_dehumidifier") == snapshot(name="with_away")
+
+    # remove away feature
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
@@ -106,8 +111,6 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
 
     # Check config entry is reloaded with new options
     await hass.async_block_till_done()
-
-    # Check no new entity was created
-    assert len(hass.states.async_all()) == 3
-
-    await hass.async_block_till_done()
+    assert hass.states.get("humidifier.my_dehumidifier") == snapshot(
+        name="without_away"
+    )

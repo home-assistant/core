@@ -122,7 +122,7 @@
       'dry_tolerance': 2.0,
       'humidifier': 'switch.run',
       'initial_state': 1.0,
-      'name': 'test',
+      'name': 'My dehumidifier',
       'target_sensor': 'sensor.humidity',
       'wet_tolerance': 4.0,
     }),
@@ -150,8 +150,55 @@
     'dry_tolerance': 2.0,
     'humidifier': 'switch.run',
     'initial_state': 1.0,
-    'name': 'test',
+    'name': 'My dehumidifier',
     'target_sensor': 'sensor.humidity',
     'wet_tolerance': 4.0,
+  })
+# ---
+# name: test_options[with_away]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'action': <HumidifierAction.IDLE: 'idle'>,
+      'available_modes': list([
+        'normal',
+        'away',
+      ]),
+      'current_humidity': 10.0,
+      'device_class': 'dehumidifier',
+      'friendly_name': 'My dehumidifier',
+      'humidity': 100,
+      'max_humidity': 100,
+      'min_humidity': 0,
+      'mode': 'normal',
+      'saved_humidity': 35.0,
+      'supported_features': <HumidifierEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.my_dehumidifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_options[without_away]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'action': <HumidifierAction.IDLE: 'idle'>,
+      'current_humidity': 10.0,
+      'device_class': 'dehumidifier',
+      'friendly_name': 'My dehumidifier',
+      'humidity': 100,
+      'max_humidity': 100,
+      'min_humidity': 0,
+      'saved_humidity': 35,
+      'supported_features': <HumidifierEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.my_dehumidifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
