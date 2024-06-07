@@ -261,11 +261,11 @@ class Valve(HomeAccessory):
     @callback
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
-        current_state = (
-            (1 if new_state.state in [STATE_OPEN, STATE_OPENING, STATE_CLOSING] else 0)
-            if self.domain == VALVE_DOMAIN
-            else (1 if new_state.state == STATE_ON else 0)
-        )
+
+        if self.domain == VALVE_DOMAIN:
+            current_state = 1 if new_state.state in [STATE_OPEN, STATE_OPENING, STATE_CLOSING] else 0
+        else:
+            current_state = 1 if new_state.state == STATE_ON else 0
 
         _LOGGER.debug("%s: Set active state to %s", self.entity_id, current_state)
         self.char_active.set_value(current_state)
