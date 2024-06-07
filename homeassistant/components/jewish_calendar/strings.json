@@ -3,9 +3,9 @@
     "sensor": {
       "hebrew_date": {
         "state_attributes": {
-          "year": { "name": "Year" },
-          "month_name": { "name": "Month Name" },
-          "day": { "name": "Day" }
+          "hebrew_year": { "name": "Hebrew Year" },
+          "hebrew_month_name": { "name": "Hebrew Month Name" },
+          "hebrew_day": { "name": "Hebrew Day" }
         }
       }
     }

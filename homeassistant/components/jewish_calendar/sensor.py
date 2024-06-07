@@ -42,11 +42,13 @@ INFO_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="weekly_portion",
         name="Parshat Hashavua",
         icon="mdi:book-open-variant",
+        device_class=SensorDeviceClass.ENUM,
     ),
     SensorEntityDescription(
         key="holiday",
         name="Holiday",
         icon="mdi:calendar-star",
+        device_class=SensorDeviceClass.ENUM,
     ),
     SensorEntityDescription(
         key="omer_count",
@@ -260,20 +262,18 @@ class JewishCalendarSensor(SensorEntity):
             hdate = cast(HebrewDate, after_shkia_date.hdate)
             month = htables.MONTHS[hdate.month.value - 1]
             self._attrs = {
-                "year": hdate.year,
-                "month_name": month.hebrew if self._hebrew else month.english,
-                "day": hdate.day,
+                "hebrew_year": hdate.year,
+                "hebrew_month_name": month.hebrew if self._hebrew else month.english,
+                "hebrew_day": hdate.day,
             }
             return after_shkia_date.hebrew_date
         if self.entity_description.key == "weekly_portion":
-            self._attr_device_class = SensorDeviceClass.ENUM
             self._attr_options = [
                 (p.hebrew if self._hebrew else p.english) for p in htables.PARASHAOT
             ]
             # Compute the weekly portion based on the upcoming shabbat.
             return after_tzais_date.upcoming_shabbat.parasha
         if self.entity_description.key == "holiday":
-            self._attr_device_class = SensorDeviceClass.ENUM
             self._attrs = {
                 "id": after_shkia_date.holiday_name,
                 "type": after_shkia_date.holiday_type.name,

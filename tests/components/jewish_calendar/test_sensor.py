@@ -163,9 +163,9 @@ TEST_PARAMS = [
         False,
         "ו' מרחשוון ה' תשע\"ט",
         {
-            "year": 5779,
-            "month_name": "מרחשוון",
-            "day": 6,
+            "hebrew_year": 5779,
+            "hebrew_month_name": "מרחשוון",
+            "hebrew_day": 6,
             "icon": "mdi:star-david",
             "friendly_name": "Jewish Calendar Date",
         },
