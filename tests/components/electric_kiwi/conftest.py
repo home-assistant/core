@@ -29,9 +29,8 @@ type ComponentSetup = Callable[[], Awaitable[bool]]
 
 
 @pytest.fixture(autouse=True)
-async def request_setup(current_request_with_host) -> None:
+async def request_setup(current_request_with_host: None) -> None:
     """Request setup."""
-    return
 
 
 @pytest.fixture
