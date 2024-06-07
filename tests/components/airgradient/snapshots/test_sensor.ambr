@@ -150,7 +150,7 @@
     'state': '1',
   })
 # ---
-# name: test_all_entities[sensor.airgradient_particles_with_diameter_0_3um-entry]
+# name: test_all_entities[sensor.airgradient_pm0_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -164,7 +164,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.airgradient_particles_with_diameter_0_3um',
+    'entity_id': 'sensor.airgradient_pm0_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -176,24 +176,24 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Particles with diameter >0.3um',
+    'original_name': 'PM0.3',
     'platform': 'airgradient',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'pm003_count',
     'unique_id': '84fce612f5b8-pm003',
-    'unit_of_measurement': 'particles/dL air',
+    'unit_of_measurement': 'particles/dL',
   })
 # ---
-# name: test_all_entities[sensor.airgradient_particles_with_diameter_0_3um-state]
+# name: test_all_entities[sensor.airgradient_pm0_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Airgradient Particles with diameter >0.3um',
+      'friendly_name': 'Airgradient PM0.3',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'particles/dL air',
+      'unit_of_measurement': 'particles/dL',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.airgradient_particles_with_diameter_0_3um',
+    'entity_id': 'sensor.airgradient_pm0_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
