@@ -51,17 +51,11 @@ class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator[HydrawiseData]):
                 zones[zone.id] = zone
             for sensor in controller.sensors:
                 sensors[sensor.id] = sensor
-            if any(
-                "flow meter" in sensor.model.name.lower()
-                for sensor in controller.sensors
-            ):
-                daily_water_use[controller.id] = await self.api.get_water_use_summary(
-                    controller,
-                    now().replace(hour=0, minute=0, second=0, microsecond=0),
-                    now(),
-                )
-            else:
-                daily_water_use[controller.id] = ControllerWaterUseSummary()
+            daily_water_use[controller.id] = await self.api.get_water_use_summary(
+                controller,
+                now().replace(hour=0, minute=0, second=0, microsecond=0),
+                now(),
+            )
 
         return HydrawiseData(
             user=user,
