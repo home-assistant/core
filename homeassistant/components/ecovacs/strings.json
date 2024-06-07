@@ -268,7 +268,7 @@
   "services": {
     "raw_get_positions": {
       "name": "Get raw positions",
-      "description": "Get bot and chargers positions."
+      "description": "Get the raw response for the positions of the chargers and the device itself."
     }
   }
 }
