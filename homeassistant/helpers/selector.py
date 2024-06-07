@@ -75,6 +75,13 @@ class Selector[_T: Mapping[str, Any]]:
 
         self.config = self.CONFIG_SCHEMA(config)
 
+    def __eq__(self, other: object) -> bool:
+        """Check equality."""
+        if not isinstance(other, Selector):
+            return NotImplemented
+
+        return self.selector_type == other.selector_type and self.config == other.config
+
     def serialize(self) -> dict[str, dict[str, _T]]:
         """Serialize Selector for voluptuous_serialize."""
         return {"selector": {self.selector_type: self.config}}

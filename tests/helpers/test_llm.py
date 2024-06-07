@@ -17,6 +17,7 @@ from homeassistant.helpers import (
     floor_registry as fr,
     intent,
     llm,
+    selector,
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml
@@ -492,11 +493,6 @@ async def test_assist_api_prompt(
             "names": "Unnamed Device",
             "state": "unavailable",
         },
-        "script.test_script": {
-            "description": "This is a test script",
-            "names": "test_script",
-            "state": "off",
-        },
     }
     exposed_entities_prompt = (
         "An overview of the areas and the devices in this smart home:\n"
@@ -562,3 +558,199 @@ async def test_assist_api_prompt(
 {area_prompt}
 {exposed_entities_prompt}"""
     )
+
+
+async def test_script_tool(hass: HomeAssistant) -> None:
+    """Test ScriptTool for the assist API."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+    context = Context()
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=context,
+        user_prompt="test_text",
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    assert api.api_prompt == (
+        "Only if the user wants to control a device, tell them to expose entities to their "
+        "voice assistant in Home Assistant."
+    )
+
+    # Create a script with a unique ID
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "test_script": {
+                    "description": "This is a test script",
+                    "sequence": [],
+                    "fields": {
+                        "beer": {"description": "Number of beers", "required": True},
+                        "wine": {"selector": {"number": {"min": 0, "max": 3}}},
+                    },
+                },
+                "unexposed_script": {
+                    "sequence": [],
+                },
+            }
+        },
+    )
+    async_expose_entity(hass, "conversation", "script.test_script", True)
+
+    api = await llm.async_get_api(hass, "assist", llm_context)
+
+    tools = [tool for tool in api.tools if isinstance(tool, llm.ScriptTool)]
+    assert len(tools) == 1
+
+    tool = tools[0]
+    assert tool.name == "test_script"
+    assert tool.description == "This is a test script"
+    assert tool.parameters.schema == {
+        vol.Required("beer", description="Number of beers"): cv.string,
+        vol.Optional("wine"): selector.NumberSelector({"min": 0, "max": 3}),
+    }
+
+
+def test_selector_serializer() -> None:
+    """Test serialization of Selectors in Open API format."""
+    assert llm.selector_serializer(selector.ActionSelector()) == {"type": "string"}
+    assert llm.selector_serializer(selector.AddonSelector()) == {"type": "string"}
+    assert llm.selector_serializer(selector.AreaSelector()) == {"type": "string"}
+    assert llm.selector_serializer(selector.AreaSelector({"multiple": True})) == {
+        "type": "array",
+        "items": {"type": "string"},
+    }
+    assert llm.selector_serializer(selector.AssistPipelineSelector({})) == {
+        "type": "string"
+    }
+    assert llm.selector_serializer(
+        selector.AttributeSelector({"entity_id": "sensor.test"})
+    ) == {"type": "string"}
+    assert llm.selector_serializer(selector.BackupLocationSelector()) == {
+        "type": "string",
+        "pattern": "^(?:\\/backup|\\w+)$",
+    }
+    assert llm.selector_serializer(selector.BooleanSelector()) == {"type": "boolean"}
+    assert llm.selector_serializer(selector.ColorRGBSelector()) == {
+        "type": "array",
+        "items": {"type": "number"},
+        "maxItems": 3,
+        "minItems": 3,
+        "format": "RGB",
+    }
+    assert llm.selector_serializer(selector.ColorTempSelector()) == {"type": "number"}
+    assert llm.selector_serializer(
+        selector.ColorTempSelector({"min": 100, "max": 1000})
+    ) == {"type": "number", "minimum": 100, "maximum": 1000}
+    assert llm.selector_serializer(selector.ConfigEntrySelector()) == {"type": "string"}
+    assert llm.selector_serializer(selector.ConstantSelector({"value": "test"})) == {
+        "enum": ["test"]
+    }
+    assert llm.selector_serializer(selector.ConstantSelector({"value": 1})) == {
+        "enum": [1]
+    }
+    assert llm.selector_serializer(selector.ConstantSelector({"value": True})) == {
+        "enum": [True]
+    }
+    assert llm.selector_serializer(selector.QrCodeSelector({"data": "test"})) == {
+        "type": "string"
+    }
+    assert llm.selector_serializer(selector.ConversationAgentSelector({})) == {
+        "type": "string"
+    }
+    assert llm.selector_serializer(selector.CountrySelector()) == {
+        "type": "string",
+        "format": "ISO 3166-1 alpha-2",
+    }
+    assert llm.selector_serializer(
+        selector.CountrySelector({"countries": ["GB", "FR"]})
+    ) == {"type": "string", "enum": ["GB", "FR"]}
+    assert llm.selector_serializer(selector.DateSelector()) == {
+        "type": "string",
+        "format": "date",
+    }
+    assert llm.selector_serializer(selector.DateTimeSelector()) == {
+        "type": "string",
+        "format": "date-time",
+    }
+    assert llm.selector_serializer(selector.DeviceSelector()) == {"type": "string"}
+    assert llm.selector_serializer(selector.DeviceSelector({"multiple": True})) == {
+        "type": "array",
+        "items": {"type": "string"},
+    }
+    assert llm.selector_serializer(selector.EntitySelector()) == {"type": "string"}
+    assert llm.selector_serializer(selector.EntitySelector({"multiple": True})) == {
+        "type": "array",
+        "items": {"type": "string"},
+    }
+    assert llm.selector_serializer(selector.FloorSelector()) == {"type": "string"}
+    assert llm.selector_serializer(selector.FloorSelector({"multiple": True})) == {
+        "type": "array",
+        "items": {"type": "string"},
+    }
+    assert llm.selector_serializer(selector.IconSelector()) == {"type": "string"}
+    assert llm.selector_serializer(selector.LabelSelector()) == {"type": "string"}
+    assert llm.selector_serializer(selector.LabelSelector({"multiple": True})) == {
+        "type": "array",
+        "items": {"type": "string"},
+    }
+    assert llm.selector_serializer(selector.LanguageSelector({})) == {
+        "type": "string",
+        "format": "RFC 5646",
+    }
+    assert llm.selector_serializer(
+        selector.LanguageSelector({"languages": ["en", "fr"]})
+    ) == {"type": "string", "enum": ["en", "fr"]}
+    assert llm.selector_serializer(selector.NumberSelector({"mode": "box"})) == {
+        "type": "number"
+    }
+    assert llm.selector_serializer(
+        selector.NumberSelector({"min": 30, "max": 100})
+    ) == {"type": "number", "minimum": 30, "maximum": 100}
+    assert llm.selector_serializer(selector.ObjectSelector()) == {"type": "object"}
+    assert llm.selector_serializer(
+        selector.SelectSelector(
+            {
+                "options": [
+                    {"value": "A", "label": "Letter A"},
+                    {"value": "B", "label": "Letter B"},
+                    {"value": "C", "label": "Letter C"},
+                ]
+            }
+        )
+    ) == {"type": "string", "enum": ["A", "B", "C"]}
+    assert llm.selector_serializer(
+        selector.SelectSelector({"options": ["A", "B", "C"], "multiple": True})
+    ) == {
+        "type": "array",
+        "items": {"type": "string", "enum": ["A", "B", "C"]},
+        "uniqueItems": True,
+    }
+    assert llm.selector_serializer(
+        selector.StateSelector({"entity_id": "sensor.test"})
+    ) == {"type": "string"}
+    assert llm.selector_serializer(selector.TemplateSelector()) == {
+        "type": "string",
+        "format": "jinja2",
+    }
+    assert llm.selector_serializer(selector.TextSelector()) == {"type": "string"}
+    assert llm.selector_serializer(selector.TextSelector({"multiple": True})) == {
+        "type": "array",
+        "items": {"type": "string"},
+    }
+    assert llm.selector_serializer(selector.ThemeSelector()) == {"type": "string"}
+    assert llm.selector_serializer(selector.TimeSelector()) == {
+        "type": "string",
+        "format": "time",
+    }
+    assert llm.selector_serializer(selector.TriggerSelector()) == {
+        "type": "array",
+        "items": {"type": "string"},
+    }
+    assert llm.selector_serializer(selector.FileSelector({"accept": ".txt"})) == {
+        "type": "string"
+    }

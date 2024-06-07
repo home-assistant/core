@@ -468,7 +468,7 @@ def _get_exposed_entities(
     return entities
 
 
-def selector_serializer(schema: Any) -> Any:
+def selector_serializer(schema: Any) -> Any:  # noqa: C901
     """Convert selectors into OpenAPI schema."""
     if not isinstance(schema, selector.Selector):
         return UNSUPPORTED
@@ -507,6 +507,8 @@ def selector_serializer(schema: Any) -> Any:
         return result
 
     if isinstance(schema, selector.CountrySelector):
+        if schema.config.get("countries"):
+            return {"type": "string", "enum": schema.config["countries"]}
         return {"type": "string", "format": "ISO 3166-1 alpha-2"}
 
     if isinstance(schema, selector.DateSelector):
@@ -533,7 +535,7 @@ def selector_serializer(schema: Any) -> Any:
         options = [
             x["value"] if isinstance(x, dict) else x for x in schema.config["options"]
         ]
-        if schema.config.get("multiselect"):
+        if schema.config.get("multiple"):
             return {
                 "type": "array",
                 "items": {"type": "string", "enum": options},
@@ -571,7 +573,7 @@ class ScriptTool(Tool):
         entity_registry = er.async_get(hass)
 
         self.name = split_entity_id(script_state.entity_id)[1]
-        schema = {}
+        schema: dict[vol.Marker, Any] = {}
         entity_entry = entity_registry.async_get(script_state.entity_id)
         if (
             entity_entry
@@ -593,7 +595,10 @@ class ScriptTool(Tool):
                     key = vol.Required(field, description=description)
                 else:
                     key = vol.Optional(field, description=description)
-                schema[key] = selector.selector(config.get("selector"))
+                if "selector" in config:
+                    schema[key] = selector.selector(config["selector"])
+                else:
+                    schema[key] = cv.string
 
         self.parameters = vol.Schema(schema)
 
@@ -615,7 +620,4 @@ class ScriptTool(Tool):
             context=llm_context.context,
         )
 
-        return {
-            "success": True,
-            "message": "The script is scheduled to execute in background",
-        }
+        return {"success": True}
