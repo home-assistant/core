@@ -72,9 +72,6 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
             True: HVACMode.COOL,
             False: HVACMode.HEAT,
         }
-        
-        ...
-
         return COOL_MODE_MAP.get(self._channel.get_cool_mode())
 
     @api_call
