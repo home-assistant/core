@@ -64,6 +64,7 @@ def fixture_mock_config_entry() -> MockConfigEntry:
 @pytest.fixture(name="mock_integration")
 async def fixture_mock_integration(
     hass: HomeAssistant,
+    mock_device: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
     """Return a mock ConfigEntry setup for Kaleidescape integration."""
