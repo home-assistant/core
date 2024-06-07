@@ -14,7 +14,9 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "missing_internal_url": "Make sure Home Assistant has valid internal url",
       "missing_nasweb_data": "Something isn't right with device internal configuration. Try restarting the device and HomeAssistant.",
+      "missing_status": "Did not received any status updates within the expected time window. Make sure the Home Assistant Internal URL is reachable from the NASweb device.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {

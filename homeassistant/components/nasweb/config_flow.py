@@ -13,6 +13,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.network import NoURLAvailableError
 
 from .const import DOMAIN, NASWEB_SCHEMA_IMG_URL
 from .coordinator import NASwebCoordinator
@@ -48,8 +49,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
         coordinator = NASwebCoordinator(hass, webio_api)
         webhook_url = nasweb_data.get_webhook_url(hass)
-        if webhook_url is None:
-            raise MissingNASwebData("Cannot pass Home Assistant url to NASweb device")
         nasweb_data.notify_coordinator.add_coordinator(webio_serial, coordinator)
         subscription = await webio_api.status_subscription(webhook_url, True)
         if not subscription:
@@ -63,7 +62,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         if not result:
             if subscription:
                 await webio_api.status_subscription(webhook_url, False)
-            raise MissingNASwebData("Did not receive status from device")
+            raise MissingNASwebStatus("Did not receive status from device")
 
         name = webio_api.get_name()
     finally:
@@ -88,8 +87,12 @@ class NASwebConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except NoURLAvailableError:
+                errors["base"] = "missing_internal_url"
             except MissingNASwebData:
                 errors["base"] = "missing_nasweb_data"
+            except MissingNASwebStatus:
+                errors["base"] = "missing_status"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -118,3 +121,7 @@ class InvalidAuth(HomeAssistantError):
 
 class MissingNASwebData(HomeAssistantError):
     """Error to indicate missing information from NASweb."""
+
+
+class MissingNASwebStatus(HomeAssistantError):
+    """Error to indicate there was no status received from NASweb."""

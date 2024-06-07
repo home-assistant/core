@@ -11,12 +11,14 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platfor
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.network import NoURLAvailableError
 
-from .config_flow import MissingNASwebData
+from .config_flow import MissingNASwebData, MissingNASwebStatus
 from .const import (
     DOMAIN,
     DOMAIN_DISPLAY_NAME,
     ISSUE_INTERNAL_ERROR,
+    ISSUE_INTERNAL_URL_ERROR,
     ISSUE_INVALID_AUTHENTICATION,
     ISSUE_NO_STATUS_UPDATE,
     MANUFACTURER,
@@ -63,12 +65,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         nasweb_data.notify_coordinator.add_coordinator(webio_serial, coordinator)
 
         webhook_url = nasweb_data.get_webhook_url(hass)
-        if webhook_url is None:
-            _LOGGER.error("Cannot pass Home Assistant url to NASweb device")
-            raise MissingNASwebData
         if not await webio_api.status_subscription(webhook_url, True):
             _LOGGER.error("Failed to subscribe for status updates from webio")
             raise MissingNASwebData
+        if not await nasweb_data.notify_coordinator.check_connection(webio_serial):
+            _LOGGER.error("Did not receive status from device")
+            raise MissingNASwebStatus
     except AuthError:
         ir.async_create_issue(
             hass,
@@ -78,6 +80,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             is_persistent=False,
             severity=ir.IssueSeverity.ERROR,
             translation_key=ISSUE_INVALID_AUTHENTICATION,
+            translation_placeholders={
+                "domain_name": DOMAIN_DISPLAY_NAME,
+                "device_name": entry.title,
+            },
+        )
+        return False
+    except NoURLAvailableError:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"{ISSUE_INTERNAL_URL_ERROR}_{entry.entry_id}",
+            is_fixable=False,
+            is_persistent=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key=ISSUE_INTERNAL_URL_ERROR,
             translation_placeholders={
                 "domain_name": DOMAIN_DISPLAY_NAME,
                 "device_name": entry.title,
@@ -100,11 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             },
         )
         return False
-    ir.async_delete_issue(
-        hass, DOMAIN, f"{ISSUE_INVALID_AUTHENTICATION}_{entry.entry_id}"
-    )
-    ir.async_delete_issue(hass, DOMAIN, f"{ISSUE_INTERNAL_ERROR}_{entry.entry_id}")
-    if not await nasweb_data.notify_coordinator.check_connection(webio_serial):
+    except MissingNASwebStatus:
         ir.async_create_issue(
             hass,
             DOMAIN,
@@ -116,9 +129,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_placeholders={
                 "domain_name": DOMAIN_DISPLAY_NAME,
                 "device_name": entry.title,
+                "support_email": SUPPORT_EMAIL,
             },
         )
         return False
+    ir.async_delete_issue(
+        hass, DOMAIN, f"{ISSUE_INVALID_AUTHENTICATION}_{entry.entry_id}"
+    )
+    ir.async_delete_issue(hass, DOMAIN, f"{ISSUE_INTERNAL_URL_ERROR}_{entry.entry_id}")
+    ir.async_delete_issue(hass, DOMAIN, f"{ISSUE_INTERNAL_ERROR}_{entry.entry_id}")
     ir.async_delete_issue(hass, DOMAIN, f"{ISSUE_NO_STATUS_UPDATE}_{entry.entry_id}")
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -137,6 +156,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         ir.async_delete_issue(
             hass, DOMAIN, f"{ISSUE_INVALID_AUTHENTICATION}_{entry.entry_id}"
+        )
+        ir.async_delete_issue(
+            hass, DOMAIN, f"{ISSUE_INTERNAL_URL_ERROR}_{entry.entry_id}"
         )
         ir.async_delete_issue(hass, DOMAIN, f"{ISSUE_INTERNAL_ERROR}_{entry.entry_id}")
         ir.async_delete_issue(
