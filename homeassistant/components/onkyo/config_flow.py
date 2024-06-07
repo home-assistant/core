@@ -1,6 +1,5 @@
 """Config flow for Onkyo."""
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -36,8 +35,6 @@ from .const import (
     EISCP_IDENTIFIER,
     EISCP_MODEL_NAME,
 )
-
-FlowInput = Mapping[str, Any] | None
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -188,19 +185,21 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id, raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
-        user_input[CONF_MODEL] = info[EISCP_MODEL_NAME]
-        user_input[CONF_MAC] = unique_id
-
-        options = {}
-        options[CONF_MAXIMUM_VOLUME] = user_input[CONF_LEGACY_MAXIMUM_VOLUME]
-        options[CONF_RECEIVER_MAXIMUM_VOLUME] = user_input[
-            CONF_LEGACY_RECEIVER_MAXIMUM_VOLUME
-        ]
-        options[CONF_SOURCES] = user_input[CONF_SOURCES]
-
         title = self._get_receiver_name(info[EISCP_MODEL_NAME], unique_id)
-
-        return self.async_create_entry(title=title, data=user_input, options=options)
+        return self.async_create_entry(
+            title=title,
+            data={
+                CONF_MODEL: info[EISCP_MODEL_NAME],
+                CONF_MAC: unique_id,
+            },
+            options={
+                CONF_MAXIMUM_VOLUME: user_input[CONF_LEGACY_MAXIMUM_VOLUME],
+                CONF_RECEIVER_MAXIMUM_VOLUME: user_input[
+                    CONF_LEGACY_RECEIVER_MAXIMUM_VOLUME
+                ],
+                CONF_SOURCES: user_input[CONF_SOURCES],
+            },
+        )
 
     @staticmethod
     @callback
