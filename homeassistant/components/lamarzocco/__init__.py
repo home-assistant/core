@@ -175,10 +175,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if CONF_MAC in entry.data:
             v2_data[CONF_MAC] = entry.data[CONF_MAC]
 
-        entry.version = 2
         hass.config_entries.async_update_entry(
             entry,
             data=v2_data,
+            version=2,
         )
         _LOGGER.debug("Migrated La Marzocco config entry to version 2")
     return True
