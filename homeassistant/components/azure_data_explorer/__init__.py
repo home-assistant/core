@@ -207,6 +207,6 @@ class AzureDataExplorer:
         if "\n" in state.state:
             return None, dropped + 1
 
-        json_event = str(json.dumps(obj=state, cls=JSONEncoder).encode("utf-8"))
+        json_event = json.dumps(obj=state, cls=JSONEncoder)
 
         return (json_event, dropped)
