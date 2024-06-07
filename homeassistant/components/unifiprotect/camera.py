@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 import logging
 from typing import Any, cast
 
@@ -14,6 +13,7 @@ from pyunifiprotect.data import (
     ProtectModelWithId,
     StateType,
 )
+from typing_extensions import Generator
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -71,7 +71,7 @@ def _get_camera_channels(
     entry: ConfigEntry,
     data: ProtectData,
     ufp_device: UFPCamera | None = None,
-) -> Generator[tuple[UFPCamera, CameraChannel, bool], None, None]:
+) -> Generator[tuple[UFPCamera, CameraChannel, bool]]:
     """Get all the camera channels."""
 
     devices = (

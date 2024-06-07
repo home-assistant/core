@@ -186,9 +186,8 @@ async def test_pipeline_events(
         )
 
 
+@pytest.mark.usefixtures("socket_enabled")
 async def test_udp_server(
-    hass: HomeAssistant,
-    socket_enabled: None,
     unused_udp_port_factory: Callable[[], int],
     voice_assistant_udp_pipeline_v1: VoiceAssistantUDPPipeline,
 ) -> None:
@@ -313,9 +312,8 @@ async def test_error_calls_handle_finished(
     voice_assistant_udp_pipeline_v1.handle_finished.assert_called()
 
 
+@pytest.mark.usefixtures("socket_enabled")
 async def test_udp_server_multiple(
-    hass: HomeAssistant,
-    socket_enabled: None,
     unused_udp_port_factory: Callable[[], int],
     voice_assistant_udp_pipeline_v1: VoiceAssistantUDPPipeline,
 ) -> None:
@@ -336,9 +334,8 @@ async def test_udp_server_multiple(
         await voice_assistant_udp_pipeline_v1.start_server()
 
 
+@pytest.mark.usefixtures("socket_enabled")
 async def test_udp_server_after_stopped(
-    hass: HomeAssistant,
-    socket_enabled: None,
     unused_udp_port_factory: Callable[[], int],
     voice_assistant_udp_pipeline_v1: VoiceAssistantUDPPipeline,
 ) -> None:

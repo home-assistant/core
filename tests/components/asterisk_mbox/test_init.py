@@ -1,9 +1,9 @@
 """Test mailbox."""
 
-from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.asterisk_mbox import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -14,7 +14,7 @@ from .const import CONFIG
 
 
 @pytest.fixture
-def client() -> Generator[Mock, None, None]:
+def client() -> Generator[Mock]:
     """Mock client."""
     with patch(
         "homeassistant.components.asterisk_mbox.asteriskClient", autospec=True
