@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from refoss_ha.controller.electricity import ElectricityXMix
@@ -16,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -27,13 +29,10 @@ from .bridge import RefossDataUpdateCoordinator
 from .const import (
     CHANNEL_DISPLAY_NAME,
     COORDINATORS,
-    DEVICE_CLASS_UNITS,
     DISPATCH_DEVICE_DISCOVERED,
     DOMAIN,
     ENERGY,
     ENERGY_RETURNED,
-    UnitOfEnergy,
-    UnitOfMeasurement,
 )
 from .entity import RefossEntity
 
@@ -43,6 +42,7 @@ class RefossSensorEntityDescription(SensorEntityDescription):
     """Describes Refoss sensor entity."""
 
     subkey: str | None = None
+    fn: Callable[[float], float] | None = None
 
 
 SENSORS: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
@@ -54,6 +54,7 @@ SENSORS: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPower.WATT,
             subkey="power",
+            fn=lambda x: round(x / 1000, 2),
         ),
         RefossSensorEntityDescription(
             key="voltage",
@@ -62,6 +63,7 @@ SENSORS: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             subkey="voltage",
+            fn=lambda x: round(x / 1000, 2),
         ),
         RefossSensorEntityDescription(
             key="current",
@@ -70,6 +72,7 @@ SENSORS: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             subkey="current",
+            fn=lambda x: round(x / 1000, 2),
         ),
         RefossSensorEntityDescription(
             key="factor",
@@ -77,22 +80,25 @@ SENSORS: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.POWER_FACTOR,
             state_class=SensorStateClass.MEASUREMENT,
             subkey="factor",
+            fn=lambda x: round(x, 2),
         ),
         RefossSensorEntityDescription(
             key="energy",
             name="This Month Energy",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL,
-            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             subkey="mConsume",
+            fn=lambda x: round(x, 2),
         ),
         RefossSensorEntityDescription(
             key="energy_returned",
             name="This Month Energy Returned",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL,
-            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             subkey="mConsume",
+            fn=lambda x: round(x, 2),
         ),
     ),
 }
@@ -137,7 +143,6 @@ class RefossSensor(RefossEntity, SensorEntity):
     """Refoss Sensor Device."""
 
     entity_description: RefossSensorEntityDescription
-    _uom: UnitOfMeasurement | None = None
 
     def __init__(
         self,
@@ -154,25 +159,6 @@ class RefossSensor(RefossEntity, SensorEntity):
             f"{CHANNEL_DISPLAY_NAME[device_type][channel]} {description.name}"
         )
 
-        if self.device_class is not None:
-            if (
-                self.native_unit_of_measurement is None
-                or self.device_class not in DEVICE_CLASS_UNITS
-            ):
-                self._attr_device_class = None
-                return
-
-            uoms = DEVICE_CLASS_UNITS[self.device_class]
-            self._uom = uoms.get(self.native_unit_of_measurement) or uoms.get(
-                self.native_unit_of_measurement.lower()
-            )
-            if self._uom is None:
-                self._attr_device_class = None
-                return
-            self._attr_native_unit_of_measurement = (
-                self._uom.conversion_unit or self._uom.unit
-            )
-
     @property
     def native_value(self) -> StateType:
         """Return the native value."""
@@ -185,10 +171,6 @@ class RefossSensor(RefossEntity, SensorEntity):
             self.entity_description.key == ENERGY_RETURNED and value > 0
         ):
             value = 0
-
-        if self._uom and self._uom.conversion_fn is not None:
-            return self._uom.conversion_fn(value)
-
-        if isinstance(value, float):
-            return f"{value:.2f}"
+        if self.entity_description.fn is not None:
+            return self.entity_description.fn(value)
         return value
