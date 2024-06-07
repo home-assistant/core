@@ -526,6 +526,8 @@ filterwarnings = [
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:ttls",
     # https://github.com/mvantellingen/python-zeep/pull/1364 - >4.2.1
     "ignore:'cgi' is deprecated and slated for removal in Python 3.13:DeprecationWarning:zeep.utils",
+    # https://github.com/vacanza/python-holidays/discussions/1800
+    "ignore::DeprecationWarning:holidays",
 
     # -- fixed for Python 3.13
     # https://github.com/rhasspy/wyoming/commit/e34af30d455b6f2bb9e5cfb25fad8d276914bc54 - >=1.4.2
