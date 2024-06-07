@@ -2,11 +2,10 @@
 
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from deebot_client.device import Device
 import pytest
-from syrupy import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.vacuum import SERVICE_RAW_GET_POSITIONS
@@ -19,34 +18,36 @@ pytestmark = [pytest.mark.usefixtures("init_integration")]
 @pytest.fixture
 def mock_device_execute_response(
     data: dict[str, Any],
-) -> Generator[AsyncMock, None, None]:
+) -> Generator[dict[str, Any], None, None]:
     """Mock the device execute function response."""
+
+    response = {
+        "ret": "ok",
+        "resp": {
+            "header": {
+                "pri": 1,
+                "tzm": 480,
+                "ts": "1717113600000",
+                "ver": "0.0.1",
+                "fwVer": "1.2.0",
+                "hwVer": "0.1.0",
+            },
+            "body": {
+                "code": 0,
+                "msg": "ok",
+                "data": data,
+            },
+        },
+        "id": "xRV3",
+        "payloadType": "j",
+    }
 
     with patch.object(
         Device,
         "execute_command",
-        return_value={
-            "ret": "ok",
-            "resp": {
-                "header": {
-                    "pri": 1,
-                    "tzm": 480,
-                    "ts": "1717113600000",
-                    "ver": "0.0.1",
-                    "fwVer": "1.2.0",
-                    "hwVer": "0.1.0",
-                },
-                "body": {
-                    "code": 0,
-                    "msg": "ok",
-                    "data": data,
-                },
-            },
-            "id": "xRV3",
-            "payloadType": "j",
-        },
-    ) as mock_device_execute_response:
-        yield mock_device_execute_response
+        return_value=response,
+    ):
+        yield response
 
 
 @pytest.mark.usefixtures("mock_device_execute_response")
@@ -72,19 +73,17 @@ def mock_device_execute_response(
 )
 async def test_get_positions_service(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
+    mock_device_execute_response: dict[str],
     entity_id: str,
 ) -> None:
     """Test that get_positions service response snapshots match."""
     vacuum = hass.states.get(entity_id)
     assert vacuum
 
-    assert snapshot(
-        name=f"{entity_id}:get-positions"
-    ) == await hass.services.async_call(
+    assert await hass.services.async_call(
         DOMAIN,
         SERVICE_RAW_GET_POSITIONS,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
         return_response=True,
-    )
+    ) == {entity_id: mock_device_execute_response}
