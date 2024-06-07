@@ -52,6 +52,7 @@ class TPLinkSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         self,
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
+        *,
         feature: Feature,
         parent: Device | None = None,
     ) -> None:

@@ -103,6 +103,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         self,
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
+        *,
         feature: Feature | None = None,
         parent: Device | None = None,
     ) -> None:
@@ -220,7 +221,7 @@ def _entities_for_device[_E: CoordinatedTPLinkEntity](
         return True
 
     return [
-        entity_class(device, coordinator, feat, parent=parent)
+        entity_class(device, coordinator, feature=feat, parent=parent)
         for feat in device.features.values()
         if _filter(device, feat)
     ]
