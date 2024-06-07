@@ -5531,7 +5531,7 @@ async def test_raise_wrong_exception_in_forwarded_platform(
     )
 
 
-async def test_config_entry_unloaded_during_platform_setup(
+async def test_config_entry_unloaded_during_platform_setups(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
     caplog: pytest.LogCaptureFixture,
@@ -5601,5 +5601,79 @@ async def test_config_entry_unloaded_during_platform_setup(
     assert (
         "OperationNotAllowed: The config entry Mock Title (test) with "
         "entry_id test2 cannot forward setup for ['light'] because it is "
+        "not loaded in the ConfigEntryState.NOT_LOADED state"
+    ) in caplog.text
+
+
+async def test_config_entry_unloaded_during_platform_setup(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test async_forward_entry_setup not being awaited."""
+    task = None
+
+    async def mock_setup_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock setting up entry."""
+
+        # Call async_forward_entry_setup in a non-tracked task
+        # so we can unload the config entry during the setup
+        def _late_setup():
+            nonlocal task
+            task = asyncio.create_task(
+                hass.config_entries.async_forward_entry_setup(entry, "light")
+            )
+
+        hass.loop.call_soon(_late_setup)
+        return True
+
+    async def mock_unload_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock unloading an entry."""
+        result = await hass.config_entries.async_unload_platforms(entry, ["light"])
+        assert result
+        return result
+
+    mock_remove_entry = AsyncMock(return_value=None)
+
+    async def mock_setup_entry_platform(
+        hass: HomeAssistant,
+        entry: config_entries.ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Mock setting up platform."""
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=mock_unload_entry,
+            async_remove_entry=mock_remove_entry,
+        ),
+    )
+    mock_platform(
+        hass, "test.light", MockPlatform(async_setup_entry=mock_setup_entry_platform)
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    entry = MockConfigEntry(domain="test", entry_id="test2")
+    entry.add_to_manager(manager)
+
+    # Setup entry
+    await manager.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await manager.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    del task
+
+    assert (
+        "OperationNotAllowed: The config entry Mock Title (test) with "
+        "entry_id test2 cannot forward setup for light because it is "
         "not loaded in the ConfigEntryState.NOT_LOADED state"
     ) in caplog.text
