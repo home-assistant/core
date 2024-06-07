@@ -21,7 +21,7 @@ from homeassistant.components.intent import async_device_supports_timers
 from homeassistant.components.script import ATTR_VARIABLES, DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.weather.intent import INTENT_GET_WEATHER
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
-from homeassistant.core import Context, HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import Context, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import yaml
 from homeassistant.util.json import JsonObjectType
@@ -389,7 +389,7 @@ class AssistAPI(API):
                 ):
                     continue
 
-                tools.append(ScriptTool(self.hass, state))
+                tools.append(ScriptTool(self.hass, state.entity_id))
 
         return tools
 
@@ -567,14 +567,14 @@ class ScriptTool(Tool):
     def __init__(
         self,
         hass: HomeAssistant,
-        script_state: State,
+        script_entity_id: str,
     ) -> None:
         """Init the class."""
         entity_registry = er.async_get(hass)
 
-        self.name = split_entity_id(script_state.entity_id)[1]
+        self.name = split_entity_id(script_entity_id)[1]
         schema: dict[vol.Marker, Any] = {}
-        entity_entry = entity_registry.async_get(script_state.entity_id)
+        entity_entry = entity_registry.async_get(script_entity_id)
         if (
             entity_entry
             and entity_entry.unique_id
@@ -601,9 +601,6 @@ class ScriptTool(Tool):
                     schema[key] = cv.string
 
         self.parameters = vol.Schema(schema)
-
-        if not self.description:
-            self.description = script_state.attributes.get("friendly_name")
 
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext

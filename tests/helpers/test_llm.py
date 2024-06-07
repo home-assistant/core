@@ -614,6 +614,22 @@ async def test_script_tool(hass: HomeAssistant) -> None:
         vol.Optional("wine"): selector.NumberSelector({"min": 0, "max": 3}),
     }
 
+    tool_input = llm.ToolInput(
+        tool_name="test_script",
+        tool_args={"beer": "3", "wine": 0},
+    )
+
+    with patch("homeassistant.core.ServiceRegistry.async_call") as mock_service_call:
+        response = await api.async_call_tool(tool_input)
+
+    mock_service_call.assert_awaited_once_with(
+        "script",
+        "turn_on",
+        {"entity_id": "script.test_script", "variables": {"beer": "3", "wine": 0}},
+        context=context,
+    )
+    assert response == {"success": True}
+
 
 def test_selector_serializer() -> None:
     """Test serialization of Selectors in Open API format."""
@@ -705,6 +721,25 @@ def test_selector_serializer() -> None:
     assert llm.selector_serializer(
         selector.LanguageSelector({"languages": ["en", "fr"]})
     ) == {"type": "string", "enum": ["en", "fr"]}
+    assert llm.selector_serializer(selector.LocationSelector()) == {
+        "type": "object",
+        "properties": {
+            "latitude": {"type": "number"},
+            "longitude": {"type": "number"},
+            "radius": {"type": "number"},
+        },
+        "required": ["latitude", "longitude"],
+    }
+    assert llm.selector_serializer(selector.MediaSelector()) == {
+        "type": "object",
+        "properties": {
+            "entity_id": {"type": "string"},
+            "media_content_id": {"type": "string"},
+            "media_content_type": {"type": "string"},
+            "metadata": {"type": "object", "additionalProperties": True},
+        },
+        "required": ["entity_id", "media_content_id", "media_content_type"],
+    }
     assert llm.selector_serializer(selector.NumberSelector({"mode": "box"})) == {
         "type": "number"
     }
