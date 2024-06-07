@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-import google.ai.generativelanguage as glm
 from google.api_core.exceptions import GoogleAPICallError
 import google.generativeai as genai
+from google.generativeai import protos
 import google.generativeai.types as genai_types
 from google.protobuf.json_format import MessageToDict
 import voluptuous as vol
@@ -93,7 +93,7 @@ def _format_tool(tool: llm.Tool) -> dict[str, Any]:
 
     parameters = _format_schema(convert(tool.parameters))
 
-    return glm.Tool(
+    return protos.Tool(
         {
             "function_declarations": [
                 {
@@ -349,13 +349,13 @@ class GoogleGenerativeAIConversationEntity(
 
                 LOGGER.debug("Tool response: %s", function_response)
                 tool_responses.append(
-                    glm.Part(
-                        function_response=glm.FunctionResponse(
+                    protos.Part(
+                        function_response=protos.FunctionResponse(
                             name=tool_name, response=function_response
                         )
                     )
                 )
-            chat_request = glm.Content(parts=tool_responses)
+            chat_request = protos.Content(parts=tool_responses)
 
         intent_response.async_set_speech(
             " ".join([part.text.strip() for part in chat_response.parts if part.text])
