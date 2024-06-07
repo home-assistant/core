@@ -1,7 +1,5 @@
 """Test climate intents."""
 
-from unittest.mock import patch
-
 import pytest
 from typing_extensions import Generator
 
