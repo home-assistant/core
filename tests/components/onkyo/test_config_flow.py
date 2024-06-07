@@ -31,17 +31,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 from tests.components.onkyo import setup_integration
 
-MOCK_ONKYO_CONFIG = {
-    CONF_HOST: "127.0.0.1",
-    CONF_NAME: "Receiver test name",
-    CONF_LEGACY_MAXIMUM_VOLUME: 42,
-    CONF_LEGACY_RECEIVER_MAXIMUM_VOLUME: 69,
-    CONF_SOURCES: {
-        "Key_one": "Value-A",
-        "Key_two": "Value-B",
-    },
-}
-
 
 async def test_no_manual_entry_and_no_devices_discovered(hass: HomeAssistant) -> None:
     """Test no devices found."""
@@ -345,12 +334,26 @@ async def test_import_success(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data=MOCK_ONKYO_CONFIG,
+            data={
+                CONF_HOST: "127.0.0.1",
+                CONF_NAME: "Receiver test name",
+                CONF_LEGACY_MAXIMUM_VOLUME: 42,
+                CONF_LEGACY_RECEIVER_MAXIMUM_VOLUME: 69,
+                CONF_SOURCES: {
+                    "Key_one": "Value-A",
+                    "Key_two": "Value-B",
+                },
+            },
         )
         await hass.async_block_till_done()
 
+    assert len(mock_setup_entry.mock_calls) == 1
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test model 001122334455"
     assert result["result"].unique_id == "001122334455"
-    assert result["data"] == MOCK_ONKYO_CONFIG
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["data"] == {"model": "Test model", "mac": "001122334455"}
+    assert result["options"] == {
+        "maximum_volume": 42,
+        "receiver_max_volume": 69,
+        "sources": {"Key_one": "Value-A", "Key_two": "Value-B"},
+    }
