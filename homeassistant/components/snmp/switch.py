@@ -165,12 +165,11 @@ async def async_setup_platform(
     else:
         auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
 
+    transport = UdpTransportTarget((host, port))
     request_args = await async_create_request_cmd_args(
-        hass, auth_data, UdpTransportTarget((host, port)), baseoid
+        hass, auth_data, transport, baseoid
     )
-    command_args = await async_create_command_cmd_args(
-        hass, auth_data, UdpTransportTarget((host, port))
-    )
+    command_args = await async_create_command_cmd_args(hass, auth_data, transport)
 
     async_add_entities(
         [
