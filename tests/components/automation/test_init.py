@@ -2940,9 +2940,7 @@ def test_deprecated_constants(
     )
 
 
-async def test_automation_turns_off_other_automation(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_automation_turns_off_other_automation(hass: HomeAssistant) -> None:
     """Test an automation that turns off another automation."""
     hass.set_state(CoreState.not_running)
     calls = async_mock_service(hass, "persistent_notification", "create")
@@ -3021,7 +3019,7 @@ async def test_automation_turns_off_other_automation(
 
 
 async def test_two_automations_call_restart_script_same_time(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
 ) -> None:
     """Test two automations that call a restart mode script at the same."""
     hass.states.async_set("binary_sensor.presence", "off")
