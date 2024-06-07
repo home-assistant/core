@@ -88,7 +88,7 @@ def mock_empty_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_homeworks() -> Generator[None, MagicMock, None]:
+def mock_homeworks() -> Generator[MagicMock]:
     """Return a mocked Homeworks client."""
     with (
         patch(

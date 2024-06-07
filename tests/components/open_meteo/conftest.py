@@ -35,7 +35,7 @@ def mock_setup_entry() -> Generator[None]:
 
 
 @pytest.fixture
-def mock_open_meteo(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None]:
+def mock_open_meteo(request: pytest.FixtureRequest) -> Generator[MagicMock]:
     """Return a mocked Open-Meteo client."""
     fixture: str = "forecast.json"
     if hasattr(request, "param") and request.param:

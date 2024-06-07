@@ -36,7 +36,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_pvoutput() -> Generator[None, MagicMock, None]:
+def mock_pvoutput() -> Generator[MagicMock]:
     """Return a mocked PVOutput client."""
     with (
         patch(
