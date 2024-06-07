@@ -15,6 +15,7 @@ override_schedule:
       example: "mowing"
       selector:
         select:
+          translation_key: override_modes
           options:
-            - "mowing"
-            - "parking"
+            - "mow"
+            - "park"

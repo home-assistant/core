@@ -6,13 +6,14 @@ from aioautomower.exceptions import ApiException
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.components.husqvarna_automower.lawn_mower import EXCEPTION_TEXT
 from homeassistant.components.lawn_mower import LawnMowerActivity
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
@@ -105,7 +106,7 @@ async def test_lawn_mower_commands(
             "override_schedule",
             {
                 "duration": {"days": 0, "hours": 3, "minutes": 0},
-                "override_mode": "mowing",
+                "override_mode": "mow",
             },
         ),
         (
@@ -114,7 +115,7 @@ async def test_lawn_mower_commands(
             "override_schedule",
             {
                 "duration": {"days": 1, "hours": 12, "minutes": 30},
-                "override_mode": "parking",
+                "override_mode": "park",
             },
         ),
     ],
@@ -178,10 +179,7 @@ async def test_lawn_mower_wrong_service_commands(
 ) -> None:
     """Test lawn_mower commands."""
     await setup_integration(hass, mock_config_entry)
-    with pytest.raises(
-        ServiceValidationError,
-        match="Only `mowing` and `parking` are supported for `override_mode`.",
-    ):
+    with pytest.raises(MultipleInvalid):
         await hass.services.async_call(
             domain=DOMAIN,
             service=service,

@@ -254,10 +254,18 @@
       }
     }
   },
+  "selector": {
+    "override_modes": {
+      "options": {
+        "mow": "Mow",
+        "park": "Park"
+      }
+    }
+  },
   "services": {
     "override_schedule": {
       "name": "Override schedule",
-      "description": "Overrides the schedule by a duration of time either with mowing or parking.",
+      "description": "Override the schedule to either mow or park for a duration of time.",
       "fields": {
         "duration": {
           "name": "Duration",

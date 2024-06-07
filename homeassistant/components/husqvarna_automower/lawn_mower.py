@@ -17,7 +17,7 @@ from homeassistant.components.lawn_mower import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -76,7 +76,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         "override_schedule",
         {
-            vol.Required("override_mode"): cv.string,
+            vol.Required("override_mode"): vol.In(["mow", "park"]),
             vol.Required("duration"): vol.All(
                 cv.time_period,
                 cv.positive_timedelta,
@@ -136,14 +136,10 @@ class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
         self, override_mode: str, duration: timedelta
     ) -> None:
         """Override the schedule with mowing or parking."""
-        if override_mode not in ["mowing", "parking"]:
-            raise ServiceValidationError(
-                "Only `mowing` and `parking` are supported for `override_mode`."
-            )
         duration_in_min = int(duration.total_seconds() / 60)
-        if override_mode == "mowing":
+        if override_mode == "mow":
             await self.coordinator.api.commands.start_for(
                 self.mower_id, duration_in_min
             )
-        if override_mode == "parking":
+        if override_mode == "park":
             await self.coordinator.api.commands.park_for(self.mower_id, duration_in_min)
