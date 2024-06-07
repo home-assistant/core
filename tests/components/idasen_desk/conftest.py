@@ -5,15 +5,16 @@ from unittest import mock
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from typing_extensions import Generator
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth):
+def mock_bluetooth(enable_bluetooth: None) -> Generator[None]:
     """Auto mock bluetooth."""
     with mock.patch(
         "homeassistant.components.idasen_desk.bluetooth.async_ble_device_from_address"
     ):
-        yield MagicMock()
+        yield
 
 
 @pytest.fixture(autouse=False)

@@ -126,6 +126,11 @@ TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
         icon="mdi:weather-night",
     ),
     SensorEntityDescription(
+        key="three_stars",
+        name="T'set Hakochavim, 3 stars",
+        icon="mdi:weather-night",
+    ),
+    SensorEntityDescription(
         key="upcoming_shabbat_candle_lighting",
         name="Upcoming Shabbat Candle Lighting",
         icon="mdi:candle",
@@ -155,9 +160,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Jewish calendar sensors ."""
     entry = hass.data[DOMAIN][config_entry.entry_id]
-    sensors = [JewishCalendarSensor(entry, description) for description in INFO_SENSORS]
+    sensors = [
+        JewishCalendarSensor(config_entry.entry_id, entry, description)
+        for description in INFO_SENSORS
+    ]
     sensors.extend(
-        JewishCalendarTimeSensor(entry, description) for description in TIME_SENSORS
+        JewishCalendarTimeSensor(config_entry.entry_id, entry, description)
+        for description in TIME_SENSORS
     )
 
     async_add_entities(sensors)
@@ -168,13 +177,14 @@ class JewishCalendarSensor(SensorEntity):
 
     def __init__(
         self,
+        entry_id: str,
         data: dict[str, Any],
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the Jewish calendar sensor."""
         self.entity_description = description
         self._attr_name = f"{DEFAULT_NAME} {description.name}"
-        self._attr_unique_id = f'{data["prefix"]}_{description.key}'
+        self._attr_unique_id = f"{entry_id}-{description.key}"
         self._location = data[CONF_LOCATION]
         self._hebrew = data[CONF_LANGUAGE] == "hebrew"
         self._candle_lighting_offset = data[CONF_CANDLE_LIGHT_MINUTES]

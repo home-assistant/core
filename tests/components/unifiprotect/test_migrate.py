@@ -23,8 +23,11 @@ from tests.typing import WebSocketGenerator
 
 
 async def test_deprecated_entity(
-    hass: HomeAssistant, ufp: MockUFPFixture, hass_ws_client, doorbell: Camera
-):
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    hass_ws_client: WebSocketGenerator,
+    doorbell: Camera,
+) -> None:
     """Test Deprecate entity repair does not exist by default (new installs)."""
 
     await init_entry(hass, ufp, [doorbell])
@@ -47,9 +50,9 @@ async def test_deprecated_entity_no_automations(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     doorbell: Camera,
-):
+) -> None:
     """Test Deprecate entity repair exists for existing installs."""
     entity_registry.async_get_or_create(
         Platform.SWITCH,

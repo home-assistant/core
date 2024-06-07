@@ -10,6 +10,7 @@ from typing import Any
 from aiowithings import (
     Activity,
     Goals,
+    MeasurementPosition,
     MeasurementType,
     SleepSummary,
     Workout,
@@ -63,12 +64,14 @@ class WithingsMeasurementSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
     measurement_type: MeasurementType
+    measurement_position: MeasurementPosition | None = None
 
 
 MEASUREMENT_SENSORS: dict[
-    MeasurementType, WithingsMeasurementSensorEntityDescription
+    tuple[MeasurementType, MeasurementPosition | None],
+    WithingsMeasurementSensorEntityDescription,
 ] = {
-    MeasurementType.WEIGHT: WithingsMeasurementSensorEntityDescription(
+    (MeasurementType.WEIGHT, None): WithingsMeasurementSensorEntityDescription(
         key="weight_kg",
         measurement_type=MeasurementType.WEIGHT,
         native_unit_of_measurement=UnitOfMass.KILOGRAMS,
@@ -76,7 +79,7 @@ MEASUREMENT_SENSORS: dict[
         device_class=SensorDeviceClass.WEIGHT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    MeasurementType.FAT_MASS_WEIGHT: WithingsMeasurementSensorEntityDescription(
+    (MeasurementType.FAT_MASS_WEIGHT, None): WithingsMeasurementSensorEntityDescription(
         key="fat_mass_kg",
         measurement_type=MeasurementType.FAT_MASS_WEIGHT,
         translation_key="fat_mass",
@@ -85,7 +88,7 @@ MEASUREMENT_SENSORS: dict[
         device_class=SensorDeviceClass.WEIGHT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    MeasurementType.FAT_FREE_MASS: WithingsMeasurementSensorEntityDescription(
+    (MeasurementType.FAT_FREE_MASS, None): WithingsMeasurementSensorEntityDescription(
         key="fat_free_mass_kg",
         measurement_type=MeasurementType.FAT_FREE_MASS,
         translation_key="fat_free_mass",
@@ -94,7 +97,7 @@ MEASUREMENT_SENSORS: dict[
         device_class=SensorDeviceClass.WEIGHT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    MeasurementType.MUSCLE_MASS: WithingsMeasurementSensorEntityDescription(
+    (MeasurementType.MUSCLE_MASS, None): WithingsMeasurementSensorEntityDescription(
         key="muscle_mass_kg",
         measurement_type=MeasurementType.MUSCLE_MASS,
         translation_key="muscle_mass",
@@ -103,7 +106,7 @@ MEASUREMENT_SENSORS: dict[
         device_class=SensorDeviceClass.WEIGHT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    MeasurementType.BONE_MASS: WithingsMeasurementSensorEntityDescription(
+    (MeasurementType.BONE_MASS, None): WithingsMeasurementSensorEntityDescription(
         key="bone_mass_kg",
         measurement_type=MeasurementType.BONE_MASS,
         translation_key="bone_mass",
@@ -112,7 +115,7 @@ MEASUREMENT_SENSORS: dict[
         device_class=SensorDeviceClass.WEIGHT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    MeasurementType.HEIGHT: WithingsMeasurementSensorEntityDescription(
+    (MeasurementType.HEIGHT, None): WithingsMeasurementSensorEntityDescription(
         key="height_m",
         measurement_type=MeasurementType.HEIGHT,
         translation_key="height",
@@ -122,14 +125,17 @@ MEASUREMENT_SENSORS: dict[
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
-    MeasurementType.TEMPERATURE: WithingsMeasurementSensorEntityDescription(
+    (MeasurementType.TEMPERATURE, None): WithingsMeasurementSensorEntityDescription(
         key="temperature_c",
         measurement_type=MeasurementType.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    MeasurementType.BODY_TEMPERATURE: WithingsMeasurementSensorEntityDescription(
+    (
+        MeasurementType.BODY_TEMPERATURE,
+        None,
+    ): WithingsMeasurementSensorEntityDescription(
         key="body_temperature_c",
         measurement_type=MeasurementType.BODY_TEMPERATURE,
         translation_key="body_temperature",
@@ -137,7 +143,10 @@ MEASUREMENT_SENSORS: dict[
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    MeasurementType.SKIN_TEMPERATURE: WithingsMeasurementSensorEntityDescription(
+    (
+        MeasurementType.SKIN_TEMPERATURE,
+        None,
+    ): WithingsMeasurementSensorEntityDescription(
         key="skin_temperature_c",
         measurement_type=MeasurementType.SKIN_TEMPERATURE,
         translation_key="skin_temperature",
@@ -145,7 +154,7 @@ MEASUREMENT_SENSORS: dict[
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    MeasurementType.FAT_RATIO: WithingsMeasurementSensorEntityDescription(
+    (MeasurementType.FAT_RATIO, None): WithingsMeasurementSensorEntityDescription(
         key="fat_ratio_pct",
         measurement_type=MeasurementType.FAT_RATIO,
         translation_key="fat_ratio",
@@ -153,35 +162,41 @@ MEASUREMENT_SENSORS: dict[
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    MeasurementType.DIASTOLIC_BLOOD_PRESSURE: WithingsMeasurementSensorEntityDescription(
+    (
+        MeasurementType.DIASTOLIC_BLOOD_PRESSURE,
+        None,
+    ): WithingsMeasurementSensorEntityDescription(
         key="diastolic_blood_pressure_mmhg",
         measurement_type=MeasurementType.DIASTOLIC_BLOOD_PRESSURE,
         translation_key="diastolic_blood_pressure",
         native_unit_of_measurement=UOM_MMHG,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    MeasurementType.SYSTOLIC_BLOOD_PRESSURE: WithingsMeasurementSensorEntityDescription(
+    (
+        MeasurementType.SYSTOLIC_BLOOD_PRESSURE,
+        None,
+    ): WithingsMeasurementSensorEntityDescription(
         key="systolic_blood_pressure_mmhg",
         measurement_type=MeasurementType.SYSTOLIC_BLOOD_PRESSURE,
         translation_key="systolic_blood_pressure",
         native_unit_of_measurement=UOM_MMHG,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    MeasurementType.HEART_RATE: WithingsMeasurementSensorEntityDescription(
+    (MeasurementType.HEART_RATE, None): WithingsMeasurementSensorEntityDescription(
         key="heart_pulse_bpm",
         measurement_type=MeasurementType.HEART_RATE,
         translation_key="heart_pulse",
         native_unit_of_measurement=UOM_BEATS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    MeasurementType.SP02: WithingsMeasurementSensorEntityDescription(
+    (MeasurementType.SP02, None): WithingsMeasurementSensorEntityDescription(
         key="spo2_pct",
         measurement_type=MeasurementType.SP02,
         translation_key="spo2",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    MeasurementType.HYDRATION: WithingsMeasurementSensorEntityDescription(
+    (MeasurementType.HYDRATION, None): WithingsMeasurementSensorEntityDescription(
         key="hydration",
         measurement_type=MeasurementType.HYDRATION,
         translation_key="hydration",
@@ -190,7 +205,10 @@ MEASUREMENT_SENSORS: dict[
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
-    MeasurementType.PULSE_WAVE_VELOCITY: WithingsMeasurementSensorEntityDescription(
+    (
+        MeasurementType.PULSE_WAVE_VELOCITY,
+        None,
+    ): WithingsMeasurementSensorEntityDescription(
         key="pulse_wave_velocity",
         measurement_type=MeasurementType.PULSE_WAVE_VELOCITY,
         translation_key="pulse_wave_velocity",
@@ -198,7 +216,7 @@ MEASUREMENT_SENSORS: dict[
         device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    MeasurementType.VO2: WithingsMeasurementSensorEntityDescription(
+    (MeasurementType.VO2, None): WithingsMeasurementSensorEntityDescription(
         key="vo2_max",
         measurement_type=MeasurementType.VO2,
         translation_key="vo2_max",
@@ -206,7 +224,10 @@ MEASUREMENT_SENSORS: dict[
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
-    MeasurementType.EXTRACELLULAR_WATER: WithingsMeasurementSensorEntityDescription(
+    (
+        MeasurementType.EXTRACELLULAR_WATER,
+        None,
+    ): WithingsMeasurementSensorEntityDescription(
         key="extracellular_water",
         measurement_type=MeasurementType.EXTRACELLULAR_WATER,
         translation_key="extracellular_water",
@@ -215,7 +236,10 @@ MEASUREMENT_SENSORS: dict[
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
-    MeasurementType.INTRACELLULAR_WATER: WithingsMeasurementSensorEntityDescription(
+    (
+        MeasurementType.INTRACELLULAR_WATER,
+        None,
+    ): WithingsMeasurementSensorEntityDescription(
         key="intracellular_water",
         measurement_type=MeasurementType.INTRACELLULAR_WATER,
         translation_key="intracellular_water",
@@ -224,33 +248,42 @@ MEASUREMENT_SENSORS: dict[
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
-    MeasurementType.VASCULAR_AGE: WithingsMeasurementSensorEntityDescription(
+    (MeasurementType.VASCULAR_AGE, None): WithingsMeasurementSensorEntityDescription(
         key="vascular_age",
         measurement_type=MeasurementType.VASCULAR_AGE,
         translation_key="vascular_age",
         entity_registry_enabled_default=False,
     ),
-    MeasurementType.VISCERAL_FAT: WithingsMeasurementSensorEntityDescription(
+    (MeasurementType.VISCERAL_FAT, None): WithingsMeasurementSensorEntityDescription(
         key="visceral_fat",
         measurement_type=MeasurementType.VISCERAL_FAT,
         translation_key="visceral_fat_index",
         entity_registry_enabled_default=False,
     ),
-    MeasurementType.ELECTRODERMAL_ACTIVITY_FEET: WithingsMeasurementSensorEntityDescription(
+    (
+        MeasurementType.ELECTRODERMAL_ACTIVITY_FEET,
+        None,
+    ): WithingsMeasurementSensorEntityDescription(
         key="electrodermal_activity_feet",
         measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_FEET,
         translation_key="electrodermal_activity_feet",
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
     ),
-    MeasurementType.ELECTRODERMAL_ACTIVITY_LEFT_FOOT: WithingsMeasurementSensorEntityDescription(
+    (
+        MeasurementType.ELECTRODERMAL_ACTIVITY_LEFT_FOOT,
+        None,
+    ): WithingsMeasurementSensorEntityDescription(
         key="electrodermal_activity_left_foot",
         measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_LEFT_FOOT,
         translation_key="electrodermal_activity_left_foot",
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
     ),
-    MeasurementType.ELECTRODERMAL_ACTIVITY_RIGHT_FOOT: WithingsMeasurementSensorEntityDescription(
+    (
+        MeasurementType.ELECTRODERMAL_ACTIVITY_RIGHT_FOOT,
+        None,
+    ): WithingsMeasurementSensorEntityDescription(
         key="electrodermal_activity_right_foot",
         measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_RIGHT_FOOT,
         translation_key="electrodermal_activity_right_foot",
@@ -650,6 +683,7 @@ async def async_setup_entry(
                     measurement_coordinator, MEASUREMENT_SENSORS[measurement_type]
                 )
                 for measurement_type in new_measurement_types
+                if measurement_type in MEASUREMENT_SENSORS
             )
 
     measurement_coordinator.async_add_listener(_async_measurement_listener)
@@ -796,14 +830,23 @@ class WithingsMeasurementSensor(
     @property
     def native_value(self) -> float:
         """Return the state of the entity."""
-        return self.coordinator.data[self.entity_description.measurement_type]
+        return self.coordinator.data[
+            (
+                self.entity_description.measurement_type,
+                self.entity_description.measurement_position,
+            )
+        ]
 
     @property
     def available(self) -> bool:
         """Return if the sensor is available."""
         return (
             super().available
-            and self.entity_description.measurement_type in self.coordinator.data
+            and (
+                self.entity_description.measurement_type,
+                self.entity_description.measurement_position,
+            )
+            in self.coordinator.data
         )
 
 

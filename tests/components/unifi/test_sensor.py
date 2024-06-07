@@ -1,7 +1,10 @@
 """UniFi Network sensor platform tests."""
 
+from collections.abc import Callable
 from copy import deepcopy
 from datetime import datetime, timedelta
+from types import MappingProxyType
+from typing import Any
 from unittest.mock import patch
 
 from aiounifi.models.device import DeviceState
@@ -25,17 +28,14 @@ from homeassistant.components.unifi.const import (
     DEFAULT_DETECTION_TIME,
     DEVICE_STATES,
 )
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, ConfigEntry
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 import homeassistant.util.dt as dt_util
 
-from .test_hub import setup_unifi_integration
-
 from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 DEVICE_1 = {
     "board_rev": 2,
@@ -309,56 +309,58 @@ PDU_OUTLETS_UPDATE_DATA = [
 ]
 
 
-async def test_no_clients(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [{CONF_ALLOW_BANDWIDTH_SENSORS: True, CONF_ALLOW_UPTIME_SENSORS: True}],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_no_clients(hass: HomeAssistant) -> None:
     """Test the update_clients function when no clients are found."""
-    await setup_unifi_integration(
-        hass,
-        aioclient_mock,
-        options={
-            CONF_ALLOW_BANDWIDTH_SENSORS: True,
-            CONF_ALLOW_UPTIME_SENSORS: True,
-        },
-    )
-
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
 
 
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [
+        {
+            CONF_ALLOW_BANDWIDTH_SENSORS: True,
+            CONF_ALLOW_UPTIME_SENSORS: False,
+            CONF_TRACK_CLIENTS: False,
+            CONF_TRACK_DEVICES: False,
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    "client_payload",
+    [
+        [
+            {
+                "hostname": "Wired client",
+                "is_wired": True,
+                "mac": "00:00:00:00:00:01",
+                "oui": "Producer",
+                "wired-rx_bytes-r": 1234000000,
+                "wired-tx_bytes-r": 5678000000,
+            },
+            {
+                "is_wired": False,
+                "mac": "00:00:00:00:00:02",
+                "name": "Wireless client",
+                "oui": "Producer",
+                "rx_bytes-r": 2345000000.0,
+                "tx_bytes-r": 6789000000.0,
+            },
+        ]
+    ],
+)
 async def test_bandwidth_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+    hass: HomeAssistant,
+    mock_unifi_websocket,
+    config_entry_options: MappingProxyType[str, Any],
+    config_entry_setup: ConfigEntry,
+    client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that bandwidth sensors are working as expected."""
-    wired_client = {
-        "hostname": "Wired client",
-        "is_wired": True,
-        "mac": "00:00:00:00:00:01",
-        "oui": "Producer",
-        "wired-rx_bytes-r": 1234000000,
-        "wired-tx_bytes-r": 5678000000,
-    }
-    wireless_client = {
-        "is_wired": False,
-        "mac": "00:00:00:00:00:02",
-        "name": "Wireless client",
-        "oui": "Producer",
-        "rx_bytes-r": 2345000000.0,
-        "tx_bytes-r": 6789000000.0,
-    }
-    options = {
-        CONF_ALLOW_BANDWIDTH_SENSORS: True,
-        CONF_ALLOW_UPTIME_SENSORS: False,
-        CONF_TRACK_CLIENTS: False,
-        CONF_TRACK_DEVICES: False,
-    }
-
-    config_entry = await setup_unifi_integration(
-        hass,
-        aioclient_mock,
-        options=options,
-        clients_response=[wired_client, wireless_client],
-    )
-
     assert len(hass.states.async_all()) == 5
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
 
@@ -385,7 +387,7 @@ async def test_bandwidth_sensors(
     assert wltx_sensor.state == "6789.0"
 
     # Verify state update
-
+    wireless_client = client_payload[1]
     wireless_client["rx_bytes-r"] = 3456000000
     wireless_client["tx_bytes-r"] = 7891000000
 
@@ -412,7 +414,8 @@ async def test_bandwidth_sensors(
 
     new_time += timedelta(
         seconds=(
-            config_entry.options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME) + 1
+            config_entry_setup.options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME)
+            + 1
         )
     )
     with freeze_time(new_time):
@@ -423,9 +426,9 @@ async def test_bandwidth_sensors(
     assert hass.states.get("sensor.wireless_client_tx").state == STATE_UNAVAILABLE
 
     # Disable option
-
+    options = deepcopy(config_entry_options)
     options[CONF_ALLOW_BANDWIDTH_SENSORS] = False
-    hass.config_entries.async_update_entry(config_entry, options=options.copy())
+    hass.config_entries.async_update_entry(config_entry_setup, options=options)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
@@ -436,9 +439,9 @@ async def test_bandwidth_sensors(
     assert hass.states.get("sensor.wired_client_tx") is None
 
     # Enable option
-
+    options = deepcopy(config_entry_options)
     options[CONF_ALLOW_BANDWIDTH_SENSORS] = True
-    hass.config_entries.async_update_entry(config_entry, options=options.copy())
+    hass.config_entries.async_update_entry(config_entry_setup, options=options)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 5
@@ -450,6 +453,30 @@ async def test_bandwidth_sensors(
 
 
 @pytest.mark.parametrize(
+    "config_entry_options",
+    [
+        {
+            CONF_ALLOW_BANDWIDTH_SENSORS: False,
+            CONF_ALLOW_UPTIME_SENSORS: True,
+            CONF_TRACK_CLIENTS: False,
+            CONF_TRACK_DEVICES: False,
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    "client_payload",
+    [
+        [
+            {
+                "mac": "00:00:00:00:00:01",
+                "name": "client1",
+                "oui": "Producer",
+                "uptime": 0,
+            }
+        ]
+    ],
+)
+@pytest.mark.parametrize(
     ("initial_uptime", "event_uptime", "new_uptime"),
     [
         # Uptime listed in epoch time should never change
@@ -458,44 +485,27 @@ async def test_bandwidth_sensors(
         (60, 64, 60),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_uptime_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
     mock_unifi_websocket,
-    entity_registry_enabled_by_default: None,
+    config_entry_options: MappingProxyType[str, Any],
+    config_entry_factory: Callable[[], ConfigEntry],
+    client_payload: list[dict[str, Any]],
     initial_uptime,
     event_uptime,
     new_uptime,
 ) -> None:
     """Verify that uptime sensors are working as expected."""
-    uptime_client = {
-        "mac": "00:00:00:00:00:01",
-        "name": "client1",
-        "oui": "Producer",
-        "uptime": initial_uptime,
-    }
-    options = {
-        CONF_ALLOW_BANDWIDTH_SENSORS: False,
-        CONF_ALLOW_UPTIME_SENSORS: True,
-        CONF_TRACK_CLIENTS: False,
-        CONF_TRACK_DEVICES: False,
-    }
+    uptime_client = client_payload[0]
+    uptime_client["uptime"] = initial_uptime
+    freezer.move_to(datetime(2021, 1, 1, 1, 1, 0, tzinfo=dt_util.UTC))
+    config_entry = await config_entry_factory()
 
-    now = datetime(2021, 1, 1, 1, 1, 0, tzinfo=dt_util.UTC)
-    freezer.move_to(now)
-    config_entry = await setup_unifi_integration(
-        hass,
-        aioclient_mock,
-        options=options,
-        clients_response=[uptime_client],
-    )
-
-    assert len(hass.states.async_all()) == 2
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
     assert hass.states.get("sensor.client1_uptime").state == "2021-01-01T01:00:00+00:00"
-
     assert (
         entity_registry.async_get("sensor.client1_uptime").entity_category
         is EntityCategory.DIAGNOSTIC
@@ -503,7 +513,6 @@ async def test_uptime_sensors(
 
     # Verify normal new event doesn't change uptime
     # 4 seconds has passed
-
     uptime_client["uptime"] = event_uptime
     now = datetime(2021, 1, 1, 1, 1, 4, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.now", return_value=now):
@@ -514,7 +523,6 @@ async def test_uptime_sensors(
 
     # Verify new event change uptime
     # 1 month has passed
-
     uptime_client["uptime"] = new_uptime
     now = datetime(2021, 2, 1, 1, 1, 0, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.now", return_value=now):
@@ -524,63 +532,60 @@ async def test_uptime_sensors(
     assert hass.states.get("sensor.client1_uptime").state == "2021-02-01T01:00:00+00:00"
 
     # Disable option
-
+    options = deepcopy(config_entry_options)
     options[CONF_ALLOW_UPTIME_SENSORS] = False
-    hass.config_entries.async_update_entry(config_entry, options=options.copy())
+    hass.config_entries.async_update_entry(config_entry, options=options)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 1
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
     assert hass.states.get("sensor.client1_uptime") is None
 
     # Enable option
-
+    options = deepcopy(config_entry_options)
     options[CONF_ALLOW_UPTIME_SENSORS] = True
     with patch("homeassistant.util.dt.now", return_value=now):
-        hass.config_entries.async_update_entry(config_entry, options=options.copy())
+        hass.config_entries.async_update_entry(config_entry, options=options)
         await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 2
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
     assert hass.states.get("sensor.client1_uptime")
 
 
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [{CONF_ALLOW_BANDWIDTH_SENSORS: True, CONF_ALLOW_UPTIME_SENSORS: True}],
+)
+@pytest.mark.parametrize(
+    "client_payload",
+    [
+        [
+            {
+                "hostname": "Wired client",
+                "is_wired": True,
+                "mac": "00:00:00:00:00:01",
+                "oui": "Producer",
+                "wired-rx_bytes": 1234000000,
+                "wired-tx_bytes": 5678000000,
+                "uptime": 1600094505,
+            },
+            {
+                "is_wired": False,
+                "mac": "00:00:00:00:00:02",
+                "name": "Wireless client",
+                "oui": "Producer",
+                "rx_bytes": 2345000000,
+                "tx_bytes": 6789000000,
+                "uptime": 60,
+            },
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_remove_sensors(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    mock_unifi_websocket,
-    entity_registry_enabled_by_default: None,
+    hass: HomeAssistant, mock_unifi_websocket, client_payload: list[dict[str, Any]]
 ) -> None:
     """Verify removing of clients work as expected."""
-    wired_client = {
-        "hostname": "Wired client",
-        "is_wired": True,
-        "mac": "00:00:00:00:00:01",
-        "oui": "Producer",
-        "wired-rx_bytes": 1234000000,
-        "wired-tx_bytes": 5678000000,
-        "uptime": 1600094505,
-    }
-    wireless_client = {
-        "is_wired": False,
-        "mac": "00:00:00:00:00:02",
-        "name": "Wireless client",
-        "oui": "Producer",
-        "rx_bytes": 2345000000,
-        "tx_bytes": 6789000000,
-        "uptime": 60,
-    }
-
-    await setup_unifi_integration(
-        hass,
-        aioclient_mock,
-        options={
-            CONF_ALLOW_BANDWIDTH_SENSORS: True,
-            CONF_ALLOW_UPTIME_SENSORS: True,
-        },
-        clients_response=[wired_client, wireless_client],
-    )
-
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
     assert hass.states.get("sensor.wired_client_rx")
     assert hass.states.get("sensor.wired_client_tx")
@@ -590,8 +595,7 @@ async def test_remove_sensors(
     assert hass.states.get("sensor.wireless_client_uptime")
 
     # Remove wired client
-
-    mock_unifi_websocket(message=MessageKey.CLIENT_REMOVED, data=wired_client)
+    mock_unifi_websocket(message=MessageKey.CLIENT_REMOVED, data=client_payload[0])
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
@@ -603,15 +607,15 @@ async def test_remove_sensors(
     assert hass.states.get("sensor.wireless_client_uptime")
 
 
+@pytest.mark.parametrize("device_payload", [[DEVICE_1]])
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_poe_port_switches(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
     websocket_mock,
 ) -> None:
     """Test the update_items function with some clients."""
-    await setup_unifi_integration(hass, aioclient_mock, devices_response=[DEVICE_1])
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
     ent_reg_entry = entity_registry.async_get("sensor.mock_name_port_1_poe_power")
@@ -678,42 +682,43 @@ async def test_poe_port_switches(
     assert hass.states.get("sensor.mock_name_port_1_poe_power")
 
 
+@pytest.mark.parametrize(
+    "client_payload",
+    [
+        [
+            {
+                "essid": "SSID 1",
+                "is_wired": False,
+                "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
+                "mac": "00:00:00:00:00:01",
+                "name": "Wireless client",
+                "oui": "Producer",
+                "rx_bytes-r": 2345000000,
+                "tx_bytes-r": 6789000000,
+            },
+            {
+                "essid": "SSID 2",
+                "is_wired": False,
+                "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
+                "mac": "00:00:00:00:00:02",
+                "name": "Wireless client2",
+                "oui": "Producer2",
+                "rx_bytes-r": 2345000000,
+                "tx_bytes-r": 6789000000,
+            },
+        ]
+    ],
+)
+@pytest.mark.parametrize("wlan_payload", [[WLAN]])
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_wlan_client_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
     websocket_mock,
+    client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that WLAN client sensors are working as expected."""
-    wireless_client_1 = {
-        "essid": "SSID 1",
-        "is_wired": False,
-        "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
-        "mac": "00:00:00:00:00:01",
-        "name": "Wireless client",
-        "oui": "Producer",
-        "rx_bytes-r": 2345000000,
-        "tx_bytes-r": 6789000000,
-    }
-    wireless_client_2 = {
-        "essid": "SSID 2",
-        "is_wired": False,
-        "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
-        "mac": "00:00:00:00:00:02",
-        "name": "Wireless client2",
-        "oui": "Producer2",
-        "rx_bytes-r": 2345000000,
-        "tx_bytes-r": 6789000000,
-    }
-
-    await setup_unifi_integration(
-        hass,
-        aioclient_mock,
-        clients_response=[wireless_client_1, wireless_client_2],
-        wlans_response=[WLAN],
-    )
-
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
 
     ent_reg_entry = entity_registry.async_get("sensor.ssid_1")
@@ -726,11 +731,11 @@ async def test_wlan_client_sensors(
     assert ssid_1.state == "1"
 
     # Verify state update - increasing number
-
+    wireless_client_1 = client_payload[0]
     wireless_client_1["essid"] = "SSID 1"
-    wireless_client_2["essid"] = "SSID 1"
-
     mock_unifi_websocket(message=MessageKey.CLIENT, data=wireless_client_1)
+    wireless_client_2 = client_payload[1]
+    wireless_client_2["essid"] = "SSID 1"
     mock_unifi_websocket(message=MessageKey.CLIENT, data=wireless_client_2)
     await hass.async_block_till_done()
 
@@ -821,11 +826,13 @@ async def test_wlan_client_sensors(
         ),
     ],
 )
+@pytest.mark.parametrize("device_payload", [[PDU_DEVICE_1]])
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_outlet_power_readings(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
+    device_payload: list[dict[str, Any]],
     entity_id: str,
     expected_unique_id: str,
     expected_value: any,
@@ -833,8 +840,6 @@ async def test_outlet_power_readings(
     expected_update_value: any,
 ) -> None:
     """Test the outlet power reporting on PDU devices."""
-    await setup_unifi_integration(hass, aioclient_mock, devices_response=[PDU_DEVICE_1])
-
     assert len(hass.states.async_all()) == 13
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 7
 
@@ -847,7 +852,7 @@ async def test_outlet_power_readings(
     assert sensor_data.state == expected_value
 
     if changed_data is not None:
-        updated_device_data = deepcopy(PDU_DEVICE_1)
+        updated_device_data = deepcopy(device_payload[0])
         updated_device_data.update(changed_data)
 
         mock_unifi_websocket(message=MessageKey.DEVICE, data=updated_device_data)
@@ -857,35 +862,42 @@ async def test_outlet_power_readings(
         assert sensor_data.state == expected_update_value
 
 
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 3,
+                "device_id": "mock-id",
+                "has_fan": True,
+                "fan_level": 0,
+                "ip": "10.0.1.1",
+                "last_seen": 1562600145,
+                "mac": "00:00:00:00:01:01",
+                "model": "US16P150",
+                "name": "Device",
+                "next_interval": 20,
+                "overheating": True,
+                "state": 1,
+                "type": "usw",
+                "upgradable": True,
+                "uptime": 60,
+                "version": "4.0.42.10433",
+            }
+        ]
+    ],
+)
 async def test_device_uptime(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
+    config_entry_factory: Callable[[], ConfigEntry],
+    device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that uptime sensors are working as expected."""
-    device = {
-        "board_rev": 3,
-        "device_id": "mock-id",
-        "has_fan": True,
-        "fan_level": 0,
-        "ip": "10.0.1.1",
-        "last_seen": 1562600145,
-        "mac": "00:00:00:00:01:01",
-        "model": "US16P150",
-        "name": "Device",
-        "next_interval": 20,
-        "overheating": True,
-        "state": 1,
-        "type": "usw",
-        "upgradable": True,
-        "uptime": 60,
-        "version": "4.0.42.10433",
-    }
-
     now = datetime(2021, 1, 1, 1, 1, 0, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.now", return_value=now):
-        await setup_unifi_integration(hass, aioclient_mock, devices_response=[device])
+        await config_entry_factory()
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
     assert hass.states.get("sensor.device_uptime").state == "2021-01-01T01:00:00+00:00"
 
@@ -896,7 +908,7 @@ async def test_device_uptime(
 
     # Verify normal new event doesn't change uptime
     # 4 seconds has passed
-
+    device = device_payload[0]
     device["uptime"] = 64
     now = datetime(2021, 1, 1, 1, 1, 4, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.now", return_value=now):
@@ -915,110 +927,127 @@ async def test_device_uptime(
     assert hass.states.get("sensor.device_uptime").state == "2021-02-01T01:00:00+00:00"
 
 
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 3,
+                "device_id": "mock-id",
+                "general_temperature": 30,
+                "has_fan": True,
+                "has_temperature": True,
+                "fan_level": 0,
+                "ip": "10.0.1.1",
+                "last_seen": 1562600145,
+                "mac": "00:00:00:00:01:01",
+                "model": "US16P150",
+                "name": "Device",
+                "next_interval": 20,
+                "overheating": True,
+                "state": 1,
+                "type": "usw",
+                "upgradable": True,
+                "uptime": 60,
+                "version": "4.0.42.10433",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_device_temperature(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
+    device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that temperature sensors are working as expected."""
-    device = {
-        "board_rev": 3,
-        "device_id": "mock-id",
-        "general_temperature": 30,
-        "has_fan": True,
-        "has_temperature": True,
-        "fan_level": 0,
-        "ip": "10.0.1.1",
-        "last_seen": 1562600145,
-        "mac": "00:00:00:00:01:01",
-        "model": "US16P150",
-        "name": "Device",
-        "next_interval": 20,
-        "overheating": True,
-        "state": 1,
-        "type": "usw",
-        "upgradable": True,
-        "uptime": 60,
-        "version": "4.0.42.10433",
-    }
-
-    await setup_unifi_integration(hass, aioclient_mock, devices_response=[device])
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
     assert hass.states.get("sensor.device_temperature").state == "30"
-
     assert (
         entity_registry.async_get("sensor.device_temperature").entity_category
         is EntityCategory.DIAGNOSTIC
     )
 
     # Verify new event change temperature
+    device = device_payload[0]
     device["general_temperature"] = 60
     mock_unifi_websocket(message=MessageKey.DEVICE, data=device)
     assert hass.states.get("sensor.device_temperature").state == "60"
 
 
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 3,
+                "device_id": "mock-id",
+                "general_temperature": 30,
+                "has_fan": True,
+                "has_temperature": True,
+                "fan_level": 0,
+                "ip": "10.0.1.1",
+                "last_seen": 1562600145,
+                "mac": "00:00:00:00:01:01",
+                "model": "US16P150",
+                "name": "Device",
+                "next_interval": 20,
+                "overheating": True,
+                "state": 1,
+                "type": "usw",
+                "upgradable": True,
+                "uptime": 60,
+                "version": "4.0.42.10433",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_device_state(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
+    device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that state sensors are working as expected."""
-    device = {
-        "board_rev": 3,
-        "device_id": "mock-id",
-        "general_temperature": 30,
-        "has_fan": True,
-        "has_temperature": True,
-        "fan_level": 0,
-        "ip": "10.0.1.1",
-        "last_seen": 1562600145,
-        "mac": "00:00:00:00:01:01",
-        "model": "US16P150",
-        "name": "Device",
-        "next_interval": 20,
-        "overheating": True,
-        "state": 1,
-        "type": "usw",
-        "upgradable": True,
-        "uptime": 60,
-        "version": "4.0.42.10433",
-    }
-
-    await setup_unifi_integration(hass, aioclient_mock, devices_response=[device])
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
-
     assert (
         entity_registry.async_get("sensor.device_state").entity_category
         is EntityCategory.DIAGNOSTIC
     )
 
+    device = device_payload[0]
     for i in list(map(int, DeviceState)):
         device["state"] = i
         mock_unifi_websocket(message=MessageKey.DEVICE, data=device)
         assert hass.states.get("sensor.device_state").state == DEVICE_STATES[i]
 
 
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "device_id": "mock-id",
+                "mac": "00:00:00:00:01:01",
+                "model": "US16P150",
+                "name": "Device",
+                "state": 1,
+                "version": "4.0.42.10433",
+                "system-stats": {"cpu": 5.8, "mem": 31.1, "uptime": 7316},
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_device_system_stats(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
+    device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that device stats sensors are working as expected."""
-
-    device = {
-        "device_id": "mock-id",
-        "mac": "00:00:00:00:01:01",
-        "model": "US16P150",
-        "name": "Device",
-        "state": 1,
-        "version": "4.0.42.10433",
-        "system-stats": {"cpu": 5.8, "mem": 31.1, "uptime": 7316},
-    }
-
-    await setup_unifi_integration(hass, aioclient_mock, devices_response=[device])
 
     assert len(hass.states.async_all()) == 8
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
@@ -1037,6 +1066,7 @@ async def test_device_system_stats(
     )
 
     # Verify new event change system-stats
+    device = device_payload[0]
     device["system-stats"] = {"cpu": 7.7, "mem": 33.3, "uptime": 7316}
     mock_unifi_websocket(message=MessageKey.DEVICE, data=device)
 
@@ -1044,72 +1074,79 @@ async def test_device_system_stats(
     assert hass.states.get("sensor.device_memory_utilization").state == "33.3"
 
 
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [
+        {
+            CONF_ALLOW_BANDWIDTH_SENSORS: True,
+            CONF_ALLOW_UPTIME_SENSORS: False,
+            CONF_TRACK_CLIENTS: False,
+            CONF_TRACK_DEVICES: False,
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 2,
+                "device_id": "mock-id",
+                "ip": "10.0.1.1",
+                "mac": "10:00:00:00:01:01",
+                "last_seen": 1562600145,
+                "model": "US16P150",
+                "name": "mock-name",
+                "port_overrides": [],
+                "port_table": [
+                    {
+                        "media": "GE",
+                        "name": "Port 1",
+                        "port_idx": 1,
+                        "poe_class": "Class 4",
+                        "poe_enable": False,
+                        "poe_mode": "auto",
+                        "poe_power": "2.56",
+                        "poe_voltage": "53.40",
+                        "portconf_id": "1a1",
+                        "port_poe": False,
+                        "up": True,
+                        "rx_bytes-r": 1151,
+                        "tx_bytes-r": 5111,
+                    },
+                    {
+                        "media": "GE",
+                        "name": "Port 2",
+                        "port_idx": 2,
+                        "poe_class": "Class 4",
+                        "poe_enable": False,
+                        "poe_mode": "auto",
+                        "poe_power": "2.56",
+                        "poe_voltage": "53.40",
+                        "portconf_id": "1a2",
+                        "port_poe": False,
+                        "up": True,
+                        "rx_bytes-r": 1536,
+                        "tx_bytes-r": 3615,
+                    },
+                ],
+                "state": 1,
+                "type": "usw",
+                "version": "4.0.42.10433",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_bandwidth_port_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
+    config_entry_setup: ConfigEntry,
+    config_entry_options: MappingProxyType[str, Any],
+    device_payload,
 ) -> None:
     """Verify that port bandwidth sensors are working as expected."""
-    device_reponse = {
-        "board_rev": 2,
-        "device_id": "mock-id",
-        "ip": "10.0.1.1",
-        "mac": "10:00:00:00:01:01",
-        "last_seen": 1562600145,
-        "model": "US16P150",
-        "name": "mock-name",
-        "port_overrides": [],
-        "port_table": [
-            {
-                "media": "GE",
-                "name": "Port 1",
-                "port_idx": 1,
-                "poe_class": "Class 4",
-                "poe_enable": False,
-                "poe_mode": "auto",
-                "poe_power": "2.56",
-                "poe_voltage": "53.40",
-                "portconf_id": "1a1",
-                "port_poe": False,
-                "up": True,
-                "rx_bytes-r": 1151,
-                "tx_bytes-r": 5111,
-            },
-            {
-                "media": "GE",
-                "name": "Port 2",
-                "port_idx": 2,
-                "poe_class": "Class 4",
-                "poe_enable": False,
-                "poe_mode": "auto",
-                "poe_power": "2.56",
-                "poe_voltage": "53.40",
-                "portconf_id": "1a2",
-                "port_poe": False,
-                "up": True,
-                "rx_bytes-r": 1536,
-                "tx_bytes-r": 3615,
-            },
-        ],
-        "state": 1,
-        "type": "usw",
-        "version": "4.0.42.10433",
-    }
-    options = {
-        CONF_ALLOW_BANDWIDTH_SENSORS: True,
-        CONF_ALLOW_UPTIME_SENSORS: False,
-        CONF_TRACK_CLIENTS: False,
-        CONF_TRACK_DEVICES: False,
-    }
-
-    config_entry = await setup_unifi_integration(
-        hass,
-        aioclient_mock,
-        options=options,
-        devices_response=[device_reponse],
-    )
-
     assert len(hass.states.async_all()) == 5
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
@@ -1168,18 +1205,20 @@ async def test_bandwidth_port_sensors(
     assert p2tx_sensor.state == "0.02892"
 
     # Verify state update
-    device_reponse["port_table"][0]["rx_bytes-r"] = 3456000000
-    device_reponse["port_table"][0]["tx_bytes-r"] = 7891000000
+    device_1 = device_payload[0]
+    device_1["port_table"][0]["rx_bytes-r"] = 3456000000
+    device_1["port_table"][0]["tx_bytes-r"] = 7891000000
 
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_reponse)
+    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.mock_name_port_1_rx").state == "27648.00000"
     assert hass.states.get("sensor.mock_name_port_1_tx").state == "63128.00000"
 
     # Disable option
+    options = config_entry_options.copy()
     options[CONF_ALLOW_BANDWIDTH_SENSORS] = False
-    hass.config_entries.async_update_entry(config_entry, options=options.copy())
+    hass.config_entries.async_update_entry(config_entry_setup, options=options)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 5

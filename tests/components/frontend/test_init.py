@@ -109,14 +109,16 @@ async def mock_http_client(
 
 @pytest.fixture
 async def themes_ws_client(
-    hass: HomeAssistant, hass_ws_client: ClientSessionGenerator, frontend_themes
-) -> TestClient:
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, frontend_themes
+) -> MockHAClientWebSocket:
     """Start the Home Assistant HTTP component."""
     return await hass_ws_client(hass)
 
 
 @pytest.fixture
-async def ws_client(hass, hass_ws_client, frontend):
+async def ws_client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, frontend
+) -> MockHAClientWebSocket:
     """Start the Home Assistant HTTP component."""
     return await hass_ws_client(hass)
 
@@ -403,9 +405,8 @@ async def test_missing_themes(hass: HomeAssistant, ws_client) -> None:
     assert msg["result"]["themes"] == {}
 
 
-async def test_extra_js(
-    hass: HomeAssistant, mock_http_client_with_extra_js, mock_onboarded
-):
+@pytest.mark.usefixtures("mock_onboarded")
+async def test_extra_js(hass: HomeAssistant, mock_http_client_with_extra_js) -> None:
     """Test that extra javascript is loaded."""
     resp = await mock_http_client_with_extra_js.get("")
     assert resp.status == 200
