@@ -1,10 +1,10 @@
 """Test fixtures for bang_olufsen."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from mozart_api.models import BeolinkPeer
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.bang_olufsen.const import DOMAIN
 
@@ -31,7 +31,7 @@ def mock_config_entry():
 
 
 @pytest.fixture
-def mock_mozart_client() -> Generator[AsyncMock, None, None]:
+def mock_mozart_client() -> Generator[AsyncMock]:
     """Mock MozartClient."""
 
     with (
