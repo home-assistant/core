@@ -2771,6 +2771,7 @@ async def test_recursive_automation_starting_script(
                     ],
                     "action": [
                         {"service": "test.automation_started"},
+                        {"delay": 0.001},
                         {"service": "script.script1"},
                     ],
                 }
