@@ -91,5 +91,5 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
     async def async_set_hvac_mode(self, **kwargs: str) -> None:
         """Set the new hvac mode."""
         if (mode := kwargs.get("hvac_mode")) not in self.hvac_mode:
-        await self._channel.set_mode(mode)
-        self.async_write_ha_state()
+            await self._channel.set_mode(mode)
+            self.async_write_ha_state()
