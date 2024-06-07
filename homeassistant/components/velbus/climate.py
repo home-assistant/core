@@ -67,11 +67,10 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return the current hvac mode based on cool_mode message."""
-        # Map velbus cool mode to Home Assistant HVACMode
         COOL_MODE_MAP = {
-            True: HVACMode.COOL,
-            False: HVACMode.HEAT,
-        }
+                    True: HVACMode.COOL,
+                    False: HVACMode.HEAT,
+                }
         return COOL_MODE_MAP.get(self._channel.get_cool_mode())
 
     @api_call
@@ -91,5 +90,6 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
     @api_call
     async def async_set_hvac_mode(self, **kwargs: str) -> None:
         """Set the new hvac mode."""
+        if (mode := kwargs.get("hvac_mode")) not in self.hvac_mode:
         await self._channel.set_mode(mode)
         self.async_write_ha_state()
