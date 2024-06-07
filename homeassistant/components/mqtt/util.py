@@ -73,7 +73,7 @@ async def async_forward_entry_setup_and_setup_discovery(
         tasks.append(create_eager_task(tag.async_setup_entry(hass, config_entry)))
     if new_entity_platforms := (new_platforms - {"tag", "device_automation"}):
         if late:
-            coro = hass.config_entries.async_late_forward_entry_setups
+            coro = hass.config_entries.async_forward_entry_setups
         else:
             coro = hass.config_entries.async_forward_entry_setups
         tasks.append(create_eager_task(coro(config_entry, new_entity_platforms)))
