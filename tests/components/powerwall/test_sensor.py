@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import Mock, patch
 
+import pytest
 from tesla_powerwall import MetersAggregatesResponse
 from tesla_powerwall.error import MissingAttributeError
 
@@ -25,11 +26,8 @@ from .mocks import MOCK_GATEWAY_DIN, _mock_powerwall_with_fixtures
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_sensors(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry_enabled_by_default: None,
-) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors(hass: HomeAssistant, device_registry: dr.DeviceRegistry) -> None:
     """Test creation of the sensors."""
 
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)
@@ -245,11 +243,11 @@ async def test_sensors_with_empty_meters(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.mysite_solar_power") is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_unique_id_migrate(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test we can migrate unique ids of the sensors."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})

@@ -355,11 +355,11 @@ async def test_rpc_sensor(
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_rpc_rssi_sensor_removal(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test RPC RSSI sensor removal if no WiFi stations enabled."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_rssi"
@@ -548,9 +548,8 @@ async def test_rpc_restored_sleeping_sensor_no_last_state(
     assert hass.states.get(entity_id).state == "22.9"
 
 
-async def test_rpc_em1_sensors(
-    hass: HomeAssistant, mock_rpc_device: Mock, entity_registry_enabled_by_default: None
-) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rpc_em1_sensors(hass: HomeAssistant, mock_rpc_device: Mock) -> None:
     """Test RPC sensors for EM1 component."""
     registry = async_get(hass)
     await init_integration(hass, 2)

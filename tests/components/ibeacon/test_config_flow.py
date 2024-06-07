@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.ibeacon.const import CONF_ALLOW_NAMELESS_UUIDS, DOMAIN
 from homeassistant.core import HomeAssistant
@@ -10,9 +12,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_setup_user_no_bluetooth(
-    hass: HomeAssistant, mock_bluetooth_adapters: None
-) -> None:
+@pytest.mark.usefixtures("mock_bluetooth_adapters")
+async def test_setup_user_no_bluetooth(hass: HomeAssistant) -> None:
     """Test setting up via user interaction when bluetooth is not enabled."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -22,7 +23,8 @@ async def test_setup_user_no_bluetooth(
     assert result["reason"] == "bluetooth_not_available"
 
 
-async def test_setup_user(hass: HomeAssistant, enable_bluetooth: None) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_setup_user(hass: HomeAssistant) -> None:
     """Test setting up via user interaction with bluetooth enabled."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -39,9 +41,8 @@ async def test_setup_user(hass: HomeAssistant, enable_bluetooth: None) -> None:
     assert result2["data"] == {}
 
 
-async def test_setup_user_already_setup(
-    hass: HomeAssistant, enable_bluetooth: None
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_setup_user_already_setup(hass: HomeAssistant) -> None:
     """Test setting up via user when already setup ."""
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
@@ -52,7 +53,8 @@ async def test_setup_user_already_setup(
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_options_flow(hass: HomeAssistant, enable_bluetooth: None) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     config_entry = MockConfigEntry(domain=DOMAIN)
     config_entry.add_to_hass(hass)

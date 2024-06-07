@@ -466,12 +466,12 @@ async def test_get_action_capabilities_features_legacy(
         assert capabilities == expected
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_action(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls: list[ServiceCall],
-    enable_custom_integrations: None,
 ) -> None:
     """Test for turn_on and turn_off actions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -631,12 +631,12 @@ async def test_action(
     assert turn_on_calls[-1].data == {"entity_id": entry.entity_id, "flash": FLASH_LONG}
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_action_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls: list[ServiceCall],
-    enable_custom_integrations: None,
 ) -> None:
     """Test for turn_on and turn_off actions."""
     config_entry = MockConfigEntry(domain="test", data={})

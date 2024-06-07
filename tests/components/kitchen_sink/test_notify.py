@@ -1,10 +1,10 @@
 """The tests for the demo button component."""
 
-from collections.abc import AsyncGenerator
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from typing_extensions import AsyncGenerator
 
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.components.notify import (
@@ -21,7 +21,7 @@ ENTITY_DIRECT_MESSAGE = "notify.mybox_personal_notifier"
 
 
 @pytest.fixture
-async def notify_only() -> AsyncGenerator[None, None]:
+async def notify_only() -> AsyncGenerator[None]:
     """Enable only the button platform."""
     with patch(
         "homeassistant.components.kitchen_sink.COMPONENTS_WITH_DEMO_PLATFORM",

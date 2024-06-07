@@ -385,3 +385,93 @@ async def test_validate_trigger_invalid_triggers(
     )
 
     assert "Invalid (type,subtype): ('single', 'button3')" in caplog.text
+
+
+async def test_rpc_no_runtime_data(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the device trigger for the RPC device when there is no runtime_data in the entry."""
+    entry = await init_integration(hass, 2)
+    monkeypatch.delattr(entry, "runtime_data")
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, entry.entry_id)[0]
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        CONF_PLATFORM: "device",
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_DEVICE_ID: device.id,
+                        CONF_TYPE: "single_push",
+                        CONF_SUBTYPE: "button1",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "test_trigger_single_push"},
+                    },
+                },
+            ]
+        },
+    )
+    message = {
+        CONF_DEVICE_ID: device.id,
+        ATTR_CLICK_TYPE: "single_push",
+        ATTR_CHANNEL: 1,
+    }
+    hass.bus.async_fire(EVENT_SHELLY_CLICK, message)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "test_trigger_single_push"
+
+
+async def test_block_no_runtime_data(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the device trigger for the block device when there is no runtime_data in the entry."""
+    entry = await init_integration(hass, 1)
+    monkeypatch.delattr(entry, "runtime_data")
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, entry.entry_id)[0]
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        CONF_PLATFORM: "device",
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_DEVICE_ID: device.id,
+                        CONF_TYPE: "single",
+                        CONF_SUBTYPE: "button1",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "test_trigger_single"},
+                    },
+                },
+            ]
+        },
+    )
+    message = {
+        CONF_DEVICE_ID: device.id,
+        ATTR_CLICK_TYPE: "single",
+        ATTR_CHANNEL: 1,
+    }
+    hass.bus.async_fire(EVENT_SHELLY_CLICK, message)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "test_trigger_single"

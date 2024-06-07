@@ -1,10 +1,10 @@
 """Common fixtures for testing greeneye_monitor."""
 
-from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.greeneye_monitor import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
@@ -99,7 +99,7 @@ def assert_sensor_registered(
 
 
 @pytest.fixture
-def monitors() -> Generator[AsyncMock, None, None]:
+def monitors() -> Generator[AsyncMock]:
     """Provide a mock greeneye.Monitors object that has listeners and can add new monitors."""
     with patch("greeneye.Monitors", autospec=True) as mock_monitors:
         mock = mock_monitors.return_value

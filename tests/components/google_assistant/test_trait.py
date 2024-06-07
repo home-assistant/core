@@ -2160,13 +2160,13 @@ async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
     ],
 )
 async def test_fan_speed_ordered(
-    hass,
+    hass: HomeAssistant,
     percentage: int,
     percentage_step: float,
     speed: str,
     speeds: list[list[str]],
     percentage_result: int,
-):
+) -> None:
     """Test FanSpeed trait speed control support for fan domain."""
     assert helpers.get_google_type(fan.DOMAIN, None) is not None
     assert trait.FanSpeedTrait.supported(

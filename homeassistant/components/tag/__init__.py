@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, Any, final
 import uuid
@@ -14,10 +15,6 @@ from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, entity_registry as er
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
@@ -34,10 +31,9 @@ LAST_SCANNED = "last_scanned"
 LAST_SCANNED_BY_DEVICE_ID = "last_scanned_by_device_id"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 3
 
 TAG_DATA: HassKey[TagStorageCollection] = HassKey(DOMAIN)
-SIGNAL_TAG_CHANGED = "signal_tag_changed"
 
 CREATE_FIELDS = {
     vol.Optional(TAG_ID): cv.string,
@@ -109,6 +105,12 @@ class TagStore(Store[collection.SerializedStorageCollection]):
                 # Copy name in tag store to the entity registry
                 _create_entry(entity_registry, tag[CONF_ID], tag.get(CONF_NAME))
                 tag["migrated"] = True
+        if old_major_version == 1 and old_minor_version < 3:
+            # Version 1.3 removes tag_id from the store
+            for tag in data["items"]:
+                if TAG_ID not in tag:
+                    continue
+                del tag[TAG_ID]
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -239,6 +241,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ).async_setup(hass)
 
     entity_registry = er.async_get(hass)
+    entity_update_handlers: dict[str, Callable[[str | None, str | None], None]] = {}
 
     async def tag_change_listener(
         change_type: str, item_id: str, updated_config: dict
@@ -257,6 +260,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await component.async_add_entities(
                 [
                     TagEntity(
+                        entity_update_handlers,
                         entity.name or entity.original_name,
                         updated_config[CONF_ID],
                         updated_config.get(LAST_SCANNED),
@@ -267,12 +271,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         elif change_type == collection.CHANGE_UPDATED:
             # When tags are changed or updated in storage
-            async_dispatcher_send(
-                hass,
-                f"{SIGNAL_TAG_CHANGED}-{updated_config[CONF_ID]}",
-                updated_config.get(DEVICE_ID),
-                updated_config.get(LAST_SCANNED),
-            )
+            if handler := entity_update_handlers.get(updated_config[CONF_ID]):
+                handler(
+                    updated_config.get(DEVICE_ID),
+                    updated_config.get(LAST_SCANNED),
+                )
 
         # Deleted tags
         elif change_type == collection.CHANGE_REMOVED:
@@ -302,6 +305,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         name = entity.name or entity.original_name
         entities.append(
             TagEntity(
+                entity_update_handlers,
                 name,
                 tag[CONF_ID],
                 tag.get(LAST_SCANNED),
@@ -365,12 +369,14 @@ class TagEntity(Entity):
 
     def __init__(
         self,
+        entity_update_handlers: dict[str, Callable[[str | None, str | None], None]],
         name: str,
         tag_id: str,
         last_scanned: str | None,
         device_id: str | None,
     ) -> None:
         """Initialize the Tag event."""
+        self._entity_update_handlers = entity_update_handlers
         self._attr_name = name
         self._tag_id = tag_id
         self._attr_unique_id = tag_id
@@ -413,10 +419,9 @@ class TagEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{SIGNAL_TAG_CHANGED}-{self._tag_id}",
-                self.async_handle_event,
-            )
-        )
+        self._entity_update_handlers[self._tag_id] = self.async_handle_event
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle entity being removed."""
+        await super().async_will_remove_from_hass()
+        del self._entity_update_handlers[self._tag_id]

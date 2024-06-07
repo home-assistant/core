@@ -1,12 +1,12 @@
 """The tests for the JSON MQTT device tracker platform."""
 
-from collections.abc import Generator
 import json
 import logging
 import os
 from unittest.mock import patch
 
 import pytest
+from typing_extensions import AsyncGenerator
 
 from homeassistant.components.device_tracker.legacy import (
     DOMAIN as DT_DOMAIN,
@@ -34,7 +34,7 @@ LOCATION_MESSAGE_INCOMPLETE = {"longitude": 2.0}
 @pytest.fixture(autouse=True)
 async def setup_comp(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient
-) -> Generator[None, None, None]:
+) -> AsyncGenerator[None]:
     """Initialize components."""
     yaml_devices = hass.config.path(YAML_DEVICES)
     yield
