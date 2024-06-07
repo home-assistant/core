@@ -64,9 +64,7 @@ def mock_roku_config_flow(mock_device: RokuDevice) -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_roku(
-    request: pytest.FixtureRequest, mock_device: RokuDevice
-) -> Generator[MagicMock]:
+def mock_roku(mock_device: RokuDevice) -> Generator[MagicMock]:
     """Return a mocked Roku client."""
 
     with patch(

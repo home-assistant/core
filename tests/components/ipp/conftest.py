@@ -72,9 +72,7 @@ def mock_ipp_config_flow(mock_printer: Printer) -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_ipp(
-    request: pytest.FixtureRequest, mock_printer: Printer
-) -> Generator[MagicMock]:
+def mock_ipp(mock_printer: Printer) -> Generator[MagicMock]:
     """Return a mocked IPP client."""
 
     with patch(
