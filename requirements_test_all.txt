@@ -886,7 +886,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.49
+holidays==0.50
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240605.0
@@ -933,7 +933,7 @@ idasen-ha==2.5.3
 ifaddr==0.2.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.1
+imgw_pib==1.0.4
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
@@ -1405,7 +1405,7 @@ pydexcom==0.2.3
 pydiscovergy==3.0.1
 
 # homeassistant.components.hydrawise
-pydrawise==2024.6.2
+pydrawise==2024.6.3
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0

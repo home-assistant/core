@@ -584,11 +584,13 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             raise UpdateFailed(
                 f"Sleeping device did not update within {self.sleep_period} seconds interval"
             )
-        if self.device.connected:
-            return
 
-        if not await self._async_device_connect_task():
-            raise UpdateFailed("Device reconnect error")
+        async with self._connection_lock:
+            if self.device.connected:  # Already connected
+                return
+
+            if not await self._async_device_connect_task():
+                raise UpdateFailed("Device reconnect error")
 
     async def _async_disconnected(self, reconnect: bool) -> None:
         """Handle device disconnected."""
