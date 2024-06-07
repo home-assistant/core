@@ -11,21 +11,16 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import UnitOfPressure, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import InComfortConfigEntry
-from .const import DOMAIN
 from .coordinator import InComfortDataCoordinator
-from .entity import IncomfortEntity
-
-INCOMFORT_HEATER_TEMP = "CV Temp"
-INCOMFORT_PRESSURE = "CV Pressure"
-INCOMFORT_TAP_TEMP = "Tap Temp"
+from .entity import IncomfortBoilerEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -34,31 +29,29 @@ class IncomfortSensorEntityDescription(SensorEntityDescription):
 
     value_key: str
     extra_key: str | None = None
-    # IncomfortSensor does not support UNDEFINED or None,
-    # restrict the type to str
-    name: str = ""
 
 
 SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
     IncomfortSensorEntityDescription(
         key="cv_pressure",
-        name=INCOMFORT_PRESSURE,
         device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.BAR,
         value_key="pressure",
     ),
     IncomfortSensorEntityDescription(
         key="cv_temp",
-        name=INCOMFORT_HEATER_TEMP,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         extra_key="is_pumping",
         value_key="heater_temp",
     ),
     IncomfortSensorEntityDescription(
         key="tap_temp",
-        name=INCOMFORT_TAP_TEMP,
+        translation_key="tap_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         extra_key="is_tapping",
         value_key="tap_temp",
@@ -81,7 +74,7 @@ async def async_setup_entry(
     )
 
 
-class IncomfortSensor(IncomfortEntity, SensorEntity):
+class IncomfortSensor(IncomfortBoilerEntity, SensorEntity):
     """Representation of an InComfort/InTouch sensor device."""
 
     entity_description: IncomfortSensorEntityDescription
@@ -93,17 +86,9 @@ class IncomfortSensor(IncomfortEntity, SensorEntity):
         description: IncomfortSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, heater)
         self.entity_description = description
-
-        self._heater = heater
-
         self._attr_unique_id = f"{heater.serial_no}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, heater.serial_no)},
-            manufacturer="Intergas",
-            name="Boiler",
-        )
 
     @property
     def native_value(self) -> StateType:

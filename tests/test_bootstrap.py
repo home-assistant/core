@@ -1,7 +1,7 @@
 """Test the bootstrapping."""
 
 import asyncio
-from collections.abc import Generator, Iterable
+from collections.abc import Iterable
 import contextlib
 import glob
 import logging
@@ -11,6 +11,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant import bootstrap, loader, runner
 import homeassistant.config as config_util
@@ -38,7 +39,7 @@ VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
 
 
 @pytest.fixture(autouse=True)
-def disable_installed_check() -> Generator[None, None, None]:
+def disable_installed_check() -> Generator[None]:
     """Disable package installed check."""
     with patch("homeassistant.util.package.is_installed", return_value=True):
         yield
@@ -55,7 +56,7 @@ async def apply_stop_hass(stop_hass: None) -> None:
 
 
 @pytest.fixture(scope="module", autouse=True)
-def mock_http_start_stop() -> Generator[None, None, None]:
+def mock_http_start_stop() -> Generator[None]:
     """Mock HTTP start and stop."""
     with (
         patch("homeassistant.components.http.start_http_server_and_save_config"),
@@ -583,7 +584,7 @@ async def test_setup_after_deps_not_present(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-def mock_is_virtual_env() -> Generator[Mock, None, None]:
+def mock_is_virtual_env() -> Generator[Mock]:
     """Mock is_virtual_env."""
     with patch(
         "homeassistant.bootstrap.is_virtual_env", return_value=False
@@ -592,14 +593,14 @@ def mock_is_virtual_env() -> Generator[Mock, None, None]:
 
 
 @pytest.fixture
-def mock_enable_logging() -> Generator[Mock, None, None]:
+def mock_enable_logging() -> Generator[Mock]:
     """Mock enable logging."""
     with patch("homeassistant.bootstrap.async_enable_logging") as enable_logging:
         yield enable_logging
 
 
 @pytest.fixture
-def mock_mount_local_lib_path() -> Generator[AsyncMock, None, None]:
+def mock_mount_local_lib_path() -> Generator[AsyncMock]:
     """Mock enable logging."""
     with patch(
         "homeassistant.bootstrap.async_mount_local_lib_path"
@@ -608,7 +609,7 @@ def mock_mount_local_lib_path() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_process_ha_config_upgrade() -> Generator[Mock, None, None]:
+def mock_process_ha_config_upgrade() -> Generator[Mock]:
     """Mock enable logging."""
     with patch(
         "homeassistant.config.process_ha_config_upgrade"
@@ -617,7 +618,7 @@ def mock_process_ha_config_upgrade() -> Generator[Mock, None, None]:
 
 
 @pytest.fixture
-def mock_ensure_config_exists() -> Generator[AsyncMock, None, None]:
+def mock_ensure_config_exists() -> Generator[AsyncMock]:
     """Mock enable logging."""
     with patch(
         "homeassistant.config.async_ensure_config_exists", return_value=True
@@ -1170,16 +1171,14 @@ async def test_bootstrap_is_cancellation_safe(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_bootstrap_empty_integrations(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_bootstrap_empty_integrations(hass: HomeAssistant) -> None:
     """Test setting up an empty integrations does not raise."""
     await bootstrap.async_setup_multi_components(hass, set(), {})
     await hass.async_block_till_done()
 
 
 @pytest.fixture(name="mock_mqtt_config_flow")
-def mock_mqtt_config_flow_fixture() -> Generator[None, None, None]:
+def mock_mqtt_config_flow_fixture() -> Generator[None]:
     """Mock MQTT config flow."""
 
     class MockConfigFlow:

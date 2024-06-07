@@ -15,8 +15,10 @@ from homeassistant.helpers.update_coordinator import (
 from .update_coordinator import BasePassiveBluetoothCoordinator
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator
+    from collections.abc import Callable
     import logging
+
+    from typing_extensions import Generator
 
     from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 
@@ -81,7 +83,7 @@ class PassiveBluetoothDataUpdateCoordinator(
         self._listeners[remove_listener] = (update_callback, context)
         return remove_listener
 
-    def async_contexts(self) -> Generator[Any, None, None]:
+    def async_contexts(self) -> Generator[Any]:
         """Return all registered contexts."""
         yield from (
             context for _, context in self._listeners.values() if context is not None

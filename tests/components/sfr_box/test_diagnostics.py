@@ -1,11 +1,11 @@
 """Test the SFR Box diagnostics."""
 
-from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
 from sfrbox_api.models import SystemInfo
 from syrupy.assertion import SnapshotAssertion
+from typing_extensions import Generator
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -19,7 +19,7 @@ pytestmark = pytest.mark.usefixtures(
 
 
 @pytest.fixture(autouse=True)
-def override_platforms() -> Generator[None, None, None]:
+def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.sfr_box.PLATFORMS", []):
         yield

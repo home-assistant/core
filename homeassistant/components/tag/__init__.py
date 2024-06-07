@@ -34,7 +34,6 @@ STORAGE_VERSION = 1
 STORAGE_VERSION_MINOR = 3
 
 TAG_DATA: HassKey[TagStorageCollection] = HassKey(DOMAIN)
-SIGNAL_TAG_CHANGED = "signal_tag_changed"
 
 CREATE_FIELDS = {
     vol.Optional(TAG_ID): cv.string,
