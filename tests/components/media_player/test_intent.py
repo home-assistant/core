@@ -179,14 +179,16 @@ async def test_previous_media_player_intent(hass: HomeAssistant) -> None:
     await media_player_intent.async_setup_intents(hass)
 
     entity_id = f"{DOMAIN}.test_media_player"
-    hass.states.async_set(entity_id, STATE_IDLE)
+    attributes = {ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.PREVIOUS_TRACK}
+
+    hass.states.async_set(entity_id, STATE_PLAYING, attributes=attributes)
+
     calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK)
 
     response = await intent.async_handle(
         hass,
         "test",
         media_player_intent.INTENT_MEDIA_PREVIOUS,
-        {"name": {"value": "test media player"}},
     )
     await hass.async_block_till_done()
 
@@ -196,6 +198,33 @@ async def test_previous_media_player_intent(hass: HomeAssistant) -> None:
     assert call.domain == DOMAIN
     assert call.service == SERVICE_MEDIA_PREVIOUS_TRACK
     assert call.data == {"entity_id": entity_id}
+
+    # Test if not playing
+    hass.states.async_set(entity_id, STATE_IDLE, attributes=attributes)
+
+    with pytest.raises(intent.MatchFailedError):
+        response = await intent.async_handle(
+            hass,
+            "test",
+            media_player_intent.INTENT_MEDIA_PREVIOUS,
+        )
+        await hass.async_block_till_done()
+
+    # Test feature not supported
+    hass.states.async_set(
+        entity_id,
+        STATE_PLAYING,
+        attributes={ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature(0)},
+    )
+
+    with pytest.raises(intent.MatchFailedError):
+        response = await intent.async_handle(
+            hass,
+            "test",
+            media_player_intent.INTENT_MEDIA_PREVIOUS,
+            {"name": {"value": "test media player"}},
+        )
+        await hass.async_block_till_done()
 
 
 async def test_volume_media_player_intent(hass: HomeAssistant) -> None:

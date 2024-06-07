@@ -74,7 +74,14 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
     intent.async_register(
         hass,
         intent.ServiceIntentHandler(
-            INTENT_MEDIA_PREVIOUS, DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK
+            INTENT_MEDIA_PREVIOUS,
+            DOMAIN,
+            SERVICE_MEDIA_PREVIOUS_TRACK,
+            required_domains={DOMAIN},
+            required_features=MediaPlayerEntityFeature.PREVIOUS_TRACK,
+            required_states={MediaPlayerState.PLAYING},
+            description="Replays the previous item for a media player",
+            platforms={DOMAIN},
         ),
     )
     intent.async_register(
