@@ -16,6 +16,7 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
+    EFFECT_OFF,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -347,7 +348,7 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
         if effect_module.effect != LightEffect.LIGHT_EFFECTS_OFF:
             self._attr_effect = effect_module.effect
         else:
-            self._attr_effect = None
+            self._attr_effect = EFFECT_OFF
         if effect_list := effect_module.effect_list:
             self._attr_effect_list = effect_list
         else:

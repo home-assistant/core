@@ -31,6 +31,7 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
+    EFFECT_OFF,
 )
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
@@ -529,7 +530,7 @@ async def test_smart_strip_effects(hass: HomeAssistant) -> None:
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_EFFECT] is None
+    assert state.attributes[ATTR_EFFECT] == EFFECT_OFF
 
     device.is_off = True
     device.is_on = False
