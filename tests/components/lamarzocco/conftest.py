@@ -57,9 +57,7 @@ def device_fixture() -> LaMarzoccoModel:
 
 
 @pytest.fixture
-def mock_lamarzocco(
-    request: pytest.FixtureRequest, device_fixture: LaMarzoccoModel
-) -> Generator[MagicMock]:
+def mock_lamarzocco(device_fixture: LaMarzoccoModel) -> Generator[MagicMock]:
     """Return a mocked LM client."""
     model_name = device_fixture
 
