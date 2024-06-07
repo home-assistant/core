@@ -18,7 +18,7 @@ from homeassistant.helpers.typing import ConfigType, VolDictType
 from .const import DOMAIN
 from .schema import ga_validator
 from .telegrams import SIGNAL_KNX_TELEGRAM, TelegramDict, decode_telegram_payload
-from .validation import sensor_type_validator
+from .validation import dpt_base_type_validator
 
 TRIGGER_TELEGRAM: Final = "telegram"
 
@@ -44,7 +44,7 @@ TELEGRAM_TRIGGER_SCHEMA: VolDictType = {
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): PLATFORM_TYPE_TRIGGER_TELEGRAM,
-        vol.Optional(CONF_TYPE, default=None): vol.Any(sensor_type_validator, None),
+        vol.Optional(CONF_TYPE, default=None): vol.Any(dpt_base_type_validator, None),
         **TELEGRAM_TRIGGER_SCHEMA,
     }
 )

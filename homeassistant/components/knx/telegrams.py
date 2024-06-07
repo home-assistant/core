@@ -6,7 +6,7 @@ from collections import deque
 from typing import Final, TypedDict
 
 from xknx import XKNX
-from xknx.dpt import DPTArray, DPTBase, DPTBinary
+from xknx.dpt import DPTArray, DPTBase, DPTBinary, DPTComplexData
 from xknx.exceptions import XKNXException
 from xknx.telegram import Telegram
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
@@ -156,7 +156,8 @@ def decode_telegram_payload(
         value = transcoder.from_knx(payload)
     except XKNXException:
         value = "Error decoding value"
-
+    if isinstance(value, DPTComplexData):
+        value = value.as_dict()
     return DecodedTelegramPayload(
         dpt_main=transcoder.dpt_main_number,
         dpt_sub=transcoder.dpt_sub_number,

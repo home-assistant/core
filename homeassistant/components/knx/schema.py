@@ -57,6 +57,7 @@ from .const import (
     ColorTempModes,
 )
 from .validation import (
+    dpt_base_type_validator,
     ga_list_validator,
     ga_validator,
     numeric_type_validator,
@@ -173,7 +174,7 @@ class EventSchema:
     KNX_EVENT_FILTER_SCHEMA = vol.Schema(
         {
             vol.Required(KNX_ADDRESS): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_TYPE): sensor_type_validator,
+            vol.Optional(CONF_TYPE): dpt_base_type_validator,
         }
     )
 
