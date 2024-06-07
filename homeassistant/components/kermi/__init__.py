@@ -48,10 +48,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "client": client,
         "coordinator": coordinator,
     }
+
     # Forward the setup to the water heater platform
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "water_heater")
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, ["water_heater"])
 
     try:
         # Fetch initial data

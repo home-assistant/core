@@ -11,7 +11,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -19,6 +19,8 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+
+from .const import MODBUS_REGISTERS
 
 SUPPORT_FLAGS_HEATER = (
     WaterHeaterEntityFeature.TARGET_TEMPERATURE
@@ -59,6 +61,9 @@ class KermiWaterHeater(WaterHeaterEntity, CoordinatorEntity):
         super().__init__(coordinator)
         self._attr_name = name
         self._attr_target_temperature = 0
+        self._attr_max_temp = 70
+        self._attr_min_temp = 30
+        self._attr_precision = PRECISION_WHOLE
         # kermi always returns celsius
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_current_operation = "auto"
@@ -97,12 +102,49 @@ class KermiWaterHeater(WaterHeaterEntity, CoordinatorEntity):
         """Return a unique ID."""
         return f"{self._entry_id}_{self.entry.data['water_heater_device_address']}"
 
+    async def write_register(self, register, value):
+        """Write a register value to the device."""
+        client = self.hass.data[DOMAIN][self.entry.entry_id]["client"]
+        result = await client.write_register(
+            register, value, self.entry.data["water_heater_device_address"]
+        )
+        logger.debug("Value set via modbus: %s", result)
+        return result
+
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
-        self._attr_target_temperature = kwargs.get(ATTR_TEMPERATURE)
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if temperature is not None:
+            # Get the register info for the target temperature, only the constant one is writeable
+            register_info = MODBUS_REGISTERS["water_heater"][
+                "constant_target_temperature"
+            ]
+
+            # Scale the temperature according to the scale_factor
+            scaled_temperature = int(temperature / register_info["scale_factor"])
+
+            # Schedule the function to be run on the event loop
+            self.hass.add_job(
+                self.write_register, register_info["register"], scaled_temperature
+            )
+
+        self._attr_target_temperature = temperature
         self.schedule_update_ha_state()
 
     def set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
+        if operation_mode is not None:
+            # Get the register info for the operation_mode
+            register_info = MODBUS_REGISTERS["water_heater"]["operation_mode"]
+
+            mapped_mode = {v: k for k, v in register_info["mapping"].items()}[  # type: ignore[attr-defined]
+                operation_mode
+            ]
+
+            # Schedule the function to be run on the event loop
+            self.hass.add_job(
+                self.write_register, register_info["register"], mapped_mode
+            )
+
         self._attr_current_operation = operation_mode
         self.schedule_update_ha_state()
