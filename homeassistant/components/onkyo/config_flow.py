@@ -91,6 +91,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             if not is_ip_address(user_input[CONF_HOST]):
                 errors["base"] = "no_ip"
             else:
+                info = None
                 try:
                     receiver = eiscp.eISCP(user_input[CONF_HOST], user_input[CONF_PORT])
                     info = receiver.info
@@ -101,6 +102,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                     if receiver:
                         receiver.disconnect()
 
+                # Info is None when connection fails
                 if info:
                     unique_id = info[EISCP_IDENTIFIER]
                     await self.async_set_unique_id(unique_id, raise_on_progress=False)
@@ -109,8 +111,8 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     return self._createOnkyoEntry(receiver)
 
-                # Info is None when connection fails
-                errors["base"] = "cannot_connect"
+                if "base" not in errors:
+                    errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="manual",
