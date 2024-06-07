@@ -42,6 +42,10 @@ SUPPORT_STATE_SERVICES = (
     | LawnMowerEntityFeature.PAUSE
     | LawnMowerEntityFeature.START_MOWING
 )
+MOW = "mow"
+PARK = "park"
+OVERRIDE_MODES = [MOW, PARK]
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +80,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         "override_schedule",
         {
-            vol.Required("override_mode"): vol.In(["mow", "park"]),
+            vol.Required("override_mode"): vol.In(OVERRIDE_MODES),
             vol.Required("duration"): vol.All(
                 cv.time_period,
                 cv.positive_timedelta,
@@ -137,9 +141,9 @@ class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
     ) -> None:
         """Override the schedule with mowing or parking."""
         duration_in_min = int(duration.total_seconds() / 60)
-        if override_mode == "mow":
+        if override_mode == MOW:
             await self.coordinator.api.commands.start_for(
                 self.mower_id, duration_in_min
             )
-        if override_mode == "park":
+        if override_mode == PARK:
             await self.coordinator.api.commands.park_for(self.mower_id, duration_in_min)
