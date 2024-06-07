@@ -121,6 +121,11 @@ async def async_setup_entry(
 
     ui_config = entry_data[CONF_UI_CONFIGURATION]
 
+    # OS 2 will not have a ui_configuration
+    if not ui_config:
+        _LOGGER.debug("No UI Configuration found for Control4")
+        return
+
     entity_list = []
     for room in all_rooms:
         room_id = room["id"]
