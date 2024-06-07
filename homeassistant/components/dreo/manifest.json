@@ -1,0 +1,15 @@
+{
+  "domain": "dreo",
+  "name": "Dreo",
+  "version": "1.0.0",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/dreo",
+  "requirements": ["hscloud==1.0.0"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@kane"
+  ]
+}
