@@ -3095,3 +3095,72 @@ async def test_two_automations_call_restart_script_same_time(
     await hass.async_block_till_done()
     assert len(events) == 2
     cancel()
+
+
+async def test_two_automation_call_restart_script_right_after_each_other(
+    hass: HomeAssistant,
+) -> None:
+    """Test two automations call a restart script right after each other."""
+
+    events = async_capture_events(hass, "repeat_test_script_finished")
+
+    assert await async_setup_component(
+        hass,
+        input_boolean.DOMAIN,
+        {
+            input_boolean.DOMAIN: {
+                "test_1": None,
+                "test_2": None,
+            }
+        },
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "state",
+                        "entity_id": ["input_boolean.test_1", "input_boolean.test_1"],
+                        "from": "off",
+                        "to": "on",
+                    },
+                    "action": [
+                        {
+                            "repeat": {
+                                "count": 2,
+                                "sequence": [
+                                    {
+                                        "delay": {
+                                            "hours": 0,
+                                            "minutes": 0,
+                                            "seconds": 0,
+                                            "milliseconds": 100,
+                                        }
+                                    }
+                                ],
+                            }
+                        },
+                        {"event": "repeat_test_script_finished", "event_data": {}},
+                    ],
+                    "id": "automation_0",
+                    "mode": "restart",
+                },
+            ]
+        },
+    )
+    hass.states.async_set("input_boolean.test_1", "off")
+    hass.states.async_set("input_boolean.test_2", "off")
+    await hass.async_block_till_done()
+    hass.states.async_set("input_boolean.test_1", "on")
+    hass.states.async_set("input_boolean.test_2", "on")
+    await asyncio.sleep(0)
+    hass.states.async_set("input_boolean.test_1", "off")
+    hass.states.async_set("input_boolean.test_2", "off")
+    await asyncio.sleep(0)
+    hass.states.async_set("input_boolean.test_1", "on")
+    hass.states.async_set("input_boolean.test_2", "on")
+    await hass.async_block_till_done()
+    assert len(events) == 1
