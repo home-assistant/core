@@ -20,6 +20,24 @@ OPTIMISTIC_LOCK_CONFIG = {
         "data_template": {
             "action": "lock",
             "caller": "{{ this.entity_id }}",
+        },
+    },
+    "unlock": {
+        "service": "test.automation",
+        "data_template": {
+            "action": "unlock",
+            "caller": "{{ this.entity_id }}",
+        },
+    },
+}
+
+OPTIMISTIC_CODED_LOCK_CONFIG = {
+    "platform": "template",
+    "lock": {
+        "service": "test.automation",
+        "data_template": {
+            "action": "lock",
+            "caller": "{{ this.entity_id }}",
             "code": "{{ code }}",
         },
     },
@@ -221,7 +239,6 @@ async def test_lock_action(hass: HomeAssistant, start_ha, calls) -> None:
     assert len(calls) == 1
     assert calls[0].data["action"] == "lock"
     assert calls[0].data["caller"] == "lock.template_lock"
-    assert calls[0].data["code"] is None
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
@@ -255,7 +272,6 @@ async def test_unlock_action(hass: HomeAssistant, start_ha, calls) -> None:
     assert len(calls) == 1
     assert calls[0].data["action"] == "unlock"
     assert calls[0].data["caller"] == "lock.template_lock"
-    assert calls[0].data["code"] is None
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
@@ -264,7 +280,7 @@ async def test_unlock_action(hass: HomeAssistant, start_ha, calls) -> None:
     [
         {
             lock.DOMAIN: {
-                **OPTIMISTIC_LOCK_CONFIG,
+                **OPTIMISTIC_CODED_LOCK_CONFIG,
                 "value_template": "{{ states.switch.test_state.state }}",
                 "code_format_template": "{{ '.+' }}",
             }
@@ -299,7 +315,7 @@ async def test_lock_action_with_code(hass: HomeAssistant, start_ha, calls) -> No
     [
         {
             lock.DOMAIN: {
-                **OPTIMISTIC_LOCK_CONFIG,
+                **OPTIMISTIC_CODED_LOCK_CONFIG,
                 "value_template": "{{ states.switch.test_state.state }}",
                 "code_format_template": "{{ '.+' }}",
             }
@@ -341,18 +357,25 @@ async def test_unlock_action_with_code(hass: HomeAssistant, start_ha, calls) -> 
         },
     ],
 )
+@pytest.mark.parametrize(
+    "test_action",
+    [
+        lock.SERVICE_LOCK,
+        lock.SERVICE_UNLOCK,
+    ],
+)
 async def test_lock_actions_fail_with_invalid_code(
-    hass: HomeAssistant, start_ha, calls
+    hass: HomeAssistant, start_ha, calls, test_action
 ) -> None:
-    """Test lock code format fails."""
+    """Test invalid lock codes."""
     await hass.services.async_call(
         lock.DOMAIN,
-        lock.SERVICE_LOCK,
+        test_action,
         {ATTR_ENTITY_ID: "lock.template_lock", ATTR_CODE: "non-number-value"},
     )
     await hass.services.async_call(
         lock.DOMAIN,
-        lock.SERVICE_UNLOCK,
+        test_action,
         {ATTR_ENTITY_ID: "lock.template_lock"},
     )
     await hass.async_block_till_done()
@@ -399,7 +422,7 @@ async def test_lock_actions_dont_execute_with_code_template_rendering_error(
     [
         {
             lock.DOMAIN: {
-                **OPTIMISTIC_LOCK_CONFIG,
+                **OPTIMISTIC_CODED_LOCK_CONFIG,
                 "value_template": "{{ states.switch.test_state.state }}",
                 "code_format_template": "{{ None }}",
             }
