@@ -21,7 +21,7 @@ TEST_VEHICLE_STATUS_AWAKE = {"status": TessieStatus.AWAKE}
 TEST_VEHICLE_STATUS_ASLEEP = {"status": TessieStatus.ASLEEP}
 
 TEST_RESPONSE = {"result": True}
-TEST_RESPONSE_ERROR = {"result": False, "reason": "reason why"}
+TEST_RESPONSE_ERROR = {"result": False, "reason": "reason_why"}
 
 TEST_CONFIG = {CONF_ACCESS_TOKEN: "1234567890"}
 TESSIE_URL = "https://api.tessie.com/"
