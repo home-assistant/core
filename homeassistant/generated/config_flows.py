@@ -281,6 +281,7 @@ FLOWS = {
         "kegtron",
         "keymitt_ble",
         "kmtronic",
+        "knocki",
         "knx",
         "kodi",
         "konnected",
