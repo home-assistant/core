@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, NamedTuple
+from typing import Any, Final, NamedTuple
 
 from pyhap.characteristic import Characteristic
 from pyhap.const import (
@@ -60,6 +60,8 @@ from .const import (
 from .util import cleanup_name_for_homekit
 
 _LOGGER = logging.getLogger(__name__)
+
+VALVE_OPEN_STATES: Final = [STATE_OPEN, STATE_OPENING, STATE_CLOSING]
 
 
 class ValveInfo(NamedTuple):
@@ -263,7 +265,7 @@ class Valve(HomeAccessory):
         """Update switch state after state changed."""
 
         if self.domain == VALVE_DOMAIN:
-            current_state = 1 if new_state.state in [STATE_OPEN, STATE_OPENING, STATE_CLOSING] else 0
+            current_state = 1 if new_state.state in VALVE_OPEN_STATES else 0
         else:
             current_state = 1 if new_state.state == STATE_ON else 0
 
