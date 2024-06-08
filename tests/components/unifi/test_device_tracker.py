@@ -726,6 +726,7 @@ async def test_option_track_devices(
     ],
 )
 @pytest.mark.usefixtures("mock_device_registry")
+@pytest.mark.freeze_time(dt_util.utcnow())
 async def test_option_ssid_filter(
     hass: HomeAssistant,
     mock_unifi_websocket,
@@ -831,32 +832,29 @@ async def test_option_ssid_filter(
     assert hass.states.get("device_tracker.client_on_ssid2").state == STATE_NOT_HOME
 
 
-@pytest.mark.parametrize(
-    "client_payload",
-    [
-        [
-            {
-                "essid": "ssid",
-                "hostname": "client",
-                "ip": "10.0.0.1",
-                "is_wired": False,
-                "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
-                "mac": "00:00:00:00:00:01",
-            }
-        ]
-    ],
-)
 @pytest.mark.usefixtures("mock_device_registry")
 async def test_wireless_client_go_wired_issue(
     hass: HomeAssistant,
     mock_unifi_websocket,
-    config_entry_setup: ConfigEntry,
+    config_entry_factory: Callable[[], ConfigEntry],
     client_payload: list[dict[str, Any]],
 ) -> None:
     """Test the solution to catch wireless device go wired UniFi issue.
 
     UniFi Network has a known issue that when a wireless device goes away it sometimes gets marked as wired.
     """
+    client_payload.append(
+        {
+            "essid": "ssid",
+            "hostname": "client",
+            "ip": "10.0.0.1",
+            "is_wired": False,
+            "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
+            "mac": "00:00:00:00:00:01",
+        }
+    )
+    config_entry = await config_entry_factory()
+
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
 
     # Client is wireless
@@ -876,9 +874,7 @@ async def test_wireless_client_go_wired_issue(
 
     # Pass time
     new_time = dt_util.utcnow() + timedelta(
-        seconds=(
-            config_entry_setup.options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME)
-        )
+        seconds=(config_entry.options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME))
     )
     with freeze_time(new_time):
         async_fire_time_changed(hass, new_time)
@@ -909,30 +905,27 @@ async def test_wireless_client_go_wired_issue(
 
 
 @pytest.mark.parametrize("config_entry_options", [{CONF_IGNORE_WIRED_BUG: True}])
-@pytest.mark.parametrize(
-    "client_payload",
-    [
-        [
-            {
-                "ap_mac": "00:00:00:00:02:01",
-                "essid": "ssid",
-                "hostname": "client",
-                "ip": "10.0.0.1",
-                "is_wired": False,
-                "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
-                "mac": "00:00:00:00:00:01",
-            }
-        ]
-    ],
-)
 @pytest.mark.usefixtures("mock_device_registry")
 async def test_option_ignore_wired_bug(
     hass: HomeAssistant,
     mock_unifi_websocket,
-    config_entry_setup: ConfigEntry,
+    config_entry_factory: Callable[[], ConfigEntry],
     client_payload: list[dict[str, Any]],
 ) -> None:
     """Test option to ignore wired bug."""
+    client_payload.append(
+        {
+            "ap_mac": "00:00:00:00:02:01",
+            "essid": "ssid",
+            "hostname": "client",
+            "ip": "10.0.0.1",
+            "is_wired": False,
+            "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
+            "mac": "00:00:00:00:00:01",
+        }
+    )
+    config_entry = await config_entry_factory()
+
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
 
     # Client is wireless
@@ -951,9 +944,7 @@ async def test_option_ignore_wired_bug(
 
     # pass time
     new_time = dt_util.utcnow() + timedelta(
-        seconds=config_entry_setup.options.get(
-            CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
-        )
+        seconds=config_entry.options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME)
     )
     with freeze_time(new_time):
         async_fire_time_changed(hass, new_time)
