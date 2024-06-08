@@ -19,6 +19,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PRECISION_TENTHS,
     PRECISION_WHOLE,
@@ -28,7 +29,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from . import EvoChild
@@ -48,15 +48,12 @@ EVO_STATE_TO_HA = {v: k for k, v in HA_STATE_TO_EVO.items() if k != ""}
 STATE_ATTRS_DHW = [SZ_DHW_ID, SZ_ACTIVE_FAULTS, SZ_STATE_STATUS, SZ_TEMPERATURE_STATUS]
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Create a DHW controller."""
-    if discovery_info is None:
-        return
 
     broker: EvoBroker = hass.data[DOMAIN]["broker"]
 

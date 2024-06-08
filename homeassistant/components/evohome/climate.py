@@ -30,11 +30,11 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from . import EvoChild, EvoDevice
@@ -96,15 +96,12 @@ STATE_ATTRS_ZONES = [
 ]
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Create the evohome Controller, and its Zones, if any."""
-    if discovery_info is None:
-        return
 
     broker: EvoBroker = hass.data[DOMAIN]["broker"]
 

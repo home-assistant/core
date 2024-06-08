@@ -33,6 +33,8 @@ from evohomeasync2.schema.const import (
 )
 import voluptuous as vol
 
+from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PASSWORD,
@@ -44,7 +46,6 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -119,13 +120,32 @@ SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Create a (EMEA/EU-based) Honeywell TCC system."""
+    """Set up the Evohome integration from the configuration.yaml file."""
 
-    async def load_auth_tokens(store: Store) -> tuple[dict, dict | None]:
+    # until config flow is fully implemented, deleting any existing entry (there should
+    # only be one) most closely matches the current behaviour
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=config[DOMAIN],
+        )
+    )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Load an Evohome config entry."""
+
+    async def load_auth_tokens(store: Store, username: str) -> tuple[dict, dict | None]:
         app_storage = await store.async_load()
         tokens = dict(app_storage or {})
 
-        if tokens.pop(CONF_USERNAME, None) != config[DOMAIN][CONF_USERNAME]:
+        if tokens.pop(CONF_USERNAME, None) != username:
             # any tokens won't be valid, and store might be corrupt
             await store.async_save({})
             return ({}, {})
@@ -140,11 +160,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return (tokens, user_data)
 
     store = Store[dict[str, Any]](hass, STORAGE_VER, STORAGE_KEY)
-    tokens, user_data = await load_auth_tokens(store)
+    tokens, user_data = await load_auth_tokens(store, entry.data[CONF_USERNAME])
 
     client_v2 = evo.EvohomeClient(
-        config[DOMAIN][CONF_USERNAME],
-        config[DOMAIN][CONF_PASSWORD],
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
         **tokens,
         session=async_get_clientsession(hass),
     )
@@ -154,12 +174,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     except evo.AuthenticationFailed as err:
         handle_evo_exception(err)
         return False
-    finally:
-        config[DOMAIN][CONF_PASSWORD] = "REDACTED"
 
     assert isinstance(client_v2.installation_info, list)  # mypy
 
-    loc_idx = config[DOMAIN][CONF_LOCATION_IDX]
+    loc_idx: int = entry.data[CONF_LOCATION_IDX]
     try:
         loc_config = client_v2.installation_info[loc_idx]
     except IndexError:
@@ -174,6 +192,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
         return False
 
+    hass.config_entries.async_update_entry(
+        entry, unique_id=loc_config[SZ_LOCATION_INFO][SZ_LOCATION_ID]
+    )
+
     if _LOGGER.isEnabledFor(logging.DEBUG):
         loc_info = {
             SZ_LOCATION_ID: loc_config[SZ_LOCATION_INFO][SZ_LOCATION_ID],
@@ -183,11 +205,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             SZ_GATEWAY_ID: loc_config[GWS][0][SZ_GATEWAY_INFO][SZ_GATEWAY_ID],
             TCS: loc_config[GWS][0][TCS],
         }
-        _config = {
+        loc_config = {
             SZ_LOCATION_INFO: loc_info,
             GWS: [{SZ_GATEWAY_INFO: gwy_info, TCS: loc_config[GWS][0][TCS]}],
         }
-        _LOGGER.debug("Config = %s", _config)
+        _LOGGER.debug("Config = %s", loc_config)
 
     client_v1 = ev1.EvohomeClient(
         client_v2.username,
@@ -198,7 +220,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]["broker"] = broker = EvoBroker(
-        hass, client_v2, client_v1, store, config[DOMAIN]
+        hass, client_v2, client_v1, store, dict(entry.data)
     )
     await broker.save_auth_tokens()
 
@@ -206,22 +228,41 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass,
         _LOGGER,
         name=f"{DOMAIN}_coordinator",
-        update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
+        update_interval=timedelta(seconds=entry.options[CONF_SCAN_INTERVAL]),
         update_method=broker.async_update,
     )
     # without a listener, _schedule_refresh() won't be invoked by _async_refresh()
     coordinator.async_add_listener(lambda: None)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.async_create_task(
-        async_load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
-    )
+    platforms = [Platform.CLIMATE]
     if broker.tcs.hotwater:
-        hass.async_create_task(
-            async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
-        )
+        platforms += [Platform.WATER_HEATER]
+
+    any(e.entry_id == entry.entry_id for e in hass.config_entries.async_entries())
+    if not hass.config_entries.async_entries(entry.entry_id):
+        # problem here: how do I know not to call this if simply re-enabling the entry?
+        await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     setup_service_functions(hass, broker)
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload an Evohome config entry."""
+
+    broker: EvoBroker = hass.data[DOMAIN]["broker"]
+
+    platforms = [Platform.CLIMATE]
+    if broker.tcs.hotwater:
+        platforms += [Platform.WATER_HEATER]
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
+
+    for svc in hass.services.async_services_for_domain(DOMAIN):
+        hass.services.async_remove(DOMAIN, svc)
+
+    hass.data[DOMAIN] = {}
 
     return True
 
