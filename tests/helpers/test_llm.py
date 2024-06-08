@@ -249,6 +249,39 @@ async def test_assist_api_get_timer_tools(
     assert "HassStartTimer" in [tool.name for tool in api.tools]
 
 
+async def test_assist_api_tools(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test getting timer tools with Assist API."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    llm_context.device_id = "test_device"
+
+    async_register_timer_handler(hass, "test_device", lambda *args: None)
+
+    class MyIntentHandler(intent.IntentHandler):
+        intent_type = "Super crazy intent with unique nåme"
+        description = "my intent handler"
+
+    intent.async_register(hass, MyIntentHandler())
+
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    assert [tool.name for tool in api.tools] == [
+        "HassTurnOn",
+        "HassTurnOff",
+        "HassSetPosition",
+        "HassStartTimer",
+        "HassCancelTimer",
+        "HassIncreaseTimer",
+        "HassDecreaseTimer",
+        "HassPauseTimer",
+        "HassUnpauseTimer",
+        "HassTimerStatus",
+        "Super_crazy_intent_with_unique_name",
+    ]
+
+
 async def test_assist_api_description(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:

@@ -1835,7 +1835,6 @@ async def test_serviceregistry_return_response_invalid(
             blocking=True,
             return_response=True,
         )
-        await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(

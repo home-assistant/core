@@ -629,12 +629,9 @@ async def test_send_tts_wrong_sample_rate(
             wav_file.writeframes(bytes(_ONE_SECOND))
 
         wav_bytes = wav_io.getvalue()
-    with (
-        patch(
-            "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
-            return_value=("wav", wav_bytes),
-        ),
-        pytest.raises(ValueError),
+    with patch(
+        "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
+        return_value=("wav", wav_bytes),
     ):
         voice_assistant_api_pipeline.started = True
         voice_assistant_api_pipeline.transport = Mock(spec=asyncio.DatagramTransport)
@@ -649,7 +646,8 @@ async def test_send_tts_wrong_sample_rate(
         )
 
         assert voice_assistant_api_pipeline._tts_task is not None
-        await voice_assistant_api_pipeline._tts_task  # raises ValueError
+        with pytest.raises(ValueError):
+            await voice_assistant_api_pipeline._tts_task
 
 
 async def test_send_tts_wrong_format(
@@ -662,7 +660,6 @@ async def test_send_tts_wrong_format(
             "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
             return_value=("raw", bytes(1024)),
         ),
-        pytest.raises(ValueError),
     ):
         voice_assistant_api_pipeline.started = True
         voice_assistant_api_pipeline.transport = Mock(spec=asyncio.DatagramTransport)
@@ -677,7 +674,8 @@ async def test_send_tts_wrong_format(
         )
 
         assert voice_assistant_api_pipeline._tts_task is not None
-        await voice_assistant_api_pipeline._tts_task  # raises ValueError
+        with pytest.raises(ValueError):
+            await voice_assistant_api_pipeline._tts_task
 
 
 async def test_send_tts_not_started(
