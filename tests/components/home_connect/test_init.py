@@ -299,5 +299,3 @@ async def test_services_exception(
 
     with pytest.raises(ValueError):
         await hass.services.async_call(**service_call)
-
-    await hass.async_block_till_done()

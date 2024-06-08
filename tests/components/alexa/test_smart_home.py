@@ -3822,8 +3822,6 @@ async def test_disabled(hass: HomeAssistant) -> None:
             hass, get_default_config(hass), request, enabled=False
         )
 
-    await hass.async_block_till_done()
-
 
 async def test_endpoint_good_health(hass: HomeAssistant) -> None:
     """Test endpoint health reporting."""
