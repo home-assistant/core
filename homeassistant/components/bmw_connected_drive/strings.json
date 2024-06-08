@@ -83,7 +83,11 @@
         "name": "AC Charging Limit"
       },
       "charging_mode": {
-        "name": "Charging Mode"
+        "name": "Charging Mode",
+        "state": {
+          "immediate_charging": "Immediate charging",
+          "delayed_charging": "Delayed charging"
+        }
       }
     },
     "sensor": {
