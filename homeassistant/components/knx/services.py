@@ -174,7 +174,7 @@ async def service_exposure_register_modify(
                 f"Could not find exposure for '{group_address}' to remove."
             ) from err
 
-        removed_exposure.shutdown()
+        removed_exposure.async_remove()
         return
 
     if group_address in knx_module.service_exposures:
@@ -187,7 +187,7 @@ async def service_exposure_register_modify(
             group_address,
             replaced_exposure.device.name,
         )
-        replaced_exposure.shutdown()
+        replaced_exposure.async_remove()
     exposure = create_knx_exposure(knx_module.hass, knx_module.xknx, call.data)
     knx_module.service_exposures[group_address] = exposure
     _LOGGER.debug(

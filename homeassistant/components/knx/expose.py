@@ -60,6 +60,7 @@ def create_knx_exposure(
             xknx=xknx,
             config=config,
         )
+    exposure.async_register()
     return exposure
 
 
@@ -87,25 +88,23 @@ class KNXExposeSensor:
             self.value_template.hass = hass
 
         self._remove_listener: Callable[[], None] | None = None
-        self.device: ExposeSensor = self.async_register(config)
-        self._init_expose_state()
-
-    @callback
-    def async_register(self, config: ConfigType) -> ExposeSensor:
-        """Register listener."""
-        name = f"{self.entity_id}__{self.expose_attribute or "state"}"
-        device = ExposeSensor(
+        self.device: ExposeSensor = ExposeSensor(
             xknx=self.xknx,
-            name=name,
+            name=f"{self.entity_id}__{self.expose_attribute or "state"}",
             group_address=config[KNX_ADDRESS],
             respond_to_read=config[CONF_RESPOND_TO_READ],
             value_type=self.expose_type,
             cooldown=config[ExposeSchema.CONF_KNX_EXPOSE_COOLDOWN],
         )
+
+    @callback
+    def async_register(self) -> None:
+        """Register listener."""
         self._remove_listener = async_track_state_change_event(
             self.hass, [self.entity_id], self._async_entity_changed
         )
-        return device
+        self.xknx.devices.async_add(self.device)
+        self._init_expose_state()
 
     @callback
     def _init_expose_state(self) -> None:
@@ -118,12 +117,12 @@ class KNXExposeSensor:
             _LOGGER.exception("Error during sending of expose sensor value")
 
     @callback
-    def shutdown(self) -> None:
+    def async_remove(self) -> None:
         """Prepare for deletion."""
         if self._remove_listener is not None:
             self._remove_listener()
             self._remove_listener = None
-        self.device.shutdown()
+        self.xknx.devices.async_remove(self.device)
 
     def _get_expose_value(self, state: State | None) -> bool | int | float | str | None:
         """Extract value from state."""
@@ -196,13 +195,8 @@ class KNXExposeTime:
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of Expose class."""
         self.xknx = xknx
-        self.device: DateTime = self.async_register(config)
-
-    @callback
-    def async_register(self, config: ConfigType) -> DateTime:
-        """Register listener."""
         expose_type = config[ExposeSchema.CONF_KNX_EXPOSE_TYPE]
-        return DateTime(
+        self.device: DateTime = DateTime(
             self.xknx,
             name=expose_type.capitalize(),
             broadcast_type=expose_type.upper(),
@@ -211,6 +205,11 @@ class KNXExposeTime:
         )
 
     @callback
-    def shutdown(self) -> None:
+    def async_register(self) -> None:
+        """Register listener."""
+        self.xknx.devices.async_add(self.device)
+
+    @callback
+    def async_remove(self) -> None:
         """Prepare for deletion."""
-        self.device.shutdown()
+        self.xknx.devices.async_remove(self.device)

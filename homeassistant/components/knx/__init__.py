@@ -225,7 +225,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     knx_module: KNXModule = hass.data[DOMAIN]
     for exposure in knx_module.exposures:
-        exposure.shutdown()
+        exposure.async_remove()
 
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry,
