@@ -51,7 +51,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_onboarding() -> Generator[None, MagicMock, None]:
+def mock_onboarding() -> Generator[MagicMock]:
     """Mock that Home Assistant is currently onboarding."""
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded",
@@ -61,9 +61,7 @@ def mock_onboarding() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_elgato(
-    device_fixtures: str, state_variant: str
-) -> Generator[None, MagicMock, None]:
+def mock_elgato(device_fixtures: str, state_variant: str) -> Generator[MagicMock]:
     """Return a mocked Elgato client."""
     with (
         patch(

@@ -40,7 +40,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_bsblan(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None]:
+def mock_bsblan() -> Generator[MagicMock]:
     """Return a mocked BSBLAN client."""
 
     with (
