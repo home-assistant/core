@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from influxdb_client.rest import ApiException
 import pytest
+from typing_extensions import Generator
 from voluptuous import Invalid
 
 from homeassistant.components import sensor
@@ -79,7 +80,9 @@ class Table:
 
 
 @pytest.fixture(name="mock_client")
-def mock_client_fixture(request):
+def mock_client_fixture(
+    request: pytest.FixtureRequest,
+) -> Generator[MagicMock]:
     """Patch the InfluxDBClient object with mock for version under test."""
     if request.param == API_VERSION_2:
         client_target = f"{INFLUXDB_CLIENT_PATH}V2"

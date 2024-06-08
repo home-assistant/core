@@ -2617,13 +2617,12 @@ async def test_async_write_ha_state_thread_safety(hass: HomeAssistant) -> None:
     assert not hass.states.get(ent2.entity_id)
 
 
-async def test_async_write_ha_state_thread_safety_custom_component(
+async def test_async_write_ha_state_thread_safety_always(
     hass: HomeAssistant,
 ) -> None:
-    """Test async_write_ha_state thread safe for custom components."""
+    """Test async_write_ha_state thread safe check."""
 
     ent = entity.Entity()
-    ent._is_custom_component = True
     ent.entity_id = "test.any"
     ent.hass = hass
     ent.platform = MockEntityPlatform(hass, domain="test")
@@ -2631,7 +2630,6 @@ async def test_async_write_ha_state_thread_safety_custom_component(
     assert hass.states.get(ent.entity_id)
 
     ent2 = entity.Entity()
-    ent2._is_custom_component = True
     ent2.entity_id = "test.any2"
     ent2.hass = hass
     ent2.platform = MockEntityPlatform(hass, domain="test")
