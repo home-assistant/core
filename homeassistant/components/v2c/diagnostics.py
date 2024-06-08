@@ -9,7 +9,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
 from .coordinator import V2CUpdateCoordinator
 
 TO_REDACT = {CONF_HOST, "title"}
@@ -19,7 +18,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: V2CUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: V2CUpdateCoordinator = entry.runtime_data.coordinator
 
     if TYPE_CHECKING:
         assert coordinator.evse

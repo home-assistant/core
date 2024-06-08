@@ -21,7 +21,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import V2CUpdateCoordinator
 from .entity import V2CBaseEntity
 
@@ -84,7 +83,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up V2C switch platform."""
-    coordinator: V2CUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: V2CUpdateCoordinator = config_entry.runtime_data.coordinator
 
     async_add_entities(
         V2CSwitchEntity(coordinator, description, config_entry.entry_id)
