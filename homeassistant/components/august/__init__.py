@@ -10,6 +10,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientError, ClientResponseError
+from path import Path
 from yalexs.activity import ActivityTypes
 from yalexs.const import DEFAULT_BRAND
 from yalexs.doorbell import Doorbell, DoorbellDetail
@@ -53,7 +54,7 @@ type AugustConfigEntry = ConfigEntry[AugustData]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up August from a config entry."""
     session = async_create_august_clientsession(hass)
-    august_gateway = AugustGateway(hass, session)
+    august_gateway = AugustGateway(Path(hass.config.config_dir), session)
 
     try:
         await august_gateway.async_setup(entry.data)

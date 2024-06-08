@@ -9,6 +9,7 @@ import aiohttp
 import voluptuous as vol
 from yalexs.authenticator import ValidationResult
 from yalexs.const import BRANDS, DEFAULT_BRAND
+from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidation
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -23,7 +24,6 @@ from .const import (
     LOGIN_METHODS,
     VERIFICATION_CODE_KEY,
 )
-from .exceptions import CannotConnect, InvalidAuth, RequireValidation
 from .gateway import AugustGateway
 from .util import async_create_august_clientsession
 
