@@ -4,6 +4,8 @@ from unittest.mock import Mock
 
 import pytest
 
+from homeassistant import config_entries
+from homeassistant.components.kermi.config_flow import KermiConfigFlow
 from homeassistant.components.kermi.water_heater import KermiWaterHeater
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -35,6 +37,7 @@ def hass() -> HomeAssistant:
     """Return a Home Assistant instance."""
     hass = Mock(spec=HomeAssistant)
     hass.data = {}
+    hass.config_entries._entries = {}
     return hass
 
 
@@ -48,3 +51,9 @@ def config_entry():
         "water_heater_device_address": 1337,
     }
     return entry
+
+
+@pytest.fixture
+def flow(hass: config_entries.HomeAssistant):
+    """Return a KermiConfigFlow."""
+    return KermiConfigFlow()

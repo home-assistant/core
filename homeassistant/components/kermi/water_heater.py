@@ -160,7 +160,7 @@ class KermiWaterHeater(WaterHeaterEntity, CoordinatorEntity):
         if register_key == "single_cycle_heating":
             value = 1
         else:
-            {v: k for k, v in register_info["mapping"].items()}[operation_mode]  # type: ignore[attr-defined]
+            value = {v: k for k, v in register_info["mapping"].items()}[operation_mode]  # type: ignore[attr-defined]
 
         # Schedule the function to be run on the event loop
         self.hass.add_job(self.write_register, register_info["register"], value)
