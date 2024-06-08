@@ -149,6 +149,6 @@ class AirQualityEntity(Entity):
         return self.particulate_matter_2_5
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity."""
         return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER

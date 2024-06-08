@@ -122,7 +122,7 @@ class FeedReaderCoordinator(
         )
         if not isinstance(self._feed.entries, list):
             self._log_no_entries()
-            return None
+            return
 
         self._filter_entries()
         self._publish_new_entries()

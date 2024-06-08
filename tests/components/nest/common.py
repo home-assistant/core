@@ -121,7 +121,7 @@ class FakeSubscriber(GoogleNestSubscriber):
         """Return the cache policy."""
         return self._device_manager.cache_policy
 
-    def stop_async(self) -> None:
+    def stop_async(self):
         """No-op to stop the subscriber."""
         self.stop_calls += 1
 
