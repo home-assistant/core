@@ -4,26 +4,24 @@ from aiohttp import ClientError
 from myuplink import DevicePoint
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MyUplinkDataCoordinator
-from .const import DOMAIN
+from . import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .entity import MyUplinkEntity
 from .helpers import find_matching_platform, skip_entity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MyUplinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up myUplink select."""
     entities: list[SelectEntity] = []
-    coordinator: MyUplinkDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: MyUplinkDataCoordinator = config_entry.runtime_data
 
     # Setup device point select entities
     for device_id, point_data in coordinator.data.points.items():
