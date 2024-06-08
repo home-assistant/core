@@ -46,7 +46,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_client_device_id() -> Generator[None, MagicMock, None]:
+def mock_client_device_id() -> Generator[MagicMock]:
     """Mock generating device id."""
     with patch(
         "homeassistant.components.jellyfin.config_flow._generate_client_device_id"
@@ -108,7 +108,7 @@ def mock_client(
 
 
 @pytest.fixture
-def mock_jellyfin(mock_client: MagicMock) -> Generator[None, MagicMock, None]:
+def mock_jellyfin(mock_client: MagicMock) -> Generator[MagicMock]:
     """Return a mocked Jellyfin."""
     with patch(
         "homeassistant.components.jellyfin.client_wrapper.Jellyfin", autospec=True

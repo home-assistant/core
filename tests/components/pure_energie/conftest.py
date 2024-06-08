@@ -35,9 +35,7 @@ def mock_setup_entry() -> Generator[None]:
 
 
 @pytest.fixture
-def mock_pure_energie_config_flow(
-    request: pytest.FixtureRequest,
-) -> Generator[None, MagicMock, None]:
+def mock_pure_energie_config_flow() -> Generator[MagicMock]:
     """Return a mocked Pure Energie client."""
     with patch(
         "homeassistant.components.pure_energie.config_flow.GridNet", autospec=True

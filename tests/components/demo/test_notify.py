@@ -1,9 +1,9 @@
 """The tests for the notify demo platform."""
 
-from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components import notify
 from homeassistant.components.demo import DOMAIN
@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry, async_capture_events
 
 
 @pytest.fixture
-def notify_only() -> Generator[None, None]:
+def notify_only() -> Generator[None]:
     """Enable only the notify platform."""
     with patch(
         "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
