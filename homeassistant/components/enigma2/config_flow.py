@@ -78,10 +78,7 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
             vol.Optional(CONF_SOURCE_BOUQUET): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=bouquets,
-                    multiple=False,
-                    custom_value=True,
                     mode=selector.SelectSelectorMode.DROPDOWN,
-                    sort=False,
                 )
             ),
             vol.Optional(CONF_USE_CHANNEL_ICON): selector.BooleanSelector(),
