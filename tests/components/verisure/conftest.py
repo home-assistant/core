@@ -38,7 +38,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_verisure_config_flow() -> Generator[None, MagicMock, None]:
+def mock_verisure_config_flow() -> Generator[MagicMock]:
     """Return a mocked Tailscale client."""
     with patch(
         "homeassistant.components.verisure.config_flow.Verisure", autospec=True

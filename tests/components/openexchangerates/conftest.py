@@ -29,9 +29,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_latest_rates_config_flow(
-    request: pytest.FixtureRequest,
-) -> Generator[AsyncMock]:
+def mock_latest_rates_config_flow() -> Generator[AsyncMock]:
     """Return a mocked WLED client."""
     with patch(
         "homeassistant.components.openexchangerates.config_flow.Client.get_latest",

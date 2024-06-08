@@ -9,6 +9,8 @@ import pytest
 from typing_extensions import Generator
 import voluptuous as vol
 
+from homeassistant.components import conversation
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.todo import (
     DOMAIN,
     TodoItem,
@@ -23,6 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import intent
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -1110,6 +1113,7 @@ async def test_add_item_intent(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test adding items to lists using an intent."""
+    assert await async_setup_component(hass, "homeassistant", {})
     await todo_intent.async_setup_intents(hass)
 
     entity1 = MockTodoListEntity()
@@ -1128,6 +1132,7 @@ async def test_add_item_intent(
         "test",
         todo_intent.INTENT_LIST_ADD_ITEM,
         {"item": {"value": "beer"}, "name": {"value": "list 1"}},
+        assistant=conversation.DOMAIN,
     )
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -1143,6 +1148,7 @@ async def test_add_item_intent(
         "test",
         todo_intent.INTENT_LIST_ADD_ITEM,
         {"item": {"value": "cheese"}, "name": {"value": "List 2"}},
+        assistant=conversation.DOMAIN,
     )
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -1157,6 +1163,7 @@ async def test_add_item_intent(
         "test",
         todo_intent.INTENT_LIST_ADD_ITEM,
         {"item": {"value": "wine"}, "name": {"value": "lIST 2"}},
+        assistant=conversation.DOMAIN,
     )
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
 
@@ -1165,13 +1172,46 @@ async def test_add_item_intent(
     assert entity2.items[1].summary == "wine"
     assert entity2.items[1].status == TodoItemStatus.NEEDS_ACTION
 
+    # Should fail if lists are not exposed
+    async_expose_entity(hass, conversation.DOMAIN, entity1.entity_id, False)
+    async_expose_entity(hass, conversation.DOMAIN, entity2.entity_id, False)
+    with pytest.raises(intent.MatchFailedError) as err:
+        await intent.async_handle(
+            hass,
+            "test",
+            todo_intent.INTENT_LIST_ADD_ITEM,
+            {"item": {"value": "cookies"}, "name": {"value": "list 1"}},
+            assistant=conversation.DOMAIN,
+        )
+    assert err.value.result.no_match_reason == intent.MatchFailedReason.ASSISTANT
+
     # Missing list
-    with pytest.raises(intent.IntentHandleError):
+    with pytest.raises(intent.MatchFailedError):
         await intent.async_handle(
             hass,
             "test",
             todo_intent.INTENT_LIST_ADD_ITEM,
             {"item": {"value": "wine"}, "name": {"value": "This list does not exist"}},
+            assistant=conversation.DOMAIN,
+        )
+
+    # Fail with empty name/item
+    with pytest.raises(intent.InvalidSlotInfo):
+        await intent.async_handle(
+            hass,
+            "test",
+            todo_intent.INTENT_LIST_ADD_ITEM,
+            {"item": {"value": "wine"}, "name": {"value": ""}},
+            assistant=conversation.DOMAIN,
+        )
+
+    with pytest.raises(intent.InvalidSlotInfo):
+        await intent.async_handle(
+            hass,
+            "test",
+            todo_intent.INTENT_LIST_ADD_ITEM,
+            {"item": {"value": ""}, "name": {"value": "list 1"}},
+            assistant=conversation.DOMAIN,
         )
 
 

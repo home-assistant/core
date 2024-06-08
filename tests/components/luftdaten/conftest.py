@@ -35,7 +35,7 @@ def mock_setup_entry() -> Generator[None]:
 
 
 @pytest.fixture
-def mock_luftdaten() -> Generator[None, MagicMock, None]:
+def mock_luftdaten() -> Generator[MagicMock]:
     """Return a mocked Luftdaten client."""
     with (
         patch(
