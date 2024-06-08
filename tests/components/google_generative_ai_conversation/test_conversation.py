@@ -510,6 +510,7 @@ async def test_conversation_agent(
 
 
 async def test_escape_decode() -> None:
+    """Test _escape_decode."""
     assert _escape_decode(
         {
             "param1": ["test_value", "param1\\'s value"],
