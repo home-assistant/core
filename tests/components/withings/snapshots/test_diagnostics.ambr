@@ -4,172 +4,55 @@
     'has_cloudhooks': True,
     'has_valid_external_webhook_url': True,
     'received_activity_data': False,
-    'received_measurements': list([
-      list([
-        1,
-        None,
+    'received_measurements': dict({
+      'body_temperature': None,
+      'bone_mass': None,
+      'diastolic_blood_pressure': None,
+      'electrodermal_activity_feet': None,
+      'electrodermal_activity_left_foot': None,
+      'electrodermal_activity_right_foot': None,
+      'extracellular_water': None,
+      'fat_free_mass': None,
+      'fat_free_mass_for_segments': list([
+        'torso',
+        'left_leg',
+        'left_arm',
+        'right_leg',
+        'right_arm',
       ]),
-      list([
-        5,
-        None,
+      'fat_mass_for_segments': list([
+        'torso',
+        'left_leg',
+        'left_arm',
+        'right_leg',
+        'right_arm',
       ]),
-      list([
-        8,
-        None,
+      'fat_mass_weight': None,
+      'fat_ratio': None,
+      'heart_rate': None,
+      'height': None,
+      'hydration': None,
+      'intracellular_water': None,
+      'muscle_mass': None,
+      'muscle_mass_for_segments': list([
+        'torso',
+        'left_leg',
+        'left_arm',
+        'right_leg',
+        'right_arm',
+        'left_wrist',
       ]),
-      list([
-        76,
-        None,
-      ]),
-      list([
-        77,
-        None,
-      ]),
-      list([
-        88,
-        None,
-      ]),
-      list([
-        168,
-        None,
-      ]),
-      list([
-        169,
-        None,
-      ]),
-      list([
-        170,
-        None,
-      ]),
-      list([
-        173,
-        12,
-      ]),
-      list([
-        173,
-        10,
-      ]),
-      list([
-        173,
-        3,
-      ]),
-      list([
-        173,
-        11,
-      ]),
-      list([
-        173,
-        2,
-      ]),
-      list([
-        174,
-        12,
-      ]),
-      list([
-        174,
-        10,
-      ]),
-      list([
-        174,
-        3,
-      ]),
-      list([
-        174,
-        11,
-      ]),
-      list([
-        174,
-        2,
-      ]),
-      list([
-        175,
-        12,
-      ]),
-      list([
-        175,
-        10,
-      ]),
-      list([
-        175,
-        3,
-      ]),
-      list([
-        175,
-        11,
-      ]),
-      list([
-        175,
-        2,
-      ]),
-      list([
-        0,
-        None,
-      ]),
-      list([
-        6,
-        None,
-      ]),
-      list([
-        1,
-        2,
-      ]),
-      list([
-        4,
-        None,
-      ]),
-      list([
-        12,
-        None,
-      ]),
-      list([
-        71,
-        None,
-      ]),
-      list([
-        73,
-        None,
-      ]),
-      list([
-        9,
-        None,
-      ]),
-      list([
-        10,
-        None,
-      ]),
-      list([
-        11,
-        None,
-      ]),
-      list([
-        54,
-        None,
-      ]),
-      list([
-        91,
-        None,
-      ]),
-      list([
-        123,
-        None,
-      ]),
-      list([
-        155,
-        None,
-      ]),
-      list([
-        198,
-        None,
-      ]),
-      list([
-        197,
-        None,
-      ]),
-      list([
-        196,
-        None,
-      ]),
-    ]),
+      'pulse_wave_velocity': None,
+      'skin_temperature': None,
+      'sp02': None,
+      'systolic_blood_pressure': None,
+      'temperature': None,
+      'unknown': None,
+      'vascular_age': None,
+      'visceral_fat': None,
+      'vo2': None,
+      'weight': None,
+    }),
     'received_sleep_data': True,
     'received_workout_data': True,
     'webhooks_connected': True,
@@ -180,172 +63,55 @@
     'has_cloudhooks': False,
     'has_valid_external_webhook_url': False,
     'received_activity_data': False,
-    'received_measurements': list([
-      list([
-        1,
-        None,
+    'received_measurements': dict({
+      'body_temperature': None,
+      'bone_mass': None,
+      'diastolic_blood_pressure': None,
+      'electrodermal_activity_feet': None,
+      'electrodermal_activity_left_foot': None,
+      'electrodermal_activity_right_foot': None,
+      'extracellular_water': None,
+      'fat_free_mass': None,
+      'fat_free_mass_for_segments': list([
+        'torso',
+        'left_leg',
+        'left_arm',
+        'right_leg',
+        'right_arm',
       ]),
-      list([
-        5,
-        None,
+      'fat_mass_for_segments': list([
+        'torso',
+        'left_leg',
+        'left_arm',
+        'right_leg',
+        'right_arm',
       ]),
-      list([
-        8,
-        None,
+      'fat_mass_weight': None,
+      'fat_ratio': None,
+      'heart_rate': None,
+      'height': None,
+      'hydration': None,
+      'intracellular_water': None,
+      'muscle_mass': None,
+      'muscle_mass_for_segments': list([
+        'torso',
+        'left_leg',
+        'left_arm',
+        'right_leg',
+        'right_arm',
+        'left_wrist',
       ]),
-      list([
-        76,
-        None,
-      ]),
-      list([
-        77,
-        None,
-      ]),
-      list([
-        88,
-        None,
-      ]),
-      list([
-        168,
-        None,
-      ]),
-      list([
-        169,
-        None,
-      ]),
-      list([
-        170,
-        None,
-      ]),
-      list([
-        173,
-        12,
-      ]),
-      list([
-        173,
-        10,
-      ]),
-      list([
-        173,
-        3,
-      ]),
-      list([
-        173,
-        11,
-      ]),
-      list([
-        173,
-        2,
-      ]),
-      list([
-        174,
-        12,
-      ]),
-      list([
-        174,
-        10,
-      ]),
-      list([
-        174,
-        3,
-      ]),
-      list([
-        174,
-        11,
-      ]),
-      list([
-        174,
-        2,
-      ]),
-      list([
-        175,
-        12,
-      ]),
-      list([
-        175,
-        10,
-      ]),
-      list([
-        175,
-        3,
-      ]),
-      list([
-        175,
-        11,
-      ]),
-      list([
-        175,
-        2,
-      ]),
-      list([
-        0,
-        None,
-      ]),
-      list([
-        6,
-        None,
-      ]),
-      list([
-        1,
-        2,
-      ]),
-      list([
-        4,
-        None,
-      ]),
-      list([
-        12,
-        None,
-      ]),
-      list([
-        71,
-        None,
-      ]),
-      list([
-        73,
-        None,
-      ]),
-      list([
-        9,
-        None,
-      ]),
-      list([
-        10,
-        None,
-      ]),
-      list([
-        11,
-        None,
-      ]),
-      list([
-        54,
-        None,
-      ]),
-      list([
-        91,
-        None,
-      ]),
-      list([
-        123,
-        None,
-      ]),
-      list([
-        155,
-        None,
-      ]),
-      list([
-        198,
-        None,
-      ]),
-      list([
-        197,
-        None,
-      ]),
-      list([
-        196,
-        None,
-      ]),
-    ]),
+      'pulse_wave_velocity': None,
+      'skin_temperature': None,
+      'sp02': None,
+      'systolic_blood_pressure': None,
+      'temperature': None,
+      'unknown': None,
+      'vascular_age': None,
+      'visceral_fat': None,
+      'vo2': None,
+      'weight': None,
+    }),
     'received_sleep_data': True,
     'received_workout_data': True,
     'webhooks_connected': False,
@@ -356,172 +122,55 @@
     'has_cloudhooks': False,
     'has_valid_external_webhook_url': True,
     'received_activity_data': False,
-    'received_measurements': list([
-      list([
-        1,
-        None,
+    'received_measurements': dict({
+      'body_temperature': None,
+      'bone_mass': None,
+      'diastolic_blood_pressure': None,
+      'electrodermal_activity_feet': None,
+      'electrodermal_activity_left_foot': None,
+      'electrodermal_activity_right_foot': None,
+      'extracellular_water': None,
+      'fat_free_mass': None,
+      'fat_free_mass_for_segments': list([
+        'torso',
+        'left_leg',
+        'left_arm',
+        'right_leg',
+        'right_arm',
       ]),
-      list([
-        5,
-        None,
+      'fat_mass_for_segments': list([
+        'torso',
+        'left_leg',
+        'left_arm',
+        'right_leg',
+        'right_arm',
       ]),
-      list([
-        8,
-        None,
+      'fat_mass_weight': None,
+      'fat_ratio': None,
+      'heart_rate': None,
+      'height': None,
+      'hydration': None,
+      'intracellular_water': None,
+      'muscle_mass': None,
+      'muscle_mass_for_segments': list([
+        'torso',
+        'left_leg',
+        'left_arm',
+        'right_leg',
+        'right_arm',
+        'left_wrist',
       ]),
-      list([
-        76,
-        None,
-      ]),
-      list([
-        77,
-        None,
-      ]),
-      list([
-        88,
-        None,
-      ]),
-      list([
-        168,
-        None,
-      ]),
-      list([
-        169,
-        None,
-      ]),
-      list([
-        170,
-        None,
-      ]),
-      list([
-        173,
-        12,
-      ]),
-      list([
-        173,
-        10,
-      ]),
-      list([
-        173,
-        3,
-      ]),
-      list([
-        173,
-        11,
-      ]),
-      list([
-        173,
-        2,
-      ]),
-      list([
-        174,
-        12,
-      ]),
-      list([
-        174,
-        10,
-      ]),
-      list([
-        174,
-        3,
-      ]),
-      list([
-        174,
-        11,
-      ]),
-      list([
-        174,
-        2,
-      ]),
-      list([
-        175,
-        12,
-      ]),
-      list([
-        175,
-        10,
-      ]),
-      list([
-        175,
-        3,
-      ]),
-      list([
-        175,
-        11,
-      ]),
-      list([
-        175,
-        2,
-      ]),
-      list([
-        0,
-        None,
-      ]),
-      list([
-        6,
-        None,
-      ]),
-      list([
-        1,
-        2,
-      ]),
-      list([
-        4,
-        None,
-      ]),
-      list([
-        12,
-        None,
-      ]),
-      list([
-        71,
-        None,
-      ]),
-      list([
-        73,
-        None,
-      ]),
-      list([
-        9,
-        None,
-      ]),
-      list([
-        10,
-        None,
-      ]),
-      list([
-        11,
-        None,
-      ]),
-      list([
-        54,
-        None,
-      ]),
-      list([
-        91,
-        None,
-      ]),
-      list([
-        123,
-        None,
-      ]),
-      list([
-        155,
-        None,
-      ]),
-      list([
-        198,
-        None,
-      ]),
-      list([
-        197,
-        None,
-      ]),
-      list([
-        196,
-        None,
-      ]),
-    ]),
+      'pulse_wave_velocity': None,
+      'skin_temperature': None,
+      'sp02': None,
+      'systolic_blood_pressure': None,
+      'temperature': None,
+      'unknown': None,
+      'vascular_age': None,
+      'visceral_fat': None,
+      'vo2': None,
+      'weight': None,
+    }),
     'received_sleep_data': True,
     'received_workout_data': True,
     'webhooks_connected': True,
