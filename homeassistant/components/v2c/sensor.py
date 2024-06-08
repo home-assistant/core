@@ -15,12 +15,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from . import V2CConfigEntry
 from .coordinator import V2CUpdateCoordinator
 from .entity import V2CBaseEntity
 
@@ -105,11 +105,11 @@ TRYDAN_SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: V2CConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up V2C sensor platform."""
-    coordinator: V2CUpdateCoordinator = config_entry.runtime_data.coordinator
+    coordinator: V2CUpdateCoordinator = config_entry.runtime_data
 
     async_add_entities(
         V2CSensorBaseEntity(coordinator, description, config_entry.entry_id)

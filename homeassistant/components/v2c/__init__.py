@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from pytrydan import Trydan
 
 from homeassistant.config_entries import ConfigEntry
@@ -21,14 +19,10 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-@dataclass
-class V2CData:
-    """Class for V2C data."""
-
-    coordinator: V2CUpdateCoordinator
+type V2CConfigEntry = ConfigEntry[V2CUpdateCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: V2CConfigEntry) -> bool:
     """Set up V2C from a config entry."""
 
     host = entry.data[CONF_HOST]
@@ -37,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = V2CData(coordinator)
+    entry.runtime_data = coordinator
 
     if coordinator.data.ID and entry.unique_id != coordinator.data.ID:
         hass.config_entries.async_update_entry(entry, unique_id=coordinator.data.ID)

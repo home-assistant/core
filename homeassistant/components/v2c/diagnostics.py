@@ -5,20 +5,20 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
+from . import V2CConfigEntry
 from .coordinator import V2CUpdateCoordinator
 
 TO_REDACT = {CONF_HOST, "title"}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: V2CConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: V2CUpdateCoordinator = entry.runtime_data.coordinator
+    coordinator: V2CUpdateCoordinator = entry.runtime_data
 
     if TYPE_CHECKING:
         assert coordinator.evse
