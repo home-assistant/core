@@ -2,21 +2,20 @@
   "config": {
     "step": {
       "user": {
+        "title": "Setup your Azure Data Explorer integration",
+        "description": "Enter connection details.\n\n'Use queued ingestion' must be checked when using ADX free cluster.",
         "data": {
-          "cluster_ingest_uri": "Cluster Ingest URI ",
+          "cluster_ingest_uri": "Cluster Ingest URI",
           "authority_id": "Authority ID",
           "client_id": "Client ID",
           "client_secret": "Client secret",
           "database": "Database name",
           "table": "Table name",
-          "use_queued_ingestion": "Use Queued ingestion (Mandotory for free cluster)"
+          "use_queued_ingestion": "Use queued ingestion"
         },
         "data_description": {
-          "cluster_ingest_uri": "Ingest-URI of the cluster, use the 'https://ingest-xxxx.xx.xx' URI",
-          "use_queued_ingestion": "Check if using free cluster"
-        },
-        "description": "Enter connection details.",
-        "title": "Setup your Azure Data Explorer integration"
+          "cluster_ingest_uri": "Ingest-URI of the cluster"
+        }
       }
     },
     "error": {
