@@ -293,6 +293,47 @@ MEASUREMENT_SENSORS: dict[
 }
 
 
+def get_positional_measurement_description(
+    measurement_type: MeasurementType, measurement_position: MeasurementPosition
+) -> WithingsMeasurementSensorEntityDescription | None:
+    """Get the sensor description for a measurement type."""
+    if measurement_position not in (
+        MeasurementPosition.TORSO,
+        MeasurementPosition.LEFT_ARM,
+        MeasurementPosition.RIGHT_ARM,
+        MeasurementPosition.LEFT_LEG,
+        MeasurementPosition.RIGHT_LEG,
+    ) or measurement_type not in (
+        MeasurementType.MUSCLE_MASS_FOR_SEGMENTS,
+        MeasurementType.FAT_FREE_MASS_FOR_SEGMENTS,
+        MeasurementType.FAT_MASS_FOR_SEGMENTS,
+    ):
+        return None
+    return WithingsMeasurementSensorEntityDescription(
+        key=f"{measurement_type.name.lower()}_{measurement_position.name.lower()}",
+        measurement_type=measurement_type,
+        measurement_position=measurement_position,
+        translation_key=f"{measurement_type.name.lower()}_{measurement_position.name.lower()}",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    )
+
+
+def get_measurement_description(
+    measurement: tuple[MeasurementType, MeasurementPosition | None],
+) -> WithingsMeasurementSensorEntityDescription | None:
+    """Get the sensor description for a measurement type."""
+    measurement_type, measurement_position = measurement
+    if measurement_position is not None:
+        return get_positional_measurement_description(
+            measurement_type, measurement_position
+        )
+    return MEASUREMENT_SENSORS.get((measurement_type, measurement_position))
+
+
 @dataclass(frozen=True, kw_only=True)
 class WithingsSleepSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
@@ -663,11 +704,9 @@ async def async_setup_entry(
 
     entities: list[SensorEntity] = []
     entities.extend(
-        WithingsMeasurementSensor(
-            measurement_coordinator, MEASUREMENT_SENSORS[measurement_type]
-        )
+        WithingsMeasurementSensor(measurement_coordinator, description)
         for measurement_type in measurement_coordinator.data
-        if measurement_type in MEASUREMENT_SENSORS
+        if (description := get_measurement_description(measurement_type)) is not None
     )
 
     current_measurement_types = set(measurement_coordinator.data)
@@ -679,11 +718,10 @@ async def async_setup_entry(
         if new_measurement_types:
             current_measurement_types.update(new_measurement_types)
             async_add_entities(
-                WithingsMeasurementSensor(
-                    measurement_coordinator, MEASUREMENT_SENSORS[measurement_type]
-                )
+                WithingsMeasurementSensor(measurement_coordinator, description)
                 for measurement_type in new_measurement_types
-                if measurement_type in MEASUREMENT_SENSORS
+                if (description := get_measurement_description(measurement_type))
+                is not None
             )
 
     measurement_coordinator.async_add_listener(_async_measurement_listener)
