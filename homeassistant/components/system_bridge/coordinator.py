@@ -160,14 +160,18 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             try:
                 await self.check_websocket_connected()
 
+                self.logger.debug("Create listener task for %s", self.title)
                 self.listen_task = self.hass.async_create_background_task(
                     self._listen_for_data(),
                     name="System Bridge WebSocket Listener",
+                    eager_start=False,
                 )
+                self.logger.debug("Listening for data from %s", self.title)
 
                 await self.websocket_client.register_data_listener(
                     RegisterDataListener(modules=MODULES)
                 )
+                self.logger.debug("Registered data listener for %s", self.title)
 
                 self.last_update_success = True
                 self.async_update_listeners()
