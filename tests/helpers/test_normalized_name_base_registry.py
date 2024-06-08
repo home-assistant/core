@@ -60,9 +60,9 @@ def test_key_already_in_use(
 
     # should raise ValueError if we update a
     # key with a entry with the same normalized name
+    entry = NormalizedNameBaseRegistryEntry(
+        name="Hello World 2", normalized_name="helloworld2"
+    )
+    registry_items["key2"] = entry
     with pytest.raises(ValueError):
-        entry = NormalizedNameBaseRegistryEntry(
-            name="Hello World 2", normalized_name="helloworld2"
-        )
-        registry_items["key2"] = entry
         registry_items["key"] = entry

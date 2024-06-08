@@ -178,9 +178,8 @@ async def test_get_services_error(hass: HomeAssistant) -> None:
         assert account_link.DATA_SERVICES not in hass.data
 
 
-async def test_implementation(
-    hass: HomeAssistant, flow_handler, current_request_with_host: None
-) -> None:
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_implementation(hass: HomeAssistant, flow_handler) -> None:
     """Test Cloud OAuth2 implementation."""
     hass.data["cloud"] = None
 

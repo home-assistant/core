@@ -150,7 +150,6 @@ async def test_configure_service_with_faulty_field(
         await hass.services.async_call(
             DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
         )
-        await hass.async_block_till_done()
 
 
 async def test_configure_service_with_faulty_entity(

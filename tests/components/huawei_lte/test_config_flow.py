@@ -119,7 +119,7 @@ async def test_connection_errors(
     exception: Exception,
     errors: dict[str, str],
     data_patch: dict[str, Any],
-):
+) -> None:
     """Test we show user form on various errors."""
     requests_mock.request(ANY, ANY, exc=exception)
     result = await hass.config_entries.flow.async_init(
@@ -134,7 +134,7 @@ async def test_connection_errors(
 
 
 @pytest.fixture
-def login_requests_mock(requests_mock):
+def login_requests_mock(requests_mock: requests_mock.Mocker) -> requests_mock.Mocker:
     """Set up a requests_mock with base mocks for login tests."""
     https_url = urlunparse(
         urlparse(FIXTURE_USER_INPUT[CONF_URL])._replace(scheme="https")

@@ -8,6 +8,8 @@ import logging
 from types import MappingProxyType
 from typing import Any
 
+from google.ai import generativelanguage_v1beta
+from google.api_core.client_options import ClientOptions
 from google.api_core.exceptions import ClientError, GoogleAPICallError
 import google.generativeai as genai
 import voluptuous as vol
@@ -43,7 +45,6 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
-    DEFAULT_PROMPT,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -64,7 +65,7 @@ STEP_API_DATA_SCHEMA = vol.Schema(
 RECOMMENDED_OPTIONS = {
     CONF_RECOMMENDED: True,
     CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-    CONF_PROMPT: DEFAULT_PROMPT,
+    CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
 }
 
 
@@ -73,12 +74,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    genai.configure(api_key=data[CONF_API_KEY])
-
-    def get_first_model():
-        return next(genai.list_models(request_options={"timeout": 5.0}), None)
-
-    await hass.async_add_executor_job(partial(get_first_model))
+    client = generativelanguage_v1beta.ModelServiceAsyncClient(
+        client_options=ClientOptions(api_key=data[CONF_API_KEY])
+    )
+    await client.list_models(timeout=5.0)
 
 
 class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -224,7 +223,11 @@ async def google_generative_ai_config_option_schema(
     schema = {
         vol.Optional(
             CONF_PROMPT,
-            description={"suggested_value": options.get(CONF_PROMPT, DEFAULT_PROMPT)},
+            description={
+                "suggested_value": options.get(
+                    CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                )
+            },
         ): TemplateSelector(),
         vol.Optional(
             CONF_LLM_HASS_API,

@@ -397,7 +397,7 @@ async def test_invalid_trigger_configuration(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     knx: KNXTestKit,
-):
+) -> None:
     """Test invalid telegram device trigger configuration at attach_trigger."""
     await knx.setup_integration({})
     device_entry = device_registry.async_get_device(

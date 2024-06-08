@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import partial
 import logging
 from typing import TYPE_CHECKING
 
@@ -25,14 +24,14 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_NOT_HOME,
 )
-from homeassistant.core import HassJobType, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_PAYLOAD_RESET, CONF_QOS, CONF_STATE_TOPIC
+from .const import CONF_PAYLOAD_RESET, CONF_STATE_TOPIC
 from .mixins import CONF_JSON_ATTRS_TOPIC, MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, ReceiveMessage, ReceivePayloadType
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
@@ -84,7 +83,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT event through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttDeviceTracker,
@@ -136,28 +135,11 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                 assert isinstance(msg.payload, str)
             self._location_name = msg.payload
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-        state_topic: str | None = self._config.get(CONF_STATE_TOPIC)
-        if state_topic is None:
-            return
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass,
-            self._sub_state,
-            {
-                "state_topic": {
-                    "topic": state_topic,
-                    "msg_callback": partial(
-                        self._message_callback,
-                        self._tracker_message_received,
-                        {"_location_name"},
-                    ),
-                    "entity_id": self.entity_id,
-                    "qos": self._config[CONF_QOS],
-                    "job_type": HassJobType.Callback,
-                }
-            },
+        self.add_subscription(
+            CONF_STATE_TOPIC, self._tracker_message_received, {"_location_name"}
         )
 
     @property

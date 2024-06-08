@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
+from types import MappingProxyType
 from typing import Any
 
 from awesomeversion import AwesomeVersion
@@ -210,6 +211,74 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self._async_generate_schema(),
+            description_placeholders=description_placeholders,
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Add reconfigure step to allow to manually reconfigure a config entry."""
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry
+
+        suggested_values: dict[str, Any] | MappingProxyType[str, Any] = (
+            user_input or entry.data
+        )
+
+        host: Any = suggested_values.get(CONF_HOST)
+        username: Any = suggested_values.get(CONF_USERNAME)
+        password: Any = suggested_values.get(CONF_PASSWORD)
+
+        if user_input is not None:
+            try:
+                envoy = await validate_input(
+                    self.hass,
+                    host,
+                    username,
+                    password,
+                )
+            except INVALID_AUTH_ERRORS as e:
+                errors["base"] = "invalid_auth"
+                description_placeholders = {"reason": str(e)}
+            except EnvoyError as e:
+                errors["base"] = "cannot_connect"
+                description_placeholders = {"reason": str(e)}
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                if self.unique_id != envoy.serial_number:
+                    errors["base"] = "unexpected_envoy"
+                    description_placeholders = {
+                        "reason": f"target: {self.unique_id}, actual: {envoy.serial_number}"
+                    }
+                else:
+                    # If envoy exists in configuration update fields and exit
+                    self._abort_if_unique_id_configured(
+                        {
+                            CONF_HOST: host,
+                            CONF_USERNAME: username,
+                            CONF_PASSWORD: password,
+                        },
+                        error="reconfigure_successful",
+                    )
+        if not self.unique_id:
+            await self.async_set_unique_id(entry.unique_id)
+
+        self.context["title_placeholders"] = {
+            CONF_SERIAL: self.unique_id,
+            CONF_HOST: host,
+        }
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                self._async_generate_schema(), suggested_values
+            ),
             description_placeholders=description_placeholders,
             errors=errors,
         )

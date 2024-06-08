@@ -93,7 +93,9 @@ async def async_setup_service(hass: HomeAssistant) -> None:
 
     def _append_to_sheet(call: ServiceCall, entry: ConfigEntry) -> None:
         """Run append in the executor."""
-        service = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))
+        service = Client(
+            Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN])  # type: ignore[no-untyped-call]
+        )
         try:
             sheet = service.open_by_key(entry.unique_id)
         except RefreshError:
