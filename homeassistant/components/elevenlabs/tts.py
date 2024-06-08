@@ -71,6 +71,12 @@ class ElevenLabsTTSEntity(tts.TextToSpeechEntity):
             (tts.Voice(v.voice_id, v.name) for v in voices if v.name),
             key=lambda v: v.name,
         )
+        # Default voice first
+        voice_indices = [
+            idx for idx, v in enumerate(self._voices) if v.voice_id == default_voice_id
+        ]
+        if voice_indices:
+            self._voices.insert(0, self._voices.pop(voice_indices[0]))
         self._attr_name = f"ElevenLabs {self._model.model_id}"
         self._attr_unique_id = config_entry.entry_id
         self._config_entry = config_entry
