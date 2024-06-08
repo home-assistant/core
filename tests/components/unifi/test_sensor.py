@@ -682,43 +682,40 @@ async def test_poe_port_switches(
     assert hass.states.get("sensor.mock_name_port_1_poe_power")
 
 
-@pytest.mark.parametrize(
-    "client_payload",
-    [
-        [
-            {
-                "essid": "SSID 1",
-                "is_wired": False,
-                "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
-                "mac": "00:00:00:00:00:01",
-                "name": "Wireless client",
-                "oui": "Producer",
-                "rx_bytes-r": 2345000000,
-                "tx_bytes-r": 6789000000,
-            },
-            {
-                "essid": "SSID 2",
-                "is_wired": False,
-                "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
-                "mac": "00:00:00:00:00:02",
-                "name": "Wireless client2",
-                "oui": "Producer2",
-                "rx_bytes-r": 2345000000,
-                "tx_bytes-r": 6789000000,
-            },
-        ]
-    ],
-)
 @pytest.mark.parametrize("wlan_payload", [[WLAN]])
-@pytest.mark.usefixtures("config_entry_setup")
 async def test_wlan_client_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_unifi_websocket,
     websocket_mock,
+    config_entry_factory: Callable[[], ConfigEntry],
     client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that WLAN client sensors are working as expected."""
+    client_payload += [
+        {
+            "essid": "SSID 1",
+            "is_wired": False,
+            "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
+            "mac": "00:00:00:00:00:01",
+            "name": "Wireless client",
+            "oui": "Producer",
+            "rx_bytes-r": 2345000000,
+            "tx_bytes-r": 6789000000,
+        },
+        {
+            "essid": "SSID 2",
+            "is_wired": False,
+            "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
+            "mac": "00:00:00:00:00:02",
+            "name": "Wireless client2",
+            "oui": "Producer2",
+            "rx_bytes-r": 2345000000,
+            "tx_bytes-r": 6789000000,
+        },
+    ]
+    await config_entry_factory()
+
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
 
     ent_reg_entry = entity_registry.async_get("sensor.ssid_1")
