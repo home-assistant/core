@@ -27,7 +27,7 @@ async def async_setup_entry(
 class KnockiTrigger(EventEntity):
     """Representation of a Knocki trigger."""
 
-    _attr_options = ["triggered"]
+    _attr_event_types = ["triggered"]
     _attr_has_entity_name = True
 
     def __init__(self, trigger: Trigger, client: KnockiClient) -> None:
@@ -44,10 +44,10 @@ class KnockiTrigger(EventEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register listener."""
+        await super().async_added_to_hass()
         self.async_on_remove(
             self._client.register_listener(EventType.TRIGGERED, self._handle_event)
         )
-        await super().async_added_to_hass()
 
     def _handle_event(self, event: Event) -> None:
         """Handle incoming event."""

@@ -38,6 +38,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: KnockiConfigEntry) -> bo
 
     entry.runtime_data = KnockiData(client=client, triggers=triggers)
 
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     return True
 
 
