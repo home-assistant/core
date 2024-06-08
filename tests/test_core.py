@@ -2834,8 +2834,32 @@ async def test_state_change_events_context_id_match_state_time(
     assert state.last_updated == events[0].time_fired
     assert len(state.context.id) == 26
     # ULIDs store time to 3 decimal places compared to python timestamps
-    assert _ulid_timestamp(state.context.id) == int(
-        state.last_updated.timestamp() * 1000
+    assert _ulid_timestamp(state.context.id) == int(state.last_updated_timestamp * 1000)
+
+
+async def test_state_change_events_match_time_with_limits_of_precision(
+    hass: HomeAssistant,
+) -> None:
+    """Ensure last_updated matches last_updated_timestamp within limits of precision.
+
+    The last_updated_timestamp uses the same precision as time.time() which is
+    a bit better than the precision of datetime.now() which is used for last_updated
+    on some platforms.
+    """
+    events = async_capture_events(hass, ha.EVENT_STATE_CHANGED)
+    hass.states.async_set("light.bedroom", "on")
+    await hass.async_block_till_done()
+    state: State = hass.states.get("light.bedroom")
+    assert state.last_updated == events[0].time_fired
+    assert state.last_updated_timestamp == pytest.approx(
+        events[0].time_fired.timestamp()
+    )
+    assert state.last_updated_timestamp == pytest.approx(state.last_updated.timestamp())
+    assert state.last_updated_timestamp == state.last_changed_timestamp
+    assert state.last_updated_timestamp == pytest.approx(state.last_changed.timestamp())
+    assert state.last_updated_timestamp == state.last_reported_timestamp
+    assert state.last_updated_timestamp == pytest.approx(
+        state.last_reported.timestamp()
     )
 
 

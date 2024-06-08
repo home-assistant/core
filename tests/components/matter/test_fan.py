@@ -98,7 +98,7 @@ async def test_fan_turn_on_with_percentage(
     hass: HomeAssistant,
     matter_client: MagicMock,
     air_purifier: MatterNode,
-):
+) -> None:
     """Test turning on the fan with a specific percentage."""
     entity_id = "fan.air_purifier"
     await hass.services.async_call(
@@ -119,7 +119,7 @@ async def test_fan_turn_on_with_preset_mode(
     hass: HomeAssistant,
     matter_client: MagicMock,
     air_purifier: MatterNode,
-):
+) -> None:
     """Test turning on the fan with a specific preset mode."""
     entity_id = "fan.air_purifier"
     await hass.services.async_call(
@@ -191,7 +191,7 @@ async def test_fan_turn_off(
     hass: HomeAssistant,
     matter_client: MagicMock,
     air_purifier: MatterNode,
-):
+) -> None:
     """Test turning off the fan."""
     entity_id = "fan.air_purifier"
     await hass.services.async_call(
@@ -233,7 +233,7 @@ async def test_fan_oscillate(
     hass: HomeAssistant,
     matter_client: MagicMock,
     air_purifier: MatterNode,
-):
+) -> None:
     """Test oscillating the fan."""
     entity_id = "fan.air_purifier"
     for oscillating, value in ((True, 1), (False, 0)):
@@ -256,7 +256,7 @@ async def test_fan_set_direction(
     hass: HomeAssistant,
     matter_client: MagicMock,
     air_purifier: MatterNode,
-):
+) -> None:
     """Test oscillating the fan."""
     entity_id = "fan.air_purifier"
     for direction, value in ((DIRECTION_FORWARD, 0), (DIRECTION_REVERSE, 1)):

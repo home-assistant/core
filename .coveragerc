@@ -149,12 +149,7 @@ omit =
     homeassistant/components/bloomsky/*
     homeassistant/components/bluesound/*
     homeassistant/components/bluetooth_tracker/*
-    homeassistant/components/bmw_connected_drive/__init__.py
-    homeassistant/components/bmw_connected_drive/binary_sensor.py
-    homeassistant/components/bmw_connected_drive/coordinator.py
-    homeassistant/components/bmw_connected_drive/lock.py
     homeassistant/components/bmw_connected_drive/notify.py
-    homeassistant/components/bmw_connected_drive/sensor.py
     homeassistant/components/bosch_shc/__init__.py
     homeassistant/components/bosch_shc/binary_sensor.py
     homeassistant/components/bosch_shc/cover.py
@@ -596,11 +591,7 @@ omit =
     homeassistant/components/iglo/light.py
     homeassistant/components/ihc/*
     homeassistant/components/incomfort/__init__.py
-    homeassistant/components/incomfort/binary_sensor.py
     homeassistant/components/incomfort/climate.py
-    homeassistant/components/incomfort/errors.py
-    homeassistant/components/incomfort/models.py
-    homeassistant/components/incomfort/sensor.py
     homeassistant/components/incomfort/water_heater.py
     homeassistant/components/insteon/binary_sensor.py
     homeassistant/components/insteon/climate.py
@@ -1565,6 +1556,7 @@ omit =
     homeassistant/components/verisure/sensor.py
     homeassistant/components/verisure/switch.py
     homeassistant/components/versasense/*
+    homeassistant/components/vesync/__init__.py
     homeassistant/components/vesync/fan.py
     homeassistant/components/vesync/light.py
     homeassistant/components/vesync/sensor.py

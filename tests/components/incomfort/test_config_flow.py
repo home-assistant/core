@@ -12,13 +12,9 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from .conftest import MOCK_CONFIG
 
-MOCK_CONFIG = {
-    "host": "192.168.1.12",
-    "username": "admin",
-    "password": "verysecret",
-}
+from tests.common import MockConfigEntry
 
 
 async def test_form(
@@ -144,7 +140,7 @@ async def test_form_validation(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # Simulate issue and retry
+    # Simulate an issue
     mock_incomfort().heaters.side_effect = exc
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], MOCK_CONFIG

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 import logging
@@ -10,6 +9,7 @@ from types import ModuleType
 from typing import Any
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components import sensor
 from homeassistant.components.number import NumberDeviceClass
@@ -2384,7 +2384,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -2399,7 +2399,9 @@ async def test_name(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, SENSOR_DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [SENSOR_DOMAIN]
+        )
         return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")

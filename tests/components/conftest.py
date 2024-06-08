@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -21,7 +22,7 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def patch_zeroconf_multiple_catcher() -> Generator[None, None, None]:
+def patch_zeroconf_multiple_catcher() -> Generator[None]:
     """Patch zeroconf wrapper that detects if multiple instances are used."""
     with patch(
         "homeassistant.components.zeroconf.install_multiple_zeroconf_catcher",
@@ -31,7 +32,7 @@ def patch_zeroconf_multiple_catcher() -> Generator[None, None, None]:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def prevent_io() -> Generator[None, None, None]:
+def prevent_io() -> Generator[None]:
     """Fixture to prevent certain I/O from happening."""
     with patch(
         "homeassistant.components.http.ban.load_yaml_config_file",
@@ -40,7 +41,7 @@ def prevent_io() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def entity_registry_enabled_by_default() -> Generator[None, None, None]:
+def entity_registry_enabled_by_default() -> Generator[None]:
     """Test fixture that ensures all entities are enabled in the registry."""
     with patch(
         "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
@@ -51,7 +52,7 @@ def entity_registry_enabled_by_default() -> Generator[None, None, None]:
 
 # Blueprint test fixtures
 @pytest.fixture(name="stub_blueprint_populate")
-def stub_blueprint_populate_fixture() -> Generator[None, None, None]:
+def stub_blueprint_populate_fixture() -> Generator[None]:
     """Stub copying the blueprints to the config folder."""
     from tests.components.blueprint.common import stub_blueprint_populate_fixture_helper
 
@@ -60,7 +61,7 @@ def stub_blueprint_populate_fixture() -> Generator[None, None, None]:
 
 # TTS test fixtures
 @pytest.fixture(name="mock_tts_get_cache_files")
-def mock_tts_get_cache_files_fixture() -> Generator[MagicMock, None, None]:
+def mock_tts_get_cache_files_fixture() -> Generator[MagicMock]:
     """Mock the list TTS cache function."""
     from tests.components.tts.common import mock_tts_get_cache_files_fixture_helper
 
@@ -70,7 +71,7 @@ def mock_tts_get_cache_files_fixture() -> Generator[MagicMock, None, None]:
 @pytest.fixture(name="mock_tts_init_cache_dir")
 def mock_tts_init_cache_dir_fixture(
     init_tts_cache_dir_side_effect: Any,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Mock the TTS cache dir in memory."""
     from tests.components.tts.common import mock_tts_init_cache_dir_fixture_helper
 
@@ -93,7 +94,7 @@ def mock_tts_cache_dir_fixture(
     mock_tts_init_cache_dir: MagicMock,
     mock_tts_get_cache_files: MagicMock,
     request: pytest.FixtureRequest,
-) -> Generator[Path, None, None]:
+) -> Generator[Path]:
     """Mock the TTS cache dir with empty dir."""
     from tests.components.tts.common import mock_tts_cache_dir_fixture_helper
 
@@ -103,7 +104,7 @@ def mock_tts_cache_dir_fixture(
 
 
 @pytest.fixture(name="tts_mutagen_mock")
-def tts_mutagen_mock_fixture() -> Generator[MagicMock, None, None]:
+def tts_mutagen_mock_fixture() -> Generator[MagicMock]:
     """Mock writing tags."""
     from tests.components.tts.common import tts_mutagen_mock_fixture_helper
 
@@ -121,7 +122,7 @@ def mock_conversation_agent_fixture(hass: HomeAssistant) -> MockAgent:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def prevent_ffmpeg_subprocess() -> Generator[None, None, None]:
+def prevent_ffmpeg_subprocess() -> Generator[None]:
     """Prevent ffmpeg from creating a subprocess."""
     with patch(
         "homeassistant.components.ffmpeg.FFVersion.get_version", return_value="6.0"

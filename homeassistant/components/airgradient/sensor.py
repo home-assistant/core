@@ -103,6 +103,7 @@ SENSOR_TYPES: tuple[AirGradientSensorEntityDescription, ...] = (
     AirGradientSensorEntityDescription(
         key="pm003",
         translation_key="pm003_count",
+        native_unit_of_measurement="particles/dL",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.pm003_count,
     ),
