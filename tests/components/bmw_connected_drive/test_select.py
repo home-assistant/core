@@ -42,15 +42,15 @@ async def test_entity_state_attrs(
     [
         (
             "select.i3_rex_charging_mode",
-            "IMMEDIATE_CHARGING",
-            "DELAYED_CHARGING",
+            "immediate_charging",
+            "delayed_charging",
             "charging-profile",
         ),
         ("select.i4_edrive40_ac_charging_limit", "12", "16", "charging-settings"),
         (
             "select.i4_edrive40_charging_mode",
-            "DELAYED_CHARGING",
-            "IMMEDIATE_CHARGING",
+            "delayed_charging",
+            "immediate_charging",
             "charging-profile",
         ),
     ],
@@ -87,7 +87,7 @@ async def test_service_call_success(
     ("entity_id", "value"),
     [
         ("select.i4_edrive40_ac_charging_limit", "17"),
-        ("select.i4_edrive40_charging_mode", "BONKERS_MODE"),
+        ("select.i4_edrive40_charging_mode", "bonkers_mode"),
     ],
 )
 async def test_service_call_invalid_input(
