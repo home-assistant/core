@@ -43,34 +43,26 @@ async def test_subscription(
         mock_knocki_client.register_listener.call_args[0][1]
     )
 
-    event_function(
-        Event(
-            EventType.TRIGGERED,
-            Trigger(device_id="KNC1-W-00000215", details=TriggerDetails(31, "aaaa")),
+    async def _call_event_function(
+        device_id: str = "KNC1-W-00000214", trigger_id: int = 31
+    ) -> None:
+        event_function(
+            Event(
+                EventType.TRIGGERED,
+                Trigger(
+                    device_id=device_id, details=TriggerDetails(trigger_id, "aaaa")
+                ),
+            )
         )
-    )
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
+    await _call_event_function(device_id="KNC1-W-00000215")
     assert hass.states.get("event.knc1_w_00000214_aaaa").state == STATE_UNKNOWN
 
-    event_function(
-        Event(
-            EventType.TRIGGERED,
-            Trigger(device_id="KNC1-W-00000214", details=TriggerDetails(32, "aaaa")),
-        )
-    )
-    await hass.async_block_till_done()
-
+    await _call_event_function(trigger_id=32)
     assert hass.states.get("event.knc1_w_00000214_aaaa").state == STATE_UNKNOWN
 
-    event_function(
-        Event(
-            EventType.TRIGGERED,
-            Trigger(device_id="KNC1-W-00000214", details=TriggerDetails(31, "aaaa")),
-        )
-    )
-    await hass.async_block_till_done()
-
+    await _call_event_function()
     assert (
         hass.states.get("event.knc1_w_00000214_aaaa").state
         == "2022-01-01T12:00:00.000+00:00"
