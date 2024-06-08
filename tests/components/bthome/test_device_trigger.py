@@ -7,7 +7,7 @@ from homeassistant.components.bluetooth.const import DOMAIN as BLUETOOTH_DOMAIN
 from homeassistant.components.bthome.const import CONF_SUBTYPE, DOMAIN
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     async_get as async_get_dev_reg,
@@ -32,7 +32,7 @@ def get_device_id(mac: str) -> tuple[str, str]:
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -229,7 +229,9 @@ async def test_get_triggers_for_invalid_device_id(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_if_fires_on_motion_detected(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_motion_detected(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test for motion event trigger firing."""
     mac = "DE:70:E8:B2:39:0C"
     entry = await _async_setup_bthome_device(hass, mac)

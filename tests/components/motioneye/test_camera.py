@@ -1,10 +1,13 @@
 """Test the motionEye camera."""
 
+from asyncio import AbstractEventLoop
+from collections.abc import Callable
 import copy
-from typing import Any, cast
+from typing import cast
 from unittest.mock import AsyncMock, Mock, call
 
 from aiohttp import web
+from aiohttp.test_utils import TestServer
 from aiohttp.web_exceptions import HTTPBadGateway
 from motioneye_client.client import (
     MotionEyeClientError,
@@ -63,7 +66,11 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.fixture
-def aiohttp_server(event_loop, aiohttp_server, socket_enabled):
+def aiohttp_server(
+    event_loop: AbstractEventLoop,
+    aiohttp_server: Callable[[], TestServer],
+    socket_enabled: None,
+) -> Callable[[], TestServer]:
     """Return aiohttp_server and allow opening sockets."""
     return aiohttp_server
 
@@ -220,7 +227,7 @@ async def test_unload_camera(hass: HomeAssistant) -> None:
 
 
 async def test_get_still_image_from_camera(
-    aiohttp_server: Any, hass: HomeAssistant
+    aiohttp_server: Callable[[], TestServer], hass: HomeAssistant
 ) -> None:
     """Test getting a still image."""
 
@@ -261,7 +268,9 @@ async def test_get_still_image_from_camera(
     assert image_handler.called
 
 
-async def test_get_stream_from_camera(aiohttp_server: Any, hass: HomeAssistant) -> None:
+async def test_get_stream_from_camera(
+    aiohttp_server: Callable[[], TestServer], hass: HomeAssistant
+) -> None:
     """Test getting a stream."""
 
     stream_handler = AsyncMock(return_value="")
@@ -344,7 +353,7 @@ async def test_device_info(
 
 
 async def test_camera_option_stream_url_template(
-    aiohttp_server: Any, hass: HomeAssistant
+    aiohttp_server: Callable[[], TestServer], hass: HomeAssistant
 ) -> None:
     """Verify camera with a stream URL template option."""
     client = create_mock_motioneye_client()
@@ -384,7 +393,7 @@ async def test_camera_option_stream_url_template(
 
 
 async def test_get_stream_from_camera_with_broken_host(
-    aiohttp_server: Any, hass: HomeAssistant
+    aiohttp_server: Callable[[], TestServer], hass: HomeAssistant
 ) -> None:
     """Test getting a stream with a broken URL (no host)."""
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Generator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
 from enum import Enum
@@ -23,6 +23,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
 import pytest
 from syrupy import SnapshotAssertion
+from typing_extensions import AsyncGenerator, Generator
 import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
@@ -95,8 +96,8 @@ from homeassistant.util.json import (
     json_loads_object,
 )
 from homeassistant.util.signal_type import SignalType
+import homeassistant.util.ulid as ulid_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
-import homeassistant.util.uuid as uuid_util
 import homeassistant.util.yaml.loader as yaml_loader
 
 from tests.testing_config.custom_components.test_constant_deprecation import (
@@ -161,7 +162,7 @@ def get_test_config_dir(*add_path):
 
 
 @contextmanager
-def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
+def get_test_home_assistant() -> Generator[HomeAssistant]:
     """Return a Home Assistant object pointing at test config directory."""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -174,6 +175,7 @@ def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
         """Run event loop."""
 
         loop._thread_ident = threading.get_ident()
+        hass.loop_thread_id = loop._thread_ident
         loop.run_forever()
         loop_stop_event.set()
 
@@ -221,7 +223,7 @@ async def async_test_home_assistant(
     event_loop: asyncio.AbstractEventLoop | None = None,
     load_registries: bool = True,
     config_dir: str | None = None,
-) -> AsyncGenerator[HomeAssistant, None]:
+) -> AsyncGenerator[HomeAssistant]:
     """Return a Home Assistant object pointing at test config dir."""
     hass = HomeAssistant(config_dir or get_test_config_dir())
     store = auth_store.AuthStore(hass)
@@ -998,7 +1000,7 @@ class MockConfigEntry(config_entries.ConfigEntry[_DataT]):
             "data": data or {},
             "disabled_by": disabled_by,
             "domain": domain,
-            "entry_id": entry_id or uuid_util.random_uuid_hex(),
+            "entry_id": entry_id or ulid_util.ulid_now(),
             "minor_version": minor_version,
             "options": options or {},
             "pref_disable_new_entities": pref_disable_new_entities,
@@ -1324,9 +1326,7 @@ class MockEntity(entity.Entity):
 
 
 @contextmanager
-def mock_storage(
-    data: dict[str, Any] | None = None,
-) -> Generator[dict[str, Any], None, None]:
+def mock_storage(data: dict[str, Any] | None = None) -> Generator[dict[str, Any]]:
     """Mock storage.
 
     Data is a dict {'key': {'version': version, 'data': data}}
@@ -1688,8 +1688,10 @@ def help_test_all(module: ModuleType) -> None:
 def extract_stack_to_frame(extract_stack: list[Mock]) -> FrameType:
     """Convert an extract stack to a frame list."""
     stack = list(extract_stack)
+    _globals = globals()
     for frame in stack:
         frame.f_back = None
+        frame.f_globals = _globals
         frame.f_code.co_filename = frame.filename
         frame.f_lineno = int(frame.lineno)
 

@@ -29,7 +29,13 @@ from tests.common import MockConfigEntry
         (_patch_login_and_data_offline_device, set()),
     ],
 )
-async def test_sensors(hass: HomeAssistant, patcher, connections) -> None:
+async def test_sensors(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    patcher,
+    connections,
+) -> None:
     """Test that the sensors are setup with the expected values."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -42,9 +48,7 @@ async def test_sensors(hass: HomeAssistant, patcher, connections) -> None:
         await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_registry = er.async_get(hass)
     ent = entity_registry.async_get("sensor.my_generator_latest_firmware")
-    device_registry = dr.async_get(hass)
     dev = device_registry.async_get(ent.device_id)
     assert dev.connections == connections
 

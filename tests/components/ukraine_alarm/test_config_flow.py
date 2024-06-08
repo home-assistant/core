@@ -1,10 +1,10 @@
 """Test the Ukraine Alarm config flow."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientConnectionError, ClientError, ClientResponseError, RequestInfo
 import pytest
+from typing_extensions import Generator
 from yarl import URL
 
 from homeassistant import config_entries
@@ -41,7 +41,7 @@ REGIONS = {
 
 
 @pytest.fixture(autouse=True)
-def mock_get_regions() -> Generator[None, AsyncMock, None]:
+def mock_get_regions() -> Generator[AsyncMock]:
     """Mock the get_regions method."""
 
     with patch(

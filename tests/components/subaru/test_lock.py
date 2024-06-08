@@ -24,9 +24,10 @@ MOCK_API_UNLOCK = f"{MOCK_API}unlock"
 DEVICE_ID = "lock.test_vehicle_2_door_locks"
 
 
-async def test_device_exists(hass: HomeAssistant, ev_entry) -> None:
+async def test_device_exists(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, ev_entry
+) -> None:
     """Test subaru lock entity exists."""
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(DEVICE_ID)
     assert entry
 

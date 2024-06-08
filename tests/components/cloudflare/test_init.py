@@ -83,7 +83,9 @@ async def test_async_setup_raises_entry_auth_failed(
     assert flow["context"]["entry_id"] == entry.entry_id
 
 
-async def test_integration_services(hass: HomeAssistant, cfupdate, caplog) -> None:
+async def test_integration_services(
+    hass: HomeAssistant, cfupdate, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test integration services."""
     instance = cfupdate.return_value
 
@@ -144,7 +146,7 @@ async def test_integration_services_with_issue(hass: HomeAssistant, cfupdate) ->
 
 
 async def test_integration_services_with_nonexisting_record(
-    hass: HomeAssistant, cfupdate, caplog
+    hass: HomeAssistant, cfupdate, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test integration services."""
     instance = cfupdate.return_value
@@ -185,7 +187,7 @@ async def test_integration_services_with_nonexisting_record(
 async def test_integration_update_interval(
     hass: HomeAssistant,
     cfupdate,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test integration update interval."""
     instance = cfupdate.return_value

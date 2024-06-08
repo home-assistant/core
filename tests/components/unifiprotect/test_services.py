@@ -26,23 +26,26 @@ from .utils import MockUFPFixture, init_entry
 
 
 @pytest.fixture(name="device")
-async def device_fixture(hass: HomeAssistant, ufp: MockUFPFixture):
+async def device_fixture(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, ufp: MockUFPFixture
+):
     """Fixture with entry setup to call services with."""
 
     await init_entry(hass, ufp, [])
-
-    device_registry = dr.async_get(hass)
 
     return list(device_registry.devices.values())[0]
 
 
 @pytest.fixture(name="subdevice")
-async def subdevice_fixture(hass: HomeAssistant, ufp: MockUFPFixture, light: Light):
+async def subdevice_fixture(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp: MockUFPFixture,
+    light: Light,
+):
     """Fixture with entry setup to call services with."""
 
     await init_entry(hass, ufp, [light])
-
-    device_registry = dr.async_get(hass)
 
     return [d for d in device_registry.devices.values() if d.name != "UnifiProtect"][0]
 
@@ -141,6 +144,7 @@ async def test_set_default_doorbell_text(
 
 async def test_set_chime_paired_doorbells(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     chime: Chime,
     doorbell: Camera,
@@ -157,9 +161,8 @@ async def test_set_chime_paired_doorbells(
 
     await init_entry(hass, ufp, [camera1, camera2, chime])
 
-    registry = er.async_get(hass)
-    chime_entry = registry.async_get("button.test_chime_play_chime")
-    camera_entry = registry.async_get("binary_sensor.test_camera_2_doorbell")
+    chime_entry = entity_registry.async_get("button.test_chime_play_chime")
+    camera_entry = entity_registry.async_get("binary_sensor.test_camera_2_doorbell")
     assert chime_entry is not None
     assert camera_entry is not None
 
@@ -183,6 +186,7 @@ async def test_set_chime_paired_doorbells(
 
 async def test_remove_privacy_zone_no_zone(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     doorbell: Camera,
 ) -> None:
@@ -193,8 +197,7 @@ async def test_remove_privacy_zone_no_zone(
 
     await init_entry(hass, ufp, [doorbell])
 
-    registry = er.async_get(hass)
-    camera_entry = registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -208,6 +211,7 @@ async def test_remove_privacy_zone_no_zone(
 
 async def test_remove_privacy_zone(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     doorbell: Camera,
 ) -> None:
@@ -220,8 +224,7 @@ async def test_remove_privacy_zone(
 
     await init_entry(hass, ufp, [doorbell])
 
-    registry = er.async_get(hass)
-    camera_entry = registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
 
     await hass.services.async_call(
         DOMAIN,

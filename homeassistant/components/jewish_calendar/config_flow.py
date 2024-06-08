@@ -32,15 +32,17 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-DOMAIN = "jewish_calendar"
-CONF_DIASPORA = "diaspora"
-CONF_CANDLE_LIGHT_MINUTES = "candle_lighting_minutes_before_sunset"
-CONF_HAVDALAH_OFFSET_MINUTES = "havdalah_minutes_after_sunset"
-DEFAULT_NAME = "Jewish Calendar"
-DEFAULT_CANDLE_LIGHT = 18
-DEFAULT_DIASPORA = False
-DEFAULT_HAVDALAH_OFFSET_MINUTES = 0
-DEFAULT_LANGUAGE = "english"
+from .const import (
+    CONF_CANDLE_LIGHT_MINUTES,
+    CONF_DIASPORA,
+    CONF_HAVDALAH_OFFSET_MINUTES,
+    DEFAULT_CANDLE_LIGHT,
+    DEFAULT_DIASPORA,
+    DEFAULT_HAVDALAH_OFFSET_MINUTES,
+    DEFAULT_LANGUAGE,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 
 LANGUAGE = [
     SelectOptionDict(value="hebrew", label="Hebrew"),
@@ -98,10 +100,23 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
+            _options = {}
+            if CONF_CANDLE_LIGHT_MINUTES in user_input:
+                _options[CONF_CANDLE_LIGHT_MINUTES] = user_input[
+                    CONF_CANDLE_LIGHT_MINUTES
+                ]
+                del user_input[CONF_CANDLE_LIGHT_MINUTES]
+            if CONF_HAVDALAH_OFFSET_MINUTES in user_input:
+                _options[CONF_HAVDALAH_OFFSET_MINUTES] = user_input[
+                    CONF_HAVDALAH_OFFSET_MINUTES
+                ]
+                del user_input[CONF_HAVDALAH_OFFSET_MINUTES]
             if CONF_LOCATION in user_input:
                 user_input[CONF_LATITUDE] = user_input[CONF_LOCATION][CONF_LATITUDE]
                 user_input[CONF_LONGITUDE] = user_input[CONF_LOCATION][CONF_LONGITUDE]
-            return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
+            return self.async_create_entry(
+                title=DEFAULT_NAME, data=user_input, options=_options
+            )
 
         return self.async_show_form(
             step_id="user",

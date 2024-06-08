@@ -1,11 +1,11 @@
 """Test the Lovelace initialization."""
 
-from collections.abc import Generator
 import time
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components import frontend
 from homeassistant.components.lovelace import const, dashboard
@@ -17,7 +17,7 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-def mock_onboarding_done() -> Generator[MagicMock, None, None]:
+def mock_onboarding_done() -> Generator[MagicMock]:
     """Mock that Home Assistant is currently onboarding.
 
     Enabled to prevent creating default dashboards during test execution.
@@ -30,7 +30,9 @@ def mock_onboarding_done() -> Generator[MagicMock, None, None]:
 
 
 async def test_lovelace_from_storage(
-    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test we load lovelace config from storage."""
     assert await async_setup_component(hass, "lovelace", {})
@@ -83,7 +85,9 @@ async def test_lovelace_from_storage(
 
 
 async def test_lovelace_from_storage_save_before_load(
-    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test we can load lovelace config from storage."""
     assert await async_setup_component(hass, "lovelace", {})
@@ -101,7 +105,9 @@ async def test_lovelace_from_storage_save_before_load(
 
 
 async def test_lovelace_from_storage_delete(
-    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test we delete lovelace config from storage."""
     assert await async_setup_component(hass, "lovelace", {})
@@ -352,7 +358,9 @@ async def test_wrong_key_dashboard_from_yaml(hass: HomeAssistant) -> None:
 
 
 async def test_storage_dashboards(
-    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test we load lovelace config from storage."""
     assert await async_setup_component(hass, "lovelace", {})

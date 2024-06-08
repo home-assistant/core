@@ -151,11 +151,12 @@ async def setup_integration(hass):
     await hass.async_block_till_done()
 
 
-async def test_simple_properties(hass: HomeAssistant) -> None:
+async def test_simple_properties(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that simple properties work as intended."""
     state = hass.states.get(VAC_ENTITY_ID)
-    registry = er.async_get(hass)
-    entity = registry.async_get(VAC_ENTITY_ID)
+    entity = entity_registry.async_get(VAC_ENTITY_ID)
 
     assert entity
     assert state
@@ -225,18 +226,19 @@ async def test_fan_speed(hass: HomeAssistant, fan_speed: str) -> None:
     ],
 )
 async def test_device_properties(
-    hass: HomeAssistant, device_property: str, target_value: str
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    device_property: str,
+    target_value: str,
 ) -> None:
     """Test device properties."""
-    registry = dr.async_get(hass)
-    device = registry.async_get_device(identifiers={(DOMAIN, "AC000Wxxxxxxxxx")})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "AC000Wxxxxxxxxx")})
     assert getattr(device, device_property) == target_value
 
 
 @pytest.mark.parametrize(
     ("room_list", "exception"),
     [
-        (["KITCHEN"], exceptions.ServiceValidationError),
         (["KITCHEN", "MUD_ROOM", "DOG HOUSE"], exceptions.ServiceValidationError),
         (["Office"], exceptions.ServiceValidationError),
         ([], MultipleInvalid),

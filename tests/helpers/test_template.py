@@ -1643,6 +1643,18 @@ def test_base64_decode(hass: HomeAssistant) -> None:
         ).async_render()
         == "homeassistant"
     )
+    assert (
+        template.Template(
+            '{{ "aG9tZWFzc2lzdGFudA==" | base64_decode(None) }}', hass
+        ).async_render()
+        == b"homeassistant"
+    )
+    assert (
+        template.Template(
+            '{{ "aG9tZWFzc2lzdGFudA==" | base64_decode("ascii") }}', hass
+        ).async_render()
+        == "homeassistant"
+    )
 
 
 def test_slugify(hass: HomeAssistant) -> None:

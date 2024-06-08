@@ -5,7 +5,7 @@ from __future__ import annotations
 from ast import literal_eval
 import asyncio
 from collections import deque
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
 import logging
@@ -58,7 +58,10 @@ class PublishMessage:
     retain: bool
 
 
-@dataclass(slots=True, frozen=True)
+# eq=False so we use the id() of the object for comparison
+# since client will only generate one instance of this object
+# per messages/subscribed_topic.
+@dataclass(slots=True, frozen=True, eq=False)
 class ReceiveMessage:
     """MQTT Message received."""
 
@@ -70,7 +73,6 @@ class ReceiveMessage:
     timestamp: float
 
 
-type AsyncMessageCallbackType = Callable[[ReceiveMessage], Coroutine[Any, Any, None]]
 type MessageCallbackType = Callable[[ReceiveMessage], None]
 
 

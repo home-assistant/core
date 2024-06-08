@@ -165,7 +165,7 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
             await session.async_ensure_token_valid()
             self.assistant = None
         if not self.assistant or user_input.language != self.language:
-            credentials = Credentials(session.token[CONF_ACCESS_TOKEN])
+            credentials = Credentials(session.token[CONF_ACCESS_TOKEN])  # type: ignore[no-untyped-call]
             self.language = user_input.language
             self.assistant = TextAssistant(credentials, self.language)
 
