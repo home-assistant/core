@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .test_hub import DEFAULT_CONFIG_ENTRY_ID
+from .conftest import DEFAULT_CONFIG_ENTRY_ID
 
 from tests.common import flush_store
 from tests.test_util.aiohttp import AiohttpClientMocker
