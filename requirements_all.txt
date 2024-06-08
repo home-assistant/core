@@ -356,7 +356,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==10.0.0
+aioshelly==10.0.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -392,7 +392,7 @@ aiovlc==0.3.2
 aiovodafone==0.6.0
 
 # homeassistant.components.waqi
-aiowaqi==3.0.1
+aiowaqi==3.1.0
 
 # homeassistant.components.watttime
 aiowatttime==0.1.1
@@ -2662,7 +2662,7 @@ subarulink==0.7.11
 sunwatcher==0.2.1
 
 # homeassistant.components.sunweg
-sunweg==2.1.1
+sunweg==3.0.1
 
 # homeassistant.components.surepetcare
 surepy==0.9.0
