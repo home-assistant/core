@@ -53,6 +53,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -73,7 +74,7 @@ from .const import (
     USER_DATA,
     EvoService,
 )
-from .coordinator import EvoBroker, EvoCoordinator
+from .coordinator import EvoBroker
 from .helpers import (
     convert_dict,
     convert_until,
@@ -201,16 +202,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await broker.save_auth_tokens()
 
-    hass.data[DOMAIN]["coordinator"] = coordinator = EvoCoordinator(
+    hass.data[DOMAIN]["coordinator"] = coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"{DOMAIN}_coordinator",
         update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
-        update_method=broker.async_update,  # type: ignore[arg-type]
+        update_method=broker.async_update,
     )
     # without a listener, _schedule_refresh() won't be invoked by _async_refresh()
     coordinator.async_add_listener(lambda: None)
-    await coordinator.async_refresh()  # get initial state now
+    await coordinator.async_config_entry_first_refresh()
 
     hass.async_create_task(
         async_load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)

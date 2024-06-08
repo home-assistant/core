@@ -17,7 +17,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     ACCESS_TOKEN,
@@ -190,7 +189,3 @@ class EvoBroker:
 
         if self.client_v1:
             await self._update_v1_api_temps()
-
-
-class EvoCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching data from the TCC API."""
