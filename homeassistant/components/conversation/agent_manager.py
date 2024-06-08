@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import logging
 from typing import Any
 
@@ -19,6 +20,11 @@ from .models import (
     AgentInfo,
     ConversationInput,
     ConversationResult,
+)
+from .trace import (
+    ConversationTraceEvent,
+    ConversationTraceEventType,
+    async_conversation_trace,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,15 +90,24 @@ async def async_converse(
         language = hass.config.language
 
     _LOGGER.debug("Processing in %s: %s", language, text)
-    return await method(
-        ConversationInput(
-            text=text,
-            context=context,
-            conversation_id=conversation_id,
-            device_id=device_id,
-            language=language,
-        )
+    conversation_input = ConversationInput(
+        text=text,
+        context=context,
+        conversation_id=conversation_id,
+        device_id=device_id,
+        language=language,
+        agent_id=agent_id,
     )
+    with async_conversation_trace() as trace:
+        trace.add_event(
+            ConversationTraceEvent(
+                ConversationTraceEventType.ASYNC_PROCESS,
+                dataclasses.asdict(conversation_input),
+            )
+        )
+        result = await method(conversation_input)
+        trace.set_result(**result.as_dict())
+        return result
 
 
 class AgentManager:

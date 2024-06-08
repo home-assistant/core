@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 import contextlib
 import logging
 
 from pywemo.exceptions import ActionException
+from typing_extensions import Generator
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .wemo_device import DeviceCoordinator
+from .coordinator import DeviceCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ class WemoEntity(CoordinatorEntity[DeviceCoordinator]):
         return self._device_info
 
     @contextlib.contextmanager
-    def _wemo_call_wrapper(self, message: str) -> Generator[None, None, None]:
+    def _wemo_call_wrapper(self, message: str) -> Generator[None]:
         """Wrap calls to the device that change its state.
 
         1. Takes care of making available=False when communications with the

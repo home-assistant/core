@@ -5,6 +5,7 @@ from datetime import timedelta
 from http import HTTPStatus
 
 from aiounifi.models.message import MessageKey
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
@@ -15,10 +16,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.util import dt as dt_util
 
-from .test_hub import setup_unifi_integration
-
 from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 WLAN = {
@@ -58,17 +56,17 @@ WLAN = {
 }
 
 
+@pytest.mark.parametrize("wlan_payload", [[WLAN]])
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_wlan_qr_code(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
     mock_unifi_websocket,
     websocket_mock,
 ) -> None:
     """Test the update_clients function when no clients are found."""
-    await setup_unifi_integration(hass, aioclient_mock, wlans_response=[WLAN])
     assert len(hass.states.async_entity_ids(IMAGE_DOMAIN)) == 0
 
     ent_reg_entry = entity_registry.async_get("image.ssid_1_qr_code")
@@ -80,8 +78,6 @@ async def test_wlan_qr_code(
     entity_registry.async_update_entity(
         entity_id="image.ssid_1_qr_code", disabled_by=None
     )
-    await hass.async_block_till_done()
-
     async_fire_time_changed(
         hass,
         dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),

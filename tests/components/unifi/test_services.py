@@ -1,72 +1,35 @@
 """deCONZ service tests."""
 
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import PropertyMock, patch
+
+import pytest
 
 from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN as UNIFI_DOMAIN
 from homeassistant.components.unifi.services import (
     SERVICE_RECONNECT_CLIENT,
     SERVICE_REMOVE_CLIENTS,
-    SUPPORTED_SERVICES,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .test_hub import setup_unifi_integration
-
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_service_setup_and_unload(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Verify service setup works."""
-    config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    for service in SUPPORTED_SERVICES:
-        assert hass.services.has_service(UNIFI_DOMAIN, service)
-
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
-    for service in SUPPORTED_SERVICES:
-        assert not hass.services.has_service(UNIFI_DOMAIN, service)
-
-
-@patch("homeassistant.core.ServiceRegistry.async_remove")
-@patch("homeassistant.core.ServiceRegistry.async_register")
-async def test_service_setup_and_unload_not_called_if_multiple_integrations_detected(
-    register_service_mock,
-    remove_service_mock,
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Make sure that services are only setup and removed once."""
-    config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    register_service_mock.reset_mock()
-    config_entry_2 = await setup_unifi_integration(
-        hass, aioclient_mock, config_entry_id=2
-    )
-    register_service_mock.assert_not_called()
-
-    assert await hass.config_entries.async_unload(config_entry_2.entry_id)
-    remove_service_mock.assert_not_called()
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
-    assert remove_service_mock.call_count == 2
-
-
+@pytest.mark.parametrize(
+    "client_payload", [[{"is_wired": False, "mac": "00:00:00:00:00:01"}]]
+)
 async def test_reconnect_client(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: ConfigEntry,
+    client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify call to reconnect client is performed as expected."""
-    clients = [
-        {
-            "is_wired": False,
-            "mac": "00:00:00:00:00:01",
-        }
-    ]
-    config_entry = await setup_unifi_integration(
-        hass, aioclient_mock, clients_response=clients
-    )
+    config_entry = config_entry_setup
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
@@ -76,7 +39,7 @@ async def test_reconnect_client(
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, clients[0]["mac"])},
+        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])},
     )
 
     await hass.services.async_call(
@@ -88,12 +51,11 @@ async def test_reconnect_client(
     assert aioclient_mock.call_count == 1
 
 
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_reconnect_non_existant_device(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Verify no call is made if device does not exist."""
-    await setup_unifi_integration(hass, aioclient_mock)
-
     aioclient_mock.clear_requests()
 
     await hass.services.async_call(
@@ -109,9 +71,10 @@ async def test_reconnect_device_without_mac(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: ConfigEntry,
 ) -> None:
     """Verify no call is made if device does not have a known mac."""
-    config_entry = await setup_unifi_integration(hass, aioclient_mock)
+    config_entry = config_entry_setup
 
     aioclient_mock.clear_requests()
 
@@ -129,23 +92,18 @@ async def test_reconnect_device_without_mac(
     assert aioclient_mock.call_count == 0
 
 
+@pytest.mark.parametrize(
+    "client_payload", [[{"is_wired": False, "mac": "00:00:00:00:00:01"}]]
+)
 async def test_reconnect_client_hub_unavailable(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: ConfigEntry,
+    client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify no call is made if hub is unavailable."""
-    clients = [
-        {
-            "is_wired": False,
-            "mac": "00:00:00:00:00:01",
-        }
-    ]
-    config_entry = await setup_unifi_integration(
-        hass, aioclient_mock, clients_response=clients
-    )
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    hub.websocket.available = False
+    config_entry = config_entry_setup
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
@@ -155,15 +113,19 @@ async def test_reconnect_client_hub_unavailable(
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, clients[0]["mac"])},
+        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])},
     )
 
-    await hass.services.async_call(
-        UNIFI_DOMAIN,
-        SERVICE_RECONNECT_CLIENT,
-        service_data={ATTR_DEVICE_ID: device_entry.id},
-        blocking=True,
-    )
+    with patch(
+        "homeassistant.components.unifi.UnifiHub.available", new_callable=PropertyMock
+    ) as ws_mock:
+        ws_mock.return_value = False
+        await hass.services.async_call(
+            UNIFI_DOMAIN,
+            SERVICE_RECONNECT_CLIENT,
+            service_data={ATTR_DEVICE_ID: device_entry.id},
+            blocking=True,
+        )
     assert aioclient_mock.call_count == 0
 
 
@@ -171,9 +133,10 @@ async def test_reconnect_client_unknown_mac(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: ConfigEntry,
 ) -> None:
     """Verify no call is made if trying to reconnect a mac unknown to hub."""
-    config_entry = await setup_unifi_integration(hass, aioclient_mock)
+    config_entry = config_entry_setup
 
     aioclient_mock.clear_requests()
 
@@ -191,27 +154,24 @@ async def test_reconnect_client_unknown_mac(
     assert aioclient_mock.call_count == 0
 
 
+@pytest.mark.parametrize(
+    "client_payload", [[{"is_wired": True, "mac": "00:00:00:00:00:01"}]]
+)
 async def test_reconnect_wired_client(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: ConfigEntry,
+    client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify no call is made if client is wired."""
-    clients = [
-        {
-            "is_wired": True,
-            "mac": "00:00:00:00:00:01",
-        }
-    ]
-    config_entry = await setup_unifi_integration(
-        hass, aioclient_mock, clients_response=clients
-    )
+    config_entry = config_entry_setup
 
     aioclient_mock.clear_requests()
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, clients[0]["mac"])},
+        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])},
     )
 
     await hass.services.async_call(
@@ -223,46 +183,43 @@ async def test_reconnect_wired_client(
     assert aioclient_mock.call_count == 0
 
 
+@pytest.mark.parametrize(
+    "clients_all_payload",
+    [
+        [
+            {
+                "mac": "00:00:00:00:00:00",
+            },
+            {"first_seen": 100, "last_seen": 500, "mac": "00:00:00:00:00:01"},
+            {"first_seen": 100, "last_seen": 1100, "mac": "00:00:00:00:00:02"},
+            {
+                "first_seen": 100,
+                "last_seen": 500,
+                "fixed_ip": "1.2.3.4",
+                "mac": "00:00:00:00:00:03",
+            },
+            {
+                "first_seen": 100,
+                "last_seen": 500,
+                "hostname": "hostname",
+                "mac": "00:00:00:00:00:04",
+            },
+            {
+                "first_seen": 100,
+                "last_seen": 500,
+                "name": "name",
+                "mac": "00:00:00:00:00:05",
+            },
+        ]
+    ],
+)
 async def test_remove_clients(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: ConfigEntry,
 ) -> None:
     """Verify removing different variations of clients work."""
-    clients = [
-        {
-            "mac": "00:00:00:00:00:00",
-        },
-        {
-            "first_seen": 100,
-            "last_seen": 500,
-            "mac": "00:00:00:00:00:01",
-        },
-        {
-            "first_seen": 100,
-            "last_seen": 1100,
-            "mac": "00:00:00:00:00:02",
-        },
-        {
-            "first_seen": 100,
-            "last_seen": 500,
-            "fixed_ip": "1.2.3.4",
-            "mac": "00:00:00:00:00:03",
-        },
-        {
-            "first_seen": 100,
-            "last_seen": 500,
-            "hostname": "hostname",
-            "mac": "00:00:00:00:00:04",
-        },
-        {
-            "first_seen": 100,
-            "last_seen": 500,
-            "name": "name",
-            "mac": "00:00:00:00:00:05",
-        },
-    ]
-    config_entry = await setup_unifi_integration(
-        hass, aioclient_mock, clients_all_response=clients
-    )
+    config_entry = config_entry_setup
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
@@ -279,42 +236,52 @@ async def test_remove_clients(
     assert await hass.config_entries.async_unload(config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    "clients_all_payload",
+    [
+        [
+            {
+                "first_seen": 100,
+                "last_seen": 500,
+                "mac": "00:00:00:00:00:01",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_remove_clients_hub_unavailable(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Verify no call is made if UniFi Network is unavailable."""
-    clients = [
-        {
-            "first_seen": 100,
-            "last_seen": 500,
-            "mac": "00:00:00:00:00:01",
-        }
-    ]
-    config_entry = await setup_unifi_integration(
-        hass, aioclient_mock, clients_all_response=clients
-    )
-    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    hub.websocket.available = False
-
     aioclient_mock.clear_requests()
 
-    await hass.services.async_call(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
+    with patch(
+        "homeassistant.components.unifi.UnifiHub.available", new_callable=PropertyMock
+    ) as ws_mock:
+        ws_mock.return_value = False
+        await hass.services.async_call(
+            UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True
+        )
     assert aioclient_mock.call_count == 0
 
 
+@pytest.mark.parametrize(
+    "clients_all_payload",
+    [
+        [
+            {
+                "first_seen": 100,
+                "last_seen": 1100,
+                "mac": "00:00:00:00:00:01",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_remove_clients_no_call_on_empty_list(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Verify no call is made if no fitting client has been added to the list."""
-    clients = [
-        {
-            "first_seen": 100,
-            "last_seen": 1100,
-            "mac": "00:00:00:00:00:01",
-        }
-    ]
-    await setup_unifi_integration(hass, aioclient_mock, clients_all_response=clients)
-
     aioclient_mock.clear_requests()
 
     await hass.services.async_call(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)

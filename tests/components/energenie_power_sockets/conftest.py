@@ -1,11 +1,11 @@
 """Configure tests for Energenie-Power-Sockets."""
 
-from collections.abc import Generator
 from typing import Final
 from unittest.mock import MagicMock, patch
 
 from pyegps.fakes.powerstrip import FakePowerStrip
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.energenie_power_sockets.const import (
     CONF_DEVICE_API_ID,
@@ -58,7 +58,7 @@ def get_pyegps_device_mock() -> MagicMock:
 
 
 @pytest.fixture(name="mock_get_device")
-def patch_get_device(pyegps_device_mock: MagicMock) -> Generator[MagicMock, None, None]:
+def patch_get_device(pyegps_device_mock: MagicMock) -> Generator[MagicMock]:
     """Fixture to patch the `get_device` api method."""
     with (
         patch("homeassistant.components.energenie_power_sockets.get_device") as m1,
@@ -74,7 +74,7 @@ def patch_get_device(pyegps_device_mock: MagicMock) -> Generator[MagicMock, None
 @pytest.fixture(name="mock_search_for_devices")
 def patch_search_devices(
     pyegps_device_mock: MagicMock,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Fixture to patch the `search_for_devices` api method."""
     with patch(
         "homeassistant.components.energenie_power_sockets.config_flow.search_for_devices",

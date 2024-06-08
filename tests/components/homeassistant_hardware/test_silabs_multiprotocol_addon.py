@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.hassio import AddonError, AddonInfo, AddonState, HassIO
 from homeassistant.components.hassio.handler import HassioAPIError
@@ -95,8 +95,8 @@ class FakeOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandler):
 
 @pytest.fixture(autouse=True)
 def config_flow_handler(
-    hass: HomeAssistant, current_request_with_host: Any
-) -> Generator[FakeConfigFlow, None, None]:
+    hass: HomeAssistant, current_request_with_host: None
+) -> Generator[None]:
     """Fixture for a test config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     with mock_config_flow(TEST_DOMAIN, FakeConfigFlow):
@@ -104,7 +104,7 @@ def config_flow_handler(
 
 
 @pytest.fixture
-def options_flow_poll_addon_state() -> Generator[None, None, None]:
+def options_flow_poll_addon_state() -> Generator[None]:
     """Fixture for patching options flow addon state polling."""
     with patch(
         "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.WaitingAddonManager.async_wait_until_addon_state"
@@ -113,7 +113,7 @@ def options_flow_poll_addon_state() -> Generator[None, None, None]:
 
 
 @pytest.fixture(autouse=True)
-def hassio_integration(hass: HomeAssistant) -> Generator[None, None, None]:
+def hassio_integration(hass: HomeAssistant) -> Generator[None]:
     """Fixture to mock the `hassio` integration."""
     mock_component(hass, "hassio")
     hass.data["hassio"] = Mock(spec_set=HassIO)
@@ -148,7 +148,7 @@ class MockMultiprotocolPlatform(MockPlatform):
 @pytest.fixture
 def mock_multiprotocol_platform(
     hass: HomeAssistant,
-) -> Generator[FakeConfigFlow, None, None]:
+) -> Generator[FakeConfigFlow]:
     """Fixture for a test silabs multiprotocol platform."""
     hass.config.components.add(TEST_DOMAIN)
     platform = MockMultiprotocolPlatform()
@@ -171,13 +171,10 @@ def get_suggested(schema, key):
     "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.ADDON_STATE_POLL_INTERVAL",
     0,
 )
-async def test_uninstall_addon_waiting(
-    hass: HomeAssistant,
-    addon_store_info,
-    addon_info,
-    install_addon,
-    uninstall_addon,
-):
+@pytest.mark.usefixtures(
+    "addon_store_info", "addon_info", "install_addon", "uninstall_addon"
+)
+async def test_uninstall_addon_waiting(hass: HomeAssistant) -> None:
     """Test the synchronous addon uninstall helper."""
 
     multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(

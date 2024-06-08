@@ -63,6 +63,7 @@ from .components import (
 )
 from .components.sensor import recorder as sensor_recorder  # noqa: F401
 from .const import (
+    BASE_PLATFORMS,
     FORMAT_DATETIME,
     KEY_DATA_LOGGING as DATA_LOGGING,
     REQUIRED_NEXT_PYTHON_HA_RELEASE,
@@ -90,7 +91,6 @@ from .helpers.storage import get_internal_store_manager
 from .helpers.system_info import async_get_system_info
 from .helpers.typing import ConfigType
 from .setup import (
-    BASE_PLATFORMS,
     # _setup_started is marked as protected to make it clear
     # that it is not part of the public API and should not be used
     # by integrations. It is only used for internal tracking of
@@ -134,8 +134,15 @@ COOLDOWN_TIME = 60
 
 
 DEBUGGER_INTEGRATIONS = {"debugpy"}
+
+# Core integrations are unconditionally loaded
 CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
-LOGGING_INTEGRATIONS = {
+
+# Integrations that are loaded right after the core is set up
+LOGGING_AND_HTTP_DEPS_INTEGRATIONS = {
+    # isal is loaded right away before `http` to ensure if its
+    # enabled, that `isal` is up to date.
+    "isal",
     # Set log levels
     "logger",
     # Error logging
@@ -214,8 +221,8 @@ CRITICAL_INTEGRATIONS = {
 }
 
 SETUP_ORDER = (
-    # Load logging as soon as possible
-    ("logging", LOGGING_INTEGRATIONS),
+    # Load logging and http deps as soon as possible
+    ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS),
     # Setup frontend and recorder
     ("frontend, recorder", {*FRONTEND_INTEGRATIONS, *RECORDER_INTEGRATIONS}),
     # Start up debuggers. Start these first in case they want to wait.
@@ -421,6 +428,9 @@ async def async_from_config_dict(
     start = monotonic()
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
+    # Prime custom component cache early so we know if registry entries are tied
+    # to a custom integration
+    await loader.async_get_custom_components(hass)
     await async_load_base_functionality(hass)
 
     # Set up core.

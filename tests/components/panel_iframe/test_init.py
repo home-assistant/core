@@ -145,9 +145,10 @@ async def test_import_config_once(
     assert response["result"] == []
 
 
-async def test_create_issue_when_manually_configured(hass: HomeAssistant) -> None:
+async def test_create_issue_when_manually_configured(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test creating issue registry issues."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    issue_registry = ir.async_get(hass)
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
