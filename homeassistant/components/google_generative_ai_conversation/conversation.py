@@ -110,7 +110,7 @@ def _format_tool(tool: llm.Tool) -> dict[str, Any]:
 def _escape_decode(value: Any) -> Any:
     """Recursively call codecs.escape_decode on all values."""
     if isinstance(value, str):
-        return str(codecs.escape_decode(bytes(value, "utf-8"))[0], "utf-8")
+        return codecs.escape_decode(bytes(value, "utf-8"))[0].decode("utf-8")
     if isinstance(value, list):
         return [_escape_decode(item) for item in value]
     if isinstance(value, dict):
