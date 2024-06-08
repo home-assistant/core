@@ -41,6 +41,7 @@ class KnockiTrigger(EventEntity):
             serial_number=trigger.device_id,
             name=trigger.device_id,
         )
+        self._attr_unique_id = f"{trigger.device_id}_{trigger.details.trigger_id}"
 
     async def async_added_to_hass(self) -> None:
         """Register listener."""
