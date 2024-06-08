@@ -99,7 +99,7 @@ def voice_assistant_udp_pipeline_v2(
 
 
 @pytest.fixture
-def test_wav() -> bytes:
+def mock_wav() -> bytes:
     """Return one second of empty WAV audio."""
     with io.BytesIO() as wav_io:
         with wave.open(wav_io, "wb") as wav_file:
@@ -186,9 +186,8 @@ async def test_pipeline_events(
         )
 
 
+@pytest.mark.usefixtures("socket_enabled")
 async def test_udp_server(
-    hass: HomeAssistant,
-    socket_enabled: None,
     unused_udp_port_factory: Callable[[], int],
     voice_assistant_udp_pipeline_v1: VoiceAssistantUDPPipeline,
 ) -> None:
@@ -313,9 +312,8 @@ async def test_error_calls_handle_finished(
     voice_assistant_udp_pipeline_v1.handle_finished.assert_called()
 
 
+@pytest.mark.usefixtures("socket_enabled")
 async def test_udp_server_multiple(
-    hass: HomeAssistant,
-    socket_enabled: None,
     unused_udp_port_factory: Callable[[], int],
     voice_assistant_udp_pipeline_v1: VoiceAssistantUDPPipeline,
 ) -> None:
@@ -336,9 +334,8 @@ async def test_udp_server_multiple(
         await voice_assistant_udp_pipeline_v1.start_server()
 
 
+@pytest.mark.usefixtures("socket_enabled")
 async def test_udp_server_after_stopped(
-    hass: HomeAssistant,
-    socket_enabled: None,
     unused_udp_port_factory: Callable[[], int],
     voice_assistant_udp_pipeline_v1: VoiceAssistantUDPPipeline,
 ) -> None:
@@ -560,12 +557,12 @@ async def test_send_tts_not_called_when_empty(
 async def test_send_tts_udp(
     hass: HomeAssistant,
     voice_assistant_udp_pipeline_v2: VoiceAssistantUDPPipeline,
-    test_wav,
+    mock_wav: bytes,
 ) -> None:
     """Test the UDP server calls sendto to transmit audio data to device."""
     with patch(
         "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
-        return_value=("wav", test_wav),
+        return_value=("wav", mock_wav),
     ):
         voice_assistant_udp_pipeline_v2.started = True
         voice_assistant_udp_pipeline_v2.transport = Mock(spec=asyncio.DatagramTransport)
@@ -593,12 +590,12 @@ async def test_send_tts_api(
     hass: HomeAssistant,
     mock_client: APIClient,
     voice_assistant_api_pipeline: VoiceAssistantAPIPipeline,
-    test_wav,
+    mock_wav: bytes,
 ) -> None:
     """Test the API pipeline calls cli.send_voice_assistant_audio to transmit audio data to device."""
     with patch(
         "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
-        return_value=("wav", test_wav),
+        return_value=("wav", mock_wav),
     ):
         voice_assistant_api_pipeline.started = True
 
@@ -686,12 +683,12 @@ async def test_send_tts_wrong_format(
 async def test_send_tts_not_started(
     hass: HomeAssistant,
     voice_assistant_udp_pipeline_v2: VoiceAssistantUDPPipeline,
-    test_wav,
+    mock_wav: bytes,
 ) -> None:
     """Test the UDP server does not call sendto when not started."""
     with patch(
         "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
-        return_value=("wav", test_wav),
+        return_value=("wav", mock_wav),
     ):
         voice_assistant_udp_pipeline_v2.started = False
         voice_assistant_udp_pipeline_v2.transport = Mock(spec=asyncio.DatagramTransport)
@@ -713,13 +710,13 @@ async def test_send_tts_not_started(
 async def test_send_tts_transport_none(
     hass: HomeAssistant,
     voice_assistant_udp_pipeline_v2: VoiceAssistantUDPPipeline,
-    test_wav,
+    mock_wav: bytes,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the UDP server does not call sendto when transport is None."""
     with patch(
         "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
-        return_value=("wav", test_wav),
+        return_value=("wav", mock_wav),
     ):
         voice_assistant_udp_pipeline_v2.started = True
         voice_assistant_udp_pipeline_v2.transport = None
