@@ -257,7 +257,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     platforms = [Platform.CLIMATE]
     if broker.tcs.hotwater:
         platforms += [Platform.WATER_HEATER]
-    await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    await hass.config_entries.async_unload_platforms(entry, platforms)
 
     for svc in hass.services.async_services_for_domain(DOMAIN):
         hass.services.async_remove(DOMAIN, svc)
