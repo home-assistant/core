@@ -291,7 +291,9 @@ async def test_unlock_action(
         },
     ],
 )
-async def test_lock_action_with_code(hass: HomeAssistant, start_ha, calls) -> None:
+async def test_lock_action_with_code(
+    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+) -> None:
     """Test lock action with defined code format and supplied lock code."""
     await setup.async_setup_component(hass, "switch", {})
     hass.states.async_set("switch.test_state", STATE_OFF)
@@ -326,7 +328,9 @@ async def test_lock_action_with_code(hass: HomeAssistant, start_ha, calls) -> No
         },
     ],
 )
-async def test_unlock_action_with_code(hass: HomeAssistant, start_ha, calls) -> None:
+async def test_unlock_action_with_code(
+    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+) -> None:
     """Test unlock action with code format and supplied unlock code."""
     await setup.async_setup_component(hass, "switch", {})
     hass.states.async_set("switch.test_state", STATE_ON)
@@ -369,7 +373,7 @@ async def test_unlock_action_with_code(hass: HomeAssistant, start_ha, calls) -> 
     ],
 )
 async def test_lock_actions_fail_with_invalid_code(
-    hass: HomeAssistant, start_ha, calls, test_action
+    hass: HomeAssistant, start_ha, calls: list[ServiceCall], test_action
 ) -> None:
     """Test invalid lock codes."""
     await hass.services.async_call(
@@ -401,7 +405,7 @@ async def test_lock_actions_fail_with_invalid_code(
     ],
 )
 async def test_lock_actions_dont_execute_with_code_template_rendering_error(
-    hass: HomeAssistant, start_ha, calls
+    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
 ) -> None:
     """Test lock code format rendering fails block lock/unlock actions."""
     await hass.services.async_call(
@@ -434,7 +438,7 @@ async def test_lock_actions_dont_execute_with_code_template_rendering_error(
     ],
 )
 async def test_actions_with_none_as_codeformat_ignores_code(
-    hass: HomeAssistant, action, start_ha, calls
+    hass: HomeAssistant, action, start_ha, calls: list[ServiceCall]
 ) -> None:
     """Test lock actions with supplied lock code."""
     await setup.async_setup_component(hass, "switch", {})
@@ -472,7 +476,7 @@ async def test_actions_with_none_as_codeformat_ignores_code(
     ],
 )
 async def test_actions_with_invalid_regexp_as_codeformat_never_execute(
-    hass: HomeAssistant, action, start_ha, calls
+    hass: HomeAssistant, action, start_ha, calls: list[ServiceCall]
 ) -> None:
     """Test lock actions don't execute with invalid regexp."""
     await setup.async_setup_component(hass, "switch", {})
