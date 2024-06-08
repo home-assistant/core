@@ -9,6 +9,8 @@ import logging
 
 from bimmer_connected.models import StrEnum, ValueWithUnit
 from bimmer_connected.vehicle import MyBMWVehicle
+from bimmer_connected.vehicle.climate import ClimateActivityState
+from bimmer_connected.vehicle.fuel_and_battery import ChargingState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -29,7 +31,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import BMWBaseEntity
-from .const import CLIMATE_ACTIVITY_STATE, DOMAIN
+from .const import DOMAIN
 from .coordinator import BMWDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,6 +75,8 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         key="charging_status",
         translation_key="charging_status",
         key_class="fuel_and_battery",
+        device_class=SensorDeviceClass.ENUM,
+        options=[s.value.lower() for s in ChargingState if s != ChargingState.UNKNOWN],
         is_available=lambda v: v.is_lsc_enabled and v.has_electric_drivetrain,
     ),
     BMWSensorEntityDescription(
@@ -155,7 +159,11 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         translation_key="climate_status",
         key_class="climate",
         device_class=SensorDeviceClass.ENUM,
-        options=CLIMATE_ACTIVITY_STATE,
+        options=[
+            s.value.lower()
+            for s in ClimateActivityState
+            if s != ClimateActivityState.UNKNOWN
+        ],
         is_available=lambda v: v.is_remote_climate_stop_enabled,
     ),
 ]
