@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
 from homeassistant.components.bmw_connected_drive.sensor import SENSOR_TYPES
 from homeassistant.components.sensor.const import SensorDeviceClass
 from homeassistant.const import Platform
@@ -91,20 +92,18 @@ async def test_entity_option_translations(
     # Setup component to load translations
     assert await setup_mocked_integration(hass)
 
-    prefix = "component.bmw_connected_drive.entity.sensor"
+    prefix = f"component.{BMW_DOMAIN}.entity.{Platform.SENSOR.value}"
 
-    all_translations = await async_get_translations(
-        hass, "en", "entity", ["bmw_connected_drive"]
-    )
-    all_translation_options = {
-        k for k in all_translations if k.startswith(prefix) and ".state." in k
+    translations = await async_get_translations(hass, "en", "entity", [BMW_DOMAIN])
+    translation_states = {
+        k for k in translations if k.startswith(prefix) and ".state." in k
     }
 
-    all_sensor_options = {
-        f"{prefix}.{sensor.translation_key}.state.{option}"
-        for sensor in SENSOR_TYPES
-        if sensor.device_class == SensorDeviceClass.ENUM
-        for option in sensor.options
+    sensor_options = {
+        f"{prefix}.{entity_description.translation_key}.state.{option}"
+        for entity_description in SENSOR_TYPES
+        if entity_description.device_class == SensorDeviceClass.ENUM
+        for option in entity_description.options
     }
 
-    assert all_sensor_options == all_translation_options
+    assert sensor_options == translation_states

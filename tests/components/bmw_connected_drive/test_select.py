@@ -168,16 +168,16 @@ async def test_entity_option_translations(
 
     prefix = f"component.{BMW_DOMAIN}.entity.{Platform.SELECT.value}"
 
-    all_translations = await async_get_translations(hass, "en", "entity", [BMW_DOMAIN])
-    all_translation_options = {
-        k for k in all_translations if k.startswith(prefix) and ".state." in k
+    translations = await async_get_translations(hass, "en", "entity", [BMW_DOMAIN])
+    translation_states = {
+        k for k in translations if k.startswith(prefix) and ".state." in k
     }
 
-    all_sensor_options = {
+    sensor_options = {
         f"{prefix}.{entity_description.translation_key}.state.{option}"
         for entity_description in SELECT_TYPES
         if entity_description.options
         for option in entity_description.options
     }
 
-    assert all_sensor_options == all_translation_options
+    assert sensor_options == translation_states
