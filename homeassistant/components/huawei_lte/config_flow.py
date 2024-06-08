@@ -171,7 +171,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         except Timeout:
             _LOGGER.warning("Connection timeout", exc_info=True)
             errors[CONF_URL] = "connection_timeout"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             _LOGGER.warning("Unknown error connecting to device", exc_info=True)
             errors[CONF_URL] = "unknown"
         return conn
@@ -181,7 +181,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             conn.close()
             conn.requests_session.close()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             _LOGGER.debug("Disconnect error", exc_info=True)
 
     async def async_step_user(
@@ -210,18 +210,18 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             client = Client(conn)
             try:
                 device_info = client.device.information()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 _LOGGER.debug("Could not get device.information", exc_info=True)
                 try:
                     device_info = client.device.basic_information()
-                except Exception:  # pylint: disable=broad-except
+                except Exception:  # noqa: BLE001
                     _LOGGER.debug(
                         "Could not get device.basic_information", exc_info=True
                     )
                     device_info = {}
             try:
                 wlan_settings = client.wlan.multi_basic_settings()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 _LOGGER.debug("Could not get wlan.multi_basic_settings", exc_info=True)
                 wlan_settings = {}
             return device_info, wlan_settings
@@ -291,7 +291,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     basic_info = Client(conn).device.basic_information()
             except ResponseErrorException:  # API compatible error
                 return True
-            except Exception:  # API incompatible error # pylint: disable=broad-except
+            except Exception:  # API incompatible error # noqa: BLE001
                 return False
             return isinstance(basic_info, dict)  # Crude content check
 

@@ -13,7 +13,7 @@ from matter_server.client.models.node import MatterEndpoint
 from homeassistant.const import Platform
 from homeassistant.helpers.entity import EntityDescription
 
-SensorValueTypes = type[
+type SensorValueTypes = type[
     clusters.uint | int | clusters.Nullable | clusters.float32 | float
 ]
 
@@ -50,9 +50,6 @@ class MatterEntityInfo:
 
     # entity class to use to instantiate the entity
     entity_class: type
-
-    # [optional] bool to specify if this primary value should be polled
-    should_poll: bool
 
     @property
     def primary_attribute(self) -> type[ClusterAttributeDescriptor]:

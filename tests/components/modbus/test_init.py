@@ -25,6 +25,7 @@ import voluptuous as vol
 
 from homeassistant import config as hass_config
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.modbus import async_reset_platform
 from homeassistant.components.modbus.const import (
     ATTR_ADDRESS,
     ATTR_HUB,
@@ -135,7 +136,9 @@ from tests.common import async_fire_time_changed, get_fixture_path
 
 
 @pytest.fixture(name="mock_modbus_with_pymodbus")
-async def mock_modbus_with_pymodbus_fixture(hass, caplog, do_config, mock_pymodbus):
+async def mock_modbus_with_pymodbus_fixture(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, do_config, mock_pymodbus
+):
     """Load integration modbus using mocked pymodbus."""
     caplog.clear()
     caplog.set_level(logging.ERROR)
@@ -1360,23 +1363,18 @@ async def test_pb_service_write(
 
 @pytest.fixture(name="mock_modbus_read_pymodbus")
 async def mock_modbus_read_pymodbus_fixture(
-    hass,
+    hass: HomeAssistant,
     do_group,
     do_type,
     do_scan_interval,
     do_return,
-    do_exception,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     mock_pymodbus,
     freezer: FrozenDateTimeFactory,
 ):
     """Load integration modbus using mocked pymodbus."""
     caplog.clear()
     caplog.set_level(logging.ERROR)
-    mock_pymodbus.read_coils.side_effect = do_exception
-    mock_pymodbus.read_discrete_inputs.side_effect = do_exception
-    mock_pymodbus.read_input_registers.side_effect = do_exception
-    mock_pymodbus.read_holding_registers.side_effect = do_exception
     mock_pymodbus.read_coils.return_value = do_return
     mock_pymodbus.read_discrete_inputs.return_value = do_return
     mock_pymodbus.read_input_registers.return_value = do_return
@@ -1779,3 +1777,9 @@ async def test_no_entities(hass: HomeAssistant) -> None:
         ]
     }
     assert await async_setup_component(hass, DOMAIN, config) is False
+
+
+async def test_reset_platform(hass: HomeAssistant) -> None:
+    """Run test for async_reset_platform."""
+    await async_reset_platform(hass, "modbus")
+    assert DOMAIN not in hass.data

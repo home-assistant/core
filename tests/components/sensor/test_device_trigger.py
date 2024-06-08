@@ -419,13 +419,13 @@ async def test_get_trigger_capabilities_none(
         assert capabilities == expected_capabilities
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_fires_not_on_above_below(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
 ) -> None:
     """Test for value triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -459,12 +459,12 @@ async def test_if_fires_not_on_above_below(
     assert "must contain at least one of below, above" in caplog.text
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_fires_on_state_above(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    enable_custom_integrations: None,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for value triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -496,15 +496,12 @@ async def test_if_fires_on_state_above(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "bat_low {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "bat_low {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -527,12 +524,12 @@ async def test_if_fires_on_state_above(
     )
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_fires_on_state_below(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    enable_custom_integrations: None,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for value triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -564,15 +561,12 @@ async def test_if_fires_on_state_below(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "bat_low {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "bat_low {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -595,12 +589,12 @@ async def test_if_fires_on_state_below(
     )
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_fires_on_state_between(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    enable_custom_integrations: None,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for value triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -633,15 +627,12 @@ async def test_if_fires_on_state_between(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "bat_low {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "bat_low {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -675,12 +666,12 @@ async def test_if_fires_on_state_between(
     )
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_fires_on_state_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    enable_custom_integrations: None,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for value triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -712,15 +703,12 @@ async def test_if_fires_on_state_legacy(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "bat_low {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "bat_low {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -743,12 +731,12 @@ async def test_if_fires_on_state_legacy(
     )
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_fires_on_state_change_with_for(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    enable_custom_integrations: None,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for triggers firing with delay."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -781,15 +769,12 @@ async def test_if_fires_on_state_change_with_for(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_off {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "turn_off {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },

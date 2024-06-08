@@ -154,7 +154,7 @@ async def test_rest_command_methods(
     setup_component: ComponentSetup,
     aioclient_mock: AiohttpClientMocker,
     method: str,
-):
+) -> None:
     """Test various http methods."""
     await setup_component()
 

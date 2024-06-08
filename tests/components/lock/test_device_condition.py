@@ -10,11 +10,13 @@ from homeassistant.const import (
     STATE_JAMMED,
     STATE_LOCKED,
     STATE_LOCKING,
+    STATE_OPEN,
+    STATE_OPENING,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
     EntityCategory,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
@@ -32,7 +34,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -67,6 +69,8 @@ async def test_get_conditions(
             "is_unlocking",
             "is_locking",
             "is_jammed",
+            "is_open",
+            "is_opening",
         ]
     ]
     conditions = await async_get_device_automations(
@@ -121,6 +125,8 @@ async def test_get_conditions_hidden_auxiliary(
             "is_unlocking",
             "is_locking",
             "is_jammed",
+            "is_open",
+            "is_opening",
         ]
     ]
     conditions = await async_get_device_automations(
@@ -133,7 +139,7 @@ async def test_if_state(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off conditions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -243,6 +249,42 @@ async def test_if_state(
                         },
                     },
                 },
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event6"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": device_entry.id,
+                            "entity_id": entry.id,
+                            "type": "is_opening",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_opening - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event7"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": device_entry.id,
+                            "entity_id": entry.id,
+                            "type": "is_open",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_open - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
             ]
         },
     )
@@ -277,12 +319,24 @@ async def test_if_state(
     assert len(calls) == 5
     assert calls[4].data["some"] == "is_jammed - event - test_event5"
 
+    hass.states.async_set(entry.entity_id, STATE_OPENING)
+    hass.bus.async_fire("test_event6")
+    await hass.async_block_till_done()
+    assert len(calls) == 6
+    assert calls[5].data["some"] == "is_opening - event - test_event6"
+
+    hass.states.async_set(entry.entity_id, STATE_OPEN)
+    hass.bus.async_fire("test_event7")
+    await hass.async_block_till_done()
+    assert len(calls) == 7
+    assert calls[6].data["some"] == "is_open - event - test_event7"
+
 
 async def test_if_state_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off conditions."""
     config_entry = MockConfigEntry(domain="test", data={})

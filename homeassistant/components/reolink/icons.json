@@ -42,6 +42,12 @@
         "state": {
           "on": "mdi:motion-sensor"
         }
+      },
+      "sleep": {
+        "default": "mdi:sleep-off",
+        "state": {
+          "on": "mdi:sleep"
+        }
       }
     },
     "button": {
@@ -101,6 +107,9 @@
         "default": "mdi:crosshairs-gps"
       },
       "motion_sensitivity": {
+        "default": "mdi:motion-sensor"
+      },
+      "pir_sensitivity": {
         "default": "mdi:motion-sensor"
       },
       "ai_face_sensitivity": {
@@ -200,6 +209,12 @@
       "ptz_pan_position": {
         "default": "mdi:pan"
       },
+      "battery_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "battery_state": {
+        "default": "mdi:battery-charging"
+      },
       "wifi_signal": {
         "default": "mdi:wifi"
       },
@@ -257,6 +272,12 @@
       },
       "hdr": {
         "default": "mdi:hdr"
+      },
+      "pir_enabled": {
+        "default": "mdi:motion-sensor"
+      },
+      "pir_reduce_alarm": {
+        "default": "mdi:motion-sensor"
       }
     }
   },

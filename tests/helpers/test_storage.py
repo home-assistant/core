@@ -1159,3 +1159,21 @@ async def test_store_manager_cleanup_after_stop(
         assert store_manager.async_fetch("integration1") is None
         assert store_manager.async_fetch("integration2") is None
         await hass.async_stop(force=True)
+
+
+async def test_storage_concurrent_load(hass: HomeAssistant) -> None:
+    """Test that we can load the store concurrently."""
+
+    store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+
+    async def _load_store():
+        await asyncio.sleep(0)
+        return "data"
+
+    with patch.object(store, "_async_load", side_effect=_load_store):
+        # Test that we can load the store concurrently
+        loads = await asyncio.gather(
+            store.async_load(), store.async_load(), store.async_load()
+        )
+        for load in loads:
+            assert load == "data"

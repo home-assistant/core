@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
-from typing import Union
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from crownstone_cloud.cloud_models.spheres import Spheres
@@ -13,6 +11,7 @@ from crownstone_cloud.exceptions import (
 )
 import pytest
 from serial.tools.list_ports_common import ListPortInfo
+from typing_extensions import Generator
 
 from homeassistant.components import usb
 from homeassistant.components.crownstone.const import (
@@ -31,7 +30,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-MockFixture = Generator[Union[MagicMock, AsyncMock], None, None]
+type MockFixture = Generator[MagicMock | AsyncMock]
 
 
 @pytest.fixture(name="crownstone_setup")

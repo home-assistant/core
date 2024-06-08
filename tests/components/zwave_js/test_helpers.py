@@ -13,22 +13,24 @@ from homeassistant.helpers import area_registry as ar, device_registry as dr
 from tests.common import MockConfigEntry
 
 
-async def test_async_get_node_status_sensor_entity_id(hass: HomeAssistant) -> None:
+async def test_async_get_node_status_sensor_entity_id(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test async_get_node_status_sensor_entity_id for non zwave_js device."""
-    dev_reg = dr.async_get(hass)
     config_entry = MockConfigEntry()
     config_entry.add_to_hass(hass)
-    device = dev_reg.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={("test", "test")},
     )
     assert async_get_node_status_sensor_entity_id(hass, device.id) is None
 
 
-async def test_async_get_nodes_from_area_id(hass: HomeAssistant) -> None:
+async def test_async_get_nodes_from_area_id(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry
+) -> None:
     """Test async_get_nodes_from_area_id."""
-    area_reg = ar.async_get(hass)
-    area = area_reg.async_create("test")
+    area = area_registry.async_create("test")
     assert not async_get_nodes_from_area_id(hass, area.id)
 
 

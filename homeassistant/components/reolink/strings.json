@@ -86,73 +86,160 @@
   "entity": {
     "binary_sensor": {
       "face": {
-        "name": "Face"
+        "name": "Face",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "person": {
-        "name": "Person"
+        "name": "Person",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "vehicle": {
-        "name": "Vehicle"
+        "name": "Vehicle",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "pet": {
-        "name": "Pet"
+        "name": "Pet",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "animal": {
-        "name": "Animal"
+        "name": "Animal",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "visitor": {
         "name": "Visitor"
       },
       "package": {
-        "name": "Package"
+        "name": "Package",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "motion_lens_0": {
-        "name": "Motion lens 0"
+        "name": "Motion lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "face_lens_0": {
-        "name": "Face lens 0"
+        "name": "Face lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "person_lens_0": {
-        "name": "Person lens 0"
+        "name": "Person lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "vehicle_lens_0": {
-        "name": "Vehicle lens 0"
+        "name": "Vehicle lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "pet_lens_0": {
-        "name": "Pet lens 0"
+        "name": "Pet lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "animal_lens_0": {
-        "name": "Animal lens 0"
+        "name": "Animal lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "visitor_lens_0": {
         "name": "Visitor lens 0"
       },
       "package_lens_0": {
-        "name": "Package lens 0"
+        "name": "Package lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "motion_lens_1": {
-        "name": "Motion lens 1"
+        "name": "Motion lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "face_lens_1": {
-        "name": "Face lens 1"
+        "name": "Face lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "person_lens_1": {
-        "name": "Person lens 1"
+        "name": "Person lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "vehicle_lens_1": {
-        "name": "Vehicle lens 1"
+        "name": "Vehicle lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "pet_lens_1": {
-        "name": "Pet lens 1"
+        "name": "Pet lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "animal_lens_1": {
-        "name": "Animal lens 1"
+        "name": "Animal lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "visitor_lens_1": {
         "name": "Visitor lens 1"
       },
       "package_lens_1": {
-        "name": "Package lens 1"
+        "name": "Package lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "sleep": {
+        "name": "Sleep status",
+        "state": {
+          "off": "Awake",
+          "on": "Sleeping"
+        }
       }
     },
     "button": {
@@ -270,6 +357,9 @@
       "motion_sensitivity": {
         "name": "Motion sensitivity"
       },
+      "pir_sensitivity": {
+        "name": "PIR sensitivity"
+      },
       "ai_face_sensitivity": {
         "name": "AI face sensitivity"
       },
@@ -380,8 +470,8 @@
           "pantiltfirst": "Pan/tilt first"
         }
       },
-      "status_led": {
-        "name": "Status LED",
+      "doorbell_led": {
+        "name": "Doorbell LED",
         "state": {
           "stayoff": "Stay off",
           "auto": "Auto",
@@ -396,6 +486,17 @@
       },
       "ptz_pan_position": {
         "name": "PTZ pan position"
+      },
+      "battery_temperature": {
+        "name": "Battery temperature"
+      },
+      "battery_state": {
+        "name": "Battery state",
+        "state": {
+          "discharging": "Discharging",
+          "charging": "Charging",
+          "chargecomplete": "Charge complete"
+        }
       },
       "hdd_storage": {
         "name": "HDD {hdd_index} storage"
@@ -451,6 +552,12 @@
       },
       "hdr": {
         "name": "HDR"
+      },
+      "pir_enabled": {
+        "name": "PIR enabled"
+      },
+      "pir_reduce_alarm": {
+        "name": "PIR reduce false alarm"
       }
     }
   }

@@ -224,7 +224,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         default_port = vol.UNDEFINED
 
         if self._radio_mgr.device_path is not None:
-            for description, port in zip(list_of_ports, ports):
+            for description, port in zip(list_of_ports, ports, strict=False):
                 if port.device == self._radio_mgr.device_path:
                     default_port = description
                     break

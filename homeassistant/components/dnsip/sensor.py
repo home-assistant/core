@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from ipaddress import IPv4Address, IPv6Address
 import logging
 
 import aiodns
@@ -25,10 +26,21 @@ from .const import (
 )
 
 DEFAULT_RETRIES = 2
+MAX_RESULTS = 10
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=120)
+
+
+def sort_ips(ips: list, querytype: str) -> list:
+    """Join IPs into a single string."""
+
+    if querytype == "AAAA":
+        ips = [IPv6Address(ip) for ip in ips]
+    else:
+        ips = [IPv4Address(ip) for ip in ips]
+    return [str(ip) for ip in sorted(ips)][:MAX_RESULTS]
 
 
 async def async_setup_entry(
@@ -41,6 +53,7 @@ async def async_setup_entry(
 
     resolver_ipv4 = entry.options[CONF_RESOLVER]
     resolver_ipv6 = entry.options[CONF_RESOLVER_IPV6]
+
     entities = []
     if entry.data[CONF_IPV4]:
         entities.append(WanIpSensor(name, hostname, resolver_ipv4, False))
@@ -92,7 +105,11 @@ class WanIpSensor(SensorEntity):
             response = None
 
         if response:
-            self._attr_native_value = response[0].host
+            sorted_ips = sort_ips(
+                [res.host for res in response], querytype=self.querytype
+            )
+            self._attr_native_value = sorted_ips[0]
+            self._attr_extra_state_attributes["ip_addresses"] = sorted_ips
             self._attr_available = True
             self._retries = DEFAULT_RETRIES
         elif self._retries > 0:

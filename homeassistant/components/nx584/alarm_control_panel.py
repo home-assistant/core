@@ -9,10 +9,11 @@ from nx584 import client
 import requests
 import voluptuous as vol
 
-import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -90,15 +91,16 @@ async def async_setup_platform(
     )
 
 
-class NX584Alarm(alarm.AlarmControlPanelEntity):
+class NX584Alarm(AlarmControlPanelEntity):
     """Representation of a NX584-based alarm panel."""
 
-    _attr_code_format = alarm.CodeFormat.NUMBER
+    _attr_code_format = CodeFormat.NUMBER
     _attr_state: str | None
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
+    _attr_code_arm_required = False
 
     def __init__(self, name: str, alarm_client: client.Client, url: str) -> None:
         """Init the nx584 alarm panel."""

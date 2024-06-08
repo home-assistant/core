@@ -11,7 +11,11 @@ from homeassistant.components import automation, script
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.script import scripts_with_entity
-from homeassistant.components.shelly.const import DOMAIN, MODEL_WALL_DISPLAY
+from homeassistant.components.shelly.const import (
+    DOMAIN,
+    MODEL_WALL_DISPLAY,
+    MOTION_MODELS,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
@@ -20,17 +24,22 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from . import init_integration, register_entity
+from . import get_entity_state, init_integration, register_device, register_entity
+
+from tests.common import mock_restore_cache
 
 RELAY_BLOCK_ID = 0
 GAS_VALVE_BLOCK_ID = 6
+MOTION_BLOCK_ID = 3
 
 
 async def test_block_device_services(
@@ -54,6 +63,121 @@ async def test_block_device_services(
         blocking=True,
     )
     assert hass.states.get("switch.test_name_channel_1").state == STATE_OFF
+
+
+@pytest.mark.parametrize("model", MOTION_MODELS)
+async def test_block_motion_switch(
+    hass: HomeAssistant,
+    model: str,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test Shelly motion active turn on/off services."""
+    entity_id = "switch.test_name_motion_detection"
+    await init_integration(hass, 1, sleep_period=1000, model=model)
+
+    # Make device online
+    mock_block_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert get_entity_state(hass, entity_id) == STATE_ON
+
+    # turn off
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    monkeypatch.setattr(mock_block_device.blocks[MOTION_BLOCK_ID], "motionActive", 0)
+    mock_block_device.mock_update()
+
+    mock_block_device.set_shelly_motion_detection.assert_called_once_with(False)
+    assert get_entity_state(hass, entity_id) == STATE_OFF
+
+    # turn on
+    mock_block_device.set_shelly_motion_detection.reset_mock()
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    monkeypatch.setattr(mock_block_device.blocks[MOTION_BLOCK_ID], "motionActive", 1)
+    mock_block_device.mock_update()
+
+    mock_block_device.set_shelly_motion_detection.assert_called_once_with(True)
+    assert get_entity_state(hass, entity_id) == STATE_ON
+
+
+@pytest.mark.parametrize("model", MOTION_MODELS)
+async def test_block_restored_motion_switch(
+    hass: HomeAssistant,
+    model: str,
+    mock_block_device: Mock,
+    device_reg: DeviceRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test block restored motion active switch."""
+    entry = await init_integration(
+        hass, 1, sleep_period=1000, model=model, skip_setup=True
+    )
+    register_device(device_reg, entry)
+    entity_id = register_entity(
+        hass,
+        SWITCH_DOMAIN,
+        "test_name_motion_detection",
+        "sensor_0-motionActive",
+        entry,
+    )
+
+    mock_restore_cache(hass, [State(entity_id, STATE_OFF)])
+    monkeypatch.setattr(mock_block_device, "initialized", False)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert get_entity_state(hass, entity_id) == STATE_OFF
+
+    # Make device online
+    monkeypatch.setattr(mock_block_device, "initialized", True)
+    mock_block_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert get_entity_state(hass, entity_id) == STATE_ON
+
+
+@pytest.mark.parametrize("model", MOTION_MODELS)
+async def test_block_restored_motion_switch_no_last_state(
+    hass: HomeAssistant,
+    model: str,
+    mock_block_device: Mock,
+    device_reg: DeviceRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test block restored motion active switch missing last state."""
+    entry = await init_integration(
+        hass, 1, sleep_period=1000, model=model, skip_setup=True
+    )
+    register_device(device_reg, entry)
+    entity_id = register_entity(
+        hass,
+        SWITCH_DOMAIN,
+        "test_name_motion_detection",
+        "sensor_0-motionActive",
+        entry,
+    )
+    monkeypatch.setattr(mock_block_device, "initialized", False)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert get_entity_state(hass, entity_id) == STATE_UNKNOWN
+
+    # Make device online
+    monkeypatch.setattr(mock_block_device, "initialized", True)
+    mock_block_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert get_entity_state(hass, entity_id) == STATE_ON
 
 
 async def test_block_device_unique_ids(
@@ -106,7 +230,6 @@ async def test_block_set_state_auth_error(
         {ATTR_ENTITY_ID: "switch.test_name_channel_1"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
 
@@ -250,7 +373,6 @@ async def test_rpc_auth_error(
         {ATTR_ENTITY_ID: "switch.test_switch_0"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
 
@@ -330,6 +452,7 @@ async def test_wall_display_relay_mode(
 
     new_status = deepcopy(mock_rpc_device.status)
     new_status["sys"]["relay_in_thermostat"] = False
+    new_status.pop("thermostat:0")
     monkeypatch.setattr(mock_rpc_device, "status", new_status)
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
@@ -349,11 +472,12 @@ async def test_wall_display_relay_mode(
     assert entry.unique_id == "123456789ABC-switch:0"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_create_issue_valve_switch(
     hass: HomeAssistant,
     mock_block_device: Mock,
-    entity_registry_enabled_by_default: None,
     monkeypatch: pytest.MonkeyPatch,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we create an issue when an automation or script is using a deprecated entity."""
     monkeypatch.setitem(mock_block_device.status, "cloud", {"connected": False})
@@ -396,7 +520,6 @@ async def test_create_issue_valve_switch(
 
     assert automations_with_entity(hass, entity_id)[0] == "automation.test"
     assert scripts_with_entity(hass, entity_id)[0] == "script.test"
-    issue_registry: ir.IssueRegistry = ir.async_get(hass)
 
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_valve_switch")
     assert issue_registry.async_get_issue(

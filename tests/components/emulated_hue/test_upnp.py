@@ -1,13 +1,16 @@
 """The tests for the emulated Hue component."""
 
+from asyncio import AbstractEventLoop
 from http import HTTPStatus
 import json
 import unittest
 from unittest.mock import patch
 
 from aiohttp import web
+from aiohttp.test_utils import TestClient
 import defusedxml.ElementTree as ET
 import pytest
+from typing_extensions import Generator
 
 from homeassistant import setup
 from homeassistant.components import emulated_hue
@@ -16,6 +19,7 @@ from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 
 from tests.common import get_test_instance_port
+from tests.typing import ClientSessionGenerator
 
 BRIDGE_SERVER_PORT = get_test_instance_port()
 
@@ -33,13 +37,19 @@ class MockTransport:
 
 
 @pytest.fixture
-def aiohttp_client(event_loop, aiohttp_client, socket_enabled):
+def aiohttp_client(
+    event_loop: AbstractEventLoop,
+    aiohttp_client: ClientSessionGenerator,
+    socket_enabled: None,
+) -> ClientSessionGenerator:
     """Return aiohttp_client and allow opening sockets."""
     return aiohttp_client
 
 
 @pytest.fixture
-def hue_client(aiohttp_client):
+def hue_client(
+    aiohttp_client: ClientSessionGenerator,
+) -> Generator[TestClient]:
     """Return a hue API client."""
     app = web.Application()
     with unittest.mock.patch(
@@ -164,7 +174,7 @@ async def test_description_xml(hass: HomeAssistant, hue_client) -> None:
         root = ET.fromstring(await result.text())
         ns = {"s": "urn:schemas-upnp-org:device-1-0"}
         assert root.find("./s:device/s:serialNumber", ns).text == "001788FFFE23BFC2"
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         pytest.fail("description.xml is not valid XML!")
 
 

@@ -73,7 +73,7 @@ class VulcanFlowHandler(ConfigFlow, domain=DOMAIN):
             except ClientConnectionError as err:
                 errors = {"base": "cannot_connect"}
                 _LOGGER.error("Connection error: %s", err)
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors = {"base": "unknown"}
             if not errors:
@@ -156,7 +156,7 @@ class VulcanFlowHandler(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_select_saved_credentials(
                     errors={"base": "cannot_connect"}
                 )
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return await self.async_step_auth(errors={"base": "unknown"})
             if len(students) == 1:
@@ -268,7 +268,7 @@ class VulcanFlowHandler(ConfigFlow, domain=DOMAIN):
             except ClientConnectionError as err:
                 errors["base"] = "cannot_connect"
                 _LOGGER.error("Connection error: %s", err)
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             if not errors:

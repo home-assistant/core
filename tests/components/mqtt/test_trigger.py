@@ -6,10 +6,11 @@ import pytest
 
 from homeassistant.components import automation
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HassJobType, HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_fire_mqtt_message, async_mock_service, mock_component
+from tests.typing import MqttMockHAClient, MqttMockHAClientGenerator
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -18,19 +19,23 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def calls(hass: HomeAssistant):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 @pytest.fixture(autouse=True)
-async def setup_comp(hass: HomeAssistant, mqtt_mock_entry):
+async def setup_comp(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> MqttMockHAClient:
     """Initialize components."""
     mock_component(hass, "group")
     return await mqtt_mock_entry()
 
 
-async def test_if_fires_on_topic_match(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_topic_match(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test if message is fired on topic match."""
     assert await async_setup_component(
         hass,
@@ -68,7 +73,9 @@ async def test_if_fires_on_topic_match(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 1
 
 
-async def test_if_fires_on_topic_and_payload_match(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_topic_and_payload_match(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test if message is fired on topic and payload match."""
     assert await async_setup_component(
         hass,
@@ -90,7 +97,9 @@ async def test_if_fires_on_topic_and_payload_match(hass: HomeAssistant, calls) -
     assert len(calls) == 1
 
 
-async def test_if_fires_on_topic_and_payload_match2(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_topic_and_payload_match2(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test if message is fired on topic and payload match.
 
     Make sure a payload which would render as a non string can still be matched.
@@ -116,7 +125,7 @@ async def test_if_fires_on_topic_and_payload_match2(hass: HomeAssistant, calls) 
 
 
 async def test_if_fires_on_templated_topic_and_payload_match(
-    hass: HomeAssistant, calls
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test if message is fired on templated topic and payload match."""
     assert await async_setup_component(
@@ -147,7 +156,9 @@ async def test_if_fires_on_templated_topic_and_payload_match(
     assert len(calls) == 1
 
 
-async def test_if_fires_on_payload_template(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_payload_template(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test if message is fired on templated topic and payload match."""
     assert await async_setup_component(
         hass,
@@ -179,7 +190,7 @@ async def test_if_fires_on_payload_template(hass: HomeAssistant, calls) -> None:
 
 
 async def test_non_allowed_templates(
-    hass: HomeAssistant, calls, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, calls: list[ServiceCall], caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test non allowed function in template."""
     assert await async_setup_component(
@@ -203,7 +214,7 @@ async def test_non_allowed_templates(
 
 
 async def test_if_not_fires_on_topic_but_no_payload_match(
-    hass: HomeAssistant, calls
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test if message is not fired on topic but no payload."""
     assert await async_setup_component(
@@ -226,7 +237,9 @@ async def test_if_not_fires_on_topic_but_no_payload_match(
     assert len(calls) == 0
 
 
-async def test_encoding_default(hass: HomeAssistant, calls, setup_comp) -> None:
+async def test_encoding_default(
+    hass: HomeAssistant, calls: list[ServiceCall], setup_comp
+) -> None:
     """Test default encoding."""
     assert await async_setup_component(
         hass,
@@ -239,10 +252,14 @@ async def test_encoding_default(hass: HomeAssistant, calls, setup_comp) -> None:
         },
     )
 
-    setup_comp.async_subscribe.assert_called_with("test-topic", ANY, 0, "utf-8")
+    setup_comp.async_subscribe.assert_called_with(
+        "test-topic", ANY, 0, "utf-8", HassJobType.Callback
+    )
 
 
-async def test_encoding_custom(hass: HomeAssistant, calls, setup_comp) -> None:
+async def test_encoding_custom(
+    hass: HomeAssistant, calls: list[ServiceCall], setup_comp
+) -> None:
     """Test default encoding."""
     assert await async_setup_component(
         hass,
@@ -255,4 +272,6 @@ async def test_encoding_custom(hass: HomeAssistant, calls, setup_comp) -> None:
         },
     )
 
-    setup_comp.async_subscribe.assert_called_with("test-topic", ANY, 0, None)
+    setup_comp.async_subscribe.assert_called_with(
+        "test-topic", ANY, 0, None, HassJobType.Callback
+    )

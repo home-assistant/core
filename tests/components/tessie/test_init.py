@@ -16,22 +16,31 @@ async def test_load_unload(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_auth_failure(hass: HomeAssistant) -> None:
+async def test_auth_failure(
+    hass: HomeAssistant, mock_get_state_of_all_vehicles
+) -> None:
     """Test init with an authentication error."""
 
-    entry = await setup_platform(hass, side_effect=ERROR_AUTH)
+    mock_get_state_of_all_vehicles.side_effect = ERROR_AUTH
+    entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_unknown_failure(hass: HomeAssistant) -> None:
+async def test_unknown_failure(
+    hass: HomeAssistant, mock_get_state_of_all_vehicles
+) -> None:
     """Test init with an client response error."""
 
-    entry = await setup_platform(hass, side_effect=ERROR_UNKNOWN)
+    mock_get_state_of_all_vehicles.side_effect = ERROR_UNKNOWN
+    entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_connection_failure(hass: HomeAssistant) -> None:
+async def test_connection_failure(
+    hass: HomeAssistant, mock_get_state_of_all_vehicles
+) -> None:
     """Test init with a network connection error."""
 
-    entry = await setup_platform(hass, side_effect=ERROR_CONNECTION)
+    mock_get_state_of_all_vehicles.side_effect = ERROR_CONNECTION
+    entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_RETRY

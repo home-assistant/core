@@ -284,7 +284,8 @@ class APIEntityStateView(HomeAssistantView):
 
         # Read the state back for our response
         status_code = HTTPStatus.CREATED if is_new_state else HTTPStatus.OK
-        assert (state := hass.states.get(entity_id))
+        state = hass.states.get(entity_id)
+        assert state
         resp = self.json(state.as_dict(), status_code)
 
         resp.headers.add("Location", f"/api/states/{entity_id}")

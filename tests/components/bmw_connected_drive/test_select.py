@@ -1,6 +1,6 @@
 """Test BMW selects."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from bimmer_connected.models import MyBMWAPIError, MyBMWRemoteServiceError
 from bimmer_connected.vehicle.remote_services import RemoteServices
@@ -8,24 +8,33 @@ import pytest
 import respx
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 
 from . import check_remote_service_call, setup_mocked_integration
 
+from tests.common import snapshot_platform
 
+
+@pytest.mark.usefixtures("bmw_fixture")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entity_state_attrs(
     hass: HomeAssistant,
-    bmw_fixture: respx.Router,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test select options and values.."""
 
     # Setup component
-    assert await setup_mocked_integration(hass)
+    with patch(
+        "homeassistant.components.bmw_connected_drive.PLATFORMS",
+        [Platform.SELECT],
+    ):
+        mock_config_entry = await setup_mocked_integration(hass)
 
-    # Get all select entities
-    assert hass.states.async_all("select") == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -33,15 +42,15 @@ async def test_entity_state_attrs(
     [
         (
             "select.i3_rex_charging_mode",
-            "IMMEDIATE_CHARGING",
-            "DELAYED_CHARGING",
+            "immediate_charging",
+            "delayed_charging",
             "charging-profile",
         ),
         ("select.i4_edrive40_ac_charging_limit", "12", "16", "charging-settings"),
         (
             "select.i4_edrive40_charging_mode",
-            "DELAYED_CHARGING",
-            "IMMEDIATE_CHARGING",
+            "delayed_charging",
+            "immediate_charging",
             "charging-profile",
         ),
     ],
@@ -73,18 +82,18 @@ async def test_service_call_success(
     assert hass.states.get(entity_id).state == new_value
 
 
+@pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.parametrize(
     ("entity_id", "value"),
     [
         ("select.i4_edrive40_ac_charging_limit", "17"),
-        ("select.i4_edrive40_charging_mode", "BONKERS_MODE"),
+        ("select.i4_edrive40_charging_mode", "bonkers_mode"),
     ],
 )
 async def test_service_call_invalid_input(
     hass: HomeAssistant,
     entity_id: str,
     value: str,
-    bmw_fixture: respx.Router,
 ) -> None:
     """Test not allowed values for select inputs."""
 
@@ -104,6 +113,7 @@ async def test_service_call_invalid_input(
     assert hass.states.get(entity_id).state == old_value
 
 
+@pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.parametrize(
     ("raised", "expected"),
     [
@@ -116,7 +126,6 @@ async def test_service_call_fail(
     hass: HomeAssistant,
     raised: Exception,
     expected: Exception,
-    bmw_fixture: respx.Router,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test exception handling."""

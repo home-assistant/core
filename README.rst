@@ -7,6 +7,8 @@ Check out `home-assistant.io <https://home-assistant.io>`__ for `a
 demo <https://demo.home-assistant.io>`__, `installation instructions <https://home-assistant.io/getting-started/>`__,
 `tutorials <https://home-assistant.io/getting-started/automation/>`__ and `documentation <https://home-assistant.io/docs/>`__.
 
+This is a project of the `Open Home Foundation <https://www.openhomefoundation.org/>`__.
+
 |screenshot-states|
 
 Featured integrations

@@ -325,16 +325,24 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         # Convert the supported features to ClimateEntityFeature.
         # Remove this compatibility shim in 2025.1 or later.
-        _supported_features = super().__getattribute__(__name)
+        _supported_features: ClimateEntityFeature = super().__getattribute__(
+            "supported_features"
+        )
+        _mod_supported_features: ClimateEntityFeature = super().__getattribute__(
+            "_ClimateEntity__mod_supported_features"
+        )
         if type(_supported_features) is int:  # noqa: E721
-            new_features = ClimateEntityFeature(_supported_features)
-            self._report_deprecated_supported_features_values(new_features)
+            _features = ClimateEntityFeature(_supported_features)
+            self._report_deprecated_supported_features_values(_features)
+        else:
+            _features = _supported_features
+
+        if not _mod_supported_features:
+            return _features
 
         # Add automatically calculated ClimateEntityFeature.TURN_OFF/TURN_ON to
         # supported features and return it
-        return _supported_features | super().__getattribute__(
-            "_ClimateEntity__mod_supported_features"
-        )
+        return _features | _mod_supported_features
 
     @callback
     def add_to_platform_start(
@@ -375,7 +383,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             # Return if integration has migrated already
             return
 
-        if not self.supported_features & ClimateEntityFeature.TURN_OFF and (
+        supported_features = self.supported_features
+        if not supported_features & ClimateEntityFeature.TURN_OFF and (
             type(self).async_turn_off is not ClimateEntity.async_turn_off
             or type(self).turn_off is not ClimateEntity.turn_off
         ):
@@ -385,7 +394,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 ClimateEntityFeature.TURN_OFF
             )
 
-        if not self.supported_features & ClimateEntityFeature.TURN_ON and (
+        if not supported_features & ClimateEntityFeature.TURN_ON and (
             type(self).async_turn_on is not ClimateEntity.async_turn_on
             or type(self).turn_on is not ClimateEntity.turn_on
         ):
@@ -398,7 +407,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if (modes := self.hvac_modes) and len(modes) >= 2 and HVACMode.OFF in modes:
             # turn_on/off implicitly supported by including more modes than 1 and one of these
             # are HVACMode.OFF
-            _modes = [_mode for _mode in self.hvac_modes if _mode is not None]
+            _modes = [_mode for _mode in modes if _mode is not None]
             _report_turn_on_off(", ".join(_modes or []), "turn_on/turn_off")
             self.__mod_supported_features |= (  # pylint: disable=unused-private-member
                 ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
