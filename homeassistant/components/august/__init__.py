@@ -15,6 +15,10 @@ from yalexs.const import DEFAULT_BRAND
 from yalexs.doorbell import Doorbell, DoorbellDetail
 from yalexs.exceptions import AugustApiAIOHTTPError
 from yalexs.lock import Lock, LockDetail
+from yalexs.manager.activity import ActivityStream
+from yalexs.manager.const import CONF_BRAND
+from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidation
+from yalexs.manager.subscriber import SubscriberMixin
 from yalexs.pubnub_activity import activities_from_pubnub_message
 from yalexs.pubnub_async import AugustPubNub, async_create_pubnub
 from yalexs_ble import YaleXSBLEDiscovery
@@ -29,11 +33,8 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr, discovery_flow
 
-from .activity import ActivityStream
-from .const import CONF_BRAND, DOMAIN, MIN_TIME_BETWEEN_DETAIL_UPDATES, PLATFORMS
-from .exceptions import CannotConnect, InvalidAuth, RequireValidation
+from .const import DOMAIN, MIN_TIME_BETWEEN_DETAIL_UPDATES, PLATFORMS
 from .gateway import AugustGateway
-from .subscriber import AugustSubscriberMixin
 from .util import async_create_august_clientsession
 
 _LOGGER = logging.getLogger(__name__)
@@ -116,7 +117,7 @@ def _async_trigger_ble_lock_discovery(
         )
 
 
-class AugustData(AugustSubscriberMixin):
+class AugustData(SubscriberMixin):
     """August data object."""
 
     def __init__(
@@ -130,7 +131,7 @@ class AugustData(AugustSubscriberMixin):
         self._config_entry = config_entry
         self._hass = hass
         self._august_gateway = august_gateway
-        self.activity_stream: ActivityStream = None  # type: ignore[assignment]
+        self.activity_stream: ActivityStream = None
         self._api = august_gateway.api
         self._device_detail_by_id: dict[str, LockDetail | DoorbellDetail] = {}
         self._doorbells_by_id: dict[str, Doorbell] = {}
