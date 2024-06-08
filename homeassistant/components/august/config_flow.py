@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
+from pathlib import Path
 from typing import Any
 
 import aiohttp
@@ -164,7 +165,9 @@ class AugustConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._august_gateway is not None:
             return self._august_gateway
         self._aiohttp_session = async_create_august_clientsession(self.hass)
-        self._august_gateway = AugustGateway(self.hass, self._aiohttp_session)
+        self._august_gateway = AugustGateway(
+            Path(self.hass.config.config_dir), self._aiohttp_session
+        )
         return self._august_gateway
 
     @callback

@@ -1,6 +1,5 @@
 """Handle August connection setup and authentication."""
 
-import logging
 from typing import Any
 
 from yalexs.const import DEFAULT_BRAND
@@ -14,8 +13,6 @@ from .const import (
     CONF_INSTALL_ID,
     CONF_LOGIN_METHOD,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class AugustGateway(Gateway):

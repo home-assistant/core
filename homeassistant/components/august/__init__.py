@@ -7,7 +7,7 @@ from collections.abc import Callable, Coroutine, Iterable, ValuesView
 from datetime import datetime
 from itertools import chain
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aiohttp import ClientError, ClientResponseError
 from path import Path
@@ -19,20 +19,22 @@ from yalexs.lock import Lock, LockDetail
 from yalexs.manager.activity import ActivityStream
 from yalexs.manager.const import CONF_BRAND
 from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidation
+from yalexs.manager.gateway import Config as YaleXSConfig
 from yalexs.manager.subscriber import SubscriberMixin
 from yalexs.pubnub_activity import activities_from_pubnub_message
 from yalexs.pubnub_async import AugustPubNub, async_create_pubnub
 from yalexs_ble import YaleXSBLEDiscovery
 
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
-from homeassistant.const import CONF_PASSWORD
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.const import CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
     HomeAssistantError,
 )
 from homeassistant.helpers import device_registry as dr, discovery_flow
+from homeassistant.util.async_ import create_eager_task
 
 from .const import DOMAIN, MIN_TIME_BETWEEN_DETAIL_UPDATES, PLATFORMS
 from .gateway import AugustGateway
@@ -55,9 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up August from a config entry."""
     session = async_create_august_clientsession(hass)
     august_gateway = AugustGateway(Path(hass.config.config_dir), session)
-
     try:
-        await august_gateway.async_setup(entry.data)
         return await async_setup_august(hass, entry, august_gateway)
     except (RequireValidation, InvalidAuth) as err:
         raise ConfigEntryAuthFailed from err
@@ -69,7 +69,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bool:
     """Unload a config entry."""
-    entry.runtime_data.async_stop()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
@@ -77,6 +76,8 @@ async def async_setup_august(
     hass: HomeAssistant, config_entry: AugustConfigEntry, august_gateway: AugustGateway
 ) -> bool:
     """Set up the August component."""
+    config = cast(YaleXSConfig, config_entry.data)
+    await august_gateway.async_setup(config)
 
     if CONF_PASSWORD in config_entry.data:
         # We no longer need to store passwords since we do not
@@ -128,7 +129,7 @@ class AugustData(SubscriberMixin):
         august_gateway: AugustGateway,
     ) -> None:
         """Init August data object."""
-        super().__init__(hass, MIN_TIME_BETWEEN_DETAIL_UPDATES)
+        super().__init__(MIN_TIME_BETWEEN_DETAIL_UPDATES)
         self._config_entry = config_entry
         self._hass = hass
         self._august_gateway = august_gateway
@@ -177,9 +178,14 @@ class AugustData(SubscriberMixin):
             pubnub.register_device(device)
 
         self.activity_stream = ActivityStream(
-            self._hass, self._api, self._august_gateway, self._house_ids, pubnub
+            self._api, self._august_gateway, self._house_ids, pubnub
+        )
+        self._config_entry.async_on_unload(self.async_stop)
+        self._config_entry.async_on_unload(
+            self._hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         )
         await self.activity_stream.async_setup()
+
         pubnub.subscribe(self.async_pubnub_message)
         self._pubnub_unsub = async_create_pubnub(
             user_data["UserID"],
@@ -202,8 +208,10 @@ class AugustData(SubscriberMixin):
         # awake when they come back online
         for result in await asyncio.gather(
             *[
-                self.async_status_async(
-                    device_id, bool(detail.bridge and detail.bridge.hyper_bridge)
+                create_eager_task(
+                    self.async_status_async(
+                        device_id, bool(detail.bridge and detail.bridge.hyper_bridge)
+                    )
                 )
                 for device_id, detail in self._device_detail_by_id.items()
                 if device_id in self._locks_by_id
@@ -234,7 +242,7 @@ class AugustData(SubscriberMixin):
             activity_stream.async_schedule_house_id_refresh(device.house_id)
 
     @callback
-    def async_stop(self) -> None:
+    def async_stop(self, event: Event | None = None) -> None:
         """Stop the subscriptions."""
         if self._pubnub_unsub:
             self._pubnub_unsub()

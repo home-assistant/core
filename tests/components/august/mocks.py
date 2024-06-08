@@ -58,8 +58,8 @@ def _mock_authenticator(auth_state):
     return authenticator
 
 
-@patch("homeassistant.components.august.gateway.ApiAsync")
-@patch("homeassistant.components.august.gateway.AuthenticatorAsync.async_authenticate")
+@patch("yalexs.manager.gateway.ApiAsync")
+@patch("yalexs.manager.gateway.AuthenticatorAsync.async_authenticate")
 async def _mock_setup_august(
     hass, api_instance, pubnub_mock, authenticate_mock, api_mock, brand
 ):
