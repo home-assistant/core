@@ -12,6 +12,9 @@ import voluptuous as vol
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import trace
+from homeassistant.components.google_generative_ai_conversation.conversation import (
+    _escape_decode,
+)
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -504,3 +507,18 @@ async def test_conversation_agent(
         mock_config_entry.entry_id
     )
     assert agent.supported_languages == "*"
+
+
+async def test_escape_decode() -> None:
+    """Test _escape_decode."""
+    assert _escape_decode(
+        {
+            "param1": ["test_value", "param1\\'s value"],
+            "param2": "param2\\'s value",
+            "param3": {"param31": "Cheminée", "param32": "Chemin\\303\\251e"},
+        }
+    ) == {
+        "param1": ["test_value", "param1's value"],
+        "param2": "param2's value",
+        "param3": {"param31": "Cheminée", "param32": "Cheminée"},
+    }
