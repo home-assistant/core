@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, TypeVar
+from typing import Any
 
 from pynuki import NukiLock, NukiOpener
 from pynuki.constants import MODE_OPENER_CONTINUOUS
@@ -27,8 +27,6 @@ from .const import (
     ERROR_STATES,
 )
 from .helpers import CannotConnect
-
-_NukiDeviceT = TypeVar("_NukiDeviceT", bound=NukiDevice)
 
 
 async def async_setup_entry(
@@ -64,7 +62,7 @@ async def async_setup_entry(
     )
 
 
-class NukiDeviceEntity(NukiEntity[_NukiDeviceT], LockEntity):
+class NukiDeviceEntity[_NukiDeviceT: NukiDevice](NukiEntity[_NukiDeviceT], LockEntity):
     """Representation of a Nuki device."""
 
     _attr_has_entity_name = True

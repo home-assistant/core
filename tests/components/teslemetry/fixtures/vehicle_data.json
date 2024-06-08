@@ -3,7 +3,7 @@
     "id": 1234,
     "user_id": 1234,
     "vehicle_id": 1234,
-    "vin": "VINVINVIN",
+    "vin": "LRWXF7EK4KC700000",
     "color": null,
     "access_type": "OWNER",
     "granular_access": {
@@ -204,17 +204,18 @@
       "is_user_present": false,
       "locked": false,
       "media_info": {
-        "audio_volume": 2.6667,
+        "a2dp_source_name": "Pixel 8 Pro",
+        "audio_volume": 1.6667,
         "audio_volume_increment": 0.333333,
         "audio_volume_max": 10.333333,
-        "media_playback_status": "Stopped",
-        "now_playing_album": "",
-        "now_playing_artist": "",
-        "now_playing_duration": 0,
-        "now_playing_elapsed": 0,
-        "now_playing_source": "Spotify",
-        "now_playing_station": "",
-        "now_playing_title": ""
+        "media_playback_status": "Playing",
+        "now_playing_album": "Elon Musk",
+        "now_playing_artist": "Walter Isaacson",
+        "now_playing_duration": 651000,
+        "now_playing_elapsed": 1000,
+        "now_playing_source": "Audible",
+        "now_playing_station": "Elon Musk",
+        "now_playing_title": "Chapter 51: Cybertruck: Tesla, 2018–2019"
       },
       "media_state": {
         "remote_control_enabled": true
@@ -236,11 +237,11 @@
       "service_mode": false,
       "service_mode_plus": false,
       "software_update": {
-        "download_perc": 0,
+        "download_perc": 100,
         "expected_duration_sec": 2700,
         "install_perc": 1,
-        "status": "",
-        "version": " "
+        "status": "available",
+        "version": "2024.12.0.0"
       },
       "speed_limit_mode": {
         "active": false,

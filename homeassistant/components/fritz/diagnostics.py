@@ -9,8 +9,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .common import AvmWrapper
 from .const import DOMAIN
+from .coordinator import AvmWrapper
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 

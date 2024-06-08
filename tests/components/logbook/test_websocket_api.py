@@ -47,9 +47,9 @@ from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
 
 
 @pytest.fixture
-def set_utc(hass):
+async def set_utc(hass):
     """Set timezone to UTC."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
 
 
 def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:
@@ -630,7 +630,7 @@ async def test_subscribe_unsubscribe_logbook_stream_excluded_entities(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
     assert msg["event"]["start_time"] == now.timestamp()
@@ -679,17 +679,17 @@ async def test_subscribe_unsubscribe_logbook_stream_excluded_entities(
         {
             "entity_id": "light.alpha",
             "state": "off",
-            "when": alpha_off_state.last_updated.timestamp(),
+            "when": alpha_off_state.last_updated_timestamp,
         },
         {
             "entity_id": "light.zulu",
             "state": "off",
-            "when": zulu_off_state.last_updated.timestamp(),
+            "when": zulu_off_state.last_updated_timestamp,
         },
         {
             "entity_id": "light.zulu",
             "state": "on",
-            "when": zulu_on_state.last_updated.timestamp(),
+            "when": zulu_on_state.last_updated_timestamp,
         },
     ]
 
@@ -1033,7 +1033,7 @@ async def test_logbook_stream_excluded_entities_inherits_filters_from_recorder(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
     assert msg["event"]["start_time"] == now.timestamp()
@@ -1082,17 +1082,17 @@ async def test_logbook_stream_excluded_entities_inherits_filters_from_recorder(
         {
             "entity_id": "light.alpha",
             "state": "off",
-            "when": alpha_off_state.last_updated.timestamp(),
+            "when": alpha_off_state.last_updated_timestamp,
         },
         {
             "entity_id": "light.zulu",
             "state": "off",
-            "when": zulu_off_state.last_updated.timestamp(),
+            "when": zulu_off_state.last_updated_timestamp,
         },
         {
             "entity_id": "light.zulu",
             "state": "on",
-            "when": zulu_on_state.last_updated.timestamp(),
+            "when": zulu_on_state.last_updated_timestamp,
         },
     ]
 
@@ -1201,7 +1201,7 @@ async def test_subscribe_unsubscribe_logbook_stream(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
     assert msg["event"]["start_time"] == now.timestamp()
@@ -1241,17 +1241,17 @@ async def test_subscribe_unsubscribe_logbook_stream(
         {
             "entity_id": "light.alpha",
             "state": "off",
-            "when": alpha_off_state.last_updated.timestamp(),
+            "when": alpha_off_state.last_updated_timestamp,
         },
         {
             "entity_id": "light.zulu",
             "state": "off",
-            "when": zulu_off_state.last_updated.timestamp(),
+            "when": zulu_off_state.last_updated_timestamp,
         },
         {
             "entity_id": "light.zulu",
             "state": "on",
-            "when": zulu_on_state.last_updated.timestamp(),
+            "when": zulu_on_state.last_updated_timestamp,
         },
     ]
 
@@ -1514,7 +1514,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
 
@@ -1613,7 +1613,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
 
@@ -1716,7 +1716,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_past_only(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
 
@@ -1804,7 +1804,7 @@ async def test_subscribe_unsubscribe_logbook_stream_big_query(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "on",
-            "when": current_state.last_updated.timestamp(),
+            "when": current_state.last_updated_timestamp,
         }
     ]
 
@@ -1817,7 +1817,7 @@ async def test_subscribe_unsubscribe_logbook_stream_big_query(
         {
             "entity_id": "binary_sensor.four_days_ago",
             "state": "off",
-            "when": four_day_old_state.last_updated.timestamp(),
+            "when": four_day_old_state.last_updated_timestamp,
         }
     ]
 
@@ -2363,7 +2363,7 @@ async def test_subscribe_disconnected(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
 
@@ -2790,7 +2790,7 @@ async def test_logbook_stream_ignores_forced_updates(
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
-            "when": state.last_updated.timestamp(),
+            "when": state.last_updated_timestamp,
         }
     ]
     assert msg["event"]["start_time"] == now.timestamp()

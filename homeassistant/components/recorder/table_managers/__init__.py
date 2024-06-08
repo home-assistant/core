@@ -1,6 +1,8 @@
 """Managers for each table."""
 
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 from lru import LRU
 
@@ -9,15 +11,13 @@ from homeassistant.util.event_type import EventType
 if TYPE_CHECKING:
     from ..core import Recorder
 
-_DataT = TypeVar("_DataT")
 
-
-class BaseTableManager(Generic[_DataT]):
+class BaseTableManager[_DataT]:
     """Base class for table managers."""
 
-    _id_map: "LRU[EventType[Any] | str, int]"
+    _id_map: LRU[EventType[Any] | str, int]
 
-    def __init__(self, recorder: "Recorder") -> None:
+    def __init__(self, recorder: Recorder) -> None:
         """Initialize the table manager.
 
         The table manager is responsible for managing the id mappings
@@ -54,10 +54,10 @@ class BaseTableManager(Generic[_DataT]):
         self._pending.clear()
 
 
-class BaseLRUTableManager(BaseTableManager[_DataT]):
+class BaseLRUTableManager[_DataT](BaseTableManager[_DataT]):
     """Base class for LRU table managers."""
 
-    def __init__(self, recorder: "Recorder", lru_size: int) -> None:
+    def __init__(self, recorder: Recorder, lru_size: int) -> None:
         """Initialize the LRU table manager.
 
         We keep track of the most recently used items

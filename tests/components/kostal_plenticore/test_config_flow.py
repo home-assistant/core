@@ -1,10 +1,10 @@
 """Test the Kostal Plenticore Solar Inverter config flow."""
 
-from collections.abc import Generator
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from pykoplenti import ApiClient, AuthenticationException, SettingsData
 import pytest
+from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components.kostal_plenticore.const import DOMAIN
@@ -25,7 +25,7 @@ def mock_apiclient() -> ApiClient:
 
 
 @pytest.fixture
-def mock_apiclient_class(mock_apiclient) -> Generator[type[ApiClient], None, None]:
+def mock_apiclient_class(mock_apiclient) -> Generator[type[ApiClient]]:
     """Return a mocked ApiClient class."""
     with patch(
         "homeassistant.components.kostal_plenticore.config_flow.ApiClient",

@@ -413,7 +413,9 @@ async def test_humidity(
     assert float(state.attributes[ATTR_WEATHER_HUMIDITY]) == 80
 
 
-async def test_custom_units(hass: HomeAssistant, config_flow_fixture: None) -> None:
+async def test_custom_units(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, config_flow_fixture: None
+) -> None:
     """Test custom unit."""
     wind_speed_value = 5
     wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
@@ -433,8 +435,6 @@ async def test_custom_units(hass: HomeAssistant, config_flow_fixture: None) -> N
         "temperature_unit": UnitOfTemperature.FAHRENHEIT,
         "visibility_unit": UnitOfLength.MILES,
     }
-
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get_or_create("weather", "test", "very_unique")
     entity_registry.async_update_entity_options(entry.entity_id, "weather", set_options)

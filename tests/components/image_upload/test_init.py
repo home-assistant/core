@@ -49,7 +49,14 @@ async def test_upload_image(
 
         tempdir = pathlib.Path(tempdir)
         item_folder: pathlib.Path = tempdir / item["id"]
-        assert (item_folder / "original").read_bytes() == TEST_IMAGE.read_bytes()
+        test_image_bytes = TEST_IMAGE.read_bytes()
+        assert (item_folder / "original").read_bytes() == test_image_bytes
+
+        # fetch original image
+        res = await client.get(f"/api/image/serve/{item['id']}/original")
+        assert res.status == 200
+        fetched_image_bytes = await res.read()
+        assert fetched_image_bytes == test_image_bytes
 
         # fetch non-existing image
         res = await client.get("/api/image/serve/non-existing/256x256")
