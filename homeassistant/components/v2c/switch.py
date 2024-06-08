@@ -83,7 +83,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up V2C switch platform."""
-    coordinator: V2CUpdateCoordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         V2CSwitchEntity(coordinator, description, config_entry.entry_id)
