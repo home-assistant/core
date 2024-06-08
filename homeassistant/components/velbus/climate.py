@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN, PRESET_MODES
 from .entity import VelbusEntity, api_call
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -89,4 +90,3 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
         if hvac_mode not in self.hvac_mode:
             await self._channel.set_mode(hvac_mode)
             self.async_write_ha_state()
-
