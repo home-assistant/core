@@ -104,7 +104,7 @@ def get_config_entry(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
         """Get config_entry."""
-        if not (config_entry := hass.config_entries.async_get_entry(msg["host_id"])):
+        if not (config_entry := hass.config_entries.async_get_entry(msg["entry_id"])):
             connection.send_result(msg["id"], False)
         else:
             await func(hass, connection, msg, config_entry)
@@ -114,7 +114,7 @@ def get_config_entry(
 
 @websocket_api.require_admin
 @websocket_api.websocket_command(
-    {vol.Required("type"): "lcn/devices", vol.Required("host_id"): cv.string}
+    {vol.Required("type"): "lcn/devices", vol.Required("entry_id"): cv.string}
 )
 @websocket_api.async_response
 @get_config_entry
@@ -132,7 +132,7 @@ async def websocket_get_device_configs(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "lcn/entities",
-        vol.Required("host_id"): cv.string,
+        vol.Required("entry_id"): cv.string,
         vol.Optional(CONF_ADDRESS): ADDRESS_SCHEMA,
     }
 )
@@ -172,7 +172,7 @@ async def websocket_get_entity_configs(
 
 @websocket_api.require_admin
 @websocket_api.websocket_command(
-    {vol.Required("type"): "lcn/devices/scan", vol.Required("host_id"): cv.string}
+    {vol.Required("type"): "lcn/devices/scan", vol.Required("entry_id"): cv.string}
 )
 @websocket_api.async_response
 @get_config_entry
@@ -202,7 +202,7 @@ async def websocket_scan_devices(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "lcn/devices/add",
-        vol.Required("host_id"): cv.string,
+        vol.Required("entry_id"): cv.string,
         vol.Required(CONF_ADDRESS): ADDRESS_SCHEMA,
     }
 )
@@ -248,7 +248,7 @@ async def websocket_add_device(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "lcn/devices/delete",
-        vol.Required("host_id"): cv.string,
+        vol.Required("entry_id"): cv.string,
         vol.Required(CONF_ADDRESS): ADDRESS_SCHEMA,
     }
 )
@@ -299,7 +299,7 @@ async def websocket_delete_device(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "lcn/entities/add",
-        vol.Required("host_id"): cv.string,
+        vol.Required("entry_id"): cv.string,
         vol.Required(CONF_ADDRESS): ADDRESS_SCHEMA,
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_DOMAIN): cv.string,
@@ -350,7 +350,7 @@ async def websocket_add_entity(
     }
 
     # Create new entity and add to corresponding component
-    callbacks = hass.data[DOMAIN][msg["host_id"]][ADD_ENTITIES_CALLBACKS]
+    callbacks = hass.data[DOMAIN][msg["entry_id"]][ADD_ENTITIES_CALLBACKS]
     async_add_entities, create_lcn_entity = callbacks[msg[CONF_DOMAIN]]
 
     entity = create_lcn_entity(hass, entity_config, config_entry)
@@ -370,7 +370,7 @@ async def websocket_add_entity(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "lcn/entities/delete",
-        vol.Required("host_id"): cv.string,
+        vol.Required("entry_id"): cv.string,
         vol.Required(CONF_ADDRESS): ADDRESS_SCHEMA,
         vol.Required(CONF_DOMAIN): cv.string,
         vol.Required(CONF_RESOURCE): cv.string,
