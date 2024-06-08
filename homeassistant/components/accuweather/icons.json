@@ -28,12 +28,6 @@
       "ragweed_pollen": {
         "default": "mdi:sprout"
       },
-      "solar_irradiance_day": {
-        "default": "mdi:weather-sunny"
-      },
-      "solar_irradiance_night": {
-        "default": "mdi:weather-sunny"
-      },
       "thunderstorm_probability_day": {
         "default": "mdi:weather-lightning"
       },

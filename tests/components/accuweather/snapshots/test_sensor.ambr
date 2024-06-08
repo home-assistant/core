@@ -3677,7 +3677,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Solar irradiance day 0',
     'platform': 'accuweather',
@@ -3692,6 +3692,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance day 0',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
@@ -3725,7 +3726,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Solar irradiance day 1',
     'platform': 'accuweather',
@@ -3740,6 +3741,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance day 1',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
@@ -3773,7 +3775,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Solar irradiance day 2',
     'platform': 'accuweather',
@@ -3788,6 +3790,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance day 2',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
@@ -3821,7 +3824,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Solar irradiance day 3',
     'platform': 'accuweather',
@@ -3836,6 +3839,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance day 3',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
@@ -3869,7 +3873,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Solar irradiance day 4',
     'platform': 'accuweather',
@@ -3884,6 +3888,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance day 4',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
@@ -3917,7 +3922,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Solar irradiance night 0',
     'platform': 'accuweather',
@@ -3932,6 +3937,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance night 0',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
@@ -3965,7 +3971,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Solar irradiance night 1',
     'platform': 'accuweather',
@@ -3980,6 +3986,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance night 1',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
@@ -4013,7 +4020,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Solar irradiance night 2',
     'platform': 'accuweather',
@@ -4028,6 +4035,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance night 2',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
@@ -4061,7 +4069,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Solar irradiance night 3',
     'platform': 'accuweather',
@@ -4076,6 +4084,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance night 3',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
@@ -4109,7 +4118,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Solar irradiance night 4',
     'platform': 'accuweather',
@@ -4124,6 +4133,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance night 4',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),

@@ -149,6 +149,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="SolarIrradianceDay",
+        device_class=SensorDeviceClass.IRRADIANCE,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         value_fn=lambda data: cast(float, data[ATTR_VALUE]),
@@ -156,6 +157,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="SolarIrradianceNight",
+        device_class=SensorDeviceClass.IRRADIANCE,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         value_fn=lambda data: cast(float, data[ATTR_VALUE]),
