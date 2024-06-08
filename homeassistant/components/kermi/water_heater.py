@@ -102,6 +102,11 @@ class KermiWaterHeater(WaterHeaterEntity, CoordinatorEntity):
         """Return a unique ID."""
         return f"{self._entry_id}_{self.entry.data['water_heater_device_address']}"
 
+    @property
+    def translation_key(self):
+        """Return the translation key."""
+        return "kermi_water_heater"
+
     async def write_register(self, register, value):
         """Write a register value to the device."""
         client = self.hass.data[DOMAIN][self.entry.entry_id]["client"]

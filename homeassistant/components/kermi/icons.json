@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "water_heater": {
+      "kermi": {
+        "state_attributes": {
+          "operation_mode": {
+            "state": {
+              "auto": "mdi:flash-auto"
+            }
+          }
+        }
+      }
+    }
+  }
+}
