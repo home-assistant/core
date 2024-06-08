@@ -491,8 +491,8 @@ class Template:
         "_limited",
         "_strict",
         "_log_fn",
-        "_hash_cache",
         "_renders",
+        "__hash__",
     )
 
     def __init__(self, template: str, hass: HomeAssistant | None = None) -> None:
@@ -509,8 +509,9 @@ class Template:
         self._limited: bool | None = None
         self._strict: bool | None = None
         self._log_fn: Callable[[int, str], None] | None = None
-        self._hash_cache: int = hash(self.template)
         self._renders: int = 0
+        _hash_cache = hash(self.template)
+        self.__hash__ = cache(lambda: _hash_cache)  # type: ignore[method-assign]
 
     @property
     def _env(self) -> TemplateEnvironment:
@@ -827,10 +828,6 @@ class Template:
             and self.template == other.template
             and self.hass == other.hass
         )
-
-    def __hash__(self) -> int:
-        """Hash code for template."""
-        return self._hash_cache
 
     def __repr__(self) -> str:
         """Representation of Template."""

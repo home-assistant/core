@@ -156,6 +156,8 @@ def test_template_equality() -> None:
     assert template_one != template_two
     assert hash(template_one) == hash(template_one_1)
     assert hash(template_one) != hash(template_two)
+    assert hash(template_one) == hash(template_one.template)
+    assert hash(template_two) == hash(template_two.template)
 
     assert str(template_one_1) == "Template<template=({{ template_one }}) renders=0>"
 
