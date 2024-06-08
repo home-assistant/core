@@ -208,7 +208,6 @@ async def test_previous_media_player_intent(hass: HomeAssistant) -> None:
             "test",
             media_player_intent.INTENT_MEDIA_PREVIOUS,
         )
-        await hass.async_block_till_done()
 
     # Test feature not supported
     hass.states.async_set(
@@ -224,7 +223,6 @@ async def test_previous_media_player_intent(hass: HomeAssistant) -> None:
             media_player_intent.INTENT_MEDIA_PREVIOUS,
             {"name": {"value": "test media player"}},
         )
-        await hass.async_block_till_done()
 
 
 async def test_volume_media_player_intent(hass: HomeAssistant) -> None:
