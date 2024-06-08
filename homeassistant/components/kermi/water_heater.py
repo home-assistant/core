@@ -95,6 +95,13 @@ class KermiWaterHeater(WaterHeaterEntity, CoordinatorEntity):
         self._attr_current_temperature = data.get("water_heater_temperature")
         self._attr_target_temperature = data.get("water_heater_target_temperature")
         self._attr_current_operation = data.get("water_heater_operation_mode")
+
+        if data.get("water_heater_single_cycle_heating"):
+            # simplyfing here, as the single cycle heating can be used with any operation mode
+            self._attr_current_operation = water_heater.const.STATE_HIGH_DEMAND
+        else:
+            self._attr_current_operation = data.get("water_heater_operation_mode")
+
         self.async_write_ha_state()
 
     @property
@@ -138,18 +145,25 @@ class KermiWaterHeater(WaterHeaterEntity, CoordinatorEntity):
 
     def set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
-        if operation_mode is not None:
-            # Get the register info for the operation_mode
-            register_info = MODBUS_REGISTERS["water_heater"]["operation_mode"]
+        if operation_mode is None:
+            return
 
-            mapped_mode = {v: k for k, v in register_info["mapping"].items()}[  # type: ignore[attr-defined]
-                operation_mode
-            ]
+        # single_cycle_heating is a special case, as it can be used with any operation mode
+        register_key = (
+            "single_cycle_heating"
+            if operation_mode == water_heater.const.STATE_HIGH_DEMAND
+            else "operation_mode"
+        )
+        register_info = MODBUS_REGISTERS["water_heater"][register_key]
 
-            # Schedule the function to be run on the event loop
-            self.hass.add_job(
-                self.write_register, register_info["register"], mapped_mode
-            )
+        # note: this will trigger single cycle heating with the current operation mode
+        if register_key == "single_cycle_heating":
+            value = 1
+        else:
+            {v: k for k, v in register_info["mapping"].items()}[operation_mode]  # type: ignore[attr-defined]
+
+        # Schedule the function to be run on the event loop
+        self.hass.add_job(self.write_register, register_info["register"], value)
 
         self._attr_current_operation = operation_mode
         self.schedule_update_ha_state()
