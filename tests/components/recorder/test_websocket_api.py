@@ -795,6 +795,196 @@ async def test_statistic_during_period_hole(
 
 
 @pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
+async def test_statistic_during_period_partial_overlap(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test statistic_during_period."""
+    now = dt_util.utcnow()
+
+    await async_recorder_block_till_done(hass)
+    client = await hass_ws_client()
+
+    zero = now
+    start = zero.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Sum shall be tracking a hypothetical sensor that is 0 at midnight, and grows by 1 per minute.
+    # The test will have 4 hours of LTS-only data (0:00-3:59:59), followed by 2 hours of overlapping STS/LTS (4:00-5:59:59), followed by 30 minutes of STS only (6:00-6:29:59)
+    # similar to how a real recorder might look after purging STS.
+
+    # The datapoint at i=0 (start = 0:00) will be 60 as that is the growth during the hour starting at the start period
+    imported_stats_hours = [
+        {
+            "start": (start + timedelta(hours=i)),
+            "sum": (i + 1) * 60,
+        }
+        for i in range(6)
+    ]
+
+    # The datapoint at i=0 (start = 4:00) would be the sensor's value at t=4:05, or 245
+    imported_stats_5min = [
+        {
+            "start": (start + timedelta(hours=4, minutes=5 * i)),
+            "sum": 4 * 60 + (i + 1) * 5,
+        }
+        for i in range(36)
+    ]
+
+    statId = "sensor.test_overlapping"
+    imported_metadata = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy overlapping",
+        "source": "recorder",
+        "statistic_id": statId,
+        "unit_of_measurement": "kWh",
+    }
+
+    recorder.get_instance(hass).async_import_statistics(
+        imported_metadata,
+        imported_stats_hours,
+        Statistics,
+    )
+    recorder.get_instance(hass).async_import_statistics(
+        imported_metadata,
+        imported_stats_5min,
+        StatisticsShortTerm,
+    )
+    await async_wait_recording_done(hass)
+
+    metadata = get_metadata(hass, statistic_ids={statId})
+    metadata_id = metadata[statId][0]
+    run_cache = get_short_term_statistics_run_cache(hass)
+    # Verify the import of the short term statistics
+    # also updates the run cache
+    assert run_cache.get_latest_ids({metadata_id}) is not None
+
+    # Get all the stats, should consider all hours and 5mins
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/statistic_during_period",
+            "statistic_id": statId,
+            "types": ["change"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "change": imported_stats_5min[-1]["sum"] - imported_stats_hours[0]["sum"],
+    }
+
+    async def assert_change_during_fixed(client, start_time, end_time, expected):
+        json = {
+            "type": "recorder/statistic_during_period",
+            "types": ["change"],
+            "statistic_id": statId,
+            "fixed_period": {},
+        }
+        if start_time:
+            json["fixed_period"]["start_time"] = start_time.isoformat()
+        if end_time:
+            json["fixed_period"]["end_time"] = end_time.isoformat()
+
+        await client.send_json_auto_id(json)
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] == {
+            "change": expected,
+        }
+
+    # One hours worth of growth in LTS-only
+    start_time = start.replace(hour=1)
+    end_time = start.replace(hour=2)
+    expect = 60
+    await assert_change_during_fixed(client, start_time, end_time, expect)
+
+    # Five minutes of growth in STS-only
+    start_time = start.replace(hour=6, minute=15)
+    end_time = start.replace(hour=6, minute=20)
+    expect = 5
+    await assert_change_during_fixed(client, start_time, end_time, expect)
+
+    # Five minutes of growth in STS-only, with a minute offset. Despite that this does not cover the full period, result is still 5
+    start_time = start.replace(hour=6, minute=16)
+    end_time = start.replace(hour=6, minute=21)
+    expect = 5
+    await assert_change_during_fixed(client, start_time, end_time, expect)
+
+    # 7 minutes of growth in STS-only, spanning two intervals
+    start_time = start.replace(hour=6, minute=14)
+    end_time = start.replace(hour=6, minute=21)
+    expect = 10
+    await assert_change_during_fixed(client, start_time, end_time, expect)
+
+    # One hours worth of growth in LTS-only, with arbitrary minute offsets
+    # Since this does not fully cover the hour, result is None?
+    start_time = start.replace(hour=1, minute=40)
+    end_time = start.replace(hour=2, minute=12)
+    expect = None
+    await assert_change_during_fixed(client, start_time, end_time, expect)
+
+    # One hours worth of growth in LTS-only, with arbitrary minute offsets, covering a whole 1-hour period
+    start_time = start.replace(hour=1, minute=40)
+    end_time = start.replace(hour=3, minute=12)
+    expect = 60
+    # FIXME: Pre-fix says "-65"
+    # Post-fix says "60"
+    # await assert_change_during_fixed(client, start_time, end_time, expect)
+
+    # 15 minutes of growth in STS window only
+    start_time = start.replace(hour=6, minute=4)
+    end_time = start.replace(hour=6, minute=17)
+    expect = 15
+    await assert_change_during_fixed(client, start_time, end_time, expect)
+
+    # 90 minutes of growth in window overlapping LTS+STS/STS-only (4:41 - 6:11)
+    start_time = start.replace(hour=4, minute=41)
+    end_time = start_time + timedelta(minutes=90)
+    expect = 90
+    await assert_change_during_fixed(client, start_time, end_time, expect)
+
+    # 4 hours of growth in overlapping LTS-only/LTS+STS (2:01-6:01)
+    start_time = start.replace(hour=2, minute=1)
+    end_time = start_time + timedelta(minutes=240)
+    expect = 185
+    # FIXME: Pre-115291 says "120", which is too little
+    # Postfix says "185", which counts LTS (3:00-6:00), plus a 5 minute at 6:00? seems odd
+    # await assert_change_during_fixed(client, start_time, end_time, expect)
+
+    # 4 hours of growth in overlapping LTS-only/LTS+STS (1:31-5:31)
+    start_time = start.replace(hour=1, minute=31)
+    end_time = start_time + timedelta(minutes=240)
+    # The earliest LTS datapoint will be 2:00, so this result will actually only pickup datapoints from 2:00-5:31
+    expect = 215
+    # FIXME: Pre-115291 says "90", which is only the STS window (4:00-5:31) ?
+    # Postfix says "215", which is 2:00-5:00 LTS (+180) 5:00-5:31 (+35)
+    # await assert_change_during_fixed(client, start_time, end_time, expect)
+
+    # 5 hours of growth, start time only (1:31-end)
+    start_time = start.replace(hour=1, minute=31)
+    end_time = None
+    # will be actually 2:00 - end
+    expect = 4 * 60 + 30
+    # FIXME: Pre-115291 says "115" (1 hour and 55 minutes)? which I do not understand
+    # Postfix says 240, which doesn't seem right either, I would have expected 270 or 275? for 2:00 to the end
+    # await assert_change_during_fixed(client, start_time, end_time, expect)
+
+    # 5 hours of growth, end_time_only (0:00-5:00)
+    start_time = None
+    end_time = start.replace(hour=5)
+    expect = 60 * 5
+    await assert_change_during_fixed(client, start_time, end_time, expect)
+
+    # 5 hours 1 minute of growth, end_time_only (0:00-5:01)
+    start_time = None
+    end_time = start.replace(hour=5, minute=1)
+    # Extra minute picks up one more 5 minute interval?
+    expect = 60 * 5 + 5
+    await assert_change_during_fixed(client, start_time, end_time, expect)
+
+
+@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
 @pytest.mark.parametrize(
     ("calendar_period", "start_time", "end_time"),
     [
