@@ -335,10 +335,7 @@ class GoogleGenerativeAIConversationEntity(
             for function_call in function_calls:
                 tool_call = MessageToDict(function_call._pb)  # noqa: SLF001
                 tool_name = tool_call["name"]
-                tool_args = {
-                    key: _escape_decode(value)
-                    for key, value in tool_call["args"].items()
-                }
+                tool_args = _escape_decode(tool_call["args"])
                 LOGGER.debug("Tool call: %s(%s)", tool_name, tool_args)
                 tool_input = llm.ToolInput(tool_name=tool_name, tool_args=tool_args)
                 try:
