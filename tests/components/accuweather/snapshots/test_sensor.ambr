@@ -31,7 +31,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:air-filter',
+    'original_icon': None,
     'original_name': 'Air quality day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -47,7 +47,6 @@
       'attribution': 'Data provided by AccuWeather',
       'device_class': 'enum',
       'friendly_name': 'Home Air quality day 0',
-      'icon': 'mdi:air-filter',
       'options': list([
         'good',
         'hazardous',
@@ -97,7 +96,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:air-filter',
+    'original_icon': None,
     'original_name': 'Air quality day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -113,7 +112,6 @@
       'attribution': 'Data provided by AccuWeather',
       'device_class': 'enum',
       'friendly_name': 'Home Air quality day 1',
-      'icon': 'mdi:air-filter',
       'options': list([
         'good',
         'hazardous',
@@ -163,7 +161,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:air-filter',
+    'original_icon': None,
     'original_name': 'Air quality day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -179,7 +177,6 @@
       'attribution': 'Data provided by AccuWeather',
       'device_class': 'enum',
       'friendly_name': 'Home Air quality day 2',
-      'icon': 'mdi:air-filter',
       'options': list([
         'good',
         'hazardous',
@@ -229,7 +226,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:air-filter',
+    'original_icon': None,
     'original_name': 'Air quality day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -245,7 +242,6 @@
       'attribution': 'Data provided by AccuWeather',
       'device_class': 'enum',
       'friendly_name': 'Home Air quality day 3',
-      'icon': 'mdi:air-filter',
       'options': list([
         'good',
         'hazardous',
@@ -295,7 +291,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:air-filter',
+    'original_icon': None,
     'original_name': 'Air quality day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -311,7 +307,6 @@
       'attribution': 'Data provided by AccuWeather',
       'device_class': 'enum',
       'friendly_name': 'Home Air quality day 4',
-      'icon': 'mdi:air-filter',
       'options': list([
         'good',
         'hazardous',
@@ -409,7 +404,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-    'original_icon': 'mdi:weather-fog',
+    'original_icon': None,
     'original_name': 'Cloud ceiling',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -425,7 +420,6 @@
       'attribution': 'Data provided by AccuWeather',
       'device_class': 'distance',
       'friendly_name': 'Home Cloud ceiling',
-      'icon': 'mdi:weather-fog',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
     }),
@@ -462,7 +456,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
+    'original_icon': None,
     'original_name': 'Cloud cover',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -477,7 +471,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Cloud cover',
-      'icon': 'mdi:weather-cloudy',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -512,7 +505,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
+    'original_icon': None,
     'original_name': 'Cloud cover day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -527,7 +520,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Cloud cover day 0',
-      'icon': 'mdi:weather-cloudy',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -561,7 +553,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
+    'original_icon': None,
     'original_name': 'Cloud cover day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -576,7 +568,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Cloud cover day 1',
-      'icon': 'mdi:weather-cloudy',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -610,7 +601,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
+    'original_icon': None,
     'original_name': 'Cloud cover day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -625,7 +616,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Cloud cover day 2',
-      'icon': 'mdi:weather-cloudy',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -659,7 +649,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
+    'original_icon': None,
     'original_name': 'Cloud cover day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -674,7 +664,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Cloud cover day 3',
-      'icon': 'mdi:weather-cloudy',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -708,7 +697,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
+    'original_icon': None,
     'original_name': 'Cloud cover day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -723,7 +712,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Cloud cover day 4',
-      'icon': 'mdi:weather-cloudy',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -757,7 +745,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
+    'original_icon': None,
     'original_name': 'Cloud cover night 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -772,7 +760,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Cloud cover night 0',
-      'icon': 'mdi:weather-cloudy',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -806,7 +793,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
+    'original_icon': None,
     'original_name': 'Cloud cover night 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -821,7 +808,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Cloud cover night 1',
-      'icon': 'mdi:weather-cloudy',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -855,7 +841,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
+    'original_icon': None,
     'original_name': 'Cloud cover night 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -870,7 +856,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Cloud cover night 2',
-      'icon': 'mdi:weather-cloudy',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -904,7 +889,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
+    'original_icon': None,
     'original_name': 'Cloud cover night 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -919,7 +904,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Cloud cover night 3',
-      'icon': 'mdi:weather-cloudy',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -953,7 +937,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
+    'original_icon': None,
     'original_name': 'Cloud cover night 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -968,7 +952,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Cloud cover night 4',
-      'icon': 'mdi:weather-cloudy',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -1524,7 +1507,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:grass',
+    'original_icon': None,
     'original_name': 'Grass pollen day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -1539,7 +1522,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Grass pollen day 0',
-      'icon': 'mdi:grass',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -1574,7 +1556,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:grass',
+    'original_icon': None,
     'original_name': 'Grass pollen day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -1589,7 +1571,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Grass pollen day 1',
-      'icon': 'mdi:grass',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -1624,7 +1605,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:grass',
+    'original_icon': None,
     'original_name': 'Grass pollen day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -1639,7 +1620,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Grass pollen day 2',
-      'icon': 'mdi:grass',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -1674,7 +1654,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:grass',
+    'original_icon': None,
     'original_name': 'Grass pollen day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -1689,7 +1669,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Grass pollen day 3',
-      'icon': 'mdi:grass',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -1724,7 +1703,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:grass',
+    'original_icon': None,
     'original_name': 'Grass pollen day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -1739,7 +1718,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Grass pollen day 4',
-      'icon': 'mdi:grass',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -1774,7 +1752,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-partly-cloudy',
+    'original_icon': None,
     'original_name': 'Hours of sun day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -1789,7 +1767,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Hours of sun day 0',
-      'icon': 'mdi:weather-partly-cloudy',
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
@@ -1823,7 +1800,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-partly-cloudy',
+    'original_icon': None,
     'original_name': 'Hours of sun day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -1838,7 +1815,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Hours of sun day 1',
-      'icon': 'mdi:weather-partly-cloudy',
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
@@ -1872,7 +1848,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-partly-cloudy',
+    'original_icon': None,
     'original_name': 'Hours of sun day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -1887,7 +1863,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Hours of sun day 2',
-      'icon': 'mdi:weather-partly-cloudy',
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
@@ -1921,7 +1896,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-partly-cloudy',
+    'original_icon': None,
     'original_name': 'Hours of sun day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -1936,7 +1911,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Hours of sun day 3',
-      'icon': 'mdi:weather-partly-cloudy',
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
@@ -1970,7 +1944,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-partly-cloudy',
+    'original_icon': None,
     'original_name': 'Hours of sun day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -1985,7 +1959,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Hours of sun day 4',
-      'icon': 'mdi:weather-partly-cloudy',
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
@@ -2019,7 +1992,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:blur',
+    'original_icon': None,
     'original_name': 'Mold pollen day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -2034,7 +2007,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Mold pollen day 0',
-      'icon': 'mdi:blur',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -2069,7 +2041,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:blur',
+    'original_icon': None,
     'original_name': 'Mold pollen day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -2084,7 +2056,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Mold pollen day 1',
-      'icon': 'mdi:blur',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -2119,7 +2090,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:blur',
+    'original_icon': None,
     'original_name': 'Mold pollen day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -2134,7 +2105,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Mold pollen day 2',
-      'icon': 'mdi:blur',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -2169,7 +2139,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:blur',
+    'original_icon': None,
     'original_name': 'Mold pollen day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -2184,7 +2154,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Mold pollen day 3',
-      'icon': 'mdi:blur',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -2219,7 +2188,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:blur',
+    'original_icon': None,
     'original_name': 'Mold pollen day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -2234,7 +2203,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Mold pollen day 4',
-      'icon': 'mdi:blur',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -2328,7 +2296,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:gauge',
+    'original_icon': None,
     'original_name': 'Pressure tendency',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -2344,7 +2312,6 @@
       'attribution': 'Data provided by AccuWeather',
       'device_class': 'enum',
       'friendly_name': 'Home Pressure tendency',
-      'icon': 'mdi:gauge',
       'options': list([
         'falling',
         'rising',
@@ -2382,7 +2349,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:sprout',
+    'original_icon': None,
     'original_name': 'Ragweed pollen day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -2397,7 +2364,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Ragweed pollen day 0',
-      'icon': 'mdi:sprout',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -2432,7 +2398,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:sprout',
+    'original_icon': None,
     'original_name': 'Ragweed pollen day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -2447,7 +2413,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Ragweed pollen day 1',
-      'icon': 'mdi:sprout',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -2482,7 +2447,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:sprout',
+    'original_icon': None,
     'original_name': 'Ragweed pollen day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -2497,7 +2462,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Ragweed pollen day 2',
-      'icon': 'mdi:sprout',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -2532,7 +2496,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:sprout',
+    'original_icon': None,
     'original_name': 'Ragweed pollen day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -2547,7 +2511,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Ragweed pollen day 3',
-      'icon': 'mdi:sprout',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -2582,7 +2545,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:sprout',
+    'original_icon': None,
     'original_name': 'Ragweed pollen day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -2597,7 +2560,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Ragweed pollen day 4',
-      'icon': 'mdi:sprout',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -3715,8 +3677,8 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
     'original_name': 'Solar irradiance day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -3730,8 +3692,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance day 0',
-      'icon': 'mdi:weather-sunny',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
@@ -3764,8 +3726,8 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
     'original_name': 'Solar irradiance day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -3779,8 +3741,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance day 1',
-      'icon': 'mdi:weather-sunny',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
@@ -3813,8 +3775,8 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
     'original_name': 'Solar irradiance day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -3828,8 +3790,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance day 2',
-      'icon': 'mdi:weather-sunny',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
@@ -3862,8 +3824,8 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
     'original_name': 'Solar irradiance day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -3877,8 +3839,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance day 3',
-      'icon': 'mdi:weather-sunny',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
@@ -3911,8 +3873,8 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
     'original_name': 'Solar irradiance day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -3926,8 +3888,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance day 4',
-      'icon': 'mdi:weather-sunny',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
@@ -3960,8 +3922,8 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
     'original_name': 'Solar irradiance night 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -3975,8 +3937,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance night 0',
-      'icon': 'mdi:weather-sunny',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
@@ -4009,8 +3971,8 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
     'original_name': 'Solar irradiance night 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -4024,8 +3986,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance night 1',
-      'icon': 'mdi:weather-sunny',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
@@ -4058,8 +4020,8 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
     'original_name': 'Solar irradiance night 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -4073,8 +4035,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance night 2',
-      'icon': 'mdi:weather-sunny',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
@@ -4107,8 +4069,8 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
     'original_name': 'Solar irradiance night 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -4122,8 +4084,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance night 3',
-      'icon': 'mdi:weather-sunny',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
@@ -4156,8 +4118,8 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
     'original_name': 'Solar irradiance night 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -4171,8 +4133,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance night 4',
-      'icon': 'mdi:weather-sunny',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
@@ -4206,7 +4168,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-lightning',
+    'original_icon': None,
     'original_name': 'Thunderstorm probability day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -4221,7 +4183,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Thunderstorm probability day 0',
-      'icon': 'mdi:weather-lightning',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4255,7 +4216,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-lightning',
+    'original_icon': None,
     'original_name': 'Thunderstorm probability day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -4270,7 +4231,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Thunderstorm probability day 1',
-      'icon': 'mdi:weather-lightning',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4304,7 +4264,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-lightning',
+    'original_icon': None,
     'original_name': 'Thunderstorm probability day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -4319,7 +4279,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Thunderstorm probability day 2',
-      'icon': 'mdi:weather-lightning',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4353,7 +4312,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-lightning',
+    'original_icon': None,
     'original_name': 'Thunderstorm probability day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -4368,7 +4327,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Thunderstorm probability day 3',
-      'icon': 'mdi:weather-lightning',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4402,7 +4360,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-lightning',
+    'original_icon': None,
     'original_name': 'Thunderstorm probability day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -4417,7 +4375,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Thunderstorm probability day 4',
-      'icon': 'mdi:weather-lightning',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4451,7 +4408,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-lightning',
+    'original_icon': None,
     'original_name': 'Thunderstorm probability night 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -4466,7 +4423,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Thunderstorm probability night 0',
-      'icon': 'mdi:weather-lightning',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4500,7 +4456,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-lightning',
+    'original_icon': None,
     'original_name': 'Thunderstorm probability night 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -4515,7 +4471,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Thunderstorm probability night 1',
-      'icon': 'mdi:weather-lightning',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4549,7 +4504,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-lightning',
+    'original_icon': None,
     'original_name': 'Thunderstorm probability night 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -4564,7 +4519,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Thunderstorm probability night 2',
-      'icon': 'mdi:weather-lightning',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4598,7 +4552,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-lightning',
+    'original_icon': None,
     'original_name': 'Thunderstorm probability night 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -4613,7 +4567,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Thunderstorm probability night 3',
-      'icon': 'mdi:weather-lightning',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4647,7 +4600,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-lightning',
+    'original_icon': None,
     'original_name': 'Thunderstorm probability night 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -4662,7 +4615,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Thunderstorm probability night 4',
-      'icon': 'mdi:weather-lightning',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4696,7 +4648,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:tree-outline',
+    'original_icon': None,
     'original_name': 'Tree pollen day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -4711,7 +4663,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Tree pollen day 0',
-      'icon': 'mdi:tree-outline',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -4746,7 +4697,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:tree-outline',
+    'original_icon': None,
     'original_name': 'Tree pollen day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -4761,7 +4712,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Tree pollen day 1',
-      'icon': 'mdi:tree-outline',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -4796,7 +4746,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:tree-outline',
+    'original_icon': None,
     'original_name': 'Tree pollen day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -4811,7 +4761,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Tree pollen day 2',
-      'icon': 'mdi:tree-outline',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -4846,7 +4795,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:tree-outline',
+    'original_icon': None,
     'original_name': 'Tree pollen day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -4861,7 +4810,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Tree pollen day 3',
-      'icon': 'mdi:tree-outline',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -4896,7 +4844,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:tree-outline',
+    'original_icon': None,
     'original_name': 'Tree pollen day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -4911,7 +4859,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Tree pollen day 4',
-      'icon': 'mdi:tree-outline',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -4948,7 +4895,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_icon': None,
     'original_name': 'UV index',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -4963,7 +4910,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home UV index',
-      'icon': 'mdi:weather-sunny',
       'level': 'High',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'UV index',
@@ -4999,7 +4945,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_icon': None,
     'original_name': 'UV index day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -5014,7 +4960,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home UV index day 0',
-      'icon': 'mdi:weather-sunny',
       'level': 'moderate',
       'unit_of_measurement': 'UV index',
     }),
@@ -5049,7 +4994,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_icon': None,
     'original_name': 'UV index day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -5064,7 +5009,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home UV index day 1',
-      'icon': 'mdi:weather-sunny',
       'level': 'high',
       'unit_of_measurement': 'UV index',
     }),
@@ -5099,7 +5043,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_icon': None,
     'original_name': 'UV index day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -5114,7 +5058,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home UV index day 2',
-      'icon': 'mdi:weather-sunny',
       'level': 'high',
       'unit_of_measurement': 'UV index',
     }),
@@ -5149,7 +5092,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_icon': None,
     'original_name': 'UV index day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -5164,7 +5107,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home UV index day 3',
-      'icon': 'mdi:weather-sunny',
       'level': 'high',
       'unit_of_measurement': 'UV index',
     }),
@@ -5199,7 +5141,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_icon': None,
     'original_name': 'UV index day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -5214,7 +5156,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home UV index day 4',
-      'icon': 'mdi:weather-sunny',
       'level': 'high',
       'unit_of_measurement': 'UV index',
     }),
