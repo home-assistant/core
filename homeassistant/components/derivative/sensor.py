@@ -32,7 +32,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
-    CONF_IGNORE_NEGATIVE,
+    CONF_IGNORE_NEGATIVE_DERIVATIVE,
     CONF_ROUND_DIGITS,
     CONF_TIME_WINDOW,
     CONF_UNIT,
@@ -71,7 +71,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_SOURCE): cv.entity_id,
-        vol.Required(CONF_IGNORE_NEGATIVE, default=False): cv.boolean,
+        vol.Required(CONF_IGNORE_NEGATIVE_DERIVATIVE, default=False): cv.boolean,
         vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
         vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
         vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
@@ -104,7 +104,9 @@ async def async_setup_entry(
 
     derivative_sensor = DerivativeSensor(
         name=config_entry.title,
-        ignore_negative=bool(config_entry.options.get(CONF_IGNORE_NEGATIVE)),
+        ignore_negative_derivative=bool(
+            config_entry.options.get(CONF_IGNORE_NEGATIVE_DERIVATIVE)
+        ),
         round_digits=int(config_entry.options[CONF_ROUND_DIGITS]),
         source_entity=source_entity_id,
         time_window=cv.time_period_dict(config_entry.options[CONF_TIME_WINDOW]),
@@ -127,7 +129,7 @@ async def async_setup_platform(
     """Set up the derivative sensor."""
     derivative = DerivativeSensor(
         name=config.get(CONF_NAME),
-        ignore_negative=config.get(CONF_IGNORE_NEGATIVE),
+        ignore_negative_derivative=config.get(CONF_IGNORE_NEGATIVE_DERIVATIVE),
         round_digits=config[CONF_ROUND_DIGITS],
         source_entity=config[CONF_SOURCE],
         time_window=config[CONF_TIME_WINDOW],
@@ -150,7 +152,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         self,
         *,
         name: str | None,
-        ignore_negative: bool | None = False,
+        ignore_negative_derivative: bool | None = False,
         round_digits: int,
         source_entity: str,
         time_window: timedelta,
@@ -163,7 +165,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         """Initialize the derivative sensor."""
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
-        self._ignore_negative = ignore_negative
+        self._ignore_negative_derivative = ignore_negative_derivative
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._state: float | int | Decimal = 0
@@ -244,7 +246,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             except AssertionError as err:
                 _LOGGER.error("Could not calculate derivative: %s", err)
 
-            if self._ignore_negative and new_derivative < 0:
+            if self._ignore_negative_derivative and new_derivative < 0:
                 return
 
             # add latest derivative to the window list

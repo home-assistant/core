@@ -149,12 +149,12 @@ async def test_dataSet6(hass: HomeAssistant) -> None:
     await setup_tests(hass, {}, times=[0, 60], values=[0, 1 / 60], expected_state=1)
 
 
-async def test_ignore_negative(hass: HomeAssistant) -> None:
-    """Test derivative sensor state with ignore_negative=True."""
+async def test_ignore_negative_derivative(hass: HomeAssistant) -> None:
+    """Test derivative sensor state with ignore_negative_derivative=True."""
     # It should return the last non negative state
     await setup_tests(
         hass,
-        {"unit_time": UnitOfTime.SECONDS, "ignore_negative": True},
+        {"unit_time": UnitOfTime.SECONDS, "ignore_negative_derivative": True},
         times=[20, 30, 40],
         values=[10, 30, 0],
         expected_state=2,
