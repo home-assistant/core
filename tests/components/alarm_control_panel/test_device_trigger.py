@@ -244,7 +244,7 @@ async def test_if_fires_on_state_change(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     service_calls: list[ServiceCall],
-):
+) -> None:
     """Test for turn_on and turn_off triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)

@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
+from freezegun import freeze_time
 from httpx import Response
 from openai import RateLimitError
 from openai.types.chat.chat_completion import ChatCompletion, Choice
@@ -214,11 +215,14 @@ async def test_function_call(
             ),
         )
 
-    with patch(
-        "openai.resources.chat.completions.AsyncCompletions.create",
-        new_callable=AsyncMock,
-        side_effect=completion_result,
-    ) as mock_create:
+    with (
+        patch(
+            "openai.resources.chat.completions.AsyncCompletions.create",
+            new_callable=AsyncMock,
+            side_effect=completion_result,
+        ) as mock_create,
+        freeze_time("2024-06-03 23:00:00"),
+    ):
         result = await conversation.async_converse(
             hass,
             "Please call the test function",
@@ -226,6 +230,11 @@ async def test_function_call(
             context,
             agent_id=agent_id,
         )
+
+    assert (
+        "Today's date is 2024-06-03."
+        in mock_create.mock_calls[1][2]["messages"][0]["content"]
+    )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert mock_create.mock_calls[1][2]["messages"][3] == {
@@ -262,6 +271,37 @@ async def test_function_call(
     # AGENT_DETAIL event contains the raw prompt passed to the model
     detail_event = trace_events[1]
     assert "Answer in plain text" in detail_event["data"]["messages"][0]["content"]
+    assert (
+        "Today's date is 2024-06-03."
+        in trace_events[1]["data"]["messages"][0]["content"]
+    )
+
+    # Call it again, make sure we have updated prompt
+    with (
+        patch(
+            "openai.resources.chat.completions.AsyncCompletions.create",
+            new_callable=AsyncMock,
+            side_effect=completion_result,
+        ) as mock_create,
+        freeze_time("2024-06-04 23:00:00"),
+    ):
+        result = await conversation.async_converse(
+            hass,
+            "Please call the test function",
+            None,
+            context,
+            agent_id=agent_id,
+        )
+
+    assert (
+        "Today's date is 2024-06-04."
+        in mock_create.mock_calls[1][2]["messages"][0]["content"]
+    )
+    # Test old assert message not updated
+    assert (
+        "Today's date is 2024-06-03."
+        in trace_events[1]["data"]["messages"][0]["content"]
+    )
 
 
 @patch(

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Iterable
+from collections.abc import Iterable
 import contextlib
 from enum import Enum
 from pathlib import Path
@@ -19,6 +19,7 @@ from pyunifiprotect.data import (
     LightModeType,
     ProtectAdoptableDeviceModel,
 )
+from typing_extensions import Generator
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -99,7 +100,7 @@ def async_get_devices_by_type(
 @callback
 def async_get_devices(
     bootstrap: Bootstrap, model_type: Iterable[ModelType]
-) -> Generator[ProtectAdoptableDeviceModel, None, None]:
+) -> Generator[ProtectAdoptableDeviceModel]:
     """Return all device by type."""
     return (
         device

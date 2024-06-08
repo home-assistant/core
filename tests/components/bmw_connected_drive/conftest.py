@@ -1,18 +1,15 @@
 """Fixtures for BMW tests."""
 
-from collections.abc import Generator
-
 from bimmer_connected.tests import ALL_CHARGING_SETTINGS, ALL_PROFILES, ALL_STATES
 from bimmer_connected.tests.common import MyBMWMockRouter
 from bimmer_connected.vehicle import remote_services
 import pytest
 import respx
+from typing_extensions import Generator
 
 
 @pytest.fixture
-def bmw_fixture(
-    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
-) -> Generator[respx.MockRouter, None, None]:
+def bmw_fixture(monkeypatch: pytest.MonkeyPatch) -> Generator[respx.MockRouter]:
     """Patch MyBMW login API calls."""
 
     # we use the library's mock router to mock the API calls, but only with a subset of vehicles

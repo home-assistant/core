@@ -12,6 +12,7 @@ from mozart_api.models import (
     Action,
     Art,
     OverlayPlayRequest,
+    OverlayPlayRequestTextToSpeechTextToSpeech,
     PlaybackContentMetadata,
     PlaybackError,
     PlaybackProgress,
@@ -69,6 +70,7 @@ _LOGGER = logging.getLogger(__name__)
 BANG_OLUFSEN_FEATURES = (
     MediaPlayerEntityFeature.BROWSE_MEDIA
     | MediaPlayerEntityFeature.CLEAR_PLAYLIST
+    | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
     | MediaPlayerEntityFeature.NEXT_TRACK
     | MediaPlayerEntityFeature.PAUSE
     | MediaPlayerEntityFeature.PLAY
@@ -547,10 +549,10 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         self,
         media_type: MediaType | str,
         media_id: str,
+        announce: bool | None = None,
         **kwargs: Any,
     ) -> None:
         """Play from: netradio station id, URI, favourite or Deezer."""
-
         # Convert audio/mpeg, audio/aac etc. to MediaType.MUSIC
         if media_type.startswith("audio/"):
             media_type = MediaType.MUSIC
@@ -574,7 +576,42 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             if media_id.endswith(".m3u"):
                 media_id = media_id.replace(".m3u", "")
 
-        if media_type in (MediaType.URL, MediaType.MUSIC):
+        if announce:
+            extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
+
+            absolute_volume = extra.get("overlay_absolute_volume", None)
+            offset_volume = extra.get("overlay_offset_volume", None)
+            tts_language = extra.get("overlay_tts_language", "en-us")
+
+            # Construct request
+            overlay_play_request = OverlayPlayRequest()
+
+            # Define volume level
+            if absolute_volume:
+                overlay_play_request.volume_absolute = absolute_volume
+
+            elif offset_volume:
+                # Ensure that the volume is not above 100
+                if not self._volume.level or not self._volume.level.level:
+                    _LOGGER.warning("Error setting volume")
+                else:
+                    overlay_play_request.volume_absolute = min(
+                        self._volume.level.level + offset_volume, 100
+                    )
+
+            if media_type == BangOlufsenMediaType.OVERLAY_TTS:
+                # Bang & Olufsen cloud TTS
+                overlay_play_request.text_to_speech = (
+                    OverlayPlayRequestTextToSpeechTextToSpeech(
+                        lang=tts_language, text=media_id
+                    )
+                )
+            else:
+                overlay_play_request.uri = Uri(location=media_id)
+
+            await self._client.post_overlay_play(overlay_play_request)
+
+        elif media_type in (MediaType.URL, MediaType.MUSIC):
             await self._client.post_uri_source(uri=Uri(location=media_id))
 
         # The "provider" media_type may not be suitable for overlay all the time.

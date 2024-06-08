@@ -89,11 +89,11 @@ async def test_setup_component_with_service(hass: HomeAssistant) -> None:
     "homeassistant.components.demo.camera.Path.read_bytes",
     return_value=b"Test",
 )
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_get_image_from_camera(
     mock_camera_read,
     hass: HomeAssistant,
     aiohttp_unused_port_factory,
-    enable_custom_integrations: None,
 ) -> None:
     """Grab an image from camera entity."""
     await setup_image_processing(hass, aiohttp_unused_port_factory)
@@ -112,11 +112,11 @@ async def test_get_image_from_camera(
     "homeassistant.components.image_processing.async_get_image",
     side_effect=HomeAssistantError(),
 )
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_get_image_without_exists_camera(
     mock_image,
     hass: HomeAssistant,
     aiohttp_unused_port_factory,
-    enable_custom_integrations: None,
 ) -> None:
     """Try to get image without exists camera."""
     await setup_image_processing(hass, aiohttp_unused_port_factory)
@@ -188,10 +188,10 @@ async def test_face_event_call_no_confidence(
     assert event_data[0]["entity_id"] == "image_processing.demo_face"
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_update_missing_camera(
     hass: HomeAssistant,
     aiohttp_unused_port_factory,
-    enable_custom_integrations: None,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test when entity does not set camera."""
