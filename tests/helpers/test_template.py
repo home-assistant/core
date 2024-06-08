@@ -3879,8 +3879,8 @@ async def test_device_attr(
     assert_result_info(info, None)
     assert info.rate_limit is None
 
+    info = render_to_info(hass, "{{ device_attr(56, 'id') }}")
     with pytest.raises(TemplateError):
-        info = render_to_info(hass, "{{ device_attr(56, 'id') }}")
         assert_result_info(info, None)
 
     # Test non existing device ids (is_device_attr)
@@ -3888,8 +3888,8 @@ async def test_device_attr(
     assert_result_info(info, False)
     assert info.rate_limit is None
 
+    info = render_to_info(hass, "{{ is_device_attr(56, 'id', 'test') }}")
     with pytest.raises(TemplateError):
-        info = render_to_info(hass, "{{ is_device_attr(56, 'id', 'test') }}")
         assert_result_info(info, False)
 
     # Test non existing entity id (device_attr)

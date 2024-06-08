@@ -4,6 +4,7 @@ from collections.abc import Callable
 from copy import deepcopy
 from datetime import timedelta
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import patch
 
 import aiounifi
@@ -313,27 +314,25 @@ async def test_reset_fails(
         assert config_entry.state is ConfigEntryState.LOADED
 
 
-@pytest.mark.parametrize(
-    "client_payload",
-    [
-        [
-            {
-                "hostname": "client",
-                "ip": "10.0.0.1",
-                "is_wired": True,
-                "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
-                "mac": "00:00:00:00:00:01",
-            },
-        ]
-    ],
-)
 async def test_connection_state_signalling(
     hass: HomeAssistant,
     mock_device_registry,
-    config_entry_setup: ConfigEntry,
     websocket_mock,
+    config_entry_factory: Callable[[], ConfigEntry],
+    client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify connection statesignalling and connection state are working."""
+    client_payload.append(
+        {
+            "hostname": "client",
+            "ip": "10.0.0.1",
+            "is_wired": True,
+            "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
+            "mac": "00:00:00:00:00:01",
+        }
+    )
+    await config_entry_factory()
+
     # Controller is connected
     assert hass.states.get("device_tracker.client").state == "home"
 
