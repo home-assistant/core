@@ -7,7 +7,7 @@ from datetime import datetime
 import logging
 from typing import Any, cast
 
-from pyunifiprotect.data import (
+from uiprotect.data import (
     NVR,
     Camera,
     Light,

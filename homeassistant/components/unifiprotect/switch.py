@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from pyunifiprotect.data import (
+from uiprotect.data import (
     NVR,
     Camera,
     ProtectAdoptableDeviceModel,
