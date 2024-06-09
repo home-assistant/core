@@ -3,8 +3,10 @@
 from datetime import timedelta
 from typing import Final
 
+import pytest
+
 from homeassistant.components.evohome import CONFIG_SCHEMA
-from homeassistant.components.evohome.const import DOMAIN
+from homeassistant.components.evohome.const import CONF_LOCATION_IDX, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -12,13 +14,21 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-TEST_CONFIG: Final = {CONF_USERNAME: "username@email.com", CONF_PASSWORD: "P@ssw0rd!!"}
+BASE_CONFIG: Final = {CONF_USERNAME: "username@email.com", CONF_PASSWORD: "P@ssw0rd!!"}
+
+TEST_CONFIGS: Final = {
+    "00": BASE_CONFIG,
+    "01": BASE_CONFIG | {CONF_SCAN_INTERVAL: 120},
+    "10": BASE_CONFIG | {CONF_LOCATION_IDX: "1"},
+    "11": BASE_CONFIG | {CONF_LOCATION_IDX: "1", CONF_SCAN_INTERVAL: 120},
+}
 
 
-async def test_import_flow(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("index", TEST_CONFIGS.keys())
+async def test_import_flow(hass: HomeAssistant, index: str) -> None:
     """Test import flow (from configuration.yaml)."""
 
-    HASS_CONFIG: Final = CONFIG_SCHEMA({DOMAIN: TEST_CONFIG})
+    HASS_CONFIG: Final = CONFIG_SCHEMA({DOMAIN: TEST_CONFIGS[index]})
 
     # async_step_import() converts scan_interval from a timedelta to an int
     assert isinstance(HASS_CONFIG[DOMAIN][CONF_SCAN_INTERVAL], timedelta)
@@ -46,7 +56,7 @@ async def test_import_flow(hass: HomeAssistant) -> None:
 async def test_single_config_entry(hass: HomeAssistant) -> None:
     """Test config flow is aborted when creating a second entry."""
 
-    HASS_CONFIG: Final = CONFIG_SCHEMA({DOMAIN: TEST_CONFIG})
+    HASS_CONFIG: Final = CONFIG_SCHEMA({DOMAIN: BASE_CONFIG})
 
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN, title="Evohome", data=HASS_CONFIG[DOMAIN]
