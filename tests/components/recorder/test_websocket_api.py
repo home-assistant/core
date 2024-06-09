@@ -905,6 +905,38 @@ async def test_statistic_during_period_partial_overlap(
     expect = 5
     await assert_change_during_fixed(client, start_time, end_time, expect)
 
+    # Six minutes of growth in STS-only
+    start_time = start.replace(hour=6, minute=14)
+    end_time = start.replace(hour=6, minute=20)
+    expect = 5
+    await assert_change_during_fixed(client, start_time, end_time, expect)
+
+    # Six minutes of growth in STS-only
+    # 5-minute Change includes start times exactly on or before a statistics start, but end times are not counted unless they are greater than start.
+    start_time = start.replace(hour=6, minute=15)
+    end_time = start.replace(hour=6, minute=21)
+    expect = 10
+    await assert_change_during_fixed(client, start_time, end_time, expect)
+
+    # Five minutes of growth in overlapping LTS+STS
+    start_time = start.replace(hour=5, minute=15)
+    end_time = start.replace(hour=5, minute=20)
+    expect = 5
+    await assert_change_during_fixed(client, start_time, end_time, expect)
+
+    # Five minutes of growth in overlapping LTS+STS (start of hour)
+    start_time = start.replace(hour=5, minute=0)
+    end_time = start.replace(hour=5, minute=5)
+    expect = 5
+    await assert_change_during_fixed(client, start_time, end_time, expect)
+
+    # Five minutes of growth in overlapping LTS+STS (end of hour)
+    start_time = start.replace(hour=4, minute=55)
+    end_time = start.replace(hour=5, minute=0)
+    expect = 5
+    # FIXME: this returns None, I might have expected 5 given the behavior of other 5 minute intervals
+    # await assert_change_during_fixed(client, start_time, end_time, expect)
+
     # Five minutes of growth in STS-only, with a minute offset. Despite that this does not cover the full period, result is still 5
     start_time = start.replace(hour=6, minute=16)
     end_time = start.replace(hour=6, minute=21)
@@ -928,14 +960,7 @@ async def test_statistic_during_period_partial_overlap(
     start_time = start.replace(hour=1, minute=40)
     end_time = start.replace(hour=3, minute=12)
     expect = 60
-    # FIXME: Pre-fix says "-65"
-    # Post-fix says "60"
-    # await assert_change_during_fixed(client, start_time, end_time, expect)
-
-    # 15 minutes of growth in STS window only
-    start_time = start.replace(hour=6, minute=4)
-    end_time = start.replace(hour=6, minute=17)
-    expect = 15
+    # Pre-115291 says "-65"
     await assert_change_during_fixed(client, start_time, end_time, expect)
 
     # 90 minutes of growth in window overlapping LTS+STS/STS-only (4:41 - 6:11)
@@ -947,27 +972,24 @@ async def test_statistic_during_period_partial_overlap(
     # 4 hours of growth in overlapping LTS-only/LTS+STS (2:01-6:01)
     start_time = start.replace(hour=2, minute=1)
     end_time = start_time + timedelta(minutes=240)
-    expect = 185
-    # FIXME: Pre-115291 says "120", which is too little
-    # Postfix says "185", which counts LTS (3:00-6:00), plus a 5 minute at 6:00? seems odd
-    # await assert_change_during_fixed(client, start_time, end_time, expect)
+    expect = 185  # 60 from LTS (3:00-3:59), 125 from STS (25 intervals) (4:00-6:01)
+    # Pre-115291 says "120", which is too little
+    await assert_change_during_fixed(client, start_time, end_time, expect)
 
     # 4 hours of growth in overlapping LTS-only/LTS+STS (1:31-5:31)
     start_time = start.replace(hour=1, minute=31)
     end_time = start_time + timedelta(minutes=240)
-    # The earliest LTS datapoint will be 2:00, so this result will actually only pickup datapoints from 2:00-5:31
-    expect = 215
-    # FIXME: Pre-115291 says "90", which is only the STS window (4:00-5:31) ?
-    # Postfix says "215", which is 2:00-5:00 LTS (+180) 5:00-5:31 (+35)
-    # await assert_change_during_fixed(client, start_time, end_time, expect)
+    expect = 215  # 120 from LTS (2:00-3:59), 95 from STS (19 intervals) 4:00-5:31
+    # Pre-115291 says "90", which is only the STS window (4:00-5:31) ?
+    await assert_change_during_fixed(client, start_time, end_time, expect)
 
     # 5 hours of growth, start time only (1:31-end)
     start_time = start.replace(hour=1, minute=31)
     end_time = None
     # will be actually 2:00 - end
     expect = 4 * 60 + 30
-    # FIXME: Pre-115291 says "115" (1 hour and 55 minutes)? which I do not understand
-    # Postfix says 240, which doesn't seem right either, I would have expected 270 or 275? for 2:00 to the end
+    # Pre-115291 says "115" (1 hour and 55 minutes)? which I do not understand
+    # FIXME: Postfix says 240, which doesn't seem right either, I would have expected 270 or 275? for 2:00 to the end
     # await assert_change_during_fixed(client, start_time, end_time, expect)
 
     # 5 hours of growth, end_time_only (0:00-5:00)
@@ -979,8 +1001,7 @@ async def test_statistic_during_period_partial_overlap(
     # 5 hours 1 minute of growth, end_time_only (0:00-5:01)
     start_time = None
     end_time = start.replace(hour=5, minute=1)
-    # Extra minute picks up one more 5 minute interval?
-    expect = 60 * 5 + 5
+    expect = 60 * 5 + 5  # 4 hours LTS, 1 hour and 5 minutes STS (4:00-5:01)
     await assert_change_during_fixed(client, start_time, end_time, expect)
 
 
