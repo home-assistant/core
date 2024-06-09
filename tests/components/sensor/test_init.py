@@ -942,7 +942,21 @@ async def test_custom_unit_change(
             "1000000",
             "1093613",
             SensorDeviceClass.DISTANCE,
-        )
+        ),
+        # Volume Storage (subclass of Volume)
+        (
+            US_CUSTOMARY_SYSTEM,
+            UnitOfVolume.LITERS,
+            UnitOfVolume.GALLONS,
+            UnitOfVolume.GALLONS,
+            UnitOfVolume.FLUID_OUNCES,
+            1000,
+            "1000",
+            "264",
+            "264",
+            "33814",
+            SensorDeviceClass.VOLUME_STORAGE,
+        ),
     ],
 )
 async def test_unit_conversion_priority(
@@ -1475,7 +1489,7 @@ async def test_unit_conversion_priority_suggested_unit_change_2(
             1,
             1000,
             SensorDeviceClass.ATMOSPHERIC_PRESSURE,
-            {"sensor.private": {"suggested_unit_of_measurement": "inHg"}},
+            {"sensor.private": {"suggested_unit_of_measurement": "psi"}},
         ),
     ],
 )
