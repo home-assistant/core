@@ -122,10 +122,10 @@ SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Evohome integration from the configuration.yaml file."""
 
-    # until config flow is fully implemented, deleting any existing entry most closely
-    # matches the current behaviour
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
+    # until config flow is implemented, this most closely matches the current behaviour
+    if entries := hass.config_entries.async_entries(DOMAIN):
+        entries[0].data = config[DOMAIN]
+        return True
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
