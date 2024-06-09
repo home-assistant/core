@@ -10,6 +10,7 @@ from typing import Any
 from unittest.mock import patch
 
 from aiounifi.models.message import MessageKey
+import orjson
 import pytest
 
 from homeassistant.components.unifi import STORAGE_KEY, STORAGE_VERSION
@@ -313,6 +314,10 @@ class WebsocketStateManager(asyncio.Event):
         self.aioclient_mock = aioclient_mock
         super().__init__()
 
+    async def waiter(self, input: Callable[[bytes], None]):
+        """Consume message_handler new_data callback."""
+        await self.wait()
+
     async def disconnect(self):
         """Mark future as done to make 'await self.api.start_websocket' return."""
         self.set()
@@ -324,14 +329,10 @@ class WebsocketStateManager(asyncio.Event):
         Mock api calls done by 'await self.api.login'.
         Fail will make 'await self.api.start_websocket' return immediately.
         """
-        hub = self.hass.config_entries.async_get_entry(
-            DEFAULT_CONFIG_ENTRY_ID
-        ).runtime_data
-        self.aioclient_mock.get(
-            f"https://{hub.config.host}:1234", status=302
-        )  # Check UniFi OS
+        # Check UniFi OS
+        self.aioclient_mock.get(f"https://{DEFAULT_HOST}:1234", status=302)
         self.aioclient_mock.post(
-            f"https://{hub.config.host}:1234/api/login",
+            f"https://{DEFAULT_HOST}:1234/api/login",
             json={"data": "login successful", "meta": {"rc": "ok"}},
             headers={"content-type": CONTENT_TYPE_JSON},
         )
@@ -344,16 +345,24 @@ class WebsocketStateManager(asyncio.Event):
 
 
 @pytest.fixture(autouse=True)
-def websocket_mock(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
-    """Mock 'await self.api.start_websocket' in 'UniFiController.start_websocket'."""
-    websocket_state_manager = WebsocketStateManager(hass, aioclient_mock)
-    with patch("aiounifi.Controller.start_websocket") as ws_mock:
-        ws_mock.side_effect = websocket_state_manager.wait
-        yield websocket_state_manager
+def aiounifi_websocket_mock():
+    """Mock aiounifi websocket context manager."""
+    with patch("aiounifi.controller.Connectivity.websocket") as ws_mock:
+        yield ws_mock
 
 
 @pytest.fixture(autouse=True)
-def mock_unifi_websocket(hass):
+def websocket_mock(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, aiounifi_websocket_mock
+):
+    """Mock 'await self.api.start_websocket' in 'UniFiController.start_websocket'."""
+    websocket_state_manager = WebsocketStateManager(hass, aioclient_mock)
+    aiounifi_websocket_mock.side_effect = websocket_state_manager.waiter
+    return websocket_state_manager
+
+
+@pytest.fixture
+def mock_unifi_websocket(aiounifi_websocket_mock):
     """No real websocket allowed."""
 
     def make_websocket_call(
@@ -362,17 +371,15 @@ def mock_unifi_websocket(hass):
         data: list[dict] | dict | None = None,
     ):
         """Generate a websocket call."""
-        hub = hass.config_entries.async_get_entry(DEFAULT_CONFIG_ENTRY_ID).runtime_data
+        message_handler = aiounifi_websocket_mock.call_args[0][0]
+
         if data and not message:
-            hub.api.messages.handler(data)
+            message_handler(orjson.dumps(data))
         elif data and message:
             if not isinstance(data, list):
                 data = [data]
-            hub.api.messages.handler(
-                {
-                    "meta": {"message": message.value},
-                    "data": data,
-                }
+            message_handler(
+                orjson.dumps({"meta": {"message": message.value}, "data": data})
             )
         else:
             raise NotImplementedError

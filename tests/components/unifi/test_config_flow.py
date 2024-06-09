@@ -564,11 +564,11 @@ async def test_form_ssdp_gets_form_with_ignored_entry(hass: HomeAssistant) -> No
         data=ssdp.SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
-            ssdp_location="http://1.2.3.4:1234/rootDesc.xml",
+            ssdp_location="http://2.3.4.5:1234/rootDesc.xml",
             upnp={
                 "friendlyName": "UniFi Dream Machine New",
                 "modelDescription": "UniFi Dream Machine Pro",
-                "serialNumber": "1",
+                "serialNumber": "2",
             },
         ),
     )
@@ -581,7 +581,7 @@ async def test_form_ssdp_gets_form_with_ignored_entry(hass: HomeAssistant) -> No
         if flow["flow_id"] == result["flow_id"]
     )
     assert context["title_placeholders"] == {
-        "host": "1.2.3.4",
+        "host": "2.3.4.5",
         "site": "default",
     }
 
