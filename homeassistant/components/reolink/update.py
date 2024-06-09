@@ -23,10 +23,7 @@ from homeassistant.helpers.event import async_call_later
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import (
-    ReolinkHostCoordinatorEntity,
-    ReolinkHostEntityDescription,
-)
+from .entity import ReolinkHostCoordinatorEntity, ReolinkHostEntityDescription
 
 POLL_AFTER_INSTALL = 120
 
