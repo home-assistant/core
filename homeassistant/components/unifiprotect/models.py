@@ -8,7 +8,7 @@ from enum import Enum
 import logging
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
-from pyunifiprotect.data import NVR, Event, ProtectAdoptableDeviceModel
+from uiprotect.data import NVR, Event, ProtectAdoptableDeviceModel
 
 from homeassistant.helpers.entity import EntityDescription
 
