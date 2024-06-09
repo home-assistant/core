@@ -183,11 +183,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             SZ_GATEWAY_ID: loc_config[GWS][0][SZ_GATEWAY_INFO][SZ_GATEWAY_ID],
             TCS: loc_config[GWS][0][TCS],
         }
-        _config = {
+        loc_config = {
             SZ_LOCATION_INFO: loc_info,
             GWS: [{SZ_GATEWAY_INFO: gwy_info, TCS: loc_config[GWS][0][TCS]}],
         }
-        _LOGGER.debug("Config = %s", _config)
+        _LOGGER.debug("Config = %s", loc_config)
 
     client_v1 = ev1.EvohomeClient(
         client_v2.username,
