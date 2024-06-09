@@ -131,7 +131,6 @@ async def test_reconnect_client_unknown_mac(
 ) -> None:
     """Verify no call is made if trying to reconnect a mac unknown to hub."""
     aioclient_mock.clear_requests()
-
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry_setup.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "mac unknown to hub")},
@@ -158,7 +157,6 @@ async def test_reconnect_wired_client(
 ) -> None:
     """Verify no call is made if client is wired."""
     aioclient_mock.clear_requests()
-
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry_setup.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])},
@@ -242,7 +240,6 @@ async def test_remove_clients_hub_unavailable(
 ) -> None:
     """Verify no call is made if UniFi Network is unavailable."""
     aioclient_mock.clear_requests()
-
     with patch(
         "homeassistant.components.unifi.UnifiHub.available", new_callable=PropertyMock
     ) as ws_mock:
@@ -271,6 +268,5 @@ async def test_remove_clients_no_call_on_empty_list(
 ) -> None:
     """Verify no call is made if no fitting client has been added to the list."""
     aioclient_mock.clear_requests()
-
     await hass.services.async_call(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
     assert aioclient_mock.call_count == 0

@@ -545,7 +545,6 @@ async def test_option_track_clients(
     hass: HomeAssistant, config_entry_setup: ConfigEntry
 ) -> None:
     """Test the tracking of clients can be turned off."""
-
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
     assert hass.states.get("device_tracker.wireless_client")
     assert hass.states.get("device_tracker.wired_client")

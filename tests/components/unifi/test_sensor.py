@@ -1045,7 +1045,6 @@ async def test_device_system_stats(
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that device stats sensors are working as expected."""
-
     assert len(hass.states.async_all()) == 8
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
 

@@ -459,7 +459,6 @@ async def test_simple_option_flow(
 
 async def test_form_ssdp(hass: HomeAssistant) -> None:
     """Test we get the form with ssdp source."""
-
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
@@ -501,7 +500,6 @@ async def test_form_ssdp_aborts_if_host_already_exists(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
     """Test we abort if the host is already configured."""
-
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
@@ -545,7 +543,6 @@ async def test_form_ssdp_aborts_if_serial_already_exists(
 
 async def test_form_ssdp_gets_form_with_ignored_entry(hass: HomeAssistant) -> None:
     """Test we can still setup if there is an ignored never configured entry."""
-
     entry = MockConfigEntry(
         domain=UNIFI_DOMAIN,
         data={"not_controller_key": None},
