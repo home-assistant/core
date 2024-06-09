@@ -413,7 +413,7 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
+    'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
     'original_icon': None,
     'original_name': 'Remaining fuel',
     'platform': 'bmw_connected_drive',
@@ -428,7 +428,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
-      'device_class': 'volume',
+      'device_class': 'volume_storage',
       'friendly_name': 'i3 (+ REX) Remaining fuel',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
@@ -1919,7 +1919,7 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
+    'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
     'original_icon': None,
     'original_name': 'Remaining fuel',
     'platform': 'bmw_connected_drive',
@@ -1934,7 +1934,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by MyBMW',
-      'device_class': 'volume',
+      'device_class': 'volume_storage',
       'friendly_name': 'M340i xDrive Remaining fuel',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
