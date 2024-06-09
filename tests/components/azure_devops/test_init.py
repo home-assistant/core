@@ -60,7 +60,7 @@ async def test_update_failed_project(
 
     assert mock_devops_client.get_project.call_count == 1
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_update_failed_builds(

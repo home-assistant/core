@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_PAT, DOMAIN
+from .const import CONF_PAT, CONF_PROJECT, DOMAIN
 from .coordinator import AzureDevOpsDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,6 +33,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # If a personal access token is set, authorize the client
     if entry.data.get(CONF_PAT) is not None:
         await coordinator.authorize(entry.data[CONF_PAT])
+
+    await coordinator.update_project(entry.data[CONF_PROJECT])
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
