@@ -1,10 +1,10 @@
 """Lamarzocco session fixtures."""
 
-from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 from lmcloud.const import LaMarzoccoModel
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.lamarzocco.const import CONF_MACHINE, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
@@ -57,9 +57,7 @@ def device_fixture() -> LaMarzoccoModel:
 
 
 @pytest.fixture
-def mock_lamarzocco(
-    request: pytest.FixtureRequest, device_fixture: LaMarzoccoModel
-) -> Generator[MagicMock, None, None]:
+def mock_lamarzocco(device_fixture: LaMarzoccoModel) -> Generator[MagicMock]:
     """Return a mocked LM client."""
     model_name = device_fixture
 
@@ -133,5 +131,5 @@ def remove_local_connection(
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth):
+def mock_bluetooth(enable_bluetooth: None) -> None:
     """Auto mock bluetooth."""

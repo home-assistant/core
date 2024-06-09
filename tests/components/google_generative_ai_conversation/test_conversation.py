@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun import freeze_time
+from google.ai.generativelanguage_v1beta.types.content import FunctionCall
 from google.api_core.exceptions import GoogleAPICallError
 import google.generativeai.types as genai_types
 import pytest
@@ -10,17 +12,23 @@ import voluptuous as vol
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import trace
+from homeassistant.components.google_generative_ai_conversation.conversation import (
+    _escape_decode,
+)
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    area_registry as ar,
-    device_registry as dr,
-    intent,
-    llm,
-)
+from homeassistant.helpers import intent, llm
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
+
+
+@pytest.fixture(autouse=True)
+def freeze_the_time():
+    """Freeze the time."""
+    with freeze_time("2024-05-24 12:00:00", tz_offset=0):
+        yield
 
 
 @pytest.mark.parametrize(
@@ -37,17 +45,14 @@ async def test_default_prompt(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
-    area_registry: ar.AreaRegistry,
-    device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
     agent_id: str | None,
     config_entry_options: {},
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that the default prompt works."""
     entry = MockConfigEntry(title=None)
     entry.add_to_hass(hass)
-    for i in range(3):
-        area_registry.async_create(f"{i}Empty Area")
 
     if agent_id is None:
         agent_id = mock_config_entry.entry_id
@@ -57,78 +62,20 @@ async def test_default_prompt(
         options={**mock_config_entry.options, **config_entry_options},
     )
 
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={("test", "1234")},
-        name="Test Device",
-        manufacturer="Test Manufacturer",
-        model="Test Model",
-        suggested_area="Test Area",
-    )
-    for i in range(3):
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            connections={("test", f"{i}abcd")},
-            name="Test Service",
-            manufacturer="Test Manufacturer",
-            model="Test Model",
-            suggested_area="Test Area",
-            entry_type=dr.DeviceEntryType.SERVICE,
-        )
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={("test", "5678")},
-        name="Test Device 2",
-        manufacturer="Test Manufacturer 2",
-        model="Device 2",
-        suggested_area="Test Area 2",
-    )
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={("test", "9876")},
-        name="Test Device 3",
-        manufacturer="Test Manufacturer 3",
-        model="Test Model 3A",
-        suggested_area="Test Area 2",
-    )
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={("test", "qwer")},
-        name="Test Device 4",
-        suggested_area="Test Area 2",
-    )
-    device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={("test", "9876-disabled")},
-        name="Test Device 3",
-        manufacturer="Test Manufacturer 3",
-        model="Test Model 3A",
-        suggested_area="Test Area 2",
-    )
-    device_registry.async_update_device(
-        device.id, disabled_by=dr.DeviceEntryDisabler.USER
-    )
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={("test", "9876-no-name")},
-        manufacturer="Test Manufacturer NoName",
-        model="Test Model NoName",
-        suggested_area="Test Area 2",
-    )
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={("test", "9876-integer-values")},
-        name=1,
-        manufacturer=2,
-        model=3,
-        suggested_area="Test Area 2",
-    )
     with (
         patch("google.generativeai.GenerativeModel") as mock_model,
         patch(
-            "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI.async_get_tools",
+            "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI._async_get_tools",
             return_value=[],
         ) as mock_get_tools,
+        patch(
+            "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI._async_get_api_prompt",
+            return_value="<api_prompt>",
+        ),
+        patch(
+            "homeassistant.components.google_generative_ai_conversation.conversation.llm.async_render_no_api_prompt",
+            return_value="<no_api_prompt>",
+        ),
     ):
         mock_chat = AsyncMock()
         mock_model.return_value.start_chat.return_value = mock_chat
@@ -136,8 +83,8 @@ async def test_default_prompt(
         mock_chat.send_message_async.return_value = chat_response
         mock_part = MagicMock()
         mock_part.function_call = None
+        mock_part.text = "Hi there!\n"
         chat_response.parts = [mock_part]
-        chat_response.text = "Hi there!"
         result = await conversation.async_converse(
             hass,
             "hello",
@@ -166,8 +113,8 @@ async def test_chat_history(
         mock_chat.send_message_async.return_value = chat_response
         mock_part = MagicMock()
         mock_part.function_call = None
+        mock_part.text = "1st model response"
         chat_response.parts = [mock_part]
-        chat_response.text = "1st model response"
         mock_chat.history = [
             {"role": "user", "parts": "prompt"},
             {"role": "model", "parts": "Ok"},
@@ -186,7 +133,8 @@ async def test_chat_history(
             result.response.as_dict()["speech"]["plain"]["speech"]
             == "1st model response"
         )
-        chat_response.text = "2nd model response"
+        mock_part.text = "2nd model response"
+        chat_response.parts = [mock_part]
         result = await conversation.async_converse(
             hass,
             "2nd user request",
@@ -204,7 +152,7 @@ async def test_chat_history(
 
 
 @patch(
-    "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI.async_get_tools"
+    "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI._async_get_tools"
 )
 async def test_function_call(
     mock_get_tools,
@@ -212,7 +160,7 @@ async def test_function_call(
     mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
 ) -> None:
-    """Test that the default prompt works."""
+    """Test function calling."""
     agent_id = mock_config_entry_with_assist.entry_id
     context = Context()
 
@@ -235,12 +183,17 @@ async def test_function_call(
         chat_response = MagicMock()
         mock_chat.send_message_async.return_value = chat_response
         mock_part = MagicMock()
-        mock_part.function_call.name = "test_tool"
-        mock_part.function_call.args = {"param1": ["test_value"]}
+        mock_part.function_call = FunctionCall(
+            name="test_tool",
+            args={
+                "param1": ["test_value", "param1\\'s value"],
+                "param2": "param2\\'s value",
+            },
+        )
 
-        def tool_call(hass, tool_input):
-            mock_part.function_call = False
-            chat_response.text = "Hi there!"
+        def tool_call(hass, tool_input, tool_context):
+            mock_part.function_call = None
+            mock_part.text = "Hi there!"
             return {"result": "Test response"}
 
         mock_tool.async_call.side_effect = tool_call
@@ -276,7 +229,12 @@ async def test_function_call(
         hass,
         llm.ToolInput(
             tool_name="test_tool",
-            tool_args={"param1": ["test_value"]},
+            tool_args={
+                "param1": ["test_value", "param1's value"],
+                "param2": "param2's value",
+            },
+        ),
+        llm.LLMContext(
             platform="google_generative_ai_conversation",
             context=context,
             user_prompt="Please call the test function",
@@ -302,7 +260,7 @@ async def test_function_call(
 
 
 @patch(
-    "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI.async_get_tools"
+    "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI._async_get_tools"
 )
 async def test_function_exception(
     mock_get_tools,
@@ -310,7 +268,7 @@ async def test_function_exception(
     mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
 ) -> None:
-    """Test that the default prompt works."""
+    """Test exception in function calling."""
     agent_id = mock_config_entry_with_assist.entry_id
     context = Context()
 
@@ -333,12 +291,11 @@ async def test_function_exception(
         chat_response = MagicMock()
         mock_chat.send_message_async.return_value = chat_response
         mock_part = MagicMock()
-        mock_part.function_call.name = "test_tool"
-        mock_part.function_call.args = {"param1": 1}
+        mock_part.function_call = FunctionCall(name="test_tool", args={"param1": 1})
 
-        def tool_call(hass, tool_input):
-            mock_part.function_call = False
-            chat_response.text = "Hi there!"
+        def tool_call(hass, tool_input, tool_context):
+            mock_part.function_call = None
+            mock_part.text = "Hi there!"
             raise HomeAssistantError("Test tool exception")
 
         mock_tool.async_call.side_effect = tool_call
@@ -375,6 +332,8 @@ async def test_function_exception(
         llm.ToolInput(
             tool_name="test_tool",
             tool_args={"param1": 1},
+        ),
+        llm.LLMContext(
             platform="google_generative_ai_conversation",
             context=context,
             user_prompt="Please call the test function",
@@ -482,12 +441,7 @@ async def test_template_error(
             "prompt": "talk like a {% if True %}smarthome{% else %}pirate please.",
         },
     )
-    with (
-        patch(
-            "google.generativeai.get_model",
-        ),
-        patch("google.generativeai.GenerativeModel"),
-    ):
+    with patch("google.generativeai.GenerativeModel"):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         result = await conversation.async_converse(
@@ -496,6 +450,51 @@ async def test_template_error(
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
+
+
+async def test_template_variables(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that template variables work."""
+    context = Context(user_id="12345")
+    mock_user = MagicMock()
+    mock_user.id = "12345"
+    mock_user.name = "Test User"
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            "prompt": (
+                "The user name is {{ user_name }}. "
+                "The user id is {{ llm_context.context.user_id }}."
+            ),
+        },
+    )
+    with (
+        patch("google.generativeai.GenerativeModel") as mock_model,
+        patch("homeassistant.auth.AuthManager.async_get_user", return_value=mock_user),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        mock_chat = AsyncMock()
+        mock_model.return_value.start_chat.return_value = mock_chat
+        chat_response = MagicMock()
+        mock_chat.send_message_async.return_value = chat_response
+        mock_part = MagicMock()
+        mock_part.text = "Model response"
+        chat_response.parts = [mock_part]
+        result = await conversation.async_converse(
+            hass, "hello", None, context, agent_id=mock_config_entry.entry_id
+        )
+
+    assert (
+        result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    ), result
+    assert (
+        "The user name is Test User."
+        in mock_model.mock_calls[1][2]["history"][0]["parts"]
+    )
+    assert "The user id is 12345." in mock_model.mock_calls[1][2]["history"][0]["parts"]
 
 
 async def test_conversation_agent(
@@ -508,3 +507,18 @@ async def test_conversation_agent(
         mock_config_entry.entry_id
     )
     assert agent.supported_languages == "*"
+
+
+async def test_escape_decode() -> None:
+    """Test _escape_decode."""
+    assert _escape_decode(
+        {
+            "param1": ["test_value", "param1\\'s value"],
+            "param2": "param2\\'s value",
+            "param3": {"param31": "Cheminée", "param32": "Chemin\\303\\251e"},
+        }
+    ) == {
+        "param1": ["test_value", "param1's value"],
+        "param2": "param2's value",
+        "param3": {"param31": "Cheminée", "param32": "Cheminée"},
+    }

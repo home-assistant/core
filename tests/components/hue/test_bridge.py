@@ -34,7 +34,8 @@ async def test_bridge_setup_v1(hass: HomeAssistant, mock_api_v1) -> None:
         patch.object(hass.config_entries, "async_forward_entry_setups") as mock_forward,
     ):
         hue_bridge = bridge.HueBridge(hass, config_entry)
-        assert await hue_bridge.async_initialize_bridge() is True
+        async with config_entry.setup_lock:
+            assert await hue_bridge.async_initialize_bridge() is True
 
     assert hue_bridge.api is mock_api_v1
     assert isinstance(hue_bridge.api, HueBridgeV1)
@@ -125,7 +126,8 @@ async def test_reset_unloads_entry_if_setup(hass: HomeAssistant, mock_api_v1) ->
         patch.object(hass.config_entries, "async_forward_entry_setups") as mock_forward,
     ):
         hue_bridge = bridge.HueBridge(hass, config_entry)
-        assert await hue_bridge.async_initialize_bridge() is True
+        async with config_entry.setup_lock:
+            assert await hue_bridge.async_initialize_bridge() is True
 
     await asyncio.sleep(0)
 
@@ -151,7 +153,8 @@ async def test_handle_unauthorized(hass: HomeAssistant, mock_api_v1) -> None:
 
     with patch.object(bridge, "HueBridgeV1", return_value=mock_api_v1):
         hue_bridge = bridge.HueBridge(hass, config_entry)
-        assert await hue_bridge.async_initialize_bridge() is True
+        async with config_entry.setup_lock:
+            assert await hue_bridge.async_initialize_bridge() is True
 
     with patch.object(bridge, "create_config_flow") as mock_create:
         await hue_bridge.handle_unauthorized_error()

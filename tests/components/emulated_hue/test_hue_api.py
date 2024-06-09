@@ -8,6 +8,7 @@ import json
 from unittest.mock import patch
 
 from aiohttp.hdrs import CONTENT_TYPE
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant import const, setup
@@ -243,7 +244,9 @@ def _mock_hue_endpoints(
 
 
 @pytest.fixture
-async def hue_client(hass_hue, hass_client_no_auth):
+async def hue_client(
+    hass_hue, hass_client_no_auth: ClientSessionGenerator
+) -> TestClient:
     """Create web client for emulated hue api."""
     _mock_hue_endpoints(
         hass_hue,

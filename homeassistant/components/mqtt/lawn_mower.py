@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import contextlib
-from functools import partial
 import logging
 
 import voluptuous as vol
@@ -17,7 +16,7 @@ from homeassistant.components.lawn_mower import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC
-from homeassistant.core import HassJobType, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -25,13 +24,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import (
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_RETAIN,
-    DEFAULT_OPTIMISTIC,
-    DEFAULT_RETAIN,
-)
+from .const import CONF_RETAIN, DEFAULT_OPTIMISTIC, DEFAULT_RETAIN
 from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
@@ -88,7 +81,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT lawn mower through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttLawnMower,
@@ -172,30 +165,15 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
             )
             return
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        if self._config.get(CONF_ACTIVITY_STATE_TOPIC) is None:
+        if not self.add_subscription(
+            CONF_ACTIVITY_STATE_TOPIC, self._message_received, {"_attr_activity"}
+        ):
             # Force into optimistic mode.
             self._attr_assumed_state = True
             return
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass,
-            self._sub_state,
-            {
-                CONF_ACTIVITY_STATE_TOPIC: {
-                    "topic": self._config.get(CONF_ACTIVITY_STATE_TOPIC),
-                    "msg_callback": partial(
-                        self._message_callback,
-                        self._message_received,
-                        {"_attr_activity"},
-                    ),
-                    "entity_id": self.entity_id,
-                    "qos": self._config[CONF_QOS],
-                    "encoding": self._config[CONF_ENCODING] or None,
-                    "job_type": HassJobType.Callback,
-                }
-            },
-        )
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""

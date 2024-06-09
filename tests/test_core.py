@@ -1835,7 +1835,6 @@ async def test_serviceregistry_return_response_invalid(
             blocking=True,
             return_response=True,
         )
-        await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
@@ -2834,8 +2833,32 @@ async def test_state_change_events_context_id_match_state_time(
     assert state.last_updated == events[0].time_fired
     assert len(state.context.id) == 26
     # ULIDs store time to 3 decimal places compared to python timestamps
-    assert _ulid_timestamp(state.context.id) == int(
-        state.last_updated.timestamp() * 1000
+    assert _ulid_timestamp(state.context.id) == int(state.last_updated_timestamp * 1000)
+
+
+async def test_state_change_events_match_time_with_limits_of_precision(
+    hass: HomeAssistant,
+) -> None:
+    """Ensure last_updated matches last_updated_timestamp within limits of precision.
+
+    The last_updated_timestamp uses the same precision as time.time() which is
+    a bit better than the precision of datetime.now() which is used for last_updated
+    on some platforms.
+    """
+    events = async_capture_events(hass, ha.EVENT_STATE_CHANGED)
+    hass.states.async_set("light.bedroom", "on")
+    await hass.async_block_till_done()
+    state: State = hass.states.get("light.bedroom")
+    assert state.last_updated == events[0].time_fired
+    assert state.last_updated_timestamp == pytest.approx(
+        events[0].time_fired.timestamp()
+    )
+    assert state.last_updated_timestamp == pytest.approx(state.last_updated.timestamp())
+    assert state.last_updated_timestamp == state.last_changed_timestamp
+    assert state.last_updated_timestamp == pytest.approx(state.last_changed.timestamp())
+    assert state.last_updated_timestamp == state.last_reported_timestamp
+    assert state.last_updated_timestamp == pytest.approx(
+        state.last_reported.timestamp()
     )
 
 
@@ -3524,3 +3547,18 @@ async def test_set_time_zone_deprecated(hass: HomeAssistant) -> None:
         ),
     ):
         await hass.config.set_time_zone("America/New_York")
+
+
+async def test_async_set_updates_last_reported(hass: HomeAssistant) -> None:
+    """Test async_set method updates last_reported AND last_reported_timestamp."""
+    hass.states.async_set("light.bowl", "on", {})
+    state = hass.states.get("light.bowl")
+    last_reported = state.last_reported
+    last_reported_timestamp = state.last_reported_timestamp
+
+    for _ in range(2):
+        hass.states.async_set("light.bowl", "on", {})
+        assert state.last_reported != last_reported
+        assert state.last_reported_timestamp != last_reported_timestamp
+        last_reported = state.last_reported
+        last_reported_timestamp = state.last_reported_timestamp

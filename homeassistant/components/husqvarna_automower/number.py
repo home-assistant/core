@@ -129,12 +129,11 @@ async def async_setup_entry(
                     for work_area_id in _work_areas
                 )
             async_remove_entities(hass, coordinator, entry, mower_id)
-    entities.extend(
-        AutomowerNumberEntity(mower_id, coordinator, description)
-        for mower_id in coordinator.data
-        for description in NUMBER_TYPES
-        if description.exists_fn(coordinator.data[mower_id])
-    )
+        entities.extend(
+            AutomowerNumberEntity(mower_id, coordinator, description)
+            for description in NUMBER_TYPES
+            if description.exists_fn(coordinator.data[mower_id])
+        )
     async_add_entities(entities)
 
 
@@ -185,7 +184,6 @@ class AutomowerWorkAreaNumberEntity(AutomowerControlEntity, NumberEntity):
     ) -> None:
         """Set up AutomowerNumberEntity."""
         super().__init__(mower_id, coordinator)
-        self.coordinator = coordinator
         self.entity_description = description
         self.work_area_id = work_area_id
         self._attr_unique_id = f"{mower_id}_{work_area_id}_{description.key}"

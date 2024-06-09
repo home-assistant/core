@@ -1262,7 +1262,7 @@ async def test_set_fan_mode_not_supported(
             {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_LOW},
             blocking=True,
         )
-        assert fan_cluster.write_attributes.await_count == 0
+    assert fan_cluster.write_attributes.await_count == 0
 
 
 async def test_set_fan_mode(hass: HomeAssistant, device_climate_fan) -> None:

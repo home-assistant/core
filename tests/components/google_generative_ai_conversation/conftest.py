@@ -16,10 +16,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture
 def mock_genai():
     """Mock the genai call in async_setup_entry."""
-    with patch(
-        "homeassistant.components.google_generative_ai_conversation.genai.list_models",
-        return_value=iter([]),
-    ):
+    with patch("google.ai.generativelanguage_v1beta.ModelServiceAsyncClient.get_model"):
         yield
 
 
@@ -49,11 +46,8 @@ def mock_config_entry_with_assist(hass, mock_config_entry):
 @pytest.fixture
 async def mock_init_component(hass: HomeAssistant, mock_config_entry: ConfigEntry):
     """Initialize integration."""
-    with patch("google.generativeai.get_model"):
-        assert await async_setup_component(
-            hass, "google_generative_ai_conversation", {}
-        )
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, "google_generative_ai_conversation", {})
+    await hass.async_block_till_done()
 
 
 @pytest.fixture(autouse=True)
