@@ -127,7 +127,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         scan_interval: timedelta = config[DOMAIN].pop(CONF_SCAN_INTERVAL)
         config[DOMAIN][CONF_SCAN_INTERVAL] = int(scan_interval.total_seconds())
 
-        entries[0].data = config[DOMAIN]
+        hass.config_entries.async_update_entry(entries[0], data=config[DOMAIN])
         return True
 
     hass.async_create_task(
