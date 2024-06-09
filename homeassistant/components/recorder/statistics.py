@@ -241,7 +241,8 @@ def _get_statistic_to_display_unit_converter(
     statistic_unit: str | None,
     state_unit: str | None,
     requested_units: dict[str, str] | None,
-) -> Callable[[float | None], float | None] | None:
+    allow_none: bool = True,
+) -> Callable[[float], float] | Callable[[float | None], float | None] | None:
     """Prepare a converter from the statistics unit to display unit."""
     if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
         return None
@@ -260,9 +261,11 @@ def _get_statistic_to_display_unit_converter(
     if display_unit == statistic_unit:
         return None
 
-    return converter.converter_factory_allow_none(
-        from_unit=statistic_unit, to_unit=display_unit
-    )
+    if allow_none:
+        return converter.converter_factory_allow_none(
+            from_unit=statistic_unit, to_unit=display_unit
+        )
+    return converter.converter_factory(from_unit=statistic_unit, to_unit=display_unit)
 
 
 def _get_display_to_statistic_unit_converter(
@@ -1730,13 +1733,11 @@ def _statistics_during_period_with_session(
 
     result = _sorted_statistics_to_dict(
         hass,
-        session,
         stats,
         statistic_ids,
         metadata,
         True,
         table,
-        start_time,
         units,
         types,
     )
@@ -1848,13 +1849,11 @@ def _get_last_statistics(
         # Return statistics combined with metadata
         return _sorted_statistics_to_dict(
             hass,
-            session,
             stats,
             statistic_ids,
             metadata,
             convert_units,
             table,
-            None,
             None,
             types,
         )
@@ -1963,13 +1962,11 @@ def get_latest_short_term_statistics_with_session(
     # Return statistics combined with metadata
     return _sorted_statistics_to_dict(
         hass,
-        session,
         stats,
         statistic_ids,
         metadata,
         False,
         StatisticsShortTerm,
-        None,
         None,
         types,
     )
@@ -2018,9 +2015,9 @@ def _statistics_at_time(
 
 
 def _fast_build_sum_list(
-    stats_list: list[Row],
+    db_rows: list[Row],
     table_duration_seconds: float,
-    convert: Callable | None,
+    convert: Callable[[float], float] | Callable[[float | None], float | None] | None,
     start_ts_idx: int,
     sum_idx: int,
 ) -> list[StatisticsRow]:
@@ -2028,31 +2025,32 @@ def _fast_build_sum_list(
     if convert:
         return [
             {
-                "start": (start_ts := db_state[start_ts_idx]),
+                "start": (start_ts := db_row[start_ts_idx]),
                 "end": start_ts + table_duration_seconds,
-                "sum": convert(db_state[sum_idx]),
+                "sum": None if (v := db_row[sum_idx]) is None else convert(v),
             }
-            for db_state in stats_list
+            for db_row in db_rows
         ]
     return [
         {
-            "start": (start_ts := db_state[start_ts_idx]),
+            "start": (start_ts := db_row[start_ts_idx]),
             "end": start_ts + table_duration_seconds,
-            "sum": db_state[sum_idx],
+            "sum": db_row[sum_idx],
         }
-        for db_state in stats_list
+        for db_row in db_rows
     ]
+
+
+_CONVERT_KEYS = {"mean", "min", "max", "state", "sum"}
 
 
 def _sorted_statistics_to_dict(  # noqa: C901
     hass: HomeAssistant,
-    session: Session,
     stats: Sequence[Row[Any]],
     statistic_ids: set[str] | None,
     _metadata: dict[str, tuple[int, StatisticMetaData]],
     convert_units: bool,
     table: type[StatisticsBase],
-    start_time: datetime | None,
     units: dict[str, str] | None,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[StatisticsRow]]:
@@ -2062,6 +2060,8 @@ def _sorted_statistics_to_dict(  # noqa: C901
     metadata = dict(_metadata.values())
     # Identify metadata IDs for which no data was available at the requested start time
     field_map: dict[str, int] = {key: idx for idx, key in enumerate(stats[0]._fields)}
+    if "last_reset_ts" in field_map:
+        field_map["last_reset"] = field_map.pop("last_reset_ts")
     metadata_id_idx = field_map["metadata_id"]
     start_ts_idx = field_map["start_ts"]
     stats_by_meta_id: dict[int, list[Row]] = {}
@@ -2083,23 +2083,22 @@ def _sorted_statistics_to_dict(  # noqa: C901
     # Figure out which fields we need to extract from the SQL result
     # and which indices they have in the result so we can avoid the overhead
     # of doing a dict lookup for each row
-    mean_idx = field_map["mean"] if "mean" in types else None
-    min_idx = field_map["min"] if "min" in types else None
-    max_idx = field_map["max"] if "max" in types else None
-    last_reset_ts_idx = field_map["last_reset_ts"] if "last_reset" in types else None
-    state_idx = field_map["state"] if "state" in types else None
+    convert_key_map: tuple[tuple[str, int, bool], ...] | None = None
+    key_map: tuple[tuple[str, int], ...] | None = None
     sum_idx = field_map["sum"] if "sum" in types else None
     sum_only = len(types) == 1 and sum_idx is not None
     # Append all statistic entries, and optionally do unit conversion
     table_duration_seconds = table.duration.total_seconds()
-    for meta_id, stats_list in stats_by_meta_id.items():
+    for meta_id, db_rows in stats_by_meta_id.items():
         metadata_by_id = metadata[meta_id]
         statistic_id = metadata_by_id["statistic_id"]
         if convert_units:
             state_unit = unit = metadata_by_id["unit_of_measurement"]
             if state := hass.states.get(statistic_id):
                 state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
+            convert = _get_statistic_to_display_unit_converter(
+                unit, state_unit, units, allow_none=False
+            )
         else:
             convert = None
 
@@ -2111,15 +2110,10 @@ def _sorted_statistics_to_dict(  # noqa: C901
             # this path to avoid the overhead of the more generic function.
             assert sum_idx is not None
             result[statistic_id] = _fast_build_sum_list(
-                stats_list,
-                table_duration_seconds,
-                convert,
-                start_ts_idx,
-                sum_idx,
+                db_rows, table_duration_seconds, convert, start_ts_idx, sum_idx
             )
             continue
 
-        ent_results_append = result[statistic_id].append
         #
         # The below loop is a red hot path for energy, and every
         # optimization counts in here.
@@ -2127,36 +2121,38 @@ def _sorted_statistics_to_dict(  # noqa: C901
         # Specifically, we want to avoid function calls,
         # attribute lookups, and dict lookups as much as possible.
         #
-        for db_state in stats_list:
-            row: StatisticsRow = {
-                "start": (start_ts := db_state[start_ts_idx]),
-                "end": start_ts + table_duration_seconds,
-            }
-            if last_reset_ts_idx is not None:
-                row["last_reset"] = db_state[last_reset_ts_idx]
-            if convert:
-                if mean_idx is not None:
-                    row["mean"] = convert(db_state[mean_idx])
-                if min_idx is not None:
-                    row["min"] = convert(db_state[min_idx])
-                if max_idx is not None:
-                    row["max"] = convert(db_state[max_idx])
-                if state_idx is not None:
-                    row["state"] = convert(db_state[state_idx])
-                if sum_idx is not None:
-                    row["sum"] = convert(db_state[sum_idx])
-            else:
-                if mean_idx is not None:
-                    row["mean"] = db_state[mean_idx]
-                if min_idx is not None:
-                    row["min"] = db_state[min_idx]
-                if max_idx is not None:
-                    row["max"] = db_state[max_idx]
-                if state_idx is not None:
-                    row["state"] = db_state[state_idx]
-                if sum_idx is not None:
-                    row["sum"] = db_state[sum_idx]
-            ent_results_append(row)
+        if convert:
+            if convert_key_map is None:
+                convert_key_map = (
+                    ("start", start_ts_idx, True),
+                    *((key, field_map[key], key not in _CONVERT_KEYS) for key in types),
+                )
+            results = [
+                {
+                    key: db_row[idx]
+                    if no_convert
+                    else convert(value)
+                    if (value := db_row[idx]) is not None
+                    else None
+                    for key, idx, no_convert in convert_key_map
+                }
+                for db_row in db_rows
+            ]
+        else:
+            if key_map is None:
+                key_map = (
+                    ("start", start_ts_idx),
+                    *((key, field_map[key]) for key in types),
+                )
+            results = [{key: db_row[idx] for key, idx in key_map} for db_row in db_rows]
+
+        for row in results:
+            row["end"] = row["start"] + table_duration_seconds
+
+        if TYPE_CHECKING:
+            result[statistic_id] = cast(list[StatisticsRow], results)
+        else:
+            result[statistic_id] = results
 
     return result
 
