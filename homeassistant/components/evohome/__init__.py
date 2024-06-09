@@ -119,7 +119,7 @@ SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Create a (EMEA/EU-based) Honeywell TCC system."""
+    """Set up the Evohome integration."""
 
     async def load_auth_tokens(store: Store, username: str) -> tuple[dict, dict | None]:
         app_storage = await store.async_load()
