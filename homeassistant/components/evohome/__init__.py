@@ -122,8 +122,8 @@ SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Evohome integration from the configuration.yaml file."""
 
-    # until config flow is fully implemented, deleting any existing entry (there should
-    # only be one) most closely matches the current behaviour
+    # until config flow is fully implemented, deleting any existing entry most closely
+    # matches the current behaviour
     for entry in hass.config_entries.async_entries(DOMAIN):
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
 
@@ -192,10 +192,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         return False
 
-    hass.config_entries.async_update_entry(
-        entry, unique_id=loc_config[SZ_LOCATION_INFO][SZ_LOCATION_ID]
-    )
-
     if _LOGGER.isEnabledFor(logging.DEBUG):
         loc_info = {
             SZ_LOCATION_ID: loc_config[SZ_LOCATION_INFO][SZ_LOCATION_ID],
@@ -239,10 +235,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if broker.tcs.hotwater:
         platforms += [Platform.WATER_HEATER]
 
-    any(e.entry_id == entry.entry_id for e in hass.config_entries.async_entries())
-    if not hass.config_entries.async_entries(entry.entry_id):
-        # problem here: how do I know not to call this if simply re-enabling the entry?
-        await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     setup_service_functions(hass, broker)
 

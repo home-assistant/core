@@ -20,9 +20,6 @@ class RamsesConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle a flow initiated by configuration file."""
 
-        if self._async_current_entries():  # should handle via manifest.json
-            return self.async_abort(reason="single_instance_allowed")
-
         options = {}
 
         if CONF_SCAN_INTERVAL in import_data:
