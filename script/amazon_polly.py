@@ -1,25 +1,41 @@
-"""Helper script to update supported languages for Amazone Polly text-to-speech (TTS)."""
+"""Helper script to update supported languages for Amazone Polly text-to-speech (TTS).
 
+N.B. This script requires AWS credentials.
+"""
+
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Self
 
 import boto3
-from pydantic import BaseModel, Field
 
 from .hassfest.serializer import format_python_namespace
 
 
-class AmazonPollyVoice(BaseModel):
+@dataclass(frozen=True)
+class AmazonPollyVoice:
     """Amazon Polly Voice."""
 
-    id: str = Field(alias="Id")
-    name: str = Field(alias="Name")
-    gender: str = Field(alias="Gender")
-    language_name: str = Field(alias="LanguageName")
-    language_code: str = Field(alias="LanguageCode")
-    supported_engines: set[str] = Field(alias="SupportedEngines")
-    additional_language_codes: set[str] = Field(
-        default=set(), alias="AdditionalLanguageCodes"
-    )
+    id: str
+    name: str
+    gender: str
+    language_name: str
+    language_code: str
+    supported_engines: set[str]
+    additional_language_codes: set[str]
+
+    @classmethod
+    def validate(cls, model: dict[str, str | list[str]]) -> Self:
+        """Validate data model."""
+        return cls(
+            id=model["Id"],
+            name=model["Name"],
+            gender=model["Gender"],
+            language_name=model["LanguageName"],
+            language_code=model["LanguageCode"],
+            supported_engines=set(model["SupportedEngines"]),
+            additional_language_codes=set(model.get("AdditionalLanguageCodes", [])),
+        )
 
 
 def get_all_voices(client: boto3.client) -> list[AmazonPollyVoice]:
