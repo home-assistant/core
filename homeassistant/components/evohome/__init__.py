@@ -86,18 +86,21 @@ from .helpers import (
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA: Final = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_LOCATION_IDX, default=0): cv.positive_int,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=SCAN_INTERVAL_DEFAULT
-                ): vol.All(cv.time_period, vol.Range(min=SCAN_INTERVAL_MINIMUM)),
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Optional(CONF_LOCATION_IDX, default=0): cv.positive_int,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL, default=SCAN_INTERVAL_DEFAULT
+                    ): vol.All(cv.time_period, vol.Range(min=SCAN_INTERVAL_MINIMUM)),
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
