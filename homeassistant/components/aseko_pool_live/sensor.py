@@ -42,17 +42,14 @@ UNIT_SENSORS = {
         key="redox",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
-        icon="mdi:test-tube",
     ),
     "electrodePower": SensorEntityDescription(
         key="electrolyzer",
         native_unit_of_measurement=GRAMS_PER_HOUR,
-        icon="mdi:lightning-bolt",
     ),
     "clf": SensorEntityDescription(
         key="free_chlorine",
         native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_LITER,
-        icon="mdi:test-tube",
     ),
     "salinity": SensorEntityDescription(
         key="salinity",
@@ -62,7 +59,6 @@ UNIT_SENSORS = {
         key="water_level",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.CENTIMETERS,
-        icon="mdi:waves",
     ),
 }
 
