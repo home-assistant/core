@@ -1134,7 +1134,6 @@ async def test_device_system_stats(
         ]
     ],
 )
-@pytest.mark.usefixtures("config_entry_setup")
 async def test_bandwidth_port_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

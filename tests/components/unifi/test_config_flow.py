@@ -193,9 +193,8 @@ async def test_flow_multiple_sites(
     assert result["data_schema"]({"site": "2"})
 
 
-async def test_flow_raise_already_configured(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
-) -> None:
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_flow_raise_already_configured(hass: HomeAssistant) -> None:
     """Test config flow aborts since a connected config entry already exists."""
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -219,9 +218,8 @@ async def test_flow_raise_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_flow_aborts_configuration_updated(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
-) -> None:
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_flow_aborts_configuration_updated(hass: HomeAssistant) -> None:
     """Test config flow aborts since a connected config entry already exists."""
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
