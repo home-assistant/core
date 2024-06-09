@@ -236,9 +236,9 @@ class ReolinkHost:
                     self._async_check_onvif_long_poll,
                 )
 
-        ch_list = [None]
+        ch_list: list[int | None] = [None]
         if self._api.is_nvr:
-            ch_list.extend(self.self._api.channels)
+            ch_list.extend(self._api.channels)
         for ch in ch_list:
             if not self._api.supported(ch, "firmware"):
                 continue
@@ -253,7 +253,9 @@ class ReolinkHost:
                     severity=ir.IssueSeverity.WARNING,
                     translation_key="firmware_update",
                     translation_placeholders={
-                        "required_firmware": self._api.camera_sw_version_required(ch).version_string,
+                        "required_firmware": self._api.camera_sw_version_required(
+                            ch
+                        ).version_string,
                         "current_firmware": self._api.camera_sw_version(ch),
                         "model": self._api.camera_model(ch),
                         "hw_version": self._api.camera_hardware_version(ch),
