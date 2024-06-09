@@ -2020,23 +2020,31 @@ def _statistics_at_time(
     return cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
 
-def _fast_build_sum_list(
+def _build_sum_converted_list(
     db_rows: list[Row],
     table_duration_seconds: float,
     start_ts_idx: int,
     sum_idx: int,
-    convert: Callable[[float | None], float | None] | Callable[[float], float] | None,
+    convert: Callable[[float | None], float | None] | Callable[[float], float],
 ) -> list[StatisticsRow]:
     """Build a list of sum statistics."""
-    if convert:
-        return [
-            {
-                "start": (start_ts := db_row[start_ts_idx]),
-                "end": start_ts + table_duration_seconds,
-                "sum": None if (v := db_row[sum_idx]) is None else convert(v),
-            }
-            for db_row in db_rows
-        ]
+    return [
+        {
+            "start": (start_ts := db_row[start_ts_idx]),
+            "end": start_ts + table_duration_seconds,
+            "sum": None if (v := db_row[sum_idx]) is None else convert(v),
+        }
+        for db_row in db_rows
+    ]
+
+
+def _build_sum_list(
+    db_rows: list[Row],
+    table_duration_seconds: float,
+    start_ts_idx: int,
+    sum_idx: int,
+) -> list[StatisticsRow]:
+    """Build a list of sum statistics."""
     return [
         {
             "start": (start_ts := db_row[start_ts_idx]),
@@ -2047,7 +2055,7 @@ def _fast_build_sum_list(
     ]
 
 
-def _fast_build_non_converted_list(
+def _build_non_converted_list(
     db_rows: list[Row],
     table_duration_seconds: float,
     start_ts_idx: int,
@@ -2082,7 +2090,7 @@ def _fast_build_non_converted_list(
     return result
 
 
-def _fast_build_converted_list(
+def _build_converted_list(
     db_rows: list[Row],
     table_duration_seconds: float,
     start_ts_idx: int,
@@ -2188,13 +2196,20 @@ def _sorted_statistics_to_dict(  # noqa: C901
             # For energy, we only need sum statistics, so we can optimize
             # this path to avoid the overhead of the more generic function.
             assert sum_idx is not None
-            result[statistic_id] = _fast_build_sum_list(*build_args, sum_idx, convert)
-        elif convert:
-            result[statistic_id] = _fast_build_converted_list(
+            if convert:
+                result[statistic_id] = _build_sum_converted_list(
+                    *build_args, sum_idx, convert
+                )
+            else:
+                result[statistic_id] = _build_sum_list(*build_args, sum_idx)
+            continue
+
+        if convert:
+            result[statistic_id] = _build_converted_list(
                 *build_args, *row_idxes, convert
             )
         else:
-            result[statistic_id] = _fast_build_non_converted_list(
+            result[statistic_id] = _build_non_converted_list(
                 *build_args,
                 *row_idxes,
             )
