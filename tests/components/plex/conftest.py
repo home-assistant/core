@@ -1,10 +1,10 @@
 """Fixtures for Plex tests."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 import requests_mock
+from typing_extensions import Generator
 
 from homeassistant.components.plex.const import DOMAIN, PLEX_SERVER_CONFIG, SERVERS
 from homeassistant.const import CONF_URL
@@ -22,7 +22,7 @@ def plex_server_url(entry):
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.plex.async_setup_entry", return_value=True

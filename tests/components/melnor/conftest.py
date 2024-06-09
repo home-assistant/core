@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from datetime import UTC, datetime, time, timedelta
 from unittest.mock import AsyncMock, _patch, patch
 
 from melnor_bluetooth.device import Device
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.components.melnor.const import DOMAIN
@@ -245,7 +245,7 @@ def mock_melnor_device():
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Patch async setup entry to return True."""
     with patch(
         "homeassistant.components.melnor.async_setup_entry", return_value=True

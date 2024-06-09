@@ -75,7 +75,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.46.1
+PySwitchbot==0.47.2
 
 # homeassistant.components.syncthru
 PySyncThru==0.7.10
@@ -107,7 +107,7 @@ RtmAPI==0.7.2
 SQLAlchemy==2.0.30
 
 # homeassistant.components.tami4
-Tami4EdgeAPI==2.1
+Tami4EdgeAPI==3.0
 
 # homeassistant.components.onvif
 WSDiscovery==2.0.0
@@ -169,6 +169,9 @@ aioambient==2024.01.0
 
 # homeassistant.components.apcupsd
 aioapcaccess==0.4.2
+
+# homeassistant.components.aquacell
+aioaquacell==0.1.7
 
 # homeassistant.components.aseko_pool_live
 aioaseko==0.1.1
@@ -326,7 +329,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==10.0.0
+aioshelly==10.0.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -362,7 +365,7 @@ aiovlc==0.3.2
 aiovodafone==0.6.0
 
 # homeassistant.components.waqi
-aiowaqi==3.0.1
+aiowaqi==3.1.0
 
 # homeassistant.components.watttime
 aiowatttime==0.1.1
@@ -371,7 +374,7 @@ aiowatttime==0.1.1
 aiowebostv==0.4.0
 
 # homeassistant.components.withings
-aiowithings==2.1.0
+aiowithings==3.0.1
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -463,7 +466,7 @@ azure-kusto-data[aio]==3.1.0
 azure-kusto-ingest==3.1.0
 
 # homeassistant.components.holiday
-babel==2.13.1
+babel==2.15.0
 
 # homeassistant.components.homekit
 base36==0.1.1
@@ -533,7 +536,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.8.1
+bthome-ble==3.9.1
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
@@ -747,7 +750,7 @@ fyta_cli==0.4.1
 gTTS==2.2.4
 
 # homeassistant.components.gardena_bluetooth
-gardena-bluetooth==1.4.1
+gardena-bluetooth==1.4.2
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.11
@@ -800,7 +803,7 @@ google-api-python-client==2.71.0
 google-cloud-pubsub==2.13.11
 
 # homeassistant.components.google_generative_ai_conversation
-google-generativeai==0.5.4
+google-generativeai==0.6.0
 
 # homeassistant.components.nest
 google-nest-sdm==4.0.4
@@ -886,7 +889,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.49
+holidays==0.50
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240605.0
@@ -933,7 +936,7 @@ idasen-ha==2.5.3
 ifaddr==0.2.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.1
+imgw_pib==1.0.4
 
 # homeassistant.components.incomfort
 incomfort-client==0.5.0
@@ -1204,7 +1207,7 @@ openhomedevice==2.2.0
 openwebifpy==4.2.4
 
 # homeassistant.components.opower
-opower==0.4.6
+opower==0.4.7
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1314,7 +1317,7 @@ py-nightscout==1.2.2
 py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.4.2
+py-synologydsm-api==2.4.4
 
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
@@ -1408,7 +1411,7 @@ pydexcom==0.2.3
 pydiscovergy==3.0.1
 
 # homeassistant.components.hydrawise
-pydrawise==2024.6.2
+pydrawise==2024.6.3
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
@@ -1420,7 +1423,7 @@ pyecoforest==0.4.0
 pyeconet==0.1.22
 
 # homeassistant.components.ista_ecotrend
-pyecotrend-ista==3.1.1
+pyecotrend-ista==3.2.0
 
 # homeassistant.components.efergy
 pyefergy==22.5.0
@@ -2016,7 +2019,7 @@ snapcast==2.3.6
 soco==0.30.4
 
 # homeassistant.components.solax
-solax==3.1.0
+solax==3.1.1
 
 # homeassistant.components.somfy_mylink
 somfy-mylink-synergy==1.0.6
@@ -2076,7 +2079,7 @@ subarulink==0.7.11
 sunwatcher==0.2.1
 
 # homeassistant.components.sunweg
-sunweg==2.1.1
+sunweg==3.0.1
 
 # homeassistant.components.surepetcare
 surepy==0.9.0
@@ -2263,7 +2266,7 @@ wyoming==1.5.4
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.28.0
+xiaomi-ble==0.29.0
 
 # homeassistant.components.knx
 xknx==2.12.2

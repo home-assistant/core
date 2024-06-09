@@ -119,7 +119,7 @@ async def test_connection_errors(
     exception: Exception,
     errors: dict[str, str],
     data_patch: dict[str, Any],
-):
+) -> None:
     """Test we show user form on various errors."""
     requests_mock.request(ANY, ANY, exc=exception)
     result = await hass.config_entries.flow.async_init(

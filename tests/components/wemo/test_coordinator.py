@@ -191,8 +191,8 @@ async def test_dli_device_info(
 
 
 async def test_options_enable_subscription_false(
-    hass, pywemo_registry, pywemo_device, wemo_entity
-):
+    hass: HomeAssistant, pywemo_registry, pywemo_device, wemo_entity
+) -> None:
     """Test setting Options.enable_subscription = False."""
     config_entry = hass.config_entries.async_get_entry(wemo_entity.config_entry_id)
     assert hass.config_entries.async_update_entry(
@@ -203,7 +203,9 @@ async def test_options_enable_subscription_false(
     pywemo_registry.unregister.assert_called_once_with(pywemo_device)
 
 
-async def test_options_enable_long_press_false(hass, pywemo_device, wemo_entity):
+async def test_options_enable_long_press_false(
+    hass: HomeAssistant, pywemo_device, wemo_entity
+) -> None:
     """Test setting Options.enable_long_press = False."""
     config_entry = hass.config_entries.async_get_entry(wemo_entity.config_entry_id)
     assert hass.config_entries.async_update_entry(
