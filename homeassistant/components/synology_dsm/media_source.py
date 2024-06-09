@@ -21,7 +21,7 @@ from homeassistant.components.media_source import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import DOMAIN, SHARED_SUFFIX
 from .models import SynologyDSMData
 
 
@@ -45,7 +45,7 @@ class SynologyPhotosMediaSourceIdentifier:
         self.album_id = None
         self.cache_key = None
         self.file_name = None
-        self.is_shared = None
+        self.is_shared = False
 
         if parts:
             self.unique_id = parts[0]
@@ -55,9 +55,9 @@ class SynologyPhotosMediaSourceIdentifier:
                 self.cache_key = parts[2]
             if len(parts) > 3:
                 self.file_name = parts[3]
-                if self.file_name.endswith("_shared"):
+                if self.file_name.endswith(SHARED_SUFFIX):
                     self.is_shared = True
-                    self.file_name = self.file_name.removesuffix("_shared")
+                    self.file_name = self.file_name.removesuffix(SHARED_SUFFIX)
 
 
 class SynologyPhotosMediaSource(MediaSource):
@@ -166,7 +166,7 @@ class SynologyPhotosMediaSource(MediaSource):
                 album_item.thumbnail_size = "sm"
                 suffix = ""
                 if album_item.is_shared:
-                    suffix = "_shared"
+                    suffix = SHARED_SUFFIX
                 ret.append(
                     BrowseMediaSource(
                         domain=DOMAIN,
@@ -195,7 +195,7 @@ class SynologyPhotosMediaSource(MediaSource):
             raise Unresolvable("No file extension")
         suffix = ""
         if identifier.is_shared:
-            suffix = "_shared"
+            suffix = SHARED_SUFFIX
         return PlayMedia(
             f"/synology_dsm/{identifier.unique_id}/{identifier.cache_key}/{identifier.file_name}{suffix}",
             mime_type,
@@ -233,10 +233,8 @@ class SynologyDsmMediaView(http.HomeAssistantView):
         # location: {cache_key}/{filename}
         cache_key, file_name = location.split("/")
         image_id = int(cache_key.split("_")[0])
-        shared = False
-        if file_name.endswith("_shared"):
-            shared = True
-            file_name = file_name.removesuffix("_shared")
+        if shared := file_name.endswith(SHARED_SUFFIX):
+            file_name = file_name.removesuffix(SHARED_SUFFIX)
         mime_type, _ = mimetypes.guess_type(file_name)
         if not isinstance(mime_type, str):
             raise web.HTTPNotFound
