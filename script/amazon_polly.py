@@ -51,16 +51,19 @@ supported_regions = set(
 polly_client = boto3.client(service_name="polly", region_name="us-east-1")
 voices = get_all_voices(polly_client)
 supported_voices = set({v.id for v in voices})
+supported_engines = set().union(*[v.supported_engines for v in voices])
 
 Path("homeassistant/generated/amazon_polly.py").write_text(
     format_python_namespace(
         {
             "SUPPORTED_VOICES": supported_voices,
             "SUPPORTED_REGIONS": supported_regions,
+            "SUPPORTED_ENGINES": supported_engines,
         },
         annotations={
             "SUPPORTED_VOICES": "Final[set[str]]",
             "SUPPORTED_REGIONS": "Final[set[str]]",
+            "SUPPORTED_ENGINES": "Final[set[str]]",
         },
         generator="script.amazon_polly",
     )

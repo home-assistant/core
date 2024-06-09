@@ -16,7 +16,11 @@ from homeassistant.components.tts import (
 )
 from homeassistant.const import ATTR_CREDENTIALS, CONF_PROFILE_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.generated.amazon_polly import SUPPORTED_REGIONS, SUPPORTED_VOICES
+from homeassistant.generated.amazon_polly import (
+    SUPPORTED_ENGINES,
+    SUPPORTED_REGIONS,
+    SUPPORTED_VOICES,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -39,7 +43,6 @@ from .const import (
     DEFAULT_SAMPLE_RATES,
     DEFAULT_TEXT_TYPE,
     DEFAULT_VOICE,
-    SUPPORTED_ENGINES,
     SUPPORTED_OUTPUT_FORMATS,
     SUPPORTED_SAMPLE_RATES,
     SUPPORTED_SAMPLE_RATES_MAP,
