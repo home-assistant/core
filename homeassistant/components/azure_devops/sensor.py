@@ -133,7 +133,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Azure DevOps sensor based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    initial_builds: list[DevOpsBuild] = coordinator.data
+    initial_builds: list[DevOpsBuild] = coordinator.data.builds
 
     async_add_entities(
         AzureDevOpsBuildSensor(

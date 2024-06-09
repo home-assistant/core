@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_ORG, CONF_PAT, DOMAIN
+from .const import CONF_PAT, DOMAIN
 from .coordinator import AzureDevOpsDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,7 +24,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         _LOGGER,
         entry=entry,
-        organization=entry.data[CONF_ORG],
     )
 
     # Store the coordinator in hass data
