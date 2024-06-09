@@ -2021,7 +2021,7 @@ def _statistics_at_time(
 
 
 def _fast_build_sum_list(
-    stats_list: list[Row],
+    db_rows: list[Row],
     table_duration_seconds: float,
     start_ts_idx: int,
     sum_idx: int,
@@ -2035,7 +2035,7 @@ def _fast_build_sum_list(
                 "end": start_ts + table_duration_seconds,
                 "sum": None if (v := db_row[sum_idx]) is None else convert(v),
             }
-            for db_row in stats_list
+            for db_row in db_rows
         ]
     return [
         {
@@ -2043,12 +2043,12 @@ def _fast_build_sum_list(
             "end": start_ts + table_duration_seconds,
             "sum": db_row[sum_idx],
         }
-        for db_row in stats_list
+        for db_row in db_rows
     ]
 
 
 def _fast_build_non_converted_list(
-    stats_list: list[Row],
+    db_rows: list[Row],
     table_duration_seconds: float,
     start_ts_idx: int,
     mean_idx: int | None,
@@ -2061,7 +2061,7 @@ def _fast_build_non_converted_list(
     """Build a list of statistics without unit conversion."""
     result: list[StatisticsRow] = []
     ent_results_append = result.append
-    for db_row in stats_list:
+    for db_row in db_rows:
         row: StatisticsRow = {
             "start": (start_ts := db_row[start_ts_idx]),
             "end": start_ts + table_duration_seconds,
@@ -2083,7 +2083,7 @@ def _fast_build_non_converted_list(
 
 
 def _fast_build_converted_list(
-    stats_list: list[Row],
+    db_rows: list[Row],
     table_duration_seconds: float,
     start_ts_idx: int,
     mean_idx: int | None,
@@ -2097,7 +2097,7 @@ def _fast_build_converted_list(
     """Build a list of statistics with unit conversion."""
     result: list[StatisticsRow] = []
     ent_results_append = result.append
-    for db_row in stats_list:
+    for db_row in db_rows:
         row: StatisticsRow = {
             "start": (start_ts := db_row[start_ts_idx]),
             "end": start_ts + table_duration_seconds,
