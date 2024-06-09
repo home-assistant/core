@@ -107,21 +107,40 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         feature: Feature | None = None,
         parent: Device | None = None,
         unique_id: str | None = None,
+        add_to_parent: bool = False,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self.device: Device = device
         self._feature = feature
+
+        registry_device = device
+        name = device.alias
+        if parent and parent.device_type != Device.Type.Hub:
+            if add_to_parent:
+                # Entity can be added to parent if add_to_parent parameter and not a hub
+                # Useful to assign primary controls to the parent for user experience.
+                registry_device = parent
+                name = registry_device.alias
+                self._attr_name = device.alias
+            else:
+                # Prefix the device name with the parent name unless it is a hub attached device.
+                # Sensible default for child devices like strip plugs or the ks240 where the child
+                # alias makes more sense in the context of the parent.
+                # i.e. Hall Ceiling Fan & Bedroom Ceiling Fan; Child device aliases will be Ceiling Fan
+                # and Dimmer Switch for both so should be distinguished by the parent name.
+                name = f"{parent.alias} {device.alias}"
+
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(device.device_id))},
+            identifiers={(DOMAIN, str(registry_device.device_id))},
             manufacturer="TP-Link",
-            model=device.model,
-            name=device.alias,
-            sw_version=device.hw_info["sw_ver"],
-            hw_version=device.hw_info["hw_ver"],
+            model=registry_device.model,
+            name=name,
+            sw_version=registry_device.hw_info["sw_ver"],
+            hw_version=registry_device.hw_info["hw_ver"],
         )
 
-        if parent is not None:
+        if parent is not None and parent != registry_device:
             self._attr_device_info["via_device"] = (DOMAIN, parent.device_id)
         else:
             self._attr_device_info["connections"] = {
@@ -210,7 +229,13 @@ def _entities_for_device[_E: CoordinatedTPLinkEntity](
     for device features that are implemented by specialized platforms like light.
     """
     return [
-        entity_class(device, coordinator, feature=feat, parent=parent)
+        entity_class(
+            device,
+            coordinator,
+            feature=feat,
+            parent=parent,
+            add_to_parent=feat.category == Feature.Category.Primary,
+        )
         for feat in device.features.values()
         if feat.type == feature_type
         and (
