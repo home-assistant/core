@@ -1034,9 +1034,7 @@ async def test_get_custom_components_recovery_mode(hass: HomeAssistant) -> None:
     assert await loader.async_get_custom_components(hass) == {}
 
 
-async def test_custom_integration_missing_version(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_custom_integration_missing_version(hass: HomeAssistant) -> None:
     """Test trying to load a custom integration without a version twice does not deadlock."""
     with pytest.raises(loader.IntegrationNotFound):
         await loader.async_get_integration(hass, "test_no_version")
@@ -1045,9 +1043,7 @@ async def test_custom_integration_missing_version(
         await loader.async_get_integration(hass, "test_no_version")
 
 
-async def test_custom_integration_missing(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_custom_integration_missing(hass: HomeAssistant) -> None:
     """Test trying to load a custom integration that is missing twice not deadlock."""
     with patch("homeassistant.loader.async_get_custom_components") as mock_get:
         mock_get.return_value = {}
@@ -1296,7 +1292,7 @@ async def test_hass_components_use_reported(
 
 
 async def test_async_get_component_preloads_config_and_config_flow(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
 ) -> None:
     """Verify async_get_component will try to preload the config and config_flow platform."""
     executor_import_integration = _get_test_integration(
@@ -1407,7 +1403,6 @@ async def test_async_get_component_loads_loop_if_already_in_sys_modules(
 
 async def test_async_get_component_concurrent_loads(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
 ) -> None:
     """Verify async_get_component waits if the first load if called again when still in progress."""
@@ -1882,7 +1877,6 @@ async def test_async_get_platforms_loads_loop_if_already_in_sys_modules(
 
 async def test_async_get_platforms_concurrent_loads(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
 ) -> None:
     """Verify async_get_platforms waits if the first load if called again.

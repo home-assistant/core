@@ -66,7 +66,7 @@ async def test_store_telegam_history(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_storage: dict[str, Any],
-):
+) -> None:
     """Test storing telegram history."""
     await knx.setup_integration({})
 
@@ -89,7 +89,7 @@ async def test_load_telegam_history(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_storage: dict[str, Any],
-):
+) -> None:
     """Test telegram history restoration."""
     hass_storage["knx/telegrams_history.json"] = {"version": 1, "data": MOCK_TELEGRAMS}
     await knx.setup_integration({})
@@ -103,7 +103,7 @@ async def test_remove_telegam_history(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_storage: dict[str, Any],
-):
+) -> None:
     """Test telegram history removal when configured to size 0."""
     hass_storage["knx/telegrams_history.json"] = {"version": 1, "data": MOCK_TELEGRAMS}
     knx.mock_config_entry.add_to_hass(hass)
