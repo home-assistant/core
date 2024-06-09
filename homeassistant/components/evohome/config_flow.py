@@ -1,13 +1,10 @@
 """Config flow to configure Evohome integration."""
 
-import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class RamsesConfigFlow(ConfigFlow, domain=DOMAIN):
