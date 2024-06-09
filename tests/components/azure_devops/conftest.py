@@ -55,5 +55,5 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     with patch(
         "homeassistant.components.azure_devops.async_setup_entry",
         return_value=True,
-    ) as mock_se:
-        yield mock_se
+    ) as mock_entry:
+        yield mock_entry
