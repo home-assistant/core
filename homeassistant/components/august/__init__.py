@@ -69,6 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bool:
     """Unload a config entry."""
+    entry.runtime_data.async_stop()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
@@ -151,13 +152,8 @@ class AugustData(SubscriberMixin):
         token = self._august_gateway.access_token
         # This used to be a gather but it was less reliable with august's recent api changes.
         user_data = await self._api.async_get_user(token)
-        locks: list[Lock] = await self._api.async_get_operable_locks(token)
-        doorbells: list[Doorbell] = await self._api.async_get_doorbells(token)
-        if not doorbells:
-            doorbells = []
-        if not locks:
-            locks = []
-
+        locks: list[Lock] = await self._api.async_get_operable_locks(token) or []
+        doorbells: list[Doorbell] = await self._api.async_get_doorbells(token) or []
         self._doorbells_by_id = {device.device_id: device for device in doorbells}
         self._locks_by_id = {device.device_id: device for device in locks}
         self._house_ids = {device.house_id for device in chain(locks, doorbells)}
@@ -180,7 +176,6 @@ class AugustData(SubscriberMixin):
         self.activity_stream = ActivityStream(
             self._api, self._august_gateway, self._house_ids, pubnub
         )
-        self._config_entry.async_on_unload(self.async_stop)
         self._config_entry.async_on_unload(
             self._hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         )
