@@ -2025,7 +2025,7 @@ def _fast_build_sum_list(
     table_duration_seconds: float,
     start_ts_idx: int,
     sum_idx: int,
-    convert: Callable | None,
+    convert: Callable[[float | None], float | None] | Callable[[float], float] | None,
 ) -> list[StatisticsRow]:
     """Build a list of sum statistics."""
     if convert:
