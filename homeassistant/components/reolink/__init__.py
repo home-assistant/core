@@ -93,16 +93,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
             await host.renew()
 
-    async def async_check_firmware_update() -> (
-        str | Literal[False] | NewSoftwareVersion
-    ):
+    async def async_check_firmware_update() -> None:
         """Check for firmware updates."""
-        if not host.api.supported(None, "update"):
-            return False
-
         async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
             try:
-                return await host.api.check_new_firmware()
+                await host.api.check_new_firmware()
             except ReolinkError as err:
                 if starting:
                     _LOGGER.debug(
@@ -110,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                         "from %s, possibly internet access is blocked",
                         host.api.nvr_name,
                     )
-                    return False
+                    return
 
                 raise UpdateFailed(
                     f"Error checking Reolink firmware update from {host.api.nvr_name}, "
