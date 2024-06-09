@@ -1,5 +1,6 @@
 """Test the Teslemetry update platform."""
 
+import copy
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -79,8 +80,11 @@ async def test_update_services(
         )
         call.assert_called_once()
 
-    VEHICLE_DATA["response"]["vehicle_state"]["software_update"]["status"] = INSTALLING
-    mock_vehicle_data.return_value = VEHICLE_DATA
+    VEHICLE_INSTALLING = copy.deepcopy(VEHICLE_DATA)
+    VEHICLE_INSTALLING["response"]["vehicle_state"]["software_update"]["status"] = (
+        INSTALLING
+    )
+    mock_vehicle_data.return_value = VEHICLE_INSTALLING
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

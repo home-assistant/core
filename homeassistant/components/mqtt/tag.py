@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
     """Set up MQTT tag scanner dynamically through MQTT discovery."""
 
     setup = functools.partial(_async_setup_tag, hass, config_entry=config_entry)
-    await async_setup_non_entity_entry_helper(hass, TAG, setup, DISCOVERY_SCHEMA)
+    async_setup_non_entity_entry_helper(hass, TAG, setup, DISCOVERY_SCHEMA)
 
 
 async def _async_setup_tag(
@@ -181,4 +181,4 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
             self.hass, self._sub_state
         )
         if self.device_id:
-            self.hass.data[DATA_MQTT].tags[self.device_id].pop(discovery_id)
+            del self.hass.data[DATA_MQTT].tags[self.device_id][discovery_id]

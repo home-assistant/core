@@ -22,12 +22,9 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    async_get as dr_async_get,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .bluetooth import async_connect_scanner
@@ -141,7 +138,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
     def async_setup(self, pending_platforms: list[Platform] | None = None) -> None:
         """Set up the coordinator."""
         self._pending_platforms = pending_platforms
-        dev_reg = dr_async_get(self.hass)
+        dev_reg = dr.async_get(self.hass)
         device_entry = dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
             name=self.name,
@@ -203,7 +200,9 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             self.hass.config_entries.async_update_entry(self.entry, data=data)
 
         # Resume platform setup
-        await self.hass.config_entries.async_forward_entry_setups(self.entry, platforms)
+        await self.hass.config_entries.async_late_forward_entry_setups(
+            self.entry, platforms
+        )
 
         return True
 
@@ -587,11 +586,13 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             raise UpdateFailed(
                 f"Sleeping device did not update within {self.sleep_period} seconds interval"
             )
-        if self.device.connected:
-            return
 
-        if not await self._async_device_connect_task():
-            raise UpdateFailed("Device reconnect error")
+        async with self._connection_lock:
+            if self.device.connected:  # Already connected
+                return
+
+            if not await self._async_device_connect_task():
+                raise UpdateFailed("Device reconnect error")
 
     async def _async_disconnected(self, reconnect: bool) -> None:
         """Handle device disconnected."""
@@ -626,7 +627,13 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             if self.connected:  # Already connected
                 return
             self.connected = True
-            await self._async_run_connected_events()
+            try:
+                await self._async_run_connected_events()
+            except DeviceConnectionError as err:
+                LOGGER.error(
+                    "Error running connected events for device %s: %s", self.name, err
+                )
+                self.last_update_success = False
 
     async def _async_run_connected_events(self) -> None:
         """Run connected events.
@@ -700,10 +707,18 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         if self.device.connected:
             try:
                 await async_stop_scanner(self.device)
+                await super().shutdown()
             except InvalidAuthError:
                 self.entry.async_start_reauth(self.hass)
                 return
-        await super().shutdown()
+            except DeviceConnectionError as err:
+                # If the device is restarting or has gone offline before
+                # the ping/pong timeout happens, the shutdown command
+                # will fail, but we don't care since we are unloading
+                # and if we setup again, we will fix anything that is
+                # in an inconsistent state at that time.
+                LOGGER.debug("Error during shutdown for device %s: %s", self.name, err)
+                return
         await self._async_disconnected(False)
 
 
@@ -734,13 +749,14 @@ def get_block_coordinator_by_device_id(
     hass: HomeAssistant, device_id: str
 ) -> ShellyBlockCoordinator | None:
     """Get a Shelly block device coordinator for the given device id."""
-    dev_reg = dr_async_get(hass)
+    dev_reg = dr.async_get(hass)
     if device := dev_reg.async_get(device_id):
         for config_entry in device.config_entries:
             entry = hass.config_entries.async_get_entry(config_entry)
             if (
                 entry
-                and entry.state == ConfigEntryState.LOADED
+                and entry.state is ConfigEntryState.LOADED
+                and hasattr(entry, "runtime_data")
                 and isinstance(entry.runtime_data, ShellyEntryData)
                 and (coordinator := entry.runtime_data.block)
             ):
@@ -753,13 +769,14 @@ def get_rpc_coordinator_by_device_id(
     hass: HomeAssistant, device_id: str
 ) -> ShellyRpcCoordinator | None:
     """Get a Shelly RPC device coordinator for the given device id."""
-    dev_reg = dr_async_get(hass)
+    dev_reg = dr.async_get(hass)
     if device := dev_reg.async_get(device_id):
         for config_entry in device.config_entries:
             entry = hass.config_entries.async_get_entry(config_entry)
             if (
                 entry
-                and entry.state == ConfigEntryState.LOADED
+                and entry.state is ConfigEntryState.LOADED
+                and hasattr(entry, "runtime_data")
                 and isinstance(entry.runtime_data, ShellyEntryData)
                 and (coordinator := entry.runtime_data.rpc)
             ):

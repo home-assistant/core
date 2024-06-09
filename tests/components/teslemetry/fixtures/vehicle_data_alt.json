@@ -3,7 +3,7 @@
     "id": 1234,
     "user_id": 1234,
     "vehicle_id": 1234,
-    "vin": "VINVINVIN",
+    "vin": "LRWXF7EK4KC700000",
     "color": null,
     "access_type": "OWNER",
     "granular_access": {
@@ -81,7 +81,7 @@
       "cabin_overheat_protection": "Off",
       "cabin_overheat_protection_actively_cooling": false,
       "climate_keeper_mode": "off",
-      "cop_activation_temperature": "High",
+      "cop_activation_temperature": "Low",
       "defrost_mode": 0,
       "driver_temp_setting": 22,
       "fan_status": 0,
@@ -201,7 +201,7 @@
       "feature_bitmask": "fbdffbff,187f",
       "fp_window": 1,
       "ft": 1,
-      "is_user_present": false,
+      "is_user_present": true,
       "locked": false,
       "media_info": {
         "audio_volume": 2.6667,

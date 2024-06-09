@@ -19,11 +19,17 @@ from homeassistant.util import dt as dt_util, location
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.common import MockUser
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
+from tests.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 
 @pytest.fixture
-async def client(hass, hass_ws_client):
+async def client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> MockHAClientWebSocket:
     """Fixture that can interact with the config manager API."""
     with patch.object(config, "SECTIONS", [core]):
         assert await async_setup_component(hass, "config", {})

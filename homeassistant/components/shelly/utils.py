@@ -28,13 +28,13 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import issue_registry as ir, singleton
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    async_get as dr_async_get,
-    format_mac,
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+    singleton,
 )
-from homeassistant.helpers.entity_registry import async_get as er_async_get
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -60,7 +60,7 @@ def async_remove_shelly_entity(
     hass: HomeAssistant, domain: str, unique_id: str
 ) -> None:
     """Remove a Shelly entity."""
-    entity_reg = er_async_get(hass)
+    entity_reg = er.async_get(hass)
     entity_id = entity_reg.async_get_entity_id(domain, DOMAIN, unique_id)
     if entity_id:
         LOGGER.debug("Removing entity: %s", entity_id)
@@ -410,10 +410,10 @@ def update_device_fw_info(
     """Update the firmware version information in the device registry."""
     assert entry.unique_id
 
-    dev_reg = dr_async_get(hass)
+    dev_reg = dr.async_get(hass)
     if device := dev_reg.async_get_device(
         identifiers={(DOMAIN, entry.entry_id)},
-        connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
+        connections={(CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
     ):
         if device.sw_version == shellydevice.firmware_version:
             return
@@ -487,7 +487,7 @@ def async_remove_shelly_rpc_entities(
     hass: HomeAssistant, domain: str, mac: str, keys: list[str]
 ) -> None:
     """Remove RPC based Shelly entity."""
-    entity_reg = er_async_get(hass)
+    entity_reg = er.async_get(hass)
     for key in keys:
         if entity_id := entity_reg.async_get_entity_id(domain, DOMAIN, f"{mac}-{key}"):
             LOGGER.debug("Removing entity: %s", entity_id)

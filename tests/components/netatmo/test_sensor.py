@@ -210,6 +210,7 @@ async def test_process_health(health: int, expected: str) -> None:
 )
 async def test_weather_sensor_enabling(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     config_entry: MockConfigEntry,
     uid: str,
     name: str,
@@ -221,8 +222,7 @@ async def test_weather_sensor_enabling(
         states_before = len(hass.states.async_all())
         assert hass.states.get(f"sensor.{name}") is None
 
-        registry = er.async_get(hass)
-        registry.async_get_or_create(
+        entity_registry.async_get_or_create(
             "sensor",
             "netatmo",
             uid,

@@ -28,7 +28,7 @@
     'previous_unique_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
     'translation_key': 'vehicle_state_software_update_status',
-    'unique_id': 'VINVINVIN-vehicle_state_software_update_status',
+    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_software_update_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -84,7 +84,7 @@
     'previous_unique_id': None,
     'supported_features': <UpdateEntityFeature: 4>,
     'translation_key': 'vehicle_state_software_update_status',
-    'unique_id': 'VINVINVIN-vehicle_state_software_update_status',
+    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_software_update_status',
     'unit_of_measurement': None,
   })
 # ---

@@ -80,10 +80,9 @@ async def test_websocket(
     }
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_download_diagnostics(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    enable_custom_integrations: None,
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test download diagnostics."""
     config_entry = MockConfigEntry(domain="fake_integration")
