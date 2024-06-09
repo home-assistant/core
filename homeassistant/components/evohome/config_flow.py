@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from .const import DOMAIN
 
 
-class RamsesConfigFlow(ConfigFlow, domain=DOMAIN):
+class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Evohome."""
 
     VERSION = 1
