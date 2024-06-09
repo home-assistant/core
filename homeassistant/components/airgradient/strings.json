@@ -38,6 +38,21 @@
           "c": "Celsius",
           "f": "Fahrenheit"
         }
+      },
+      "display_pm_standard": {
+        "name": "Display PM standard",
+        "state": {
+          "ugm3": "µg/m³",
+          "us_aqi": "US AQI"
+        }
+      },
+      "led_bar_mode": {
+        "name": "LED bar mode",
+        "state": {
+          "off": "Off",
+          "co2": "Carbon dioxide",
+          "pm": "Particulate matter"
+        }
       }
     },
     "sensor": {
