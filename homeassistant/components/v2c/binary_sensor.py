@@ -54,7 +54,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up V2C binary sensor platform."""
-    coordinator: V2CUpdateCoordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         V2CBinarySensorBaseEntity(coordinator, description, config_entry.entry_id)
