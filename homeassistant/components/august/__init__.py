@@ -69,7 +69,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bool:
     """Unload a config entry."""
-    entry.runtime_data.async_stop()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
@@ -179,6 +178,7 @@ class AugustData(SubscriberMixin):
         self._config_entry.async_on_unload(
             self._hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         )
+        self._config_entry.async_on_unload(self.async_stop)
         await self.activity_stream.async_setup()
 
         pubnub.subscribe(self.async_pubnub_message)
