@@ -95,9 +95,8 @@ DPI_GROUPS = [
 ]
 
 
-async def test_flow_works(
-    hass: HomeAssistant, mock_discovery, mock_default_requests: None
-) -> None:
+@pytest.mark.usefixtures("mock_default_requests")
+async def test_flow_works(hass: HomeAssistant, mock_discovery) -> None:
     """Test config flow."""
     mock_discovery.return_value = "1"
     result = await hass.config_entries.flow.async_init(
@@ -165,9 +164,8 @@ async def test_flow_works_negative_discovery(
         ]
     ],
 )
-async def test_flow_multiple_sites(
-    hass: HomeAssistant, mock_default_requests: None
-) -> None:
+@pytest.mark.usefixtures("mock_default_requests")
+async def test_flow_multiple_sites(hass: HomeAssistant) -> None:
     """Test config flow works when finding multiple sites."""
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -247,9 +245,8 @@ async def test_flow_aborts_configuration_updated(hass: HomeAssistant) -> None:
     assert result["reason"] == "configuration_updated"
 
 
-async def test_flow_fails_user_credentials_faulty(
-    hass: HomeAssistant, mock_default_requests: None
-) -> None:
+@pytest.mark.usefixtures("mock_default_requests")
+async def test_flow_fails_user_credentials_faulty(hass: HomeAssistant) -> None:
     """Test config flow."""
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -274,9 +271,8 @@ async def test_flow_fails_user_credentials_faulty(
     assert result["errors"] == {"base": "faulty_credentials"}
 
 
-async def test_flow_fails_hub_unavailable(
-    hass: HomeAssistant, mock_default_requests: None
-) -> None:
+@pytest.mark.usefixtures("mock_default_requests")
+async def test_flow_fails_hub_unavailable(hass: HomeAssistant) -> None:
     """Test config flow."""
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
