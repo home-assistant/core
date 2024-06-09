@@ -1782,16 +1782,16 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
 
     # Test with no secure_pin configured
 
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            STATE_ALARM_DISARMED,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+        ),
+        BASIC_CONFIG,
+    )
     with pytest.raises(error.SmartHomeError) as err:
-        trt = trait.ArmDisArmTrait(
-            hass,
-            State(
-                "alarm_control_panel.alarm",
-                STATE_ALARM_DISARMED,
-                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
-            ),
-            BASIC_CONFIG,
-        )
         await trt.execute(
             trait.COMMAND_ARMDISARM,
             BASIC_DATA,
@@ -1845,16 +1845,16 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
     assert len(calls) == 1
 
     # Test already armed
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            STATE_ALARM_ARMED_AWAY,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+        ),
+        PIN_CONFIG,
+    )
     with pytest.raises(error.SmartHomeError) as err:
-        trt = trait.ArmDisArmTrait(
-            hass,
-            State(
-                "alarm_control_panel.alarm",
-                STATE_ALARM_ARMED_AWAY,
-                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
-            ),
-            PIN_CONFIG,
-        )
         await trt.execute(
             trait.COMMAND_ARMDISARM,
             PIN_DATA,
@@ -1940,16 +1940,16 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
     )
 
     # Test without secure_pin configured
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            STATE_ALARM_ARMED_AWAY,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+        ),
+        BASIC_CONFIG,
+    )
     with pytest.raises(error.SmartHomeError) as err:
-        trt = trait.ArmDisArmTrait(
-            hass,
-            State(
-                "alarm_control_panel.alarm",
-                STATE_ALARM_ARMED_AWAY,
-                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
-            ),
-            BASIC_CONFIG,
-        )
         await trt.execute(trait.COMMAND_ARMDISARM, BASIC_DATA, {"arm": False}, {})
 
     assert len(calls) == 0
@@ -1989,31 +1989,32 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
     assert len(calls) == 1
 
     # Test already disarmed
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            STATE_ALARM_DISARMED,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+        ),
+        PIN_CONFIG,
+    )
     with pytest.raises(error.SmartHomeError) as err:
-        trt = trait.ArmDisArmTrait(
-            hass,
-            State(
-                "alarm_control_panel.alarm",
-                STATE_ALARM_DISARMED,
-                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
-            ),
-            PIN_CONFIG,
-        )
         await trt.execute(trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": False}, {})
     assert len(calls) == 1
     assert err.value.code == const.ERR_ALREADY_DISARMED
 
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            STATE_ALARM_ARMED_AWAY,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
+        ),
+        PIN_CONFIG,
+    )
+
     # Cancel arming after already armed will require pin
     with pytest.raises(error.SmartHomeError) as err:
-        trt = trait.ArmDisArmTrait(
-            hass,
-            State(
-                "alarm_control_panel.alarm",
-                STATE_ALARM_ARMED_AWAY,
-                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
-            ),
-            PIN_CONFIG,
-        )
         await trt.execute(
             trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": True, "cancel": True}, {}
         )
@@ -2160,13 +2161,13 @@ async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
     ],
 )
 async def test_fan_speed_ordered(
-    hass,
+    hass: HomeAssistant,
     percentage: int,
     percentage_step: float,
     speed: str,
     speeds: list[list[str]],
     percentage_result: int,
-):
+) -> None:
     """Test FanSpeed trait speed control support for fan domain."""
     assert helpers.get_google_type(fan.DOMAIN, None) is not None
     assert trait.FanSpeedTrait.supported(

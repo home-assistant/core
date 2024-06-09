@@ -5,25 +5,21 @@ from datetime import timedelta
 from aiohttp.cookiejar import CookieJar
 import attr
 import eternalegypt
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PASSWORD,
-    CONF_RECIPIENT,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -31,9 +27,6 @@ from .const import (
     ATTR_HOST,
     ATTR_MESSAGE,
     ATTR_SMS_ID,
-    CONF_BINARY_SENSOR,
-    CONF_NOTIFY,
-    CONF_SENSOR,
     DATA_HASS_CONFIG,
     DISPATCHER_NETGEAR_LTE,
     DOMAIN,
@@ -67,59 +60,13 @@ ALL_BINARY_SENSORS = [
     "mobile_connected",
 ]
 
-
-NOTIFY_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME, default=DOMAIN): cv.string,
-        vol.Optional(CONF_RECIPIENT, default=[]): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
-
-SENSOR_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=["usage"]): vol.All(
-            cv.ensure_list, [vol.In(ALL_SENSORS)]
-        )
-    }
-)
-
-BINARY_SENSOR_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=["mobile_connected"]): vol.All(
-            cv.ensure_list, [vol.In(ALL_BINARY_SENSORS)]
-        )
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Required(CONF_PASSWORD): cv.string,
-                        vol.Optional(CONF_NOTIFY, default={}): vol.All(
-                            cv.ensure_list, [NOTIFY_SCHEMA]
-                        ),
-                        vol.Optional(CONF_SENSOR, default={}): SENSOR_SCHEMA,
-                        vol.Optional(
-                            CONF_BINARY_SENSOR, default={}
-                        ): BINARY_SENSOR_SCHEMA,
-                    }
-                )
-            ],
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.NOTIFY,
     Platform.SENSOR,
 ]
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @attr.s
@@ -170,42 +117,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Netgear LTE component."""
     hass.data[DATA_HASS_CONFIG] = config
 
-    if lte_config := config.get(DOMAIN):
-        hass.async_create_task(import_yaml(hass, lte_config))
-
     return True
-
-
-async def import_yaml(hass: HomeAssistant, lte_config: ConfigType) -> None:
-    """Import yaml if we can connect. Create appropriate issue registry entries."""
-    for entry in lte_config:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
-        )
-        if result.get("reason") == "cannot_connect":
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "import_failure",
-                is_fixable=False,
-                severity=IssueSeverity.ERROR,
-                translation_key="import_failure",
-            )
-        else:
-            async_create_issue(
-                hass,
-                HOMEASSISTANT_DOMAIN,
-                f"deprecated_yaml_{DOMAIN}",
-                breaks_in_ha_version="2024.7.0",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_yaml",
-                translation_placeholders={
-                    "domain": DOMAIN,
-                    "integration_title": "Netgear LTE",
-                },
-            )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -241,7 +153,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await async_setup_services(hass)
 
-    _legacy_task(hass, entry)
+    await discovery.async_load_platform(
+        hass,
+        Platform.NOTIFY,
+        DOMAIN,
+        {CONF_HOST: entry.data[CONF_HOST], CONF_NAME: entry.title},
+        hass.data[DATA_HASS_CONFIG],
+    )
 
     await hass.config_entries.async_forward_entry_setups(
         entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
@@ -285,64 +203,3 @@ async def _login(hass: HomeAssistant, modem_data: ModemData, password: str) -> N
 
     await modem_data.async_update()
     hass.data[DOMAIN].modem_data[modem_data.host] = modem_data
-
-
-def _legacy_task(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Create notify service and add a repair issue when appropriate."""
-    # Discovery can happen up to 2 times for notify depending on existing yaml config
-    # One for the name of the config entry, allows the user to customize the name
-    # One for each notify described in the yaml config which goes away with config flow
-    # One for the default if the user never specified one
-    hass.async_create_task(
-        discovery.async_load_platform(
-            hass,
-            Platform.NOTIFY,
-            DOMAIN,
-            {CONF_HOST: entry.data[CONF_HOST], CONF_NAME: entry.title},
-            hass.data[DATA_HASS_CONFIG],
-        )
-    )
-    if not (lte_configs := hass.data[DATA_HASS_CONFIG].get(DOMAIN, [])):
-        return
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_notify",
-        breaks_in_ha_version="2024.7.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_notify",
-        translation_placeholders={
-            "name": f"{Platform.NOTIFY}.{entry.title.lower().replace(' ', '_')}"
-        },
-    )
-
-    for lte_config in lte_configs:
-        if lte_config[CONF_HOST] == entry.data[CONF_HOST]:
-            if not lte_config[CONF_NOTIFY]:
-                hass.async_create_task(
-                    discovery.async_load_platform(
-                        hass,
-                        Platform.NOTIFY,
-                        DOMAIN,
-                        {CONF_HOST: entry.data[CONF_HOST], CONF_NAME: DOMAIN},
-                        hass.data[DATA_HASS_CONFIG],
-                    )
-                )
-                break
-            for notify_conf in lte_config[CONF_NOTIFY]:
-                discovery_info = {
-                    CONF_HOST: lte_config[CONF_HOST],
-                    CONF_NAME: notify_conf.get(CONF_NAME),
-                    CONF_NOTIFY: notify_conf,
-                }
-                hass.async_create_task(
-                    discovery.async_load_platform(
-                        hass,
-                        Platform.NOTIFY,
-                        DOMAIN,
-                        discovery_info,
-                        hass.data[DATA_HASS_CONFIG],
-                    )
-                )
-            break

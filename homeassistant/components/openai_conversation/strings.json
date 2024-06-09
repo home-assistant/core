@@ -60,6 +60,11 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_config_entry": {
+      "message": "Invalid config entry provided. Got {config_entry}"
+    }
+  },
   "issues": {
     "image_size_deprecated_format": {
       "title": "Deprecated size format for image generation service",

@@ -66,13 +66,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 }
             )
 
-        model_name = "gemini-pro-vision" if image_filenames else "gemini-pro"
-        model = genai.GenerativeModel(model_name=model_name)
+        model = genai.GenerativeModel(model_name=RECOMMENDED_CHAT_MODEL)
 
         try:
             response = await model.generate_content_async(prompt_parts)
         except (
-            ClientError,
+            GoogleAPICallError,
             ValueError,
             genai_types.BlockedPromptException,
             genai_types.StopCandidateException,

@@ -1,6 +1,5 @@
 """Tests for Renault sensors."""
 
-from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import patch
 
@@ -8,6 +7,7 @@ import pytest
 from renault_api.exceptions import RenaultException
 from renault_api.kamereon import schemas
 from renault_api.kamereon.models import ChargeSchedule
+from typing_extensions import Generator
 
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.components.renault.services import (
@@ -39,14 +39,14 @@ pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicle
 
 
 @pytest.fixture(autouse=True)
-def override_platforms() -> Generator[None, None, None]:
+def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.renault.PLATFORMS", []):
         yield
 
 
 @pytest.fixture(autouse=True, name="vehicle_type", params=["zoe_40"])
-def override_vehicle_type(request) -> str:
+def override_vehicle_type(request: pytest.FixtureRequest) -> str:
     """Parametrize vehicle type."""
     return request.param
 

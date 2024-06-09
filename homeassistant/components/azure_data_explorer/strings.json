@@ -5,12 +5,13 @@
         "title": "Setup your Azure Data Explorer integration",
         "description": "Enter connection details.",
         "data": {
-          "clusteringesturi": "Cluster Ingest URI",
+          "cluster_ingest_uri": "Cluster ingest URI",
           "database": "Database name",
           "table": "Table name",
           "client_id": "Client ID",
           "client_secret": "Client secret",
-          "authority_id": "Authority ID"
+          "authority_id": "Authority ID",
+          "use_queued_ingestion": "Use queued ingestion"
         }
       }
     },

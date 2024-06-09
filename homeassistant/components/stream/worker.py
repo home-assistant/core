@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict, deque
-from collections.abc import Callable, Generator, Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 import contextlib
 from dataclasses import fields
 import datetime
@@ -13,6 +13,7 @@ from threading import Event
 from typing import Any, Self, cast
 
 import av
+from typing_extensions import Generator
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -415,7 +416,7 @@ class PeekIterator(Iterator):
         self._next = self._iterator.__next__
         return self._next()
 
-    def peek(self) -> Generator[av.Packet, None, None]:
+    def peek(self) -> Generator[av.Packet]:
         """Return items without consuming from the iterator."""
         # Items consumed are added to a buffer for future calls to __next__
         # or peek. First iterate over the buffer from previous calls to peek.

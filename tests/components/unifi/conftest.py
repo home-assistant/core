@@ -12,6 +12,7 @@ from unittest.mock import patch
 from aiounifi.models.message import MessageKey
 import pytest
 
+from homeassistant.components.unifi import STORAGE_KEY, STORAGE_VERSION
 from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN as UNIFI_DOMAIN
 from homeassistant.components.unifi.hub.websocket import RETRY_TIMER
 from homeassistant.config_entries import ConfigEntry
@@ -34,6 +35,21 @@ DEFAULT_CONFIG_ENTRY_ID = "1"
 DEFAULT_HOST = "1.2.3.4"
 DEFAULT_PORT = 1234
 DEFAULT_SITE = "site_id"
+
+CONTROLLER_HOST = {
+    "hostname": "controller_host",
+    "ip": DEFAULT_HOST,
+    "is_wired": True,
+    "last_seen": 1562600145,
+    "mac": "10:00:00:00:00:01",
+    "name": "Controller host",
+    "oui": "Producer",
+    "sw_mac": "00:00:00:00:01:01",
+    "sw_port": 1,
+    "wired-rx_bytes": 1234000000,
+    "wired-tx_bytes": 5678000000,
+    "uptime": 1562600160,
+}
 
 
 @pytest.fixture(autouse=True)
@@ -87,7 +103,6 @@ def config_entry_fixture(
         unique_id="1",
         data=config_entry_data,
         options=config_entry_options,
-        version=1,
     )
     config_entry.add_to_hass(hass)
     return config_entry
@@ -112,8 +127,29 @@ def config_entry_options_fixture() -> MappingProxyType[str, Any]:
     return {}
 
 
-@pytest.fixture(name="mock_unifi_requests")
-def default_request_fixture(
+# Known wireless clients
+
+
+@pytest.fixture(name="known_wireless_clients")
+def known_wireless_clients_fixture() -> list[str]:
+    """Known previously observed wireless clients."""
+    return []
+
+
+@pytest.fixture(autouse=True)
+def mock_wireless_client_storage(hass_storage, known_wireless_clients: list[str]):
+    """Mock the known wireless storage."""
+    data: dict[str, list[str]] = (
+        {"wireless_clients": known_wireless_clients} if known_wireless_clients else {}
+    )
+    hass_storage[STORAGE_KEY] = {"version": STORAGE_VERSION, "data": data}
+
+
+# UniFi request mocks
+
+
+@pytest.fixture(name="mock_requests")
+def request_fixture(
     aioclient_mock: AiohttpClientMocker,
     client_payload: list[dict[str, Any]],
     clients_all_payload: list[dict[str, Any]],
@@ -127,7 +163,7 @@ def default_request_fixture(
 ) -> Callable[[str], None]:
     """Mock default UniFi requests responses."""
 
-    def __mock_default_requests(host: str, site_id: str) -> None:
+    def __mock_requests(host: str = DEFAULT_HOST, site_id: str = DEFAULT_SITE) -> None:
         url = f"https://{host}:{DEFAULT_PORT}"
 
         def mock_get_request(path: str, payload: list[dict[str, Any]]) -> None:
@@ -153,7 +189,7 @@ def default_request_fixture(
         mock_get_request(f"/api/s/{site_id}/stat/sysinfo", system_information_payload)
         mock_get_request(f"/api/s/{site_id}/rest/wlanconf", wlan_payload)
 
-    return __mock_default_requests
+    return __mock_requests
 
 
 # Request payload fixtures
@@ -229,22 +265,24 @@ def wlan_data_fixture() -> list[dict[str, Any]]:
     return []
 
 
-@pytest.fixture(name="setup_default_unifi_requests")
-def default_vapix_requests_fixture(
-    config_entry: ConfigEntry,
-    mock_unifi_requests: Callable[[str, str], None],
+@pytest.fixture(name="mock_default_requests")
+def default_requests_fixture(
+    mock_requests: Callable[[str, str], None],
 ) -> None:
-    """Mock default UniFi requests responses."""
-    mock_unifi_requests(config_entry.data[CONF_HOST], config_entry.data[CONF_SITE_ID])
+    """Mock UniFi requests responses with default host and site."""
+    mock_requests(DEFAULT_HOST, DEFAULT_SITE)
 
 
-@pytest.fixture(name="prepare_config_entry")
-async def prep_config_entry_fixture(
-    hass: HomeAssistant, config_entry: ConfigEntry, setup_default_unifi_requests: None
+@pytest.fixture(name="config_entry_factory")
+async def config_entry_factory_fixture(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    mock_requests: Callable[[str, str], None],
 ) -> Callable[[], ConfigEntry]:
-    """Fixture factory to set up UniFi network integration."""
+    """Fixture factory that can set up UniFi network integration."""
 
     async def __mock_setup_config_entry() -> ConfigEntry:
+        mock_requests(config_entry.data[CONF_HOST], config_entry.data[CONF_SITE_ID])
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         return config_entry
@@ -252,12 +290,12 @@ async def prep_config_entry_fixture(
     return __mock_setup_config_entry
 
 
-@pytest.fixture(name="setup_config_entry")
-async def setup_config_entry_fixture(
-    hass: HomeAssistant, prepare_config_entry: Callable[[], ConfigEntry]
+@pytest.fixture(name="config_entry_setup")
+async def config_entry_setup_fixture(
+    hass: HomeAssistant, config_entry_factory: Callable[[], ConfigEntry]
 ) -> ConfigEntry:
-    """Fixture to set up UniFi network integration."""
-    return await prepare_config_entry()
+    """Fixture providing a set up instance of UniFi network integration."""
+    return await config_entry_factory()
 
 
 # Websocket fixtures
