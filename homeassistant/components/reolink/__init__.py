@@ -142,13 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
 
     cleanup_disconnected_cams(hass, config_entry.entry_id, host)
-
-    # Can be remove in HA 2024.6.0
-    entity_reg = er.async_get(hass)
-    entities = er.async_entries_for_config_entry(entity_reg, config_entry.entry_id)
-    for entity in entities:
-        if entity.domain == "light" and entity.unique_id.endswith("ir_lights"):
-            entity_reg.async_remove(entity.entity_id)
+    migrate_entity_ids(hass, config_entry.entry_id, host)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -225,3 +219,14 @@ def cleanup_disconnected_cams(
 
         # clean device registry and associated entities
         device_reg.async_remove_device(device.id)
+
+def migrate_entity_ids(
+    hass: HomeAssistant, config_entry_id: str, host: ReolinkHost
+) -> None:
+    """Migrate entity IDs if needed."""
+    entity_reg = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(entity_reg, config_entry_id)
+    for entity in entities:
+        # Can be remove in HA 2025.1.0
+        if entity.domain == "update" and entity.unique_id == host.unique_id:
+            entity_reg.async_update_entity(entity.entity_id, new_unique_id=f"{host.unique_id}_firmware")
