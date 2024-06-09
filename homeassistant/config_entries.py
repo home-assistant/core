@@ -862,8 +862,6 @@ class ConfigEntry(Generic[_DataT]):
                     self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
 
                 await self._async_process_on_unload(hass)
-                if hasattr(self, "runtime_data"):
-                    object.__delattr__(self, "runtime_data")
         except Exception as exc:
             _LOGGER.exception(
                 "Error unloading entry %s for %s", self.title, integration.domain
@@ -873,6 +871,9 @@ class ConfigEntry(Generic[_DataT]):
                     hass, ConfigEntryState.FAILED_UNLOAD, str(exc) or "Unknown error"
                 )
             return False
+        finally:
+            if hasattr(self, "runtime_data"):
+                object.__delattr__(self, "runtime_data")
         return result
 
     async def async_remove(self, hass: HomeAssistant) -> None:
