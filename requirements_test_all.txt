@@ -1678,7 +1678,7 @@ pyrympro==0.0.8
 pysabnzbd==1.1.1
 
 # homeassistant.components.schlage
-pyschlage==2024.2.0
+pyschlage==2024.6.0
 
 # homeassistant.components.sensibo
 pysensibo==1.0.36
@@ -1807,7 +1807,7 @@ python-qbittorrent==0.4.3
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.2.3
+python-roborock==2.3.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -1925,7 +1925,7 @@ renault-api==0.2.3
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.9.1
+reolink-aio==0.9.2
 
 # homeassistant.components.rflink
 rflink==0.0.66
