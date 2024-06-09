@@ -50,7 +50,8 @@ def dsm_with_photos() -> MagicMock:
     dsm.photos.get_albums = AsyncMock(return_value=[SynoPhotosAlbum(1, "Album 1", 10)])
     dsm.photos.get_items_from_album = AsyncMock(
         return_value=[
-            SynoPhotosItem(10, "", "filename.jpg", 12345, "10_1298753", "sm", False)
+            SynoPhotosItem(10, "", "filename.jpg", 12345, "10_1298753", "sm", False),
+            SynoPhotosItem(10, "", "filename.jpg", 12345, "10_1298753", "sm", True),
         ]
     )
     dsm.photos.get_item_thumbnail_url = AsyncMock(
@@ -377,10 +378,19 @@ async def test_browse_media_get_items(
     result = await source.async_browse_media(item)
 
     assert result
-    assert len(result.children) == 1
+    assert len(result.children) == 2
     item = result.children[0]
     assert isinstance(item, BrowseMedia)
     assert item.identifier == "mocked_syno_dsm_entry/1/10_1298753/filename.jpg"
+    assert item.title == "filename.jpg"
+    assert item.media_class == MediaClass.IMAGE
+    assert item.media_content_type == "image/jpeg"
+    assert item.can_play
+    assert not item.can_expand
+    assert item.thumbnail == "http://my.thumbnail.url"
+    item = result.children[1]
+    assert isinstance(item, BrowseMedia)
+    assert item.identifier == "mocked_syno_dsm_entry/1/10_1298753/filename.jpg_shared"
     assert item.title == "filename.jpg"
     assert item.media_class == MediaClass.IMAGE
     assert item.media_content_type == "image/jpeg"
