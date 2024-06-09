@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 import re
 import tempfile
 from unittest.mock import patch
@@ -304,7 +305,7 @@ def command_events(hass: HomeAssistant):
 
 
 @pytest.fixture
-def image_path(tmp_path):
+def image_path(tmp_path: Path):
     """Provide the Path to a mock image."""
     image = Image.new("RGBA", size=(50, 50), color=(256, 0, 0))
     image_file = tempfile.NamedTemporaryFile(dir=tmp_path)

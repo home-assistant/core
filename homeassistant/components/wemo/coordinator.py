@@ -24,11 +24,8 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import (
-    CONNECTION_UPNP,
-    DeviceInfo,
-    async_get as async_get_device_registry,
-)
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import CONNECTION_UPNP, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
@@ -291,7 +288,7 @@ async def async_register_device(
     await device.async_refresh()
     if not device.last_update_success and device.last_exception:
         raise device.last_exception
-    device_registry = async_get_device_registry(hass)
+    device_registry = dr.async_get(hass)
     entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id, **_create_device_info(wemo)
     )

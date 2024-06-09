@@ -1104,17 +1104,18 @@ async def test_state_raises(hass: HomeAssistant) -> None:
         test(hass)
 
     # Unknown state entity
-    with pytest.raises(ConditionError, match="input_text.missing"):
-        config = {
-            "condition": "state",
-            "entity_id": "sensor.door",
-            "state": "input_text.missing",
-        }
-        config = cv.CONDITION_SCHEMA(config)
-        config = await condition.async_validate_condition_config(hass, config)
-        test = await condition.async_from_config(hass, config)
 
-        hass.states.async_set("sensor.door", "open")
+    config = {
+        "condition": "state",
+        "entity_id": "sensor.door",
+        "state": "input_text.missing",
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("sensor.door", "open")
+    with pytest.raises(ConditionError, match="input_text.missing"):
         test(hass)
 
 
@@ -1549,76 +1550,76 @@ async def test_numeric_state_raises(hass: HomeAssistant) -> None:
         test(hass)
 
     # Template error
-    with pytest.raises(ConditionError, match="ZeroDivisionError"):
-        config = {
-            "condition": "numeric_state",
-            "entity_id": "sensor.temperature",
-            "value_template": "{{ 1 / 0 }}",
-            "above": 0,
-        }
-        config = cv.CONDITION_SCHEMA(config)
-        config = await condition.async_validate_condition_config(hass, config)
-        test = await condition.async_from_config(hass, config)
+    config = {
+        "condition": "numeric_state",
+        "entity_id": "sensor.temperature",
+        "value_template": "{{ 1 / 0 }}",
+        "above": 0,
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
 
-        hass.states.async_set("sensor.temperature", 50)
+    hass.states.async_set("sensor.temperature", 50)
+    with pytest.raises(ConditionError, match="ZeroDivisionError"):
         test(hass)
 
     # Bad number
-    with pytest.raises(ConditionError, match="cannot be processed as a number"):
-        config = {
-            "condition": "numeric_state",
-            "entity_id": "sensor.temperature",
-            "above": 0,
-        }
-        config = cv.CONDITION_SCHEMA(config)
-        config = await condition.async_validate_condition_config(hass, config)
-        test = await condition.async_from_config(hass, config)
+    config = {
+        "condition": "numeric_state",
+        "entity_id": "sensor.temperature",
+        "above": 0,
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
 
-        hass.states.async_set("sensor.temperature", "fifty")
+    hass.states.async_set("sensor.temperature", "fifty")
+    with pytest.raises(ConditionError, match="cannot be processed as a number"):
         test(hass)
 
     # Below entity missing
-    with pytest.raises(ConditionError, match="'below' entity"):
-        config = {
-            "condition": "numeric_state",
-            "entity_id": "sensor.temperature",
-            "below": "input_number.missing",
-        }
-        config = cv.CONDITION_SCHEMA(config)
-        config = await condition.async_validate_condition_config(hass, config)
-        test = await condition.async_from_config(hass, config)
+    config = {
+        "condition": "numeric_state",
+        "entity_id": "sensor.temperature",
+        "below": "input_number.missing",
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
 
-        hass.states.async_set("sensor.temperature", 50)
+    hass.states.async_set("sensor.temperature", 50)
+    with pytest.raises(ConditionError, match="'below' entity"):
         test(hass)
 
     # Below entity not a number
+    hass.states.async_set("input_number.missing", "number")
     with pytest.raises(
         ConditionError,
         match="'below'.*input_number.missing.*cannot be processed as a number",
     ):
-        hass.states.async_set("input_number.missing", "number")
         test(hass)
 
     # Above entity missing
-    with pytest.raises(ConditionError, match="'above' entity"):
-        config = {
-            "condition": "numeric_state",
-            "entity_id": "sensor.temperature",
-            "above": "input_number.missing",
-        }
-        config = cv.CONDITION_SCHEMA(config)
-        config = await condition.async_validate_condition_config(hass, config)
-        test = await condition.async_from_config(hass, config)
+    config = {
+        "condition": "numeric_state",
+        "entity_id": "sensor.temperature",
+        "above": "input_number.missing",
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
 
-        hass.states.async_set("sensor.temperature", 50)
+    hass.states.async_set("sensor.temperature", 50)
+    with pytest.raises(ConditionError, match="'above' entity"):
         test(hass)
 
     # Above entity not a number
+    hass.states.async_set("input_number.missing", "number")
     with pytest.raises(
         ConditionError,
         match="'above'.*input_number.missing.*cannot be processed as a number",
     ):
-        hass.states.async_set("input_number.missing", "number")
         test(hass)
 
 
@@ -3059,7 +3060,7 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(
     at 7 AM and sunset at 3AM during summer
     After sunrise is true from sunrise until midnight, local time.
     """
-    hass.config.set_time_zone("America/Anchorage")
+    await hass.config.async_set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -3136,7 +3137,7 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(
     at 7 AM and sunset at 3AM during summer
     Before sunrise is true from midnight until sunrise, local time.
     """
-    hass.config.set_time_zone("America/Anchorage")
+    await hass.config.async_set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -3213,7 +3214,7 @@ async def test_if_action_before_sunset_no_offset_kotzebue(
     at 7 AM and sunset at 3AM during summer
     Before sunset is true from midnight until sunset, local time.
     """
-    hass.config.set_time_zone("America/Anchorage")
+    await hass.config.async_set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -3290,7 +3291,7 @@ async def test_if_action_after_sunset_no_offset_kotzebue(
     at 7 AM and sunset at 3AM during summer
     After sunset is true from sunset until midnight, local time.
     """
-    hass.config.set_time_zone("America/Anchorage")
+    await hass.config.async_set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(

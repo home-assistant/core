@@ -5234,9 +5234,8 @@ async def async_record_states_partially_unavailable(hass, zero, entity_id, attri
     return four, states
 
 
-async def test_exclude_attributes(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_exclude_attributes(hass: HomeAssistant) -> None:
     """Test sensor attributes to be excluded."""
     entity0 = MockSensor(
         has_entity_name=True,

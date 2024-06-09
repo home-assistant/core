@@ -980,9 +980,9 @@ async def test_light_brightness_step(hass: HomeAssistant) -> None:
     assert entity0.state == "off"  # 126 - 126; brightness is 0, light should turn off
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_light_brightness_pct_conversion(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test that light brightness percent conversion."""

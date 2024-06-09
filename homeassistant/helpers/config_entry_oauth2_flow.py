@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from abc import ABC, ABCMeta, abstractmethod
 import asyncio
+from asyncio import Lock
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from json import JSONDecodeError
@@ -506,6 +507,7 @@ class OAuth2Session:
         self.hass = hass
         self.config_entry = config_entry
         self.implementation = implementation
+        self._token_lock = Lock()
 
     @property
     def token(self) -> dict:
@@ -522,14 +524,15 @@ class OAuth2Session:
 
     async def async_ensure_token_valid(self) -> None:
         """Ensure that the current token is valid."""
-        if self.valid_token:
-            return
+        async with self._token_lock:
+            if self.valid_token:
+                return
 
-        new_token = await self.implementation.async_refresh_token(self.token)
+            new_token = await self.implementation.async_refresh_token(self.token)
 
-        self.hass.config_entries.async_update_entry(
-            self.config_entry, data={**self.config_entry.data, "token": new_token}
-        )
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, data={**self.config_entry.data, "token": new_token}
+            )
 
     async def async_request(
         self, method: str, url: str, **kwargs: Any

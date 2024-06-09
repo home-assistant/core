@@ -10,7 +10,7 @@ from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.switch import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
@@ -30,7 +30,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -178,12 +178,12 @@ async def test_get_condition_capabilities_legacy(
         assert capabilities == expected_capabilities
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_state(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    enable_custom_integrations: None,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off conditions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -265,12 +265,12 @@ async def test_if_state(
     assert calls[1].data["some"] == "is_off event - test_event2"
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_state_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    enable_custom_integrations: None,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off conditions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -323,12 +323,12 @@ async def test_if_state_legacy(
     assert calls[0].data["some"] == "is_on event - test_event1"
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_fires_on_for_condition(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    enable_custom_integrations: None,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for firing if condition is on with delay."""
     point1 = dt_util.utcnow()
