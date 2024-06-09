@@ -22,7 +22,7 @@ from .data import AzureDevOpsData
 BUILDS_QUERY: Final = "?queryOrder=queueTimeDescending&maxBuildsPerDefinition=1"
 
 
-def azure_exception_none_handler(func: Callable) -> Callable:
+def ado_exception_none_handler(func: Callable) -> Callable:
     """Handle exceptions or None to always return a value or raise."""
 
     async def handler(*args, **kwargs):
@@ -66,7 +66,7 @@ class AzureDevOpsDataUpdateCoordinator(DataUpdateCoordinator[AzureDevOpsData]):
         self.client = DevOpsClient(session=async_get_clientsession(hass))
         self.organization = entry.data[CONF_ORG]
 
-    @azure_exception_none_handler
+    @ado_exception_none_handler
     async def authorize(
         self,
         personal_access_token: str,
@@ -84,7 +84,7 @@ class AzureDevOpsDataUpdateCoordinator(DataUpdateCoordinator[AzureDevOpsData]):
 
         return True
 
-    @azure_exception_none_handler
+    @ado_exception_none_handler
     async def get_project(
         self,
         project: str,
@@ -95,7 +95,7 @@ class AzureDevOpsDataUpdateCoordinator(DataUpdateCoordinator[AzureDevOpsData]):
             project,
         )
 
-    @azure_exception_none_handler
+    @ado_exception_none_handler
     async def _get_builds(self, project_name: str) -> list[DevOpsBuild] | None:
         """Get the builds."""
         return await self.client.get_builds(
