@@ -125,7 +125,7 @@ SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Evohome integration."""
 
-    if not hass.config_entries.async_entries(DOMAIN):
+    if DOMAIN in config and not hass.config_entries.async_entries(DOMAIN):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
