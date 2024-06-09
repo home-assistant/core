@@ -16,7 +16,9 @@ from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER, MODELS
 from .coordinator import (
@@ -25,6 +27,7 @@ from .coordinator import (
     TeslemetryVehicleDataCoordinator,
 )
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
+from .services import async_register_services
 
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
@@ -42,6 +45,14 @@ PLATFORMS: Final = [
 ]
 
 type TeslemetryConfigEntry = ConfigEntry[TeslemetryData]
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Telemetry integration."""
+    async_register_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
