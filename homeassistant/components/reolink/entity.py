@@ -44,7 +44,11 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
     _attr_has_entity_name = True
     entity_description: ReolinkHostEntityDescription | ReolinkChannelEntityDescription
 
-    def __init__(self, reolink_data: ReolinkData, coordinator: DataUpdateCoordinator[None] | None = None) -> None:
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        coordinator: DataUpdateCoordinator[None] | None = None,
+    ) -> None:
         """Initialize ReolinkHostCoordinatorEntity."""
         if coordinator is None:
             coordinator = reolink_data.device_coordinator
@@ -102,7 +106,7 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
         self,
         reolink_data: ReolinkData,
         channel: int,
-        coordinator: DataUpdateCoordinator[_DataT] | None = None,
+        coordinator: DataUpdateCoordinator[None] | None = None,
     ) -> None:
         """Initialize ReolinkChannelCoordinatorEntity for a hardware camera connected to a channel of the NVR."""
         super().__init__(reolink_data, coordinator)
