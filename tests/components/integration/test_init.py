@@ -5,7 +5,6 @@ import pytest
 from homeassistant.components.integration.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity_registry import RegistryEntry
 
 from tests.common import MockConfigEntry
 
@@ -71,7 +70,7 @@ async def test_entry_changed(hass: HomeAssistant, platform) -> None:
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
-    def _create_mock_entity(domain: str, name: str) -> RegistryEntry:
+    def _create_mock_entity(domain: str, name: str) -> er.RegistryEntry:
         config_entry = MockConfigEntry(
             data={},
             domain="test",
@@ -85,7 +84,7 @@ async def test_entry_changed(hass: HomeAssistant, platform) -> None:
             domain, "test", name, suggested_object_id=name, device_id=device_entry.id
         )
 
-    def _get_device_config_entries(entry: RegistryEntry) -> set[str]:
+    def _get_device_config_entries(entry: er.RegistryEntry) -> set[str]:
         assert entry.device_id
         device = device_registry.async_get(entry.device_id)
         assert device
