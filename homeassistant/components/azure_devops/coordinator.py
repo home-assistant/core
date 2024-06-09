@@ -84,8 +84,10 @@ class AzureDevOpsDataUpdateCoordinator(DataUpdateCoordinator[AzureDevOpsData]):
             # Get the project if we haven't already
             if self.data is None or (project := self.data.project) is None:
                 project = await self._get_project(self.project_name)
-                if project is None:
-                    raise UpdateFailed("No project found")
+
+            # Check if we have a project
+            if project is None:
+                raise UpdateFailed("No project found")
 
             # Get the builds from the project
             builds = await self._get_builds(project.name)
