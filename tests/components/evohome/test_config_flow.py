@@ -1,5 +1,7 @@
 """Tests for the Withings component."""
 
+from __future__ import annotations
+
 from datetime import timedelta
 from typing import Final
 
