@@ -520,6 +520,12 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
     if isinstance(schema, selector.DurationSelector):
         return convert(cv.time_period_dict)
 
+    if isinstance(schema, selector.EntitySelector):
+        if schema.config.get("multiple"):
+            return {"type": "array", "items": {"type": "string", "format": "entity_id"}}
+
+        return {"type": "string", "format": "entity_id"}
+
     if isinstance(schema, selector.LanguageSelector):
         if schema.config.get("languages"):
             return {"type": "string", "enum": schema.config["languages"]}
@@ -606,6 +612,35 @@ class ScriptTool(Tool):
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
         """Run the script."""
+
+        for field, validator in self.parameters.schema.items():
+            if field not in tool_input.tool_args:
+                continue
+            if isinstance(validator, selector.AreaSelector):
+                area_reg = ar.async_get(hass)
+                if validator.config.get("multiple"):
+                    areas: list[ar.AreaEntry] = []
+                    for area in tool_input.tool_args[field]:
+                        areas.extend(intent.find_areas(area, area_reg))
+                    tool_input.tool_args[field] = list({area.id for area in areas})
+                else:
+                    area = tool_input.tool_args[field]
+                    area = list(intent.find_areas(area, area_reg))[0].id
+                    tool_input.tool_args[field] = area
+
+            elif isinstance(validator, selector.FloorSelector):
+                floor_reg = fr.async_get(hass)
+                if validator.config.get("multiple"):
+                    floors: list[fr.FloorEntry] = []
+                    for floor in tool_input.tool_args[field]:
+                        floors.extend(intent.find_floors(floor, floor_reg))
+                    tool_input.tool_args[field] = list(
+                        {floor.floor_id for floor in floors}
+                    )
+                else:
+                    floor = tool_input.tool_args[field]
+                    floor = list(intent.find_floors(floor, floor_reg))[0].floor_id
+                    tool_input.tool_args[field] = floor
 
         await hass.services.async_call(
             SCRIPT_DOMAIN,

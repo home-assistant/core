@@ -285,7 +285,7 @@ class AssistPipelineSelector(Selector[AssistPipelineSelectorConfig]):
 
     CONFIG_SCHEMA = vol.Schema({})
 
-    def __init__(self, config: AssistPipelineSelectorConfig) -> None:
+    def __init__(self, config: AssistPipelineSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -524,7 +524,7 @@ class ConstantSelector(Selector[ConstantSelectorConfig]):
         }
     )
 
-    def __init__(self, config: ConstantSelectorConfig | None = None) -> None:
+    def __init__(self, config: ConstantSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -567,7 +567,7 @@ class QrCodeSelector(Selector[QrCodeSelectorConfig]):
         }
     )
 
-    def __init__(self, config: QrCodeSelectorConfig | None = None) -> None:
+    def __init__(self, config: QrCodeSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -595,7 +595,7 @@ class ConversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
         }
     )
 
-    def __init__(self, config: ConversationAgentSelectorConfig) -> None:
+    def __init__(self, config: ConversationAgentSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -827,7 +827,7 @@ class FloorSelectorConfig(TypedDict, total=False):
 
 
 @SELECTORS.register("floor")
-class FloorSelector(Selector[AreaSelectorConfig]):
+class FloorSelector(Selector[FloorSelectorConfig]):
     """Selector of a single or list of floors."""
 
     selector_type = "floor"
@@ -941,7 +941,7 @@ class LanguageSelector(Selector[LanguageSelectorConfig]):
         }
     )
 
-    def __init__(self, config: LanguageSelectorConfig) -> None:
+    def __init__(self, config: LanguageSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -1166,7 +1166,7 @@ class SelectSelector(Selector[SelectSelectorConfig]):
         }
     )
 
-    def __init__(self, config: SelectSelectorConfig | None = None) -> None:
+    def __init__(self, config: SelectSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -1441,7 +1441,7 @@ class FileSelector(Selector[FileSelectorConfig]):
         }
     )
 
-    def __init__(self, config: FileSelectorConfig | None = None) -> None:
+    def __init__(self, config: FileSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 

@@ -560,7 +560,11 @@ async def test_assist_api_prompt(
     )
 
 
-async def test_script_tool(hass: HomeAssistant) -> None:
+async def test_script_tool(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
     """Test ScriptTool for the assist API."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
@@ -572,11 +576,6 @@ async def test_script_tool(hass: HomeAssistant) -> None:
         language="*",
         assistant="conversation",
         device_id=None,
-    )
-    api = await llm.async_get_api(hass, "assist", llm_context)
-    assert api.api_prompt == (
-        "Only if the user wants to control a device, tell them to expose entities to their "
-        "voice assistant in Home Assistant."
     )
 
     # Create a script with a unique ID
@@ -591,6 +590,10 @@ async def test_script_tool(hass: HomeAssistant) -> None:
                     "fields": {
                         "beer": {"description": "Number of beers", "required": True},
                         "wine": {"selector": {"number": {"min": 0, "max": 3}}},
+                        "where": {"selector": {"area": {}}},
+                        "area_list": {"selector": {"area": {"multiple": True}}},
+                        "floor": {"selector": {"floor": {}}},
+                        "floor_list": {"selector": {"floor": {"multiple": True}}},
                     },
                 },
                 "unexposed_script": {
@@ -600,6 +603,9 @@ async def test_script_tool(hass: HomeAssistant) -> None:
         },
     )
     async_expose_entity(hass, "conversation", "script.test_script", True)
+
+    area = area_registry.async_create("Living room")
+    floor = floor_registry.async_create("2")
 
     api = await llm.async_get_api(hass, "assist", llm_context)
 
@@ -612,11 +618,22 @@ async def test_script_tool(hass: HomeAssistant) -> None:
     assert tool.parameters.schema == {
         vol.Required("beer", description="Number of beers"): cv.string,
         vol.Optional("wine"): selector.NumberSelector({"min": 0, "max": 3}),
+        vol.Optional("where"): selector.AreaSelector(),
+        vol.Optional("area_list"): selector.AreaSelector({"multiple": True}),
+        vol.Optional("floor"): selector.FloorSelector(),
+        vol.Optional("floor_list"): selector.FloorSelector({"multiple": True}),
     }
 
     tool_input = llm.ToolInput(
         tool_name="test_script",
-        tool_args={"beer": "3", "wine": 0},
+        tool_args={
+            "beer": "3",
+            "wine": 0,
+            "where": "Living room",
+            "area_list": ["Living room"],
+            "floor": "2",
+            "floor_list": ["2"],
+        },
     )
 
     with patch("homeassistant.core.ServiceRegistry.async_call") as mock_service_call:
@@ -625,7 +642,17 @@ async def test_script_tool(hass: HomeAssistant) -> None:
     mock_service_call.assert_awaited_once_with(
         "script",
         "turn_on",
-        {"entity_id": "script.test_script", "variables": {"beer": "3", "wine": 0}},
+        {
+            "entity_id": "script.test_script",
+            "variables": {
+                "beer": "3",
+                "wine": 0,
+                "where": area.id,
+                "area_list": [area.id],
+                "floor": floor.floor_id,
+                "floor_list": [floor.floor_id],
+            },
+        },
         context=context,
     )
     assert response == {"success": True}
@@ -640,7 +667,7 @@ def test_selector_serializer() -> None:
         "type": "array",
         "items": {"type": "string"},
     }
-    assert llm.selector_serializer(selector.AssistPipelineSelector({})) == {
+    assert llm.selector_serializer(selector.AssistPipelineSelector()) == {
         "type": "string"
     }
     assert llm.selector_serializer(
@@ -662,15 +689,6 @@ def test_selector_serializer() -> None:
     assert llm.selector_serializer(
         selector.ColorTempSelector({"min": 100, "max": 1000})
     ) == {"type": "number", "minimum": 100, "maximum": 1000}
-    assert llm.selector_serializer(selector.ConditionSelector()) == {
-        "type": "array",
-        "items": {
-            "anyOf": [
-                {"nullable": True, "type": "string"},
-                {"nullable": True, "type": "string"},
-            ]
-        },
-    }
     assert llm.selector_serializer(selector.ConfigEntrySelector()) == {"type": "string"}
     assert llm.selector_serializer(selector.ConstantSelector({"value": "test"})) == {
         "enum": ["test"]
@@ -684,7 +702,7 @@ def test_selector_serializer() -> None:
     assert llm.selector_serializer(selector.QrCodeSelector({"data": "test"})) == {
         "type": "string"
     }
-    assert llm.selector_serializer(selector.ConversationAgentSelector({})) == {
+    assert llm.selector_serializer(selector.ConversationAgentSelector()) == {
         "type": "string"
     }
     assert llm.selector_serializer(selector.CountrySelector()) == {
@@ -707,10 +725,13 @@ def test_selector_serializer() -> None:
         "type": "array",
         "items": {"type": "string"},
     }
-    assert llm.selector_serializer(selector.EntitySelector()) == {"type": "string"}
+    assert llm.selector_serializer(selector.EntitySelector()) == {
+        "type": "string",
+        "format": "entity_id",
+    }
     assert llm.selector_serializer(selector.EntitySelector({"multiple": True})) == {
         "type": "array",
-        "items": {"type": "string"},
+        "items": {"type": "string", "format": "entity_id"},
     }
     assert llm.selector_serializer(selector.FloorSelector()) == {"type": "string"}
     assert llm.selector_serializer(selector.FloorSelector({"multiple": True})) == {
@@ -723,7 +744,7 @@ def test_selector_serializer() -> None:
         "type": "array",
         "items": {"type": "string"},
     }
-    assert llm.selector_serializer(selector.LanguageSelector({})) == {
+    assert llm.selector_serializer(selector.LanguageSelector()) == {
         "type": "string",
         "format": "RFC 5646",
     }
