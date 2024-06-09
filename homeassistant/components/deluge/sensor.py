@@ -54,9 +54,9 @@ def get_state(data: dict[str, float], key: str) -> str | float:
     elif key == UPLOAD_SPEED:
         rate = upload
     elif key == PROTOCOL_TRAFFIC_DOWNLOAD_SPEED:
-        rate = protocol_upload
-    else:
         rate = protocol_download
+    else:
+        rate = protocol_upload
 
     # convert to KiB/s and round
     kb_spd = rate / 1024
