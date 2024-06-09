@@ -39,7 +39,7 @@ async def test_async_setup_entry(recorder_mock: Recorder, hass: HomeAssistant) -
             {statistic_id},
             "hour",
             None,
-            {"start", "state", "mean", "min", "max", "last_reset", "sum"},
+            {"state", "mean", "min", "max", "last_reset", "sum"},
         )
 
         assert len(stats) == 1
