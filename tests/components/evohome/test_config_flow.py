@@ -33,7 +33,9 @@ async def test_import_flow(hass: HomeAssistant) -> None:
     assert result["title"] == "Evohome"
     assert result["options"] == {}
 
-    scan_interval = result["data"].pop(CONF_SCAN_INTERVAL)
+    assert isinstance(result["data"], dict)  # mypy hint: is TypedDict, not Mapping
+
+    scan_interval: int = result["data"].pop(CONF_SCAN_INTERVAL)
     assert scan_interval == HASS_CONFIG[DOMAIN][CONF_SCAN_INTERVAL].total_seconds()
 
     assert result["data"] == {
