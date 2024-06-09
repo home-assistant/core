@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock
 
-from pyunifiprotect.data import Light
-from pyunifiprotect.data.types import LEDLevel
+from uiprotect.data import Light
+from uiprotect.data.types import LEDLevel
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION

@@ -7,9 +7,9 @@ import functools
 from typing import Any, cast
 
 from pydantic import ValidationError
-from pyunifiprotect.api import ProtectApiClient
-from pyunifiprotect.data import Camera, Chime
-from pyunifiprotect.exceptions import ClientError
+from uiprotect.api import ProtectApiClient
+from uiprotect.data import Camera, Chime
+from uiprotect.exceptions import ClientError
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass

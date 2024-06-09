@@ -6,7 +6,7 @@ from collections.abc import Generator
 import logging
 from typing import Any, cast
 
-from pyunifiprotect.data import (
+from uiprotect.data import (
     Camera as UFPCamera,
     CameraChannel,
     ModelType,

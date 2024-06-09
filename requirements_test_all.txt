@@ -1836,9 +1836,6 @@ pytrydan==0.6.1
 # homeassistant.components.usb
 pyudev==0.24.1
 
-# homeassistant.components.unifiprotect
-pyunifiprotect==5.1.2
-
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
 
@@ -2154,6 +2151,9 @@ twitchAPI==4.0.0
 
 # homeassistant.components.ukraine_alarm
 uasiren==0.0.1
+
+# homeassistant.components.unifiprotect
+uiprotect==0.3.9
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
