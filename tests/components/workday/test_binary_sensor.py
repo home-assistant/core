@@ -1,6 +1,6 @@
 """Tests the Home Assistant workday binary sensor."""
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
@@ -68,7 +68,9 @@ async def test_setup(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test setup from various configs."""
-    freezer.move_to(datetime(2022, 4, 15, 12, tzinfo=UTC))  # Friday
+    # Start on a Friday
+    await hass.config.async_set_time_zone("Europe/Paris")
+    freezer.move_to(datetime(2022, 4, 15, 0, tzinfo=timezone(timedelta(hours=1))))
     await init_integration(hass, config)
 
     state = hass.states.get("binary_sensor.workday_sensor")

@@ -51,7 +51,7 @@ from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
 from homeassistant.const import HASSIO_USER_NAME
-from homeassistant.core import CoreState, HassJob, HomeAssistant
+from homeassistant.core import CoreState, HassJob, HomeAssistant, ServiceCall
 from homeassistant.helpers import (
     area_registry as ar,
     category_registry as cr,
@@ -1773,6 +1773,24 @@ def issue_registry(hass: HomeAssistant) -> ir.IssueRegistry:
 def label_registry(hass: HomeAssistant) -> lr.LabelRegistry:
     """Return the label registry from the current hass instance."""
     return lr.async_get(hass)
+
+
+@pytest.fixture
+def service_calls() -> Generator[None, None, list[ServiceCall]]:
+    """Track all service calls."""
+    calls = []
+
+    async def _async_call(
+        self,
+        domain: str,
+        service: str,
+        service_data: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ):
+        calls.append(ServiceCall(domain, service, service_data))
+
+    with patch("homeassistant.core.ServiceRegistry.async_call", _async_call):
+        yield calls
 
 
 @pytest.fixture
