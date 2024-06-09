@@ -377,7 +377,12 @@ omit =
     homeassistant/components/eufylife_ble/__init__.py
     homeassistant/components/eufylife_ble/sensor.py
     homeassistant/components/everlights/light.py
-    homeassistant/components/evohome/*
+    homeassistant/components/evohome/__init__.py
+    homeassistant/components/evohome/climate.py
+    homeassistant/components/evohome/const.py
+    homeassistant/components/evohome/coordinator.py
+    homeassistant/components/evohome/helpers.py
+    homeassistant/components/evohome/water_heater.py
     homeassistant/components/ezviz/__init__.py
     homeassistant/components/ezviz/alarm_control_panel.py
     homeassistant/components/ezviz/binary_sensor.py
