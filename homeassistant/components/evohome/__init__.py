@@ -124,6 +124,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # until config flow is implemented, this most closely matches the current behaviour
     if entries := hass.config_entries.async_entries(DOMAIN):
+        scan_interval: timedelta = config[DOMAIN].pop(CONF_SCAN_INTERVAL)
+        config[DOMAIN][CONF_SCAN_INTERVAL] = int(scan_interval.total_seconds())
+
         entries[0].data = config[DOMAIN]
         return True
 
