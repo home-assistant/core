@@ -83,12 +83,12 @@ async def async_setup_entry(
     """Set up Control4 rooms from a config entry."""
     entry_data = hass.data[DOMAIN][entry.entry_id]
     ui_config = entry_data[CONF_UI_CONFIGURATION]
-    
+
     # OS 2 will not have a ui_configuration
     if not ui_config:
         _LOGGER.debug("No UI Configuration found for Control4")
         return
-        
+
     all_rooms = await get_rooms(hass, entry)
     if not all_rooms:
         return
