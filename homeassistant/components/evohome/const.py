@@ -48,6 +48,8 @@ ATTR_DURATION_HOURS: Final = "duration"
 ATTR_ZONE_TEMP: Final = "setpoint"
 ATTR_DURATION_UNTIL: Final = "duration"
 
+TITLE: Final = "Evohome"
+
 
 @unique
 class EvoService(StrEnum):
