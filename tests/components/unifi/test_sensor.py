@@ -1140,7 +1140,7 @@ async def test_bandwidth_port_sensors(
     mock_websocket_message,
     config_entry_setup: ConfigEntry,
     config_entry_options: MappingProxyType[str, Any],
-    device_payload,
+    device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that port bandwidth sensors are working as expected."""
     assert len(hass.states.async_all()) == 5

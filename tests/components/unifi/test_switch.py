@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from copy import deepcopy
 from datetime import timedelta
+from typing import Any
 
 from aiounifi.models.message import MessageKey
 import pytest
@@ -1083,7 +1084,7 @@ async def test_outlet_switches(
     aioclient_mock: AiohttpClientMocker,
     mock_websocket_message,
     config_entry_setup: ConfigEntry,
-    device_payload,
+    device_payload: list[dict[str, Any]],
     mock_websocket_state,
     entity_id: str,
     outlet_index: int,
@@ -1275,7 +1276,7 @@ async def test_poe_port_switches(
     mock_websocket_message,
     mock_websocket_state,
     config_entry_setup: ConfigEntry,
-    device_payload,
+    device_payload: list[dict[str, Any]],
 ) -> None:
     """Test PoE port entities work."""
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
@@ -1386,7 +1387,7 @@ async def test_wlan_switches(
     mock_websocket_message,
     mock_websocket_state,
     config_entry_setup: ConfigEntry,
-    wlan_payload,
+    wlan_payload: list[dict[str, Any]],
 ) -> None:
     """Test control of UniFi WLAN availability."""
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
@@ -1471,7 +1472,7 @@ async def test_port_forwarding_switches(
     mock_websocket_message,
     mock_websocket_state,
     config_entry_setup: ConfigEntry,
-    port_forward_payload,
+    port_forward_payload: list[dict[str, Any]],
 ) -> None:
     """Test control of UniFi port forwarding."""
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
