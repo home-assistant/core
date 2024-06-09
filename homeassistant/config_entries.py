@@ -872,7 +872,7 @@ class ConfigEntry(Generic[_DataT]):
                 )
             return False
         finally:
-            if hasattr(self, "runtime_data"):
+            if domain_is_integration and hasattr(self, "runtime_data"):
                 object.__delattr__(self, "runtime_data")
         return result
 
