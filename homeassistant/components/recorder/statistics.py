@@ -969,8 +969,8 @@ def reduce_day_ts_factory() -> (
             hour=0, minute=0, second=0, microsecond=0
         )
         return (
-            start_local.astimezone(dt_util.UTC).timestamp(),
-            (start_local + timedelta(days=1)).astimezone(dt_util.UTC).timestamp(),
+            start_local.timestamp(),
+            (start_local + timedelta(days=1)).timestamp(),
         )
 
     # We create _day_start_end_ts_cached in the closure in case the timezone changes
@@ -1019,8 +1019,8 @@ def reduce_week_ts_factory() -> (
             hour=0, minute=0, second=0, microsecond=0
         ) - timedelta(days=time_local.weekday())
         return (
-            start_local.astimezone(dt_util.UTC).timestamp(),
-            (start_local + timedelta(days=7)).astimezone(dt_util.UTC).timestamp(),
+            start_local.timestamp(),
+            (start_local + timedelta(days=7)).timestamp(),
         )
 
     # We create _week_start_end_ts_cached in the closure in case the timezone changes
@@ -1076,10 +1076,7 @@ def reduce_month_ts_factory() -> (
             day=1, hour=0, minute=0, second=0, microsecond=0
         )
         end_local = _find_month_end_time(start_local)
-        return (
-            start_local.astimezone(dt_util.UTC).timestamp(),
-            end_local.astimezone(dt_util.UTC).timestamp(),
-        )
+        return (start_local.timestamp(), end_local.timestamp())
 
     # We create _month_start_end_ts_cached in the closure in case the timezone changes
     _month_start_end_ts_cached = lru_cache(maxsize=6)(_month_start_end_ts)
