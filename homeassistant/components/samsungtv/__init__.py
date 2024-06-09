@@ -304,9 +304,24 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 new_connections = device.connections.copy()
                 new_connections.discard((dr.CONNECTION_NETWORK_MAC, "none"))
                 if new_connections != device.connections:
-                    dev_reg.async_update_device(
-                        device.id, new_connections=new_connections
+                    LOGGER.info(
+                        "Clearing invalid `none` mac connection "
+                        "from device %s for config entry %s",
+                        device.id,
+                        config_entry.entry_id,
                     )
+                    try:
+                        dev_reg.async_update_device(
+                            device.id, new_connections=new_connections
+                        )
+                    except KeyError:
+                        LOGGER.error(
+                            "Failed to remove `none` mac connection "
+                            "from device %s for config entry %s. Aborting migration",
+                            device.id,
+                            config_entry.entry_id,
+                        )
+                        return False
 
             minor_version = 2
             hass.config_entries.async_update_entry(config_entry, minor_version=2)
