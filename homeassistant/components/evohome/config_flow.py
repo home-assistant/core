@@ -17,7 +17,9 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle a flow initiated by configuration file."""
 
-        scan_interval: timedelta = import_data.pop(CONF_SCAN_INTERVAL)
-        import_data[CONF_SCAN_INTERVAL] = int(scan_interval.total_seconds())
+        data = import_data.copy()
 
-        return self.async_create_entry(title="Evohome", data=import_data)
+        scan_interval: timedelta = data.pop(CONF_SCAN_INTERVAL)
+        data[CONF_SCAN_INTERVAL] = int(scan_interval.total_seconds())
+
+        return self.async_create_entry(title="Evohome", data=data)
