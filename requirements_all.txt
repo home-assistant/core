@@ -122,7 +122,7 @@ RtmAPI==0.7.2
 SQLAlchemy==2.0.30
 
 # homeassistant.components.tami4
-Tami4EdgeAPI==2.1
+Tami4EdgeAPI==3.0
 
 # homeassistant.components.travisci
 TravisPy==0.3.5
@@ -356,7 +356,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==10.0.0
+aioshelly==10.0.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -392,7 +392,7 @@ aiovlc==0.3.2
 aiovodafone==0.6.0
 
 # homeassistant.components.waqi
-aiowaqi==3.0.1
+aiowaqi==3.1.0
 
 # homeassistant.components.watttime
 aiowatttime==0.1.1
@@ -977,7 +977,7 @@ google-cloud-pubsub==2.13.11
 google-cloud-texttospeech==2.12.3
 
 # homeassistant.components.google_generative_ai_conversation
-google-generativeai==0.5.4
+google-generativeai==0.6.0
 
 # homeassistant.components.nest
 google-nest-sdm==4.0.4
@@ -1652,7 +1652,7 @@ py-schluter==0.1.7
 py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.4.2
+py-synologydsm-api==2.4.4
 
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
@@ -2662,7 +2662,7 @@ subarulink==0.7.11
 sunwatcher==0.2.1
 
 # homeassistant.components.sunweg
-sunweg==2.1.1
+sunweg==3.0.1
 
 # homeassistant.components.surepetcare
 surepy==0.9.0

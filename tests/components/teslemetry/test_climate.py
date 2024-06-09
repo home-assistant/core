@@ -154,8 +154,11 @@ async def test_invalid_error(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        mock_on.assert_called_once()
-        assert error.from_exception == InvalidCommand
+    mock_on.assert_called_once()
+    assert (
+        str(error.value)
+        == "Teslemetry command failed, The data request or command is unknown."
+    )
 
 
 @pytest.mark.parametrize("response", COMMAND_ERRORS)
@@ -178,7 +181,7 @@ async def test_errors(hass: HomeAssistant, response: str) -> None:
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        mock_on.assert_called_once()
+    mock_on.assert_called_once()
 
 
 async def test_ignored_error(
@@ -232,7 +235,7 @@ async def test_asleep_or_offline(
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        assert error
+    assert str(error.value) == "The data request or command is unknown."
     mock_wake_up.assert_called_once()
 
     mock_wake_up.side_effect = None
@@ -251,7 +254,7 @@ async def test_asleep_or_offline(
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        assert error
+    assert str(error.value) == "Could not wake up vehicle"
     mock_wake_up.assert_called_once()
     mock_vehicle.assert_called()
 

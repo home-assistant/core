@@ -12,6 +12,7 @@ from unittest.mock import patch
 from aiounifi.models.message import MessageKey
 import pytest
 
+from homeassistant.components.unifi import STORAGE_KEY, STORAGE_VERSION
 from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN as UNIFI_DOMAIN
 from homeassistant.components.unifi.hub.websocket import RETRY_TIMER
 from homeassistant.config_entries import ConfigEntry
@@ -34,6 +35,21 @@ DEFAULT_CONFIG_ENTRY_ID = "1"
 DEFAULT_HOST = "1.2.3.4"
 DEFAULT_PORT = 1234
 DEFAULT_SITE = "site_id"
+
+CONTROLLER_HOST = {
+    "hostname": "controller_host",
+    "ip": DEFAULT_HOST,
+    "is_wired": True,
+    "last_seen": 1562600145,
+    "mac": "10:00:00:00:00:01",
+    "name": "Controller host",
+    "oui": "Producer",
+    "sw_mac": "00:00:00:00:01:01",
+    "sw_port": 1,
+    "wired-rx_bytes": 1234000000,
+    "wired-tx_bytes": 5678000000,
+    "uptime": 1562600160,
+}
 
 
 @pytest.fixture(autouse=True)
@@ -109,6 +125,27 @@ def config_entry_data_fixture() -> MappingProxyType[str, Any]:
 def config_entry_options_fixture() -> MappingProxyType[str, Any]:
     """Define a config entry options fixture."""
     return {}
+
+
+# Known wireless clients
+
+
+@pytest.fixture(name="known_wireless_clients")
+def known_wireless_clients_fixture() -> list[str]:
+    """Known previously observed wireless clients."""
+    return []
+
+
+@pytest.fixture(autouse=True)
+def mock_wireless_client_storage(hass_storage, known_wireless_clients: list[str]):
+    """Mock the known wireless storage."""
+    data: dict[str, list[str]] = (
+        {"wireless_clients": known_wireless_clients} if known_wireless_clients else {}
+    )
+    hass_storage[STORAGE_KEY] = {"version": STORAGE_VERSION, "data": data}
+
+
+# UniFi request mocks
 
 
 @pytest.fixture(name="mock_requests")
