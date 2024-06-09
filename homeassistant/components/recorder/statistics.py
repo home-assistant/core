@@ -2020,7 +2020,7 @@ def _statistics_at_time(
     return cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
 
-def _build_sum_converted_list(
+def _build_sum_converted_stats(
     db_rows: list[Row],
     table_duration_seconds: float,
     start_ts_idx: int,
@@ -2038,7 +2038,7 @@ def _build_sum_converted_list(
     ]
 
 
-def _build_sum_list(
+def _build_sum_stats(
     db_rows: list[Row],
     table_duration_seconds: float,
     start_ts_idx: int,
@@ -2055,7 +2055,7 @@ def _build_sum_list(
     ]
 
 
-def _build_non_converted_list(
+def _build_stats(
     db_rows: list[Row],
     table_duration_seconds: float,
     start_ts_idx: int,
@@ -2090,7 +2090,7 @@ def _build_non_converted_list(
     return result
 
 
-def _build_converted_list(
+def _build_converted_stats(
     db_rows: list[Row],
     table_duration_seconds: float,
     start_ts_idx: int,
@@ -2175,7 +2175,7 @@ def _sorted_statistics_to_dict(
     row_idxes = (mean_idx, min_idx, max_idx, last_reset_ts_idx, state_idx, sum_idx)
     # Append all statistic entries, and optionally do unit conversion
     table_duration_seconds = table.duration.total_seconds()
-    for meta_id, stats_list in stats_by_meta_id.items():
+    for meta_id, db_rows in stats_by_meta_id.items():
         metadata_by_id = metadata[meta_id]
         statistic_id = metadata_by_id["statistic_id"]
         if convert_units:
@@ -2188,7 +2188,7 @@ def _sorted_statistics_to_dict(
         else:
             convert = None
 
-        build_args = (stats_list, table_duration_seconds, start_ts_idx)
+        build_args = (db_rows, table_duration_seconds, start_ts_idx)
         if sum_only:
             # This function is extremely flexible and can handle all types of
             # statistics, but in practice we only ever use a few combinations.
@@ -2197,22 +2197,15 @@ def _sorted_statistics_to_dict(
             # this path to avoid the overhead of the more generic function.
             assert sum_idx is not None
             if convert:
-                result[statistic_id] = _build_sum_converted_list(
-                    *build_args, sum_idx, convert
-                )
+                _stats = _build_sum_converted_stats(*build_args, sum_idx, convert)
             else:
-                result[statistic_id] = _build_sum_list(*build_args, sum_idx)
-            continue
-
-        if convert:
-            result[statistic_id] = _build_converted_list(
-                *build_args, *row_idxes, convert
-            )
+                _stats = _build_sum_stats(*build_args, sum_idx)
+        elif convert:
+            _stats = _build_converted_stats(*build_args, *row_idxes, convert)
         else:
-            result[statistic_id] = _build_non_converted_list(
-                *build_args,
-                *row_idxes,
-            )
+            _stats = _build_stats(*build_args, *row_idxes)
+
+        result[statistic_id] = _stats
 
     return result
 
