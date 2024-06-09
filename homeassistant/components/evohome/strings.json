@@ -1,4 +1,29 @@
 {
+  "config": {
+    "flow_title": "Set up Honeywell TCC (Europe).",
+    "step": {
+      "user": {
+        "description": "Enter logon credentials.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "The username to logon to the TCC website.",
+          "password": "The password to logon to the TCC website."
+        }
+      },
+      "location": {
+        "description": "Enter location index (optional).",
+        "data": {
+          "location_idx": "Location index."
+        },
+        "data_description": {
+          "location_idx": "The location index of your CH/DHW system (usually 0)."
+        }
+      }
+    }
+  },
   "services": {
     "set_system_mode": {
       "name": "Set system mode",
