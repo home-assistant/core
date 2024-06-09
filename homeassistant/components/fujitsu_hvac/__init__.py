@@ -1,4 +1,5 @@
 """The Fujitsu HVAC (based on Ayla IOT) integration."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -47,7 +48,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     with suppress(TimeoutError):
-        await hass.data[DOMAIN][entry.entry_id].async_sign_out()
+        await hass.data[DOMAIN][entry.entry_id].api.async_sign_out()
 
     hass.data[DOMAIN].pop(entry.entry_id)
 
