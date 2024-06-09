@@ -188,7 +188,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = NetgearLTEDataUpdateCoordinator(hass, modem)
     await coordinator.async_config_entry_first_refresh()
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await async_setup_services(hass, modem)
 
@@ -203,8 +203,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     loaded_entries = [
         entry
         for entry in hass.config_entries.async_entries(DOMAIN)
@@ -229,7 +228,7 @@ def _legacy_task(hass: HomeAssistant, entry: ConfigEntry) -> None:
             hass,
             Platform.NOTIFY,
             DOMAIN,
-            {"modem": hass.data[DOMAIN][entry.entry_id].modem, CONF_NAME: entry.title},
+            {"modem": entry.runtime_data.modem, CONF_NAME: entry.title},
             hass.data[DATA_HASS_CONFIG],
         )
     )

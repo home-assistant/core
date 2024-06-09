@@ -12,7 +12,6 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .entity import LTEEntity
 
 BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
@@ -41,11 +40,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Netgear LTE binary sensor."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
-        NetgearLTEBinarySensor(coordinator, description)
-        for description in BINARY_SENSORS
+        NetgearLTEBinarySensor(entry, description) for description in BINARY_SENSORS
     )
 
 
