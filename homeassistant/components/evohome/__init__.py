@@ -123,23 +123,16 @@ SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Evohome integration from the configuration.yaml file."""
+    """Set up the Evohome integration."""
 
-    scan_interval: timedelta = config[DOMAIN].pop(CONF_SCAN_INTERVAL)
-    config[DOMAIN][CONF_SCAN_INTERVAL] = int(scan_interval.total_seconds())
-
-    # until config flow is implemented, this most closely matches the current behaviour
-    if entries := hass.config_entries.async_entries(DOMAIN):
-        hass.config_entries.async_update_entry(entries[0], data=config[DOMAIN])
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=config[DOMAIN],
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data=config[DOMAIN],
+            )
         )
-    )
 
     return True
 
