@@ -67,7 +67,7 @@ def mock_expires_at() -> int:
 @pytest.fixture
 def polling_config_entry(expires_at: int) -> MockConfigEntry:
     """Create Monzo entry in Home Assistant."""
-    return MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         title=TITLE,
         unique_id=str(USER_ID),
@@ -84,6 +84,8 @@ def polling_config_entry(expires_at: int) -> MockConfigEntry:
             "profile": TITLE,
         },
     )
+    entry.runtime_data = None
+    return entry
 
 
 @pytest.fixture(name="basic_monzo")
