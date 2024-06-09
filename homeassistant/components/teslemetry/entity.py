@@ -119,7 +119,7 @@ class TeslemetryVehicleEntity(TeslemetryEntity):
 
     async def wake_up_if_asleep(self) -> None:
         """Wake up the vehicle if its asleep."""
-        return wake_up_vehicle(self.vehicle)
+        await wake_up_vehicle(self.vehicle)
 
     async def handle_command(self, command) -> dict[str, Any]:
         """Handle a vehicle command."""

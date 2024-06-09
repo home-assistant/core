@@ -10,7 +10,7 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import LOGGER, TeslemetryState
 
 
-async def wake_up_vehicle(vehicle):
+async def wake_up_vehicle(vehicle) -> None:
     """Wake up a vehicle."""
     async with vehicle.wakelock:
         times = 0
@@ -23,8 +23,6 @@ async def wake_up_vehicle(vehicle):
                 state = cmd["response"]["state"]
             except TeslaFleetError as e:
                 raise HomeAssistantError(str(e)) from e
-            except TypeError as e:
-                raise HomeAssistantError("Invalid response from Teslemetry") from e
             vehicle.coordinator.data["state"] = state
             if state != TeslemetryState.ONLINE:
                 times += 1
