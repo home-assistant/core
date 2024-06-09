@@ -1,12 +1,12 @@
 """Contains fixtures for Loqed tests."""
 
-from collections.abc import AsyncGenerator
 import json
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from loqedAPI import loqed
 import pytest
+from typing_extensions import AsyncGenerator
 
 from homeassistant.components.loqed import DOMAIN
 from homeassistant.components.loqed.const import CONF_CLOUDHOOK_URL
@@ -81,7 +81,7 @@ def lock_fixture() -> loqed.Lock:
 @pytest.fixture(name="integration")
 async def integration_fixture(
     hass: HomeAssistant, config_entry: MockConfigEntry, lock: loqed.Lock
-) -> AsyncGenerator[MockConfigEntry, None]:
+) -> AsyncGenerator[MockConfigEntry]:
     """Set up the loqed integration with a config entry."""
     config: dict[str, Any] = {DOMAIN: {CONF_API_TOKEN: ""}}
     config_entry.add_to_hass(hass)

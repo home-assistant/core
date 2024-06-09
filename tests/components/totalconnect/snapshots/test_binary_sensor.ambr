@@ -12,7 +12,7 @@
     'domain': 'binary_sensor',
     'entity_category': None,
     'entity_id': 'binary_sensor.fire',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -23,7 +23,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
-    'original_name': 'Fire',
+    'original_name': None,
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -49,7 +49,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entity_registry[binary_sensor.fire_low_battery-entry]
+# name: test_entity_registry[binary_sensor.fire_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -61,8 +61,8 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.fire_low_battery',
-    'has_entity_name': False,
+    'entity_id': 'binary_sensor.fire_battery',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -73,7 +73,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Fire low battery',
+    'original_name': 'Battery',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -82,17 +82,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_registry[binary_sensor.fire_low_battery-state]
+# name: test_entity_registry[binary_sensor.fire_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Fire low battery',
+      'friendly_name': 'Fire Battery',
       'location_id': '123456',
       'partition': '1',
       'zone_id': '2',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.fire_low_battery',
+    'entity_id': 'binary_sensor.fire_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -112,7 +112,7 @@
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'binary_sensor.fire_tamper',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -123,7 +123,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
     'original_icon': None,
-    'original_name': 'Fire tamper',
+    'original_name': 'Tamper',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -136,7 +136,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'tamper',
-      'friendly_name': 'Fire tamper',
+      'friendly_name': 'Fire Tamper',
       'location_id': '123456',
       'partition': '1',
       'zone_id': '2',
@@ -162,7 +162,7 @@
     'domain': 'binary_sensor',
     'entity_category': None,
     'entity_id': 'binary_sensor.gas',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -173,7 +173,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.GAS: 'gas'>,
     'original_icon': None,
-    'original_name': 'Gas',
+    'original_name': None,
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -199,7 +199,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entity_registry[binary_sensor.gas_low_battery-entry]
+# name: test_entity_registry[binary_sensor.gas_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -211,8 +211,8 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.gas_low_battery',
-    'has_entity_name': False,
+    'entity_id': 'binary_sensor.gas_battery',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -223,7 +223,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Gas low battery',
+    'original_name': 'Battery',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -232,17 +232,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_registry[binary_sensor.gas_low_battery-state]
+# name: test_entity_registry[binary_sensor.gas_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Gas low battery',
+      'friendly_name': 'Gas Battery',
       'location_id': '123456',
       'partition': '1',
       'zone_id': '3',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.gas_low_battery',
+    'entity_id': 'binary_sensor.gas_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -262,7 +262,7 @@
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'binary_sensor.gas_tamper',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -273,7 +273,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
     'original_icon': None,
-    'original_name': 'Gas tamper',
+    'original_name': 'Tamper',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -286,7 +286,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'tamper',
-      'friendly_name': 'Gas tamper',
+      'friendly_name': 'Gas Tamper',
       'location_id': '123456',
       'partition': '1',
       'zone_id': '3',
@@ -312,7 +312,7 @@
     'domain': 'binary_sensor',
     'entity_category': None,
     'entity_id': 'binary_sensor.medical',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -323,7 +323,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
     'original_icon': None,
-    'original_name': 'Medical',
+    'original_name': None,
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -362,7 +362,7 @@
     'domain': 'binary_sensor',
     'entity_category': None,
     'entity_id': 'binary_sensor.motion',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -373,7 +373,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
-    'original_name': 'Motion',
+    'original_name': None,
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -399,7 +399,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entity_registry[binary_sensor.motion_low_battery-entry]
+# name: test_entity_registry[binary_sensor.motion_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -411,8 +411,8 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.motion_low_battery',
-    'has_entity_name': False,
+    'entity_id': 'binary_sensor.motion_battery',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -423,7 +423,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Motion low battery',
+    'original_name': 'Battery',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -432,17 +432,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_registry[binary_sensor.motion_low_battery-state]
+# name: test_entity_registry[binary_sensor.motion_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Motion low battery',
+      'friendly_name': 'Motion Battery',
       'location_id': '123456',
       'partition': '1',
       'zone_id': '4',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.motion_low_battery',
+    'entity_id': 'binary_sensor.motion_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -462,7 +462,7 @@
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'binary_sensor.motion_tamper',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -473,7 +473,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
     'original_icon': None,
-    'original_name': 'Motion tamper',
+    'original_name': 'Tamper',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -486,7 +486,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'tamper',
-      'friendly_name': 'Motion tamper',
+      'friendly_name': 'Motion Tamper',
       'location_id': '123456',
       'partition': '1',
       'zone_id': '4',
@@ -512,7 +512,7 @@
     'domain': 'binary_sensor',
     'entity_category': None,
     'entity_id': 'binary_sensor.security',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -523,7 +523,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
-    'original_name': 'Security',
+    'original_name': None,
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -549,7 +549,7 @@
     'state': 'on',
   })
 # ---
-# name: test_entity_registry[binary_sensor.security_low_battery-entry]
+# name: test_entity_registry[binary_sensor.security_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -561,8 +561,8 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.security_low_battery',
-    'has_entity_name': False,
+    'entity_id': 'binary_sensor.security_battery',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -573,7 +573,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Security low battery',
+    'original_name': 'Battery',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -582,17 +582,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_registry[binary_sensor.security_low_battery-state]
+# name: test_entity_registry[binary_sensor.security_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Security low battery',
+      'friendly_name': 'Security Battery',
       'location_id': '123456',
       'partition': '1',
       'zone_id': '1',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.security_low_battery',
+    'entity_id': 'binary_sensor.security_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -612,7 +612,7 @@
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'binary_sensor.security_tamper',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -623,7 +623,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
     'original_icon': None,
-    'original_name': 'Security tamper',
+    'original_name': 'Tamper',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -636,7 +636,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'tamper',
-      'friendly_name': 'Security tamper',
+      'friendly_name': 'Security Tamper',
       'location_id': '123456',
       'partition': '1',
       'zone_id': '1',
@@ -662,7 +662,7 @@
     'domain': 'binary_sensor',
     'entity_category': None,
     'entity_id': 'binary_sensor.temperature',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -673,7 +673,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Temperature',
+    'original_name': None,
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -699,7 +699,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entity_registry[binary_sensor.temperature_low_battery-entry]
+# name: test_entity_registry[binary_sensor.temperature_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -711,8 +711,8 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.temperature_low_battery',
-    'has_entity_name': False,
+    'entity_id': 'binary_sensor.temperature_battery',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -723,7 +723,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Temperature low battery',
+    'original_name': 'Battery',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -732,17 +732,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_registry[binary_sensor.temperature_low_battery-state]
+# name: test_entity_registry[binary_sensor.temperature_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Temperature low battery',
+      'friendly_name': 'Temperature Battery',
       'location_id': '123456',
       'partition': '1',
       'zone_id': 7,
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.temperature_low_battery',
+    'entity_id': 'binary_sensor.temperature_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -762,7 +762,7 @@
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'binary_sensor.temperature_tamper',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -773,7 +773,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
     'original_icon': None,
-    'original_name': 'Temperature tamper',
+    'original_name': 'Tamper',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -786,7 +786,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'tamper',
-      'friendly_name': 'Temperature tamper',
+      'friendly_name': 'Temperature Tamper',
       'location_id': '123456',
       'partition': '1',
       'zone_id': 7,
@@ -799,7 +799,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entity_registry[binary_sensor.test_low_battery-entry]
+# name: test_entity_registry[binary_sensor.test_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -811,8 +811,8 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_low_battery',
-    'has_entity_name': False,
+    'entity_id': 'binary_sensor.test_battery',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -823,7 +823,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'test low battery',
+    'original_name': 'Battery',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -832,15 +832,15 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_registry[binary_sensor.test_low_battery-state]
+# name: test_entity_registry[binary_sensor.test_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'test low battery',
+      'friendly_name': 'test Battery',
       'location_id': '123456',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_low_battery',
+    'entity_id': 'binary_sensor.test_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -860,7 +860,7 @@
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'binary_sensor.test_power',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -871,7 +871,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'test power',
+    'original_name': 'Power',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -884,7 +884,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'test power',
+      'friendly_name': 'test Power',
       'location_id': '123456',
     }),
     'context': <ANY>,
@@ -908,7 +908,7 @@
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'binary_sensor.test_tamper',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -919,7 +919,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
     'original_icon': None,
-    'original_name': 'test tamper',
+    'original_name': 'Tamper',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -932,7 +932,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'tamper',
-      'friendly_name': 'test tamper',
+      'friendly_name': 'test Tamper',
       'location_id': '123456',
     }),
     'context': <ANY>,
@@ -956,7 +956,7 @@
     'domain': 'binary_sensor',
     'entity_category': None,
     'entity_id': 'binary_sensor.unknown',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -967,7 +967,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
-    'original_name': 'Unknown',
+    'original_name': None,
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -993,7 +993,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entity_registry[binary_sensor.unknown_low_battery-entry]
+# name: test_entity_registry[binary_sensor.unknown_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1005,8 +1005,8 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.unknown_low_battery',
-    'has_entity_name': False,
+    'entity_id': 'binary_sensor.unknown_battery',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -1017,7 +1017,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Unknown low battery',
+    'original_name': 'Battery',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1026,17 +1026,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_registry[binary_sensor.unknown_low_battery-state]
+# name: test_entity_registry[binary_sensor.unknown_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Unknown low battery',
+      'friendly_name': 'Unknown Battery',
       'location_id': '123456',
       'partition': '1',
       'zone_id': '6',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.unknown_low_battery',
+    'entity_id': 'binary_sensor.unknown_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1056,7 +1056,7 @@
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'binary_sensor.unknown_tamper',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -1067,7 +1067,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
     'original_icon': None,
-    'original_name': 'Unknown tamper',
+    'original_name': 'Tamper',
     'platform': 'totalconnect',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1080,7 +1080,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'tamper',
-      'friendly_name': 'Unknown tamper',
+      'friendly_name': 'Unknown Tamper',
       'location_id': '123456',
       'partition': '1',
       'zone_id': '6',

@@ -7,7 +7,7 @@ from functools import partial
 import logging
 from typing import Any
 
-from soco import alarms
+from soco import SoCo, alarms
 from soco.core import (
     MUSIC_SRC_LINE_IN,
     MUSIC_SRC_RADIO,
@@ -15,6 +15,7 @@ from soco.core import (
     PLAY_MODES,
 )
 from soco.data_structures import DidlFavorite
+from soco.ms_data_structures import MusicServiceItem
 from sonos_websocket.exception import SonosWebsocketError
 import voluptuous as vol
 
@@ -38,7 +39,7 @@ from homeassistant.components.plex.services import process_plex_payload
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TIME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -431,7 +432,13 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         fav = [fav for fav in self.speaker.favorites if fav.title == name]
 
         if len(fav) != 1:
-            return
+            raise ServiceValidationError(
+                translation_domain=SONOS_DOMAIN,
+                translation_key="invalid_favorite",
+                translation_placeholders={
+                    "name": name,
+                },
+            )
 
         src = fav.pop()
         self._play_favorite(src)
@@ -444,7 +451,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             MUSIC_SRC_RADIO,
             MUSIC_SRC_LINE_IN,
         ]:
-            soco.play_uri(uri, title=favorite.title)
+            soco.play_uri(uri, title=favorite.title, timeout=LONG_SERVICE_TIMEOUT)
         else:
             soco.clear_queue()
             soco.add_to_queue(favorite.reference, timeout=LONG_SERVICE_TIMEOUT)
@@ -549,6 +556,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, is_radio: bool, **kwargs: Any
     ) -> None:
         """Wrap sync calls to async_play_media."""
+        _LOGGER.debug("_play_media media_type %s media_id %s", media_type, media_id)
         enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE)
 
         if media_type == "favorite_item_id":
@@ -645,9 +653,34 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 _LOGGER.error('Could not find "%s" in the library', media_id)
                 return
 
-            soco.play_uri(item.get_uri())
+            self._play_media_queue(soco, item, enqueue)
         else:
             _LOGGER.error('Sonos does not support a media type of "%s"', media_type)
+
+    def _play_media_queue(
+        self, soco: SoCo, item: MusicServiceItem, enqueue: MediaPlayerEnqueue
+    ):
+        """Manage adding, replacing, playing items onto the sonos queue."""
+        _LOGGER.debug(
+            "_play_media_queue item_id [%s] title [%s] enqueue [%s]",
+            item.item_id,
+            item.title,
+            enqueue,
+        )
+        if enqueue == MediaPlayerEnqueue.REPLACE:
+            soco.clear_queue()
+
+        if enqueue in (MediaPlayerEnqueue.ADD, MediaPlayerEnqueue.REPLACE):
+            soco.add_to_queue(item, timeout=LONG_SERVICE_TIMEOUT)
+            if enqueue == MediaPlayerEnqueue.REPLACE:
+                soco.play_from_queue(0)
+        else:
+            pos = (self.media.queue_position or 0) + 1
+            new_pos = soco.add_to_queue(
+                item, position=pos, timeout=LONG_SERVICE_TIMEOUT
+            )
+            if enqueue == MediaPlayerEnqueue.PLAY:
+                soco.play_from_queue(new_pos - 1)
 
     @soco_error()
     def set_sleep_timer(self, sleep_time: int) -> None:

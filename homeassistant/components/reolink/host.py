@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections import defaultdict
 from collections.abc import Mapping
 import logging
+from time import time
 from typing import Any, Literal
 
 import aiohttp
@@ -21,7 +23,7 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -38,6 +40,10 @@ SUBSCRIPTION_RENEW_THRESHOLD = 300
 POLL_INTERVAL_NO_PUSH = 5
 LONG_POLL_COOLDOWN = 0.75
 LONG_POLL_ERROR_COOLDOWN = 30
+
+# Conserve battery by not waking the battery cameras each minute during normal update
+# Most props are cached in the Home Hub and updated, but some are skipped
+BATTERY_WAKE_UPDATE_INTERVAL = 3600  # seconds
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +73,10 @@ class ReolinkHost:
             timeout=DEFAULT_TIMEOUT,
         )
 
-        self.update_cmd_list: list[str] = []
+        self.last_wake: float = 0
+        self._update_cmd: defaultdict[str, defaultdict[int | None, int]] = defaultdict(
+            lambda: defaultdict(int)
+        )
 
         self.webhook_id: str | None = None
         self._onvif_push_supported: bool = True
@@ -83,6 +92,20 @@ class ReolinkHost:
         self._poll_job = HassJob(self._async_poll_all_motion, cancel_on_shutdown=True)
         self._long_poll_task: asyncio.Task | None = None
         self._lost_subscription: bool = False
+
+    @callback
+    def async_register_update_cmd(self, cmd: str, channel: int | None = None) -> None:
+        """Register the command to update the state."""
+        self._update_cmd[cmd][channel] += 1
+
+    @callback
+    def async_unregister_update_cmd(self, cmd: str, channel: int | None = None) -> None:
+        """Unregister the command to update the state."""
+        self._update_cmd[cmd][channel] -= 1
+        if not self._update_cmd[cmd][channel]:
+            del self._update_cmd[cmd][channel]
+        if not self._update_cmd[cmd]:
+            del self._update_cmd[cmd]
 
     @property
     def unique_id(self) -> str:
@@ -320,7 +343,13 @@ class ReolinkHost:
 
     async def update_states(self) -> None:
         """Call the API of the camera device to update the internal states."""
-        await self._api.get_states(cmd_list=self.update_cmd_list)
+        wake = False
+        if time() - self.last_wake > BATTERY_WAKE_UPDATE_INTERVAL:
+            # wake the battery cameras for a complete update
+            wake = True
+            self.last_wake = time()
+
+        await self._api.get_states(cmd_list=self._update_cmd, wake=wake)
 
     async def disconnect(self) -> None:
         """Disconnect from the API, so the connection will be released."""
@@ -652,7 +681,7 @@ class ReolinkHost:
 
             message = data.decode("utf-8")
             channels = await self._api.ONVIF_event_callback(message)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Error processing ONVIF event for Reolink %s", self._api.nvr_name
             )

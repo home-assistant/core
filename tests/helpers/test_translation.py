@@ -1,7 +1,6 @@
 """Test the translation helper."""
 
 import asyncio
-from os import path
 import pathlib
 from typing import Any
 from unittest.mock import Mock, call, patch
@@ -12,8 +11,12 @@ from homeassistant import loader
 from homeassistant.const import EVENT_CORE_CONFIG_UPDATE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import translation
-from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
+
+
+@pytest.fixture(autouse=True)
+def _disable_translations_once(disable_translations_once: None) -> None:
+    """Override loading translations once."""
 
 
 @pytest.fixture
@@ -37,26 +40,7 @@ def test_recursive_flatten() -> None:
     }
 
 
-async def test_component_translation_path(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
-    """Test the component translation file function."""
-    assert await async_setup_component(
-        hass,
-        "switch",
-        {"switch": [{"platform": "test"}, {"platform": "test_embedded"}]},
-    )
-    assert await async_setup_component(hass, "test_package", {"test_package": None})
-    int_test_package = await async_get_integration(hass, "test_package")
-
-    assert path.normpath(
-        translation.component_translation_path("en", int_test_package)
-    ) == path.normpath(
-        hass.config.path("custom_components", "test_package", "translations", "en.json")
-    )
-
-
-def test__load_translations_files_by_language(
+def test_load_translations_files_by_language(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the load translation files function."""
@@ -238,10 +222,6 @@ async def test_get_translations_loads_config_flows(
 
     with (
         patch(
-            "homeassistant.helpers.translation.component_translation_path",
-            return_value="bla.json",
-        ),
-        patch(
             "homeassistant.helpers.translation._load_translations_files_by_language",
             return_value={"en": {"component1": {"title": "world"}}},
         ),
@@ -270,10 +250,6 @@ async def test_get_translations_loads_config_flows(
     integration.name = "Component 2"
 
     with (
-        patch(
-            "homeassistant.helpers.translation.component_translation_path",
-            return_value="bla.json",
-        ),
         patch(
             "homeassistant.helpers.translation._load_translations_files_by_language",
             return_value={"en": {"component2": {"title": "world"}}},
@@ -324,10 +300,6 @@ async def test_get_translations_while_loading_components(hass: HomeAssistant) ->
         return {language: {"component1": {"title": "world"}} for language in files}
 
     with (
-        patch(
-            "homeassistant.helpers.translation.component_translation_path",
-            return_value="bla.json",
-        ),
         patch(
             "homeassistant.helpers.translation._load_translations_files_by_language",
             mock_load_translation_files,
@@ -454,10 +426,10 @@ async def test_caching(hass: HomeAssistant) -> None:
         side_effect=translation.build_resources,
     ) as mock_build_resources:
         load1 = await translation.async_get_translations(hass, "en", "entity_component")
-        assert len(mock_build_resources.mock_calls) == 5
+        assert len(mock_build_resources.mock_calls) == 6
 
         load2 = await translation.async_get_translations(hass, "en", "entity_component")
-        assert len(mock_build_resources.mock_calls) == 5
+        assert len(mock_build_resources.mock_calls) == 6
 
         assert load1 == load2
 
@@ -692,10 +664,6 @@ async def test_get_translations_still_has_title_without_translations_files(
     integration.name = "Component 1"
 
     with (
-        patch(
-            "homeassistant.helpers.translation.component_translation_path",
-            return_value="bla.json",
-        ),
         patch(
             "homeassistant.helpers.translation._load_translations_files_by_language",
             return_value={},

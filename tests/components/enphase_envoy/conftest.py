@@ -343,7 +343,7 @@ def mock_envoy_fixture(
 
 
 @pytest.fixture(name="setup_enphase_envoy")
-async def setup_enphase_envoy_fixture(hass, config, mock_envoy):
+async def setup_enphase_envoy_fixture(hass: HomeAssistant, config, mock_envoy):
     """Define a fixture to set up Enphase Envoy."""
     with (
         patch(

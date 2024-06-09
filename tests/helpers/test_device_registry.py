@@ -2,6 +2,7 @@
 
 from collections.abc import Iterable
 from contextlib import AbstractContextManager, nullcontext
+from functools import partial
 import time
 from typing import Any
 from unittest.mock import patch
@@ -1256,6 +1257,7 @@ async def test_update(
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("hue", "456"), ("bla", "123")},
     )
+    new_connections = {(dr.CONNECTION_NETWORK_MAC, "65:43:21:FE:DC:BA")}
     new_identifiers = {("hue", "654"), ("bla", "321")}
     assert not entry.area_id
     assert not entry.labels
@@ -1274,6 +1276,7 @@ async def test_update(
             model="Test Model",
             name_by_user="Test Friendly Name",
             name="name",
+            new_connections=new_connections,
             new_identifiers=new_identifiers,
             serial_number="serial_no",
             suggested_area="suggested_area",
@@ -1287,7 +1290,7 @@ async def test_update(
         area_id="12345A",
         config_entries={mock_config_entry.entry_id},
         configuration_url="https://example.com/config",
-        connections={("mac", "12:34:56:ab:cd:ef")},
+        connections={("mac", "65:43:21:fe:dc:ba")},
         disabled_by=dr.DeviceEntryDisabler.USER,
         entry_type=dr.DeviceEntryType.SERVICE,
         hw_version="hw_version",
@@ -1318,6 +1321,12 @@ async def test_update(
         device_registry.async_get_device(
             connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")}
         )
+        is None
+    )
+    assert (
+        device_registry.async_get_device(
+            connections={(dr.CONNECTION_NETWORK_MAC, "65:43:21:FE:DC:BA")}
+        )
         == updated_entry
     )
 
@@ -1335,6 +1344,7 @@ async def test_update(
         "device_id": entry.id,
         "changes": {
             "area_id": None,
+            "connections": {("mac", "12:34:56:ab:cd:ef")},
             "configuration_url": None,
             "disabled_by": None,
             "entry_type": None,
@@ -1351,6 +1361,105 @@ async def test_update(
             "via_device_id": None,
         },
     }
+    with pytest.raises(HomeAssistantError):
+        device_registry.async_update_device(
+            entry.id,
+            merge_connections=new_connections,
+            new_connections=new_connections,
+        )
+
+    with pytest.raises(HomeAssistantError):
+        device_registry.async_update_device(
+            entry.id,
+            merge_identifiers=new_identifiers,
+            new_identifiers=new_identifiers,
+        )
+
+
+@pytest.mark.parametrize(
+    ("initial_connections", "new_connections", "updated_connections"),
+    [
+        (  # No connection -> single connection
+            None,
+            {(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+            {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
+        ),
+        (  # No connection -> double connection
+            None,
+            {
+                (dr.CONNECTION_NETWORK_MAC, "65:43:21:FE:DC:BA"),
+                (dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF"),
+            },
+            {
+                (dr.CONNECTION_NETWORK_MAC, "65:43:21:fe:dc:ba"),
+                (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef"),
+            },
+        ),
+        (  # single connection -> no connection
+            {(dr.CONNECTION_NETWORK_MAC, "65:43:21:FE:DC:BA")},
+            set(),
+            set(),
+        ),
+        (  # single connection -> single connection
+            {(dr.CONNECTION_NETWORK_MAC, "65:43:21:FE:DC:BA")},
+            {(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+            {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
+        ),
+        (  # single connection -> double connection
+            {(dr.CONNECTION_NETWORK_MAC, "65:43:21:FE:DC:BA")},
+            {
+                (dr.CONNECTION_NETWORK_MAC, "65:43:21:FE:DC:BA"),
+                (dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF"),
+            },
+            {
+                (dr.CONNECTION_NETWORK_MAC, "65:43:21:fe:dc:ba"),
+                (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef"),
+            },
+        ),
+        (  # Double connection -> None
+            {
+                (dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF"),
+                (dr.CONNECTION_NETWORK_MAC, "65:43:21:FE:DC:BA"),
+            },
+            set(),
+            set(),
+        ),
+        (  # Double connection -> single connection
+            {
+                (dr.CONNECTION_NETWORK_MAC, "65:43:21:FE:DC:BA"),
+                (dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF"),
+            },
+            {(dr.CONNECTION_NETWORK_MAC, "65:43:21:FE:DC:BA")},
+            {(dr.CONNECTION_NETWORK_MAC, "65:43:21:fe:dc:ba")},
+        ),
+    ],
+)
+async def test_update_connection(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    initial_connections: set[tuple[str, str]] | None,
+    new_connections: set[tuple[str, str]] | None,
+    updated_connections: set[tuple[str, str]] | None,
+) -> None:
+    """Verify that we can update some attributes of a device."""
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections=initial_connections,
+        identifiers={("hue", "456"), ("bla", "123")},
+    )
+
+    with patch.object(device_registry, "async_schedule_save") as mock_save:
+        updated_entry = device_registry.async_update_device(
+            entry.id,
+            new_connections=new_connections,
+        )
+
+    assert mock_save.call_count == 1
+    assert updated_entry != entry
+    assert updated_entry.connections == updated_connections
+    assert (
+        device_registry.async_get_device(identifiers={("bla", "123")}) == updated_entry
+    )
 
 
 async def test_update_remove_config_entries(
@@ -2473,3 +2582,49 @@ async def test_device_name_translation_placeholders_errors(
         )
 
     assert expected_error in caplog.text
+
+
+async def test_async_get_or_create_thread_safety(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test async_get_or_create raises when called from wrong thread."""
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls device_registry.async_update_device from a thread.",
+    ):
+        await hass.async_add_executor_job(
+            partial(
+                device_registry.async_get_or_create,
+                config_entry_id=mock_config_entry.entry_id,
+                connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+                identifiers=set(),
+                manufacturer="manufacturer",
+                model="model",
+            )
+        )
+
+
+async def test_async_remove_device_thread_safety(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test async_remove_device raises when called from wrong thread."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers=set(),
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls device_registry.async_remove_device from a thread.",
+    ):
+        await hass.async_add_executor_job(
+            device_registry.async_remove_device, device.id
+        )

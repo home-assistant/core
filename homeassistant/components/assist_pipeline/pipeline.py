@@ -5,7 +5,7 @@ from __future__ import annotations
 import array
 import asyncio
 from collections import defaultdict, deque
-from collections.abc import AsyncGenerator, AsyncIterable, Callable, Iterable
+from collections.abc import AsyncIterable, Callable, Iterable
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 import logging
@@ -16,6 +16,7 @@ import time
 from typing import TYPE_CHECKING, Any, Final, Literal, cast
 import wave
 
+from typing_extensions import AsyncGenerator
 import voluptuous as vol
 
 if TYPE_CHECKING:
@@ -349,7 +350,7 @@ class PipelineEvent:
     timestamp: str = field(default_factory=lambda: dt_util.utcnow().isoformat())
 
 
-PipelineEventCallback = Callable[[PipelineEvent], None]
+type PipelineEventCallback = Callable[[PipelineEvent], None]
 
 
 @dataclass(frozen=True)
@@ -922,7 +923,7 @@ class PipelineRun:
         stt_vad: VoiceCommandSegmenter | None,
         sample_rate: int = 16000,
         sample_width: int = 2,
-    ) -> AsyncGenerator[bytes, None]:
+    ) -> AsyncGenerator[bytes]:
         """Yield audio chunks until VAD detects silence or speech-to-text completes."""
         chunk_seconds = AUDIO_PROCESSOR_SAMPLES / sample_rate
         sent_vad_start = False
@@ -1185,7 +1186,7 @@ class PipelineRun:
         audio_stream: AsyncIterable[bytes],
         sample_rate: int = 16000,
         sample_width: int = 2,
-    ) -> AsyncGenerator[ProcessedAudioChunk, None]:
+    ) -> AsyncGenerator[ProcessedAudioChunk]:
         """Apply volume transformation only (no VAD/audio enhancements) with optional chunking."""
         ms_per_sample = sample_rate // 1000
         ms_per_chunk = (AUDIO_PROCESSOR_SAMPLES // sample_width) // ms_per_sample
@@ -1220,7 +1221,7 @@ class PipelineRun:
         audio_stream: AsyncIterable[bytes],
         sample_rate: int = 16000,
         sample_width: int = 2,
-    ) -> AsyncGenerator[ProcessedAudioChunk, None]:
+    ) -> AsyncGenerator[ProcessedAudioChunk]:
         """Split audio into 10 ms chunks and apply VAD/noise suppression/auto gain/volume transformation."""
         assert self.audio_processor is not None
 
@@ -1295,7 +1296,7 @@ def _pipeline_debug_recording_thread_proc(
                     wav_writer.writeframes(message)
     except Empty:
         pass  # occurs when pipeline has unexpected error
-    except Exception:  # pylint: disable=broad-exception-caught
+    except Exception:
         _LOGGER.exception("Unexpected error in debug recording thread")
     finally:
         if wav_writer is not None:
@@ -1386,7 +1387,7 @@ class PipelineInput:
                     # Send audio in the buffer first to speech-to-text, then move on to stt_stream.
                     # This is basically an async itertools.chain.
                     async def buffer_then_audio_stream() -> (
-                        AsyncGenerator[ProcessedAudioChunk, None]
+                        AsyncGenerator[ProcessedAudioChunk]
                     ):
                         # Buffered audio
                         for chunk in stt_audio_buffer:

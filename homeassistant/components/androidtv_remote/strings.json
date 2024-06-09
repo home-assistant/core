@@ -20,7 +20,7 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "You need to pair again with the Android TV ({name})."
+        "description": "You need to pair again with the Android TV ({name}). It will turn on and a pairing code will be displayed on it that you will need to enter in the next screen."
       }
     },
     "error": {

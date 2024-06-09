@@ -20,7 +20,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
-SetupCallback = Callable[[pv.VeraController, dict], None]
+type SetupCallback = Callable[[pv.VeraController, dict], None]
 
 
 class ControllerData(NamedTuple):

@@ -94,7 +94,9 @@ async def async_setup_entry(
 
 
 class QingpingBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[bool | None]],
+    PassiveBluetoothProcessorEntity[
+        PassiveBluetoothDataProcessor[bool | None, SensorUpdate]
+    ],
     BinarySensorEntity,
 ):
     """Representation of a Qingping binary sensor."""

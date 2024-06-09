@@ -5,8 +5,9 @@ from __future__ import annotations
 import asyncio
 from asyncio import Event
 from collections.abc import Awaitable, Callable
+from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aioesphomeapi import (
     APIClient,
@@ -41,12 +42,12 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth):
+def mock_bluetooth(enable_bluetooth: None) -> None:
     """Auto mock bluetooth."""
 
 
 @pytest.fixture(autouse=True)
-def esphome_mock_async_zeroconf(mock_async_zeroconf):
+def esphome_mock_async_zeroconf(mock_async_zeroconf: MagicMock) -> None:
     """Auto mock zeroconf."""
 
 
@@ -57,7 +58,7 @@ async def load_homeassistant(hass) -> None:
 
 
 @pytest.fixture(autouse=True)
-def mock_tts(mock_tts_cache_dir):
+def mock_tts(mock_tts_cache_dir: Path) -> None:
     """Auto mock the tts cache."""
 
 
@@ -181,7 +182,9 @@ async def mock_dashboard(hass):
 class MockESPHomeDevice:
     """Mock an esphome device."""
 
-    def __init__(self, entry: MockConfigEntry, client: APIClient) -> None:
+    def __init__(
+        self, entry: MockConfigEntry, client: APIClient, device_info: DeviceInfo
+    ) -> None:
         """Init the mock."""
         self.entry = entry
         self.client = client
@@ -193,6 +196,7 @@ class MockESPHomeDevice:
         self.home_assistant_state_subscription_callback: Callable[
             [str, str | None], None
         ]
+        self.device_info = device_info
 
     def set_state_callback(self, state_callback: Callable[[EntityState], None]) -> None:
         """Set the state callback."""
@@ -274,8 +278,6 @@ async def _mock_generic_device_entry(
         )
         entry.add_to_hass(hass)
 
-    mock_device = MockESPHomeDevice(entry, mock_client)
-
     default_device_info = {
         "name": "test",
         "friendly_name": "Test",
@@ -283,6 +285,8 @@ async def _mock_generic_device_entry(
         "mac_address": "11:22:33:44:55:AA",
     }
     device_info = DeviceInfo(**(default_device_info | mock_device_info))
+
+    mock_device = MockESPHomeDevice(entry, mock_client, device_info)
 
     def _subscribe_states(callback: Callable[[EntityState], None]) -> None:
         """Subscribe to state."""
@@ -302,7 +306,7 @@ async def _mock_generic_device_entry(
         """Subscribe to home assistant states."""
         mock_device.set_home_assistant_state_subscription_callback(on_state_sub)
 
-    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.device_info = AsyncMock(return_value=mock_device.device_info)
     mock_client.subscribe_voice_assistant = Mock()
     mock_client.list_entities_services = AsyncMock(
         return_value=mock_list_entities_services

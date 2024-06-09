@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable
 from copy import deepcopy
 from types import MappingProxyType
 from typing import Any
@@ -11,6 +11,7 @@ from unittest.mock import AsyncMock, patch
 from axis.rtsp import Signal, State
 import pytest
 import respx
+from typing_extensions import Generator
 
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -49,7 +50,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.axis.async_setup_entry", return_value=True
@@ -114,6 +115,7 @@ def default_request_fixture(
     port_management_payload: dict[str, Any],
     param_properties_payload: dict[str, Any],
     param_ports_payload: dict[str, Any],
+    mqtt_status_code: int,
 ) -> Callable[[str], None]:
     """Mock default Vapix requests responses."""
 
@@ -131,7 +133,7 @@ def default_request_fixture(
             json=port_management_payload,
         )
         respx.post("/axis-cgi/mqtt/client.cgi").respond(
-            json=MQTT_CLIENT_RESPONSE,
+            json=MQTT_CLIENT_RESPONSE, status_code=mqtt_status_code
         )
         respx.post("/axis-cgi/streamprofile.cgi").respond(
             json=STREAM_PROFILES_RESPONSE,
@@ -239,6 +241,12 @@ def param_ports_data_fixture() -> dict[str, Any]:
     return PORTS_RESPONSE
 
 
+@pytest.fixture(name="mqtt_status_code")
+def mqtt_status_code_fixture():
+    """Property parameter data."""
+    return 200
+
+
 @pytest.fixture(name="setup_default_vapix_requests")
 def default_vapix_requests_fixture(mock_vapix_requests: Callable[[str], None]) -> None:
     """Mock default Vapix requests responses."""
@@ -273,7 +281,7 @@ async def setup_config_entry_fixture(
 
 
 @pytest.fixture(autouse=True)
-def mock_axis_rtspclient() -> Generator[Callable[[dict | None, str], None], None, None]:
+def mock_axis_rtspclient() -> Generator[Callable[[dict | None, str], None]]:
     """No real RTSP communication allowed."""
     with patch("axis.stream_manager.RTSPClient") as rtsp_client_mock:
         rtsp_client_mock.return_value.session.state = State.STOPPED

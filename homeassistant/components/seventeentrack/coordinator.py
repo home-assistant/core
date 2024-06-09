@@ -45,19 +45,19 @@ class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
         self.show_delivered = self.config_entry.options[CONF_SHOW_DELIVERED]
         self.account_id = client.profile.account_id
 
-        self._show_archived = self.config_entry.options[CONF_SHOW_ARCHIVED]
-        self._client = client
+        self.show_archived = self.config_entry.options[CONF_SHOW_ARCHIVED]
+        self.client = client
 
     async def _async_update_data(self) -> SeventeenTrackData:
         """Fetch data from 17Track API."""
 
         try:
-            summary = await self._client.profile.summary(
-                show_archived=self._show_archived
+            summary = await self.client.profile.summary(
+                show_archived=self.show_archived
             )
 
             live_packages = set(
-                await self._client.profile.packages(show_archived=self._show_archived)
+                await self.client.profile.packages(show_archived=self.show_archived)
             )
 
         except SeventeenTrackError as err:

@@ -10,10 +10,11 @@ from aiohttp import ClientConnectionError, ClientResponseError
 from tessie_api import get_state_of_all_vehicles
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from . import TessieConfigEntry
 from .const import DOMAIN
 
 TESSIE_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
@@ -29,7 +30,7 @@ class TessieConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize."""
-        self._reauth_entry: ConfigEntry | None = None
+        self._reauth_entry: TessieConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
@@ -92,13 +93,9 @@ class TessieConfigFlow(ConfigFlow, domain=DOMAIN):
             except ClientConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                self.hass.config_entries.async_update_entry(
+                return self.async_update_reload_and_abort(
                     self._reauth_entry, data=user_input
                 )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                )
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",

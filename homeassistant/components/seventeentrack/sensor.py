@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
@@ -38,7 +39,6 @@ from .const import (
     CONF_SHOW_ARCHIVED,
     CONF_SHOW_DELIVERED,
     DOMAIN,
-    ENTITY_ID_TEMPLATE,
     LOGGER,
     NOTIFICATION_DELIVERED_MESSAGE,
     NOTIFICATION_DELIVERED_TITLE,
@@ -150,7 +150,7 @@ async def async_setup_entry(
         )
 
     async_add_entities(
-        SeventeenTrackSummarySensor(status, summary_data["status_name"], coordinator)
+        SeventeenTrackSummarySensor(status, coordinator)
         for status, summary_data in coordinator.data.summary.items()
     )
 
@@ -161,26 +161,37 @@ async def async_setup_entry(
     )
 
 
-class SeventeenTrackSummarySensor(
-    CoordinatorEntity[SeventeenTrackCoordinator], SensorEntity
-):
-    """Define a summary sensor."""
+class SeventeenTrackSensor(CoordinatorEntity[SeventeenTrackCoordinator], SensorEntity):
+    """Define a 17Track sensor."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_icon = "mdi:package"
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: SeventeenTrackCoordinator) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.account_id)},
+            entry_type=DeviceEntryType.SERVICE,
+            name="17Track",
+        )
+
+
+class SeventeenTrackSummarySensor(SeventeenTrackSensor):
+    """Define a summary sensor."""
+
     _attr_native_unit_of_measurement = "packages"
 
     def __init__(
         self,
         status: str,
-        status_name: str,
         coordinator: SeventeenTrackCoordinator,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._status = status
-        self._attr_name = f"Seventeentrack Packages {status_name}"
-        self._attr_unique_id = f"summary_{coordinator.account_id}_{self._status}"
+        self._attr_translation_key = status
+        self._attr_unique_id = f"summary_{coordinator.account_id}_{status}"
 
     @property
     def available(self) -> bool:
@@ -211,13 +222,10 @@ class SeventeenTrackSummarySensor(
         }
 
 
-class SeventeenTrackPackageSensor(
-    CoordinatorEntity[SeventeenTrackCoordinator], SensorEntity
-):
+class SeventeenTrackPackageSensor(SeventeenTrackSensor):
     """Define an individual package sensor."""
 
-    _attr_attribution = ATTRIBUTION
-    _attr_icon = "mdi:package"
+    _attr_translation_key = "package"
 
     def __init__(
         self,
@@ -228,23 +236,18 @@ class SeventeenTrackPackageSensor(
         super().__init__(coordinator)
         self._tracking_number = tracking_number
         self._previous_status = coordinator.data.live_packages[tracking_number].status
-        self.entity_id = ENTITY_ID_TEMPLATE.format(tracking_number)
         self._attr_unique_id = UNIQUE_ID_TEMPLATE.format(
             coordinator.account_id, tracking_number
         )
+        package = coordinator.data.live_packages[tracking_number]
+        if not (name := package.friendly_name):
+            name = tracking_number
+        self._attr_translation_placeholders = {"name": name}
 
     @property
     def available(self) -> bool:
         """Return whether the entity is available."""
         return self._tracking_number in self.coordinator.data.live_packages
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        package = self.coordinator.data.live_packages.get(self._tracking_number)
-        if package is None or not (name := package.friendly_name):
-            name = self._tracking_number
-        return f"Seventeentrack Package: {name}"
 
     @property
     def native_value(self) -> StateType:

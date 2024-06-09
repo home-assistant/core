@@ -165,7 +165,7 @@ async def test_block_sleeping_sensor(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "22.1"
 
@@ -207,7 +207,7 @@ async def test_block_restored_sleeping_sensor(
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "22.1"
 
@@ -233,7 +233,7 @@ async def test_block_restored_sleeping_sensor_no_last_state(
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "22.1"
 
@@ -306,7 +306,7 @@ async def test_block_not_matched_restored_sleeping_sensor(
     )
     monkeypatch.setattr(mock_block_device, "initialized", True)
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "20.4"
 
@@ -355,11 +355,11 @@ async def test_rpc_sensor(
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_rpc_rssi_sensor_removal(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test RPC RSSI sensor removal if no WiFi stations enabled."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_rssi"
@@ -464,7 +464,7 @@ async def test_rpc_sleeping_sensor(
 
     # Make device online
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "22.9"
 
@@ -503,7 +503,7 @@ async def test_rpc_restored_sleeping_sensor(
     # Make device online
     monkeypatch.setattr(mock_rpc_device, "initialized", True)
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Mock update
     mock_rpc_device.mock_update()
@@ -539,7 +539,7 @@ async def test_rpc_restored_sleeping_sensor_no_last_state(
     # Make device online
     monkeypatch.setattr(mock_rpc_device, "initialized", True)
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Mock update
     mock_rpc_device.mock_update()
@@ -548,9 +548,8 @@ async def test_rpc_restored_sleeping_sensor_no_last_state(
     assert hass.states.get(entity_id).state == "22.9"
 
 
-async def test_rpc_em1_sensors(
-    hass: HomeAssistant, mock_rpc_device: Mock, entity_registry_enabled_by_default: None
-) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rpc_em1_sensors(hass: HomeAssistant, mock_rpc_device: Mock) -> None:
     """Test RPC sensors for EM1 component."""
     registry = async_get(hass)
     await init_integration(hass, 2)
@@ -607,7 +606,7 @@ async def test_rpc_sleeping_update_entity_service(
 
     # Make device online
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state.state == "22.9"
@@ -618,7 +617,6 @@ async def test_rpc_sleeping_update_entity_service(
         service_data={ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Entity should be available after update_entity service call
     state = hass.states.get(entity_id)
@@ -657,7 +655,7 @@ async def test_block_sleeping_update_entity_service(
 
     # Make device online
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "22.1"
 
@@ -667,7 +665,6 @@ async def test_block_sleeping_update_entity_service(
         service_data={ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Entity should be available after update_entity service call
     state = hass.states.get(entity_id)

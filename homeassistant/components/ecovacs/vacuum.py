@@ -23,15 +23,15 @@ from homeassistant.components.vacuum import (
     StateVacuumEntityDescription,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
 
+from . import EcovacsConfigEntry
 from .const import DOMAIN
-from .controller import EcovacsController
 from .entity import EcovacsEntity
 from .util import get_name_key
 
@@ -40,14 +40,17 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_ERROR = "error"
 ATTR_COMPONENT_PREFIX = "component_"
 
+SERVICE_RAW_GET_POSITIONS = "raw_get_positions"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EcovacsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Ecovacs vacuums."""
-    controller: EcovacsController = hass.data[DOMAIN][config_entry.entry_id]
+
+    controller = config_entry.runtime_data
     vacuums: list[EcovacsVacuum | EcovacsLegacyVacuum] = [
         EcovacsVacuum(device) for device in controller.devices(VacuumCapabilities)
     ]
@@ -56,6 +59,14 @@ async def async_setup_entry(
         vacuums.append(EcovacsLegacyVacuum(device))
     _LOGGER.debug("Adding Ecovacs Vacuums to Home Assistant: %s", vacuums)
     async_add_entities(vacuums)
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_RAW_GET_POSITIONS,
+        {},
+        "async_raw_get_positions",
+        supports_response=SupportsResponse.ONLY,
+    )
 
 
 class EcovacsLegacyVacuum(StateVacuumEntity):
@@ -197,6 +208,15 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
     ) -> None:
         """Send a command to a vacuum cleaner."""
         self.device.run(sucks.VacBotCommand(command, params))
+
+    async def async_raw_get_positions(
+        self,
+    ) -> None:
+        """Get bot and chargers positions."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="vacuum_raw_get_positions_not_supported",
+        )
 
 
 _STATE_TO_VACUUM_STATE = {
@@ -378,3 +398,19 @@ class EcovacsVacuum(
             await self._device.execute_command(
                 self._capability.custom.set(command, params)
             )
+
+    async def async_raw_get_positions(
+        self,
+    ) -> dict[str, Any]:
+        """Get bot and chargers positions."""
+        _LOGGER.debug("async_raw_get_positions")
+
+        if not (map_cap := self._capability.map) or not (
+            position_commands := map_cap.position.get
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="vacuum_raw_get_positions_not_supported",
+            )
+
+        return await self._device.execute_command(position_commands[0])

@@ -174,11 +174,8 @@ GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE_WITH_DEVICE_NAME_AND_TEMP_CHANGE = (
 )
 
 
-async def test_basic_usage(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-) -> None:
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_basic_usage(hass: HomeAssistant) -> None:
     """Test basic usage of the PassiveBluetoothProcessorCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -276,10 +273,9 @@ async def test_basic_usage(
     cancel_coordinator()
 
 
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
 async def test_entity_key_is_dispatched_on_entity_key_change(
     hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
 ) -> None:
     """Test entity key listeners are only dispatched on change."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -398,11 +394,8 @@ async def test_entity_key_is_dispatched_on_entity_key_change(
     cancel_coordinator()
 
 
-async def test_unavailable_after_no_data(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-) -> None:
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_unavailable_after_no_data(hass: HomeAssistant) -> None:
     """Test that the coordinator is unavailable after no data for a while."""
     start_monotonic = time.monotonic()
 
@@ -465,6 +458,7 @@ async def test_unavailable_after_no_data(
         device=MagicMock(),
         advertisement=MagicMock(),
         connectable=True,
+        tx_power=0,
     )
 
     inject_bluetooth_service_info_bleak(hass, service_info_at_time)
@@ -512,11 +506,8 @@ async def test_unavailable_after_no_data(
     cancel_coordinator()
 
 
-async def test_no_updates_once_stopping(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-) -> None:
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_no_updates_once_stopping(hass: HomeAssistant) -> None:
     """Test updates are ignored once hass is stopping."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -569,11 +560,9 @@ async def test_no_updates_once_stopping(
     cancel_coordinator()
 
 
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
 async def test_exception_from_update_method(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we handle exceptions from the update method."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -638,11 +627,8 @@ async def test_exception_from_update_method(
     cancel_coordinator()
 
 
-async def test_bad_data_from_update_method(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-) -> None:
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_bad_data_from_update_method(hass: HomeAssistant) -> None:
     """Test we handle bad data from the update method."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -995,11 +981,8 @@ GOVEE_B5178_PRIMARY_AND_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = (
 )
 
 
-async def test_integration_with_entity(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-) -> None:
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_integration_with_entity(hass: HomeAssistant) -> None:
     """Test integration of PassiveBluetoothProcessorCoordinator with PassiveBluetoothCoordinatorEntity."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -1157,11 +1140,8 @@ NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
 )
 
 
-async def test_integration_with_entity_without_a_device(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-) -> None:
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_integration_with_entity_without_a_device(hass: HomeAssistant) -> None:
     """Test integration with PassiveBluetoothCoordinatorEntity with no device."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -1223,10 +1203,9 @@ async def test_integration_with_entity_without_a_device(
     cancel_coordinator()
 
 
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
 async def test_passive_bluetooth_entity_with_entity_platform(
     hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
 ) -> None:
     """Test with a mock entity platform."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -1330,11 +1309,8 @@ DEVICE_ONLY_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
 )
 
 
-async def test_integration_multiple_entity_platforms(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-) -> None:
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_integration_multiple_entity_platforms(hass: HomeAssistant) -> None:
     """Test integration of PassiveBluetoothProcessorCoordinator with multiple platforms."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -1425,11 +1401,9 @@ async def test_integration_multiple_entity_platforms(
     cancel_coordinator()
 
 
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
 async def test_exception_from_coordinator_update_method(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we handle exceptions from the update method."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -1484,11 +1458,9 @@ async def test_exception_from_coordinator_update_method(
     cancel_coordinator()
 
 
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
 async def test_integration_multiple_entity_platforms_with_reload_and_restart(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-    hass_storage: dict[str, Any],
+    hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test integration of PassiveBluetoothProcessorCoordinator with multiple platforms with reload."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -1790,11 +1762,8 @@ NAMING_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
 )
 
 
-async def test_naming(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-) -> None:
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_naming(hass: HomeAssistant) -> None:
     """Test basic usage of the PassiveBluetoothProcessorCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 

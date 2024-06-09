@@ -103,14 +103,17 @@ async def device_inovelli(hass, zigpy_device_mock, zha_device_joined):
     return zigpy_device, zha_device
 
 
-async def test_get_actions(hass: HomeAssistant, device_ias) -> None:
+async def test_get_actions(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device_ias,
+) -> None:
     """Test we get the expected actions from a ZHA device."""
 
     ieee_address = str(device_ias[0].ieee)
 
-    device_registry = dr.async_get(hass)
     reg_device = device_registry.async_get_device(identifiers={(DOMAIN, ieee_address)})
-    entity_registry = er.async_get(hass)
     siren_level_select = entity_registry.async_get(
         "select.fakemanufacturer_fakemodel_default_siren_level"
     )
@@ -165,15 +168,18 @@ async def test_get_actions(hass: HomeAssistant, device_ias) -> None:
     assert actions == unordered(expected_actions)
 
 
-async def test_get_inovelli_actions(hass: HomeAssistant, device_inovelli) -> None:
+async def test_get_inovelli_actions(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device_inovelli,
+) -> None:
     """Test we get the expected actions from a ZHA device."""
 
     inovelli_ieee_address = str(device_inovelli[0].ieee)
-    device_registry = dr.async_get(hass)
     inovelli_reg_device = device_registry.async_get_device(
         identifiers={(DOMAIN, inovelli_ieee_address)}
     )
-    entity_registry = er.async_get(hass)
     inovelli_button = entity_registry.async_get("button.inovelli_vzm31_sn_identify")
     inovelli_light = entity_registry.async_get("light.inovelli_vzm31_sn_light")
 
@@ -248,7 +254,9 @@ async def test_get_inovelli_actions(hass: HomeAssistant, device_inovelli) -> Non
     assert actions == unordered(expected_actions)
 
 
-async def test_action(hass: HomeAssistant, device_ias, device_inovelli) -> None:
+async def test_action(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, device_ias, device_inovelli
+) -> None:
     """Test for executing a ZHA device action."""
     zigpy_device, zha_device = device_ias
     inovelli_zigpy_device, inovelli_zha_device = device_inovelli
@@ -260,7 +268,6 @@ async def test_action(hass: HomeAssistant, device_ias, device_inovelli) -> None:
     ieee_address = str(zha_device.ieee)
     inovelli_ieee_address = str(inovelli_zha_device.ieee)
 
-    device_registry = dr.async_get(hass)
     reg_device = device_registry.async_get_device(identifiers={(DOMAIN, ieee_address)})
     inovelli_reg_device = device_registry.async_get_device(
         identifiers={(DOMAIN, inovelli_ieee_address)}
