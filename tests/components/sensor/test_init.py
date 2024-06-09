@@ -1489,7 +1489,7 @@ async def test_unit_conversion_priority_suggested_unit_change_2(
             1,
             1000,
             SensorDeviceClass.ATMOSPHERIC_PRESSURE,
-            {"sensor.private": {"suggested_unit_of_measurement": "psi"}},
+            {"sensor.private": {"suggested_unit_of_measurement": "inHg"}},
         ),
     ],
 )

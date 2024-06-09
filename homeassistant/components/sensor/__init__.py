@@ -403,10 +403,17 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # Unit suggested by the integration
         suggested_unit_of_measurement = self.suggested_unit_of_measurement
 
+        if suggested_unit_of_measurement is None:
+            # Fallback to suggested by the unit conversion rules from device class
+            suggested_unit_of_measurement = self.hass.config.units.get_converted_unit(
+                self.device_class, self.native_unit_of_measurement
+            )
+
         if suggested_unit_of_measurement is None and (
             unit_converter := UNIT_CONVERTERS.get(self.device_class)
         ):
-            # Fallback to suggested by the unit conversion rules
+            # Fallback to suggested by the unit conversion rules from unit converter
+            # if no specific conversion rule is set for the device class
             suggested_unit_of_measurement = self.hass.config.units.get_converted_unit(
                 unit_converter.UNIT_CLASS, self.native_unit_of_measurement
             )
