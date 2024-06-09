@@ -102,6 +102,11 @@ async def test_resolve_media_bad_identifier(
             "/synology_dsm/ABC012345/12631_47189/filename.png",
             "image/png",
         ),
+        (
+            "ABC012345/12/12631_47189/filename.png_shared",
+            "/synology_dsm/ABC012345/12631_47189/filename.png_shared",
+            "image/png",
+        ),
     ],
 )
 async def test_resolve_media_success(
