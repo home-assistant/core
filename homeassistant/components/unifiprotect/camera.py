@@ -5,7 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any, cast
 
-from pyunifiprotect.data import (
+from typing_extensions import Generator
+from uiprotect.data import (
     Camera as UFPCamera,
     CameraChannel,
     ModelType,
@@ -13,7 +14,6 @@ from pyunifiprotect.data import (
     ProtectModelWithId,
     StateType,
 )
-from typing_extensions import Generator
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
