@@ -25,7 +25,7 @@ class AmazonPollyVoice:
     additional_language_codes: set[str]
 
     @classmethod
-    def validate(cls, model: dict[str, str]) -> Self:
+    def validate(cls, model: dict[str, str | list[str]]) -> Self:
         """Validate data model."""
         return cls(
             id=model["Id"],
