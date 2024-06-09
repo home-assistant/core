@@ -304,6 +304,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 new_connections = device.connections.copy()
                 new_connections.discard((dr.CONNECTION_NETWORK_MAC, "none"))
                 if new_connections != device.connections:
+                    # The migration is failing for some users, so we log the error
+                    # see #119082 for sample errors
                     LOGGER.info(
                         "Clearing invalid `none` mac connection "
                         "from device %s for config entry %s",
