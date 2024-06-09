@@ -42,6 +42,7 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ARMING_STATES = "arming_states"
 CONF_CODE_TEMPLATE = "code_template"
 CONF_CODE_ARM_REQUIRED = "code_arm_required"
 
@@ -70,6 +71,14 @@ SUPPORTED_ARMING_STATES = [
     for state in SUPPORTED_STATES
     if state not in (STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
 ]
+
+SUPPORTED_ARMING_STATE_TO_FEATURE = {
+    STATE_ALARM_ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
+    STATE_ALARM_ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
+    STATE_ALARM_ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
+    STATE_ALARM_ARMED_VACATION: AlarmControlPanelEntityFeature.ARM_VACATION,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+}
 
 ATTR_PREVIOUS_STATE = "previous_state"
 ATTR_NEXT_STATE = "next_state"
@@ -128,6 +137,9 @@ PLATFORM_SCHEMA = vol.Schema(
             vol.Optional(
                 CONF_DISARM_AFTER_TRIGGER, default=DEFAULT_DISARM_AFTER_TRIGGER
             ): cv.boolean,
+            vol.Optional(CONF_ARMING_STATES, default=SUPPORTED_ARMING_STATES): vol.All(
+                cv.ensure_list, [vol.In(SUPPORTED_ARMING_STATES)]
+            ),
             vol.Optional(STATE_ALARM_ARMED_AWAY, default={}): _state_schema(
                 STATE_ALARM_ARMED_AWAY
             ),
@@ -188,14 +200,6 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
     """
 
     _attr_should_poll = False
-    _attr_supported_features = (
-        AlarmControlPanelEntityFeature.ARM_HOME
-        | AlarmControlPanelEntityFeature.ARM_AWAY
-        | AlarmControlPanelEntityFeature.ARM_NIGHT
-        | AlarmControlPanelEntityFeature.ARM_VACATION
-        | AlarmControlPanelEntityFeature.TRIGGER
-        | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
-    )
 
     def __init__(
         self,
@@ -232,6 +236,12 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         self._arming_time_by_state = {
             state: config[state][CONF_ARMING_TIME] for state in SUPPORTED_ARMING_STATES
         }
+
+        self._attr_supported_features = AlarmControlPanelEntityFeature.TRIGGER
+        for arming_state in config.get(CONF_ARMING_STATES, SUPPORTED_ARMING_STATES):
+            self._attr_supported_features |= SUPPORTED_ARMING_STATE_TO_FEATURE[
+                arming_state
+            ]
 
     @property
     def state(self) -> str:

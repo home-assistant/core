@@ -107,7 +107,7 @@ RtmAPI==0.7.2
 SQLAlchemy==2.0.30
 
 # homeassistant.components.tami4
-Tami4EdgeAPI==2.1
+Tami4EdgeAPI==3.0
 
 # homeassistant.components.onvif
 WSDiscovery==2.0.0
@@ -329,7 +329,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==10.0.0
+aioshelly==10.0.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -365,7 +365,7 @@ aiovlc==0.3.2
 aiovodafone==0.6.0
 
 # homeassistant.components.waqi
-aiowaqi==3.0.1
+aiowaqi==3.1.0
 
 # homeassistant.components.watttime
 aiowatttime==0.1.1
@@ -803,7 +803,7 @@ google-api-python-client==2.71.0
 google-cloud-pubsub==2.13.11
 
 # homeassistant.components.google_generative_ai_conversation
-google-generativeai==0.5.4
+google-generativeai==0.6.0
 
 # homeassistant.components.nest
 google-nest-sdm==4.0.4
@@ -939,7 +939,7 @@ ifaddr==0.2.0
 imgw_pib==1.0.4
 
 # homeassistant.components.incomfort
-incomfort-client==0.5.0
+incomfort-client==0.6.1
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
@@ -1086,7 +1086,7 @@ moat-ble==0.1.1
 moehlenhoff-alpha2==1.3.0
 
 # homeassistant.components.monzo
-monzopy==1.2.0
+monzopy==1.3.0
 
 # homeassistant.components.mopeka
 mopeka-iot-ble==0.7.0
@@ -1207,7 +1207,7 @@ openhomedevice==2.2.0
 openwebifpy==4.2.4
 
 # homeassistant.components.opower
-opower==0.4.6
+opower==0.4.7
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1317,7 +1317,7 @@ py-nightscout==1.2.2
 py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.4.2
+py-synologydsm-api==2.4.4
 
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
@@ -1780,6 +1780,9 @@ python-matter-server==6.1.0
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
 
+# homeassistant.components.mpd
+python-mpd2==3.1.1
+
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
 
@@ -2018,7 +2021,7 @@ snapcast==2.3.6
 soco==0.30.4
 
 # homeassistant.components.solax
-solax==3.1.0
+solax==3.1.1
 
 # homeassistant.components.somfy_mylink
 somfy-mylink-synergy==1.0.6
@@ -2078,7 +2081,7 @@ subarulink==0.7.11
 sunwatcher==0.2.1
 
 # homeassistant.components.sunweg
-sunweg==2.1.1
+sunweg==3.0.1
 
 # homeassistant.components.surepetcare
 surepy==0.9.0
@@ -2285,7 +2288,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==2.4.2
 
 # homeassistant.components.august
-yalexs==3.1.0
+yalexs==5.2.0
 
 # homeassistant.components.yeelight
 yeelight==0.7.14
