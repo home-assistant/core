@@ -59,9 +59,13 @@ class ElgatoLight(ElgatoEntity, LightEntity):
         self._attr_unique_id = coordinator.data.info.serial_number
 
         # Elgato Light supporting color, have a different temperature range
-        if self.coordinator.data.info.product_name in (
-            "Elgato Light Strip",
-            "Elgato Light Strip Pro",
+        if (
+            self.coordinator.data.info.product_name
+            in (
+                "Elgato Light Strip",
+                "Elgato Light Strip Pro",
+            )
+            or self.coordinator.data.settings.power_on_hue
         ):
             self._attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
             self._attr_min_mireds = 153
