@@ -339,7 +339,7 @@ async def test_browse_media_get_items_thumbnail_error(
     result = await source.async_browse_media(item)
 
     assert result
-    assert len(result.children) == 1
+    assert len(result.children) == 2
     item = result.children[0]
     assert isinstance(item, BrowseMedia)
     assert item.thumbnail is None
@@ -448,5 +448,10 @@ async def test_media_view(
     with patch.object(tempfile, "tempdir", tmp_path):
         result = await view.get(
             request, "mocked_syno_dsm_entry", "10_1298753/filename.jpg"
+        )
+        assert isinstance(result, web.Response)
+    with patch.object(tempfile, "tempdir", tmp_path):
+        result = await view.get(
+            request, "mocked_syno_dsm_entry", "10_1298753/filename.jpg_shared"
         )
         assert isinstance(result, web.Response)
