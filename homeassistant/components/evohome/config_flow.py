@@ -20,12 +20,7 @@ class RamsesConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle a flow initiated by configuration file."""
 
-        options = {}
+        scan_interval: timedelta = import_data.pop(CONF_SCAN_INTERVAL)
+        import_data[CONF_SCAN_INTERVAL] = int(scan_interval.total_seconds())
 
-        if CONF_SCAN_INTERVAL in import_data:
-            scan_interval: timedelta = import_data.pop(CONF_SCAN_INTERVAL)
-            options[CONF_SCAN_INTERVAL] = int(scan_interval.total_seconds())
-
-        return self.async_create_entry(
-            title="Evohome", data=import_data, options=options
-        )
+        return self.async_create_entry(title="Evohome", data=import_data)

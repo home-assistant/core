@@ -224,7 +224,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         _LOGGER,
         name=f"{DOMAIN}_coordinator",
-        update_interval=timedelta(seconds=entry.options[CONF_SCAN_INTERVAL]),
+        update_interval=timedelta(seconds=entry.data[CONF_SCAN_INTERVAL]),
         update_method=broker.async_update,
     )
     # without a listener, _schedule_refresh() won't be invoked by _async_refresh()
