@@ -121,11 +121,11 @@ SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Create a (EMEA/EU-based) Honeywell TCC system."""
 
-    async def load_auth_tokens(store: Store) -> tuple[dict, dict | None]:
+    async def load_auth_tokens(store: Store, username: str) -> tuple[dict, dict | None]:
         app_storage = await store.async_load()
         tokens = dict(app_storage or {})
 
-        if tokens.pop(CONF_USERNAME, None) != config[DOMAIN][CONF_USERNAME]:
+        if tokens.pop(CONF_USERNAME, None) != username:
             # any tokens won't be valid, and store might be corrupt
             await store.async_save({})
             return ({}, {})
@@ -140,7 +140,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return (tokens, user_data)
 
     store = Store[dict[str, Any]](hass, STORAGE_VER, STORAGE_KEY)
-    tokens, user_data = await load_auth_tokens(store)
+    tokens, user_data = await load_auth_tokens(store, config[DOMAIN][CONF_USERNAME])
 
     client_v2 = evo.EvohomeClient(
         config[DOMAIN][CONF_USERNAME],
