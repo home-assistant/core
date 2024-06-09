@@ -5,9 +5,13 @@ from unittest.mock import patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
+from homeassistant.components.bmw_connected_drive.sensor import SENSOR_TYPES
+from homeassistant.components.sensor.const import SensorDeviceClass
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.translation import async_get_translations
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM as METRIC,
     US_CUSTOMARY_SYSTEM as IMPERIAL,
@@ -77,3 +81,29 @@ async def test_unit_conversion(
     entity = hass.states.get(entity_id)
     assert entity.state == value
     assert entity.attributes.get("unit_of_measurement") == unit_of_measurement
+
+
+@pytest.mark.usefixtures("bmw_fixture")
+async def test_entity_option_translations(
+    hass: HomeAssistant,
+) -> None:
+    """Ensure all enum sensor values are translated."""
+
+    # Setup component to load translations
+    assert await setup_mocked_integration(hass)
+
+    prefix = f"component.{BMW_DOMAIN}.entity.{Platform.SENSOR.value}"
+
+    translations = await async_get_translations(hass, "en", "entity", [BMW_DOMAIN])
+    translation_states = {
+        k for k in translations if k.startswith(prefix) and ".state." in k
+    }
+
+    sensor_options = {
+        f"{prefix}.{entity_description.translation_key}.state.{option}"
+        for entity_description in SENSOR_TYPES
+        if entity_description.device_class == SensorDeviceClass.ENUM
+        for option in entity_description.options
+    }
+
+    assert sensor_options == translation_states

@@ -154,6 +154,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "recorder_mock": "Recorder",
     "request": "pytest.FixtureRequest",
     "requests_mock": "Mocker",
+    "service_calls": "list[ServiceCall]",
     "snapshot": "SnapshotAssertion",
     "socket_enabled": "None",
     "stub_blueprint_populate": "None",
