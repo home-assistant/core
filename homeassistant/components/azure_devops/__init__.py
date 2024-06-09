@@ -34,7 +34,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.data.get(CONF_PAT) is not None:
         await coordinator.authorize(entry.data[CONF_PAT])
 
-    await coordinator.update_project(entry.data[CONF_PROJECT])
+    # Set the project for the coordinator
+    coordinator.project = await coordinator.get_project(entry.data[CONF_PROJECT])
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()

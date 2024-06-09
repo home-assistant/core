@@ -42,6 +42,10 @@ def azure_exception_none_handler(func: Callable) -> Callable:
 class AzureDevOpsDataUpdateCoordinator(DataUpdateCoordinator[AzureDevOpsData]):
     """Class to manage and fetch Azure DevOps data."""
 
+    client: DevOpsClient
+    organization: str
+    project: DevOpsProject
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -61,7 +65,6 @@ class AzureDevOpsDataUpdateCoordinator(DataUpdateCoordinator[AzureDevOpsData]):
 
         self.client = DevOpsClient(session=async_get_clientsession(hass))
         self.organization = entry.data[CONF_ORG]
-        self.project: DevOpsProject | None = None
 
     @azure_exception_none_handler
     async def authorize(
@@ -82,20 +85,15 @@ class AzureDevOpsDataUpdateCoordinator(DataUpdateCoordinator[AzureDevOpsData]):
         return True
 
     @azure_exception_none_handler
-    async def update_project(
+    async def get_project(
         self,
         project: str,
     ) -> DevOpsProject | None:
         """Get the project."""
-        try:
-            self.project = await self.client.get_project(
-                self.organization,
-                project,
-            )
-        except aiohttp.ClientError as exception:
-            raise UpdateFailed from exception
-
-        return self.project
+        return await self.client.get_project(
+            self.organization,
+            project,
+        )
 
     @azure_exception_none_handler
     async def _get_builds(self, project_name: str) -> list[DevOpsBuild] | None:
@@ -108,10 +106,6 @@ class AzureDevOpsDataUpdateCoordinator(DataUpdateCoordinator[AzureDevOpsData]):
 
     async def _async_update_data(self) -> AzureDevOpsData:
         """Fetch data from Azure DevOps."""
-        # We should already have the project from setup
-        if self.project is None:
-            raise UpdateFailed("No project found")
-
         # Get the builds from the project
         builds = await self._get_builds(self.project.name)
 
