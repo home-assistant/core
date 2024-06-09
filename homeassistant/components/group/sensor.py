@@ -359,7 +359,9 @@ class SensorGroup(GroupEntity, SensorEntity):
                 self.calculate_attributes_later = async_track_state_change_event(
                     self.hass, self._entity_ids, self.calculate_state_attributes
                 )
-        await self.calculate_state_attributes()
+                break
+        if not self.calculate_attributes_later:
+            await self.calculate_state_attributes()
         await super().async_added_to_hass()
 
     async def calculate_state_attributes(
