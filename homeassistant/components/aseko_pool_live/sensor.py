@@ -26,13 +26,11 @@ GRAMS_PER_HOUR = "g/hour"
 UNIT_SENSORS = {
     "airTemp": SensorEntityDescription(
         key="air_temperature",
-        translation_key="air_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     "waterTemp": SensorEntityDescription(
         key="water_temperature",
-        translation_key="water_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
@@ -42,31 +40,26 @@ UNIT_SENSORS = {
     ),
     "rx": SensorEntityDescription(
         key="redox",
-        translation_key="redox",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
         icon="mdi:test-tube",
     ),
     "electrodePower": SensorEntityDescription(
         key="electrolyzer",
-        translation_key="electrolyzer",
         native_unit_of_measurement=GRAMS_PER_HOUR,
         icon="mdi:lightning-bolt",
     ),
     "clf": SensorEntityDescription(
         key="free_chlorine",
-        translation_key="free_chlorine",
         native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_LITER,
         icon="mdi:test-tube",
     ),
     "salinity": SensorEntityDescription(
         key="salinity",
-        translation_key="salinity",
         native_unit_of_measurement=CONCENTRATION_KILOGRAMS_PER_CUBIC_METER,
     ),
     "waterLevel": SensorEntityDescription(
         key="water_level",
-        translation_key="water_level",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.CENTIMETERS,
         icon="mdi:waves",
@@ -106,6 +99,7 @@ class VariableSensorEntity(AsekoEntity, SensorEntity):
         entity_description = UNIT_SENSORS.get(self._variable.type)
         if entity_description is not None:
             self.entity_description = entity_description
+            self.translation_key = entity_description.key
         else:
             self._attr_name = self._variable.name
             self._attr_native_unit_of_measurement = self._variable.unit
