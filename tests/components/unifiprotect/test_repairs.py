@@ -6,7 +6,7 @@ from copy import copy, deepcopy
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock
 
-from pyunifiprotect.data import Camera, CloudAccount, ModelType, Version
+from uiprotect.data import Camera, CloudAccount, ModelType, Version
 
 from homeassistant.components.repairs.issue_handler import (
     async_process_repairs_platforms,
