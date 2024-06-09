@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-import logging
 from typing import Any
 
 from reolink_aio.exceptions import ReolinkError
@@ -30,8 +29,6 @@ from .entity import (
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
-
-LOGGER = logging.getLogger(__name__)
 
 POLL_AFTER_INSTALL = 120
 
