@@ -220,6 +220,7 @@ def cleanup_disconnected_cams(
         # clean device registry and associated entities
         device_reg.async_remove_device(device.id)
 
+
 def migrate_entity_ids(
     hass: HomeAssistant, config_entry_id: str, host: ReolinkHost
 ) -> None:
@@ -229,4 +230,6 @@ def migrate_entity_ids(
     for entity in entities:
         # Can be remove in HA 2025.1.0
         if entity.domain == "update" and entity.unique_id == host.unique_id:
-            entity_reg.async_update_entity(entity.entity_id, new_unique_id=f"{host.unique_id}_firmware")
+            entity_reg.async_update_entity(
+                entity.entity_id, new_unique_id=f"{host.unique_id}_firmware"
+            )
