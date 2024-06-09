@@ -373,7 +373,6 @@ async def test_lock_throws_exception_on_unknown_status_code(
     data = {ATTR_ENTITY_ID: "lock.online_with_doorsense_name"}
     with pytest.raises(ClientResponseError):
         await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
-        await hass.async_block_till_done()
 
 
 async def test_one_lock_unknown_state(hass: HomeAssistant) -> None:
