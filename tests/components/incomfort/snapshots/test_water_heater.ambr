@@ -30,7 +30,7 @@
     'platform': 'incomfort',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'boiler',
     'unique_id': 'c0ffeec0ffee',
     'unit_of_measurement': None,
   })
