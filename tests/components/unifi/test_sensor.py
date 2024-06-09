@@ -355,7 +355,7 @@ async def test_no_clients(hass: HomeAssistant) -> None:
 )
 async def test_bandwidth_sensors(
     hass: HomeAssistant,
-    mock_unifi_websocket,
+    mock_websocket_message,
     config_entry_options: MappingProxyType[str, Any],
     config_entry_setup: ConfigEntry,
     client_payload: list[dict[str, Any]],
@@ -391,7 +391,7 @@ async def test_bandwidth_sensors(
     wireless_client["rx_bytes-r"] = 3456000000
     wireless_client["tx_bytes-r"] = 7891000000
 
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=wireless_client)
+    mock_websocket_message(message=MessageKey.CLIENT, data=wireless_client)
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.wireless_client_rx").state == "3456.0"
@@ -402,7 +402,7 @@ async def test_bandwidth_sensors(
     new_time = dt_util.utcnow()
     wireless_client["last_seen"] = dt_util.as_timestamp(new_time)
 
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=wireless_client)
+    mock_websocket_message(message=MessageKey.CLIENT, data=wireless_client)
     await hass.async_block_till_done()
 
     with freeze_time(new_time):
@@ -490,7 +490,7 @@ async def test_uptime_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-    mock_unifi_websocket,
+    mock_websocket_message,
     config_entry_options: MappingProxyType[str, Any],
     config_entry_factory: Callable[[], ConfigEntry],
     client_payload: list[dict[str, Any]],
@@ -516,7 +516,7 @@ async def test_uptime_sensors(
     uptime_client["uptime"] = event_uptime
     now = datetime(2021, 1, 1, 1, 1, 4, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.now", return_value=now):
-        mock_unifi_websocket(message=MessageKey.CLIENT, data=uptime_client)
+        mock_websocket_message(message=MessageKey.CLIENT, data=uptime_client)
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.client1_uptime").state == "2021-01-01T01:00:00+00:00"
@@ -526,7 +526,7 @@ async def test_uptime_sensors(
     uptime_client["uptime"] = new_uptime
     now = datetime(2021, 2, 1, 1, 1, 0, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.now", return_value=now):
-        mock_unifi_websocket(message=MessageKey.CLIENT, data=uptime_client)
+        mock_websocket_message(message=MessageKey.CLIENT, data=uptime_client)
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.client1_uptime").state == "2021-02-01T01:00:00+00:00"
@@ -583,7 +583,7 @@ async def test_uptime_sensors(
 @pytest.mark.usefixtures("config_entry_setup")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_remove_sensors(
-    hass: HomeAssistant, mock_unifi_websocket, client_payload: list[dict[str, Any]]
+    hass: HomeAssistant, mock_websocket_message, client_payload: list[dict[str, Any]]
 ) -> None:
     """Verify removing of clients work as expected."""
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
@@ -595,7 +595,7 @@ async def test_remove_sensors(
     assert hass.states.get("sensor.wireless_client_uptime")
 
     # Remove wired client
-    mock_unifi_websocket(message=MessageKey.CLIENT_REMOVED, data=client_payload[0])
+    mock_websocket_message(message=MessageKey.CLIENT_REMOVED, data=client_payload[0])
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
@@ -612,8 +612,8 @@ async def test_remove_sensors(
 async def test_poe_port_switches(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_unifi_websocket,
-    websocket_mock,
+    mock_websocket_message,
+    mock_websocket_state,
 ) -> None:
     """Test the update_items function with some clients."""
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
@@ -642,34 +642,34 @@ async def test_poe_port_switches(
     # Update state object
     device_1 = deepcopy(DEVICE_1)
     device_1["port_table"][0]["poe_power"] = "5.12"
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.mock_name_port_1_poe_power").state == "5.12"
 
     # PoE is disabled
     device_1 = deepcopy(DEVICE_1)
     device_1["port_table"][0]["poe_mode"] = "off"
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.mock_name_port_1_poe_power").state == "0"
 
     # Availability signalling
 
     # Controller disconnects
-    await websocket_mock.disconnect()
+    await mock_websocket_state.disconnect()
     assert (
         hass.states.get("sensor.mock_name_port_1_poe_power").state == STATE_UNAVAILABLE
     )
 
     # Controller reconnects
-    await websocket_mock.reconnect()
+    await mock_websocket_state.reconnect()
     assert (
         hass.states.get("sensor.mock_name_port_1_poe_power").state != STATE_UNAVAILABLE
     )
 
     # Device gets disabled
     device_1["disabled"] = True
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
     assert (
         hass.states.get("sensor.mock_name_port_1_poe_power").state == STATE_UNAVAILABLE
@@ -677,7 +677,7 @@ async def test_poe_port_switches(
 
     # Device gets re-enabled
     device_1["disabled"] = False
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.mock_name_port_1_poe_power")
 
@@ -686,8 +686,8 @@ async def test_poe_port_switches(
 async def test_wlan_client_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_unifi_websocket,
-    websocket_mock,
+    mock_websocket_message,
+    mock_websocket_state,
     config_entry_factory: Callable[[], ConfigEntry],
     client_payload: list[dict[str, Any]],
 ) -> None:
@@ -730,10 +730,10 @@ async def test_wlan_client_sensors(
     # Verify state update - increasing number
     wireless_client_1 = client_payload[0]
     wireless_client_1["essid"] = "SSID 1"
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=wireless_client_1)
+    mock_websocket_message(message=MessageKey.CLIENT, data=wireless_client_1)
     wireless_client_2 = client_payload[1]
     wireless_client_2["essid"] = "SSID 1"
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=wireless_client_2)
+    mock_websocket_message(message=MessageKey.CLIENT, data=wireless_client_2)
     await hass.async_block_till_done()
 
     ssid_1 = hass.states.get("sensor.ssid_1")
@@ -748,7 +748,7 @@ async def test_wlan_client_sensors(
     # Verify state update - decreasing number
 
     wireless_client_1["essid"] = "SSID"
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=wireless_client_1)
+    mock_websocket_message(message=MessageKey.CLIENT, data=wireless_client_1)
 
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
@@ -759,7 +759,7 @@ async def test_wlan_client_sensors(
     # Verify state update - decreasing number
 
     wireless_client_2["last_seen"] = 0
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=wireless_client_2)
+    mock_websocket_message(message=MessageKey.CLIENT, data=wireless_client_2)
 
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
@@ -770,23 +770,23 @@ async def test_wlan_client_sensors(
     # Availability signalling
 
     # Controller disconnects
-    await websocket_mock.disconnect()
+    await mock_websocket_state.disconnect()
     assert hass.states.get("sensor.ssid_1").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    await websocket_mock.reconnect()
+    await mock_websocket_state.reconnect()
     assert hass.states.get("sensor.ssid_1").state == "0"
 
     # WLAN gets disabled
     wlan_1 = deepcopy(WLAN)
     wlan_1["enabled"] = False
-    mock_unifi_websocket(message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
+    mock_websocket_message(message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.ssid_1").state == STATE_UNAVAILABLE
 
     # WLAN gets re-enabled
     wlan_1["enabled"] = True
-    mock_unifi_websocket(message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
+    mock_websocket_message(message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.ssid_1").state == "0"
 
@@ -828,7 +828,7 @@ async def test_wlan_client_sensors(
 async def test_outlet_power_readings(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_unifi_websocket,
+    mock_websocket_message,
     device_payload: list[dict[str, Any]],
     entity_id: str,
     expected_unique_id: str,
@@ -852,7 +852,7 @@ async def test_outlet_power_readings(
         updated_device_data = deepcopy(device_payload[0])
         updated_device_data.update(changed_data)
 
-        mock_unifi_websocket(message=MessageKey.DEVICE, data=updated_device_data)
+        mock_websocket_message(message=MessageKey.DEVICE, data=updated_device_data)
         await hass.async_block_till_done()
 
         sensor_data = hass.states.get(f"sensor.{entity_id}")
@@ -887,7 +887,7 @@ async def test_outlet_power_readings(
 async def test_device_uptime(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_unifi_websocket,
+    mock_websocket_message,
     config_entry_factory: Callable[[], ConfigEntry],
     device_payload: list[dict[str, Any]],
 ) -> None:
@@ -909,7 +909,7 @@ async def test_device_uptime(
     device["uptime"] = 64
     now = datetime(2021, 1, 1, 1, 1, 4, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.now", return_value=now):
-        mock_unifi_websocket(message=MessageKey.DEVICE, data=device)
+        mock_websocket_message(message=MessageKey.DEVICE, data=device)
 
     assert hass.states.get("sensor.device_uptime").state == "2021-01-01T01:00:00+00:00"
 
@@ -919,7 +919,7 @@ async def test_device_uptime(
     device["uptime"] = 60
     now = datetime(2021, 2, 1, 1, 1, 0, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.now", return_value=now):
-        mock_unifi_websocket(message=MessageKey.DEVICE, data=device)
+        mock_websocket_message(message=MessageKey.DEVICE, data=device)
 
     assert hass.states.get("sensor.device_uptime").state == "2021-02-01T01:00:00+00:00"
 
@@ -955,7 +955,7 @@ async def test_device_uptime(
 async def test_device_temperature(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_unifi_websocket,
+    mock_websocket_message,
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that temperature sensors are working as expected."""
@@ -969,7 +969,7 @@ async def test_device_temperature(
     # Verify new event change temperature
     device = device_payload[0]
     device["general_temperature"] = 60
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=device)
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
     assert hass.states.get("sensor.device_temperature").state == "60"
 
 
@@ -1004,7 +1004,7 @@ async def test_device_temperature(
 async def test_device_state(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_unifi_websocket,
+    mock_websocket_message,
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that state sensors are working as expected."""
@@ -1017,7 +1017,7 @@ async def test_device_state(
     device = device_payload[0]
     for i in list(map(int, DeviceState)):
         device["state"] = i
-        mock_unifi_websocket(message=MessageKey.DEVICE, data=device)
+        mock_websocket_message(message=MessageKey.DEVICE, data=device)
         assert hass.states.get("sensor.device_state").state == DEVICE_STATES[i]
 
 
@@ -1041,7 +1041,7 @@ async def test_device_state(
 async def test_device_system_stats(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_unifi_websocket,
+    mock_websocket_message,
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that device stats sensors are working as expected."""
@@ -1065,7 +1065,7 @@ async def test_device_system_stats(
     # Verify new event change system-stats
     device = device_payload[0]
     device["system-stats"] = {"cpu": 7.7, "mem": 33.3, "uptime": 7316}
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=device)
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
 
     assert hass.states.get("sensor.device_cpu_utilization").state == "7.7"
     assert hass.states.get("sensor.device_memory_utilization").state == "33.3"
@@ -1138,7 +1138,7 @@ async def test_device_system_stats(
 async def test_bandwidth_port_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_unifi_websocket,
+    mock_websocket_message,
     config_entry_setup: ConfigEntry,
     config_entry_options: MappingProxyType[str, Any],
     device_payload,
@@ -1206,7 +1206,7 @@ async def test_bandwidth_port_sensors(
     device_1["port_table"][0]["rx_bytes-r"] = 3456000000
     device_1["port_table"][0]["tx_bytes-r"] = 7891000000
 
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.mock_name_port_1_rx").state == "27648.00000"
