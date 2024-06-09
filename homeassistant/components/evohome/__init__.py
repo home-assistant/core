@@ -159,7 +159,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     assert isinstance(client_v2.installation_info, list)  # mypy
 
-    loc_idx = config[DOMAIN][CONF_LOCATION_IDX]
+    loc_idx: int = config[DOMAIN][CONF_LOCATION_IDX]
     try:
         loc_config = client_v2.installation_info[loc_idx]
     except IndexError:
