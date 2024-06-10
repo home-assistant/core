@@ -966,7 +966,6 @@ async def test_statistic_during_period_partial_overlap(
     start_time = start.replace(hour=1, minute=40)
     end_time = start.replace(hour=3, minute=12)
     expect = 60
-    # Pre-115291 says "-65"
     await assert_change_during_fixed(client, start_time, end_time, expect)
 
     # 90 minutes of growth in window overlapping LTS+STS/STS-only (4:41 - 6:11)
@@ -979,14 +978,12 @@ async def test_statistic_during_period_partial_overlap(
     start_time = start.replace(hour=2, minute=1)
     end_time = start_time + timedelta(minutes=240)
     expect = 185  # 60 from LTS (3:00-3:59), 125 from STS (25 intervals) (4:00-6:01)
-    # Pre-115291 says "120", which is too little
     await assert_change_during_fixed(client, start_time, end_time, expect)
 
     # 4 hours of growth in overlapping LTS-only/LTS+STS (1:31-5:31)
     start_time = start.replace(hour=1, minute=31)
     end_time = start_time + timedelta(minutes=240)
     expect = 215  # 120 from LTS (2:00-3:59), 95 from STS (19 intervals) 4:00-5:31
-    # Pre-115291 says "90", which is only the STS window (4:00-5:31) ?
     await assert_change_during_fixed(client, start_time, end_time, expect)
 
     # 5 hours of growth, start time only (1:31-end)
@@ -994,7 +991,6 @@ async def test_statistic_during_period_partial_overlap(
     end_time = None
     # will be actually 2:00 - end
     expect = 4 * 60 + 30
-    # Pre-115291 says "115" (1 hour and 55 minutes)? which I do not understand
     await assert_change_during_fixed(client, start_time, end_time, expect)
 
     # 5 hours of growth, end_time_only (0:00-5:00)
