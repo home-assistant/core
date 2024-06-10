@@ -1,6 +1,7 @@
 """The test for the bayesian sensor platform."""
 
 import json
+from logging import WARNING
 from unittest.mock import patch
 
 import pytest
@@ -810,7 +811,8 @@ async def test_bad_multi_numeric(
         ]
         is not None
     )
-
+    caplog.clear()
+    caplog.set_level(WARNING)
     hass.states.async_set("sensor.signal_strength", 6)
     await hass.async_block_till_done()
 
@@ -821,6 +823,7 @@ async def test_bad_multi_numeric(
     # and no probability updates should happen
 
     assert "bins_out" in caplog.text
+    assert "more than one range" in caplog.text
 
 
 async def test_bad_numeric(
@@ -859,7 +862,7 @@ async def test_bad_numeric(
     hass.states.async_set("sensor.temp", 18)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.temp")
+    state = hass.states.get("binary_sensor.goldilocks_zone")
     await hass.async_block_till_done()
     assert state.attributes.get("occurred_observation_entities") == []
     assert abs(state.attributes.get("probability") - 0.4) == 0
