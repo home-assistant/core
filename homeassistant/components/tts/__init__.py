@@ -1114,7 +1114,7 @@ def websocket_get_engine(
     if not provider:
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_FOUND,
+            websocket_api.ERR_NOT_FOUND,
             f"tts engine {engine_id} not found",
         )
         return
@@ -1149,7 +1149,7 @@ def websocket_list_engine_voices(
     if not engine_instance:
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_FOUND,
+            websocket_api.ERR_NOT_FOUND,
             f"tts engine {engine_id} not found",
         )
         return
