@@ -507,9 +507,8 @@ async def test_abort(hass: HomeAssistant, client) -> None:
     }
 
 
-async def test_create_account(
-    hass: HomeAssistant, client, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_create_account(hass: HomeAssistant, client) -> None:
     """Test a flow that creates an account."""
     mock_platform(hass, "test.config_flow", None)
 
@@ -566,9 +565,8 @@ async def test_create_account(
     }
 
 
-async def test_two_step_flow(
-    hass: HomeAssistant, client, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_two_step_flow(hass: HomeAssistant, client) -> None:
     """Test we can finish a two step flow."""
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
@@ -2227,9 +2225,8 @@ async def test_flow_with_multiple_schema_errors_base(
         }
 
 
-async def test_supports_reconfigure(
-    hass: HomeAssistant, client, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_supports_reconfigure(hass: HomeAssistant, client) -> None:
     """Test a flow that support reconfigure step."""
     mock_platform(hass, "test.config_flow", None)
 
@@ -2317,8 +2314,9 @@ async def test_supports_reconfigure(
     }
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_does_not_support_reconfigure(
-    hass: HomeAssistant, client: TestClient, enable_custom_integrations: None
+    hass: HomeAssistant, client: TestClient
 ) -> None:
     """Test a flow that does not support reconfigure step."""
     mock_platform(hass, "test.config_flow", None)

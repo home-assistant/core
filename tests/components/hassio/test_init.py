@@ -24,7 +24,7 @@ from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import async_get
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -52,7 +52,7 @@ def os_info(extra_os_info):
 
 
 @pytest.fixture(autouse=True)
-def mock_all(aioclient_mock, request, os_info):
+def mock_all(aioclient_mock: AiohttpClientMocker, os_info) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
@@ -773,9 +773,10 @@ async def test_migration_off_hassio(hass: HomeAssistant) -> None:
     assert hass.config_entries.async_entries(DOMAIN) == []
 
 
-async def test_device_registry_calls(hass: HomeAssistant) -> None:
+async def test_device_registry_calls(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test device registry entries for hassio."""
-    dev_reg = async_get(hass)
     supervisor_mock_data = {
         "version": "1.0.0",
         "version_latest": "1.0.0",
@@ -829,7 +830,7 @@ async def test_device_registry_calls(hass: HomeAssistant) -> None:
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert len(dev_reg.devices) == 6
+        assert len(device_registry.devices) == 6
 
     supervisor_mock_data = {
         "version": "1.0.0",
@@ -863,11 +864,11 @@ async def test_device_registry_calls(hass: HomeAssistant) -> None:
     ):
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=1))
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert len(dev_reg.devices) == 5
+        assert len(device_registry.devices) == 5
 
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=2))
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert len(dev_reg.devices) == 5
+        assert len(device_registry.devices) == 5
 
     supervisor_mock_data = {
         "version": "1.0.0",
@@ -921,7 +922,7 @@ async def test_device_registry_calls(hass: HomeAssistant) -> None:
     ):
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=3))
         await hass.async_block_till_done()
-        assert len(dev_reg.devices) == 5
+        assert len(device_registry.devices) == 5
 
 
 async def test_coordinator_updates(
@@ -999,10 +1000,10 @@ async def test_coordinator_updates(
         assert "Error on Supervisor API: Unknown" in caplog.text
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_coordinator_updates_stats_entities_enabled(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test coordinator updates with stats entities enabled."""
     await async_setup_component(hass, "homeassistant", {})

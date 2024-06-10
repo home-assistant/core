@@ -1,10 +1,10 @@
 """Tests for Lovelace system health."""
 
-from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.lovelace import dashboard
 from homeassistant.core import HomeAssistant
@@ -14,7 +14,7 @@ from tests.common import get_system_health_info
 
 
 @pytest.fixture(autouse=True)
-def mock_onboarding_done() -> Generator[MagicMock, None, None]:
+def mock_onboarding_done() -> Generator[MagicMock]:
     """Mock that Home Assistant is currently onboarding.
 
     Enabled to prevent creating default dashboards during test execution.

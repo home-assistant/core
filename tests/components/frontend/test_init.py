@@ -21,7 +21,7 @@ from homeassistant.components.frontend import (
     async_register_built_in_panel,
     async_remove_panel,
 )
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
@@ -405,9 +405,8 @@ async def test_missing_themes(hass: HomeAssistant, ws_client) -> None:
     assert msg["result"]["themes"] == {}
 
 
-async def test_extra_js(
-    hass: HomeAssistant, mock_http_client_with_extra_js, mock_onboarded
-):
+@pytest.mark.usefixtures("mock_onboarded")
+async def test_extra_js(hass: HomeAssistant, mock_http_client_with_extra_js) -> None:
     """Test that extra javascript is loaded."""
     resp = await mock_http_client_with_extra_js.get("")
     assert resp.status == 200

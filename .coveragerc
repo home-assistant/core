@@ -62,7 +62,6 @@ omit =
     homeassistant/components/aladdin_connect/api.py
     homeassistant/components/aladdin_connect/application_credentials.py
     homeassistant/components/aladdin_connect/cover.py
-    homeassistant/components/aladdin_connect/model.py
     homeassistant/components/aladdin_connect/sensor.py
     homeassistant/components/alarmdecoder/__init__.py
     homeassistant/components/alarmdecoder/alarm_control_panel.py
@@ -90,6 +89,7 @@ omit =
     homeassistant/components/aprilaire/entity.py
     homeassistant/components/apsystems/__init__.py
     homeassistant/components/apsystems/coordinator.py
+    homeassistant/components/apsystems/entity.py
     homeassistant/components/apsystems/sensor.py
     homeassistant/components/aqualogic/*
     homeassistant/components/aquostv/media_player.py
@@ -149,12 +149,7 @@ omit =
     homeassistant/components/bloomsky/*
     homeassistant/components/bluesound/*
     homeassistant/components/bluetooth_tracker/*
-    homeassistant/components/bmw_connected_drive/__init__.py
-    homeassistant/components/bmw_connected_drive/binary_sensor.py
-    homeassistant/components/bmw_connected_drive/coordinator.py
-    homeassistant/components/bmw_connected_drive/lock.py
     homeassistant/components/bmw_connected_drive/notify.py
-    homeassistant/components/bmw_connected_drive/sensor.py
     homeassistant/components/bosch_shc/__init__.py
     homeassistant/components/bosch_shc/binary_sensor.py
     homeassistant/components/bosch_shc/cover.py
@@ -595,7 +590,9 @@ omit =
     homeassistant/components/ifttt/alarm_control_panel.py
     homeassistant/components/iglo/light.py
     homeassistant/components/ihc/*
-    homeassistant/components/incomfort/*
+    homeassistant/components/incomfort/__init__.py
+    homeassistant/components/incomfort/climate.py
+    homeassistant/components/incomfort/water_heater.py
     homeassistant/components/insteon/binary_sensor.py
     homeassistant/components/insteon/climate.py
     homeassistant/components/insteon/cover.py
@@ -625,6 +622,7 @@ omit =
     homeassistant/components/irish_rail_transport/sensor.py
     homeassistant/components/iss/__init__.py
     homeassistant/components/iss/sensor.py
+    homeassistant/components/ista_ecotrend/coordinator.py
     homeassistant/components/isy994/__init__.py
     homeassistant/components/isy994/binary_sensor.py
     homeassistant/components/isy994/button.py
@@ -1558,6 +1556,7 @@ omit =
     homeassistant/components/verisure/sensor.py
     homeassistant/components/verisure/switch.py
     homeassistant/components/versasense/*
+    homeassistant/components/vesync/__init__.py
     homeassistant/components/vesync/fan.py
     homeassistant/components/vesync/light.py
     homeassistant/components/vesync/sensor.py

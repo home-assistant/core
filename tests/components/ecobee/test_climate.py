@@ -18,8 +18,8 @@ from homeassistant.components.ecobee.climate import (
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_OFF
 from homeassistant.core import HomeAssistant
 
-from tests.components.ecobee import GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
-from tests.components.ecobee.common import setup_platform
+from . import GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
+from .common import setup_platform
 
 ENTITY_ID = "climate.ecobee"
 

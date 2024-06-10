@@ -1855,7 +1855,6 @@ async def test_cancellation_is_not_blocked(
 
     with pytest.raises(asyncio.CancelledError):
         assert await platform.async_setup_entry(config_entry)
-        await hass.async_block_till_done()
 
     full_name = f"{config_entry.domain}.{platform.domain}"
     assert full_name not in hass.config.components

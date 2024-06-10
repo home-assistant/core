@@ -16,12 +16,13 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from .common import MockFan
+
 from tests.common import (
     help_test_all,
     import_and_test_deprecated_constant_enum,
     setup_test_component_platform,
 )
-from tests.components.fan.common import MockFan
 
 
 class BaseFan(FanEntity):
@@ -148,7 +149,7 @@ async def test_preset_mode_validation(
             },
             blocking=True,
         )
-        assert exc.value.translation_key == "not_valid_preset_mode"
+    assert exc.value.translation_key == "not_valid_preset_mode"
 
     with pytest.raises(NotValidPresetModeError) as exc:
         await test_fan._valid_preset_mode_or_raise("invalid")

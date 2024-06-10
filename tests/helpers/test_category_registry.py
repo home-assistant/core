@@ -340,7 +340,7 @@ async def test_load_categories(
 
 @pytest.mark.parametrize("load_registries", [False])
 async def test_loading_categories_from_storage(
-    hass: HomeAssistant, hass_storage: Any
+    hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test loading stored categories on start."""
     hass_storage[cr.STORAGE_KEY] = {
