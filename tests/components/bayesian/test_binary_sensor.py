@@ -20,8 +20,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.entity_registry import async_get as async_get_entities
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
@@ -57,7 +56,7 @@ async def test_load_values_when_added_to_hass(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "binary_sensor", config)
     await hass.async_block_till_done()
 
-    entity_registry = async_get_entities(hass)
+    entity_registry = er.async_get(hass)
     assert (
         entity_registry.entities["binary_sensor.test_binary"].unique_id
         == "bayesian-3b4c9563-5e84-4167-8fe7-8f507e796d72"

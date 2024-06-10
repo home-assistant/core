@@ -470,9 +470,10 @@ class BayesianBinarySensor(BinarySensorEntity):
                 ):
                     return True
                 return None
-            return False
         except ConditionError:
             return None
+        else:
+            return False
 
     def _process_state(
         self, entity_observation: Observation, multi: bool = False
@@ -491,10 +492,10 @@ class BayesianBinarySensor(BinarySensorEntity):
             result = condition.state(self.hass, entity, entity_observation.to_state)
             if multi and not result:
                 return None
-            return result
-
         except ConditionError:
             return None
+        else:
+            return result
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
