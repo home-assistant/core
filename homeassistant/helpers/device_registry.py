@@ -871,21 +871,55 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             new_values["config_entries"] = config_entries
             old_values["config_entries"] = old.config_entries
 
-        for attr_name, setvalue in (
-            ("connections", merge_connections),
-            ("identifiers", merge_identifiers),
-        ):
-            old_value = getattr(old, attr_name)
-            # If not undefined, check if `value` contains new items.
-            if setvalue is not UNDEFINED and not setvalue.issubset(old_value):
-                new_values[attr_name] = old_value | setvalue
-                old_values[attr_name] = old_value
+        if merge_connections is not UNDEFINED:
+            normalized_merge_connections = _normalize_connections(merge_connections)
+            # FIXME: If the connections match more than one device its random which one we get
+            if (
+                existing_device := self.async_get_device(
+                    connections=normalized_merge_connections
+                )
+            ) and existing_device.id != device_id:
+                raise HomeAssistantError(
+                    f"Connections {normalized_merge_connections} already registered to {existing_device}"
+                )
+
+            old_value = old.connections
+            if not normalized_merge_connections.issubset(old_value):
+                new_values["connections"] = old_value | normalized_merge_connections
+                old_values["connections"] = old_value
+
+        if merge_identifiers is not UNDEFINED:
+            # FIXME: If the identifiers match more than one device its random which one we get
+            if (
+                existing_device := self.async_get_device(identifiers=merge_identifiers)
+            ) and existing_device.id != device_id:
+                raise HomeAssistantError(
+                    f"Identifiers {merge_identifiers} already registered to {existing_device}"
+                )
+            old_value = old.identifiers
+            if not merge_identifiers.issubset(old_value):
+                new_values["identifiers"] = old_value | merge_identifiers
+                old_values["identifiers"] = old_value
 
         if new_connections is not UNDEFINED:
+            # FIXME: If the connections match more than one device its random which one we get
+            if (
+                existing_device := self.async_get_device(identifiers=new_connections)
+            ) and existing_device.id != device_id:
+                raise HomeAssistantError(
+                    f"Connections {new_connections} already registered to {existing_device}"
+                )
             new_values["connections"] = _normalize_connections(new_connections)
             old_values["connections"] = old.connections
 
         if new_identifiers is not UNDEFINED:
+            # FIXME: If the identifiers match more than one device its random which one we get
+            if (
+                existing_device := self.async_get_device(identifiers=new_identifiers)
+            ) and existing_device.id != device_id:
+                raise HomeAssistantError(
+                    f"Identifiers {new_identifiers} already registered to {existing_device}"
+                )
             new_values["identifiers"] = new_identifiers
             old_values["identifiers"] = old.identifiers
 

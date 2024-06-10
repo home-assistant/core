@@ -2628,3 +2628,77 @@ async def test_async_remove_device_thread_safety(
         await hass.async_add_executor_job(
             device_registry.async_remove_device, device.id
         )
+
+
+async def test_device_registry_collisions(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test identifiers and connection collisions in the device registry."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+
+    device1 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "none")},
+        identifiers={("bridgeid", "1234")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    device2 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "none")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    device3 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    device4 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "EE:EE:EE:EE:EE:EE")},
+        identifiers={("bridgeid", "dev4")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert device1.id == device2.id
+    assert device1.id == device3.id
+    assert device2.id == device3.id
+    assert device4.id != device1.id
+
+    with pytest.raises(HomeAssistantError):
+        device_registry.async_update_device(
+            device3.id,
+            merge_connections={
+                (dr.CONNECTION_NETWORK_MAC, "EE:EE:EE:EE:EE:EE"),
+                (dr.CONNECTION_NETWORK_MAC, "none"),
+            },
+        )
+
+    device = device_registry.async_get(device3.id)
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
+        (dr.CONNECTION_NETWORK_MAC, "ee:ee:ee:ee:ee:ee"),
+        (dr.CONNECTION_NETWORK_MAC, "none"),
+    }
+    assert device.id == device1.id
+
+    new_connections = device.connections.copy()
+    new_connections.discard((dr.CONNECTION_NETWORK_MAC, "none"))
+    assert new_connections == {
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
+        (dr.CONNECTION_NETWORK_MAC, "ee:ee:ee:ee:ee:ee"),
+    }
+    device_registry.async_update_device(device3.id, new_connections=new_connections)
+    device = device_registry.async_get(device3.id)
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
+        (dr.CONNECTION_NETWORK_MAC, "ee:ee:ee:ee:ee:ee"),
+    }
+
+    assert len(device_registry.devices) == 1
