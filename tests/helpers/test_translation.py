@@ -15,7 +15,7 @@ from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture(autouse=True)
-def _disable_translations_once(disable_translations_once):
+def _disable_translations_once(disable_translations_once: None) -> None:
     """Override loading translations once."""
 
 
@@ -426,10 +426,10 @@ async def test_caching(hass: HomeAssistant) -> None:
         side_effect=translation.build_resources,
     ) as mock_build_resources:
         load1 = await translation.async_get_translations(hass, "en", "entity_component")
-        assert len(mock_build_resources.mock_calls) == 5
+        assert len(mock_build_resources.mock_calls) == 6
 
         load2 = await translation.async_get_translations(hass, "en", "entity_component")
-        assert len(mock_build_resources.mock_calls) == 5
+        assert len(mock_build_resources.mock_calls) == 6
 
         assert load1 == load2
 

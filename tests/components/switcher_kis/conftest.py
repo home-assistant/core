@@ -1,13 +1,13 @@
 """Common fixtures and objects for the Switcher integration tests."""
 
-from collections.abc import Generator
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from typing_extensions import Generator
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.switcher_kis.async_setup_entry", return_value=True
@@ -16,7 +16,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_bridge(request):
+def mock_bridge(request: pytest.FixtureRequest) -> Generator[MagicMock]:
     """Return a mocked SwitcherBridge."""
     with (
         patch(

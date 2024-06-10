@@ -74,6 +74,7 @@ from .const import (
     EVENT_STATE_CHANGED,
     EVENT_STATE_REPORTED,
     MATCH_ALL,
+    MAX_EXPECTED_ENTITY_IDS,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_STATE_STATE,
     UnitOfLength,
@@ -177,7 +178,6 @@ _DEPRECATED_SOURCE_YAML = DeprecatedConstantEnum(ConfigSource.YAML, "2025.1")
 # How long to wait until things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
 
-MAX_EXPECTED_ENTITY_IDS = 16384
 
 EVENTS_EXCLUDED_FROM_MATCH_ALL = {
     EVENT_HOMEASSISTANT_CLOSE,
@@ -434,25 +434,17 @@ class HomeAssistant:
         self.import_executor = InterruptibleThreadPoolExecutor(
             max_workers=1, thread_name_prefix="ImportExecutor"
         )
-        self._loop_thread_id = getattr(
+        self.loop_thread_id = getattr(
             self.loop, "_thread_ident", getattr(self.loop, "_thread_id")
         )
 
     def verify_event_loop_thread(self, what: str) -> None:
         """Report and raise if we are not running in the event loop thread."""
-        if self._loop_thread_id != threading.get_ident():
+        if self.loop_thread_id != threading.get_ident():
+            # frame is a circular import, so we import it here
             from .helpers import frame  # pylint: disable=import-outside-toplevel
 
-            # frame is a circular import, so we import it here
-            frame.report(
-                f"calls {what} from a thread other than the event loop, "
-                "which may cause Home Assistant to crash or data to corrupt. "
-                "For more information, see "
-                "https://developers.home-assistant.io/docs/asyncio_thread_safety/"
-                f"#{what.replace('.', '')}",
-                error_if_core=True,
-                error_if_integration=True,
-            )
+            frame.report_non_thread_safe_operation(what)
 
     @property
     def _active_tasks(self) -> set[asyncio.Future[Any]]:
@@ -793,16 +785,10 @@ class HomeAssistant:
 
         target: target to call.
         """
-        # We turned on asyncio debug in April 2024 in the dev containers
-        # in the hope of catching some of the issues that have been
-        # reported. It will take a while to get all the issues fixed in
-        # custom components.
-        #
-        # In 2025.5 we should guard the `verify_event_loop_thread`
-        # check with a check for the `hass.config.debug` flag being set as
-        # long term we don't want to be checking this in production
-        # environments since it is a performance hit.
-        self.verify_event_loop_thread("hass.async_create_task")
+        if self.loop_thread_id != threading.get_ident():
+            from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+            frame.report_non_thread_safe_operation("hass.async_create_task")
         return self.async_create_task_internal(target, name, eager_start)
 
     @callback
@@ -1497,7 +1483,10 @@ class EventBus:
         This method must be run in the event loop.
         """
         _verify_event_type_length_or_raise(event_type)
-        self._hass.verify_event_loop_thread("hass.bus.async_fire")
+        if self._hass.loop_thread_id != threading.get_ident():
+            from .helpers import frame  # pylint: disable=import-outside-toplevel
+
+            frame.report_non_thread_safe_operation("hass.bus.async_fire")
         return self.async_fire_internal(
             event_type, event_data, origin, context, time_fired
         )
@@ -1773,6 +1762,7 @@ class State:
         context: Context | None = None,
         validate_entity_id: bool | None = True,
         state_info: StateInfo | None = None,
+        last_updated_timestamp: float | None = None,
     ) -> None:
         """Initialize a new state."""
         state = str(state)
@@ -1803,9 +1793,17 @@ class State:
         # The recorder or the websocket_api will always call the timestamps,
         # so we will set the timestamp values here to avoid the overhead of
         # the function call in the property we know will always be called.
-        self.last_updated_timestamp = self.last_updated.timestamp()
-        if self.last_changed == self.last_updated:
-            self.__dict__["last_changed_timestamp"] = self.last_updated_timestamp
+        last_updated = self.last_updated
+        if not last_updated_timestamp:
+            last_updated_timestamp = last_updated.timestamp()
+        self.last_updated_timestamp = last_updated_timestamp
+        if self.last_changed == last_updated:
+            self.__dict__["last_changed_timestamp"] = last_updated_timestamp
+        # If last_reported is the same as last_updated async_set will pass
+        # the same datetime object for both values so we can use an identity
+        # check here.
+        if self.last_reported is last_updated:
+            self.__dict__["last_reported_timestamp"] = last_updated_timestamp
 
     @cached_property
     def name(self) -> str:
@@ -1822,8 +1820,6 @@ class State:
     @cached_property
     def last_reported_timestamp(self) -> float:
         """Timestamp of last report."""
-        if self.last_reported == self.last_updated:
-            return self.last_updated_timestamp
         return self.last_reported.timestamp()
 
     @cached_property
@@ -2282,6 +2278,7 @@ class StateMachine:
             # mypy does not understand this is only possible if old_state is not None
             old_last_reported = old_state.last_reported  # type: ignore[union-attr]
             old_state.last_reported = now  # type: ignore[union-attr]
+            old_state.last_reported_timestamp = timestamp  # type: ignore[union-attr]
             self._bus.async_fire_internal(
                 EVENT_STATE_REPORTED,
                 {
@@ -2314,6 +2311,7 @@ class StateMachine:
             context,
             old_state is None,
             state_info,
+            timestamp,
         )
         if old_state is not None:
             old_state.expire()

@@ -22,13 +22,14 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
 import homeassistant.util.color as color_util
 
+from .common import MockLight
+
 from tests.common import (
     MockEntityPlatform,
     MockUser,
     async_mock_service,
     setup_test_component_platform,
 )
-from tests.components.light.common import MockLight
 
 orig_Profiles = light.Profiles
 
@@ -980,9 +981,9 @@ async def test_light_brightness_step(hass: HomeAssistant) -> None:
     assert entity0.state == "off"  # 126 - 126; brightness is 0, light should turn off
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_light_brightness_pct_conversion(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test that light brightness percent conversion."""

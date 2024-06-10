@@ -41,6 +41,8 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
+from .common import MockSensor
+
 from tests.common import setup_test_component_platform
 from tests.components.recorder.common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
@@ -50,7 +52,6 @@ from tests.components.recorder.common import (
     do_adhoc_statistics,
     statistics_during_period,
 )
-from tests.components.sensor.common import MockSensor
 from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
 
 BATTERY_SENSOR_ATTRIBUTES = {
@@ -5234,9 +5235,8 @@ async def async_record_states_partially_unavailable(hass, zero, entity_id, attri
     return four, states
 
 
-async def test_exclude_attributes(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_exclude_attributes(hass: HomeAssistant) -> None:
     """Test sensor attributes to be excluded."""
     entity0 = MockSensor(
         has_entity_name=True,

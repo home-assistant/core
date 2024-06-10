@@ -15,13 +15,19 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import SUN_EVENT_SUNSET
+from homeassistant.const import CONF_LANGUAGE, CONF_LOCATION, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import (
+    CONF_CANDLE_LIGHT_MINUTES,
+    CONF_DIASPORA,
+    CONF_HAVDALAH_OFFSET_MINUTES,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,6 +126,11 @@ TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
         icon="mdi:weather-night",
     ),
     SensorEntityDescription(
+        key="three_stars",
+        name="T'set Hakochavim, 3 stars",
+        icon="mdi:weather-night",
+    ),
+    SensorEntityDescription(
         key="upcoming_shabbat_candle_lighting",
         name="Upcoming Shabbat Candle Lighting",
         icon="mdi:candle",
@@ -149,9 +160,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Jewish calendar sensors ."""
     entry = hass.data[DOMAIN][config_entry.entry_id]
-    sensors = [JewishCalendarSensor(entry, description) for description in INFO_SENSORS]
+    sensors = [
+        JewishCalendarSensor(config_entry.entry_id, entry, description)
+        for description in INFO_SENSORS
+    ]
     sensors.extend(
-        JewishCalendarTimeSensor(entry, description) for description in TIME_SENSORS
+        JewishCalendarTimeSensor(config_entry.entry_id, entry, description)
+        for description in TIME_SENSORS
     )
 
     async_add_entities(sensors)
@@ -162,18 +177,19 @@ class JewishCalendarSensor(SensorEntity):
 
     def __init__(
         self,
+        entry_id: str,
         data: dict[str, Any],
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the Jewish calendar sensor."""
         self.entity_description = description
         self._attr_name = f"{DEFAULT_NAME} {description.name}"
-        self._attr_unique_id = f'{data["prefix"]}_{description.key}'
-        self._location = data["location"]
-        self._hebrew = data["language"] == "hebrew"
-        self._candle_lighting_offset = data["candle_lighting_offset"]
-        self._havdalah_offset = data["havdalah_offset"]
-        self._diaspora = data["diaspora"]
+        self._attr_unique_id = f"{entry_id}-{description.key}"
+        self._location = data[CONF_LOCATION]
+        self._hebrew = data[CONF_LANGUAGE] == "hebrew"
+        self._candle_lighting_offset = data[CONF_CANDLE_LIGHT_MINUTES]
+        self._havdalah_offset = data[CONF_HAVDALAH_OFFSET_MINUTES]
+        self._diaspora = data[CONF_DIASPORA]
         self._holiday_attrs: dict[str, str] = {}
 
     async def async_update(self) -> None:
