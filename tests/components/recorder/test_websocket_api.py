@@ -817,6 +817,9 @@ async def test_statistic_during_period_partial_overlap(
     imported_stats_hours = [
         {
             "start": (start + timedelta(hours=i)),
+            "min": i * 60,
+            "max": i * 60 + 60,
+            "mean": i * 60 + 30,
             "sum": (i + 1) * 60,
         }
         for i in range(6)
@@ -826,6 +829,9 @@ async def test_statistic_during_period_partial_overlap(
     imported_stats_5min = [
         {
             "start": (start + timedelta(hours=4, minutes=5 * i)),
+            "min": 4 * 60 + i * 5,
+            "max": 4 * 60 + i * 5 + 5,
+            "mean": 4 * 60 + i * 5 + 2.5,
             "sum": 4 * 60 + (i + 1) * 5,
         }
         for i in range(30)
@@ -874,17 +880,21 @@ async def test_statistic_during_period_partial_overlap(
         {
             "type": "recorder/statistic_during_period",
             "statistic_id": statId,
-            "types": ["change"],
         }
     )
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"] == {"change": 390}
+    assert response["result"] == {
+        "change": 390,
+        "max": 390,
+        "min": 0,
+        "mean": 195,
+    }
 
-    async def assert_change_during_fixed(client, start_time, end_time, expected):
+    async def assert_stat_during_fixed(client, start_time, end_time, expect):
         json = {
             "type": "recorder/statistic_during_period",
-            "types": ["change"],
+            "types": list(expect.keys()),
             "statistic_id": statId,
             "fixed_period": {},
         }
@@ -896,114 +906,220 @@ async def test_statistic_during_period_partial_overlap(
         await client.send_json_auto_id(json)
         response = await client.receive_json()
         assert response["success"]
-        assert response["result"] == {
-            "change": expected,
-        }
+        assert response["result"] == expect
 
     # One hours worth of growth in LTS-only
     start_time = start.replace(hour=1)
     end_time = start.replace(hour=2)
-    expect = 60
-    await assert_change_during_fixed(client, start_time, end_time, expect)
+    await assert_stat_during_fixed(
+        client, start_time, end_time, {"change": 60, "min": 60, "max": 120, "mean": 90}
+    )
 
     # Five minutes of growth in STS-only
     start_time = start.replace(hour=6, minute=15)
     end_time = start.replace(hour=6, minute=20)
-    expect = 5
-    await assert_change_during_fixed(client, start_time, end_time, expect)
+    await assert_stat_during_fixed(
+        client,
+        start_time,
+        end_time,
+        {
+            "change": 5,
+            "min": 6 * 60 + 15,
+            "max": 6 * 60 + 20,
+            "mean": 6 * 60 + (15 + 20) / 2,
+        },
+    )
 
     # Six minutes of growth in STS-only
     start_time = start.replace(hour=6, minute=14)
     end_time = start.replace(hour=6, minute=20)
-    expect = 5
-    await assert_change_during_fixed(client, start_time, end_time, expect)
+    await assert_stat_during_fixed(
+        client,
+        start_time,
+        end_time,
+        {
+            "change": 5,
+            "min": 6 * 60 + 15,
+            "max": 6 * 60 + 20,
+            "mean": 6 * 60 + (15 + 20) / 2,
+        },
+    )
 
     # Six minutes of growth in STS-only
     # 5-minute Change includes start times exactly on or before a statistics start, but end times are not counted unless they are greater than start.
     start_time = start.replace(hour=6, minute=15)
     end_time = start.replace(hour=6, minute=21)
-    expect = 10
-    await assert_change_during_fixed(client, start_time, end_time, expect)
+    await assert_stat_during_fixed(
+        client,
+        start_time,
+        end_time,
+        {
+            "change": 10,
+            "min": 6 * 60 + 15,
+            "max": 6 * 60 + 25,
+            "mean": 6 * 60 + (15 + 25) / 2,
+        },
+    )
 
     # Five minutes of growth in overlapping LTS+STS
     start_time = start.replace(hour=5, minute=15)
     end_time = start.replace(hour=5, minute=20)
-    expect = 5
-    await assert_change_during_fixed(client, start_time, end_time, expect)
+    await assert_stat_during_fixed(
+        client,
+        start_time,
+        end_time,
+        {
+            "change": 5,
+            "min": 5 * 60 + 15,
+            "max": 5 * 60 + 20,
+            "mean": 5 * 60 + (15 + 20) / 2,
+        },
+    )
 
     # Five minutes of growth in overlapping LTS+STS (start of hour)
     start_time = start.replace(hour=5, minute=0)
     end_time = start.replace(hour=5, minute=5)
-    expect = 5
-    await assert_change_during_fixed(client, start_time, end_time, expect)
+    await assert_stat_during_fixed(
+        client,
+        start_time,
+        end_time,
+        {"change": 5, "min": 5 * 60, "max": 5 * 60 + 5, "mean": 5 * 60 + (5) / 2},
+    )
 
     # Five minutes of growth in overlapping LTS+STS (end of hour)
     start_time = start.replace(hour=4, minute=55)
     end_time = start.replace(hour=5, minute=0)
-    expect = 5
-    await assert_change_during_fixed(client, start_time, end_time, expect)
+    await assert_stat_during_fixed(
+        client,
+        start_time,
+        end_time,
+        {
+            "change": 5,
+            "min": 4 * 60 + 55,
+            "max": 5 * 60,
+            "mean": 4 * 60 + (55 + 60) / 2,
+        },
+    )
 
     # Five minutes of growth in STS-only, with a minute offset. Despite that this does not cover the full period, result is still 5
     start_time = start.replace(hour=6, minute=16)
     end_time = start.replace(hour=6, minute=21)
-    expect = 5
-    await assert_change_during_fixed(client, start_time, end_time, expect)
+    await assert_stat_during_fixed(
+        client,
+        start_time,
+        end_time,
+        {
+            "change": 5,
+            "min": 6 * 60 + 20,
+            "max": 6 * 60 + 25,
+            "mean": 6 * 60 + (20 + 25) / 2,
+        },
+    )
 
     # 7 minutes of growth in STS-only, spanning two intervals
     start_time = start.replace(hour=6, minute=14)
     end_time = start.replace(hour=6, minute=21)
-    expect = 10
-    await assert_change_during_fixed(client, start_time, end_time, expect)
+    await assert_stat_during_fixed(
+        client,
+        start_time,
+        end_time,
+        {
+            "change": 10,
+            "min": 6 * 60 + 15,
+            "max": 6 * 60 + 25,
+            "mean": 6 * 60 + (15 + 25) / 2,
+        },
+    )
 
     # One hours worth of growth in LTS-only, with arbitrary minute offsets
     # Since this does not fully cover the hour, result is None?
     start_time = start.replace(hour=1, minute=40)
     end_time = start.replace(hour=2, minute=12)
-    expect = None
-    await assert_change_during_fixed(client, start_time, end_time, expect)
+    await assert_stat_during_fixed(
+        client,
+        start_time,
+        end_time,
+        {"change": None, "min": None, "max": None, "mean": None},
+    )
 
     # One hours worth of growth in LTS-only, with arbitrary minute offsets, covering a whole 1-hour period
     start_time = start.replace(hour=1, minute=40)
     end_time = start.replace(hour=3, minute=12)
-    expect = 60
-    await assert_change_during_fixed(client, start_time, end_time, expect)
+    await assert_stat_during_fixed(
+        client,
+        start_time,
+        end_time,
+        {"change": 60, "min": 120, "max": 180, "mean": 150},
+    )
 
     # 90 minutes of growth in window overlapping LTS+STS/STS-only (4:41 - 6:11)
     start_time = start.replace(hour=4, minute=41)
     end_time = start_time + timedelta(minutes=90)
-    expect = 90
-    await assert_change_during_fixed(client, start_time, end_time, expect)
+    await assert_stat_during_fixed(
+        client,
+        start_time,
+        end_time,
+        {
+            "change": 90,
+            "min": 4 * 60 + 45,
+            "max": 4 * 60 + 45 + 90,
+            "mean": 4 * 60 + 45 + 45,
+        },
+    )
 
     # 4 hours of growth in overlapping LTS-only/LTS+STS (2:01-6:01)
     start_time = start.replace(hour=2, minute=1)
     end_time = start_time + timedelta(minutes=240)
-    expect = 185  # 60 from LTS (3:00-3:59), 125 from STS (25 intervals) (4:00-6:01)
-    await assert_change_during_fixed(client, start_time, end_time, expect)
+    # 60 from LTS (3:00-3:59), 125 from STS (25 intervals) (4:00-6:01)
+    await assert_stat_during_fixed(
+        client,
+        start_time,
+        end_time,
+        {"change": 185, "min": 3 * 60, "max": 3 * 60 + 185, "mean": 3 * 60 + 185 / 2},
+    )
 
     # 4 hours of growth in overlapping LTS-only/LTS+STS (1:31-5:31)
     start_time = start.replace(hour=1, minute=31)
     end_time = start_time + timedelta(minutes=240)
-    expect = 215  # 120 from LTS (2:00-3:59), 95 from STS (19 intervals) 4:00-5:31
-    await assert_change_during_fixed(client, start_time, end_time, expect)
+    # 120 from LTS (2:00-3:59), 95 from STS (19 intervals) 4:00-5:31
+    await assert_stat_during_fixed(
+        client,
+        start_time,
+        end_time,
+        {"change": 215, "min": 2 * 60, "max": 2 * 60 + 215, "mean": 2 * 60 + 215 / 2},
+    )
 
     # 5 hours of growth, start time only (1:31-end)
     start_time = start.replace(hour=1, minute=31)
     end_time = None
     # will be actually 2:00 - end
-    expect = 4 * 60 + 30
-    await assert_change_during_fixed(client, start_time, end_time, expect)
+    await assert_stat_during_fixed(
+        client,
+        start_time,
+        end_time,
+        {"change": 4 * 60 + 30, "min": 120, "max": 390, "mean": (390 + 120) / 2},
+    )
 
     # 5 hours of growth, end_time_only (0:00-5:00)
     start_time = None
     end_time = start.replace(hour=5)
-    expect = 60 * 5
-    await assert_change_during_fixed(client, start_time, end_time, expect)
+    await assert_stat_during_fixed(
+        client,
+        start_time,
+        end_time,
+        {"change": 5 * 60, "min": 0, "max": 5 * 60, "mean": (5 * 60) / 2},
+    )
 
     # 5 hours 1 minute of growth, end_time_only (0:00-5:01)
     start_time = None
     end_time = start.replace(hour=5, minute=1)
-    expect = 60 * 5 + 5  # 4 hours LTS, 1 hour and 5 minutes STS (4:00-5:01)
-    await assert_change_during_fixed(client, start_time, end_time, expect)
+    # 4 hours LTS, 1 hour and 5 minutes STS (4:00-5:01)
+    await assert_stat_during_fixed(
+        client,
+        start_time,
+        end_time,
+        {"change": 5 * 60 + 5, "min": 0, "max": 5 * 60 + 5, "mean": (5 * 60 + 5) / 2},
+    )
 
 
 @pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
