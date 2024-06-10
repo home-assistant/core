@@ -220,7 +220,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             brightness = round((brightness * 100.0) / 255.0)
 
-        if self.device.device_type == DeviceType.Dimmer and transition is None:
+        if self._device.device_type == DeviceType.Dimmer and transition is None:
             # This is a stopgap solution for inconsistent set_brightness handling
             # in the upstream library, see #57265.
             # This should be removed when the upstream has fixed the issue.
@@ -305,7 +305,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
         light_module = self._light_module
-        self._attr_is_on = self.device.is_on
+        self._attr_is_on = self._device.is_on
         if light_module.is_dimmable:
             self._attr_brightness = round((light_module.brightness * 255.0) / 100.0)
         color_mode = self._determine_color_mode()

@@ -98,6 +98,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
     """Common base class for all coordinated tplink entities."""
 
     _attr_has_entity_name = True
+    _device: Device
 
     def __init__(
         self,
@@ -110,7 +111,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self.device: Device = device
+        self._device: Device = device
         self._feature = feature
 
         registry_device = device
@@ -204,7 +205,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
             if self._attr_available:
                 _LOGGER.warning(
                     "Unable to read data for %s %s: %s",
-                    self.device,
+                    self._device,
                     self.entity_description,
                     ex,
                 )

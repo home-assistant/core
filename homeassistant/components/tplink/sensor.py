@@ -181,7 +181,7 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
         self._attr_native_value = async_emeter_from_device(
-            self.device, self.entity_description
+            self._device, self.entity_description
         )
 
     @callback
