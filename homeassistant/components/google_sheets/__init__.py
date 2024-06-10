@@ -61,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not async_entry_has_scopes(hass, entry):
         raise ConfigEntryAuthFailed("Required scopes are not present, reauth required")
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = session
+    entry.runtime_data = session
 
     await async_setup_service(hass)
 
@@ -75,7 +75,6 @@ def async_entry_has_scopes(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.data[DOMAIN].pop(entry.entry_id)
     loaded_entries = [
         entry
         for entry in hass.config_entries.async_entries(DOMAIN)
@@ -93,9 +92,7 @@ async def async_setup_service(hass: HomeAssistant) -> None:
 
     def _append_to_sheet(call: ServiceCall, entry: ConfigEntry) -> None:
         """Run append in the executor."""
-        service = Client(
-            Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN])  # type: ignore[no-untyped-call]
-        )
+        service = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))
         try:
             sheet = service.open_by_key(entry.unique_id)
         except RefreshError:
@@ -120,11 +117,9 @@ async def async_setup_service(hass: HomeAssistant) -> None:
         entry: ConfigEntry | None = hass.config_entries.async_get_entry(
             call.data[DATA_CONFIG_ENTRY]
         )
-        if not entry:
+        if not entry or not hasattr(entry, "runtime_data"):
             raise ValueError(f"Invalid config entry: {call.data[DATA_CONFIG_ENTRY]}")
-        if not (session := hass.data[DOMAIN].get(entry.entry_id)):
-            raise ValueError(f"Config entry not loaded: {call.data[DATA_CONFIG_ENTRY]}")
-        await session.async_ensure_token_valid()
+        await entry.runtime_data.async_ensure_token_valid()
         await hass.async_add_executor_job(_append_to_sheet, call, entry)
 
     hass.services.async_register(
