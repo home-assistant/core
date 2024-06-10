@@ -746,6 +746,7 @@ jobs:
       - hassfest
       - lint-other
       - lint-ruff
+      - lint-ruff-format
       - mypy
       - prepare-pytest-full
     strategy:
@@ -863,6 +864,7 @@ jobs:
       - hassfest
       - lint-other
       - lint-ruff
+      - lint-ruff-format
       - mypy
     strategy:
       fail-fast: false
@@ -986,6 +988,7 @@ jobs:
       - hassfest
       - lint-other
       - lint-ruff
+      - lint-ruff-format
       - mypy
     strategy:
       fail-fast: false
@@ -1128,6 +1131,7 @@ jobs:
       - hassfest
       - lint-other
       - lint-ruff
+      - lint-ruff-format
       - mypy
     strategy:
       fail-fast: false

@@ -619,13 +619,11 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
         except vol.Invalid as err:
             connection.send_error(
                 msg["id"],
-                websocket_api.const.ERR_INVALID_FORMAT,
+                websocket_api.ERR_INVALID_FORMAT,
                 humanize_error(data, err),
             )
         except ValueError as err:
-            connection.send_error(
-                msg["id"], websocket_api.const.ERR_INVALID_FORMAT, str(err)
-            )
+            connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
 
     async def ws_update_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
@@ -642,19 +640,17 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
         except ItemNotFound:
             connection.send_error(
                 msg["id"],
-                websocket_api.const.ERR_NOT_FOUND,
+                websocket_api.ERR_NOT_FOUND,
                 f"Unable to find {self.item_id_key} {item_id}",
             )
         except vol.Invalid as err:
             connection.send_error(
                 msg["id"],
-                websocket_api.const.ERR_INVALID_FORMAT,
+                websocket_api.ERR_INVALID_FORMAT,
                 humanize_error(data, err),
             )
         except ValueError as err:
-            connection.send_error(
-                msg_id, websocket_api.const.ERR_INVALID_FORMAT, str(err)
-            )
+            connection.send_error(msg_id, websocket_api.ERR_INVALID_FORMAT, str(err))
 
     async def ws_delete_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
@@ -665,7 +661,7 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
         except ItemNotFound:
             connection.send_error(
                 msg["id"],
-                websocket_api.const.ERR_NOT_FOUND,
+                websocket_api.ERR_NOT_FOUND,
                 f"Unable to find {self.item_id_key} {msg[self.item_id_key]}",
             )
 
