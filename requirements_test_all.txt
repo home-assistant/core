@@ -189,7 +189,7 @@ aioazuredevops==2.0.0
 aiobafi6==0.9.0
 
 # homeassistant.components.aws
-aiobotocore==2.12.1
+aiobotocore==2.13.0
 
 # homeassistant.components.comelit
 aiocomelit==0.9.0
@@ -892,7 +892,7 @@ hole==0.8.0
 holidays==0.50
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240605.0
+home-assistant-frontend==20240610.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.6.5
@@ -1017,7 +1017,7 @@ libsoundtouch==0.8
 linear-garage-door==0.2.9
 
 # homeassistant.components.lamarzocco
-lmcloud==0.4.35
+lmcloud==1.1.11
 
 # homeassistant.components.logi_circle
 logi-circle==0.2.3
@@ -1799,9 +1799,6 @@ python-otbr-api==2.6.0
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
 
-# homeassistant.components.qbittorrent
-python-qbittorrent==0.4.3
-
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
 
@@ -1892,6 +1889,9 @@ pyyardian==1.1.1
 
 # homeassistant.components.zerproc
 pyzerproc==0.4.8
+
+# homeassistant.components.qbittorrent
+qbittorrent-api==2024.2.59
 
 # homeassistant.components.qingping
 qingping-ble==0.10.0
@@ -2165,7 +2165,7 @@ twitchAPI==4.0.0
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==0.4.0
+uiprotect==0.4.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7

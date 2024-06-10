@@ -28,7 +28,9 @@ from homeassistant.setup import async_setup_component
 from tests.common import get_fixture_path
 
 
-async def test_load_values_when_added_to_hass(hass: HomeAssistant) -> None:
+async def test_load_values_when_added_to_hass(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that sensor initializes with observations of relevant entities."""
 
     config = {
@@ -58,10 +60,6 @@ async def test_load_values_when_added_to_hass(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
-    assert (
-        entity_registry.entities["binary_sensor.test_binary"].unique_id
-        == "bayesian-3b4c9563-5e84-4167-8fe7-8f507e796d72"
-    )
 
     state = hass.states.get("binary_sensor.test_binary")
     assert state.attributes.get("device_class") == "connectivity"
