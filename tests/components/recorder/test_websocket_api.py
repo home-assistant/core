@@ -7,6 +7,7 @@ import threading
 from unittest.mock import ANY, patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import recorder
@@ -794,17 +795,30 @@ async def test_statistic_during_period_hole(
     }
 
 
-@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 6, 31, tzinfo=datetime.UTC))
+@pytest.mark.parametrize(
+    "frozen_time",
+    [
+        # This is the normal case, all statistics runs are available
+        datetime.datetime(2022, 10, 21, 6, 31, tzinfo=datetime.UTC),
+        # Statistic only available up until 6:25, this can happen if
+        # core has been shut down for an hour
+        datetime.datetime(2022, 10, 21, 7, 31, tzinfo=datetime.UTC),
+    ],
+)
 async def test_statistic_during_period_partial_overlap(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    frozen_time: datetime,
 ) -> None:
     """Test statistic_during_period."""
+    client = await hass_ws_client()
+
+    freezer.move_to(frozen_time)
     now = dt_util.utcnow()
 
     await async_recorder_block_till_done(hass)
-    client = await hass_ws_client()
 
     zero = now
     start = zero.replace(hour=0, minute=0, second=0, microsecond=0)
