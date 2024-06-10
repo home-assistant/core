@@ -17,7 +17,7 @@ from homeassistant.components.camera import (
     async_get_mjpeg_stream,
     async_get_stream_source,
 )
-from homeassistant.components.generic import (
+from homeassistant.components.generic.const import (
     CONF_CONTENT_TYPE,
     CONF_FRAMERATE,
     CONF_LIMIT_REFETCH_TO_URL_CHANGE,
