@@ -10,6 +10,7 @@ from homeassistant.components.workday.binary_sensor import SERVICE_CHECK_DATE
 from homeassistant.components.workday.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import UTC
 
 from . import (
@@ -144,12 +145,16 @@ async def test_setup_add_holiday(
     assert state.state == "off"
 
 
+@pytest.mark.parametrize("time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii"])
 async def test_setup_no_country_weekend(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    time_zone: str,
 ) -> None:
     """Test setup shows weekend as non-workday with no country."""
-    freezer.move_to(datetime(2020, 2, 23, 12, tzinfo=UTC))  # Sunday
+    await hass.config.async_set_time_zone(time_zone)
+    zone = await dt_util.async_get_time_zone(time_zone)
+    freezer.move_to(datetime(2020, 2, 23, 12, tzinfo=zone))  # Sunday
     await init_integration(hass, TEST_CONFIG_NO_COUNTRY)
 
     state = hass.states.get("binary_sensor.workday_sensor")
