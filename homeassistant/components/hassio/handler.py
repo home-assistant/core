@@ -7,7 +7,7 @@ from collections.abc import Callable, Coroutine
 from http import HTTPStatus
 import logging
 import os
-from typing import Any, ParamSpec
+from typing import Any
 
 import aiohttp
 from yarl import URL
@@ -24,8 +24,6 @@ from homeassistant.loader import bind_hass
 
 from .const import ATTR_DISCOVERY, ATTR_MESSAGE, ATTR_RESULT, DOMAIN, X_HASS_SOURCE
 
-_P = ParamSpec("_P")
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -33,7 +31,7 @@ class HassioAPIError(RuntimeError):
     """Return if a API trow a error."""
 
 
-def _api_bool(
+def _api_bool[**_P](
     funct: Callable[_P, Coroutine[Any, Any, dict[str, Any]]],
 ) -> Callable[_P, Coroutine[Any, Any, bool]]:
     """Return a boolean."""
@@ -49,7 +47,7 @@ def _api_bool(
     return _wrapper
 
 
-def api_data(
+def api_data[**_P](
     funct: Callable[_P, Coroutine[Any, Any, dict[str, Any]]],
 ) -> Callable[_P, Coroutine[Any, Any, Any]]:
     """Return data of an api."""
@@ -263,10 +261,7 @@ async def async_update_core(
 @bind_hass
 @_api_bool
 async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> dict:
-    """Apply a suggestion from supervisor's resolution center.
-
-    The caller of the function should handle HassioAPIError.
-    """
+    """Apply a suggestion from supervisor's resolution center."""
     hassio: HassIO = hass.data[DOMAIN]
     command = f"/resolution/suggestion/{suggestion_uuid}"
     return await hassio.send_command(command, timeout=None)
@@ -386,6 +381,14 @@ class HassIO:
         This method returns a coroutine.
         """
         return self.send_command("/supervisor/info", method="get")
+
+    @api_data
+    def get_network_info(self) -> Coroutine:
+        """Return data for the Host Network.
+
+        This method returns a coroutine.
+        """
+        return self.send_command("/network/info", method="get")
 
     @api_data
     def get_addon_info(self, addon: str) -> Coroutine:
@@ -574,7 +577,7 @@ class HassIO:
         # such as ../../../../etc/passwd
         if url != str(joined_url):
             _LOGGER.error("Invalid request %s", command)
-            raise HassioAPIError()
+            raise HassioAPIError
 
         try:
             response = await self.websession.request(
@@ -601,7 +604,7 @@ class HassIO:
                     method,
                     response.status,
                 )
-                raise HassioAPIError()
+                raise HassioAPIError
 
             if return_text:
                 return await response.text(encoding="utf-8")
@@ -614,4 +617,4 @@ class HassIO:
         except aiohttp.ClientError as err:
             _LOGGER.error("Client error on %s request %s", command, err)
 
-        raise HassioAPIError()
+        raise HassioAPIError

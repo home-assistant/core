@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 from typing import Any, cast
 
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import (
+from typing_extensions import Generator
+from uiprotect import ProtectApiClient
+from uiprotect.data import (
     NVR,
     Bootstrap,
     Camera,
@@ -19,7 +21,8 @@ from pyunifiprotect.data import (
     ProtectAdoptableDeviceModel,
     WSSubscriptionMessage,
 )
-from pyunifiprotect.exceptions import ClientError, NotAuthorized
+from uiprotect.exceptions import ClientError, NotAuthorized
+from uiprotect.utils import log_event
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -41,12 +44,7 @@ from .const import (
 from .utils import async_dispatch_id as _ufpd, async_get_devices_by_type
 
 _LOGGER = logging.getLogger(__name__)
-ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
-SMART_EVENTS = {
-    EventType.SMART_DETECT,
-    EventType.SMART_AUDIO_DETECT,
-    EventType.SMART_DETECT_LINE,
-}
+type ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
 
 
 @callback
@@ -97,7 +95,7 @@ class ProtectData:
 
     def get_by_types(
         self, device_types: Iterable[ModelType], ignore_unadopted: bool = True
-    ) -> Generator[ProtectAdoptableDeviceModel, None, None]:
+    ) -> Generator[ProtectAdoptableDeviceModel]:
         """Get all devices matching types."""
         for device_type in device_types:
             devices = async_get_devices_by_type(
@@ -229,28 +227,9 @@ class ProtectData:
                 self._async_update_device(obj, message.changed_data)
 
         # trigger updates for camera that the event references
-        elif isinstance(obj, Event):  # type: ignore[unreachable]
+        elif isinstance(obj, Event):
             if _LOGGER.isEnabledFor(logging.DEBUG):
-                _LOGGER.debug("event WS msg: %s", obj.dict())
-            if obj.type in SMART_EVENTS:
-                if obj.camera is not None:
-                    if obj.end is None:
-                        _LOGGER.debug(
-                            "%s (%s): New smart detection started for %s (%s)",
-                            obj.camera.name,
-                            obj.camera.mac,
-                            obj.smart_detect_types,
-                            obj.id,
-                        )
-                    else:
-                        _LOGGER.debug(
-                            "%s (%s): Smart detection ended for %s (%s)",
-                            obj.camera.name,
-                            obj.camera.mac,
-                            obj.smart_detect_types,
-                            obj.id,
-                        )
-
+                log_event(obj)
             if obj.type is EventType.DEVICE_ADOPTED:
                 if obj.metadata is not None and obj.metadata.device_id is not None:
                     device = self.api.bootstrap.get_device_from_id(
@@ -291,7 +270,12 @@ class ProtectData:
         this will be a no-op. If the websocket is disconnected,
         this will trigger a reconnect and refresh.
         """
-        self._hass.async_create_task(self.async_refresh(), eager_start=True)
+        self._entry.async_create_background_task(
+            self._hass,
+            self.async_refresh(),
+            name=f"{DOMAIN} {self._entry.title} refresh",
+            eager_start=True,
+        )
 
     @callback
     def async_subscribe_device_id(
@@ -303,11 +287,7 @@ class ProtectData:
                 self._hass, self._async_poll, self._update_interval
             )
         self._subscriptions.setdefault(mac, []).append(update_callback)
-
-        def _unsubscribe() -> None:
-            self.async_unsubscribe_device_id(mac, update_callback)
-
-        return _unsubscribe
+        return partial(self.async_unsubscribe_device_id, mac, update_callback)
 
     @callback
     def async_unsubscribe_device_id(
@@ -324,12 +304,10 @@ class ProtectData:
     @callback
     def _async_signal_device_update(self, device: ProtectDeviceType) -> None:
         """Call the callbacks for a device_id."""
-
-        if not self._subscriptions.get(device.mac):
+        if not (subscriptions := self._subscriptions.get(device.mac)):
             return
-
         _LOGGER.debug("Updating device: %s (%s)", device.name, device.mac)
-        for update_callback in self._subscriptions[device.mac]:
+        for update_callback in subscriptions:
             update_callback(device)
 
 

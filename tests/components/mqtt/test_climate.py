@@ -32,7 +32,7 @@ from homeassistant.components.mqtt.climate import (
     MQTT_CLIMATE_ATTRIBUTES_BLOCKED,
     VALUE_TEMPLATE_KEYS,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -148,74 +148,6 @@ async def test_preset_none_in_preset_modes(
     assert "preset_modes must not include preset mode 'none'" in caplog.text
 
 
-@pytest.mark.parametrize(
-    ("hass_config", "parameter"),
-    [
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"away_mode_command_topic": "away-mode-command-topic"},),
-            ),
-            "away_mode_command_topic",
-        ),
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"away_mode_state_topic": "away-mode-state-topic"},),
-            ),
-            "away_mode_state_topic",
-        ),
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"away_mode_state_template": "{{ value_json }}"},),
-            ),
-            "away_mode_state_template",
-        ),
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"hold_mode_command_topic": "hold-mode-command-topic"},),
-            ),
-            "hold_mode_command_topic",
-        ),
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"hold_mode_command_template": "hold-mode-command-template"},),
-            ),
-            "hold_mode_command_template",
-        ),
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"hold_mode_state_topic": "hold-mode-state-topic"},),
-            ),
-            "hold_mode_state_topic",
-        ),
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"hold_mode_state_template": "{{ value_json }}"},),
-            ),
-            "hold_mode_state_template",
-        ),
-    ],
-)
-async def test_preset_modes_deprecation_guard(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, parameter: str
-) -> None:
-    """Test the configuration for invalid legacy parameters."""
-    assert f"[{parameter}] is an invalid option for [mqtt]. Check: mqtt->mqtt->climate->0->{parameter}"
-
-
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_supported_features(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
@@ -313,11 +245,11 @@ async def test_set_operation_pessimistic(
     await mqtt_mock_entry()
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
 
     await common.async_set_hvac_mode(hass, "cool", ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "mode-state", "cool")
     state = hass.states.get(ENTITY_CLIMATE)
@@ -326,6 +258,16 @@ async def test_set_operation_pessimistic(
     async_fire_mqtt_message(hass, "mode-state", "bogus mode")
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.state == "cool"
+
+    # Ignored
+    async_fire_mqtt_message(hass, "mode-state", "")
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.state == "cool"
+
+    # Reset with `None`
+    async_fire_mqtt_message(hass, "mode-state", "None")
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
@@ -1079,11 +1021,7 @@ async def test_handle_action_received(
     """Test getting the action received via MQTT."""
     await mqtt_mock_entry()
 
-    # Cycle through valid modes and also check for wrong input such as "None" (str(None))
-    async_fire_mqtt_message(hass, "action", "None")
-    state = hass.states.get(ENTITY_CLIMATE)
-    hvac_action = state.attributes.get(ATTR_HVAC_ACTION)
-    assert hvac_action is None
+    # Cycle through valid modes
     # Redefine actions according to https://developers.home-assistant.io/docs/core/entity/climate/#hvac-action
     actions = ["off", "preheating", "heating", "cooling", "drying", "idle", "fan"]
     assert all(elem in actions for elem in HVACAction)
@@ -1092,6 +1030,18 @@ async def test_handle_action_received(
         state = hass.states.get(ENTITY_CLIMATE)
         hvac_action = state.attributes.get(ATTR_HVAC_ACTION)
         assert hvac_action == action
+
+    # Check empty payload is ignored (last action == "fan")
+    async_fire_mqtt_message(hass, "action", "")
+    state = hass.states.get(ENTITY_CLIMATE)
+    hvac_action = state.attributes.get(ATTR_HVAC_ACTION)
+    assert hvac_action == "fan"
+
+    # Check "None" payload is resetting the action
+    async_fire_mqtt_message(hass, "action", "None")
+    state = hass.states.get(ENTITY_CLIMATE)
+    hvac_action = state.attributes.get(ATTR_HVAC_ACTION)
+    assert hvac_action is None
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -1138,9 +1088,9 @@ async def test_set_preset_mode_optimistic(
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") == "comfort"
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as excinfo:
         await common.async_set_preset_mode(hass, "invalid", ENTITY_CLIMATE)
-        assert "'invalid' is not a valid preset mode" in caplog.text
+    assert "Preset mode invalid is not valid." in str(excinfo.value)
 
 
 @pytest.mark.parametrize(
@@ -1196,9 +1146,9 @@ async def test_set_preset_mode_explicit_optimistic(
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") == "comfort"
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as excinfo:
         await common.async_set_preset_mode(hass, "invalid", ENTITY_CLIMATE)
-        assert "'invalid' is not a valid preset mode" in caplog.text
+    assert "Preset mode invalid is not valid." in str(excinfo.value)
 
 
 @pytest.mark.parametrize(
@@ -1235,6 +1185,10 @@ async def test_set_preset_mode_pessimistic(
     assert state.attributes.get("preset_mode") == "none"
 
     async_fire_mqtt_message(hass, "preset-mode-state", "comfort")
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("preset_mode") == "comfort"
+
+    async_fire_mqtt_message(hass, "preset-mode-state", "")
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") == "comfort"
 
@@ -1517,10 +1471,15 @@ async def test_get_with_templates(
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("hvac_action") == "cooling"
 
-    # Test ignoring null values
-    async_fire_mqtt_message(hass, "action", "null")
+    # Test ignoring empty values
+    async_fire_mqtt_message(hass, "action", "")
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("hvac_action") == "cooling"
+
+    # Test resetting with null values
+    async_fire_mqtt_message(hass, "action", "null")
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("hvac_action") is None
 
 
 @pytest.mark.parametrize(

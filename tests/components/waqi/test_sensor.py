@@ -20,7 +20,10 @@ from tests.common import MockConfigEntry, load_fixture
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test failed update."""
     mock_config_entry.add_to_hass(hass)
@@ -32,7 +35,6 @@ async def test_sensor(
     ):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
-    entity_registry = er.async_get(hass)
     for sensor in SENSORS:
         entity_id = entity_registry.async_get_entity_id(
             SENSOR_DOMAIN, DOMAIN, f"4584_{sensor.key}"
@@ -52,4 +54,4 @@ async def test_updating_failed(
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
-    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

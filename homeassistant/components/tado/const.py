@@ -102,7 +102,7 @@ CONST_EXCLUSIVE_OVERLAY_GROUP = (
 
 
 # Heat always comes first since we get the
-# min and max tempatures for the zone from
+# min and max temperatures for the zone from
 # it.
 # Heat is preferred as it generally has a lower minimum temperature
 ORDERED_KNOWN_TADO_MODES = [

@@ -91,7 +91,7 @@ async def test_one_light(hass: HomeAssistant, rfxtrx) -> None:
 
 
 @pytest.mark.parametrize(
-    ("state", "brightness"), [["on", 100], ["on", 50], ["off", None]]
+    ("state", "brightness"), [("on", 100), ("on", 50), ("off", None)]
 )
 async def test_state_restore(hass: HomeAssistant, rfxtrx, state, brightness) -> None:
     """State restoration."""

@@ -11,6 +11,7 @@
     'context': <ANY>,
     'entity_id': 'number.wled_rgb_light_segment_1_intensity',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '64',
   })
@@ -99,6 +100,7 @@
     'context': <ANY>,
     'entity_id': 'number.wled_rgb_light_segment_1_speed',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '16',
   })

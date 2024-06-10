@@ -6,13 +6,14 @@ from datetime import timedelta
 import logging
 
 from aiohttp.client_exceptions import ServerDisconnectedError
-from pyunifiprotect.data import Bootstrap
-from pyunifiprotect.exceptions import ClientError, NotAuthorized
+from uiprotect.data import Bootstrap
+from uiprotect.data.types import FirmwareReleaseChannel
+from uiprotect.exceptions import ClientError, NotAuthorized
 
-# Import the test_util.anonymize module from the pyunifiprotect package
+# Import the test_util.anonymize module from the uiprotect package
 # in __init__ to ensure it gets imported in the executor since the
 # diagnostics module will not be imported in the executor.
-from pyunifiprotect.test_util.anonymize import anonymize_data  # noqa: F401
+from uiprotect.test_util.anonymize import anonymize_data  # noqa: F401
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -112,19 +113,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, data_service.async_stop)
     )
 
-    if (
-        not entry.options.get(CONF_ALLOW_EA, False)
-        and await nvr_info.get_is_prerelease()
+    if not entry.options.get(CONF_ALLOW_EA, False) and (
+        await nvr_info.get_is_prerelease()
+        or nvr_info.release_channel != FirmwareReleaseChannel.RELEASE
     ):
         ir.async_create_issue(
             hass,
             DOMAIN,
-            "ea_warning",
+            "ea_channel_warning",
             is_fixable=True,
             is_persistent=True,
             learn_more_url="https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access",
             severity=IssueSeverity.WARNING,
-            translation_key="ea_warning",
+            translation_key="ea_channel_warning",
             translation_placeholders={"version": str(nvr_info.version)},
             data={"entry_id": entry.entry_id},
         )
@@ -150,8 +151,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "version": str(nvr_info.version),
                 },
             )
-            ir.async_delete_issue(hass, DOMAIN, "ea_warning")
-            _LOGGER.exception("Error setting up UniFi Protect integration: %s", err)
+            ir.async_delete_issue(hass, DOMAIN, "ea_channel_warning")
+            _LOGGER.exception("Error setting up UniFi Protect integration")
         raise
 
     return True

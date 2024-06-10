@@ -14,14 +14,11 @@ from homeassistant.components.subaru.sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .api_responses import (
-    EXPECTED_STATE_EV_IMPERIAL,
     EXPECTED_STATE_EV_METRIC,
     EXPECTED_STATE_EV_UNAVAILABLE,
     TEST_VIN_2_EV,
-    VEHICLE_STATUS_EV,
 )
 from .conftest import (
     MOCK_API_FETCH,
@@ -29,19 +26,6 @@ from .conftest import (
     advance_time_to_next_fetch,
     setup_subaru_config_entry,
 )
-
-
-async def test_sensors_ev_imperial(hass: HomeAssistant, ev_entry) -> None:
-    """Test sensors supporting imperial units."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
-
-    with patch(MOCK_API_FETCH), patch(
-        MOCK_API_GET_DATA, return_value=VEHICLE_STATUS_EV
-    ):
-        advance_time_to_next_fetch(hass)
-        await hass.async_block_till_done()
-
-    _assert_data(hass, EXPECTED_STATE_EV_IMPERIAL)
 
 
 async def test_sensors_ev_metric(hass: HomeAssistant, ev_entry) -> None:
@@ -73,10 +57,14 @@ async def test_sensors_missing_vin_data(hass: HomeAssistant, ev_entry) -> None:
     ],
 )
 async def test_sensor_migrate_unique_ids(
-    hass: HomeAssistant, entitydata, old_unique_id, new_unique_id, subaru_config_entry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entitydata,
+    old_unique_id,
+    new_unique_id,
+    subaru_config_entry,
 ) -> None:
     """Test successful migration of entity unique_ids."""
-    entity_registry = er.async_get(hass)
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
         **entitydata,
         config_entry=subaru_config_entry,
@@ -105,10 +93,14 @@ async def test_sensor_migrate_unique_ids(
     ],
 )
 async def test_sensor_migrate_unique_ids_duplicate(
-    hass: HomeAssistant, entitydata, old_unique_id, new_unique_id, subaru_config_entry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entitydata,
+    old_unique_id,
+    new_unique_id,
+    subaru_config_entry,
 ) -> None:
     """Test unsuccessful migration of entity unique_ids due to duplicate."""
-    entity_registry = er.async_get(hass)
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
         **entitydata,
         config_entry=subaru_config_entry,

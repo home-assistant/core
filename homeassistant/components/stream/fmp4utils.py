@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from typing import TYPE_CHECKING
+
+from typing_extensions import Generator
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
 
 def find_box(
     mp4_bytes: bytes, target_type: bytes, box_start: int = 0
-) -> Generator[int, None, None]:
+) -> Generator[int]:
     """Find location of first box (or sub box if box_start provided) of given type."""
     if box_start == 0:
         index = 0
@@ -92,7 +93,7 @@ def get_codec_string(mp4_bytes: bytes) -> str:
                 stsd_box[112:116], byteorder="big"
             )
             reverse = 0
-            for i in range(0, 32):
+            for i in range(32):
                 reverse |= general_profile_compatibility & 1
                 if i == 31:
                     break

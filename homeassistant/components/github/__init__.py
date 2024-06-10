@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = GitHubAPI(
         token=entry.data[CONF_ACCESS_TOKEN],
         session=async_get_clientsession(hass),
-        **{"client_name": SERVER_SOFTWARE},
+        client_name=SERVER_SOFTWARE,
     )
 
     repositories: list[str] = entry.options[CONF_REPOSITORIES]

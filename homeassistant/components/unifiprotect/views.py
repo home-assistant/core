@@ -9,8 +9,8 @@ from typing import Any
 from urllib.parse import urlencode
 
 from aiohttp import web
-from pyunifiprotect.data import Camera, Event
-from pyunifiprotect.exceptions import ClientError
+from uiprotect.data import Camera, Event
+from uiprotect.exceptions import ClientError
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
@@ -52,14 +52,12 @@ def async_generate_event_video_url(event: Event) -> str:
         raise ValueError("Event is ongoing")
 
     url_format = VideoProxyView.url or "{nvr_id}/{camera_id}/{start}/{end}"
-    url = url_format.format(
+    return url_format.format(
         nvr_id=event.api.bootstrap.nvr.id,
         camera_id=event.camera_id,
         start=event.start.replace(microsecond=0).isoformat(),
         end=event.end.replace(microsecond=0).isoformat(),
     )
-
-    return url
 
 
 @callback

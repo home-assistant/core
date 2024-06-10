@@ -216,7 +216,7 @@ async def test_statistics_during_period(
 
 
 @pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
-@pytest.mark.parametrize("offset", (0, 1, 2))
+@pytest.mark.parametrize("offset", [0, 1, 2])
 async def test_statistic_during_period(
     recorder_mock: Recorder,
     hass: HomeAssistant,
@@ -242,7 +242,7 @@ async def test_statistic_during_period(
             "min": -76 + i * 2,
             "sum": i,
         }
-        for i in range(0, 39)
+        for i in range(39)
     ]
     imported_stats = []
     slice_end = 12 - offset
@@ -255,7 +255,7 @@ async def test_statistic_during_period(
             "sum": imported_stats_5min[slice_end - 1]["sum"],
         }
     )
-    for i in range(0, 2):
+    for i in range(2):
         slice_start = i * 12 + (12 - offset)
         slice_end = (i + 1) * 12 + (12 - offset)
         assert imported_stats_5min[slice_start]["start"].minute == 0
@@ -641,12 +641,12 @@ async def test_statistic_during_period_hole(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test statistic_during_period when there are holes in the data."""
-    id = 1
+    stat_id = 1
 
     def next_id():
-        nonlocal id
-        id += 1
-        return id
+        nonlocal stat_id
+        stat_id += 1
+        return stat_id
 
     now = dt_util.utcnow()
 
@@ -664,7 +664,7 @@ async def test_statistic_during_period_hole(
             "min": -76 + i * 2,
             "sum": i,
         }
-        for i in range(0, 6)
+        for i in range(6)
     ]
 
     imported_metadata = {
@@ -797,7 +797,7 @@ async def test_statistic_during_period_hole(
 @pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
 @pytest.mark.parametrize(
     ("calendar_period", "start_time", "end_time"),
-    (
+    [
         (
             {"period": "hour"},
             "2022-10-21T07:00:00+00:00",
@@ -848,7 +848,7 @@ async def test_statistic_during_period_hole(
             "2021-01-01T08:00:00+00:00",
             "2022-01-01T08:00:00+00:00",
         ),
-    ),
+    ],
 )
 async def test_statistic_during_period_calendar(
     recorder_mock: Recorder,
@@ -1119,7 +1119,7 @@ async def test_statistics_during_period_in_the_past(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test statistics_during_period in the past."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     now = dt_util.utcnow().replace()
 
     hass.config.units = US_CUSTOMARY_SYSTEM
@@ -2166,16 +2166,19 @@ async def test_recorder_info_migration_queue_exhausted(
         migration_done.wait()
         return real_migration(*args)
 
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.Recorder.async_periodic_statistics"
-    ), patch(
-        "homeassistant.components.recorder.core.create_engine",
-        new=create_engine_test,
-    ), patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1), patch.object(
-        recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 0
-    ), patch(
-        "homeassistant.components.recorder.migration._apply_update",
-        wraps=stalled_migration,
+    with (
+        patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),
+        patch("homeassistant.components.recorder.Recorder.async_periodic_statistics"),
+        patch(
+            "homeassistant.components.recorder.core.create_engine",
+            new=create_engine_test,
+        ),
+        patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1),
+        patch.object(recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 0),
+        patch(
+            "homeassistant.components.recorder.migration._apply_update",
+            wraps=stalled_migration,
+        ),
     ):
         recorder_helper.async_initialize_recorder(hass)
         hass.create_task(
@@ -2393,10 +2396,10 @@ async def test_get_statistics_metadata(
 
 @pytest.mark.parametrize(
     ("source", "statistic_id"),
-    (
+    [
         ("test", "test:total_energy_import"),
         ("recorder", "sensor.total_energy_import"),
-    ),
+    ],
 )
 async def test_import_statistics(
     recorder_mock: Recorder,
@@ -2607,10 +2610,10 @@ async def test_import_statistics(
 
 @pytest.mark.parametrize(
     ("source", "statistic_id"),
-    (
+    [
         ("test", "test:total_energy_import"),
         ("recorder", "sensor.total_energy_import"),
-    ),
+    ],
 )
 async def test_adjust_sum_statistics_energy(
     recorder_mock: Recorder,
@@ -2800,10 +2803,10 @@ async def test_adjust_sum_statistics_energy(
 
 @pytest.mark.parametrize(
     ("source", "statistic_id"),
-    (
+    [
         ("test", "test:total_gas"),
         ("recorder", "sensor.total_gas"),
-    ),
+    ],
 )
 async def test_adjust_sum_statistics_gas(
     recorder_mock: Recorder,
@@ -3000,14 +3003,14 @@ async def test_adjust_sum_statistics_gas(
         "valid_units",
         "invalid_units",
     ),
-    (
+    [
         ("kWh", "kWh", "energy", 1, ("Wh", "kWh", "MWh"), ("ft³", "m³", "cats", None)),
         ("MWh", "MWh", "energy", 1, ("Wh", "kWh", "MWh"), ("ft³", "m³", "cats", None)),
         ("m³", "m³", "volume", 1, ("ft³", "m³"), ("Wh", "kWh", "MWh", "cats", None)),
         ("ft³", "ft³", "volume", 1, ("ft³", "m³"), ("Wh", "kWh", "MWh", "cats", None)),
         ("dogs", "dogs", None, 1, ("dogs",), ("cats", None)),
         (None, None, "unitless", 1, (None,), ("cats",)),
-    ),
+    ],
 )
 async def test_adjust_sum_statistics_errors(
     recorder_mock: Recorder,
@@ -3174,3 +3177,81 @@ async def test_adjust_sum_statistics_errors(
         stats = statistics_during_period(hass, zero, period="hour")
         assert stats != previous_stats
         previous_stats = stats
+
+
+async def test_import_statistics_with_last_reset(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test importing external statistics with last_reset can be fetched via websocket api."""
+    client = await hass_ws_client()
+
+    assert "Compiling statistics for" not in caplog.text
+    assert "Statistics already compiled" not in caplog.text
+
+    zero = dt_util.utcnow()
+    last_reset = dt_util.parse_datetime("2022-01-01T00:00:00+02:00")
+    period1 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+    period2 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=2)
+
+    external_statistics1 = {
+        "start": period1,
+        "last_reset": last_reset,
+        "state": 0,
+        "sum": 2,
+    }
+    external_statistics2 = {
+        "start": period2,
+        "last_reset": last_reset,
+        "state": 1,
+        "sum": 3,
+    }
+
+    external_metadata = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import",
+        "unit_of_measurement": "kWh",
+    }
+
+    async_add_external_statistics(
+        hass, external_metadata, (external_statistics1, external_statistics2)
+    )
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/statistics_during_period",
+            "start_time": zero.isoformat(),
+            "end_time": (zero + timedelta(hours=48)).isoformat(),
+            "statistic_ids": ["test:total_energy_import"],
+            "period": "hour",
+            "types": ["change", "last_reset", "max", "mean", "min", "state", "sum"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["result"] == {
+        "test:total_energy_import": [
+            {
+                "change": 2.0,
+                "end": (period1.timestamp() * 1000) + (3600 * 1000),
+                "last_reset": last_reset.timestamp() * 1000,
+                "start": period1.timestamp() * 1000,
+                "state": 0.0,
+                "sum": 2.0,
+            },
+            {
+                "change": 1.0,
+                "end": (period2.timestamp() * 1000 + (3600 * 1000)),
+                "last_reset": last_reset.timestamp() * 1000,
+                "start": period2.timestamp() * 1000,
+                "state": 1.0,
+                "sum": 3.0,
+            },
+        ]
+    }

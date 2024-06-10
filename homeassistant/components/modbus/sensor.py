@@ -95,7 +95,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         )
 
         return [
-            SlaveSensor(self._coordinator, idx, entry) for idx in range(0, slave_count)
+            SlaveSensor(self._coordinator, idx, entry) for idx in range(slave_count)
         ]
 
     async def async_added_to_hass(self) -> None:

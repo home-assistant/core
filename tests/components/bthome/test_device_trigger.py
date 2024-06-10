@@ -1,13 +1,11 @@
 """Test BTHome BLE events."""
 
-import pytest
-
 from homeassistant.components import automation
-from homeassistant.components.bluetooth.const import DOMAIN as BLUETOOTH_DOMAIN
+from homeassistant.components.bluetooth import DOMAIN as BLUETOOTH_DOMAIN
 from homeassistant.components.bthome.const import CONF_SUBTYPE, DOMAIN
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     async_get as async_get_dev_reg,
@@ -20,7 +18,6 @@ from tests.common import (
     MockConfigEntry,
     async_capture_events,
     async_get_device_automations,
-    async_mock_service,
 )
 from tests.components.bluetooth import inject_bluetooth_service_info_bleak
 
@@ -29,12 +26,6 @@ from tests.components.bluetooth import inject_bluetooth_service_info_bleak
 def get_device_id(mac: str) -> tuple[str, str]:
     """Get device registry identifier for bthome_ble."""
     return (BLUETOOTH_DOMAIN, mac)
-
-
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 async def _async_setup_bthome_device(hass, mac: str):
@@ -229,7 +220,9 @@ async def test_get_triggers_for_invalid_device_id(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_if_fires_on_motion_detected(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_motion_detected(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
     """Test for motion event trigger firing."""
     mac = "DE:70:E8:B2:39:0C"
     entry = await _async_setup_bthome_device(hass, mac)
@@ -276,8 +269,8 @@ async def test_if_fires_on_motion_detected(hass: HomeAssistant, calls) -> None:
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "test_trigger_button_long_press"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "test_trigger_button_long_press"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

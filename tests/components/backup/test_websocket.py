@@ -27,10 +27,10 @@ def sync_access_token_proxy(
 
 @pytest.mark.parametrize(
     "with_hassio",
-    (
+    [
         pytest.param(True, id="with_hassio"),
         pytest.param(False, id="without_hassio"),
-    ),
+    ],
 )
 async def test_info(
     hass: HomeAssistant,
@@ -54,10 +54,10 @@ async def test_info(
 
 @pytest.mark.parametrize(
     "with_hassio",
-    (
+    [
         pytest.param(True, id="with_hassio"),
         pytest.param(False, id="without_hassio"),
-    ),
+    ],
 )
 async def test_remove(
     hass: HomeAssistant,
@@ -80,10 +80,10 @@ async def test_remove(
 
 @pytest.mark.parametrize(
     "with_hassio",
-    (
+    [
         pytest.param(True, id="with_hassio"),
         pytest.param(False, id="without_hassio"),
-    ),
+    ],
 )
 async def test_generate(
     hass: HomeAssistant,
@@ -111,16 +111,15 @@ async def test_generate(
 )
 @pytest.mark.parametrize(
     ("with_hassio"),
-    (
+    [
         pytest.param(True, id="with_hassio"),
         pytest.param(False, id="without_hassio"),
-    ),
+    ],
 )
 async def test_backup_end(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
-    request: pytest.FixtureRequest,
     sync_access_token_proxy: str,
     *,
     access_token_fixture_name: str,
@@ -145,10 +144,10 @@ async def test_backup_end(
 )
 @pytest.mark.parametrize(
     ("with_hassio"),
-    (
+    [
         pytest.param(True, id="with_hassio"),
         pytest.param(False, id="without_hassio"),
-    ),
+    ],
 )
 async def test_backup_start(
     hass: HomeAssistant,
@@ -174,11 +173,11 @@ async def test_backup_start(
 
 @pytest.mark.parametrize(
     "exception",
-    (
+    [
         TimeoutError(),
         HomeAssistantError("Boom"),
         Exception("Boom"),
-    ),
+    ],
 )
 async def test_backup_end_excepion(
     hass: HomeAssistant,
@@ -203,11 +202,11 @@ async def test_backup_end_excepion(
 
 @pytest.mark.parametrize(
     "exception",
-    (
+    [
         TimeoutError(),
         HomeAssistantError("Boom"),
         Exception("Boom"),
-    ),
+    ],
 )
 async def test_backup_start_excepion(
     hass: HomeAssistant,

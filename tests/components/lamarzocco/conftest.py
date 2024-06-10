@@ -1,16 +1,16 @@
 """Lamarzocco session fixtures."""
 
-from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 from lmcloud.const import LaMarzoccoModel
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.lamarzocco.const import CONF_MACHINE, DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 
-from . import USER_INPUT, async_init_integration
+from . import MODEL_DICT, USER_INPUT, async_init_integration
 
 from tests.common import (
     MockConfigEntry,
@@ -28,7 +28,12 @@ def mock_config_entry(
         title="My LaMarzocco",
         domain=DOMAIN,
         data=USER_INPUT
-        | {CONF_MACHINE: mock_lamarzocco.serial_number, CONF_HOST: "host"},
+        | {
+            CONF_MACHINE: mock_lamarzocco.serial_number,
+            CONF_HOST: "host",
+            CONF_NAME: "name",
+            CONF_MAC: "mac",
+        },
         unique_id=mock_lamarzocco.serial_number,
     )
     entry.add_to_hass(hass)
@@ -52,31 +57,21 @@ def device_fixture() -> LaMarzoccoModel:
 
 
 @pytest.fixture
-def mock_lamarzocco(
-    request: pytest.FixtureRequest, device_fixture: LaMarzoccoModel
-) -> Generator[MagicMock, None, None]:
+def mock_lamarzocco(device_fixture: LaMarzoccoModel) -> Generator[MagicMock]:
     """Return a mocked LM client."""
     model_name = device_fixture
 
-    if model_name == LaMarzoccoModel.GS3_AV:
-        serial_number = "GS01234"
-        true_model_name = "GS3 AV"
-    elif model_name == LaMarzoccoModel.GS3_MP:
-        serial_number = "GS01234"
-        true_model_name = "GS3 MP"
-    elif model_name == LaMarzoccoModel.LINEA_MICRA:
-        serial_number = "MR01234"
-        true_model_name = "Linea Micra"
-    elif model_name == LaMarzoccoModel.LINEA_MINI:
-        serial_number = "LM01234"
-        true_model_name = "Linea Mini"
+    (serial_number, true_model_name) = MODEL_DICT[model_name]
 
-    with patch(
-        "homeassistant.components.lamarzocco.coordinator.LaMarzoccoClient",
-        autospec=True,
-    ) as lamarzocco_mock, patch(
-        "homeassistant.components.lamarzocco.config_flow.LaMarzoccoClient",
-        new=lamarzocco_mock,
+    with (
+        patch(
+            "homeassistant.components.lamarzocco.coordinator.LaMarzoccoClient",
+            autospec=True,
+        ) as lamarzocco_mock,
+        patch(
+            "homeassistant.components.lamarzocco.config_flow.LaMarzoccoClient",
+            new=lamarzocco_mock,
+        ),
     ):
         lamarzocco = lamarzocco_mock.return_value
 
@@ -118,6 +113,9 @@ def mock_lamarzocco(
 
         lamarzocco.lm_local_api.websocket_connect = websocket_connect_mock
 
+        lamarzocco.lm_bluetooth = MagicMock()
+        lamarzocco.lm_bluetooth.address = "AA:BB:CC:DD:EE:FF"
+
         yield lamarzocco
 
 
@@ -130,3 +128,8 @@ def remove_local_connection(
     del data[CONF_HOST]
     hass.config_entries.async_update_entry(mock_config_entry, data=data)
     return mock_config_entry
+
+
+@pytest.fixture(autouse=True)
+def mock_bluetooth(enable_bluetooth: None) -> None:
+    """Auto mock bluetooth."""

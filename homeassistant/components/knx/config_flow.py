@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import AsyncGenerator
 from typing import Any, Final
 
+from typing_extensions import AsyncGenerator
 import voluptuous as vol
 from xknx import XKNX
 from xknx.exceptions.exception import (
@@ -118,7 +118,7 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
         self._tunnel_endpoints: list[XMLInterface] = []
 
         self._gatewayscanner: GatewayScanner | None = None
-        self._async_scan_gen: AsyncGenerator[GatewayDescriptor, None] | None = None
+        self._async_scan_gen: AsyncGenerator[GatewayDescriptor] | None = None
 
     @abstractmethod
     def finish_flow(self) -> ConfigFlowResult:
@@ -756,8 +756,6 @@ class KNXConfigFlow(KNXCommonFlow, ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
         return await self.async_step_connection_type()
 
 

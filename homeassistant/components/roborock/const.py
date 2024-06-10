@@ -30,3 +30,5 @@ IMAGE_DRAWABLES: list[Drawable] = [
 IMAGE_CACHE_INTERVAL = 90
 
 MAP_SLEEP = 3
+
+GET_MAPS_SERVICE_NAME = "get_maps"

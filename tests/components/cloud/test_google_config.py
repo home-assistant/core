@@ -1,7 +1,7 @@
 """Test the Cloud Google Config."""
 
 from http import HTTPStatus
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, PropertyMock, patch
 
 from freezegun import freeze_time
 import pytest
@@ -69,9 +69,12 @@ async def test_google_update_report_state(
 
     mock_conf._cloud.subscription_expired = False
 
-    with patch.object(mock_conf, "async_sync_entities") as mock_sync, patch(
-        "homeassistant.components.google_assistant.report_state.async_enable_report_state"
-    ) as mock_report_state:
+    with (
+        patch.object(mock_conf, "async_sync_entities") as mock_sync,
+        patch(
+            "homeassistant.components.google_assistant.report_state.async_enable_report_state"
+        ) as mock_report_state,
+    ):
         await cloud_prefs.async_update(google_report_state=True)
         await hass.async_block_till_done()
 
@@ -90,9 +93,12 @@ async def test_google_update_report_state_subscription_expired(
 
     assert mock_conf._cloud.subscription_expired
 
-    with patch.object(mock_conf, "async_sync_entities") as mock_sync, patch(
-        "homeassistant.components.google_assistant.report_state.async_enable_report_state"
-    ) as mock_report_state:
+    with (
+        patch.object(mock_conf, "async_sync_entities") as mock_sync,
+        patch(
+            "homeassistant.components.google_assistant.report_state.async_enable_report_state"
+        ) as mock_report_state,
+    ):
         await cloud_prefs.async_update(google_report_state=True)
         await hass.async_block_till_done()
 
@@ -154,8 +160,9 @@ async def test_google_update_expose_trigger_sync(
         await hass.async_block_till_done()
         await config.async_connect_agent_user("mock-user-id")
 
-        with patch.object(config, "async_sync_entities") as mock_sync, patch.object(
-            ga_helpers, "SYNC_DELAY", 0
+        with (
+            patch.object(config, "async_sync_entities") as mock_sync,
+            patch.object(ga_helpers, "SYNC_DELAY", 0),
         ):
             expose_entity(hass, light_entry.entity_id, True)
             await hass.async_block_till_done()
@@ -164,8 +171,9 @@ async def test_google_update_expose_trigger_sync(
 
         assert len(mock_sync.mock_calls) == 1
 
-        with patch.object(config, "async_sync_entities") as mock_sync, patch.object(
-            ga_helpers, "SYNC_DELAY", 0
+        with (
+            patch.object(config, "async_sync_entities") as mock_sync,
+            patch.object(ga_helpers, "SYNC_DELAY", 0),
         ):
             expose_entity(hass, light_entry.entity_id, False)
             expose_entity(hass, binary_sensor_entry.entity_id, True)
@@ -194,10 +202,10 @@ async def test_google_entity_registry_sync(
     await config.async_initialize()
     await config.async_connect_agent_user("mock-user-id")
 
-    with patch.object(
-        config, "async_schedule_google_sync_all"
-    ) as mock_sync, patch.object(config, "async_sync_entities_all"), patch.object(
-        ga_helpers, "SYNC_DELAY", 0
+    with (
+        patch.object(config, "async_schedule_google_sync_all") as mock_sync,
+        patch.object(config, "async_sync_entities_all"),
+        patch.object(ga_helpers, "SYNC_DELAY", 0),
     ):
         # Created entity
         entry = entity_registry.async_get_or_create(
@@ -857,3 +865,43 @@ async def test_google_config_get_agent_user_id(
         == config.agent_user_id
     )
     assert config.get_agent_user_id_from_webhook("other_id") != config.agent_user_id
+
+
+async def test_google_config_get_agent_users(
+    hass: HomeAssistant, mock_cloud_login, cloud_prefs
+) -> None:
+    """Test overridden async_get_agent_users method."""
+    username_mock = PropertyMock(return_value="blah")
+
+    # We should not call Cloud.username when not logged in
+    cloud_prefs._prefs["google_connected"] = True
+    assert cloud_prefs.google_connected
+    mock_cloud = Mock(is_logged_in=False)
+    type(mock_cloud).username = username_mock
+    config = CloudGoogleConfig(
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, mock_cloud
+    )
+    assert config.async_get_agent_users() == ()
+    username_mock.assert_not_called()
+
+    # We should not call Cloud.username when not connected
+    cloud_prefs._prefs["google_connected"] = False
+    assert not cloud_prefs.google_connected
+    mock_cloud = Mock(is_logged_in=True)
+    type(mock_cloud).username = username_mock
+    config = CloudGoogleConfig(
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, mock_cloud
+    )
+    assert config.async_get_agent_users() == ()
+    username_mock.assert_not_called()
+
+    # Logged in and connected
+    cloud_prefs._prefs["google_connected"] = True
+    assert cloud_prefs.google_connected
+    mock_cloud = Mock(is_logged_in=True)
+    type(mock_cloud).username = username_mock
+    config = CloudGoogleConfig(
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, mock_cloud
+    )
+    assert config.async_get_agent_users() == ("blah",)
+    username_mock.assert_called()

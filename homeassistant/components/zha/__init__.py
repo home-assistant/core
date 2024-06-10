@@ -1,6 +1,5 @@
 """Support for Zigbee Home Automation devices."""
 
-import asyncio
 import contextlib
 import copy
 import logging
@@ -124,8 +123,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     zha_data = get_zha_data(hass)
 
     if zha_data.yaml_config.get(CONF_ENABLE_QUIRKS, True):
-        setup_quirks(
-            custom_quirks_path=zha_data.yaml_config.get(CONF_CUSTOM_QUIRKS_PATH)
+        await hass.async_add_import_executor_job(
+            setup_quirks, zha_data.yaml_config.get(CONF_CUSTOM_QUIRKS_PATH)
         )
 
     # Load and cache device trigger information early
@@ -238,12 +237,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     websocket_api.async_unload_api(hass)
 
     # our components don't have unload methods so no need to look at return values
-    await asyncio.gather(
-        *(
-            hass.config_entries.async_forward_entry_unload(config_entry, platform)
-            for platform in PLATFORMS
-        )
-    )
+    await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
     return True
 

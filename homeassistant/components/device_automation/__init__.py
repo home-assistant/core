@@ -9,7 +9,7 @@ from enum import Enum
 from functools import wraps
 import logging
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias, overload
+from typing import TYPE_CHECKING, Any, Literal, overload
 
 import voluptuous as vol
 import voluptuous_serialize
@@ -49,7 +49,7 @@ if TYPE_CHECKING:
     from .condition import DeviceAutomationConditionProtocol
     from .trigger import DeviceAutomationTriggerProtocol
 
-    DeviceAutomationPlatformType: TypeAlias = (
+    type DeviceAutomationPlatformType = (
         ModuleType
         | DeviceAutomationTriggerProtocol
         | DeviceAutomationConditionProtocol
@@ -134,8 +134,7 @@ async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.TRIGGER],
-) -> DeviceAutomationTriggerProtocol:
-    ...
+) -> DeviceAutomationTriggerProtocol: ...
 
 
 @overload
@@ -143,8 +142,7 @@ async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.CONDITION],
-) -> DeviceAutomationConditionProtocol:
-    ...
+) -> DeviceAutomationConditionProtocol: ...
 
 
 @overload
@@ -152,15 +150,13 @@ async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.ACTION],
-) -> DeviceAutomationActionProtocol:
-    ...
+) -> DeviceAutomationActionProtocol: ...
 
 
 @overload
 async def async_get_device_automation_platform(
     hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType
-) -> DeviceAutomationPlatformType:
-    ...
+) -> DeviceAutomationPlatformType: ...
 
 
 async def async_get_device_automation_platform(
@@ -373,7 +369,7 @@ def handle_device_errors(
             await func(hass, connection, msg)
         except DeviceNotFound:
             connection.send_error(
-                msg["id"], websocket_api.const.ERR_NOT_FOUND, "Device not found"
+                msg["id"], websocket_api.ERR_NOT_FOUND, "Device not found"
             )
 
     return with_error_handling

@@ -42,6 +42,7 @@
     'context': <ANY>,
     'entity_id': 'cover.test_charge_port_door',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
@@ -89,6 +90,7 @@
     'context': <ANY>,
     'entity_id': 'cover.test_frunk',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
   })
@@ -136,6 +138,7 @@
     'context': <ANY>,
     'entity_id': 'cover.test_trunk',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
   })
@@ -183,6 +186,7 @@
     'context': <ANY>,
     'entity_id': 'cover.test_vent_windows',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
   })

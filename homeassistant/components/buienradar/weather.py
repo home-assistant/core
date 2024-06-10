@@ -138,13 +138,14 @@ class BrWeather(WeatherEntity):
         self._attr_unique_id = (
             f"{coordinates[CONF_LATITUDE]:2.6f}{coordinates[CONF_LONGITUDE]:2.6f}"
         )
+        self._forecast: list | None = None
 
     @callback
     def data_updated(self, data: BrData) -> None:
         """Update data."""
         self._attr_attribution = data.attribution
         self._attr_condition = self._calc_condition(data)
-        self._attr_forecast = self._calc_forecast(data)
+        self._forecast = self._calc_forecast(data)
         self._attr_humidity = data.humidity
         self._attr_name = (
             self._stationname or f"BR {data.stationname or '(unknown station)'}"
@@ -196,4 +197,4 @@ class BrWeather(WeatherEntity):
 
     async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        return self._attr_forecast
+        return self._forecast

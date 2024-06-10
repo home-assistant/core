@@ -93,7 +93,6 @@ class SonosMicrophoneSensorEntity(SonosEntity, BinarySensorEntity):
     """Representation of a Sonos microphone sensor entity."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_icon = "mdi:microphone"
     _attr_translation_key = "microphone"
 
     def __init__(self, speaker: SonosSpeaker) -> None:

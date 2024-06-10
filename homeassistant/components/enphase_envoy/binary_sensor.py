@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from operator import attrgetter
 
 from pyenphase import EnvoyEncharge, EnvoyEnpower
 
@@ -36,7 +37,7 @@ ENCHARGE_SENSORS = (
         translation_key="communicating",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda encharge: encharge.communicating,
+        value_fn=attrgetter("communicating"),
     ),
     EnvoyEnchargeBinarySensorEntityDescription(
         key="dc_switch",
@@ -60,7 +61,7 @@ ENPOWER_SENSORS = (
         translation_key="communicating",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda enpower: enpower.communicating,
+        value_fn=attrgetter("communicating"),
     ),
     EnvoyEnpowerBinarySensorEntityDescription(
         key="mains_oper_state",

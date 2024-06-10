@@ -6,22 +6,24 @@ import aiohttp
 from myuplink import DevicePoint
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MyUplinkDataCoordinator
-from .const import DOMAIN
+from . import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .entity import MyUplinkEntity
-from .helpers import find_matching_platform
+from .helpers import find_matching_platform, skip_entity
 
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SwitchEntityDescription]] = {
     "NIBEF": {
         "50004": SwitchEntityDescription(
             key="temporary_lux",
-            icon="mdi:water-alert-outline",
+            translation_key="temporary_lux",
+        ),
+        "50005": SwitchEntityDescription(
+            key="boost_ventilation",
+            translation_key="boost_ventilation",
         ),
     },
 }
@@ -35,25 +37,23 @@ def get_description(device_point: DevicePoint) -> SwitchEntityDescription | None
     2. Default to None
     """
     prefix, _, _ = device_point.category.partition(" ")
-    description = CATEGORY_BASED_DESCRIPTIONS.get(prefix, {}).get(
-        device_point.parameter_id
-    )
-
-    return description
+    return CATEGORY_BASED_DESCRIPTIONS.get(prefix, {}).get(device_point.parameter_id)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MyUplinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up myUplink switch."""
     entities: list[SwitchEntity] = []
-    coordinator: MyUplinkDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     # Setup device point switches
     for device_id, point_data in coordinator.data.points.items():
         for point_id, device_point in point_data.items():
+            if skip_entity(device_point.category, device_point):
+                continue
             if find_matching_platform(device_point) == Platform.SWITCH:
                 description = get_description(device_point)
 

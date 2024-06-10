@@ -50,7 +50,7 @@ async def test_datetime(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
 async def test_date_restore_and_respond(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX datetime with passive_address, restoring state and respond_to_read."""
-    hass.config.set_time_zone("Europe/Vienna")
+    await hass.config.async_set_time_zone("Europe/Vienna")
     test_address = "1/1/1"
     test_passive_address = "3/3/3"
     fake_state = State("datetime.test", "2022-03-03T03:04:05+00:00")

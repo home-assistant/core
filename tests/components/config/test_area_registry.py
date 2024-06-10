@@ -30,6 +30,8 @@ async def test_list_areas(
         aliases={"alias_1", "alias_2"},
         icon="mdi:garage",
         picture="/image/example.png",
+        floor_id="first_floor",
+        labels={"label_1", "label_2"},
     )
 
     await client.send_json_auto_id({"type": "config/area_registry/list"})
@@ -39,14 +41,18 @@ async def test_list_areas(
         {
             "aliases": [],
             "area_id": area1.id,
+            "floor_id": None,
             "icon": None,
+            "labels": [],
             "name": "mock 1",
             "picture": None,
         },
         {
             "aliases": unordered(["alias_1", "alias_2"]),
             "area_id": area2.id,
+            "floor_id": "first_floor",
             "icon": "mdi:garage",
+            "labels": unordered(["label_1", "label_2"]),
             "name": "mock 2",
             "picture": "/image/example.png",
         },
@@ -67,7 +73,9 @@ async def test_create_area(
     assert msg["result"] == {
         "aliases": [],
         "area_id": ANY,
+        "floor_id": None,
         "icon": None,
+        "labels": [],
         "name": "mock",
         "picture": None,
     }
@@ -77,7 +85,9 @@ async def test_create_area(
     await client.send_json_auto_id(
         {
             "aliases": ["alias_1", "alias_2"],
+            "floor_id": "first_floor",
             "icon": "mdi:garage",
+            "labels": ["label_1", "label_2"],
             "name": "mock 2",
             "picture": "/image/example.png",
             "type": "config/area_registry/create",
@@ -89,7 +99,9 @@ async def test_create_area(
     assert msg["result"] == {
         "aliases": unordered(["alias_1", "alias_2"]),
         "area_id": ANY,
+        "floor_id": "first_floor",
         "icon": "mdi:garage",
+        "labels": unordered(["label_1", "label_2"]),
         "name": "mock 2",
         "picture": "/image/example.png",
     }
@@ -158,7 +170,9 @@ async def test_update_area(
         {
             "aliases": ["alias_1", "alias_2"],
             "area_id": area.id,
+            "floor_id": "first_floor",
             "icon": "mdi:garage",
+            "labels": ["label_1", "label_2"],
             "name": "mock 2",
             "picture": "/image/example.png",
             "type": "config/area_registry/update",
@@ -170,7 +184,9 @@ async def test_update_area(
     assert msg["result"] == {
         "aliases": unordered(["alias_1", "alias_2"]),
         "area_id": area.id,
+        "floor_id": "first_floor",
         "icon": "mdi:garage",
+        "labels": unordered(["label_1", "label_2"]),
         "name": "mock 2",
         "picture": "/image/example.png",
     }
@@ -180,7 +196,9 @@ async def test_update_area(
         {
             "aliases": ["alias_1", "alias_1"],
             "area_id": area.id,
+            "floor_id": None,
             "icon": None,
+            "labels": [],
             "picture": None,
             "type": "config/area_registry/update",
         }
@@ -191,7 +209,9 @@ async def test_update_area(
     assert msg["result"] == {
         "aliases": ["alias_1"],
         "area_id": area.id,
+        "floor_id": None,
         "icon": None,
+        "labels": [],
         "name": "mock 2",
         "picture": None,
     }

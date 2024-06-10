@@ -35,9 +35,8 @@ DEFAULT_EXPOSED_DOMAINS = {
     "fan",
     "humidifier",
     "light",
-    "lock",
+    "media_player",
     "scene",
-    "script",
     "switch",
     "todo",
     "vacuum",
@@ -151,9 +150,8 @@ class ExposedEntities:
         """
         entity_registry = er.async_get(self._hass)
         if not (registry_entry := entity_registry.async_get(entity_id)):
-            return self._async_set_legacy_assistant_option(
-                assistant, entity_id, key, value
-            )
+            self._async_set_legacy_assistant_option(assistant, entity_id, key, value)
+            return
 
         assistant_options: ReadOnlyDict[str, Any] | dict[str, Any]
         if (
@@ -419,7 +417,7 @@ def ws_expose_entity(
         None,
     ):
         connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_ALLOWED, f"can't expose '{blocked}'"
+            msg["id"], websocket_api.ERR_NOT_ALLOWED, f"can't expose '{blocked}'"
         )
         return
 

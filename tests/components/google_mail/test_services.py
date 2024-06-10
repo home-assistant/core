@@ -62,10 +62,10 @@ async def test_set_vacation(
 
 @pytest.mark.parametrize(
     ("side_effect"),
-    (
+    [
         (RefreshError,),
         (ClientResponseError("", (), status=400),),
-    ),
+    ],
 )
 async def test_reauth_trigger(
     hass: HomeAssistant,

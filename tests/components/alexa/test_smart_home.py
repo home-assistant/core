@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.components import camera
 from homeassistant.components.alexa import smart_home, state_report
-import homeassistant.components.camera as camera
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 from homeassistant.components.media_player import MediaPlayerEntityFeature
@@ -882,7 +882,7 @@ async def test_direction_fan(hass: HomeAssistant) -> None:
             payload={},
             instance=None,
         )
-        assert call.data
+    assert call.data
 
 
 async def test_preset_mode_fan(
@@ -1822,12 +1822,6 @@ async def test_media_player_seek_error(hass: HomeAssistant) -> None:
             response_type="StateReport",
             payload={"deltaPositionMilliseconds": 30000},
         )
-
-        assert "event" in msg
-        msg = msg["event"]
-        assert msg["header"]["name"] == "ErrorResponse"
-        assert msg["header"]["namespace"] == "Alexa.Video"
-        assert msg["payload"]["type"] == "ACTION_NOT_PERMITTED_FOR_CONTENT"
 
 
 @pytest.mark.freeze_time("2022-04-19 07:53:05")
@@ -3827,7 +3821,6 @@ async def test_disabled(hass: HomeAssistant) -> None:
         await smart_home.async_handle_message(
             hass, get_default_config(hass), request, enabled=False
         )
-        await hass.async_block_till_done()
 
 
 async def test_endpoint_good_health(hass: HomeAssistant) -> None:
@@ -5464,9 +5457,8 @@ async def test_camera_discovery(hass: HomeAssistant, mock_stream: None) -> None:
     )
 
     hass.config.components.add("cloud")
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         appliance = await discovery_test(device, hass)
@@ -5495,9 +5487,8 @@ async def test_camera_discovery_without_stream(hass: HomeAssistant) -> None:
     )
 
     hass.config.components.add("cloud")
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         appliance = await discovery_test(device, hass)

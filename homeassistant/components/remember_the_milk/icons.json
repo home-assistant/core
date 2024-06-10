@@ -1,0 +1,6 @@
+{
+  "services": {
+    "create_task": "mdi:check",
+    "complete_task": "mdi:check-all"
+  }
+}

@@ -13,21 +13,21 @@ async def test_init_success(mock_api, hass: HomeAssistant) -> None:
     """Test setup and that we can create the entry."""
 
     entry = await create_config_entry(hass)
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
-    "mock_get_water_quality", [exceptions.APIRequestFailedException], indirect=True
+    "mock_get_device", [exceptions.APIRequestFailedException], indirect=True
 )
 async def test_init_with_api_error(mock_api, hass: HomeAssistant) -> None:
     """Test init with api error."""
 
     entry = await create_config_entry(hass)
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(
-    ("mock__get_devices", "expected_state"),
+    ("mock__get_devices_metadata", "expected_state"),
     [
         (
             exceptions.RefreshTokenExpiredException,
@@ -38,7 +38,7 @@ async def test_init_with_api_error(mock_api, hass: HomeAssistant) -> None:
             ConfigEntryState.SETUP_RETRY,
         ),
     ],
-    indirect=["mock__get_devices"],
+    indirect=["mock__get_devices_metadata"],
 )
 async def test_init_error_raised(
     mock_api, hass: HomeAssistant, expected_state: ConfigEntryState

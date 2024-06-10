@@ -70,6 +70,7 @@ WOHAND_SERVICE_INFO = BluetoothServiceInfoBleak(
     device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoHand"),
     time=0,
     connectable=True,
+    tx_power=-127,
 )
 
 
@@ -90,6 +91,7 @@ WOHAND_SERVICE_INFO_NOT_CONNECTABLE = BluetoothServiceInfoBleak(
     device=generate_ble_device("aa:bb:cc:dd:ee:ff", "WoHand"),
     time=0,
     connectable=False,
+    tx_power=-127,
 )
 
 
@@ -110,6 +112,7 @@ WOHAND_ENCRYPTED_SERVICE_INFO = BluetoothServiceInfoBleak(
     device=generate_ble_device("798A8547-2A3D-C609-55FF-73FA824B923B", "WoHand"),
     time=0,
     connectable=True,
+    tx_power=-127,
 )
 
 
@@ -130,6 +133,7 @@ WOHAND_SERVICE_ALT_ADDRESS_INFO = BluetoothServiceInfoBleak(
     device=generate_ble_device("aa:bb:cc:dd:ee:ff", "WoHand"),
     time=0,
     connectable=True,
+    tx_power=-127,
 )
 WOCURTAIN_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="WoCurtain",
@@ -148,6 +152,7 @@ WOCURTAIN_SERVICE_INFO = BluetoothServiceInfoBleak(
     device=generate_ble_device("aa:bb:cc:dd:ee:ff", "WoCurtain"),
     time=0,
     connectable=True,
+    tx_power=-127,
 )
 
 WOSENSORTH_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -165,6 +170,7 @@ WOSENSORTH_SERVICE_INFO = BluetoothServiceInfoBleak(
     device=generate_ble_device("aa:bb:cc:dd:ee:ff", "WoSensorTH"),
     time=0,
     connectable=False,
+    tx_power=-127,
 )
 
 
@@ -185,6 +191,7 @@ WOLOCK_SERVICE_INFO = BluetoothServiceInfoBleak(
     device=generate_ble_device("aa:bb:cc:dd:ee:ff", "WoLock"),
     time=0,
     connectable=True,
+    tx_power=-127,
 )
 
 NOT_SWITCHBOT_INFO = BluetoothServiceInfoBleak(
@@ -202,4 +209,5 @@ NOT_SWITCHBOT_INFO = BluetoothServiceInfoBleak(
     device=generate_ble_device("aa:bb:cc:dd:ee:ff", "unknown"),
     time=0,
     connectable=True,
+    tx_power=-127,
 )

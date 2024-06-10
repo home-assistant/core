@@ -1,16 +1,23 @@
 """Base classes for Axis entities."""
 
+from __future__ import annotations
+
 from abc import abstractmethod
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from axis.models.event import Event, EventTopic
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import DOMAIN as AXIS_DOMAIN
-from .hub import AxisHub
+
+if TYPE_CHECKING:
+    from .hub import AxisHub
 
 TOPIC_TO_EVENT_TYPE = {
     EventTopic.DAY_NIGHT_VISION: "DayNight",
@@ -30,6 +37,18 @@ TOPIC_TO_EVENT_TYPE = {
     EventTopic.RELAY: "Relay",
     EventTopic.SOUND_TRIGGER_LEVEL: "Sound",
 }
+
+
+@dataclass(frozen=True, kw_only=True)
+class AxisEventDescription(EntityDescription):
+    """Axis event based entity description."""
+
+    event_topic: tuple[EventTopic, ...] | EventTopic
+    """Event topic that provides state updates."""
+    name_fn: Callable[[AxisHub, Event], str] = lambda hub, event: ""
+    """Function providing the corresponding name to the event ID."""
+    supported_fn: Callable[[AxisHub, Event], bool] = lambda hub, event: True
+    """Function validating if event is supported."""
 
 
 class AxisEntity(Entity):
@@ -66,20 +85,25 @@ class AxisEntity(Entity):
 class AxisEventEntity(AxisEntity):
     """Base common to all Axis entities from event stream."""
 
+    entity_description: AxisEventDescription
+
     _attr_should_poll = False
 
-    def __init__(self, event: Event, hub: AxisHub) -> None:
+    def __init__(
+        self, hub: AxisHub, description: AxisEventDescription, event: Event
+    ) -> None:
         """Initialize the Axis event."""
         super().__init__(hub)
 
+        self.entity_description = description
+
         self._event_id = event.id
         self._event_topic = event.topic_base
-        self._event_type = TOPIC_TO_EVENT_TYPE[event.topic_base]
 
-        self._attr_name = f"{self._event_type} {event.id}"
+        event_type = TOPIC_TO_EVENT_TYPE[event.topic_base]
+        self._attr_name = description.name_fn(hub, event) or f"{event_type} {event.id}"
+
         self._attr_unique_id = f"{hub.unique_id}-{event.topic}-{event.id}"
-
-        self._attr_device_class = event.group.value
 
     @callback
     @abstractmethod

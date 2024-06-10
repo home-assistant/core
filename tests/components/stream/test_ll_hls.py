@@ -33,6 +33,8 @@ from .common import (
 )
 from .test_hls import STREAM_SOURCE, HlsClient, make_playlist
 
+from tests.typing import ClientSessionGenerator
+
 SEGMENT_DURATION = 6
 TEST_PART_DURATION = 0.75
 NUM_PART_SEGMENTS = int(-(-SEGMENT_DURATION // TEST_PART_DURATION))
@@ -45,7 +47,7 @@ VERY_LARGE_LAST_BYTE_POS = 9007199254740991
 
 
 @pytest.fixture
-def hls_stream(hass, hass_client):
+def hls_stream(hass: HomeAssistant, hass_client: ClientSessionGenerator):
     """Create test fixture for creating an HLS client for a stream."""
 
     async def create_client_for_stream(stream):
@@ -397,7 +399,7 @@ async def test_ll_hls_playlist_bad_msn_part(
     """Test some playlist requests with invalid _HLS_msn/_HLS_part."""
 
     async def _handler_bad_request(request):
-        raise web.HTTPBadRequest()
+        raise web.HTTPBadRequest
 
     await async_setup_component(
         hass,

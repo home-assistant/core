@@ -9,7 +9,7 @@ from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.bootstrap import async_setup_component
-import homeassistant.components.mailbox as mailbox
+from homeassistant.components import mailbox
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -49,7 +49,7 @@ class TestMailbox(mailbox.Mailbox):
         """Initialize Test mailbox."""
         super().__init__(hass, name)
         self._messages: dict[str, dict[str, Any]] = {}
-        for idx in range(0, 10):
+        for idx in range(10):
             msg = _create_message(idx)
             msgsha = msg["sha"]
             self._messages[msgsha] = msg

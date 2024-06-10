@@ -33,9 +33,9 @@ EVENT_USER_ADDED = "user_added"
 EVENT_USER_UPDATED = "user_updated"
 EVENT_USER_REMOVED = "user_removed"
 
-_MfaModuleDict = dict[str, MultiFactorAuthModule]
-_ProviderKey = tuple[str, str | None]
-_ProviderDict = dict[_ProviderKey, AuthProvider]
+type _MfaModuleDict = dict[str, MultiFactorAuthModule]
+type _ProviderKey = tuple[str, str | None]
+type _ProviderDict = dict[_ProviderKey, AuthProvider]
 
 
 class InvalidAuthError(Exception):
@@ -85,7 +85,7 @@ async def auth_manager_from_config(
         module_hash[module.id] = module
 
     manager = AuthManager(hass, store, provider_hash, module_hash)
-    manager.async_setup()
+    await manager.async_setup()
     return manager
 
 
@@ -181,8 +181,7 @@ class AuthManager:
             self._async_remove_expired_refresh_tokens, job_type=HassJobType.Callback
         )
 
-    @callback
-    def async_setup(self) -> None:
+    async def async_setup(self) -> None:
         """Set up the auth manager."""
         hass = self.hass
         hass.async_add_shutdown_job(
@@ -516,6 +515,13 @@ class AuthManager:
         callbacks = self._revoke_callbacks.pop(refresh_token.id, ())
         for revoke_callback in callbacks:
             revoke_callback()
+
+    @callback
+    def async_set_expiry(
+        self, refresh_token: models.RefreshToken, *, enable_expiry: bool
+    ) -> None:
+        """Enable or disable expiry of a refresh token."""
+        self._store.async_set_expiry(refresh_token, enable_expiry=enable_expiry)
 
     @callback
     def _async_remove_expired_refresh_tokens(self, _: datetime | None = None) -> None:
