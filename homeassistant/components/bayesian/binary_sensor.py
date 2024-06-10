@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import Callable
 import logging
+import math
 from typing import Any
 from uuid import UUID
 
@@ -98,6 +99,33 @@ def _above_greater_than_below(configs: list) -> list:
     return configs
 
 
+def _no_overlaping(configs: list[dict]) -> list[dict]:
+    if configs[0].get(CONF_PLATFORM, None) != CONF_NUMERIC_STATE:
+        return configs
+    if len(configs) < 2:
+        return configs
+    d: dict[str, list[tuple]] = {}
+    index = 0
+    for index, config in enumerate(configs):
+        above = config.get(CONF_ABOVE, -math.inf)
+        below = config.get(CONF_BELOW, math.inf)
+        entity_id: str = str(config.get(CONF_ENTITY_ID))
+        d.setdefault(entity_id, [])
+        d[entity_id].append((index, above, below))
+
+    for ent_id, tuples in d.items():
+        tuples = sorted(tuples, key=lambda tup: tup[1])
+
+        for i, tup in enumerate(tuples):
+            if len(tuples) == i + 1:
+                continue
+            if tup[2] > tuples[i + 1][1]:
+                raise vol.Invalid(
+                    f"For bayesian numeric state entities with more than one range like {ent_id}, they must not overlap, but above:{tup[1]}, below:{tup[2]} overlaps with above:{tuples[i+1][1]}, below:{tuples[i+1][2]}."
+                )
+    return configs
+
+
 STATE_SCHEMA = vol.Schema(
     {
         CONF_PLATFORM: CONF_STATE,
@@ -126,9 +154,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_DEVICE_CLASS): cv.string,
         vol.Required(CONF_OBSERVATIONS): vol.Schema(
             vol.All(
-                cv.ensure_list,
                 [vol.Any(TEMPLATE_SCHEMA, STATE_SCHEMA, NUMERIC_STATE_SCHEMA)],
                 _above_greater_than_below,
+                _no_overlaping,
+                cv.ensure_list,
             )
         ),
         vol.Required(CONF_PRIOR): vol.Coerce(float),
