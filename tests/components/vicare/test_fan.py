@@ -37,4 +37,3 @@ async def test_fan_turn_off(
             {ATTR_ENTITY_ID: ["fan.model0_ventilation"], ATTR_PERCENTAGE: 0},
             blocking=True,
         )
-        await hass.async_block_till_done()
