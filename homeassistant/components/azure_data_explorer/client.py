@@ -35,14 +35,6 @@ class AzureDataExplorerClient:
     def __init__(self, data: Mapping[str, Any]) -> None:
         """Create the right class."""
 
-        # User provided data with the Ingest- in the URI
-        self._cluster_ingest_uri = data[CONF_ADX_CLUSTER_INGEST_URI]
-
-        # Remove the Ingest- from the URI
-        self._cluster_query_uri = data[CONF_ADX_CLUSTER_INGEST_URI].replace(
-            "ingest-", ""
-        )
-
         self._database = data[CONF_ADX_DATABASE_NAME]
         self._table = data[CONF_ADX_TABLE_NAME]
         self._ingestion_properties = IngestionProperties(
@@ -55,7 +47,7 @@ class AzureDataExplorerClient:
         # Create client for ingesting data
         kcsb_ingest = (
             KustoConnectionStringBuilder.with_aad_application_key_authentication(
-                self._cluster_ingest_uri,
+                data[CONF_ADX_CLUSTER_INGEST_URI],
                 data[CONF_APP_REG_ID],
                 data[CONF_APP_REG_SECRET],
                 data[CONF_AUTHORITY_ID],
@@ -65,7 +57,7 @@ class AzureDataExplorerClient:
         # Create client for querying data
         kcsb_query = (
             KustoConnectionStringBuilder.with_aad_application_key_authentication(
-                self._cluster_query_uri,
+                data[CONF_ADX_CLUSTER_INGEST_URI].replace("ingest-", ""),
                 data[CONF_APP_REG_ID],
                 data[CONF_APP_REG_SECRET],
                 data[CONF_AUTHORITY_ID],
