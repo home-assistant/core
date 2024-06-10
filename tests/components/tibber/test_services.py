@@ -248,4 +248,4 @@ async def test_get_prices_invalid_input():
         call = ServiceCall(DOMAIN, PRICE_SERVICE_NAME, {"start": "test"})
         await __get_prices(call, hass=create_mock_hass())
 
-        assert "Invalid datetime provided." in str(excinfo.value)
+    assert "Invalid datetime provided." in str(excinfo.value)
