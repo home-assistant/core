@@ -1,6 +1,7 @@
 """Axis binary sensor platform tests."""
 
 from collections.abc import Callable
+from typing import Any
 
 import pytest
 
@@ -8,7 +9,6 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
@@ -173,12 +173,12 @@ from .const import NAME
         ),
     ],
 )
+@pytest.mark.usefixtures("setup_config_entry")
 async def test_binary_sensors(
     hass: HomeAssistant,
-    setup_config_entry: ConfigEntry,
     mock_rtsp_event: Callable[[str, str, str, str, str, str], None],
     event: dict[str, str],
-    entity: dict[str, str],
+    entity: dict[str, Any],
 ) -> None:
     """Test that sensors are loaded properly."""
     mock_rtsp_event(**event)
@@ -225,9 +225,9 @@ async def test_binary_sensors(
         },
     ],
 )
+@pytest.mark.usefixtures("setup_config_entry")
 async def test_unsupported_events(
     hass: HomeAssistant,
-    setup_config_entry: ConfigEntry,
     mock_rtsp_event: Callable[[str, str, str, str, str, str], None],
     event: dict[str, str],
 ) -> None:

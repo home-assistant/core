@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Generator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
 from enum import Enum
@@ -23,6 +23,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
 import pytest
 from syrupy import SnapshotAssertion
+from typing_extensions import AsyncGenerator, Generator
 import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
@@ -38,7 +39,7 @@ from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
 from homeassistant.config import async_process_component_config
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, _DataT
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -161,7 +162,7 @@ def get_test_config_dir(*add_path):
 
 
 @contextmanager
-def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
+def get_test_home_assistant() -> Generator[HomeAssistant]:
     """Return a Home Assistant object pointing at test config directory."""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -174,7 +175,7 @@ def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
         """Run event loop."""
 
         loop._thread_ident = threading.get_ident()
-        hass._loop_thread_id = loop._thread_ident
+        hass.loop_thread_id = loop._thread_ident
         loop.run_forever()
         loop_stop_event.set()
 
@@ -222,7 +223,7 @@ async def async_test_home_assistant(
     event_loop: asyncio.AbstractEventLoop | None = None,
     load_registries: bool = True,
     config_dir: str | None = None,
-) -> AsyncGenerator[HomeAssistant, None]:
+) -> AsyncGenerator[HomeAssistant]:
     """Return a Home Assistant object pointing at test config dir."""
     hass = HomeAssistant(config_dir or get_test_config_dir())
     store = auth_store.AuthStore(hass)
@@ -971,10 +972,8 @@ class MockToggleEntity(entity.ToggleEntity):
             return None
 
 
-class MockConfigEntry(config_entries.ConfigEntry[_DataT]):
+class MockConfigEntry(config_entries.ConfigEntry):
     """Helper for creating config entries that adds some defaults."""
-
-    runtime_data: _DataT
 
     def __init__(
         self,
@@ -1325,9 +1324,7 @@ class MockEntity(entity.Entity):
 
 
 @contextmanager
-def mock_storage(
-    data: dict[str, Any] | None = None,
-) -> Generator[dict[str, Any], None, None]:
+def mock_storage(data: dict[str, Any] | None = None) -> Generator[dict[str, Any]]:
     """Mock storage.
 
     Data is a dict {'key': {'version': version, 'data': data}}

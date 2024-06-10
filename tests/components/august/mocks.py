@@ -58,8 +58,8 @@ def _mock_authenticator(auth_state):
     return authenticator
 
 
-@patch("homeassistant.components.august.gateway.ApiAsync")
-@patch("homeassistant.components.august.gateway.AuthenticatorAsync.async_authenticate")
+@patch("yalexs.manager.gateway.ApiAsync")
+@patch("yalexs.manager.gateway.AuthenticatorAsync.async_authenticate")
 async def _mock_setup_august(
     hass, api_instance, pubnub_mock, authenticate_mock, api_mock, brand
 ):
@@ -77,7 +77,10 @@ async def _mock_setup_august(
     )
     entry.add_to_hass(hass)
     with (
-        patch("homeassistant.components.august.async_create_pubnub"),
+        patch(
+            "homeassistant.components.august.async_create_pubnub",
+            return_value=AsyncMock(),
+        ),
         patch("homeassistant.components.august.AugustPubNub", return_value=pubnub_mock),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)

@@ -5,8 +5,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 
-from pyunifiprotect.data import Camera, Event, EventType, Light, MountType, Sensor
-from pyunifiprotect.data.nvr import EventMetadata
+from uiprotect.data import Camera, Event, EventType, Light, MountType, Sensor
+from uiprotect.data.nvr import EventMetadata
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.unifiprotect.binary_sensor import (

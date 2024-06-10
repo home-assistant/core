@@ -16,8 +16,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
+from . import setup_with_selected_platforms
+
 from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.flexit_bacnet import setup_with_selected_platforms
 
 ENTITY_ID = "switch.device_name_electric_heater"
 

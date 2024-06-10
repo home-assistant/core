@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -13,13 +14,13 @@ from . import init_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     mock_v2c_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test states of the sensor."""
     with patch("homeassistant.components.v2c.PLATFORMS", [Platform.SENSOR]):
@@ -32,12 +33,12 @@ async def test_sensor(
         "no_error",
         "communication",
         "reading",
-        "slave",
+        "meter",
         "waiting_wifi",
         "waiting_communication",
         "wrong_ip",
-        "slave_not_found",
-        "wrong_slave",
+        "meter_not_found",
+        "wrong_meter",
         "no_response",
         "clamp_not_connected",
         "illegal_function",

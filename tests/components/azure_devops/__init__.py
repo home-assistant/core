@@ -43,7 +43,7 @@ DEVOPS_PROJECT = DevOpsProject(
 
 DEVOPS_BUILD_DEFINITION = DevOpsBuildDefinition(
     build_id=9876,
-    name="Test Build",
+    name="CI",
     url=f"https://dev.azure.com/{ORGANIZATION}/{PROJECT}/_apis/build/definitions/1",
     path="",
     build_type="build",
@@ -66,6 +66,16 @@ DEVOPS_BUILD = DevOpsBuild(
     definition=DEVOPS_BUILD_DEFINITION,
     project=DEVOPS_PROJECT,
     links=None,
+)
+
+DEVOPS_BUILD_MISSING_DATA = DevOpsBuild(
+    build_id=6789,
+    definition=DEVOPS_BUILD_DEFINITION,
+    project=DEVOPS_PROJECT,
+)
+
+DEVOPS_BUILD_MISSING_PROJECT_DEFINITION = DevOpsBuild(
+    build_id=9876,
 )
 
 

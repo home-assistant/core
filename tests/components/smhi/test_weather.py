@@ -13,20 +13,18 @@ from homeassistant.components.smhi.weather import CONDITION_CLASSES, RETRY_TIMEO
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_FORECAST_CONDITION,
+    ATTR_WEATHER_CLOUD_COVERAGE,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_VISIBILITY,
     ATTR_WEATHER_WIND_BEARING,
+    ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN as WEATHER_DOMAIN,
     LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECASTS,
-)
-from homeassistant.components.weather.const import (
-    ATTR_WEATHER_CLOUD_COVERAGE,
-    ATTR_WEATHER_WIND_GUST_SPEED,
 )
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN, UnitOfSpeed
 from homeassistant.core import HomeAssistant

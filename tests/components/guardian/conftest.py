@@ -1,10 +1,10 @@
 """Define fixtures for Elexa Guardian tests."""
 
-from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.guardian import CONF_UID, DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.guardian.async_setup_entry", return_value=True

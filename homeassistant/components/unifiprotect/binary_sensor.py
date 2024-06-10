@@ -6,7 +6,7 @@ import dataclasses
 import logging
 from typing import Any
 
-from pyunifiprotect.data import (
+from uiprotect.data import (
     NVR,
     Camera,
     Light,
@@ -16,7 +16,7 @@ from pyunifiprotect.data import (
     ProtectModelWithId,
     Sensor,
 )
-from pyunifiprotect.data.nvr import UOSDisk
+from uiprotect.data.nvr import UOSDisk
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,

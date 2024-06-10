@@ -13,8 +13,8 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import (
+from uiprotect import ProtectApiClient
+from uiprotect.data import (
     NVR,
     Bootstrap,
     Camera,

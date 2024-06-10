@@ -119,6 +119,7 @@ async def _assert_contexts(client, next_id, contexts, domain=None, item_id=None)
         ("script", "sequence", [set(), set()], [UNDEFINED, UNDEFINED], "id", []),
     ],
 )
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_get_trace(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -129,7 +130,6 @@ async def test_get_trace(
     trigger,
     context_key,
     condition_results,
-    enable_custom_integrations: None,
 ) -> None:
     """Test tracing a script or automation."""
     await async_setup_component(hass, "homeassistant", {})
@@ -1573,10 +1573,10 @@ async def test_script_mode_2(
     assert trace["script_execution"] == "finished"
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_trace_blueprint_automation(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    enable_custom_integrations: None,
 ) -> None:
     """Test trace of blueprint automation."""
     await async_setup_component(hass, "homeassistant", {})

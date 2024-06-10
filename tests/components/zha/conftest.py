@@ -1,6 +1,6 @@
 """Test configuration for the ZHA component."""
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable
 import itertools
 import time
 from typing import Any
@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 import warnings
 
 import pytest
+from typing_extensions import Generator
 import zigpy
 from zigpy.application import ControllerApplication
 import zigpy.backups
@@ -225,7 +226,7 @@ async def config_entry_fixture(hass) -> MockConfigEntry:
 @pytest.fixture
 def mock_zigpy_connect(
     zigpy_app_controller: ControllerApplication,
-) -> Generator[ControllerApplication, None, None]:
+) -> Generator[ControllerApplication]:
     """Patch the zigpy radio connection with our mock application."""
     with (
         patch(
@@ -385,7 +386,7 @@ def zha_device_restored(hass, zigpy_app_controller, setup_zha):
 
 
 @pytest.fixture(params=["zha_device_joined", "zha_device_restored"])
-def zha_device_joined_restored(request):
+def zha_device_joined_restored(request: pytest.FixtureRequest):
     """Join or restore ZHA device."""
     named_method = request.getfixturevalue(request.param)
     named_method.name = request.param
