@@ -15,7 +15,7 @@ from .coordinator import (
     TeslemetryEnergySiteLiveCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
-from .helpers import handle_command, handle_vehicle_command, wake_up_vehicle
+from .helpers import wake_up_vehicle
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 
@@ -75,10 +75,6 @@ class TeslemetryEntity(
         """Return True if a specific value is in coordinator data."""
         return self.key in self.coordinator.data
 
-    async def handle_command(self, command) -> dict[str, Any]:
-        """Handle a command."""
-        return await handle_command(command)
-
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()
@@ -120,10 +116,6 @@ class TeslemetryVehicleEntity(TeslemetryEntity):
     async def wake_up_if_asleep(self) -> None:
         """Wake up the vehicle if its asleep."""
         await wake_up_vehicle(self.vehicle)
-
-    async def handle_command(self, command) -> dict[str, Any]:
-        """Handle a vehicle command."""
-        return await handle_vehicle_command(command)
 
 
 class TeslemetryEnergyLiveEntity(TeslemetryEntity):
