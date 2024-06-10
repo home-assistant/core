@@ -76,7 +76,7 @@
           'components_wall_connectors': list([
             dict({
               'device_id': '123abc',
-              'din': 'abc-123',
+              'din': 'abd-123',
               'is_active': True,
               'part_name': 'Gen 3 Wall Connector',
             }),

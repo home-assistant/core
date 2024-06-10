@@ -82,7 +82,7 @@
       "wall_connectors": [
         {
           "device_id": "123abc",
-          "din": "abc-123",
+          "din": "abd-123",
           "part_name": "Gen 3 Wall Connector",
           "is_active": true
         },
