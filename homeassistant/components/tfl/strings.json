@@ -39,11 +39,9 @@
     "step": {
       "init": {
         "title": "Edit Configuration",
-        "description": "Update API Key and Stop Points",
+        "description": "Update Stop Points",
         "data": {
-          "app_key": "Application Key",
-          "stop_points": "Stop Points",
-          "stop_point": "Add Stop Point"
+          "stop_points": "Stop Point"
         }
       }
     },

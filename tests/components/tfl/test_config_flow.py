@@ -4,12 +4,12 @@ from unittest.mock import Mock, patch
 from urllib.error import HTTPError
 
 import pytest
+import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.tfl.common import CannotConnect, InvalidAuth
 from homeassistant.components.tfl.config_flow import (
-    STEP_STOP_POINT_DATA_SCHEMA,
-    CannotConnect,
-    InvalidAuth,
+    STEP_STOP_POINTS_DATA_SCHEMA,
     TfLConfigFlow,
 )
 from homeassistant.components.tfl.const import (
@@ -61,7 +61,7 @@ async def test_flow_stops_form_is_shown(hass: HomeAssistant) -> None:
     assert stops_config_flow__init_result["step_id"] == "stop_point"
     assert stops_config_flow__init_result["handler"] == "tfl"
     assert stops_config_flow__init_result["errors"] == {}
-    assert stops_config_flow__init_result["data_schema"] == STEP_STOP_POINT_DATA_SCHEMA
+    assert stops_config_flow__init_result["data_schema"] == STEP_STOP_POINTS_DATA_SCHEMA
 
 
 @patch("homeassistant.components.tfl.config_flow.stopPoint")
@@ -166,7 +166,7 @@ async def test_form_no_stop(m_stopPoint, hass: HomeAssistant) -> None:
     assert stops_config_error_result["step_id"] == "stop_point"
     assert stops_config_error_result["handler"] == "tfl"
     assert stops_config_error_result["errors"] == {}
-    assert stops_config_error_result["data_schema"] == STEP_STOP_POINT_DATA_SCHEMA
+    assert stops_config_error_result["data_schema"] == STEP_STOP_POINTS_DATA_SCHEMA
 
 
 @patch("homeassistant.components.tfl.config_flow.stopPoint")
@@ -199,7 +199,7 @@ async def test_invalid_stop_id(m_stopPoint, hass: HomeAssistant) -> None:
     assert stops_config_error_result["step_id"] == "stop_point"
     assert stops_config_error_result["handler"] == "tfl"
     assert stops_config_error_result["errors"] == {"base": "invalid_stop_point"}
-    assert stops_config_error_result["data_schema"] == STEP_STOP_POINT_DATA_SCHEMA
+    assert stops_config_error_result["data_schema"] == STEP_STOP_POINTS_DATA_SCHEMA
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
@@ -260,14 +260,13 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
     assert {} == result["errors"]
-    assert result["data_schema"]({}) == {
-        CONF_STOP_POINTS: ["AAAAAAAA1"],
-    }
-
-    schema = result["data_schema"].schema
-    assert CONF_STOP_POINTS in schema
-    assert isinstance(schema.get(CONF_STOP_POINTS), TextSelector)
-    assert schema.get(CONF_STOP_POINTS).config["multiple"] is True
+    assert len(result["data_schema"].schema) == 1
+    for key, value in result["data_schema"].schema.items():
+        assert isinstance(key, vol.Marker)
+        assert key == CONF_STOP_POINTS
+        assert key.description == {"suggested_value": ["AAAAAAAA1"]}
+        assert isinstance(value, TextSelector)
+        assert value.config["multiple"] is True
 
 
 @patch("homeassistant.components.tfl.config_flow.stopPoint")
@@ -356,11 +355,11 @@ async def test_async_step_reconfigure_shows_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == config_entries.SOURCE_RECONFIGURE
     assert result["handler"] == "tfl"
     assert result["errors"] == {}
-    assert result["data_schema"]({}) == {
-        CONF_API_APP_KEY: config_entry.data[CONF_API_APP_KEY],
-    }
-    schema = result["data_schema"].schema
-    assert CONF_API_APP_KEY in schema
+    assert len(result["data_schema"].schema) == 1
+    for key in result["data_schema"].schema:
+        assert isinstance(key, vol.Marker)
+        assert key == CONF_API_APP_KEY
+        assert key.description == {"suggested_value": "appy_appy_app_key"}
 
 
 async def test_async_step_reconfigure_is_successful(hass: HomeAssistant) -> None:

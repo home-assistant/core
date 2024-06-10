@@ -1,4 +1,5 @@
 """Common fixtures for the Transport for London tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 

@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
 import logging
 from typing import Any
-from urllib.error import HTTPError, URLError
+from urllib.error import HTTPError
 
 from tflwrapper import stopPoint
 import voluptuous as vol
@@ -18,10 +17,10 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
 
+from .common import CannotConnect, InvalidAuth, call_tfl_api
 from .const import CONF_API_APP_KEY, CONF_STOP_POINTS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,8 +30,18 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_API_APP_KEY, default=""): cv.string,
     }
 )
-STEP_STOP_POINT_DATA_SCHEMA = vol.Schema(
+STEP_STOP_POINTS_DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_STOP_POINTS): TextSelector(TextSelectorConfig(multiple=True))}
+)
+RECONFIGURE_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_API_APP_KEY): cv.string,
+    }
+)
+OPTIONS_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_STOP_POINTS): TextSelector(TextSelectorConfig(multiple=True)),
+    }
 )
 
 
@@ -42,19 +51,8 @@ async def validate_app_key(hass: HomeAssistant, app_key: str) -> None:
     _LOGGER.debug("Validating app_key")
     stop_point_api = stopPoint(app_key)
     # Make a random, cheap, call to the API to validate the app_key
-    try:
-        categories = await hass.async_add_executor_job(stop_point_api.getCategories)
-        _LOGGER.debug("Validating app_key, got categories=%s", categories)
-    except HTTPError as exception:
-        # TfL's API returns a 429 if you pass an invalid app_key, but we also check
-        # for other reasonable error codes in case their behaviour changes
-        error_code = exception.code
-        if error_code in (429, 401, 403):
-            raise InvalidAuth from exception
-
-        raise
-    except URLError as exception:
-        raise CannotConnect from exception
+    categories = await call_tfl_api(hass, stop_point_api.getCategories)
+    _LOGGER.debug("Validating app_key, got categories=%s", categories)
 
 
 async def validate_stop_point(
@@ -67,23 +65,15 @@ async def validate_stop_point(
     try:
         stop_point_api = stopPoint(app_key)
         _LOGGER.debug("Validating stop_point=%s", stop_point)
-        arrivals = await hass.async_add_executor_job(
-            stop_point_api.getStationArrivals, stop_point
+        arrivals = await call_tfl_api(
+            hass, stop_point_api.getStationArrivals, stop_point
         )
         _LOGGER.debug("Got for stop_point=%s, arrivals=%s", stop_point, arrivals)
     except HTTPError as exception:
-        # TfL's API returns a 429 if you pass an invalid app_key, but we also check
-        # for other reasonable error codes in case their behaviour changes
-        error_code = exception.code
-        if error_code in (429, 401, 403):
-            raise InvalidAuth from exception
-
-        if error_code == 404:
+        if exception.code == 404:
             raise ValueError from exception
 
         raise
-    except URLError as exception:
-        raise CannotConnect from exception
 
 
 async def validate_stop_points(hass: HomeAssistant, app_key: str, stop_points):
@@ -170,7 +160,7 @@ class TfLConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="stop_point",
-            data_schema=STEP_STOP_POINT_DATA_SCHEMA,
+            data_schema=STEP_STOP_POINTS_DATA_SCHEMA,
             errors=errors,
             description_placeholders=description_placeholders,
         )
@@ -178,7 +168,7 @@ class TfLConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Add reconfigure step to allow to reconfigure a config entry."""
+        """Reconfigure step allows the app key to be updated."""
         errors: dict[str, str] = {}
         config_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -205,12 +195,8 @@ class TfLConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_API_APP_KEY, default=config_entry.data[CONF_API_APP_KEY]
-                    ): cv.string,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                RECONFIGURE_DATA_SCHEMA, config_entry.data
             ),
             errors=errors,
         )
@@ -259,26 +245,12 @@ class OptionsFlowHandler(OptionsFlow):
                 )
 
         config = self.config_entry.options
-        all_stops = deepcopy(config[CONF_STOP_POINTS])
 
-        options_schema = vol.Schema(
-            {
-                vol.Required(CONF_STOP_POINTS, default=all_stops): TextSelector(
-                    TextSelectorConfig(multiple=True)
-                ),
-            }
-        )
         return self.async_show_form(
             step_id="init",
-            data_schema=options_schema,
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_DATA_SCHEMA, config
+            ),
             errors=errors,
             description_placeholders=description_placeholders,
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""

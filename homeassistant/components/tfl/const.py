@@ -2,7 +2,6 @@
 
 DOMAIN = "tfl"
 CONF_API_APP_KEY = "app_key"
-CONF_STOP_POINT = "stop_point"
 CONF_STOP_POINTS = "stop_points"
 
 ATTR_NEXT_ARRIVALS = "all"

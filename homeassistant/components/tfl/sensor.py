@@ -1,4 +1,5 @@
 """Sensor for Transport for London (TfL)."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -16,6 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .common import call_tfl_api
 from .const import (
     ATTR_NEXT_ARRIVALS,
     ATTR_NEXT_THREE_ARRIVALS,
@@ -41,8 +43,8 @@ async def async_setup_entry(
     stop_point_ids: list[str] = conf[CONF_STOP_POINTS]
 
     try:
-        stop_point_infos = await hass.async_add_executor_job(
-            stop_point_api.getByIDs, stop_point_ids, False
+        stop_point_infos = await call_tfl_api(
+            hass, stop_point_api.getByIDs, stop_point_ids, False
         )
         devices = []
         if isinstance(stop_point_infos, list):
@@ -117,8 +119,8 @@ class StopPointSensor(SensorEntity):
                     "time_to_station": raw_arrival[RAW_ARRIVAL_TIME_TO_STATION],
                 }
 
-            raw_arrivals = await self.hass.async_add_executor_job(
-                self._stop_point_api.getStationArrivals, self._stop_point_id
+            raw_arrivals = await call_tfl_api(
+                self.hass, self._stop_point_api.getStationArrivals, self._stop_point_id
             )
 
             if raw_arrivals:

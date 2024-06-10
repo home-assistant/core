@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from urllib.error import HTTPError, URLError
+from urllib.error import HTTPError
 
 from tflwrapper import stopPoint
 
@@ -12,6 +12,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
+from .common import CannotConnect, InvalidAuth, call_tfl_api
 from .const import CONF_API_APP_KEY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,22 +28,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     app_key = entry.data[CONF_API_APP_KEY]
     stop_point_api = stopPoint(app_key)
     try:
-        categories = await hass.async_add_executor_job(
-            stop_point_api.getCategories
-        )  # Check can call endpoint.
-    except HTTPError as exception:
-        # TfL's API returns a 429 if you pass an invalid app_key, but we also check
-        # for other reasonable error codes in case their behaviour changes
-        error_code = exception.code
-        if error_code in (429, 401, 403):
-            raise ConfigEntryAuthFailed(
-                "Authentication failure for app_key=" + app_key
-            ) from exception
-
-        raise ConfigEntryNotReady(
-            "Connection error whilst connecting to TfL"
+        # Check can call an endpoint.
+        categories = await call_tfl_api(hass, stop_point_api.getCategories)
+    except InvalidAuth as exception:
+        raise ConfigEntryAuthFailed(
+            "Authentication failure for app_key=" + app_key
         ) from exception
-    except URLError as exception:
+    except (HTTPError, CannotConnect) as exception:
         raise ConfigEntryNotReady(
             "Connection error whilst connecting to TfL"
         ) from exception
