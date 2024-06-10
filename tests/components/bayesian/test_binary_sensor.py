@@ -440,7 +440,9 @@ async def test_multiple_observations(hass: HomeAssistant) -> None:
     assert state.attributes.get("observations")[1]["platform"] == "state"
 
 
-async def test_multiple_numeric_observations(hass: HomeAssistant) -> None:
+async def test_multiple_numeric_observations(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test sensor on numeric state platform observations with more than one range."""
 
     config = {
@@ -502,7 +504,7 @@ async def test_multiple_numeric_observations(hass: HomeAssistant) -> None:
         json.dumps(attrs)
     assert state.attributes.get("occurred_observation_entities") == []
     assert state.attributes.get("probability") == 0.1
-    
+
     # No observations made so probability should be the prior
     assert state.attributes.get("occurred_observation_entities") == ["sensor.test_temp"]
     assert abs(state.attributes.get("probability") - 0.09677) < 0.01
@@ -566,7 +568,7 @@ async def test_multiple_numeric_observations(hass: HomeAssistant) -> None:
 
     assert state.state == "off"
 
-    assert len(async_get(hass).issues) == 0
+    assert len(issue_registry.issues) == 0
     assert state.attributes.get("observations")[0]["platform"] == "numeric_state"
 
     hass.states.async_set("sensor.test_temp", "badstate")
