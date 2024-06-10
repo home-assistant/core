@@ -155,7 +155,7 @@ class OpenAIConversationEntity(
             # a new conversation was started. If the user picks their own, they
             # want to track a conversation and we respect it.
             try:
-                ulid.bytes_to_ulid(user_input.conversation_id.encode())
+                ulid.ulid_to_bytes(user_input.conversation_id)
                 conversation_id = ulid.ulid_now()
             except ValueError:
                 conversation_id = user_input.conversation_id
