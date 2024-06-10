@@ -15,12 +15,6 @@ from homeassistant.helpers import discovery_flow
 
 from .gateway import AugustGateway
 
-API_CACHED_ATTRS = {
-    "door_state",
-    "door_state_datetime",
-    "lock_status",
-    "lock_status_datetime",
-}
 YALEXS_BLE_DOMAIN = "yalexs_ble"
 
 
