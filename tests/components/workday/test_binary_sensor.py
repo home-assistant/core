@@ -145,7 +145,9 @@ async def test_setup_add_holiday(
     assert state.state == "off"
 
 
-@pytest.mark.parametrize("time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii"])
+@pytest.mark.parametrize(
+    "time_zone", ["Asia/Tokyo", "Europe/Berlin", "America/Chicago", "US/Hawaii"]
+)
 async def test_setup_no_country_weekend(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -154,12 +156,31 @@ async def test_setup_no_country_weekend(
     """Test setup shows weekend as non-workday with no country."""
     await hass.config.async_set_time_zone(time_zone)
     zone = await dt_util.async_get_time_zone(time_zone)
-    freezer.move_to(datetime(2020, 2, 23, 23, 59, 59, tzinfo=zone))  # Sunday
+    freezer.move_to(datetime(2020, 2, 22, 0, 1, 1, tzinfo=zone))  # Saturday
     await init_integration(hass, TEST_CONFIG_NO_COUNTRY)
 
     state = hass.states.get("binary_sensor.workday_sensor")
     assert state is not None
     assert state.state == "off"
+
+
+@pytest.mark.parametrize(
+    "time_zone", ["Asia/Tokyo", "Europe/Berlin", "America/Chicago", "US/Hawaii"]
+)
+async def test_setup_no_country_weekday(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    time_zone: str,
+) -> None:
+    """Test setup shows a weekday as a workday with no country."""
+    await hass.config.async_set_time_zone(time_zone)
+    zone = await dt_util.async_get_time_zone(time_zone)
+    freezer.move_to(datetime(2020, 2, 21, 23, 59, 59, tzinfo=zone))  # Friday
+    await init_integration(hass, TEST_CONFIG_NO_COUNTRY)
+
+    state = hass.states.get("binary_sensor.workday_sensor")
+    assert state is not None
+    assert state.state == "on"
 
 
 async def test_setup_remove_holiday(
