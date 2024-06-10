@@ -140,7 +140,7 @@ async def async_handle(
     except IntentError:
         raise  # bubble up intent related errors
     except Exception as err:
-        _LOGGER.error("Error for %s: %s", intent_type, err)
+        _LOGGER.exception("Error for %s: %s", intent_type, err)
         raise IntentUnexpectedError(f"Error handling {intent_type}") from err
     return result
 
