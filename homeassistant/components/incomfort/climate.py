@@ -82,7 +82,7 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
         """Return the actual current HVAC action."""
         if self._heater.is_burning and self._heater.is_pumping:
             return HVACAction.HEATING
-        return HVACAction.OFF
+        return HVACAction.IDLE
 
     @property
     def target_temperature(self) -> float | None:
