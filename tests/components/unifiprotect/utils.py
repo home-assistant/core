@@ -8,8 +8,8 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import Mock
 
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import (
+from uiprotect import ProtectApiClient
+from uiprotect.data import (
     Bootstrap,
     Camera,
     Event,
@@ -18,8 +18,8 @@ from pyunifiprotect.data import (
     ProtectAdoptableDeviceModel,
     WSSubscriptionMessage,
 )
-from pyunifiprotect.data.bootstrap import ProtectDeviceRef
-from pyunifiprotect.test_util.anonymize import random_hex
+from uiprotect.data.bootstrap import ProtectDeviceRef
+from uiprotect.test_util.anonymize import random_hex
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, split_entity_id
