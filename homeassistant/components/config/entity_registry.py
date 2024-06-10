@@ -43,7 +43,7 @@ def websocket_list_entities(
     registry = er.async_get(hass)
     # Build start of response message
     msg_json_prefix = (
-        f'{{"id":{msg["id"]},"type": "{websocket_api.const.TYPE_RESULT}",'
+        f'{{"id":{msg["id"]},"type": "{websocket_api.TYPE_RESULT}",'
         '"success":true,"result": ['
     ).encode()
     # Concatenate cached entity registry item JSON serializations
@@ -74,7 +74,7 @@ def websocket_list_entities_for_display(
     registry = er.async_get(hass)
     # Build start of response message
     msg_json_prefix = (
-        f'{{"id":{msg["id"]},"type":"{websocket_api.const.TYPE_RESULT}","success":true,'
+        f'{{"id":{msg["id"]},"type":"{websocket_api.TYPE_RESULT}","success":true,'
         f'"result":{{"entity_categories":{_ENTITY_CATEGORIES_JSON},"entities":['
     ).encode()
     # Concatenate cached entity registry item JSON serializations
