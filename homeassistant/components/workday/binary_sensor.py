@@ -28,7 +28,7 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
 )
-from homeassistant.helpers.event import async_track_point_in_time
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import dt as dt_util, slugify
 
@@ -264,14 +264,14 @@ class IsWorkdaySensor(BinarySensorEntity):
 
     def get_next_interval(self, now: datetime) -> datetime:
         """Compute next time an update should occur."""
-        tomorrow = now + timedelta(days=1)
+        tomorrow = dt_util.as_local(now) + timedelta(days=1)
         return dt_util.start_of_local_day(tomorrow)
 
     def _update_state_and_setup_listener(self) -> None:
         """Update state and setup listener for next interval."""
         now = dt_util.now()
         self.update_data(now)
-        self.unsub = async_track_point_in_time(
+        self.unsub = async_track_point_in_utc_time(
             self.hass, self.point_in_time_listener, self.get_next_interval(now)
         )
 
