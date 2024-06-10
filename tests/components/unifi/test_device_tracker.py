@@ -49,7 +49,7 @@ from tests.common import async_fire_time_changed
 @pytest.mark.usefixtures("mock_device_registry")
 async def test_tracked_wireless_clients(
     hass: HomeAssistant,
-    mock_unifi_websocket,
+    mock_websocket_message,
     config_entry_setup: ConfigEntry,
     client_payload: list[dict[str, Any]],
 ) -> None:
@@ -60,7 +60,7 @@ async def test_tracked_wireless_clients(
     # Updated timestamp marks client as home
     client = client_payload[0]
     client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=client)
+    mock_websocket_message(message=MessageKey.CLIENT, data=client)
     await hass.async_block_till_done()
 
     assert hass.states.get("device_tracker.client").state == STATE_HOME
@@ -78,7 +78,7 @@ async def test_tracked_wireless_clients(
     assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
 
     # Same timestamp doesn't explicitly mark client as away
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=client)
+    mock_websocket_message(message=MessageKey.CLIENT, data=client)
     await hass.async_block_till_done()
 
     assert hass.states.get("device_tracker.client").state == STATE_HOME
@@ -146,7 +146,7 @@ async def test_tracked_wireless_clients(
 @pytest.mark.usefixtures("config_entry_setup")
 @pytest.mark.usefixtures("mock_device_registry")
 async def test_tracked_clients(
-    hass: HomeAssistant, mock_unifi_websocket, client_payload: list[dict[str, Any]]
+    hass: HomeAssistant, mock_websocket_message, client_payload: list[dict[str, Any]]
 ) -> None:
     """Test the update_items function with some clients."""
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 5
@@ -170,7 +170,7 @@ async def test_tracked_clients(
 
     client_1 = client_payload[0]
     client_1["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=client_1)
+    mock_websocket_message(message=MessageKey.CLIENT, data=client_1)
     await hass.async_block_till_done()
 
     assert hass.states.get("device_tracker.client_1").state == STATE_HOME
@@ -196,7 +196,7 @@ async def test_tracked_clients(
 async def test_tracked_wireless_clients_event_source(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    mock_unifi_websocket,
+    mock_websocket_message,
     config_entry_setup: ConfigEntry,
     client_payload: list[dict[str, Any]],
 ) -> None:
@@ -226,7 +226,7 @@ async def test_tracked_wireless_clients_event_source(
         ),
         "_id": "5ea331fa30c49e00f90ddc1a",
     }
-    mock_unifi_websocket(message=MessageKey.EVENT, data=event)
+    mock_websocket_message(message=MessageKey.EVENT, data=event)
     await hass.async_block_till_done()
     assert hass.states.get("device_tracker.client").state == STATE_HOME
 
@@ -249,7 +249,7 @@ async def test_tracked_wireless_clients_event_source(
         ),
         "_id": "5ea32ff730c49e00f90dca1a",
     }
-    mock_unifi_websocket(message=MessageKey.EVENT, data=event)
+    mock_websocket_message(message=MessageKey.EVENT, data=event)
     await hass.async_block_till_done()
     assert hass.states.get("device_tracker.client").state == STATE_HOME
 
@@ -275,7 +275,7 @@ async def test_tracked_wireless_clients_event_source(
 
     # New data
     client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=client)
+    mock_websocket_message(message=MessageKey.CLIENT, data=client)
     await hass.async_block_till_done()
     assert hass.states.get("device_tracker.client").state == STATE_HOME
 
@@ -298,7 +298,7 @@ async def test_tracked_wireless_clients_event_source(
         ),
         "_id": "5ea32ff730c49e00f90dca1a",
     }
-    mock_unifi_websocket(message=MessageKey.EVENT, data=event)
+    mock_websocket_message(message=MessageKey.EVENT, data=event)
     await hass.async_block_till_done()
     assert hass.states.get("device_tracker.client").state == STATE_HOME
 
@@ -361,7 +361,7 @@ async def test_tracked_wireless_clients_event_source(
 async def test_tracked_devices(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    mock_unifi_websocket,
+    mock_websocket_message,
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Test the update_items function with some devices."""
@@ -375,7 +375,7 @@ async def test_tracked_devices(
     device_2 = device_payload[1]
     device_2["state"] = 1
     device_2["next_interval"] = 50
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=[device_1, device_2])
+    mock_websocket_message(message=MessageKey.DEVICE, data=[device_1, device_2])
     await hass.async_block_till_done()
 
     assert hass.states.get("device_tracker.device_1").state == STATE_HOME
@@ -392,7 +392,7 @@ async def test_tracked_devices(
 
     # Disabled device is unavailable
     device_1["disabled"] = True
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
 
     assert hass.states.get("device_tracker.device_1").state == STATE_UNAVAILABLE
@@ -422,7 +422,7 @@ async def test_tracked_devices(
 @pytest.mark.usefixtures("config_entry_setup")
 @pytest.mark.usefixtures("mock_device_registry")
 async def test_remove_clients(
-    hass: HomeAssistant, mock_unifi_websocket, client_payload: list[dict[str, Any]]
+    hass: HomeAssistant, mock_websocket_message, client_payload: list[dict[str, Any]]
 ) -> None:
     """Test the remove_items function with some clients."""
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
@@ -430,7 +430,7 @@ async def test_remove_clients(
     assert hass.states.get("device_tracker.client_2")
 
     # Remove client
-    mock_unifi_websocket(message=MessageKey.CLIENT_REMOVED, data=client_payload[0])
+    mock_websocket_message(message=MessageKey.CLIENT_REMOVED, data=client_payload[0])
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
@@ -479,19 +479,19 @@ async def test_remove_clients(
 )
 @pytest.mark.usefixtures("config_entry_setup")
 @pytest.mark.usefixtures("mock_device_registry")
-async def test_hub_state_change(hass: HomeAssistant, websocket_mock) -> None:
+async def test_hub_state_change(hass: HomeAssistant, mock_websocket_state) -> None:
     """Verify entities state reflect on hub connection becoming unavailable."""
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
     assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
     assert hass.states.get("device_tracker.device").state == STATE_HOME
 
     # Controller unavailable
-    await websocket_mock.disconnect()
+    await mock_websocket_state.disconnect()
     assert hass.states.get("device_tracker.client").state == STATE_UNAVAILABLE
     assert hass.states.get("device_tracker.device").state == STATE_UNAVAILABLE
 
     # Controller available
-    await websocket_mock.reconnect()
+    await mock_websocket_state.reconnect()
     assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
     assert hass.states.get("device_tracker.device").state == STATE_HOME
 
@@ -545,7 +545,6 @@ async def test_option_track_clients(
     hass: HomeAssistant, config_entry_setup: ConfigEntry
 ) -> None:
     """Test the tracking of clients can be turned off."""
-
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
     assert hass.states.get("device_tracker.wireless_client")
     assert hass.states.get("device_tracker.wired_client")
@@ -707,7 +706,7 @@ async def test_option_track_devices(
 @pytest.mark.usefixtures("mock_device_registry")
 async def test_option_ssid_filter(
     hass: HomeAssistant,
-    mock_unifi_websocket,
+    mock_websocket_message,
     config_entry_factory: Callable[[], ConfigEntry],
     client_payload: list[dict[str, Any]],
 ) -> None:
@@ -753,12 +752,12 @@ async def test_option_ssid_filter(
     # Roams to SSID outside of filter
     client = client_payload[0]
     client["essid"] = "other_ssid"
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=client)
+    mock_websocket_message(message=MessageKey.CLIENT, data=client)
 
     # Data update while SSID filter is in effect shouldn't create the client
     client_on_ssid2 = client_payload[1]
     client_on_ssid2["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=client_on_ssid2)
+    mock_websocket_message(message=MessageKey.CLIENT, data=client_on_ssid2)
     await hass.async_block_till_done()
 
     new_time = dt_util.utcnow() + timedelta(
@@ -782,7 +781,7 @@ async def test_option_ssid_filter(
 
     client["last_seen"] += 1
     client_on_ssid2["last_seen"] += 1
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=[client, client_on_ssid2])
+    mock_websocket_message(message=MessageKey.CLIENT, data=[client, client_on_ssid2])
     await hass.async_block_till_done()
 
     assert hass.states.get("device_tracker.client").state == STATE_HOME
@@ -801,7 +800,7 @@ async def test_option_ssid_filter(
     assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
 
     client_on_ssid2["last_seen"] += 1
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=client_on_ssid2)
+    mock_websocket_message(message=MessageKey.CLIENT, data=client_on_ssid2)
     await hass.async_block_till_done()
 
     # Client won't go away until after next update
@@ -809,7 +808,7 @@ async def test_option_ssid_filter(
 
     # Trigger update to get client marked as away
     client_on_ssid2["last_seen"] += 1
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=client_on_ssid2)
+    mock_websocket_message(message=MessageKey.CLIENT, data=client_on_ssid2)
     await hass.async_block_till_done()
 
     new_time += timedelta(
@@ -825,7 +824,7 @@ async def test_option_ssid_filter(
 @pytest.mark.usefixtures("mock_device_registry")
 async def test_wireless_client_go_wired_issue(
     hass: HomeAssistant,
-    mock_unifi_websocket,
+    mock_websocket_message,
     config_entry_factory: Callable[[], ConfigEntry],
     client_payload: list[dict[str, Any]],
 ) -> None:
@@ -855,7 +854,7 @@ async def test_wireless_client_go_wired_issue(
     client = client_payload[0]
     client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
     client["is_wired"] = True
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=client)
+    mock_websocket_message(message=MessageKey.CLIENT, data=client)
     await hass.async_block_till_done()
 
     # Wired bug fix keeps client marked as wireless
@@ -876,7 +875,7 @@ async def test_wireless_client_go_wired_issue(
 
     # Try to mark client as connected
     client["last_seen"] += 1
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=client)
+    mock_websocket_message(message=MessageKey.CLIENT, data=client)
     await hass.async_block_till_done()
 
     # Make sure it don't go online again until wired bug disappears
@@ -886,7 +885,7 @@ async def test_wireless_client_go_wired_issue(
     # Make client wireless
     client["last_seen"] += 1
     client["is_wired"] = False
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=client)
+    mock_websocket_message(message=MessageKey.CLIENT, data=client)
     await hass.async_block_till_done()
 
     # Client is no longer affected by wired bug and can be marked online
@@ -898,7 +897,7 @@ async def test_wireless_client_go_wired_issue(
 @pytest.mark.usefixtures("mock_device_registry")
 async def test_option_ignore_wired_bug(
     hass: HomeAssistant,
-    mock_unifi_websocket,
+    mock_websocket_message,
     config_entry_factory: Callable[[], ConfigEntry],
     client_payload: list[dict[str, Any]],
 ) -> None:
@@ -925,7 +924,7 @@ async def test_option_ignore_wired_bug(
     # Trigger wired bug
     client = client_payload[0]
     client["is_wired"] = True
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=client)
+    mock_websocket_message(message=MessageKey.CLIENT, data=client)
     await hass.async_block_till_done()
 
     # Wired bug in effect
@@ -946,7 +945,7 @@ async def test_option_ignore_wired_bug(
 
     # Mark client as connected again
     client["last_seen"] += 1
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=client)
+    mock_websocket_message(message=MessageKey.CLIENT, data=client)
     await hass.async_block_till_done()
 
     # Ignoring wired bug allows client to go home again even while affected
@@ -956,7 +955,7 @@ async def test_option_ignore_wired_bug(
     # Make client wireless
     client["last_seen"] += 1
     client["is_wired"] = False
-    mock_unifi_websocket(message=MessageKey.CLIENT, data=client)
+    mock_websocket_message(message=MessageKey.CLIENT, data=client)
     await hass.async_block_till_done()
 
     # Client is wireless and still connected
