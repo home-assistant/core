@@ -1505,7 +1505,7 @@ def statistic_during_period(
         if end_time is None:
             tail_start_time = _last_statistic(session, Statistics, metadata_id)
             if tail_start_time:
-                tail_start_time -= timedelta(hours=1)
+                tail_start_time += timedelta(hours=1)
             else:
                 tail_start_time = now.replace(minute=0, second=0, microsecond=0)
         elif tail_only:
