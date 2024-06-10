@@ -7,7 +7,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.components.airthings_ble import (
+from . import (
     CO2_V1,
     CO2_V2,
     HUMIDITY_V2,
@@ -21,6 +21,7 @@ from tests.components.airthings_ble import (
     create_entry,
     patch_airthings_device_update,
 )
+
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 _LOGGER = logging.getLogger(__name__)

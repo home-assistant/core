@@ -1,7 +1,7 @@
 """Test BTHome BLE events."""
 
 from homeassistant.components import automation
-from homeassistant.components.bluetooth.const import DOMAIN as BLUETOOTH_DOMAIN
+from homeassistant.components.bluetooth import DOMAIN as BLUETOOTH_DOMAIN
 from homeassistant.components.bthome.const import CONF_SUBTYPE, DOMAIN
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
