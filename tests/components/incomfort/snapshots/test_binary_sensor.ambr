@@ -83,7 +83,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_code': '-',
+      'fault_code': 'none',
       'friendly_name': 'Boiler Fault',
     }),
     'context': <ANY>,
@@ -743,7 +743,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_code': '-',
+      'fault_code': 'none',
       'friendly_name': 'Boiler Fault',
     }),
     'context': <ANY>,
@@ -1073,7 +1073,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_code': '-',
+      'fault_code': 'none',
       'friendly_name': 'Boiler Fault',
     }),
     'context': <ANY>,
@@ -1403,7 +1403,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_code': '-',
+      'fault_code': 'none',
       'friendly_name': 'Boiler Fault',
     }),
     'context': <ANY>,
