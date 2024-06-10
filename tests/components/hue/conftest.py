@@ -19,13 +19,14 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
+from .const import FAKE_BRIDGE, FAKE_BRIDGE_DEVICE
+
 from tests.common import (
     MockConfigEntry,
     async_mock_service,
     load_fixture,
     mock_device_registry,
 )
-from tests.components.hue.const import FAKE_BRIDGE, FAKE_BRIDGE_DEVICE
 
 
 @pytest.fixture(autouse=True)
