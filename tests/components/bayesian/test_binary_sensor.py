@@ -731,6 +731,146 @@ async def test_missing_prob_given_false(
     )
 
 
+async def test_bad_multi_numeric(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test whether missing prob_given_false are detected and appropriate issues are created."""
+
+    config = {
+        "binary_sensor": {
+            "platform": "bayesian",
+            "name": "bins_out",
+            "observations": [
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.signal_strength",
+                    "above": 10,
+                    "prob_given_true": 0.01,
+                    "prob_given_false": 0.3,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.signal_strength",
+                    "above": 5,
+                    "below": 10,
+                    "prob_given_true": 0.02,
+                    "prob_given_false": 0.5,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.signal_strength",
+                    "above": 0,
+                    "below": 6,  # overlaps
+                    "prob_given_true": 0.07,
+                    "prob_given_false": 0.1,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.signal_strength",
+                    "above": -10,
+                    "below": 0,
+                    "prob_given_true": 0.3,
+                    "prob_given_false": 0.07,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.signal_strength",
+                    "below": -10,
+                    "prob_given_true": 0.6,
+                    "prob_given_false": 0.03,
+                },
+            ],
+            "prior": 0.2,
+        }
+    }
+
+    assert await async_setup_component(hass, "binary_sensor", config)
+
+    hass.states.async_set("sensor.signal_strength", -7)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.bins_out")
+    await hass.async_block_till_done()
+    assert state.attributes.get("occurred_observation_entities") == [
+        "sensor.signal_strength"
+    ]
+    assert abs(state.attributes.get("probability") - 0.51724138) < 0.01
+    # Where there are multi numeric ranges when on the threshold, use below
+    # Calculated using P(A) = 0.2, P(B|A) = 0.3, P(B|~A) = 0.07 -> 0.51724138
+
+    assert len(issue_registry.issues) == 1
+    assert (
+        issue_registry.issues[
+            (
+                "bayesian",
+                "overlapping_numeric_ranges/bins_out/sensor.sensor.signal_strength",
+            )
+        ]
+        is not None
+    )
+
+    hass.states.async_set("sensor.signal_strength", 6)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.bins_out")
+    await hass.async_block_till_done()
+    assert abs(state.attributes.get("probability") - 0.2) == 0
+    # 6 exists in more than one range, so the expected behaviour is that an error should be thrown
+    # and no probability updates should happen
+
+    assert "bins_out" in caplog.text
+
+
+async def test_bad_numeric(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test whether missing prob_given_false are detected and appropriate issues are created."""
+
+    config = {
+        "binary_sensor": {
+            "platform": "bayesian",
+            "name": "goldilocks_zone",
+            "observations": [
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.temp",
+                    "above": 23,
+                    "below": 20,
+                    "prob_given_true": 0.9,
+                    "prob_given_false": 0.2,
+                },
+            ],
+            "prior": 0.4,
+        }
+    }
+
+    assert await async_setup_component(hass, "binary_sensor", config)
+
+    hass.states.async_set("sensor.temp", 21)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.temp")
+    await hass.async_block_till_done()
+    assert state.attributes.get("occurred_observation_entities") == []
+    assert abs(state.attributes.get("probability") - 0.4) == 0
+
+    hass.states.async_set("sensor.temp", 18)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.temp")
+    await hass.async_block_till_done()
+    assert state.attributes.get("occurred_observation_entities") == []
+    assert abs(state.attributes.get("probability") - 0.4) == 0
+
+    assert len(issue_registry.issues) == 1
+    assert (
+        issue_registry.issues[("bayesian", "bad_config/goldilocks_zone/sensor.temp")]
+        is not None
+    )
+
+
 async def test_probability_updates(hass: HomeAssistant) -> None:
     """Test probability update function."""
     prob_given_true = [0.3, 0.6, 0.8]
