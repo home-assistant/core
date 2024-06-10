@@ -2,18 +2,17 @@
 
 import logging
 
-from tesla_fleet_api.exceptions import TeslaFleetError
 import voluptuous as vol
 from voluptuous import All, Range
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import DOMAIN
-from .helpers import handle_vehicle_command, wake_up_vehicle
+from .helpers import handle_command, handle_vehicle_command, wake_up_vehicle
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,7 +53,8 @@ def async_get_device_for_service_call(
     device_id = call.data[CONF_DEVICE_ID]
     device_registry = dr.async_get(hass)
     if (device_entry := device_registry.async_get(device_id)) is None:
-        raise ServiceValidationError(f"Invalid device ATTR_ID: {device_id}")
+        raise ServiceValidationError(f"Invalid device: {device_id}")
+
     return device_entry
 
 
@@ -63,13 +63,10 @@ def async_get_config_for_device(
 ) -> ConfigEntry:
     """Get the config entry related to a device entry."""
     for entry_id in device_entry.config_entries:
-        if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
-            continue
-        if entry.domain == DOMAIN:
-            return entry
-    raise ServiceValidationError(
-        f"No config entry for device ATTR_ID: {device_entry.id}"
-    )
+        if entry := hass.config_entries.async_get_entry(entry_id):
+            if entry.domain == DOMAIN:
+                return entry
+    raise ServiceValidationError(f"No config entry for device: {device_entry.id}")
 
 
 def async_get_vehicle_for_entry(
@@ -88,9 +85,9 @@ def async_get_energy_site_for_entry(
 ) -> TeslemetryEnergyData:
     """Get the energy site data for a config entry."""
     assert device.serial_number is not None
-    for site in config.runtime_data.energy_sites:
-        if site.id == device.serial_number:
-            return site
+    for energysite in config.runtime_data.energysites:
+        if str(energysite.id) == device.serial_number:
+            return energysite
     raise ServiceValidationError(f"No energy site for device ATTR_ID: {device.id}")
 
 
@@ -105,17 +102,14 @@ def async_register_services(hass: HomeAssistant) -> None:  # noqa: C901
         config = async_get_config_for_device(hass, device)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
-        try:
-            await wake_up_vehicle(vehicle)
-            await handle_vehicle_command(
-                vehicle.api.navigation_gps_request(
-                    lat=call.data[ATTR_GPS][CONF_LATITUDE],
-                    lon=call.data[ATTR_GPS][CONF_LONGITUDE],
-                    order=call.data.get(ATTR_ORDER),
-                )
+        await wake_up_vehicle(vehicle)
+        await handle_vehicle_command(
+            vehicle.api.navigation_gps_request(
+                lat=call.data[ATTR_GPS][CONF_LATITUDE],
+                lon=call.data[ATTR_GPS][CONF_LONGITUDE],
+                order=call.data.get(ATTR_ORDER),
             )
-        except TeslaFleetError as e:
-            raise HomeAssistantError from e
+        )
 
     hass.services.async_register(
         DOMAIN,
@@ -148,15 +142,10 @@ def async_register_services(hass: HomeAssistant) -> None:  # noqa: C901
         else:
             time = None
 
-        try:
-            await wake_up_vehicle(vehicle)
-            await handle_vehicle_command(
-                vehicle.api.set_scheduled_charging(
-                    enable=call.data["enable"], time=time
-                )
-            )
-        except TeslaFleetError as e:
-            raise HomeAssistantError from e
+        await wake_up_vehicle(vehicle)
+        await handle_vehicle_command(
+            vehicle.api.set_scheduled_charging(enable=call.data["enable"], time=time)
+        )
 
     hass.services.async_register(
         DOMAIN,
@@ -209,22 +198,18 @@ def async_register_services(hass: HomeAssistant) -> None:  # noqa: C901
         else:
             end_off_peak_time = 0
 
-        try:
-            await wake_up_vehicle(vehicle)
-            await handle_vehicle_command(
-                vehicle.api.set_scheduled_departure(
-                    enable,
-                    preconditioning_enabled,
-                    preconditioning_weekdays_only,
-                    departure_time,
-                    off_peak_charging_enabled,
-                    off_peak_charging_weekdays_only,
-                    end_off_peak_time,
-                )
+        await wake_up_vehicle(vehicle)
+        await handle_vehicle_command(
+            vehicle.api.set_scheduled_departure(
+                enable,
+                preconditioning_enabled,
+                preconditioning_weekdays_only,
+                departure_time,
+                off_peak_charging_enabled,
+                off_peak_charging_weekdays_only,
+                end_off_peak_time,
             )
-
-        except TeslaFleetError as e:
-            raise HomeAssistantError from e
+        )
 
     hass.services.async_register(
         DOMAIN,
@@ -250,16 +235,12 @@ def async_register_services(hass: HomeAssistant) -> None:  # noqa: C901
         config = async_get_config_for_device(hass, device)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
-        try:
-            await wake_up_vehicle(vehicle)
-            await handle_vehicle_command(
-                vehicle.api.set_valet_mode(
-                    call.data.get("enable"), call.data.get("pin", "")
-                )
+        await wake_up_vehicle(vehicle)
+        await handle_vehicle_command(
+            vehicle.api.set_valet_mode(
+                call.data.get("enable"), call.data.get("pin", "")
             )
-
-        except TeslaFleetError as e:
-            raise HomeAssistantError from e
+        )
 
     hass.services.async_register(
         DOMAIN,
@@ -280,20 +261,16 @@ def async_register_services(hass: HomeAssistant) -> None:  # noqa: C901
         config = async_get_config_for_device(hass, device)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
-        try:
-            await wake_up_vehicle(vehicle)
-            enable = call.data.get("enable")
-            if enable is True:
-                await handle_vehicle_command(
-                    vehicle.api.speed_limit_activate(call.data.get("pin"))
-                )
-            elif enable is False:
-                await handle_vehicle_command(
-                    vehicle.api.speed_limit_deactivate(call.data.get("pin"))
-                )
-
-        except TeslaFleetError as e:
-            raise HomeAssistantError from e
+        await wake_up_vehicle(vehicle)
+        enable = call.data.get("enable")
+        if enable is True:
+            await handle_vehicle_command(
+                vehicle.api.speed_limit_activate(call.data.get("pin"))
+            )
+        elif enable is False:
+            await handle_vehicle_command(
+                vehicle.api.speed_limit_deactivate(call.data.get("pin"))
+            )
 
     hass.services.async_register(
         DOMAIN,
@@ -314,10 +291,9 @@ def async_register_services(hass: HomeAssistant) -> None:  # noqa: C901
         config = async_get_config_for_device(hass, device)
         site = async_get_energy_site_for_entry(hass, device, config)
 
-        try:
-            resp = await site.api.time_of_use_settings(call.data.get(ATTR_TOU_SETTINGS))
-        except Exception as e:
-            raise HomeAssistantError from e
+        resp = await handle_command(
+            site.api.time_of_use_settings(call.data.get(ATTR_TOU_SETTINGS))
+        )
         if "error" in resp:
             raise ServiceValidationError(resp["error"])
 

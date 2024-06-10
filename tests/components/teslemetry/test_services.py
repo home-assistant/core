@@ -2,7 +2,10 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.teslemetry.const import DOMAIN
+from homeassistant.components.teslemetry.models import TeslemetryData
 from homeassistant.components.teslemetry.services import (
     ATTR_DEPARTURE_TIME,
     ATTR_ENABLE,
@@ -24,16 +27,21 @@ from homeassistant.components.teslemetry.services import (
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceEntry
 
 from . import setup_platform
 from .const import COMMAND_OK
+
+lat = -27.9699373
+lon = 153.3726526
 
 
 async def test_services(
     hass: HomeAssistant,
 ) -> None:
-    """Tests that the climate entity is correct."""
+    """Tests that the custom services are correct."""
 
     await setup_platform(hass)
     entity_registry = er.async_get(hass)
@@ -44,8 +52,6 @@ async def test_services(
         "sensor.energy_site_battery_power"
     ).device_id
 
-    lat = -27.9699373
-    lon = 153.3726526
     with patch(
         "homeassistant.components.teslemetry.VehicleSpecific.navigation_gps_request",
         return_value=COMMAND_OK,
@@ -160,3 +166,85 @@ async def test_services(
             blocking=True,
         )
         set_time_of_use.assert_called_once()
+
+
+async def test_service_validation_errors(
+    hass: HomeAssistant,
+) -> None:
+    """Tests that the custom services handle bad data."""
+
+    entry = await setup_platform(hass)
+    entity_registry = er.async_get(hass)
+
+    # Get a vehicle device ID
+    vehicle_device = entity_registry.async_get("sensor.test_charging").device_id
+    energy_device = entity_registry.async_get(
+        "sensor.energy_site_battery_power"
+    ).device_id
+
+    # Bad device ID
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
+            {
+                CONF_DEVICE_ID: "nope",
+                ATTR_GPS: {CONF_LATITUDE: lat, CONF_LONGITUDE: lon},
+            },
+            blocking=True,
+        )
+
+    # Device with no config entry
+    with (
+        pytest.raises(ServiceValidationError),
+        patch(
+            "homeassistant.components.teslemetry.services.async_get_device_for_service_call",
+            return_value=DeviceEntry(),
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_GPS: {CONF_LATITUDE: lat, CONF_LONGITUDE: lon},
+            },
+            blocking=True,
+        )
+
+    entry.runtime_data = TeslemetryData([], [], [])
+    # Config entry with no vehicle data
+    with (
+        pytest.raises(ServiceValidationError),
+        patch(
+            "homeassistant.components.teslemetry.services.async_get_config_for_device",
+            return_value=entry,
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_GPS: {CONF_LATITUDE: lat, CONF_LONGITUDE: lon},
+            },
+            blocking=True,
+        )
+
+    # Config entry with no vehicle data
+    with (
+        pytest.raises(ServiceValidationError),
+        patch(
+            "homeassistant.components.teslemetry.services.async_get_config_for_device",
+            return_value=entry,
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIME_OF_USE,
+            {
+                CONF_DEVICE_ID: energy_device,
+                ATTR_TOU_SETTINGS: {},
+            },
+            blocking=True,
+        )
