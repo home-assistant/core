@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 from urllib.error import HTTPError
 
@@ -19,11 +20,18 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
+type TfLConfigEntry = ConfigEntry[TfLData]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+@dataclass
+class TfLData:
+    """Runtime data for TfL integration."""
+
+    stop_point_api: stopPoint
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: TfLConfigEntry) -> bool:
     """Set up Transport for London from a config entry."""
-
-    hass.data.setdefault(DOMAIN, {})
 
     app_key = entry.data[CONF_API_APP_KEY]
     stop_point_api = stopPoint(app_key)
@@ -43,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "Setting up %s integration, got stoppoint categories %s", DOMAIN, categories
     )
 
-    hass.data[DOMAIN][entry.entry_id] = stop_point_api
+    entry.runtime_data = TfLData(stop_point_api)
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -51,16 +59,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, entry: TfLConfigEntry) -> None:
     """Handle options update."""
     _LOGGER.debug("update_listener called")
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TfLConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        if DOMAIN in hass.data:
-            hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

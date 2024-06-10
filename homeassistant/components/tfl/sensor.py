@@ -12,11 +12,11 @@ from tflwrapper import stopPoint
 from homeassistant.components.sensor import (  # ENTITY_ID_FORMAT,; PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import TfLConfigEntry
 from .common import call_tfl_api
 from .const import (
     ATTR_NEXT_ARRIVALS,
@@ -33,10 +33,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: TfLConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the TfL sensor."""
-    stop_point_api = hass.data[DOMAIN][entry.entry_id]
+    stop_point_api = entry.runtime_data.stop_point_api
 
     conf = entry.options
 
