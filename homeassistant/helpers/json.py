@@ -1,4 +1,5 @@
 """Helpers to help with encoding Home Assistant objects in JSON."""
+
 from collections import deque
 from collections.abc import Callable
 import datetime
@@ -45,6 +46,8 @@ def json_encoder_default(obj: Any) -> Any:
 
     Hand other objects to the original method.
     """
+    if hasattr(obj, "json_fragment"):
+        return obj.json_fragment
     if isinstance(obj, (set, tuple)):
         return list(obj)
     if isinstance(obj, float):
@@ -114,6 +117,9 @@ def json_bytes_strip_null(data: Any) -> bytes:
     return json_bytes(_strip_null(orjson.loads(result)))
 
 
+json_fragment = orjson.Fragment
+
+
 def json_dumps(data: Any) -> str:
     r"""Dump json string.
 
@@ -143,12 +149,17 @@ JSON_DUMP: Final = json_dumps
 
 
 def _orjson_default_encoder(data: Any) -> str:
-    """JSON encoder that uses orjson with hass defaults."""
+    """JSON encoder that uses orjson with hass defaults and returns a str."""
+    return _orjson_bytes_default_encoder(data).decode("utf-8")
+
+
+def _orjson_bytes_default_encoder(data: Any) -> bytes:
+    """JSON encoder that uses orjson with hass defaults and returns bytes."""
     return orjson.dumps(
         data,
         option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS,
         default=json_encoder_default,
-    ).decode("utf-8")
+    )
 
 
 def save_json(
@@ -168,11 +179,13 @@ def save_json(
         if encoder and encoder is not JSONEncoder:
             # If they pass a custom encoder that is not the
             # default JSONEncoder, we use the slow path of json.dumps
+            mode = "w"
             dump = json.dumps
-            json_data = json.dumps(data, indent=2, cls=encoder)
+            json_data: str | bytes = json.dumps(data, indent=2, cls=encoder)
         else:
+            mode = "wb"
             dump = _orjson_default_encoder
-            json_data = _orjson_default_encoder(data)
+            json_data = _orjson_bytes_default_encoder(data)
     except TypeError as error:
         formatted_data = format_unserializable_data(
             find_paths_unserializable_data(data, dump=dump)
@@ -181,10 +194,8 @@ def save_json(
         _LOGGER.error(msg)
         raise SerializationError(msg) from error
 
-    if atomic_writes:
-        write_utf8_file_atomic(filename, json_data, private)
-    else:
-        write_utf8_file(filename, json_data, private)
+    method = write_utf8_file_atomic if atomic_writes else write_utf8_file
+    method(filename, json_data, private, mode=mode)
 
 
 def find_paths_unserializable_data(

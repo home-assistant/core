@@ -1,11 +1,12 @@
 """Support for interacting with Spotify Connect."""
+
 from __future__ import annotations
 
 from asyncio import run_coroutine_threadsafe
-import datetime as dt
+from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, Concatenate
 
 import requests
 from spotipy import SpotifyException
@@ -21,15 +22,14 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.dt import utc_from_timestamp
+from homeassistant.util.dt import utcnow
 
-from . import HomeAssistantSpotifyData
+from . import HomeAssistantSpotifyData, SpotifyConfigEntry
 from .browse_media import async_browse_media_internal
 from .const import DOMAIN, MEDIA_PLAYER_PREFIX, PLAYABLE_MEDIA_TYPES, SPOTIFY_SCOPES
 from .util import fetch_image_url
@@ -62,41 +62,49 @@ REPEAT_MODE_MAPPING_TO_SPOTIFY = {
     value: key for key, value in REPEAT_MODE_MAPPING_TO_HA.items()
 }
 
+# This is a minimal representation of the DJ playlist that Spotify now offers
+# The DJ is not fully integrated with the playlist API, so needs to have the playlist response mocked in order to maintain functionality
+SPOTIFY_DJ_PLAYLIST = {"uri": "spotify:playlist:37i9dQZF1EYkqdzj48dyYq", "name": "DJ"}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SpotifyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Spotify based on a config entry."""
     spotify = SpotifyMediaPlayer(
-        hass.data[DOMAIN][entry.entry_id],
+        entry.runtime_data,
         entry.data[CONF_ID],
         entry.title,
     )
     async_add_entities([spotify], True)
 
 
-def spotify_exception_handler(func):
+def spotify_exception_handler[_SpotifyMediaPlayerT: SpotifyMediaPlayer, **_P, _R](
+    func: Callable[Concatenate[_SpotifyMediaPlayerT, _P], _R],
+) -> Callable[Concatenate[_SpotifyMediaPlayerT, _P], _R | None]:
     """Decorate Spotify calls to handle Spotify exception.
 
     A decorator that wraps the passed in function, catches Spotify errors,
     aiohttp exceptions and handles the availability of the media player.
     """
 
-    def wrapper(self, *args, **kwargs):
-        # pylint: disable=protected-access
+    def wrapper(
+        self: _SpotifyMediaPlayerT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> _R | None:
         try:
             result = func(self, *args, **kwargs)
-            self._attr_available = True
-            return result
         except requests.RequestException:
             self._attr_available = False
+            return None
         except SpotifyException as exc:
             self._attr_available = False
             if exc.reason == "NO_ACTIVE_DEVICE":
                 raise HomeAssistantError("No active playback device found") from None
             raise HomeAssistantError(f"Spotify error: {exc.reason}") from exc
+        self._attr_available = True
+        return result
 
     return wrapper
 
@@ -105,9 +113,9 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     """Representation of a Spotify controller."""
 
     _attr_has_entity_name = True
-    _attr_icon = "mdi:spotify"
     _attr_media_image_remotely_accessible = False
     _attr_name = None
+    _attr_translation_key = "spotify"
 
     def __init__(
         self,
@@ -198,13 +206,6 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         ):
             return None
         return self._currently_playing["progress_ms"] / 1000
-
-    @property
-    def media_position_updated_at(self) -> dt.datetime | None:
-        """When was the position of the current playing media valid."""
-        if not self._currently_playing:
-            return None
-        return utc_from_timestamp(self._currently_playing["timestamp"] / 1000)
 
     @property
     def media_image_url(self) -> str | None:
@@ -371,7 +372,8 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
                 raise ValueError(
                     f"Media type {media_type} is not supported when enqueue is ADD"
                 )
-            return self.data.client.add_to_queue(media_id, kwargs.get("device_id"))
+            self.data.client.add_to_queue(media_id, kwargs.get("device_id"))
+            return
 
         self.data.client.start_playback(**kwargs)
 
@@ -413,6 +415,9 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             additional_types=[MediaType.EPISODE]
         )
         self._currently_playing = current or {}
+        # Record the last updated time, because Spotify's timestamp property is unreliable
+        # and doesn't actually return the fetch time as is mentioned in the API description
+        self._attr_media_position_updated_at = utcnow() if current is not None else None
 
         context = self._currently_playing.get("context") or {}
 
@@ -428,7 +433,19 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         if context and (self._playlist is None or self._playlist["uri"] != uri):
             self._playlist = None
             if context["type"] == MediaType.PLAYLIST:
-                self._playlist = self.data.client.playlist(uri)
+                # The Spotify API does not currently support doing a lookup for the DJ playlist, so just use the minimal mock playlist object
+                if uri == SPOTIFY_DJ_PLAYLIST["uri"]:
+                    self._playlist = SPOTIFY_DJ_PLAYLIST
+                else:
+                    # Make sure any playlist lookups don't break the current playback state update
+                    try:
+                        self._playlist = self.data.client.playlist(uri)
+                    except SpotifyException:
+                        _LOGGER.debug(
+                            "Unable to load spotify playlist '%s'. Continuing without playlist data",
+                            uri,
+                        )
+                        self._playlist = None
 
         device = self._currently_playing.get("device")
         if device is not None:

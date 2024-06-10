@@ -1,8 +1,8 @@
 """The Deluge integration."""
+
 from __future__ import annotations
 
 import logging
-import socket
 from ssl import SSLError
 
 from deluge_client.client import DelugeRPCClient
@@ -40,13 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api.web_port = entry.data[CONF_WEB_PORT]
     try:
         await hass.async_add_executor_job(api.connect)
-    except (
-        ConnectionRefusedError,
-        socket.timeout,
-        SSLError,
-    ) as ex:
+    except (ConnectionRefusedError, TimeoutError, SSLError) as ex:
         raise ConfigEntryNotReady("Connection to Deluge Daemon failed") from ex
-    except Exception as ex:  # pylint:disable=broad-except
+    except Exception as ex:  # noqa: BLE001
         if type(ex).__name__ == "BadLoginError":
             raise ConfigEntryAuthFailed(
                 "Credentials for Deluge client are not valid"

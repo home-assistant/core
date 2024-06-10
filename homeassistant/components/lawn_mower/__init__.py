@@ -1,8 +1,9 @@
 """The lawn mower integration."""
+
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
+from functools import cached_property
 import logging
 from typing import final
 
@@ -65,12 +66,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class LawnMowerEntityEntityDescription(EntityDescription):
+class LawnMowerEntityEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes lawn mower entities."""
 
 
-class LawnMowerEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "activity",
+    "supported_features",
+}
+
+
+class LawnMowerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for lawn mower entities."""
 
     entity_description: LawnMowerEntityEntityDescription
@@ -85,19 +91,19 @@ class LawnMowerEntity(Entity):
             return None
         return str(activity)
 
-    @property
+    @cached_property
     def activity(self) -> LawnMowerActivity | None:
         """Return the current lawn mower activity."""
         return self._attr_activity
 
-    @property
+    @cached_property
     def supported_features(self) -> LawnMowerEntityFeature:
         """Flag lawn mower features that are supported."""
         return self._attr_supported_features
 
     def start_mowing(self) -> None:
         """Start or resume mowing."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_start_mowing(self) -> None:
         """Start or resume mowing."""
@@ -105,7 +111,7 @@ class LawnMowerEntity(Entity):
 
     def dock(self) -> None:
         """Dock the mower."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_dock(self) -> None:
         """Dock the mower."""
@@ -113,7 +119,7 @@ class LawnMowerEntity(Entity):
 
     def pause(self) -> None:
         """Pause the lawn mower."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_pause(self) -> None:
         """Pause the lawn mower."""

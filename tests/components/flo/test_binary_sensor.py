@@ -1,4 +1,5 @@
 """Test Flo by Moen binary sensor entities."""
+
 from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,

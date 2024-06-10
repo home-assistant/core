@@ -1,0 +1,213 @@
+# serializer version: 1
+# name: test_calendar_edge_cases[start_date0-end_date0]
+  dict({
+    'calendar.gs01234_auto_on_off_schedule': dict({
+      'events': list([
+        dict({
+          'description': 'Machine is scheduled to turn on at the start time and off at the end time',
+          'end': '2024-02-11T07:30:00-08:00',
+          'start': '2024-02-11T07:00:00-08:00',
+          'summary': 'Machine My LaMarzocco on',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_calendar_edge_cases[start_date1-end_date1]
+  dict({
+    'calendar.gs01234_auto_on_off_schedule': dict({
+      'events': list([
+        dict({
+          'description': 'Machine is scheduled to turn on at the start time and off at the end time',
+          'end': '2024-02-11T07:30:00-08:00',
+          'start': '2024-02-11T07:00:00-08:00',
+          'summary': 'Machine My LaMarzocco on',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_calendar_edge_cases[start_date2-end_date2]
+  dict({
+    'calendar.gs01234_auto_on_off_schedule': dict({
+      'events': list([
+        dict({
+          'description': 'Machine is scheduled to turn on at the start time and off at the end time',
+          'end': '2024-02-18T07:30:00-08:00',
+          'start': '2024-02-18T07:00:00-08:00',
+          'summary': 'Machine My LaMarzocco on',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_calendar_edge_cases[start_date3-end_date3]
+  dict({
+    'calendar.gs01234_auto_on_off_schedule': dict({
+      'events': list([
+        dict({
+          'description': 'Machine is scheduled to turn on at the start time and off at the end time',
+          'end': '2024-02-18T07:30:00-08:00',
+          'start': '2024-02-18T07:00:00-08:00',
+          'summary': 'Machine My LaMarzocco on',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_calendar_edge_cases[start_date4-end_date4]
+  dict({
+    'calendar.gs01234_auto_on_off_schedule': dict({
+      'events': list([
+      ]),
+    }),
+  })
+# ---
+# name: test_calendar_edge_cases[start_date5-end_date5]
+  dict({
+    'calendar.gs01234_auto_on_off_schedule': dict({
+      'events': list([
+        dict({
+          'description': 'Machine is scheduled to turn on at the start time and off at the end time',
+          'end': '2024-02-11T07:30:00-08:00',
+          'start': '2024-02-11T07:00:00-08:00',
+          'summary': 'Machine My LaMarzocco on',
+        }),
+        dict({
+          'description': 'Machine is scheduled to turn on at the start time and off at the end time',
+          'end': '2024-02-18T07:30:00-08:00',
+          'start': '2024-02-18T07:00:00-08:00',
+          'summary': 'Machine My LaMarzocco on',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_calendar_events
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'all_day': False,
+      'description': 'Machine is scheduled to turn on at the start time and off at the end time',
+      'end_time': '2024-01-13 23:00:00',
+      'friendly_name': 'GS01234 Auto on/off schedule',
+      'location': '',
+      'message': 'Machine My LaMarzocco on',
+      'start_time': '2024-01-13 10:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.gs01234_auto_on_off_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_calendar_events.1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.gs01234_auto_on_off_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Auto on/off schedule',
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_on_off_schedule',
+    'unique_id': 'GS01234_auto_on_off_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_calendar_events.2
+  dict({
+    'calendar.gs01234_auto_on_off_schedule': dict({
+      'events': list([
+        dict({
+          'description': 'Machine is scheduled to turn on at the start time and off at the end time',
+          'end': '2024-01-13T23:00:00-08:00',
+          'start': '2024-01-13T10:00:00-08:00',
+          'summary': 'Machine My LaMarzocco on',
+        }),
+        dict({
+          'description': 'Machine is scheduled to turn on at the start time and off at the end time',
+          'end': '2024-01-17T13:00:00-08:00',
+          'start': '2024-01-17T08:00:00-08:00',
+          'summary': 'Machine My LaMarzocco on',
+        }),
+        dict({
+          'description': 'Machine is scheduled to turn on at the start time and off at the end time',
+          'end': '2024-01-19T09:00:00-08:00',
+          'start': '2024-01-19T06:00:00-08:00',
+          'summary': 'Machine My LaMarzocco on',
+        }),
+        dict({
+          'description': 'Machine is scheduled to turn on at the start time and off at the end time',
+          'end': '2024-01-20T23:00:00-08:00',
+          'start': '2024-01-20T10:00:00-08:00',
+          'summary': 'Machine My LaMarzocco on',
+        }),
+        dict({
+          'description': 'Machine is scheduled to turn on at the start time and off at the end time',
+          'end': '2024-01-24T13:00:00-08:00',
+          'start': '2024-01-24T08:00:00-08:00',
+          'summary': 'Machine My LaMarzocco on',
+        }),
+        dict({
+          'description': 'Machine is scheduled to turn on at the start time and off at the end time',
+          'end': '2024-01-26T09:00:00-08:00',
+          'start': '2024-01-26T06:00:00-08:00',
+          'summary': 'Machine My LaMarzocco on',
+        }),
+        dict({
+          'description': 'Machine is scheduled to turn on at the start time and off at the end time',
+          'end': '2024-01-27T23:00:00-08:00',
+          'start': '2024-01-27T10:00:00-08:00',
+          'summary': 'Machine My LaMarzocco on',
+        }),
+        dict({
+          'description': 'Machine is scheduled to turn on at the start time and off at the end time',
+          'end': '2024-01-31T13:00:00-08:00',
+          'start': '2024-01-31T08:00:00-08:00',
+          'summary': 'Machine My LaMarzocco on',
+        }),
+        dict({
+          'description': 'Machine is scheduled to turn on at the start time and off at the end time',
+          'end': '2024-02-02T09:00:00-08:00',
+          'start': '2024-02-02T06:00:00-08:00',
+          'summary': 'Machine My LaMarzocco on',
+        }),
+        dict({
+          'description': 'Machine is scheduled to turn on at the start time and off at the end time',
+          'end': '2024-02-03T23:00:00-08:00',
+          'start': '2024-02-03T10:00:00-08:00',
+          'summary': 'Machine My LaMarzocco on',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_no_calendar_events_global_disable
+  dict({
+    'calendar.gs01234_auto_on_off_schedule': dict({
+      'events': list([
+      ]),
+    }),
+  })
+# ---

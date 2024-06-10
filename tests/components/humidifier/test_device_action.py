@@ -1,9 +1,10 @@
 """The tests for Humidifier device actions."""
+
 import pytest
 from pytest_unordered import unordered
 import voluptuous_serialize
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.humidifier import DOMAIN, const, device_action
 from homeassistant.const import STATE_ON, EntityCategory
@@ -94,12 +95,12 @@ async def test_get_actions(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_actions_hidden_auxiliary(
     hass: HomeAssistant,
@@ -142,9 +143,21 @@ async def test_get_actions_hidden_auxiliary(
     assert actions == unordered(expected_actions)
 
 
-async def test_action(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
+async def test_action(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for actions."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     hass.states.async_set(
         entry.entity_id,
@@ -164,7 +177,7 @@ async def test_action(hass: HomeAssistant, entity_registry: er.EntityRegistry) -
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "turn_off",
                     },
@@ -176,7 +189,7 @@ async def test_action(hass: HomeAssistant, entity_registry: er.EntityRegistry) -
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "turn_on",
                     },
@@ -185,7 +198,7 @@ async def test_action(hass: HomeAssistant, entity_registry: er.EntityRegistry) -
                     "trigger": {"platform": "event", "event_type": "test_event_toggle"},
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "toggle",
                     },
@@ -197,7 +210,7 @@ async def test_action(hass: HomeAssistant, entity_registry: er.EntityRegistry) -
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "set_humidity",
                         "humidity": 35,
@@ -210,7 +223,7 @@ async def test_action(hass: HomeAssistant, entity_registry: er.EntityRegistry) -
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "set_mode",
                         "mode": const.MODE_AWAY,
@@ -290,10 +303,20 @@ async def test_action(hass: HomeAssistant, entity_registry: er.EntityRegistry) -
 
 
 async def test_action_legacy(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test for actions."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     hass.states.async_set(
         entry.entity_id,
@@ -313,7 +336,7 @@ async def test_action_legacy(
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "abcdefgh",
+                        "device_id": device_entry.id,
                         "entity_id": entry.entity_id,
                         "type": "set_mode",
                         "mode": const.MODE_AWAY,

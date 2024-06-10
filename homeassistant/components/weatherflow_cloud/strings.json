@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up a WeatherFlow Forecast Station",
+        "data": {
+          "api_token": "Personal api token"
+        }
+      },
+      "reauth": {
+        "description": "Reauthenticate with WeatherFlow",
+        "data": {
+          "api_token": "[%key:component::weatherflow_cloud::config::step::user::data::api_token%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+    },
+
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  }
+}

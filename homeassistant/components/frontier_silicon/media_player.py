@@ -1,4 +1,5 @@
 """Support for Frontier Silicon Devices (Medion, Hama, Auna,...)."""
+
 from __future__ import annotations
 
 import logging
@@ -126,7 +127,8 @@ class AFSAPIDevice(MediaPlayerEntity):
 
         if not self._attr_source_list:
             self.__modes_by_label = {
-                mode.label: mode.key for mode in await afsapi.get_modes()
+                (mode.label if mode.label else mode.id): mode.key
+                for mode in await afsapi.get_modes()
             }
             self._attr_source_list = list(self.__modes_by_label)
 
@@ -306,10 +308,9 @@ class AFSAPIDevice(MediaPlayerEntity):
             # Keys of presets are 0-based, while the list shown on the device starts from 1
             preset = int(keys[0]) - 1
 
-            result = await self.fs_device.select_preset(preset)
+            await self.fs_device.select_preset(preset)
         else:
-            result = await self.fs_device.nav_select_item_via_path(keys)
+            await self.fs_device.nav_select_item_via_path(keys)
 
         await self.async_update()
         self._attr_media_content_id = media_id
-        return result

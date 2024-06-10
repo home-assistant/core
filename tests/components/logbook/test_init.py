@@ -1,12 +1,14 @@
 """The tests for the logbook component."""
+
 import asyncio
 import collections
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
@@ -59,16 +61,16 @@ EMPTY_CONFIG = logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})
 
 
 @pytest.fixture
-async def hass_(recorder_mock, hass):
+async def hass_(recorder_mock: Recorder, hass: HomeAssistant) -> HomeAssistant:
     """Set up things to be run when tests are started."""
     assert await async_setup_component(hass, logbook.DOMAIN, EMPTY_CONFIG)
     return hass
 
 
 @pytest.fixture
-def set_utc(hass):
+async def set_utc(hass):
     """Set timezone to UTC."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
 
 
 async def test_service_call_create_logbook_entry(hass_) -> None:
@@ -292,14 +294,25 @@ def create_state_changed_event(
     state,
     attributes=None,
     last_changed=None,
+    last_reported=None,
     last_updated=None,
 ):
     """Create state changed event."""
     old_state = ha.State(
-        entity_id, "old", attributes, last_changed, last_updated
+        entity_id,
+        "old",
+        attributes,
+        last_changed=last_changed,
+        last_reported=last_reported,
+        last_updated=last_updated,
     ).as_dict()
     new_state = ha.State(
-        entity_id, state, attributes, last_changed, last_updated
+        entity_id,
+        state,
+        attributes,
+        last_changed=last_changed,
+        last_reported=last_reported,
+        last_updated=last_updated,
     ).as_dict()
 
     return create_state_changed_event_from_old_new(
@@ -493,17 +506,18 @@ async def test_logbook_describe_event(
         hass,
         "fake_integration.logbook",
         Mock(
-            async_describe_events=lambda hass, async_describe_event: async_describe_event(
-                "test_domain", "some_event", _describe
-            )
+            async_describe_events=(
+                lambda hass, async_describe_event: async_describe_event(
+                    "test_domain",
+                    "some_event",
+                    _describe,
+                )
+            ),
         ),
     )
 
     assert await async_setup_component(hass, "logbook", {})
-    with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=dt_util.utcnow() - timedelta(seconds=5),
-    ):
+    with freeze_time(dt_util.utcnow() - timedelta(seconds=5)):
         hass.bus.async_fire("some_event")
         await async_wait_recording_done(hass)
 
@@ -565,10 +579,7 @@ async def test_exclude_described_event(
         },
     )
 
-    with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=dt_util.utcnow() - timedelta(seconds=5),
-    ):
+    with freeze_time(dt_util.utcnow() - timedelta(seconds=5)):
         hass.bus.async_fire(
             "some_automation_event",
             {logbook.ATTR_NAME: name, logbook.ATTR_ENTITY_ID: entity_id},
@@ -2655,7 +2666,7 @@ async def test_get_events_with_device_ids(
 
             async_describe_event("test", "mock_event", async_describe_test_event)
 
-    await logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
+    logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire("mock_event", {"device_id": device.id})

@@ -1,4 +1,5 @@
 """Validate dependencies."""
+
 from __future__ import annotations
 
 import contextlib
@@ -13,7 +14,7 @@ from voluptuous.humanize import humanize_error
 from homeassistant.const import CONF_SELECTOR
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, selector, service
-from homeassistant.util.yaml import load_yaml
+from homeassistant.util.yaml import load_yaml_dict
 
 from .model import Config, Integration
 
@@ -29,7 +30,6 @@ CORE_INTEGRATION_FIELD_SCHEMA = vol.Schema(
     {
         vol.Optional("example"): exists,
         vol.Optional("default"): exists,
-        vol.Optional("values"): exists,
         vol.Optional("required"): bool,
         vol.Optional("advanced"): bool,
         vol.Optional(CONF_SELECTOR): selector.validate_selector,
@@ -107,7 +107,7 @@ def grep_dir(path: pathlib.Path, glob_pattern: str, search_pattern: str) -> bool
 def validate_services(config: Config, integration: Integration) -> None:
     """Validate services."""
     try:
-        data = load_yaml(str(integration.path / "services.yaml"))
+        data = load_yaml_dict(str(integration.path / "services.yaml"))
     except FileNotFoundError:
         # Find if integration uses services
         has_services = grep_dir(
@@ -122,7 +122,7 @@ def validate_services(config: Config, integration: Integration) -> None:
             )
         return
     except HomeAssistantError:
-        integration.add_error("services", "Unable to load services.yaml")
+        integration.add_error("services", "Invalid services.yaml")
         return
 
     try:
@@ -138,6 +138,13 @@ def validate_services(config: Config, integration: Integration) -> None:
             "services", f"Invalid services.yaml: {humanize_error(data, err)}"
         )
         return
+
+    icons_file = integration.path / "icons.json"
+    icons = {}
+    if icons_file.is_file():
+        with contextlib.suppress(ValueError):
+            icons = json.loads(icons_file.read_text())
+    service_icons = icons.get("services", {})
 
     # Try loading translation strings
     if integration.core:
@@ -155,9 +162,18 @@ def validate_services(config: Config, integration: Integration) -> None:
     if not integration.core:
         error_msg_suffix = f"and is not {error_msg_suffix}"
 
-    # For each service in the integration, check if the description if set,
-    # if not, check if it's in the strings file. If not, add an error.
+    # For each service in the integration:
+    # 1. Check if the service description is set, if not,
+    #    check if it's in the strings file else add an error.
+    # 2. Check if the service has an icon set in icons.json.
+    #    raise an error if not.,
     for service_name, service_schema in services.items():
+        if integration.core and service_name not in service_icons:
+            # This is enforced for Core integrations only
+            integration.add_error(
+                "services",
+                f"Service {service_name} has no icon in icons.json.",
+            )
         if service_schema is None:
             continue
         if "name" not in service_schema:

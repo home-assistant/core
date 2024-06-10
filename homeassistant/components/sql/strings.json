@@ -6,6 +6,8 @@
     "error": {
       "db_url_invalid": "Database URL invalid",
       "query_invalid": "SQL Query invalid",
+      "query_no_read_only": "SQL query must be read-only",
+      "multiple_queries": "Multiple SQL queries are not supported",
       "column_invalid": "The column `{column}` is not returned by the query"
     },
     "step": {
@@ -38,7 +40,7 @@
       "init": {
         "data": {
           "db_url": "[%key:component::sql::config::step::user::data::db_url%]",
-          "name": "[%key:component::sql::config::step::user::data::name%]",
+          "name": "[%key:common::config_flow::data::name%]",
           "query": "[%key:component::sql::config::step::user::data::query%]",
           "column": "[%key:component::sql::config::step::user::data::column%]",
           "unit_of_measurement": "[%key:component::sql::config::step::user::data::unit_of_measurement%]",
@@ -61,13 +63,14 @@
     "error": {
       "db_url_invalid": "[%key:component::sql::config::error::db_url_invalid%]",
       "query_invalid": "[%key:component::sql::config::error::query_invalid%]",
+      "query_no_read_only": "[%key:component::sql::config::error::query_no_read_only%]",
+      "multiple_queries": "[%key:component::sql::config::error::multiple_queries%]",
       "column_invalid": "[%key:component::sql::config::error::column_invalid%]"
     }
   },
   "selector": {
     "device_class": {
       "options": {
-        "none": "No device class",
         "date": "[%key:component::sensor::entity_component::date::name%]",
         "duration": "[%key:component::sensor::entity_component::duration::name%]",
         "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
@@ -110,7 +113,7 @@
         "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
         "timestamp": "[%key:component::sensor::entity_component::timestamp::name%]",
         "volatile_organic_compounds": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
-        "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds_parts::name%]",
+        "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
         "voltage": "[%key:component::sensor::entity_component::voltage::name%]",
         "volume": "[%key:component::sensor::entity_component::volume::name%]",
         "volume_storage": "[%key:component::sensor::entity_component::volume_storage::name%]",
@@ -121,7 +124,6 @@
     },
     "state_class": {
       "options": {
-        "none": "No state class",
         "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
         "total": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total%]",
         "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"

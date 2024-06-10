@@ -1,8 +1,8 @@
 """Support for RainMachine devices."""
+
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial, wraps
@@ -38,6 +38,7 @@ from homeassistant.util.network import is_ip_address
 
 from .config_flow import get_client_controller
 from .const import (
+    CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
     CONF_DEFAULT_ZONE_RUN_TIME,
     CONF_DURATION,
     CONF_USE_APP_RUN_TIMES,
@@ -48,11 +49,12 @@ from .const import (
     DATA_RESTRICTIONS_CURRENT,
     DATA_RESTRICTIONS_UNIVERSAL,
     DATA_ZONES,
+    DEFAULT_ZONE_RUN,
     DOMAIN,
     LOGGER,
 )
+from .coordinator import RainMachineDataUpdateCoordinator
 from .model import RainMachineEntityDescription
-from .util import RainMachineDataUpdateCoordinator
 
 DEFAULT_SSL = True
 
@@ -204,13 +206,10 @@ async def async_update_programs_and_zones(
     programs affect zones and certain combinations of zones affect programs.
     """
     data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
-
-    await asyncio.gather(
-        *[
-            data.coordinators[DATA_PROGRAMS].async_refresh(),
-            data.coordinators[DATA_ZONES].async_refresh(),
-        ]
-    )
+    # No gather here to allow http keep-alive to reuse
+    # the connection for each coordinator.
+    await data.coordinators[DATA_PROGRAMS].async_refresh()
+    await data.coordinators[DATA_ZONES].async_refresh()
 
 
 async def async_setup_entry(  # noqa: C901
@@ -249,8 +248,13 @@ async def async_setup_entry(  # noqa: C901
             **entry.options,
             CONF_DEFAULT_ZONE_RUN_TIME: data.pop(CONF_DEFAULT_ZONE_RUN_TIME),
         }
+    entry_updates["options"] = {**entry.options}
     if CONF_USE_APP_RUN_TIMES not in entry.options:
-        entry_updates["options"] = {**entry.options, CONF_USE_APP_RUN_TIMES: False}
+        entry_updates["options"][CONF_USE_APP_RUN_TIMES] = False
+    if CONF_DEFAULT_ZONE_RUN_TIME not in entry.options:
+        entry_updates["options"][CONF_DEFAULT_ZONE_RUN_TIME] = DEFAULT_ZONE_RUN
+    if CONF_ALLOW_INACTIVE_ZONES_TO_RUN not in entry.options:
+        entry_updates["options"][CONF_ALLOW_INACTIVE_ZONES_TO_RUN] = False
     if entry_updates:
         hass.config_entries.async_update_entry(entry, **entry_updates)
 
@@ -295,14 +299,6 @@ async def async_setup_entry(  # noqa: C901
 
         return data
 
-    async def async_init_coordinator(
-        coordinator: RainMachineDataUpdateCoordinator,
-    ) -> None:
-        """Initialize a RainMachineDataUpdateCoordinator."""
-        await coordinator.async_initialize()
-        await coordinator.async_config_entry_first_refresh()
-
-    controller_init_tasks = []
     coordinators = {}
     for api_category, update_interval in COORDINATOR_UPDATE_INTERVAL_MAP.items():
         coordinator = coordinators[api_category] = RainMachineDataUpdateCoordinator(
@@ -313,9 +309,11 @@ async def async_setup_entry(  # noqa: C901
             update_interval=update_interval,
             update_method=partial(async_update, api_category),
         )
-        controller_init_tasks.append(async_init_coordinator(coordinator))
-
-    await asyncio.gather(*controller_init_tasks)
+        coordinator.async_initialize()
+        # Its generally faster not to gather here so we can
+        # reuse the connection instead of creating a new
+        # connection for each coordinator.
+        await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = RainMachineData(
@@ -326,10 +324,17 @@ async def async_setup_entry(  # noqa: C901
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    def call_with_controller(update_programs_and_zones: bool = True) -> Callable:
+    def call_with_controller(
+        update_programs_and_zones: bool = True,
+    ) -> Callable[
+        [Callable[[ServiceCall, Controller], Coroutine[Any, Any, None]]],
+        Callable[[ServiceCall], Coroutine[Any, Any, None]],
+    ]:
         """Hydrate a service call with the appropriate controller."""
 
-        def decorator(func: Callable) -> Callable[..., Awaitable]:
+        def decorator(
+            func: Callable[[ServiceCall, Controller], Coroutine[Any, Any, None]],
+        ) -> Callable[[ServiceCall], Coroutine[Any, Any, None]]:
             """Define the decorator."""
 
             @wraps(func)
@@ -493,7 +498,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # 1 -> 2: Update unique IDs to be consistent across platform (including removing
     # the silly removal of colons in the MAC address that was added originally):
     if version == 1:
-        version = entry.version = 2
+        version = 2
+        hass.config_entries.async_update_entry(entry, version=version)
 
         @callback
         def migrate_unique_id(entity_entry: er.RegistryEntry) -> dict[str, Any]:

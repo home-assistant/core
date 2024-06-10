@@ -1,4 +1,5 @@
 """iCloud component constants."""
+
 from homeassistant.const import Platform
 
 DOMAIN = "icloud"

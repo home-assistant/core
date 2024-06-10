@@ -1,4 +1,5 @@
 """Constants for Hive."""
+
 from homeassistant.const import Platform
 
 ATTR_MODE = "mode"

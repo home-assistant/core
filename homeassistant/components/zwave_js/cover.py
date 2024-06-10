@@ -1,4 +1,5 @@
 """Support for Z-Wave cover devices."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -18,7 +19,7 @@ from zwave_js_server.const.command_class.multilevel_switch import (
 from zwave_js_server.const.command_class.window_covering import (
     NO_POSITION_PROPERTY_KEYS,
     NO_POSITION_SUFFIX,
-    WINDOW_COVERING_OPEN_PROPERTY,
+    WINDOW_COVERING_LEVEL_CHANGE_UP_PROPERTY,
     SlatStates,
 )
 from zwave_js_server.model.driver import Driver
@@ -56,7 +57,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Cover from Config Entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
 
     @callback
     def async_add_cover(info: ZwaveDiscoveryInfo) -> None:
@@ -370,7 +371,7 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
                 set_values_func(
                     value,
                     stop_value=self.get_zwave_value(
-                        WINDOW_COVERING_OPEN_PROPERTY,
+                        WINDOW_COVERING_LEVEL_CHANGE_UP_PROPERTY,
                         value_property_key=value.property_key,
                     ),
                 )
@@ -378,12 +379,11 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
                     assert self._attr_supported_features
                     self._attr_supported_features ^= set_position_feature
 
-        additional_info: list[str] = []
-        for value in (self._current_position_value, self._current_tilt_value):
-            if value and value.property_key_name:
-                additional_info.append(
-                    value.property_key_name.removesuffix(f" {NO_POSITION_SUFFIX}")
-                )
+        additional_info: list[str] = [
+            value.property_key_name.removesuffix(f" {NO_POSITION_SUFFIX}")
+            for value in (self._current_position_value, self._current_tilt_value)
+            if value and value.property_key_name
+        ]
         self._attr_name = self.generate_name(additional_info=additional_info)
         self._attr_device_class = CoverDeviceClass.WINDOW
 

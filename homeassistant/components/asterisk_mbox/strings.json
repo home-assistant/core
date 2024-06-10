@@ -1,0 +1,8 @@
+{
+  "issues": {
+    "deprecated_integration": {
+      "title": "The {integration_title} is being removed",
+      "description": "{integration_title} is being removed as the `{mailbox}` platform is being removed and {integration_title} supports no other platforms. Remove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
+  }
+}

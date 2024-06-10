@@ -3,6 +3,7 @@
 It shows list of users if access from trusted network.
 Abort login flow if not access from trusted network.
 """
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -19,16 +20,16 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.network import is_cloud_connection
 
 from .. import InvalidAuthError
-from ..models import Credentials, RefreshToken, UserMeta
+from ..models import AuthFlowResult, Credentials, RefreshToken, UserMeta
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 
-IPAddress = IPv4Address | IPv6Address
-IPNetwork = IPv4Network | IPv6Network
+type IPAddress = IPv4Address | IPv6Address
+type IPNetwork = IPv4Network | IPv6Network
 
 CONF_TRUSTED_NETWORKS = "trusted_networks"
 CONF_TRUSTED_USERS = "trusted_users"
@@ -192,11 +193,8 @@ class TrustedNetworksAuthProvider(AuthProvider):
         if any(ip_addr in trusted_proxy for trusted_proxy in self.trusted_proxies):
             raise InvalidAuthError("Can't allow access from a proxy server")
 
-        if "cloud" in self.hass.config.components:
-            from hass_nabucasa import remote  # pylint: disable=import-outside-toplevel
-
-            if remote.is_cloud_request.get():
-                raise InvalidAuthError("Can't allow access from Home Assistant Cloud")
+        if is_cloud_connection(self.hass):
+            raise InvalidAuthError("Can't allow access from Home Assistant Cloud")
 
     @callback
     def async_validate_refresh_token(
@@ -228,7 +226,7 @@ class TrustedNetworksLoginFlow(LoginFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> AuthFlowResult:
         """Handle the step of the form."""
         try:
             cast(

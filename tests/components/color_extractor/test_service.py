@@ -1,4 +1,5 @@
 """Tests for color_extractor component service calls."""
+
 import base64
 import io
 from typing import Any
@@ -110,7 +111,6 @@ async def test_missing_url_and_path(hass: HomeAssistant, setup_integration) -> N
         await hass.services.async_call(
             DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
         )
-        await hass.async_block_till_done()
 
     # check light is still off, unchanged due to bad parameters on service call
     state = hass.states.get(LIGHT_ENTITY)

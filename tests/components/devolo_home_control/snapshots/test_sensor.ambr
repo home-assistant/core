@@ -10,6 +10,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_battery_level',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
@@ -33,6 +34,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -40,6 +43,7 @@
     'original_icon': None,
     'original_name': 'Battery level',
     'platform': 'devolo_home_control',
+    'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'devolo.BatterySensor:Test',
@@ -57,6 +61,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_current_consumption',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -80,6 +85,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -87,6 +94,7 @@
     'original_icon': None,
     'original_name': 'Current consumption',
     'platform': 'devolo_home_control',
+    'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'devolo.Meter:Test_current',
@@ -104,6 +112,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_total_consumption',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
@@ -127,6 +136,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -134,6 +145,7 @@
     'original_icon': None,
     'original_name': 'Total consumption',
     'platform': 'devolo_home_control',
+    'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'devolo.Meter:Test_total',
@@ -151,6 +163,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.test_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
@@ -174,6 +187,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -181,6 +196,7 @@
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'devolo_home_control',
+    'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'devolo.MultiLevelSensor:Test',

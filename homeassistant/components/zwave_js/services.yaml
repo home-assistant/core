@@ -29,6 +29,65 @@ set_lock_usercode:
       selector:
         text:
 
+set_lock_configuration:
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+  fields:
+    operation_type:
+      required: true
+      example: timed
+      selector:
+        select:
+          options:
+            - constant
+            - timed
+    lock_timeout:
+      required: false
+      example: 1
+      selector:
+        number:
+          min: 0
+          max: 65535
+          unit_of_measurement: sec
+    outside_handles_can_open_door_configuration:
+      required: false
+      example: [true, true, true, false]
+      selector:
+        object:
+    inside_handles_can_open_door_configuration:
+      required: false
+      example: [true, true, true, false]
+      selector:
+        object:
+    auto_relock_time:
+      required: false
+      example: 1
+      selector:
+        number:
+          min: 0
+          max: 65535
+          unit_of_measurement: sec
+    hold_and_release_time:
+      required: false
+      example: 1
+      selector:
+        number:
+          min: 0
+          max: 65535
+          unit_of_measurement: sec
+    twist_assist:
+      required: false
+      example: true
+      selector:
+        boolean:
+    block_to_block:
+      required: false
+      example: true
+      selector:
+        boolean:
+
 set_config_parameter:
   target:
     entity:
@@ -54,6 +113,18 @@ set_config_parameter:
       required: true
       selector:
         text:
+    value_size:
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 4
+    value_format:
+      example: 1
+      selector:
+        number:
+          min: 0
+          max: 3
 
 bulk_set_partial_config_parameters:
   target:
@@ -223,3 +294,25 @@ invoke_cc_api:
       required: true
       selector:
         object:
+
+refresh_notifications:
+  target:
+    entity:
+      integration: zwave_js
+  fields:
+    notification_type:
+      example: 1
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 22
+          mode: box
+    notification_event:
+      example: 1
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 255
+          mode: box

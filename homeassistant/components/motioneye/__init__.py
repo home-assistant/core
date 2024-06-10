@@ -1,4 +1,5 @@
 """The motionEye integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -111,7 +112,7 @@ def get_motioneye_device_identifier(
 
 
 def split_motioneye_device_identifier(
-    identifier: tuple[str, str]
+    identifier: tuple[str, str],
 ) -> tuple[str, str, int] | None:
     """Get the identifiers for a motionEye device."""
     if len(identifier) != 2 or identifier[0] != DOMAIN or "_" not in identifier[1]:
@@ -413,7 +414,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def handle_webhook(
     hass: HomeAssistant, webhook_id: str, request: Request
-) -> None | Response:
+) -> Response | None:
     """Handle webhook callback."""
 
     try:

@@ -1,4 +1,5 @@
 """Support for Z-Wave lights."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -67,7 +68,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Light from Config Entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
 
     @callback
     def async_add_light(info: ZwaveDiscoveryInfo) -> None:
@@ -129,18 +130,29 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         self._supported_color_modes: set[ColorMode] = set()
 
         # get additional (optional) values and set features
+        # If the command class is Basic, we must geenerate a name that includes
+        # the command class name to avoid ambiguity
         self._target_brightness = self.get_zwave_value(
             TARGET_VALUE_PROPERTY,
             CommandClass.SWITCH_MULTILEVEL,
             add_to_watched_value_ids=False,
         )
+        if self.info.primary_value.command_class == CommandClass.BASIC:
+            self._attr_name = self.generate_name(
+                include_value_name=True, alternate_value_name="Basic"
+            )
+            self._target_brightness = self.get_zwave_value(
+                TARGET_VALUE_PROPERTY,
+                CommandClass.BASIC,
+                add_to_watched_value_ids=False,
+            )
         self._target_color = self.get_zwave_value(
             TARGET_COLOR_PROPERTY,
             CommandClass.SWITCH_COLOR,
             add_to_watched_value_ids=False,
         )
 
-        self._calculate_color_values()
+        self._calculate_color_support()
         if self._supports_rgbw:
             self._supported_color_modes.add(ColorMode.RGBW)
         elif self._supports_color:
@@ -149,6 +161,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             self._supported_color_modes.add(ColorMode.COLOR_TEMP)
         if not self._supported_color_modes:
             self._supported_color_modes.add(ColorMode.BRIGHTNESS)
+        self._calculate_color_values()
 
         # Entity class attributes
         self.supports_brightness_transition = bool(
@@ -356,14 +369,15 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         # typically delayed and causes a confusing UX.
         if (
             zwave_brightness == SET_TO_PREVIOUS_VALUE
-            and self.info.primary_value.command_class == CommandClass.SWITCH_MULTILEVEL
+            and self.info.primary_value.command_class
+            in (CommandClass.BASIC, CommandClass.SWITCH_MULTILEVEL)
         ):
             self._set_optimistic_state = True
             self.async_write_ha_state()
 
     @callback
-    def _calculate_color_values(self) -> None:
-        """Calculate light colors."""
+    def _get_color_values(self) -> tuple[Value | None, ...]:
+        """Get light colors."""
         # NOTE: We lookup all values here (instead of relying on the multicolor one)
         # to find out what colors are supported
         # as this is a simple lookup by key, this not heavy
@@ -392,6 +406,27 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             CommandClass.SWITCH_COLOR,
             value_property_key=ColorComponent.COLD_WHITE.value,
         )
+        return (red_val, green_val, blue_val, ww_val, cw_val)
+
+    @callback
+    def _calculate_color_support(self) -> None:
+        """Calculate light colors."""
+        (red, green, blue, warm_white, cool_white) = self._get_color_values()
+        # RGB support
+        if red and green and blue:
+            self._supports_color = True
+        # color temperature support
+        if warm_white and cool_white:
+            self._supports_color_temp = True
+        # only one white channel (warm white or cool white) = rgbw support
+        elif red and green and blue and warm_white or cool_white:
+            self._supports_rgbw = True
+
+    @callback
+    def _calculate_color_values(self) -> None:
+        """Calculate light colors."""
+        (red_val, green_val, blue_val, ww_val, cw_val) = self._get_color_values()
+
         # prefer the (new) combined color property
         # https://github.com/zwave-js/node-zwave-js/pull/1782
         combined_color_val = self.get_zwave_value(
@@ -404,8 +439,11 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         else:
             multi_color = {}
 
-        # Default: Brightness (no color)
-        self._color_mode = ColorMode.BRIGHTNESS
+        # Default: Brightness (no color) or Unknown
+        if self.supported_color_modes == {ColorMode.BRIGHTNESS}:
+            self._color_mode = ColorMode.BRIGHTNESS
+        else:
+            self._color_mode = ColorMode.UNKNOWN
 
         # RGB support
         if red_val and green_val and blue_val:
@@ -413,7 +451,6 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             red = multi_color.get(COLOR_SWITCH_COMBINED_RED, red_val.value)
             green = multi_color.get(COLOR_SWITCH_COMBINED_GREEN, green_val.value)
             blue = multi_color.get(COLOR_SWITCH_COMBINED_BLUE, blue_val.value)
-            self._supports_color = True
             if None not in (red, green, blue):
                 # convert to HS
                 self._hs_color = color_util.color_RGB_to_hs(red, green, blue)
@@ -422,7 +459,6 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         # color temperature support
         if ww_val and cw_val:
-            self._supports_color_temp = True
             warm_white = multi_color.get(COLOR_SWITCH_COMBINED_WARM_WHITE, ww_val.value)
             cold_white = multi_color.get(COLOR_SWITCH_COMBINED_COLD_WHITE, cw_val.value)
             # Calculate color temps based on whites
@@ -437,7 +473,6 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
                 self._color_temp = None
         # only one white channel (warm white) = rgbw support
         elif red_val and green_val and blue_val and ww_val:
-            self._supports_rgbw = True
             white = multi_color.get(COLOR_SWITCH_COMBINED_WARM_WHITE, ww_val.value)
             self._rgbw_color = (red, green, blue, white)
             # Light supports rgbw, set color mode to rgbw

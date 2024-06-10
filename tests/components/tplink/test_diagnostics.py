@@ -1,4 +1,5 @@
 """Tests for the diagnostics data provided by the TP-Link integration."""
+
 import json
 
 from kasa import SmartDevice
@@ -37,7 +38,7 @@ async def test_diagnostics(
     fixture_file: str,
     sysinfo_vars: list[str],
     expected_oui: str | None,
-):
+) -> None:
     """Test diagnostics for config entry."""
     diagnostics_data = json.loads(load_fixture(fixture_file, "tplink"))
 

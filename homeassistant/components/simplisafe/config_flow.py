@@ -1,4 +1,5 @@
 """Config flow to configure the SimpliSafe component."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -13,11 +14,14 @@ from simplipy.util.auth import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_CODE, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import DOMAIN, LOGGER
@@ -47,7 +51,7 @@ def async_get_simplisafe_oauth_values() -> SimpliSafeOAuthValues:
     return SimpliSafeOAuthValues(auth_url, code_verifier)
 
 
-class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class SimpliSafeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a SimpliSafe config flow."""
 
     VERSION = 1
@@ -65,14 +69,14 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Define the config flow to handle options."""
         return SimpliSafeOptionsFlowHandler(config_entry)
 
-    async def async_step_reauth(self, config: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, config: Mapping[str, Any]) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self._reauth = True
         return await self.async_step_user()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         if user_input is None:
             return self.async_show_form(
@@ -144,7 +148,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=simplisafe_user_id, data=data)
 
 
-class SimpliSafeOptionsFlowHandler(config_entries.OptionsFlow):
+class SimpliSafeOptionsFlowHandler(OptionsFlow):
     """Handle a SimpliSafe options flow."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
@@ -153,7 +157,7 @@ class SimpliSafeOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(data=user_input)

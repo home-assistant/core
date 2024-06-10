@@ -1,4 +1,5 @@
 """Tests for the comfoconnect sensor platform."""
+
 # import json
 from unittest.mock import patch
 

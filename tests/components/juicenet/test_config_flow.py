@@ -1,4 +1,5 @@
 """Test the JuiceNet config flow."""
+
 from unittest.mock import MagicMock, patch
 
 import aiohttp
@@ -8,6 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components.juicenet.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
 def _mock_juicenet_return_value(get_devices=None):
@@ -22,23 +24,27 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.juicenet.config_flow.Api.get_devices",
-        return_value=MagicMock(),
-    ), patch(
-        "homeassistant.components.juicenet.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.juicenet.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.juicenet.config_flow.Api.get_devices",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.juicenet.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.juicenet.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_ACCESS_TOKEN: "access_token"}
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "JuiceNet"
     assert result2["data"] == {CONF_ACCESS_TOKEN: "access_token"}
     assert len(mock_setup.mock_calls) == 1
@@ -59,7 +65,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             result["flow_id"], {CONF_ACCESS_TOKEN: "access_token"}
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -77,7 +83,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             result["flow_id"], {CONF_ACCESS_TOKEN: "access_token"}
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -95,21 +101,25 @@ async def test_form_catch_unknown_errors(hass: HomeAssistant) -> None:
             result["flow_id"], {CONF_ACCESS_TOKEN: "access_token"}
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_import(hass: HomeAssistant) -> None:
     """Test that import works as expected."""
 
-    with patch(
-        "homeassistant.components.juicenet.config_flow.Api.get_devices",
-        return_value=MagicMock(),
-    ), patch(
-        "homeassistant.components.juicenet.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.juicenet.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.juicenet.config_flow.Api.get_devices",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.juicenet.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.juicenet.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -117,7 +127,7 @@ async def test_import(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "JuiceNet"
     assert result["data"] == {CONF_ACCESS_TOKEN: "access_token"}
     assert len(mock_setup.mock_calls) == 1

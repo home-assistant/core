@@ -1,0 +1,12 @@
+{
+  "services": {
+    "set_hev_cycle_state": "mdi:led-on",
+    "set_state": "mdi:led-on",
+    "effect_pulse": "mdi:pulse",
+    "effect_colorloop": "mdi:looks",
+    "effect_move": "mdi:cube-send",
+    "effect_flame": "mdi:fire",
+    "effect_morph": "mdi:shape-outline",
+    "effect_stop": "mdi:stop"
+  }
+}

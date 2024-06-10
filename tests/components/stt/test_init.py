@@ -1,10 +1,12 @@
 """Test STT component setup."""
-from collections.abc import AsyncIterable, Generator
+
+from collections.abc import AsyncIterable
 from http import HTTPStatus
 from pathlib import Path
 from unittest.mock import AsyncMock
 
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components.stt import (
     DOMAIN,
@@ -121,12 +123,20 @@ class STTFlow(ConfigFlow):
     """Test flow."""
 
 
-@pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
-    """Mock config flow."""
-    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+@pytest.fixture(name="config_flow_test_domain")
+def config_flow_test_domain_fixture() -> str:
+    """Test domain fixture."""
+    return TEST_DOMAIN
 
-    with mock_config_flow(TEST_DOMAIN, STTFlow):
+
+@pytest.fixture(autouse=True)
+def config_flow_fixture(
+    hass: HomeAssistant, config_flow_test_domain: str
+) -> Generator[None]:
+    """Mock config flow."""
+    mock_platform(hass, f"{config_flow_test_domain}.config_flow")
+
+    with mock_config_flow(config_flow_test_domain, STTFlow):
         yield
 
 
@@ -137,6 +147,7 @@ async def setup_fixture(
     request: pytest.FixtureRequest,
 ) -> MockProvider | MockProviderEntity:
     """Set up the test environment."""
+    provider: MockProvider | MockProviderEntity
     if request.param == "mock_setup":
         provider = MockProvider()
         await mock_setup(hass, tmp_path, provider)
@@ -166,7 +177,10 @@ async def mock_setup(
 
 
 async def mock_config_entry_setup(
-    hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockProviderEntity
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_provider_entity: MockProviderEntity,
+    test_domain: str = TEST_DOMAIN,
 ) -> MockConfigEntry:
     """Set up a test provider via config entry."""
 
@@ -174,7 +188,7 @@ async def mock_config_entry_setup(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
         return True
 
     async def async_unload_entry_init(
@@ -187,7 +201,7 @@ async def mock_config_entry_setup(
     mock_integration(
         hass,
         MockModule(
-            TEST_DOMAIN,
+            test_domain,
             async_setup_entry=async_setup_entry_init,
             async_unload_entry=async_unload_entry_init,
         ),
@@ -201,9 +215,9 @@ async def mock_config_entry_setup(
         """Set up test stt platform via config entry."""
         async_add_entities([mock_provider_entity])
 
-    mock_stt_entity_platform(hass, tmp_path, TEST_DOMAIN, async_setup_entry_platform)
+    mock_stt_entity_platform(hass, tmp_path, test_domain, async_setup_entry_platform)
 
-    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry = MockConfigEntry(domain=test_domain)
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -287,7 +301,7 @@ async def test_stream_audio(
 )
 @pytest.mark.parametrize(
     ("header", "status", "error"),
-    (
+    [
         (None, 400, "Missing X-Speech-Content header"),
         (
             (
@@ -318,7 +332,7 @@ async def test_stream_audio(
             400,
             "Missing language in X-Speech-Content header",
         ),
-    ),
+    ],
 )
 async def test_metadata_errors(
     hass: HomeAssistant,
@@ -357,9 +371,9 @@ async def test_config_entry_unload(
 ) -> None:
     """Test we can unload config entry."""
     config_entry = await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     await hass.config_entries.async_unload(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_restore_state(
@@ -375,7 +389,7 @@ async def test_restore_state(
     config_entry = await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     state = hass.states.get(entity_id)
     assert state
     assert state.state == timestamp
@@ -456,7 +470,11 @@ async def test_default_engine_none(hass: HomeAssistant, tmp_path: Path) -> None:
     assert async_default_engine(hass) is None
 
 
-async def test_default_engine(hass: HomeAssistant, tmp_path: Path) -> None:
+async def test_default_engine(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_provider: MockProvider,
+) -> None:
     """Test async_default_engine."""
     mock_stt_platform(
         hass,
@@ -479,26 +497,31 @@ async def test_default_engine_entity(
     assert async_default_engine(hass) == f"{DOMAIN}.{TEST_DOMAIN}"
 
 
-async def test_default_engine_prefer_cloud(hass: HomeAssistant, tmp_path: Path) -> None:
+@pytest.mark.parametrize("config_flow_test_domain", ["new_test"])
+async def test_default_engine_prefer_provider(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_provider_entity: MockProviderEntity,
+    mock_provider: MockProvider,
+    config_flow_test_domain: str,
+) -> None:
     """Test async_default_engine."""
-    mock_stt_platform(
-        hass,
-        tmp_path,
-        TEST_DOMAIN,
-        async_get_engine=AsyncMock(return_value=mock_provider),
-    )
-    mock_stt_platform(
-        hass,
-        tmp_path,
-        "cloud",
-        async_get_engine=AsyncMock(return_value=mock_provider),
-    )
-    assert await async_setup_component(
-        hass, "stt", {"stt": [{"platform": TEST_DOMAIN}, {"platform": "cloud"}]}
+    mock_provider_entity.url_path = "stt.new_test"
+    mock_provider_entity._attr_name = "New test"
+
+    await mock_setup(hass, tmp_path, mock_provider)
+    await mock_config_entry_setup(
+        hass, tmp_path, mock_provider_entity, test_domain=config_flow_test_domain
     )
     await hass.async_block_till_done()
 
-    assert async_default_engine(hass) == "cloud"
+    entity_engine = async_get_speech_to_text_engine(hass, "stt.new_test")
+    assert entity_engine is not None
+    assert entity_engine.name == "New test"
+    provider_engine = async_get_speech_to_text_engine(hass, "test")
+    assert provider_engine is not None
+    assert provider_engine.name == "test"
+    assert async_default_engine(hass) == "test"
 
 
 async def test_get_engine_legacy(

@@ -1,16 +1,17 @@
 """The tests for Nest device triggers."""
+
 from google_nest_sdm.event import EventMessage
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.nest import DOMAIN
 from homeassistant.components.nest.events import NEST_EVENT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -79,13 +80,16 @@ async def setup_automation(hass, device_id, trigger_type):
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 async def test_get_triggers(
-    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    create_device: CreateDevice,
+    setup_platform: PlatformSetup,
 ) -> None:
     """Test we get the expected triggers from a nest."""
     create_device.create(
@@ -99,7 +103,6 @@ async def test_get_triggers(
     )
     await setup_platform()
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
 
     expected_triggers = [
@@ -125,7 +128,10 @@ async def test_get_triggers(
 
 
 async def test_multiple_devices(
-    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    create_device: CreateDevice,
+    setup_platform: PlatformSetup,
 ) -> None:
     """Test we get the expected triggers from a nest."""
     create_device.create(
@@ -148,10 +154,9 @@ async def test_multiple_devices(
     )
     await setup_platform()
 
-    registry = er.async_get(hass)
-    entry1 = registry.async_get("camera.camera_1")
+    entry1 = entity_registry.async_get("camera.camera_1")
     assert entry1.unique_id == "device-id-1-camera"
-    entry2 = registry.async_get("camera.camera_2")
+    entry2 = entity_registry.async_get("camera.camera_2")
     assert entry2.unique_id == "device-id-2-camera"
 
     triggers = await async_get_device_automations(
@@ -180,7 +185,10 @@ async def test_multiple_devices(
 
 
 async def test_triggers_for_invalid_device_id(
-    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    create_device: CreateDevice,
+    setup_platform: PlatformSetup,
 ) -> None:
     """Get triggers for a device not found in the API."""
     create_device.create(
@@ -194,7 +202,6 @@ async def test_triggers_for_invalid_device_id(
     )
     await setup_platform()
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
     assert device_entry is not None
 
@@ -214,14 +221,16 @@ async def test_triggers_for_invalid_device_id(
 
 
 async def test_no_triggers(
-    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    create_device: CreateDevice,
+    setup_platform: PlatformSetup,
 ) -> None:
     """Test we get the expected triggers from a nest."""
     create_device.create(raw_data=make_camera(device_id=DEVICE_ID, traits={}))
     await setup_platform()
 
-    registry = er.async_get(hass)
-    entry = registry.async_get("camera.my_camera")
+    entry = entity_registry.async_get("camera.my_camera")
     assert entry.unique_id == f"{DEVICE_ID}-camera"
 
     triggers = await async_get_device_automations(
@@ -230,53 +239,164 @@ async def test_no_triggers(
     assert triggers == []
 
 
-async def test_fires_on_camera_motion(hass: HomeAssistant, calls) -> None:
+async def test_fires_on_camera_motion(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    create_device: CreateDevice,
+    setup_platform: PlatformSetup,
+    calls: list[ServiceCall],
+) -> None:
     """Test camera_motion triggers firing."""
-    assert await setup_automation(hass, DEVICE_ID, "camera_motion")
+    create_device.create(
+        raw_data=make_camera(
+            device_id=DEVICE_ID,
+            traits={
+                "sdm.devices.traits.CameraMotion": {},
+                "sdm.devices.traits.CameraPerson": {},
+            },
+        )
+    )
+    await setup_platform()
 
-    message = {"device_id": DEVICE_ID, "type": "camera_motion", "timestamp": utcnow()}
+    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
+
+    assert await setup_automation(hass, device_entry.id, "camera_motion")
+
+    message = {
+        "device_id": device_entry.id,
+        "type": "camera_motion",
+        "timestamp": utcnow(),
+    }
     hass.bus.async_fire(NEST_EVENT, message)
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data == DATA_MESSAGE
 
 
-async def test_fires_on_camera_person(hass: HomeAssistant, calls) -> None:
+async def test_fires_on_camera_person(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    create_device: CreateDevice,
+    setup_platform: PlatformSetup,
+    calls: list[ServiceCall],
+) -> None:
     """Test camera_person triggers firing."""
-    assert await setup_automation(hass, DEVICE_ID, "camera_person")
+    create_device.create(
+        raw_data=make_camera(
+            device_id=DEVICE_ID,
+            traits={
+                "sdm.devices.traits.CameraMotion": {},
+                "sdm.devices.traits.CameraPerson": {},
+            },
+        )
+    )
+    await setup_platform()
 
-    message = {"device_id": DEVICE_ID, "type": "camera_person", "timestamp": utcnow()}
+    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
+
+    assert await setup_automation(hass, device_entry.id, "camera_person")
+
+    message = {
+        "device_id": device_entry.id,
+        "type": "camera_person",
+        "timestamp": utcnow(),
+    }
     hass.bus.async_fire(NEST_EVENT, message)
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data == DATA_MESSAGE
 
 
-async def test_fires_on_camera_sound(hass: HomeAssistant, calls) -> None:
-    """Test camera_person triggers firing."""
-    assert await setup_automation(hass, DEVICE_ID, "camera_sound")
+async def test_fires_on_camera_sound(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    create_device: CreateDevice,
+    setup_platform: PlatformSetup,
+    calls: list[ServiceCall],
+) -> None:
+    """Test camera_sound triggers firing."""
+    create_device.create(
+        raw_data=make_camera(
+            device_id=DEVICE_ID,
+            traits={
+                "sdm.devices.traits.CameraMotion": {},
+                "sdm.devices.traits.CameraSound": {},
+            },
+        )
+    )
+    await setup_platform()
 
-    message = {"device_id": DEVICE_ID, "type": "camera_sound", "timestamp": utcnow()}
+    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
+
+    assert await setup_automation(hass, device_entry.id, "camera_sound")
+
+    message = {
+        "device_id": device_entry.id,
+        "type": "camera_sound",
+        "timestamp": utcnow(),
+    }
     hass.bus.async_fire(NEST_EVENT, message)
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data == DATA_MESSAGE
 
 
-async def test_fires_on_doorbell_chime(hass: HomeAssistant, calls) -> None:
+async def test_fires_on_doorbell_chime(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    create_device: CreateDevice,
+    setup_platform: PlatformSetup,
+    calls: list[ServiceCall],
+) -> None:
     """Test doorbell_chime triggers firing."""
-    assert await setup_automation(hass, DEVICE_ID, "doorbell_chime")
+    create_device.create(
+        raw_data=make_camera(
+            device_id=DEVICE_ID,
+            traits={
+                "sdm.devices.traits.CameraMotion": {},
+                "sdm.devices.traits.DoorbellChime": {},
+            },
+        )
+    )
+    await setup_platform()
 
-    message = {"device_id": DEVICE_ID, "type": "doorbell_chime", "timestamp": utcnow()}
+    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
+
+    assert await setup_automation(hass, device_entry.id, "doorbell_chime")
+
+    message = {
+        "device_id": device_entry.id,
+        "type": "doorbell_chime",
+        "timestamp": utcnow(),
+    }
     hass.bus.async_fire(NEST_EVENT, message)
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data == DATA_MESSAGE
 
 
-async def test_trigger_for_wrong_device_id(hass: HomeAssistant, calls) -> None:
-    """Test for turn_on and turn_off triggers firing."""
-    assert await setup_automation(hass, DEVICE_ID, "camera_motion")
+async def test_trigger_for_wrong_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    create_device: CreateDevice,
+    setup_platform: PlatformSetup,
+    calls: list[ServiceCall],
+) -> None:
+    """Test messages for the wrong device are ignored."""
+    create_device.create(
+        raw_data=make_camera(
+            device_id=DEVICE_ID,
+            traits={
+                "sdm.devices.traits.CameraMotion": {},
+                "sdm.devices.traits.CameraPerson": {},
+            },
+        )
+    )
+    await setup_platform()
+
+    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
+
+    assert await setup_automation(hass, device_entry.id, "camera_motion")
 
     message = {
         "device_id": "wrong-device-id",
@@ -288,12 +408,31 @@ async def test_trigger_for_wrong_device_id(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 0
 
 
-async def test_trigger_for_wrong_event_type(hass: HomeAssistant, calls) -> None:
-    """Test for turn_on and turn_off triggers firing."""
-    assert await setup_automation(hass, DEVICE_ID, "camera_motion")
+async def test_trigger_for_wrong_event_type(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    create_device: CreateDevice,
+    setup_platform: PlatformSetup,
+    calls: list[ServiceCall],
+) -> None:
+    """Test that messages for the wrong event type are ignored."""
+    create_device.create(
+        raw_data=make_camera(
+            device_id=DEVICE_ID,
+            traits={
+                "sdm.devices.traits.CameraMotion": {},
+                "sdm.devices.traits.CameraPerson": {},
+            },
+        )
+    )
+    await setup_platform()
+
+    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
+
+    assert await setup_automation(hass, device_entry.id, "camera_motion")
 
     message = {
-        "device_id": DEVICE_ID,
+        "device_id": device_entry.id,
         "type": "wrong-event-type",
         "timestamp": utcnow(),
     }
@@ -304,7 +443,8 @@ async def test_trigger_for_wrong_event_type(hass: HomeAssistant, calls) -> None:
 
 async def test_subscriber_automation(
     hass: HomeAssistant,
-    calls: list,
+    device_registry: dr.DeviceRegistry,
+    calls: list[ServiceCall],
     create_device: CreateDevice,
     setup_platform: PlatformSetup,
     subscriber: FakeSubscriber,
@@ -320,13 +460,12 @@ async def test_subscriber_automation(
     )
     await setup_platform()
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
 
     assert await setup_automation(hass, device_entry.id, "camera_motion")
 
     # Simulate a pubsub message received by the subscriber with a motion event
-    event = EventMessage(
+    event = EventMessage.create_event(
         {
             "eventId": "some-event-id",
             "timestamp": "2019-01-01T00:00:01Z",

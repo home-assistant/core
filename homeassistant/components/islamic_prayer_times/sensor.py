@@ -1,4 +1,5 @@
 """Platform to retrieve Islamic prayer times information for Home Assistant."""
+
 from datetime import datetime
 
 from homeassistant.components.sensor import (
@@ -54,7 +55,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Islamic prayer times sensor platform."""
 
-    coordinator: IslamicPrayerDataUpdateCoordinator = hass.data[DOMAIN]
+    coordinator: IslamicPrayerDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
 
     async_add_entities(
         IslamicPrayerTimeSensor(coordinator, description)
@@ -78,7 +81,7 @@ class IslamicPrayerTimeSensor(
         """Initialize the Islamic prayer time sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = description.key
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             name=NAME,

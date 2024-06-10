@@ -1,4 +1,5 @@
 """Constants for the Xiaomi Miio component."""
+
 from miio.integrations.vacuum.roborock.vacuum import (
     ROCKROBO_E2,
     ROCKROBO_S4,
@@ -18,8 +19,6 @@ DOMAIN = "xiaomi_miio"
 # Config flow
 CONF_FLOW_TYPE = "config_flow_device"
 CONF_GATEWAY = "gateway"
-CONF_DEVICE = "device"
-CONF_MAC = "mac"
 CONF_CLOUD_USERNAME = "cloud_username"
 CONF_CLOUD_PASSWORD = "cloud_password"
 CONF_CLOUD_COUNTRY = "cloud_country"

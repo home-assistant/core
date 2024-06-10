@@ -1,5 +1,5 @@
 """Tests for 1-Wire sensors."""
-from collections.abc import Generator
+
 from copy import deepcopy
 import logging
 from unittest.mock import MagicMock, _patch_dict, patch
@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, _patch_dict, patch
 from pyownet.protocol import OwnetError
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from typing_extensions import Generator
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -18,7 +19,7 @@ from .const import ATTR_INJECT_READS, MOCK_OWPROXY_DEVICES
 
 
 @pytest.fixture(autouse=True)
-def override_platforms() -> Generator[None, None, None]:
+def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.onewire.PLATFORMS", [Platform.SENSOR]):
         yield
@@ -53,7 +54,7 @@ async def test_sensors(
     setup_owproxy_mock_devices(owproxy, Platform.SENSOR, [device_id])
     # Some entities are disabled, enable them and reload before checking states
     for ent in entity_entries:
-        entity_registry.async_update_entity(ent.entity_id, **{"disabled_by": None})
+        entity_registry.async_update_entity(ent.entity_id, disabled_by=None)
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 

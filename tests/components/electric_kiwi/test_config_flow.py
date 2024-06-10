@@ -1,4 +1,5 @@
 """Test the Electric Kiwi config flow."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -48,15 +49,15 @@ async def test_config_flow_no_credentials(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "missing_credentials"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials: None,
     mock_setup_entry: AsyncMock,
 ) -> None:
@@ -106,11 +107,11 @@ async def test_full_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_existing_entry(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials: None,
     config_entry: MockConfigEntry,
 ) -> None:
@@ -149,10 +150,10 @@ async def test_existing_entry(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauthentication(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
     aioclient_mock: AiohttpClientMocker,
     mock_setup_entry: MagicMock,
     config_entry: MockConfigEntry,

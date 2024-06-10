@@ -1,13 +1,15 @@
 """Provides device automations for homekit devices."""
+
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.characteristics.const import InputEventValues
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.utils import clamp_enum_to_char
+from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
@@ -64,7 +66,8 @@ class TriggerSource:
         self._callbacks: dict[tuple[str, str], list[Callable[[Any], None]]] = {}
         self._iid_trigger_keys: dict[int, set[tuple[str, str]]] = {}
 
-    async def async_setup(
+    @callback
+    def async_setup(
         self, connection: HKDevice, aid: int, triggers: list[dict[str, Any]]
     ) -> None:
         """Set up a set of triggers for a device.
@@ -78,7 +81,7 @@ class TriggerSource:
             self._triggers[trigger_key] = trigger_data
             iid = trigger_data["characteristic"]
             self._iid_trigger_keys.setdefault(iid, set()).add(trigger_key)
-            await connection.add_watchable_characteristics([(aid, iid)])
+            connection.add_watchable_characteristics([(aid, iid)])
 
     def fire(self, iid: int, ev: dict[str, Any]) -> None:
         """Process events that have been received from a HomeKit accessory."""
@@ -86,7 +89,7 @@ class TriggerSource:
             for event_handler in self._callbacks.get(trigger_key, []):
                 event_handler(ev)
 
-    def async_get_triggers(self) -> Generator[tuple[str, str], None, None]:
+    def async_get_triggers(self) -> Generator[tuple[str, str]]:
         """List device triggers for HomeKit devices."""
         yield from self._triggers
 
@@ -114,7 +117,7 @@ class TriggerSource:
 
         trigger_callbacks.append(event_handler)
 
-        def async_remove_handler():
+        def async_remove_handler() -> None:
             trigger_callbacks.remove(event_handler)
 
         return async_remove_handler
@@ -158,7 +161,7 @@ def enumerate_stateless_switch_group(service: Service) -> list[dict[str, Any]]:
         )
     )
 
-    results = []
+    results: list[dict[str, Any]] = []
     for idx, switch in enumerate(switches):
         char = switch[CharacteristicsTypes.INPUT_EVENT]
 
@@ -166,15 +169,15 @@ def enumerate_stateless_switch_group(service: Service) -> list[dict[str, Any]]:
         # manufacturer might not - clamp options to what they say.
         all_values = clamp_enum_to_char(InputEventValues, char)
 
-        for event_type in all_values:
-            results.append(
-                {
-                    "characteristic": char.iid,
-                    "value": event_type,
-                    "type": f"button{idx + 1}",
-                    "subtype": HK_TO_HA_INPUT_EVENT_VALUES[event_type],
-                }
-            )
+        results.extend(
+            {
+                "characteristic": char.iid,
+                "value": event_type,
+                "type": f"button{idx + 1}",
+                "subtype": HK_TO_HA_INPUT_EVENT_VALUES[event_type],
+            }
+            for event_type in all_values
+        )
     return results
 
 
@@ -186,17 +189,15 @@ def enumerate_doorbell(service: Service) -> list[dict[str, Any]]:
     # manufacturer might not - clamp options to what they say.
     all_values = clamp_enum_to_char(InputEventValues, input_event)
 
-    results = []
-    for event_type in all_values:
-        results.append(
-            {
-                "characteristic": input_event.iid,
-                "value": event_type,
-                "type": "doorbell",
-                "subtype": HK_TO_HA_INPUT_EVENT_VALUES[event_type],
-            }
-        )
-    return results
+    return [
+        {
+            "characteristic": input_event.iid,
+            "value": event_type,
+            "type": "doorbell",
+            "subtype": HK_TO_HA_INPUT_EVENT_VALUES[event_type],
+        }
+        for event_type in all_values
+    ]
 
 
 TRIGGER_FINDERS = {
@@ -214,7 +215,7 @@ async def async_setup_triggers_for_entry(
     conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_characteristic(service: Service):
+    def async_add_characteristic(service: Service) -> bool:
         aid = service.accessory.aid
         service_type = service.type
 
@@ -237,7 +238,7 @@ async def async_setup_triggers_for_entry(
             return False
 
         trigger = async_get_or_create_trigger_source(conn.hass, device_id)
-        hass.async_create_task(trigger.async_setup(conn, aid, triggers))
+        trigger.async_setup(conn, aid, triggers)
 
         return True
 
@@ -256,7 +257,9 @@ def async_get_or_create_trigger_source(
     return source
 
 
-def async_fire_triggers(conn: HKDevice, events: dict[tuple[int, int], dict[str, Any]]):
+def async_fire_triggers(
+    conn: HKDevice, events: dict[tuple[int, int], dict[str, Any]]
+) -> None:
     """Process events generated by a HomeKit accessory into automation triggers."""
     trigger_sources: dict[str, TriggerSource] = conn.hass.data.get(TRIGGERS, {})
     if not trigger_sources:

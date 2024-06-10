@@ -1,7 +1,6 @@
 """Test BMW diagnostics."""
+
 import datetime
-import os
-import time
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -19,18 +18,15 @@ from tests.components.diagnostics import (
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11))
+@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11, tzinfo=datetime.UTC))
+@pytest.mark.usefixtures("bmw_fixture")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_config_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    bmw_fixture,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
-
-    # Make sure that local timezone for test is UTC
-    os.environ["TZ"] = "UTC"
-    time.tzset()
 
     mock_config_entry = await setup_mocked_integration(hass)
 
@@ -41,22 +37,19 @@ async def test_config_entry_diagnostics(
     assert diagnostics == snapshot
 
 
-@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11))
+@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11, tzinfo=datetime.UTC))
+@pytest.mark.usefixtures("bmw_fixture")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_device_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    bmw_fixture,
+    device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device diagnostics."""
 
-    # Make sure that local timezone for test is UTC
-    os.environ["TZ"] = "UTC"
-    time.tzset()
-
     mock_config_entry = await setup_mocked_integration(hass)
 
-    device_registry = dr.async_get(hass)
     reg_device = device_registry.async_get_device(
         identifiers={(DOMAIN, "WBY00000000REXI01")},
     )
@@ -69,22 +62,19 @@ async def test_device_diagnostics(
     assert diagnostics == snapshot
 
 
-@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11))
+@pytest.mark.freeze_time(datetime.datetime(2022, 7, 10, 11, tzinfo=datetime.UTC))
+@pytest.mark.usefixtures("bmw_fixture")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_device_diagnostics_vehicle_not_found(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    bmw_fixture,
+    device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device diagnostics when the vehicle cannot be found."""
 
-    # Make sure that local timezone for test is UTC
-    os.environ["TZ"] = "UTC"
-    time.tzset()
-
     mock_config_entry = await setup_mocked_integration(hass)
 
-    device_registry = dr.async_get(hass)
     reg_device = device_registry.async_get_device(
         identifiers={(DOMAIN, "WBY00000000REXI01")},
     )

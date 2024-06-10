@@ -1,4 +1,5 @@
 """Cisco Webex Teams notify component."""
+
 from __future__ import annotations
 
 import logging
@@ -31,7 +32,6 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> CiscoWebexTeamsNotificationService | None:
     """Get the CiscoWebexTeams notification service."""
-
     client = WebexTeamsAPI(access_token=config[CONF_TOKEN])
     try:
         # Validate the token & room_id

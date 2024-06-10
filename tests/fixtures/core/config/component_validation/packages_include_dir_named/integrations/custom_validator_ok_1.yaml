@@ -1,0 +1,3 @@
+# This is correct and should not generate errors
+custom_validator_ok_1:
+  host: blah.com

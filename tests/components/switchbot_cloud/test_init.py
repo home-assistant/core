@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 import pytest
-from switchbot_api import CannotConnect, Device, InvalidAuth, PowerState
+from switchbot_api import CannotConnect, Device, InvalidAuth, PowerState, Remote
 
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
 from homeassistant.config_entries import ConfigEntryState
@@ -32,18 +32,30 @@ async def test_setup_entry_success(
 ) -> None:
     """Test successful setup of entry."""
     mock_list_devices.return_value = [
+        Remote(
+            deviceId="air-conditonner-id-1",
+            deviceName="air-conditonner-name-1",
+            remoteType="Air Conditioner",
+            hubDeviceId="test-hub-id",
+        ),
         Device(
-            deviceId="test-id",
-            deviceName="test-name",
+            deviceId="plug-id-1",
+            deviceName="plug-name-1",
             deviceType="Plug",
             hubDeviceId="test-hub-id",
-        )
+        ),
+        Remote(
+            deviceId="plug-id-2",
+            deviceName="plug-name-2",
+            remoteType="DIY Plug",
+            hubDeviceId="test-hub-id",
+        ),
     ]
     mock_get_status.return_value = {"power": PowerState.ON.value}
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -92,7 +104,7 @@ async def test_setup_entry_fails_when_refreshing(
     mock_get_status.side_effect = CannotConnect
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()

@@ -14,7 +14,11 @@
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -115,6 +119,125 @@
     "unregister_webhook": {
       "name": "Unregister webhook",
       "description": "Unregisters the webhook from the Netatmo backend."
+    },
+    "set_preset_mode_with_end_datetime": {
+      "name": "Set preset mode with end date & time",
+      "description": "Sets the preset mode for a Netatmo climate device. The preset mode must match a preset mode configured at Netatmo.",
+      "fields": {
+        "preset_mode": {
+          "name": "Preset mode",
+          "description": "Climate preset mode such as Schedule, Away or Frost Guard."
+        },
+        "end_datetime": {
+          "name": "End date & time",
+          "description": "Date & time the preset will be active until."
+        }
+      }
+    },
+    "set_temperature_with_end_datetime": {
+      "name": "Set temperature with end date & time",
+      "description": "Sets the target temperature for a Netatmo climate device with an end date & time.",
+      "fields": {
+        "target_temperature": {
+          "name": "Target temperature",
+          "description": "The target temperature for the device."
+        },
+        "end_datetime": {
+          "name": "[%key:component::netatmo::services::set_preset_mode_with_end_datetime::fields::end_datetime::name%]",
+          "description": "Date & time the target temperature will be active until."
+        }
+      }
+    },
+    "set_temperature_with_time_period": {
+      "name": "Set temperature with time period",
+      "description": "Sets the target temperature for a Netatmo climate device with time period.",
+      "fields": {
+        "target_temperature": {
+          "name": "[%key:component::netatmo::services::set_temperature_with_end_datetime::fields::target_temperature::name%]",
+          "description": "[%key:component::netatmo::services::set_temperature_with_end_datetime::fields::target_temperature::description%]"
+        },
+        "time_period": {
+          "name": "Time period",
+          "description": "The time period which the temperature setting will be active for."
+        }
+      }
+    },
+    "clear_temperature_setting": {
+      "name": "Clear temperature setting",
+      "description": "Clears any temperature setting for a Netatmo climate device reverting it to the current preset or schedule."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "temp_trend": {
+        "name": "Temperature trend"
+      },
+      "pressure_trend": {
+        "name": "Pressure trend"
+      },
+      "noise": {
+        "name": "Noise"
+      },
+      "sum_rain_1": {
+        "name": "Precipitation last hour"
+      },
+      "sum_rain_24": {
+        "name": "Precipitation today"
+      },
+      "wind_direction": {
+        "name": "Wind direction",
+        "state": {
+          "n": "North",
+          "ne": "North-east",
+          "e": "East",
+          "se": "South-east",
+          "s": "South",
+          "sw": "South-west",
+          "w": "West",
+          "nw": "North-west"
+        }
+      },
+      "wind_angle": {
+        "name": "Wind angle"
+      },
+      "gust_direction": {
+        "name": "Gust direction",
+        "state": {
+          "n": "[%key:component::netatmo::entity::sensor::wind_direction::state::n%]",
+          "ne": "[%key:component::netatmo::entity::sensor::wind_direction::state::ne%]",
+          "e": "[%key:component::netatmo::entity::sensor::wind_direction::state::e%]",
+          "se": "[%key:component::netatmo::entity::sensor::wind_direction::state::se%]",
+          "s": "[%key:component::netatmo::entity::sensor::wind_direction::state::s%]",
+          "sw": "[%key:component::netatmo::entity::sensor::wind_direction::state::sw%]",
+          "w": "[%key:component::netatmo::entity::sensor::wind_direction::state::w%]",
+          "nw": "[%key:component::netatmo::entity::sensor::wind_direction::state::nw%]"
+        }
+      },
+      "gust_angle": {
+        "name": "Gust angle"
+      },
+      "gust_strength": {
+        "name": "Gust strength"
+      },
+      "reachable": {
+        "name": "Reachability"
+      },
+      "rf_strength": {
+        "name": "Radio"
+      },
+      "wifi_strength": {
+        "name": "Wi-Fi"
+      },
+      "health_idx": {
+        "name": "Health index",
+        "state": {
+          "healthy": "Healthy",
+          "fine": "Fine",
+          "fair": "Fair",
+          "poor": "Poor",
+          "unhealthy": "Unhealthy"
+        }
+      }
     }
   }
 }

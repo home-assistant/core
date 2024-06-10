@@ -1,4 +1,5 @@
 """Tests for the Atag climate platform."""
+
 from unittest.mock import PropertyMock, patch
 
 from homeassistant.components.atag.climate import DOMAIN, PRESET_MAP
@@ -33,11 +34,12 @@ CLIMATE_ID = f"{Platform.CLIMATE}.{DOMAIN}"
 
 
 async def test_climate(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the creation and values of Atag climate device."""
     await init_integration(hass, aioclient_mock)
-    entity_registry = er.async_get(hass)
 
     assert entity_registry.async_is_registered(CLIMATE_ID)
     entity = entity_registry.async_get(CLIMATE_ID)

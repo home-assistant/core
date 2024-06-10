@@ -1,4 +1,5 @@
 """Tests for the devolo Home Control binary sensors."""
+
 from unittest.mock import patch
 
 import pytest

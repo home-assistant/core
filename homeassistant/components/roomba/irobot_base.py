@@ -1,4 +1,5 @@
 """Base class for iRobot devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -13,7 +14,7 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumEntityFeature,
 )
-from homeassistant.const import STATE_IDLE, STATE_PAUSED
+from homeassistant.const import ATTR_CONNECTIONS, STATE_IDLE, STATE_PAUSED
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -69,9 +70,23 @@ class IRobotEntity(Entity):
         self.vacuum = roomba
         self._blid = blid
         self.vacuum_state = roomba_reported_state(roomba)
-        self._name = self.vacuum_state.get("name")
-        self._version = self.vacuum_state.get("softwareVer")
-        self._sku = self.vacuum_state.get("sku")
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.robot_unique_id)},
+            serial_number=self.vacuum_state.get("hwPartsRev", {}).get("navSerialNo"),
+            manufacturer="iRobot",
+            model=self.vacuum_state.get("sku"),
+            name=str(self.vacuum_state.get("name")),
+            sw_version=self.vacuum_state.get("softwareVer"),
+            hw_version=self.vacuum_state.get("hardwareRev"),
+        )
+
+        if mac_address := self.vacuum_state.get("hwPartsRev", {}).get(
+            "wlan0HwAddr", self.vacuum_state.get("mac")
+        ):
+            self._attr_device_info[ATTR_CONNECTIONS] = {
+                (dr.CONNECTION_NETWORK_MAC, mac_address)
+            }
 
     @property
     def robot_unique_id(self):
@@ -84,26 +99,24 @@ class IRobotEntity(Entity):
         return self.robot_unique_id
 
     @property
-    def device_info(self):
-        """Return the device info of the vacuum cleaner."""
-        connections = None
-        if mac_address := self.vacuum_state.get("hwPartsRev", {}).get(
-            "wlan0HwAddr", self.vacuum_state.get("mac")
-        ):
-            connections = {(dr.CONNECTION_NETWORK_MAC, mac_address)}
-        return DeviceInfo(
-            connections=connections,
-            identifiers={(DOMAIN, self.robot_unique_id)},
-            manufacturer="iRobot",
-            model=self._sku,
-            name=str(self._name),
-            sw_version=self._version,
-        )
-
-    @property
-    def _battery_level(self):
+    def battery_level(self):
         """Return the battery level of the vacuum cleaner."""
         return self.vacuum_state.get("batPct")
+
+    @property
+    def run_stats(self):
+        """Return the run stats."""
+        return self.vacuum_state.get("bbrun", {})
+
+    @property
+    def mission_stats(self):
+        """Return the mission stats."""
+        return self.vacuum_state.get("bbmssn", {})
+
+    @property
+    def battery_stats(self):
+        """Return the battery stats."""
+        return self.vacuum_state.get("bbchg3", {})
 
     @property
     def _robot_state(self):
@@ -145,11 +158,6 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         """Initialize the iRobot handler."""
         super().__init__(roomba, blid)
         self._cap_position = self.vacuum_state.get("cap", {}).get("pose") == 1
-
-    @property
-    def battery_level(self):
-        """Return the battery level of the vacuum cleaner."""
-        return self._battery_level
 
     @property
     def state(self):
@@ -243,7 +251,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         """Set the vacuum cleaner to return to the dock."""
         if self.state == STATE_CLEANING:
             await self.async_pause()
-            for _ in range(0, 10):
+            for _ in range(10):
                 if self.state == STATE_PAUSED:
                     break
                 await asyncio.sleep(1)

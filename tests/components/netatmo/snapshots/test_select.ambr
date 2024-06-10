@@ -1,0 +1,57 @@
+# serializer version: 1
+# name: test_entity[select.myhome-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Default',
+        'Winter',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.myhome',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '91763b24c43d3e344f424e8b-schedule-select',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[select.myhome-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'friendly_name': 'MYHOME',
+      'options': list([
+        'Default',
+        'Winter',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.myhome',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Default',
+  })
+# ---

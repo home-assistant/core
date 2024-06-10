@@ -1,4 +1,5 @@
 """Support for IPP sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -12,14 +13,15 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LOCATION, PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
+from . import IPPConfigEntry
 from .const import (
     ATTR_COMMAND_SET,
     ATTR_INFO,
@@ -30,25 +32,15 @@ from .const import (
     ATTR_STATE_MESSAGE,
     ATTR_STATE_REASON,
     ATTR_URI_SUPPORTED,
-    DOMAIN,
 )
-from .coordinator import IPPDataUpdateCoordinator
 from .entity import IPPEntity
 
 
-@dataclass
-class IPPSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
-
-    value_fn: Callable[[Printer], StateType | datetime]
-
-
-@dataclass
-class IPPSensorEntityDescription(
-    SensorEntityDescription, IPPSensorEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class IPPSensorEntityDescription(SensorEntityDescription):
     """Describes IPP sensor entity."""
 
+    value_fn: Callable[[Printer], StateType | datetime]
     attributes_fn: Callable[[Printer], dict[Any, StateType]] = lambda _: {}
 
 
@@ -69,7 +61,6 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
         key="printer",
         name=None,
         translation_key="printer",
-        icon="mdi:printer",
         device_class=SensorDeviceClass.ENUM,
         options=["idle", "printing", "stopped"],
         attributes_fn=lambda printer: {
@@ -86,7 +77,6 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
     IPPSensorEntityDescription(
         key="uptime",
         translation_key="uptime",
-        icon="mdi:clock-outline",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -97,11 +87,11 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: IPPConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up IPP sensor based on a config entry."""
-    coordinator: IPPDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     sensors: list[SensorEntity] = [
         IPPSensor(
             coordinator,
@@ -117,8 +107,9 @@ async def async_setup_entry(
                 IPPSensorEntityDescription(
                     key=f"marker_{index}",
                     name=marker.name,
-                    icon="mdi:water",
+                    translation_key="marker",
                     native_unit_of_measurement=PERCENTAGE,
+                    state_class=SensorStateClass.MEASUREMENT,
                     attributes_fn=_get_marker_attributes_fn(
                         index,
                         lambda marker: {
@@ -127,7 +118,10 @@ async def async_setup_entry(
                             ATTR_MARKER_TYPE: marker.marker_type,
                         },
                     ),
-                    value_fn=_get_marker_value_fn(index, lambda marker: marker.level),
+                    value_fn=_get_marker_value_fn(
+                        index,
+                        lambda marker: marker.level if marker.level >= 0 else None,
+                    ),
                 ),
             )
         )

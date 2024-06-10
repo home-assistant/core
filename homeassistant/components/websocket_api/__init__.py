@@ -1,4 +1,5 @@
 """WebSocket based API for Home Assistant."""
+
 from __future__ import annotations
 
 from typing import Final, cast
@@ -17,6 +18,7 @@ from .const import (  # noqa: F401
     ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
     ERR_NOT_SUPPORTED,
+    ERR_SERVICE_VALIDATION_ERROR,
     ERR_TEMPLATE_ERROR,
     ERR_TIMEOUT,
     ERR_UNAUTHORIZED,
@@ -54,11 +56,10 @@ def async_register_command(
     schema: vol.Schema | None = None,
 ) -> None:
     """Register a websocket command."""
-    # pylint: disable=protected-access
     if handler is None:
         handler = cast(const.WebSocketCommandHandler, command_or_handler)
-        command = handler._ws_command  # type: ignore[attr-defined]
-        schema = handler._ws_schema  # type: ignore[attr-defined]
+        command = handler._ws_command  # type: ignore[attr-defined]  # noqa: SLF001
+        schema = handler._ws_schema  # type: ignore[attr-defined]  # noqa: SLF001
     else:
         command = command_or_handler
     if (handlers := hass.data.get(DOMAIN)) is None:

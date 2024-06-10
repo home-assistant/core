@@ -1,4 +1,5 @@
 """Support for Overkiz alarm control panel."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -35,19 +36,12 @@ from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity
 
 
-@dataclass
-class OverkizAlarmDescriptionMixin:
-    """Define an entity description mixin for switch entities."""
+@dataclass(frozen=True, kw_only=True)
+class OverkizAlarmDescription(AlarmControlPanelEntityDescription):
+    """Class to describe an Overkiz alarm control panel."""
 
     supported_features: AlarmControlPanelEntityFeature
     fn_state: Callable[[Callable[[str], OverkizStateType]], str]
-
-
-@dataclass
-class OverkizAlarmDescription(
-    AlarmControlPanelEntityDescription, OverkizAlarmDescriptionMixin
-):
-    """Class to describe an Overkiz alarm control panel."""
 
     alarm_disarm: str | None = None
     alarm_disarm_args: OverkizStateType | list[OverkizStateType] = None
@@ -95,7 +89,7 @@ MAP_CORE_ACTIVE_ZONES: dict[str, str] = {
 
 
 def _state_stateful_alarm_controller(
-    select_state: Callable[[str], OverkizStateType]
+    select_state: Callable[[str], OverkizStateType],
 ) -> str:
     """Return the state of the device."""
     if state := cast(str, select_state(OverkizState.CORE_ACTIVE_ZONES)):
@@ -118,7 +112,7 @@ MAP_MYFOX_STATUS_STATE: dict[str, str] = {
 
 
 def _state_myfox_alarm_controller(
-    select_state: Callable[[str], OverkizStateType]
+    select_state: Callable[[str], OverkizStateType],
 ) -> str:
     """Return the state of the device."""
     if (
@@ -141,7 +135,7 @@ MAP_ARM_TYPE: dict[str, str] = {
 
 
 def _state_alarm_panel_controller(
-    select_state: Callable[[str], OverkizStateType]
+    select_state: Callable[[str], OverkizStateType],
 ) -> str:
     """Return the state of the device."""
     return MAP_ARM_TYPE[
@@ -227,27 +221,26 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Overkiz alarm control panel from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
-    entities: list[OverkizAlarmControlPanel] = []
 
-    for device in data.platforms[Platform.ALARM_CONTROL_PANEL]:
-        if description := SUPPORTED_DEVICES.get(device.widget) or SUPPORTED_DEVICES.get(
-            device.ui_class
-        ):
-            entities.append(
-                OverkizAlarmControlPanel(
-                    device.device_url,
-                    data.coordinator,
-                    description,
-                )
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        OverkizAlarmControlPanel(
+            device.device_url,
+            data.coordinator,
+            description,
+        )
+        for device in data.platforms[Platform.ALARM_CONTROL_PANEL]
+        if (
+            description := SUPPORTED_DEVICES.get(device.widget)
+            or SUPPORTED_DEVICES.get(device.ui_class)
+        )
+    )
 
 
 class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity):
     """Representation of an Overkiz Alarm Control Panel."""
 
     entity_description: OverkizAlarmDescription
+    _attr_code_arm_required = False
 
     def __init__(
         self,

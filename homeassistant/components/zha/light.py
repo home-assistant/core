@@ -1,4 +1,5 @@
 """Lights on Zigbee Home Automation networks."""
+
 from __future__ import annotations
 
 from collections import Counter
@@ -8,7 +9,7 @@ import functools
 import itertools
 import logging
 import random
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from zigpy.zcl.clusters.general import Identify, LevelControl, OnOff
 from zigpy.zcl.clusters.lighting import Color
@@ -47,6 +48,7 @@ from .core.const import (
     CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
     CONF_ENABLE_LIGHT_TRANSITIONING_FLAG,
     CONF_GROUP_MEMBERS_ASSUME_STATE,
+    DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
@@ -75,7 +77,6 @@ FLASH_EFFECTS = {
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.LIGHT)
 GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, Platform.LIGHT)
-PARALLEL_UPDATES = 0
 SIGNAL_LIGHT_GROUP_STATE_CHANGED = "zha_light_group_state_changed"
 SIGNAL_LIGHT_GROUP_TRANSITION_START = "zha_light_group_transition_start"
 SIGNAL_LIGHT_GROUP_TRANSITION_FINISHED = "zha_light_group_transition_finished"
@@ -146,11 +147,10 @@ class BaseLight(LogMixin, light.LightEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return state attributes."""
-        attributes = {
+        return {
             "off_with_transition": self._off_with_transition,
             "off_brightness": self._off_brightness,
         }
-        return attributes
 
     @property
     def is_on(self) -> bool:
@@ -637,8 +637,8 @@ class BaseLight(LogMixin, light.LightEntity):
 class Light(BaseLight, ZhaEntity):
     """Representation of a ZHA or ZLL light."""
 
-    _attr_name: str = "Light"
     _attr_supported_color_modes: set[ColorMode]
+    _attr_translation_key: str = "light"
     _REFRESH_INTERVAL = (45, 75)
 
     def __init__(
@@ -788,6 +788,7 @@ class Light(BaseLight, ZhaEntity):
         self._cancel_refresh_handle = async_track_time_interval(
             self.hass, self._refresh, timedelta(seconds=refresh_interval)
         )
+        self.debug("started polling with refresh interval of %s", refresh_interval)
         self.async_accept_signal(
             None,
             SIGNAL_LIGHT_GROUP_STATE_CHANGED,
@@ -838,6 +839,8 @@ class Light(BaseLight, ZhaEntity):
         """Disconnect entity object when removed."""
         assert self._cancel_refresh_handle
         self._cancel_refresh_handle()
+        self._cancel_refresh_handle = None
+        self.debug("stopped polling during device removal")
         await super().async_will_remove_from_hass()
 
     @callback
@@ -850,8 +853,8 @@ class Light(BaseLight, ZhaEntity):
             self._off_with_transition = last_state.attributes["off_with_transition"]
         if "off_brightness" in last_state.attributes:
             self._off_brightness = last_state.attributes["off_brightness"]
-        if "color_mode" in last_state.attributes:
-            self._attr_color_mode = ColorMode(last_state.attributes["color_mode"])
+        if (color_mode := last_state.attributes.get("color_mode")) is not None:
+            self._attr_color_mode = ColorMode(color_mode)
         if "color_temp" in last_state.attributes:
             self._attr_color_temp = last_state.attributes["color_temp"]
         if "xy_color" in last_state.attributes:
@@ -980,8 +983,16 @@ class Light(BaseLight, ZhaEntity):
         if self.is_transitioning:
             self.debug("skipping _refresh while transitioning")
             return
-        await self.async_get_state()
-        self.async_write_ha_state()
+        if self._zha_device.available and self.hass.data[DATA_ZHA].allow_polling:
+            self.debug("polling for updated state")
+            await self.async_get_state()
+            self.async_write_ha_state()
+        else:
+            self.debug(
+                "skipping polling for updated state, available: %s, allow polled requests: %s",
+                self._zha_device.available,
+                self.hass.data[DATA_ZHA].allow_polling,
+            )
 
     async def _maybe_force_refresh(self, signal):
         """Force update the state if the signal contains the entity id for this entity."""
@@ -989,8 +1000,16 @@ class Light(BaseLight, ZhaEntity):
             if self.is_transitioning:
                 self.debug("skipping _maybe_force_refresh while transitioning")
                 return
-            await self.async_get_state()
-            self.async_write_ha_state()
+            if self._zha_device.available and self.hass.data[DATA_ZHA].allow_polling:
+                self.debug("forcing polling for updated state")
+                await self.async_get_state()
+                self.async_write_ha_state()
+            else:
+                self.debug(
+                    "skipping _maybe_force_refresh, available: %s, allow polled requests: %s",
+                    self._zha_device.available,
+                    self.hass.data[DATA_ZHA].allow_polling,
+                )
 
     @callback
     def _assume_group_state(self, signal, update_params) -> None:
@@ -1066,19 +1085,17 @@ class Light(BaseLight, ZhaEntity):
 class HueLight(Light):
     """Representation of a HUE light which does not report attributes."""
 
-    _attr_name: str = "Light"
     _REFRESH_INTERVAL = (3, 5)
 
 
 @STRICT_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_ON_OFF,
     aux_cluster_handlers={CLUSTER_HANDLER_COLOR, CLUSTER_HANDLER_LEVEL},
-    manufacturers={"Jasco", "Quotra-Vision", "eWeLight", "eWeLink"},
+    manufacturers={"Jasco", "Jasco Products", "Quotra-Vision", "eWeLight", "eWeLink"},
 )
 class ForceOnLight(Light):
     """Representation of a light which does not respect on/off for move_to_level_with_on_off commands."""
 
-    _attr_name: str = "Light"
     _FORCE_ON = True
 
 
@@ -1090,8 +1107,6 @@ class ForceOnLight(Light):
 class MinTransitionLight(Light):
     """Representation of a light which does not react to any "move to" calls with 0 as a transition."""
 
-    _attr_name: str = "Light"
-
     # Transitions are counted in 1/10th of a second increments, so this is the smallest
     _DEFAULT_MIN_TRANSITION_TIME = 0.1
 
@@ -1099,6 +1114,8 @@ class MinTransitionLight(Light):
 @GROUP_MATCH()
 class LightGroup(BaseLight, ZhaGroupEntity):
     """Representation of a light group."""
+
+    _attr_translation_key: str = "light_group"
 
     def __init__(
         self,
@@ -1119,13 +1136,13 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             # time of any members.
             if member.device.manufacturer in DEFAULT_MIN_TRANSITION_MANUFACTURERS:
                 self._DEFAULT_MIN_TRANSITION_TIME = (
-                    MinTransitionLight._DEFAULT_MIN_TRANSITION_TIME
+                    MinTransitionLight._DEFAULT_MIN_TRANSITION_TIME  # noqa: SLF001
                 )
 
             # Check all group members to see if they support execute_if_off.
             # If at least one member has a color cluster and doesn't support it,
             # it's not used.
-            for endpoint in member.device._endpoints.values():
+            for endpoint in member.device._endpoints.values():  # noqa: SLF001
                 for cluster_handler in endpoint.all_cluster_handlers.values():
                     if (
                         cluster_handler.name == CLUSTER_HANDLER_COLOR
@@ -1166,7 +1183,9 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         if self._zha_config_group_members_assume_state:
             self._update_group_from_child_delay = ASSUME_UPDATE_GROUP_FROM_CHILD_DELAY
         self._zha_config_enhanced_light_transition = False
-        self._attr_color_mode = None
+
+        self._attr_color_mode = ColorMode.UNKNOWN
+        self._attr_supported_color_modes = {ColorMode.ONOFF}
 
     # remove this when all ZHA platforms and base entities are updated
     @property
@@ -1266,7 +1285,19 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             effects_count = Counter(itertools.chain(all_effects))
             self._attr_effect = effects_count.most_common(1)[0][0]
 
-        self._attr_color_mode = None
+        supported_color_modes = {ColorMode.ONOFF}
+        all_supported_color_modes: list[set[ColorMode]] = list(
+            helpers.find_state_attributes(states, light.ATTR_SUPPORTED_COLOR_MODES)
+        )
+        if all_supported_color_modes:
+            # Merge all color modes.
+            supported_color_modes = filter_supported_color_modes(
+                set().union(*all_supported_color_modes)
+            )
+
+        self._attr_supported_color_modes = supported_color_modes
+
+        self._attr_color_mode = ColorMode.UNKNOWN
         all_color_modes = list(
             helpers.find_state_attributes(on_states, light.ATTR_COLOR_MODE)
         )
@@ -1274,25 +1305,25 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             # Report the most common color mode, select brightness and onoff last
             color_mode_count = Counter(itertools.chain(all_color_modes))
             if ColorMode.ONOFF in color_mode_count:
-                color_mode_count[ColorMode.ONOFF] = -1
+                if ColorMode.ONOFF in supported_color_modes:
+                    color_mode_count[ColorMode.ONOFF] = -1
+                else:
+                    color_mode_count.pop(ColorMode.ONOFF)
             if ColorMode.BRIGHTNESS in color_mode_count:
-                color_mode_count[ColorMode.BRIGHTNESS] = 0
-            self._attr_color_mode = color_mode_count.most_common(1)[0][0]
+                if ColorMode.BRIGHTNESS in supported_color_modes:
+                    color_mode_count[ColorMode.BRIGHTNESS] = 0
+                else:
+                    color_mode_count.pop(ColorMode.BRIGHTNESS)
+            if color_mode_count:
+                self._attr_color_mode = color_mode_count.most_common(1)[0][0]
+            else:
+                self._attr_color_mode = next(iter(supported_color_modes))
+
             if self._attr_color_mode == ColorMode.HS and (
                 color_mode_count[ColorMode.HS] != len(self._group.members)
                 or self._zha_config_always_prefer_xy_color_mode
             ):  # switch to XY if all members do not support HS
                 self._attr_color_mode = ColorMode.XY
-
-        self._attr_supported_color_modes = None
-        all_supported_color_modes = list(
-            helpers.find_state_attributes(states, light.ATTR_SUPPORTED_COLOR_MODES)
-        )
-        if all_supported_color_modes:
-            # Merge all color modes.
-            self._attr_supported_color_modes = cast(
-                set[str], set().union(*all_supported_color_modes)
-            )
 
         self._attr_supported_features = LightEntityFeature(0)
         for support in helpers.find_state_attributes(states, ATTR_SUPPORTED_FEATURES):

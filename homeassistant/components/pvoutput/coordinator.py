@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for the PVOutput integration."""
+
 from __future__ import annotations
 
 from pvo import PVOutput, PVOutputAuthenticationError, PVOutputNoDataError, Status

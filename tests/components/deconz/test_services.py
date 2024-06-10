@@ -1,4 +1,5 @@
 """deCONZ service tests."""
+
 from unittest.mock import patch
 
 import pytest
@@ -17,7 +18,6 @@ from homeassistant.components.deconz.services import (
     SERVICE_ENTITY,
     SERVICE_FIELD,
     SERVICE_REMOVE_ORPHANED_ENTRIES,
-    SUPPORTED_SERVICES,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
@@ -34,40 +34,6 @@ from .test_gateway import (
 
 from tests.common import async_capture_events
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-async def test_service_setup_and_unload(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Verify service setup works."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-    for service in SUPPORTED_SERVICES:
-        assert hass.services.has_service(DECONZ_DOMAIN, service)
-
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
-    for service in SUPPORTED_SERVICES:
-        assert not hass.services.has_service(DECONZ_DOMAIN, service)
-
-
-@patch("homeassistant.core.ServiceRegistry.async_remove")
-@patch("homeassistant.core.ServiceRegistry.async_register")
-async def test_service_setup_and_unload_not_called_if_multiple_integrations_detected(
-    register_service_mock,
-    remove_service_mock,
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Make sure that services are only setup and removed once."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-    register_service_mock.reset_mock()
-    config_entry_2 = await setup_deconz_integration(hass, aioclient_mock, entry_id=2)
-    register_service_mock.assert_not_called()
-
-    register_service_mock.assert_not_called()
-    assert await hass.config_entries.async_unload(config_entry_2.entry_id)
-    remove_service_mock.assert_not_called()
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
-    assert remove_service_mock.call_count == 3
 
 
 async def test_configure_service_with_field(
@@ -184,7 +150,6 @@ async def test_configure_service_with_faulty_field(
         await hass.services.async_call(
             DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
         )
-        await hass.async_block_till_done()
 
 
 async def test_configure_service_with_faulty_entity(
@@ -349,7 +314,10 @@ async def test_service_refresh_devices_trigger_no_state_update(
 
 
 async def test_remove_orphaned_entries_service(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test service works and also don't remove more than expected."""
     data = {
@@ -374,7 +342,6 @@ async def test_remove_orphaned_entries_service(
     with patch.dict(DECONZ_WEB_REQUEST, data):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "123")},
@@ -391,7 +358,6 @@ async def test_remove_orphaned_entries_service(
         == 5  # Host, gateway, light, switch and orphan
     )
 
-    entity_registry = er.async_get(hass)
     entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
         DECONZ_DOMAIN,

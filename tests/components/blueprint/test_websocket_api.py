@@ -1,8 +1,11 @@
 """Test websocket API."""
+
 from pathlib import Path
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+import yaml
 
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -13,19 +16,23 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-def automation_config():
+def automation_config() -> dict[str, Any]:
     """Automation config."""
     return {}
 
 
 @pytest.fixture
-def script_config():
+def script_config() -> dict[str, Any]:
     """Script config."""
     return {}
 
 
 @pytest.fixture(autouse=True)
-async def setup_bp(hass, automation_config, script_config):
+async def setup_bp(
+    hass: HomeAssistant,
+    automation_config: dict[str, Any],
+    script_config: dict[str, Any],
+) -> None:
     """Fixture to set up the blueprint component."""
     assert await async_setup_component(hass, "blueprint", {})
 
@@ -129,12 +136,57 @@ async def test_import_blueprint(
             },
         },
         "validation_errors": None,
+        "exists": False,
+    }
+
+
+@pytest.mark.usefixtures("setup_bp")
+async def test_import_blueprint_update(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test importing blueprints."""
+    raw_data = Path(
+        hass.config.path("blueprints/automation/in_folder/in_folder_blueprint.yaml")
+    ).read_text()
+
+    aioclient_mock.get(
+        "https://raw.githubusercontent.com/in_folder/home-assistant-config/main/blueprints/automation/in_folder_blueprint.yaml",
+        text=raw_data,
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "blueprint/import",
+            "url": "https://github.com/in_folder/home-assistant-config/blob/main/blueprints/automation/in_folder_blueprint.yaml",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["success"]
+    assert msg["result"] == {
+        "suggested_filename": "in_folder/in_folder_blueprint",
+        "raw_data": raw_data,
+        "blueprint": {
+            "metadata": {
+                "domain": "automation",
+                "input": {"action": None, "trigger": None},
+                "name": "In Folder Blueprint",
+                "source_url": "https://github.com/in_folder/home-assistant-config/blob/main/blueprints/automation/in_folder_blueprint.yaml",
+            }
+        },
+        "validation_errors": None,
+        "exists": True,
     }
 
 
 async def test_save_blueprint(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test saving blueprints."""
@@ -188,7 +240,6 @@ async def test_save_blueprint(
 
 async def test_save_existing_file(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test saving blueprints."""
@@ -212,9 +263,43 @@ async def test_save_existing_file(
     assert msg["error"] == {"code": "already_exists", "message": "File already exists"}
 
 
+async def test_save_existing_file_override(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test saving blueprints."""
+
+    client = await hass_ws_client(hass)
+    with patch("pathlib.Path.write_text") as write_mock:
+        await client.send_json(
+            {
+                "id": 7,
+                "type": "blueprint/save",
+                "path": "test_event_service",
+                "yaml": 'blueprint: {name: "name", domain: "automation"}',
+                "domain": "automation",
+                "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/test_event_service.yaml",
+                "allow_override": True,
+            }
+        )
+
+        msg = await client.receive_json()
+
+    assert msg["id"] == 7
+    assert msg["success"]
+    assert msg["result"] == {"overrides_existing": True}
+    assert yaml.safe_load(write_mock.mock_calls[0][1][0]) == {
+        "blueprint": {
+            "name": "name",
+            "domain": "automation",
+            "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/test_event_service.yaml",
+            "input": {},
+        }
+    }
+
+
 async def test_save_file_error(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test saving blueprints with OS error."""
@@ -239,7 +324,6 @@ async def test_save_file_error(
 
 async def test_save_invalid_blueprint(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test saving invalid blueprints."""
@@ -268,7 +352,6 @@ async def test_save_invalid_blueprint(
 
 async def test_delete_blueprint(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test deleting blueprints."""
@@ -293,7 +376,6 @@ async def test_delete_blueprint(
 
 async def test_delete_non_exist_file_blueprint(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test deleting non existing blueprints."""
@@ -316,7 +398,7 @@ async def test_delete_non_exist_file_blueprint(
 
 @pytest.mark.parametrize(
     "automation_config",
-    (
+    [
         {
             "automation": {
                 "use_blueprint": {
@@ -329,11 +411,10 @@ async def test_delete_non_exist_file_blueprint(
                 }
             }
         },
-    ),
+    ],
 )
 async def test_delete_blueprint_in_use_by_automation(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test deleting a blueprint which is in use."""
@@ -355,14 +436,14 @@ async def test_delete_blueprint_in_use_by_automation(
         assert msg["id"] == 9
         assert not msg["success"]
         assert msg["error"] == {
-            "code": "unknown_error",
+            "code": "home_assistant_error",
             "message": "Blueprint in use",
         }
 
 
 @pytest.mark.parametrize(
     "script_config",
-    (
+    [
         {
             "script": {
                 "test_script": {
@@ -375,11 +456,10 @@ async def test_delete_blueprint_in_use_by_automation(
                 }
             }
         },
-    ),
+    ],
 )
 async def test_delete_blueprint_in_use_by_script(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test deleting a blueprint which is in use."""
@@ -401,6 +481,6 @@ async def test_delete_blueprint_in_use_by_script(
         assert msg["id"] == 9
         assert not msg["success"]
         assert msg["error"] == {
-            "code": "unknown_error",
+            "code": "home_assistant_error",
             "message": "Blueprint in use",
         }

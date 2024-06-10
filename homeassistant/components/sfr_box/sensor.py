@@ -1,7 +1,7 @@
 """SFR Box sensor platform."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, TypeVar
 
 from sfrbox_api.models import DslInfo, SystemInfo, WanInfo
 
@@ -29,19 +29,12 @@ from .const import DOMAIN
 from .coordinator import SFRDataUpdateCoordinator
 from .models import DomainData
 
-_T = TypeVar("_T")
 
-
-@dataclass
-class SFRBoxSensorMixin(Generic[_T]):
-    """Mixin for SFR Box sensors."""
+@dataclass(frozen=True, kw_only=True)
+class SFRBoxSensorEntityDescription[_T](SensorEntityDescription):
+    """Description for SFR Box sensors."""
 
     value_fn: Callable[[_T], StateType]
-
-
-@dataclass
-class SFRBoxSensorEntityDescription(SensorEntityDescription, SFRBoxSensorMixin[_T]):
-    """Description for SFR Box sensors."""
 
 
 DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
@@ -188,7 +181,7 @@ SYSTEM_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[SystemInfo], ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda x: x.temperature / 1000,
+        value_fn=lambda x: None if x.temperature is None else x.temperature / 1000,
     ),
 )
 WAN_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[WanInfo], ...] = (
@@ -233,7 +226,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SFRBoxSensor(CoordinatorEntity[SFRDataUpdateCoordinator[_T]], SensorEntity):
+class SFRBoxSensor[_T](CoordinatorEntity[SFRDataUpdateCoordinator[_T]], SensorEntity):
     """SFR Box sensor."""
 
     entity_description: SFRBoxSensorEntityDescription[_T]

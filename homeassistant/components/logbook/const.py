@@ -1,15 +1,19 @@
 """Event parser and human readable log generator."""
+
 from __future__ import annotations
 
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
-from homeassistant.components.counter import DOMAIN as COUNTER_DOMAIN
-from homeassistant.components.proximity import DOMAIN as PROXIMITY_DOMAIN
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import EVENT_CALL_SERVICE, EVENT_LOGBOOK_ENTRY
 
+#
 # Domains that are always continuous
-ALWAYS_CONTINUOUS_DOMAINS = {COUNTER_DOMAIN, PROXIMITY_DOMAIN}
+#
+# These are hard coded here to avoid importing
+# the entire counter and proximity integrations
+# to get the name of the domain.
+ALWAYS_CONTINUOUS_DOMAINS = {"counter", "proximity"}
 
 # Domains that are continuous if there is a UOM set on the entity
 CONDITIONALLY_CONTINUOUS_DOMAINS = {SENSOR_DOMAIN}

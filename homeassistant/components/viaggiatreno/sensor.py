@@ -1,4 +1,5 @@
 """Support for the Italian train system using ViaggiaTreno API."""
+
 from __future__ import annotations
 
 import asyncio
@@ -83,11 +84,13 @@ async def async_http_request(hass, uri):
         if req.status != HTTPStatus.OK:
             return {"error": req.status}
         json_response = await req.json()
-        return json_response
-    except (asyncio.TimeoutError, aiohttp.ClientError) as exc:
+    except (TimeoutError, aiohttp.ClientError) as exc:
         _LOGGER.error("Cannot connect to ViaggiaTreno API endpoint: %s", exc)
+        return None
     except ValueError:
         _LOGGER.error("Received non-JSON data from ViaggiaTreno API endpoint")
+        return None
+    return json_response
 
 
 class ViaggiaTrenoSensor(SensorEntity):

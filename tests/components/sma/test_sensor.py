@@ -1,4 +1,5 @@
 """Test the sma sensor platform."""
+
 from pysma.const import (
     ENERGY_METER_VIA_INVERTER,
     GENERIC_SENSORS,

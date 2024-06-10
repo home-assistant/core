@@ -1,10 +1,13 @@
 """Tests for Microsoft text-to-speech."""
+
+from http import HTTPStatus
+from pathlib import Path
 from unittest.mock import patch
 
 from pycsspeechtts import pycsspeechtts
 import pytest
 
-from homeassistant.components import media_source, tts
+from homeassistant.components import tts
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
@@ -12,30 +15,23 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.microsoft.tts import SUPPORTED_LANGUAGES
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ServiceNotFound
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
-
-
-async def get_media_source_url(hass: HomeAssistant, media_content_id):
-    """Get the media source url."""
-    if media_source.DOMAIN not in hass.config.components:
-        assert await async_setup_component(hass, media_source.DOMAIN, {})
-
-    resolved = await media_source.async_resolve_media(hass, media_content_id, None)
-    return resolved.url
+from tests.components.tts.common import retrieve_media
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> Path:
     """Mock the TTS cache dir with empty dir."""
     return mock_tts_cache_dir
 
 
 @pytest.fixture
-async def calls(hass: HomeAssistant):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Mock media player calls."""
     return async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -58,12 +54,18 @@ def mock_tts():
         yield mock_tts
 
 
-async def test_service_say(hass: HomeAssistant, mock_tts, calls) -> None:
+async def test_service_say(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts,
+    calls: list[ServiceCall],
+) -> None:
     """Test service call say."""
 
     await async_setup_component(
         hass, tts.DOMAIN, {tts.DOMAIN: {"platform": "microsoft", "api_key": ""}}
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -76,9 +78,12 @@ async def test_service_say(hass: HomeAssistant, mock_tts, calls) -> None:
     )
 
     assert len(calls) == 1
-    url = await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.OK
+    )
+
     assert len(mock_tts.mock_calls) == 2
-    assert url.endswith(".mp3")
 
     assert mock_tts.mock_calls[1][2] == {
         "language": "en-us",
@@ -93,7 +98,12 @@ async def test_service_say(hass: HomeAssistant, mock_tts, calls) -> None:
     }
 
 
-async def test_service_say_en_gb_config(hass: HomeAssistant, mock_tts, calls) -> None:
+async def test_service_say_en_gb_config(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts,
+    calls: list[ServiceCall],
+) -> None:
     """Test service call say with en-gb code in the config."""
 
     await async_setup_component(
@@ -108,6 +118,7 @@ async def test_service_say_en_gb_config(hass: HomeAssistant, mock_tts, calls) ->
             }
         },
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -120,7 +131,11 @@ async def test_service_say_en_gb_config(hass: HomeAssistant, mock_tts, calls) ->
     )
 
     assert len(calls) == 1
-    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.OK
+    )
+
     assert len(mock_tts.mock_calls) == 2
     assert mock_tts.mock_calls[1][2] == {
         "language": "en-gb",
@@ -135,7 +150,12 @@ async def test_service_say_en_gb_config(hass: HomeAssistant, mock_tts, calls) ->
     }
 
 
-async def test_service_say_en_gb_service(hass: HomeAssistant, mock_tts, calls) -> None:
+async def test_service_say_en_gb_service(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts,
+    calls: list[ServiceCall],
+) -> None:
     """Test service call say with en-gb code in the service."""
 
     await async_setup_component(
@@ -143,6 +163,7 @@ async def test_service_say_en_gb_service(hass: HomeAssistant, mock_tts, calls) -
         tts.DOMAIN,
         {tts.DOMAIN: {"platform": "microsoft", "api_key": ""}},
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -157,7 +178,11 @@ async def test_service_say_en_gb_service(hass: HomeAssistant, mock_tts, calls) -
     )
 
     assert len(calls) == 1
-    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.OK
+    )
+
     assert len(mock_tts.mock_calls) == 2
     assert mock_tts.mock_calls[1][2] == {
         "language": "en-gb",
@@ -172,7 +197,12 @@ async def test_service_say_en_gb_service(hass: HomeAssistant, mock_tts, calls) -
     }
 
 
-async def test_service_say_fa_ir_config(hass: HomeAssistant, mock_tts, calls) -> None:
+async def test_service_say_fa_ir_config(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts,
+    calls: list[ServiceCall],
+) -> None:
     """Test service call say with fa-ir code in the config."""
 
     await async_setup_component(
@@ -187,6 +217,7 @@ async def test_service_say_fa_ir_config(hass: HomeAssistant, mock_tts, calls) ->
             }
         },
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -199,7 +230,11 @@ async def test_service_say_fa_ir_config(hass: HomeAssistant, mock_tts, calls) ->
     )
 
     assert len(calls) == 1
-    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.OK
+    )
+
     assert len(mock_tts.mock_calls) == 2
     assert mock_tts.mock_calls[1][2] == {
         "language": "fa-ir",
@@ -214,7 +249,12 @@ async def test_service_say_fa_ir_config(hass: HomeAssistant, mock_tts, calls) ->
     }
 
 
-async def test_service_say_fa_ir_service(hass: HomeAssistant, mock_tts, calls) -> None:
+async def test_service_say_fa_ir_service(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts,
+    calls: list[ServiceCall],
+) -> None:
     """Test service call say with fa-ir code in the service."""
 
     config = {
@@ -226,6 +266,7 @@ async def test_service_say_fa_ir_service(hass: HomeAssistant, mock_tts, calls) -
     }
 
     await async_setup_component(hass, tts.DOMAIN, config)
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -240,7 +281,11 @@ async def test_service_say_fa_ir_service(hass: HomeAssistant, mock_tts, calls) -
     )
 
     assert len(calls) == 1
-    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.OK
+    )
+
     assert len(mock_tts.mock_calls) == 2
     assert mock_tts.mock_calls[1][2] == {
         "language": "fa-ir",
@@ -272,13 +317,16 @@ def test_supported_languages() -> None:
     assert len(SUPPORTED_LANGUAGES) > 100
 
 
-async def test_invalid_language(hass: HomeAssistant, mock_tts, calls) -> None:
+async def test_invalid_language(
+    hass: HomeAssistant, mock_tts, calls: list[ServiceCall]
+) -> None:
     """Test setup component with invalid language."""
     await async_setup_component(
         hass,
         tts.DOMAIN,
         {tts.DOMAIN: {"platform": "microsoft", "api_key": "", "language": "en"}},
     )
+    await hass.async_block_till_done()
 
     with pytest.raises(ServiceNotFound):
         await hass.services.async_call(
@@ -295,12 +343,18 @@ async def test_invalid_language(hass: HomeAssistant, mock_tts, calls) -> None:
     assert len(mock_tts.mock_calls) == 0
 
 
-async def test_service_say_error(hass: HomeAssistant, mock_tts, calls) -> None:
+async def test_service_say_error(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts,
+    calls: list[ServiceCall],
+) -> None:
     """Test service call say with http error."""
     mock_tts.return_value.speak.side_effect = pycsspeechtts.requests.HTTPError
     await async_setup_component(
         hass, tts.DOMAIN, {tts.DOMAIN: {"platform": "microsoft", "api_key": ""}}
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -313,6 +367,9 @@ async def test_service_say_error(hass: HomeAssistant, mock_tts, calls) -> None:
     )
 
     assert len(calls) == 1
-    with pytest.raises(HomeAssistantError):
-        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.NOT_FOUND
+    )
+
     assert len(mock_tts.mock_calls) == 2

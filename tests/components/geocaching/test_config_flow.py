@@ -1,4 +1,5 @@
 """Test the Geocaching config flow."""
+
 from http import HTTPStatus
 from unittest.mock import MagicMock
 
@@ -39,11 +40,11 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     mock_geocaching_config_flow: MagicMock,
     mock_setup_entry: MagicMock,
 ) -> None:
@@ -60,7 +61,7 @@ async def test_full_flow(
         },
     )
 
-    assert result.get("type") == FlowResultType.EXTERNAL_STEP
+    assert result.get("type") is FlowResultType.EXTERNAL_STEP
     assert result.get("step_id") == "auth"
     assert result.get("url") == (
         f"{CURRENT_ENVIRONMENT_URLS['authorize_url']}?response_type=code&client_id={CLIENT_ID}"
@@ -89,11 +90,11 @@ async def test_full_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_existing_entry(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     mock_geocaching_config_flow: MagicMock,
     mock_setup_entry: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -135,11 +136,11 @@ async def test_existing_entry(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_oauth_error(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     mock_geocaching_config_flow: MagicMock,
     mock_setup_entry: MagicMock,
 ) -> None:
@@ -155,7 +156,7 @@ async def test_oauth_error(
             "redirect_uri": REDIRECT_URI,
         },
     )
-    assert result.get("type") == FlowResultType.EXTERNAL_STEP
+    assert result.get("type") is FlowResultType.EXTERNAL_STEP
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
@@ -175,18 +176,18 @@ async def test_oauth_error(
     )
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result2.get("type") == FlowResultType.ABORT
+    assert result2.get("type") is FlowResultType.ABORT
     assert result2.get("reason") == "oauth_error"
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert len(mock_setup_entry.mock_calls) == 0
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauthentication(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     mock_geocaching_config_flow: MagicMock,
     mock_setup_entry: MagicMock,
     mock_config_entry: MockConfigEntry,

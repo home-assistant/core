@@ -1,4 +1,5 @@
 """Tests for the sensors provided by the PVOutput integration."""
+
 from homeassistant.components.pvoutput.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -23,11 +24,11 @@ from tests.common import MockConfigEntry
 
 async def test_sensors(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the PVOutput sensors."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     state = hass.states.get("sensor.frenck_s_solar_farm_energy_consumed")
     entry = entity_registry.async_get("sensor.frenck_s_solar_farm_energy_consumed")
@@ -35,7 +36,7 @@ async def test_sensors(
     assert state
     assert entry.unique_id == "12345_energy_consumption"
     assert entry.entity_category is None
-    assert state.state == "1000"
+    assert state.state == "1000.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
@@ -51,7 +52,7 @@ async def test_sensors(
     assert state
     assert entry.unique_id == "12345_energy_generation"
     assert entry.entity_category is None
-    assert state.state == "500"
+    assert state.state == "500.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
@@ -83,7 +84,7 @@ async def test_sensors(
     assert state
     assert entry.unique_id == "12345_power_consumption"
     assert entry.entity_category is None
-    assert state.state == "2500"
+    assert state.state == "2500.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck's Solar Farm Power consumed"
@@ -98,7 +99,7 @@ async def test_sensors(
     assert state
     assert entry.unique_id == "12345_power_generation"
     assert entry.entity_category is None
-    assert state.state == "1500"
+    assert state.state == "1500.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)

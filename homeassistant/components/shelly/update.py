@@ -1,4 +1,5 @@
 """Update entities for Shelly devices."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -6,6 +7,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Final, cast
 
+from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.components.update import (
@@ -16,7 +18,6 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -24,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import CONF_SLEEP_PERIOD, OTA_BEGIN, OTA_ERROR, OTA_PROGRESS, OTA_SUCCESS
-from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
+from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     RestEntityDescription,
     RpcEntityDescription,
@@ -34,39 +35,25 @@ from .entity import (
     async_setup_entry_rest,
     async_setup_entry_rpc,
 )
-from .utils import get_device_entry_gen
+from .utils import get_device_entry_gen, get_release_url
 
 LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class RpcUpdateRequiredKeysMixin:
-    """Class for RPC update required keys."""
-
-    latest_version: Callable[[dict], Any]
-    beta: bool
-
-
-@dataclass
-class RestUpdateRequiredKeysMixin:
-    """Class for REST update required keys."""
-
-    latest_version: Callable[[dict], Any]
-    beta: bool
-
-
-@dataclass
-class RpcUpdateDescription(
-    RpcEntityDescription, UpdateEntityDescription, RpcUpdateRequiredKeysMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class RpcUpdateDescription(RpcEntityDescription, UpdateEntityDescription):
     """Class to describe a RPC update."""
 
+    latest_version: Callable[[dict], Any]
+    beta: bool
 
-@dataclass
-class RestUpdateDescription(
-    RestEntityDescription, UpdateEntityDescription, RestUpdateRequiredKeysMixin
-):
+
+@dataclass(frozen=True, kw_only=True)
+class RestUpdateDescription(RestEntityDescription, UpdateEntityDescription):
     """Class to describe a REST update."""
+
+    latest_version: Callable[[dict], Any]
+    beta: bool
 
 
 REST_UPDATES: Final = {
@@ -115,11 +102,11 @@ RPC_UPDATES: Final = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up update entities for Shelly component."""
-    if get_device_entry_gen(config_entry) == 2:
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         if config_entry.data[CONF_SLEEP_PERIOD]:
             async_setup_entry_rpc(
                 hass,
@@ -156,10 +143,15 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         self,
         block_coordinator: ShellyBlockCoordinator,
         attribute: str,
-        description: RestEntityDescription,
+        description: RestUpdateDescription,
     ) -> None:
         """Initialize update entity."""
         super().__init__(block_coordinator, attribute, description)
+        self._attr_release_url = get_release_url(
+            block_coordinator.device.gen,
+            block_coordinator.model,
+            description.beta,
+        )
         self._in_progress_old_version: str | None = None
 
     @property
@@ -205,9 +197,9 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         try:
             result = await self.coordinator.device.trigger_ota_update(beta=beta)
         except DeviceConnectionError as err:
-            raise HomeAssistantError(f"Error starting OTA update: {repr(err)}") from err
+            raise HomeAssistantError(f"Error starting OTA update: {err!r}") from err
         except InvalidAuthError:
-            self.coordinator.entry.async_start_reauth(self.hass)
+            await self.coordinator.async_shutdown_device_and_start_reauth()
         else:
             LOGGER.debug("Result of OTA update call: %s", result)
 
@@ -225,11 +217,14 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         coordinator: ShellyRpcCoordinator,
         key: str,
         attribute: str,
-        description: RpcEntityDescription,
+        description: RpcUpdateDescription,
     ) -> None:
         """Initialize update entity."""
         super().__init__(coordinator, key, attribute, description)
-        self._ota_in_progress: bool = False
+        self._ota_in_progress: bool | int = False
+        self._attr_release_url = get_release_url(
+            coordinator.device.gen, coordinator.model, description.beta
+        )
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -241,14 +236,13 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     @callback
     def _ota_progress_callback(self, event: dict[str, Any]) -> None:
         """Handle device OTA progress."""
-        if self._ota_in_progress:
+        if self.in_progress is not False:
             event_type = event["event"]
             if event_type == OTA_BEGIN:
-                self._attr_in_progress = 0
+                self._ota_in_progress = 0
             elif event_type == OTA_PROGRESS:
-                self._attr_in_progress = event["progress_percent"]
+                self._ota_in_progress = event["progress_percent"]
             elif event_type in (OTA_ERROR, OTA_SUCCESS):
-                self._attr_in_progress = False
                 self._ota_in_progress = False
             self.async_write_ha_state()
 
@@ -265,6 +259,11 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             return cast(str, new_version)
 
         return self.installed_version
+
+    @property
+    def in_progress(self) -> bool | int:
+        """Update installation in progress."""
+        return self._ota_in_progress
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
@@ -287,16 +286,14 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         try:
             await self.coordinator.device.trigger_ota_update(beta=beta)
         except DeviceConnectionError as err:
-            raise HomeAssistantError(
-                f"OTA update connection error: {repr(err)}"
-            ) from err
+            raise HomeAssistantError(f"OTA update connection error: {err!r}") from err
         except RpcCallError as err:
-            raise HomeAssistantError(f"OTA update request error: {repr(err)}") from err
+            raise HomeAssistantError(f"OTA update request error: {err!r}") from err
         except InvalidAuthError:
-            self.coordinator.entry.async_start_reauth(self.hass)
+            await self.coordinator.async_shutdown_device_and_start_reauth()
         else:
             self._ota_in_progress = True
-            LOGGER.debug("OTA update call successful")
+            LOGGER.debug("OTA update call for %s successful", self.coordinator.name)
 
 
 class RpcSleepingUpdateEntity(
@@ -336,3 +333,15 @@ class RpcSleepingUpdateEntity(
             return None
 
         return self.last_state.attributes.get(ATTR_LATEST_VERSION)
+
+    @property
+    def release_url(self) -> str | None:
+        """URL to the full release notes."""
+        if not self.coordinator.device.initialized:
+            return None
+
+        return get_release_url(
+            self.coordinator.device.gen,
+            self.coordinator.model,
+            self.entity_description.beta,
+        )

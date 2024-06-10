@@ -3,6 +3,7 @@
 ISO does not publish a machine readable list free of charge, so the list is generated
 with help of the pycountry package.
 """
+
 from pathlib import Path
 
 import pycountry
@@ -23,5 +24,6 @@ Path("homeassistant/generated/countries.py").write_text(
             "COUNTRIES": countries,
         },
         generator=generator_string,
+        annotations={"COUNTRIES": "Final[set[str]]"},
     )
 )

@@ -1,14 +1,15 @@
 """The Aseko Pool Live integration."""
+
 from __future__ import annotations
 
 import logging
 
-from aioaseko import APIUnavailable, MobileAccount
+from aioaseko import APIUnavailable, InvalidAuthCredentials, MobileAccount
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, Platform
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -22,11 +23,15 @@ PLATFORMS: list[str] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Aseko Pool Live from a config entry."""
     account = MobileAccount(
-        async_get_clientsession(hass), access_token=entry.data[CONF_ACCESS_TOKEN]
+        async_get_clientsession(hass),
+        username=entry.data[CONF_EMAIL],
+        password=entry.data[CONF_PASSWORD],
     )
 
     try:
         units = await account.get_units()
+    except InvalidAuthCredentials as err:
+        raise ConfigEntryAuthFailed from err
     except APIUnavailable as err:
         raise ConfigEntryNotReady from err
 
@@ -48,3 +53,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        new = {
+            CONF_EMAIL: config_entry.title,
+            CONF_PASSWORD: "",
+        }
+
+        hass.config_entries.async_update_entry(config_entry, data=new, version=2)
+
+        _LOGGER.debug("Migration to version %s successful", config_entry.version)
+        return True
+
+    _LOGGER.error("Attempt to migrate from unknown version %s", config_entry.version)
+    return False

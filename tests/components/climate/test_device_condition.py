@@ -1,13 +1,14 @@
 """The tests for Climate device conditions."""
+
 import pytest
 from pytest_unordered import unordered
 import voluptuous_serialize
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.climate import DOMAIN, HVACMode, const, device_condition
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -29,7 +30,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -100,12 +101,12 @@ async def test_get_conditions(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_conditions_hidden_auxiliary(
     hass: HomeAssistant,
@@ -147,10 +148,21 @@ async def test_get_conditions_hidden_auxiliary(
 
 
 async def test_if_state(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off conditions."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     assert await async_setup_component(
         hass,
@@ -163,7 +175,7 @@ async def test_if_state(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "entity_id": entry.id,
                             "type": "is_hvac_mode",
                             "hvac_mode": "cool",
@@ -185,7 +197,7 @@ async def test_if_state(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "entity_id": entry.id,
                             "type": "is_preset_mode",
                             "preset_mode": "away",
@@ -257,10 +269,21 @@ async def test_if_state(
 
 
 async def test_if_state_legacy(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off conditions."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     assert await async_setup_component(
         hass,
@@ -273,7 +296,7 @@ async def test_if_state_legacy(
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
+                            "device_id": device_entry.id,
                             "entity_id": entry.entity_id,
                             "type": "is_hvac_mode",
                             "hvac_mode": "cool",

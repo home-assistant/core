@@ -1,7 +1,7 @@
 """Config flow for World Air Quality Index (WAQI) integration."""
+
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 import logging
 from typing import Any
 
@@ -13,31 +13,42 @@ from aiowaqi import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_METHOD,
-    CONF_NAME,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.selector import (
     LocationSelector,
     SelectSelector,
     SelectSelectorConfig,
 )
-from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_STATION_NUMBER, DOMAIN, ISSUE_PLACEHOLDER
+from .const import CONF_STATION_NUMBER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_MAP = "map"
+
+
+async def get_by_station_number(
+    client: WAQIClient, station_number: int
+) -> tuple[WAQIAirQuality | None, dict[str, str]]:
+    """Get measuring station by station number."""
+    errors: dict[str, str] = {}
+    measuring_station: WAQIAirQuality | None = None
+    try:
+        measuring_station = await client.get_by_station_number(station_number)
+    except WAQIConnectionError:
+        errors["base"] = "cannot_connect"
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
+        errors["base"] = "unknown"
+    return measuring_station, errors
 
 
 class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -51,7 +62,7 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -65,8 +76,8 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "invalid_auth"
                 except WAQIConnectionError:
                     errors["base"] = "cannot_connect"
-                except Exception as exc:  # pylint: disable=broad-except
-                    _LOGGER.exception(exc)
+                except Exception:
+                    _LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
                     self.data = user_input
@@ -90,13 +101,10 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_base_step(
-        self,
-        step_id: str,
-        method: Callable[[WAQIClient, dict[str, Any]], Awaitable[WAQIAirQuality]],
-        data_schema: vol.Schema,
-        user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    async def async_step_map(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Add measuring station via map."""
         errors: dict[str, str] = {}
         if user_input is not None:
             async with WAQIClient(
@@ -104,28 +112,20 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
             ) as waqi_client:
                 waqi_client.authenticate(self.data[CONF_API_KEY])
                 try:
-                    measuring_station = await method(waqi_client, user_input)
+                    measuring_station = await waqi_client.get_by_coordinates(
+                        user_input[CONF_LOCATION][CONF_LATITUDE],
+                        user_input[CONF_LOCATION][CONF_LONGITUDE],
+                    )
                 except WAQIConnectionError:
                     errors["base"] = "cannot_connect"
-                except Exception as exc:  # pylint: disable=broad-except
-                    _LOGGER.exception(exc)
+                except Exception:
+                    _LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
                     return await self._async_create_entry(measuring_station)
         return self.async_show_form(
-            step_id=step_id, data_schema=data_schema, errors=errors
-        )
-
-    async def async_step_map(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Add measuring station via map."""
-        return await self._async_base_step(
-            CONF_MAP,
-            lambda waqi_client, data: waqi_client.get_by_coordinates(
-                data[CONF_LOCATION][CONF_LATITUDE], data[CONF_LOCATION][CONF_LONGITUDE]
-            ),
-            self.add_suggested_values_to_schema(
+            step_id=CONF_MAP,
+            data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(
                     {
                         vol.Required(
@@ -140,31 +140,45 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
                     }
                 },
             ),
-            user_input,
+            errors=errors,
         )
 
     async def async_step_station_number(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Add measuring station via station number."""
-        return await self._async_base_step(
-            CONF_STATION_NUMBER,
-            lambda waqi_client, data: waqi_client.get_by_station_number(
-                data[CONF_STATION_NUMBER]
-            ),
-            vol.Schema(
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            async with WAQIClient(
+                session=async_get_clientsession(self.hass)
+            ) as waqi_client:
+                waqi_client.authenticate(self.data[CONF_API_KEY])
+                station_number = user_input[CONF_STATION_NUMBER]
+                measuring_station, errors = await get_by_station_number(
+                    waqi_client, abs(station_number)
+                )
+                if not measuring_station:
+                    measuring_station, _ = await get_by_station_number(
+                        waqi_client,
+                        abs(station_number) - station_number - station_number,
+                    )
+                if measuring_station:
+                    return await self._async_create_entry(measuring_station)
+        return self.async_show_form(
+            step_id=CONF_STATION_NUMBER,
+            data_schema=vol.Schema(
                 {
                     vol.Required(
                         CONF_STATION_NUMBER,
                     ): int,
                 }
             ),
-            user_input,
+            errors=errors,
         )
 
     async def _async_create_entry(
         self, measuring_station: WAQIAirQuality
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         await self.async_set_unique_id(str(measuring_station.station_id))
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
@@ -172,45 +186,5 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_API_KEY: self.data[CONF_API_KEY],
                 CONF_STATION_NUMBER: measuring_station.station_id,
-            },
-        )
-
-    async def async_step_import(self, import_config: ConfigType) -> FlowResult:
-        """Handle importing from yaml."""
-        await self.async_set_unique_id(str(import_config[CONF_STATION_NUMBER]))
-        try:
-            self._abort_if_unique_id_configured()
-        except AbortFlow as exc:
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                "deprecated_yaml_import_issue_already_configured",
-                breaks_in_ha_version="2024.4.0",
-                is_fixable=False,
-                severity=IssueSeverity.ERROR,
-                translation_key="deprecated_yaml_import_issue_already_configured",
-                translation_placeholders=ISSUE_PLACEHOLDER,
-            )
-            raise exc
-
-        async_create_issue(
-            self.hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.4.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "World Air Quality Index",
-            },
-        )
-        return self.async_create_entry(
-            title=import_config[CONF_NAME],
-            data={
-                CONF_API_KEY: import_config[CONF_API_KEY],
-                CONF_STATION_NUMBER: import_config[CONF_STATION_NUMBER],
             },
         )

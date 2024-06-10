@@ -1,4 +1,5 @@
 """Slack platform for notify component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -166,7 +167,7 @@ class SlackNotificationService(BaseNotificationService):
                 filename=filename,
                 initial_comment=message,
                 title=title or filename,
-                thread_ts=thread_ts,
+                thread_ts=thread_ts or "",
             )
         except (SlackApiError, ClientError) as err:
             _LOGGER.error("Error while uploading file-based message: %r", err)
@@ -261,7 +262,7 @@ class SlackNotificationService(BaseNotificationService):
         }
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
-        for target, result in zip(tasks, results):
+        for target, result in zip(tasks, results, strict=False):
             if isinstance(result, SlackApiError):
                 _LOGGER.error(
                     "There was a Slack API error while sending to %s: %r",

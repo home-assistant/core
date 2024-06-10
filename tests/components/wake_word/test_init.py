@@ -1,9 +1,14 @@
 """Test wake_word component setup."""
-from collections.abc import AsyncIterable, Generator
+
+import asyncio
+from collections.abc import AsyncIterable
+from functools import partial
 from pathlib import Path
+from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from typing_extensions import Generator
 
 from homeassistant.components import wake_word
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
@@ -37,12 +42,15 @@ class MockProviderEntity(wake_word.WakeWordDetectionEntity):
     url_path = "wake_word.test"
     _attr_name = "test"
 
-    @property
-    def supported_wake_words(self) -> list[wake_word.WakeWord]:
+    async def get_supported_wake_words(self) -> list[wake_word.WakeWord]:
         """Return a list of supported wake words."""
         return [
-            wake_word.WakeWord(id="test_ww", name="Test Wake Word"),
-            wake_word.WakeWord(id="test_ww_2", name="Test Wake Word 2"),
+            wake_word.WakeWord(
+                id="test_ww", name="Test Wake Word", phrase="Test Phrase"
+            ),
+            wake_word.WakeWord(
+                id="test_ww_2", name="Test Wake Word 2", phrase="Test Phrase 2"
+            ),
         ]
 
     async def _async_process_audio_stream(
@@ -50,12 +58,20 @@ class MockProviderEntity(wake_word.WakeWordDetectionEntity):
     ) -> wake_word.DetectionResult | None:
         """Try to detect wake word(s) in an audio stream with timestamps."""
         if wake_word_id is None:
-            wake_word_id = self.supported_wake_words[0].id
+            wake_word_id = (await self.get_supported_wake_words())[0].id
+
+        wake_word_phrase = wake_word_id
+        for ww in await self.get_supported_wake_words():
+            if ww.id == wake_word_id:
+                wake_word_phrase = ww.phrase or ww.name
+                break
 
         async for _chunk, timestamp in stream:
             if timestamp >= 2000:
                 return wake_word.DetectionResult(
-                    wake_word_id=wake_word_id, timestamp=timestamp
+                    wake_word_id=wake_word_id,
+                    wake_word_phrase=wake_word_phrase,
+                    timestamp=timestamp,
                 )
 
         # Not detected
@@ -73,7 +89,7 @@ class WakeWordFlow(ConfigFlow):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -102,8 +118,8 @@ async def mock_config_entry_setup(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(
-            config_entry, wake_word.DOMAIN
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [wake_word.DOMAIN]
         )
         return True
 
@@ -150,17 +166,17 @@ async def test_config_entry_unload(
 ) -> None:
     """Test we can unload config entry."""
     config_entry = await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     await hass.config_entries.async_unload(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 @freeze_time("2023-06-22 10:30:00+00:00")
 @pytest.mark.parametrize(
-    ("wake_word_id", "expected_ww"),
+    ("wake_word_id", "expected_ww", "expected_phrase"),
     [
-        (None, "test_ww"),
-        ("test_ww_2", "test_ww_2"),
+        (None, "test_ww", "Test Phrase"),
+        ("test_ww_2", "test_ww_2", "Test Phrase 2"),
     ],
 )
 async def test_detected_entity(
@@ -169,6 +185,7 @@ async def test_detected_entity(
     setup: MockProviderEntity,
     wake_word_id: str | None,
     expected_ww: str,
+    expected_phrase: str,
 ) -> None:
     """Test successful detection through entity."""
 
@@ -182,7 +199,9 @@ async def test_detected_entity(
     state = setup.state
     assert state is None
     result = await setup.async_process_audio_stream(three_second_stream(), wake_word_id)
-    assert result == wake_word.DetectionResult(expected_ww, 2048)
+    assert result == wake_word.DetectionResult(
+        wake_word_id=expected_ww, wake_word_phrase=expected_phrase, timestamp=2048
+    )
 
     assert state != setup.state
     assert setup.state == "2023-06-22T10:30:00+00:00"
@@ -250,7 +269,7 @@ async def test_restore_state(
     config_entry = await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     state = hass.states.get(entity_id)
     assert state
     assert state.state == timestamp
@@ -283,8 +302,8 @@ async def test_list_wake_words(
     assert msg["success"]
     assert msg["result"] == {
         "wake_words": [
-            {"id": "test_ww", "name": "Test Wake Word"},
-            {"id": "test_ww_2", "name": "Test Wake Word 2"},
+            {"id": "test_ww", "name": "Test Wake Word", "phrase": "Test Phrase"},
+            {"id": "test_ww_2", "name": "Test Wake Word 2", "phrase": "Test Phrase 2"},
         ]
     }
 
@@ -294,7 +313,7 @@ async def test_list_wake_words_unknown_entity(
     setup: MockProviderEntity,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test that the list_wake_words websocket command works."""
+    """Test that the list_wake_words websocket command handles unknown entity."""
     client = await hass_ws_client(hass)
     await client.send_json(
         {
@@ -308,3 +327,29 @@ async def test_list_wake_words_unknown_entity(
 
     assert not msg["success"]
     assert msg["error"] == {"code": "not_found", "message": "Entity not found"}
+
+
+async def test_list_wake_words_timeout(
+    hass: HomeAssistant,
+    setup: MockProviderEntity,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that the list_wake_words websocket command handles unknown entity."""
+    client = await hass_ws_client(hass)
+
+    with (
+        patch.object(setup, "get_supported_wake_words", partial(asyncio.sleep, 1)),
+        patch("homeassistant.components.wake_word.TIMEOUT_FETCH_WAKE_WORDS", 0),
+    ):
+        await client.send_json(
+            {
+                "id": 5,
+                "type": "wake_word/info",
+                "entity_id": setup.entity_id,
+            }
+        )
+
+        msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"] == {"code": "timeout", "message": "Timeout fetching wake words"}

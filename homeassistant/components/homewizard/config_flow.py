@@ -1,4 +1,5 @@
 """Config flow for HomeWizard."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -11,14 +12,13 @@ from homewizard_energy.models import Device
 from voluptuous import Required, Schema
 
 from homeassistant.components import onboarding, zeroconf
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_IP_ADDRESS
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PATH
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
     CONF_API_ENABLED,
-    CONF_PATH,
     CONF_PRODUCT_NAME,
     CONF_PRODUCT_TYPE,
     CONF_SERIAL,
@@ -47,7 +47,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors: dict[str, str] | None = None
         if user_input is not None:
@@ -62,15 +62,18 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 self._abort_if_unique_id_configured(updates=user_input)
                 return self.async_create_entry(
-                    title=f"{device_info.product_name} ({device_info.serial})",
+                    title=f"{device_info.product_name}",
                     data=user_input,
                 )
 
+        user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
             data_schema=Schema(
                 {
-                    Required(CONF_IP_ADDRESS): str,
+                    Required(
+                        CONF_IP_ADDRESS, default=user_input.get(CONF_IP_ADDRESS)
+                    ): str,
                 }
             ),
             errors=errors,
@@ -78,7 +81,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         if (
             CONF_API_ENABLED not in discovery_info.properties
@@ -110,7 +113,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         errors: dict[str, str] | None = None
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
@@ -121,14 +124,18 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors = {"base": ex.error_code}
             else:
                 return self.async_create_entry(
-                    title=f"{self.discovery.product_name} ({self.discovery.serial})",
+                    title=self.discovery.product_name,
                     data={CONF_IP_ADDRESS: self.discovery.ip},
                 )
 
         self._set_confirm_only()
-        self.context["title_placeholders"] = {
-            "name": f"{self.discovery.product_name} ({self.discovery.serial})"
-        }
+
+        # We won't be adding mac/serial to the title for devices
+        # that users generally don't have multiple of.
+        name = self.discovery.product_name
+        if self.discovery.product_type not in ["HWE-P1", "HWE-WTR"]:
+            name = f"{name} ({self.discovery.serial})"
+        self.context["title_placeholders"] = {"name": name}
 
         return self.async_show_form(
             step_id="discovery_confirm",
@@ -140,14 +147,16 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle re-auth if API was disabled."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         errors: dict[str, str] | None = None
         if user_input is not None:
@@ -192,7 +201,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             ) from ex
 
         except Exception as ex:
-            _LOGGER.exception(ex)
+            _LOGGER.exception("Unexpected exception")
             raise AbortFlow("unknown_error") from ex
 
         finally:

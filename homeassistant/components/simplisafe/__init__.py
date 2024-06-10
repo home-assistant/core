@@ -1,8 +1,9 @@
 """Support for SimpliSafe alarm systems."""
+
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Coroutine, Iterable
 from datetime import timedelta
 from typing import Any, cast
 
@@ -336,7 +337,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
-    def extract_system(func: Callable) -> Callable:
+    def extract_system(
+        func: Callable[[ServiceCall, SystemType], Coroutine[Any, Any, None]],
+    ) -> Callable[[ServiceCall], Coroutine[Any, Any, None]]:
         """Define a decorator to get the correct system for a service call."""
 
         async def wrapper(call: ServiceCall) -> None:
@@ -454,7 +457,7 @@ class SimpliSafe:
     @callback
     def _async_process_new_notifications(self, system: SystemType) -> None:
         """Act on any new system notifications."""
-        if self._hass.state != CoreState.running:
+        if self._hass.state is not CoreState.running:
             # If HASS isn't fully running yet, it may cause the SIMPLISAFE_NOTIFICATION
             # event to fire before dependent components (like automation) are fully
             # ready. If that's the case, skip:
@@ -500,7 +503,7 @@ class SimpliSafe:
             raise
         except WebsocketError as err:
             LOGGER.error("Failed to connect to websocket: %s", err)
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             LOGGER.error("Unknown exception while connecting to websocket: %s", err)
 
         LOGGER.info("Reconnecting to websocket")

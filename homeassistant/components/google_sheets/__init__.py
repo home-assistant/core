@@ -1,4 +1,5 @@
 """Support for Google Sheets."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -81,7 +82,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if entry.state == ConfigEntryState.LOADED
     ]
     if len(loaded_entries) == 1:
-        for service_name in hass.services.async_services()[DOMAIN]:
+        for service_name in hass.services.async_services_for_domain(DOMAIN):
             hass.services.async_remove(DOMAIN, service_name)
 
     return True
@@ -92,12 +93,14 @@ async def async_setup_service(hass: HomeAssistant) -> None:
 
     def _append_to_sheet(call: ServiceCall, entry: ConfigEntry) -> None:
         """Run append in the executor."""
-        service = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))
+        service = Client(
+            Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN])  # type: ignore[no-untyped-call]
+        )
         try:
             sheet = service.open_by_key(entry.unique_id)
-        except RefreshError as ex:
+        except RefreshError:
             entry.async_start_reauth(hass)
-            raise ex
+            raise
         except APIError as ex:
             raise HomeAssistantError("Failed to write data") from ex
 

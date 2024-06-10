@@ -1,4 +1,5 @@
 """Config flow for the Huawei LTE platform."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -16,12 +17,17 @@ from huawei_lte_api.exceptions import (
     ResponseErrorException,
 )
 from huawei_lte_api.Session import GetResponseType
-from requests.exceptions import Timeout
+from requests.exceptions import SSLError, Timeout
 from url_normalize import url_normalize
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
@@ -29,9 +35,9 @@ from homeassistant.const import (
     CONF_RECIPIENT,
     CONF_URL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_MANUFACTURER,
@@ -44,12 +50,12 @@ from .const import (
     DEFAULT_UNAUTHENTICATED_MODE,
     DOMAIN,
 )
-from .utils import get_device_macs
+from .utils import get_device_macs, non_verifying_requests_session
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle Huawei LTE config flow."""
 
     VERSION = 3
@@ -57,7 +63,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get options flow."""
         return OptionsFlowHandler(config_entry)
@@ -66,7 +72,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self,
         user_input: dict[str, Any] | None = None,
         errors: dict[str, str] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         if user_input is None:
             user_input = {}
         return self.async_show_form(
@@ -80,6 +86,13 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                             self.context.get(CONF_URL, ""),
                         ),
                     ): str,
+                    vol.Optional(
+                        CONF_VERIFY_SSL,
+                        default=user_input.get(
+                            CONF_VERIFY_SSL,
+                            False,
+                        ),
+                    ): bool,
                     vol.Optional(
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME) or ""
                     ): str,
@@ -95,7 +108,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self,
         user_input: dict[str, Any],
         errors: dict[str, str] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema(
@@ -119,11 +132,20 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         password = user_input.get(CONF_PASSWORD) or ""
 
         def _get_connection() -> Connection:
+            if (
+                user_input[CONF_URL].startswith("https://")
+                and not user_input[CONF_VERIFY_SSL]
+            ):
+                requests_session = non_verifying_requests_session(user_input[CONF_URL])
+            else:
+                requests_session = None
+
             return Connection(
                 url=user_input[CONF_URL],
                 username=username,
                 password=password,
                 timeout=CONNECTION_TIMEOUT,
+                requests_session=requests_session,
             )
 
         conn = None
@@ -140,10 +162,16 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except ResponseErrorException:
             _LOGGER.warning("Response error", exc_info=True)
             errors["base"] = "response_error"
+        except SSLError:
+            _LOGGER.warning("SSL error", exc_info=True)
+            if user_input[CONF_VERIFY_SSL]:
+                errors[CONF_URL] = "ssl_error_try_unverified"
+            else:
+                errors[CONF_URL] = "ssl_error_try_plain"
         except Timeout:
             _LOGGER.warning("Connection timeout", exc_info=True)
             errors[CONF_URL] = "connection_timeout"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             _LOGGER.warning("Unknown error connecting to device", exc_info=True)
             errors[CONF_URL] = "unknown"
         return conn
@@ -152,12 +180,13 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def _disconnect(conn: Connection) -> None:
         try:
             conn.close()
-        except Exception:  # pylint: disable=broad-except
+            conn.requests_session.close()
+        except Exception:  # noqa: BLE001
             _LOGGER.debug("Disconnect error", exc_info=True)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user initiated config flow."""
         if user_input is None:
             return await self._async_show_user_form()
@@ -181,18 +210,18 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             client = Client(conn)
             try:
                 device_info = client.device.information()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 _LOGGER.debug("Could not get device.information", exc_info=True)
                 try:
                     device_info = client.device.basic_information()
-                except Exception:  # pylint: disable=broad-except
+                except Exception:  # noqa: BLE001
                     _LOGGER.debug(
                         "Could not get device.basic_information", exc_info=True
                     )
                     device_info = {}
             try:
                 wlan_settings = client.wlan.multi_basic_settings()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 _LOGGER.debug("Could not get wlan.multi_basic_settings", exc_info=True)
                 wlan_settings = {}
             return device_info, wlan_settings
@@ -232,7 +261,9 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=title, data=user_input)
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle SSDP initiated config flow."""
 
         if TYPE_CHECKING:
@@ -260,7 +291,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     basic_info = Client(conn).device.basic_information()
             except ResponseErrorException:  # API compatible error
                 return True
-            except Exception:  # API incompatible error # pylint: disable=broad-except
+            except Exception:  # API incompatible error # noqa: BLE001
                 return False
             return isinstance(basic_info, dict)  # Crude content check
 
@@ -278,13 +309,15 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return await self._async_show_user_form()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert entry
@@ -311,16 +344,16 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason="reauth_successful")
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Huawei LTE options flow."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle options flow."""
 
         # Recipients are persisted as a list, but handled as comma separated string in UI

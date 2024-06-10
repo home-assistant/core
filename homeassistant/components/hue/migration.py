@@ -11,19 +11,14 @@ from homeassistant import core
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_USERNAME
-from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.device_registry import (
-    async_entries_for_config_entry as devices_for_config_entries,
-    async_get as async_get_device_registry,
-)
-from homeassistant.helpers.entity_registry import (
-    async_entries_for_config_entry as entities_for_config_entry,
-    async_entries_for_device,
-    async_get as async_get_entity_registry,
+from homeassistant.const import CONF_API_KEY, CONF_API_VERSION, CONF_HOST, CONF_USERNAME
+from homeassistant.helpers import (
+    aiohttp_client,
+    device_registry as dr,
+    entity_registry as er,
 )
 
-from .const import CONF_API_VERSION, DOMAIN
+from .const import DOMAIN
 
 LOGGER = logging.getLogger(__name__)
 
@@ -75,15 +70,15 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
     """Perform migration of devices and entities to V2 Id's."""
     host = entry.data[CONF_HOST]
     api_key = entry.data[CONF_API_KEY]
-    dev_reg = async_get_device_registry(hass)
-    ent_reg = async_get_entity_registry(hass)
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
     LOGGER.info("Start of migration of devices and entities to support API schema 2")
 
     # Create mapping of mac address to HA device id's.
     # Identifier in dev reg should be mac-address,
     # but in some cases it has a postfix like `-0b` or `-01`.
     dev_ids = {}
-    for hass_dev in devices_for_config_entries(dev_reg, entry.entry_id):
+    for hass_dev in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
         for domain, mac in hass_dev.identifiers:
             if domain != DOMAIN:
                 continue
@@ -128,7 +123,7 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
             LOGGER.info("Migrated device %s (%s)", hue_dev.metadata.name, hass_dev_id)
 
             # loop through all entities for device and find match
-            for ent in async_entries_for_device(ent_reg, hass_dev_id, True):
+            for ent in er.async_entries_for_device(ent_reg, hass_dev_id, True):
                 if ent.entity_id.startswith("light"):
                     # migrate light
                     # should always return one lightid here
@@ -179,7 +174,7 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
                     )
 
         # migrate entities that are not connected to a device (groups)
-        for ent in entities_for_config_entry(ent_reg, entry.entry_id):
+        for ent in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
             if ent.device_id is not None:
                 continue
             if "-" in ent.unique_id:

@@ -1,4 +1,5 @@
 """Support for Tailscale sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -21,18 +22,11 @@ from . import TailscaleEntity
 from .const import DOMAIN
 
 
-@dataclass
-class TailscaleSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class TailscaleSensorEntityDescription(SensorEntityDescription):
+    """Describes a Tailscale sensor entity."""
 
     value_fn: Callable[[TailscaleDevice], datetime | str | None]
-
-
-@dataclass
-class TailscaleSensorEntityDescription(
-    SensorEntityDescription, TailscaleSensorEntityDescriptionMixin
-):
-    """Describes a Tailscale sensor entity."""
 
 
 SENSORS: tuple[TailscaleSensorEntityDescription, ...] = (
@@ -46,7 +40,6 @@ SENSORS: tuple[TailscaleSensorEntityDescription, ...] = (
     TailscaleSensorEntityDescription(
         key="ip",
         translation_key="ip",
-        icon="mdi:ip-network",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.addresses[0] if device.addresses else None,
     ),

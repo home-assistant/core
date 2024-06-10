@@ -1,4 +1,5 @@
 """Test the Fully Kiosk Browser sensors."""
+
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -26,14 +27,13 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_sensors_sensors(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
     mock_fully_kiosk: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test standard Fully Kiosk sensors."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     state = hass.states.get("sensor.amazon_fire_battery")
     assert state
     assert state.state == "100"
@@ -145,7 +145,7 @@ async def test_sensors_sensors(
     mock_fully_kiosk.getDeviceInfo.return_value = {}
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.amazon_fire_internal_storage_free_space")
     assert state
@@ -155,7 +155,7 @@ async def test_sensors_sensors(
     mock_fully_kiosk.getDeviceInfo.side_effect = FullyKioskError("error", "status")
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.amazon_fire_internal_storage_free_space")
     assert state
@@ -181,7 +181,7 @@ async def test_url_sensor_truncating(
         "currentPage": long_url,
     }
     async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.amazon_fire_current_page")
     assert state

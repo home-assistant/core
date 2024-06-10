@@ -1,4 +1,5 @@
 """SMA Solar Webconnect interface."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -274,8 +275,6 @@ SENSOR_ENTITIES: dict[str, SensorEntityDescription] = {
     "grid_power_factor_excitation": SensorEntityDescription(
         key="grid_power_factor_excitation",
         name="Grid Power Factor Excitation",
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.POWER_FACTOR,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -845,19 +844,16 @@ async def async_setup_entry(
     if TYPE_CHECKING:
         assert config_entry.unique_id
 
-    entities = []
-    for sensor in used_sensors:
-        entities.append(
-            SMAsensor(
-                coordinator,
-                config_entry.unique_id,
-                SENSOR_ENTITIES.get(sensor.name),
-                device_info,
-                sensor,
-            )
+    async_add_entities(
+        SMAsensor(
+            coordinator,
+            config_entry.unique_id,
+            SENSOR_ENTITIES.get(sensor.name),
+            device_info,
+            sensor,
         )
-
-    async_add_entities(entities)
+        for sensor in used_sensors
+    )
 
 
 class SMAsensor(CoordinatorEntity, SensorEntity):

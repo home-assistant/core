@@ -1,4 +1,5 @@
 """Base classes for ONVIF entities."""
+
 from __future__ import annotations
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -32,8 +33,7 @@ class ONVIFBaseEntity(Entity):
         See: https://github.com/home-assistant/core/issues/35883
         """
         return (
-            self.device.info.mac
-            or self.device.info.serial_number  # type:ignore[return-value]
+            self.device.info.mac or self.device.info.serial_number  # type:ignore[return-value]
         )
 
     @property

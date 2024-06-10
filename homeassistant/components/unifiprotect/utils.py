@@ -1,7 +1,8 @@
 """UniFi Protect Integration utils."""
+
 from __future__ import annotations
 
-from collections.abc import Generator, Iterable
+from collections.abc import Iterable
 import contextlib
 from enum import Enum
 from pathlib import Path
@@ -9,9 +10,11 @@ import socket
 from typing import Any
 
 from aiohttp import CookieJar
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import (
+from typing_extensions import Generator
+from uiprotect import ProtectApiClient
+from uiprotect.data import (
     Bootstrap,
+    CameraChannel,
     Light,
     LightModeEnableType,
     LightModeType,
@@ -97,7 +100,7 @@ def async_get_devices_by_type(
 @callback
 def async_get_devices(
     bootstrap: Bootstrap, model_type: Iterable[ModelType]
-) -> Generator[ProtectAdoptableDeviceModel, None, None]:
+) -> Generator[ProtectAdoptableDeviceModel]:
     """Return all device by type."""
     return (
         device
@@ -111,8 +114,8 @@ def async_get_light_motion_current(obj: Light) -> str:
     """Get light motion mode for Flood Light."""
 
     if (
-        obj.light_mode_settings.mode == LightModeType.MOTION
-        and obj.light_mode_settings.enable_at == LightModeEnableType.DARK
+        obj.light_mode_settings.mode is LightModeType.MOTION
+        and obj.light_mode_settings.enable_at is LightModeEnableType.DARK
     ):
         return f"{LightModeType.MOTION.value}Dark"
     return obj.light_mode_settings.mode.value
@@ -143,5 +146,17 @@ def async_create_api_client(
         override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
         ignore_stats=not entry.options.get(CONF_ALL_UPDATES, False),
         ignore_unadopted=False,
-        cache_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect_cache")),
+        cache_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect")),
+        config_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect")),
     )
+
+
+@callback
+def get_camera_base_name(channel: CameraChannel) -> str:
+    """Get base name for cameras channel."""
+
+    camera_name = channel.name
+    if channel.name != "Package Camera":
+        camera_name = f"{channel.name} Resolution Channel"
+
+    return camera_name

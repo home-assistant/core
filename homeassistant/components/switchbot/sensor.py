@@ -1,4 +1,5 @@
 """Support for SwitchBot sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.bluetooth import async_last_service_info

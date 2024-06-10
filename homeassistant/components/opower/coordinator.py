@@ -1,6 +1,8 @@
 """Coordinator to handle Opower connections."""
+
 from datetime import datetime, timedelta
 import logging
+import socket
 from types import MappingProxyType
 from typing import Any, cast
 
@@ -23,7 +25,7 @@ from homeassistant.components.recorder.statistics import (
     statistics_during_period,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfEnergy, UnitOfVolume
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -51,12 +53,22 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             update_interval=timedelta(hours=12),
         )
         self.api = Opower(
-            aiohttp_client.async_get_clientsession(hass),
+            aiohttp_client.async_get_clientsession(hass, family=socket.AF_INET),
             entry_data[CONF_UTILITY],
             entry_data[CONF_USERNAME],
             entry_data[CONF_PASSWORD],
             entry_data.get(CONF_TOTP_SECRET),
         )
+
+        @callback
+        def _dummy_listener() -> None:
+            pass
+
+        # Force the coordinator to periodically update by registering at least one listener.
+        # Needed when the _async_update_data below returns {} for utilities that don't provide
+        # forecast, which results to no sensors added, no registered listeners, and thus
+        # _async_update_data not periodically getting called which is needed for _insert_statistics.
+        self.async_add_listener(_dummy_listener)
 
     async def _async_update_data(
         self,
@@ -71,6 +83,8 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             raise ConfigEntryAuthFailed from err
         forecasts: list[Forecast] = await self.api.async_get_forecast()
         _LOGGER.debug("Updating sensor data with: %s", forecasts)
+        # Because Opower provides historical usage/cost with a delay of a couple of days
+        # we need to insert data into statistics.
         await self._insert_statistics()
         return {forecast.account.utility_account_id: forecast for forecast in forecasts}
 
@@ -81,7 +95,9 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 (
                     self.api.utility.subdomain(),
                     account.meter_type.name.lower(),
-                    account.utility_account_id,
+                    # Some utilities like AEP have "-" in their account id.
+                    # Replace it with "_" to avoid "Invalid statistic_id"
+                    account.utility_account_id.replace("-", "_"),
                 )
             )
             cost_statistic_id = f"{DOMAIN}:{id_prefix}_energy_cost"
@@ -93,7 +109,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             )
 
             last_stat = await get_instance(self.hass).async_add_executor_job(
-                get_last_statistics, self.hass, 1, consumption_statistic_id, True, set()
+                get_last_statistics, self.hass, 1, cost_statistic_id, True, set()
             )
             if not last_stat:
                 _LOGGER.debug("Updating statistic for the first time")
@@ -103,7 +119,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 last_stats_time = None
             else:
                 cost_reads = await self._async_get_recent_cost_reads(
-                    account, last_stat[consumption_statistic_id][0]["start"]
+                    account, last_stat[cost_statistic_id][0]["start"]
                 )
                 if not cost_reads:
                     _LOGGER.debug("No recent usage/cost data. Skipping update")
@@ -143,13 +159,9 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                     )
                 )
 
-            name_prefix = " ".join(
-                (
-                    "Opower",
-                    self.api.utility.subdomain(),
-                    account.meter_type.name.lower(),
-                    account.utility_account_id,
-                )
+            name_prefix = (
+                f"Opower {self.api.utility.subdomain()} "
+                f"{account.meter_type.name.lower()} {account.utility_account_id}"
             )
             cost_metadata = StatisticMetaData(
                 has_mean=False,

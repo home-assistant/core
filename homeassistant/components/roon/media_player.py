@@ -1,4 +1,5 @@
 """MediaPlayer platform for Roon integration."""
+
 from __future__ import annotations
 
 import logging
@@ -92,7 +93,6 @@ class RoonDevice(MediaPlayerEntity):
         MediaPlayerEntityFeature.BROWSE_MEDIA
         | MediaPlayerEntityFeature.GROUPING
         | MediaPlayerEntityFeature.PAUSE
-        | MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.NEXT_TRACK
@@ -104,7 +104,6 @@ class RoonDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.PLAY_MEDIA
-        | MediaPlayerEntityFeature.VOLUME_STEP
     )
 
     def __init__(self, server, player_data):
@@ -124,6 +123,8 @@ class RoonDevice(MediaPlayerEntity):
         self._attr_shuffle = False
         self._attr_media_image_url = None
         self._attr_volume_level = 0
+        self._volume_fixed = True
+        self._volume_incremental = False
         self.update_data(player_data)
 
     async def async_added_to_hass(self) -> None:
@@ -190,29 +191,33 @@ class RoonDevice(MediaPlayerEntity):
             "level": 0,
             "step": 0,
             "muted": False,
+            "fixed": True,
+            "incremental": False,
         }
 
         try:
             volume_data = player_data["volume"]
-            volume_muted = volume_data["is_muted"]
-            volume_step = convert(volume_data["step"], int, 0)
+        except KeyError:
+            return volume
+
+        volume["fixed"] = False
+        volume["incremental"] = volume_data["type"] == "incremental"
+        volume["muted"] = volume_data.get("is_muted", False)
+        volume["step"] = convert(volume_data.get("step"), int, 0)
+
+        try:
             volume_max = volume_data["max"]
             volume_min = volume_data["min"]
+
             raw_level = convert(volume_data["value"], float, 0)
 
             volume_range = volume_max - volume_min
             volume_percentage_factor = volume_range / 100
 
             level = (raw_level - volume_min) / volume_percentage_factor
-            volume_level = convert(level, int, 0) / 100
-
+            volume["level"] = round(level) / 100
         except KeyError:
-            # catch KeyError
             pass
-        else:
-            volume["muted"] = volume_muted
-            volume["step"] = volume_step
-            volume["level"] = volume_level
 
         return volume
 
@@ -228,12 +233,13 @@ class RoonDevice(MediaPlayerEntity):
         }
         now_playing_data = None
 
+        media_position = convert(player_data.get("seek_position"), int, 0)
+
         try:
             now_playing_data = player_data["now_playing"]
             media_title = now_playing_data["three_line"]["line1"]
             media_artist = now_playing_data["three_line"]["line2"]
             media_album_name = now_playing_data["three_line"]["line3"]
-            media_position = convert(now_playing_data["seek_position"], int, 0)
             media_duration = convert(now_playing_data.get("length"), int, 0)
             image_id = now_playing_data.get("image_key")
         except KeyError:
@@ -264,9 +270,10 @@ class RoonDevice(MediaPlayerEntity):
                     break
         # determine player state
         if not new_state:
-            if self.player_data["state"] == "playing":
-                new_state = MediaPlayerState.PLAYING
-            elif self.player_data["state"] == "loading":
+            if (
+                self.player_data["state"] == "playing"
+                or self.player_data["state"] == "loading"
+            ):
                 new_state = MediaPlayerState.PLAYING
             elif self.player_data["state"] == "stopped":
                 new_state = MediaPlayerState.IDLE
@@ -288,6 +295,16 @@ class RoonDevice(MediaPlayerEntity):
         self._attr_is_volume_muted = volume["muted"]
         self._attr_volume_step = volume["step"]
         self._attr_volume_level = volume["level"]
+        self._volume_fixed = volume["fixed"]
+        self._volume_incremental = volume["incremental"]
+        if not self._volume_fixed:
+            self._attr_supported_features = (
+                self._attr_supported_features | MediaPlayerEntityFeature.VOLUME_STEP
+            )
+            if not self._volume_incremental:
+                self._attr_supported_features = (
+                    self._attr_supported_features | MediaPlayerEntityFeature.VOLUME_SET
+                )
 
         now_playing = self._parse_now_playing(self.player_data)
         self._attr_media_title = now_playing["title"]
@@ -359,11 +376,17 @@ class RoonDevice(MediaPlayerEntity):
 
     def volume_up(self) -> None:
         """Send new volume_level to device."""
-        self._server.roonapi.change_volume_percent(self.output_id, 3)
+        if self._volume_incremental:
+            self._server.roonapi.change_volume_raw(self.output_id, 1, "relative")
+        else:
+            self._server.roonapi.change_volume_percent(self.output_id, 3)
 
     def volume_down(self) -> None:
         """Send new volume_level to device."""
-        self._server.roonapi.change_volume_percent(self.output_id, -3)
+        if self._volume_incremental:
+            self._server.roonapi.change_volume_raw(self.output_id, -1, "relative")
+        else:
+            self._server.roonapi.change_volume_percent(self.output_id, -3)
 
     def turn_on(self) -> None:
         """Turn on device (if supported)."""

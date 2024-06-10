@@ -1,7 +1,8 @@
 """Webhook tests for mobile_app."""
+
 from binascii import unhexlify
 from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -23,10 +24,7 @@ from homeassistant.setup import async_setup_component
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
 from tests.common import async_capture_events, async_mock_service
-from tests.components.conversation.conftest import mock_agent
-
-# To avoid autoflake8 removing the import
-mock_agent = mock_agent
+from tests.components.conversation import MockAgent
 
 
 @pytest.fixture
@@ -42,7 +40,6 @@ def encrypt_payload(secret_key, payload, encode_json=True):
         from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
-        return
 
     import json
 
@@ -64,7 +61,6 @@ def encrypt_payload_legacy(secret_key, payload, encode_json=True):
         from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
-        return
 
     import json
 
@@ -89,7 +85,6 @@ def decrypt_payload(secret_key, encrypted_data):
         from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
-        return
 
     import json
 
@@ -110,7 +105,6 @@ def decrypt_payload_legacy(secret_key, encrypted_data):
         from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
-        return
 
     import json
 
@@ -318,9 +312,9 @@ async def test_webhook_handle_get_config(
         "unit_system": hass_config["unit_system"],
         "location_name": hass_config["location_name"],
         "time_zone": hass_config["time_zone"],
-        "components": hass_config["components"],
+        "components": set(hass_config["components"]),
         "version": hass_config["version"],
-        "theme_color": "#03A9F4",  # Default frontend theme color
+        "theme_color": ANY,
         "entities": {
             "mock-device-id": {"disabled": False},
             "battery-state-id": {"disabled": False},
@@ -347,13 +341,13 @@ async def test_webhook_returns_error_incorrect_json(
 
 @pytest.mark.parametrize(
     ("msg", "generate_response"),
-    (
+    [
         (RENDER_TEMPLATE, lambda hass: {"one": "Hello world"}),
         (
             {"type": "get_zones", "data": {}},
             lambda hass: [hass.states.get("zone.home").as_dict()],
         ),
-    ),
+    ],
 )
 async def test_webhook_handle_decryption(
     hass: HomeAssistant, webhook_client, create_registrations, msg, generate_response
@@ -854,12 +848,13 @@ async def test_webhook_camera_stream_stream_available_but_errors(
 
 
 async def test_webhook_handle_scan_tag(
-    hass: HomeAssistant, create_registrations, webhook_client
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    create_registrations,
+    webhook_client,
 ) -> None:
     """Test that we can scan tags."""
-    device = dr.async_get(hass).async_get_device(
-        identifiers={(DOMAIN, "mock-device-id")}
-    )
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "mock-device-id")})
     assert device is not None
 
     events = async_capture_events(hass, EVENT_TAG_SCANNED)
@@ -920,7 +915,10 @@ async def test_register_sensor_limits_state_class(
 
 
 async def test_reregister_sensor(
-    hass: HomeAssistant, create_registrations, webhook_client
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    create_registrations,
+    webhook_client,
 ) -> None:
     """Test that we can add more info in re-registration."""
     webhook_id = create_registrations[1]["webhook_id"]
@@ -941,8 +939,7 @@ async def test_reregister_sensor(
 
     assert reg_resp.status == HTTPStatus.CREATED
 
-    ent_reg = er.async_get(hass)
-    entry = ent_reg.async_get("sensor.test_1_battery_state")
+    entry = entity_registry.async_get("sensor.test_1_battery_state")
     assert entry.original_name == "Test 1 Battery State"
     assert entry.device_class is None
     assert entry.unit_of_measurement is None
@@ -959,7 +956,7 @@ async def test_reregister_sensor(
                 "state": 100,
                 "type": "sensor",
                 "unique_id": "abcd",
-                "state_class": "total",
+                "state_class": "measurement",
                 "device_class": "battery",
                 "entity_category": "diagnostic",
                 "icon": "mdi:new-icon",
@@ -970,7 +967,7 @@ async def test_reregister_sensor(
     )
 
     assert reg_resp.status == HTTPStatus.CREATED
-    entry = ent_reg.async_get("sensor.test_1_battery_state")
+    entry = entity_registry.async_get("sensor.test_1_battery_state")
     assert entry.original_name == "Test 1 New Name"
     assert entry.device_class == "battery"
     assert entry.unit_of_measurement == "%"
@@ -992,7 +989,7 @@ async def test_reregister_sensor(
     )
 
     assert reg_resp.status == HTTPStatus.CREATED
-    entry = ent_reg.async_get("sensor.test_1_battery_state")
+    entry = entity_registry.async_get("sensor.test_1_battery_state")
     assert entry.disabled_by is None
 
     reg_resp = await webhook_client.post(
@@ -1014,7 +1011,7 @@ async def test_reregister_sensor(
     )
 
     assert reg_resp.status == HTTPStatus.CREATED
-    entry = ent_reg.async_get("sensor.test_1_battery_state")
+    entry = entity_registry.async_get("sensor.test_1_battery_state")
     assert entry.original_name == "Test 1 New Name 2"
     assert entry.device_class is None
     assert entry.unit_of_measurement is None
@@ -1023,14 +1020,18 @@ async def test_reregister_sensor(
 
 
 async def test_webhook_handle_conversation_process(
-    hass: HomeAssistant, homeassistant, create_registrations, webhook_client, mock_agent
+    hass: HomeAssistant,
+    homeassistant,
+    create_registrations,
+    webhook_client,
+    mock_conversation_agent: MockAgent,
 ) -> None:
     """Test that we can converse."""
     webhook_client.server.app.router._frozen = False
 
     with patch(
-        "homeassistant.components.conversation.AgentManager.async_get_agent",
-        return_value=mock_agent,
+        "homeassistant.components.conversation.agent_manager.async_get_agent",
+        return_value=mock_conversation_agent,
     ):
         resp = await webhook_client.post(
             "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
@@ -1067,6 +1068,7 @@ async def test_webhook_handle_conversation_process(
 
 async def test_sending_sensor_state(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     create_registrations,
     webhook_client,
     caplog: pytest.LogCaptureFixture,
@@ -1105,8 +1107,7 @@ async def test_sending_sensor_state(
 
     assert reg_resp.status == HTTPStatus.CREATED
 
-    ent_reg = er.async_get(hass)
-    entry = ent_reg.async_get("sensor.test_1_battery_state")
+    entry = entity_registry.async_get("sensor.test_1_battery_state")
     assert entry.original_name == "Test 1 Battery State"
     assert entry.device_class is None
     assert entry.unit_of_measurement is None

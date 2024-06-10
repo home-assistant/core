@@ -1,0 +1,8 @@
+{
+  "services": {
+    "set_climate_timer": "mdi:timer",
+    "set_water_heater_timer": "mdi:timer",
+    "set_climate_temperature_offset": "mdi:thermometer",
+    "add_meter_reading": "mdi:counter"
+  }
+}

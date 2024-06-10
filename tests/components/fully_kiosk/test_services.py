@@ -1,4 +1,5 @@
 """Test Fully Kiosk Browser services."""
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -23,11 +24,11 @@ from tests.common import MockConfigEntry
 
 async def test_services(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_fully_kiosk: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the Fully Kiosk Browser services."""
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, "abcdef-123456")}
     )
@@ -71,6 +72,22 @@ async def test_services(
     mock_fully_kiosk.setConfigurationString.assert_called_once_with(key, value)
 
     key = "test_key"
+    value = 1234
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_CONFIG,
+        {
+            ATTR_DEVICE_ID: [device_entry.id],
+            ATTR_KEY: key,
+            ATTR_VALUE: value,
+        },
+        blocking=True,
+    )
+
+    mock_fully_kiosk.setConfigurationString.assert_called_with(key, str(value))
+
+    key = "test_key"
     value = "true"
     await hass.services.async_call(
         DOMAIN,
@@ -103,13 +120,13 @@ async def test_services(
 
 async def test_service_unloaded_entry(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_fully_kiosk: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test service not called when config entry unloaded."""
-    await init_integration.async_unload(hass)
+    await hass.config_entries.async_unload(init_integration.entry_id)
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, "abcdef-123456")}
     )
@@ -156,19 +173,18 @@ async def test_service_bad_device_id(
 
 async def test_service_called_with_non_fkb_target_devices(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_fully_kiosk: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
     """Services raise exception when no valid devices provided."""
-    device_registry = dr.async_get(hass)
-
     other_domain = "NotFullyKiosk"
     other_config_id = "555"
-    await hass.config_entries.async_add(
-        MockConfigEntry(
-            title="Not Fully Kiosk", domain=other_domain, entry_id=other_config_id
-        )
+    other_mock_config_entry = MockConfigEntry(
+        title="Not Fully Kiosk", domain=other_domain, entry_id=other_config_id
     )
+    other_mock_config_entry.add_to_hass(hass)
+
     device_entry = device_registry.async_get_or_create(
         config_entry_id=other_config_id,
         identifiers={

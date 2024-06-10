@@ -1,16 +1,13 @@
 """Test Environment Canada diagnostics."""
+
 from datetime import UTC, datetime
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.environment_canada.const import (
-    CONF_LANGUAGE,
-    CONF_STATION,
-    DOMAIN,
-)
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.components.environment_canada.const import CONF_STATION, DOMAIN
+from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -55,17 +52,23 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     radar_mock.image = b"GIF..."
     radar_mock.timestamp = datetime(2022, 10, 4, tzinfo=UTC)
 
-    with patch(
-        "homeassistant.components.environment_canada.ECWeather",
-        return_value=weather_mock,
-    ), patch(
-        "homeassistant.components.environment_canada.ECAirQuality",
-        return_value=mock_ec(),
-    ), patch(
-        "homeassistant.components.environment_canada.ECRadar", return_value=radar_mock
-    ), patch(
-        "homeassistant.components.environment_canada.config_flow.ECWeather",
-        return_value=weather_mock,
+    with (
+        patch(
+            "homeassistant.components.environment_canada.ECWeather",
+            return_value=weather_mock,
+        ),
+        patch(
+            "homeassistant.components.environment_canada.ECAirQuality",
+            return_value=mock_ec(),
+        ),
+        patch(
+            "homeassistant.components.environment_canada.ECRadar",
+            return_value=radar_mock,
+        ),
+        patch(
+            "homeassistant.components.environment_canada.config_flow.ECWeather",
+            return_value=weather_mock,
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

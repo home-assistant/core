@@ -1,4 +1,5 @@
 """Config flow for MusicCast."""
+
 from __future__ import annotations
 
 import logging
@@ -32,7 +33,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> data_entry_flow.ConfigFlowResult:
         """Handle a flow initiated by the user."""
         # Request user input, unless we are preparing discovery flow
         if user_input is None:
@@ -50,7 +51,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             )
         except (MusicCastConnectionException, ClientConnectorError):
             errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -74,7 +75,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def _show_setup_form(
         self, errors: dict | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> data_entry_flow.ConfigFlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -84,7 +85,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(
         self, discovery_info: ssdp.SsdpServiceInfo
-    ) -> data_entry_flow.FlowResult:
+    ) -> data_entry_flow.ConfigFlowResult:
         """Handle ssdp discoveries."""
         if not await MusicCastDevice.check_yamaha_ssdp(
             discovery_info.ssdp_location, async_get_clientsession(self.hass)
@@ -95,9 +96,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
         self.upnp_description = discovery_info.ssdp_location
 
         # ssdp_location and hostname have been checked in check_yamaha_ssdp so it is safe to ignore type assignment
-        self.host = urlparse(
-            discovery_info.ssdp_location
-        ).hostname  # type: ignore[assignment]
+        self.host = urlparse(discovery_info.ssdp_location).hostname  # type: ignore[assignment]
 
         await self.async_set_unique_id(self.serial_number)
         self._abort_if_unique_id_configured(
@@ -118,7 +117,9 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm()
 
-    async def async_step_confirm(self, user_input=None) -> data_entry_flow.FlowResult:
+    async def async_step_confirm(
+        self, user_input=None
+    ) -> data_entry_flow.ConfigFlowResult:
         """Allow the user to confirm adding the device."""
         if user_input is not None:
             return self.async_create_entry(

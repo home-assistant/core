@@ -1,4 +1,5 @@
 """The Read Your Meter Pro integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -33,10 +34,15 @@ class RymProDataUpdateCoordinator(DataUpdateCoordinator[dict[int, dict]]):
     async def _async_update_data(self) -> dict[int, dict]:
         """Fetch data from Rym Pro."""
         try:
-            return await self.rympro.last_read()
+            meters = await self.rympro.last_read()
+            for meter_id, meter in meters.items():
+                meter["consumption_forecast"] = await self.rympro.consumption_forecast(
+                    meter_id
+                )
         except UnauthorizedError as error:
             assert self.config_entry
             await self.hass.config_entries.async_reload(self.config_entry.entry_id)
             raise UpdateFailed(error) from error
         except (CannotConnectError, OperationError) as error:
             raise UpdateFailed(error) from error
+        return meters

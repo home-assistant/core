@@ -1,4 +1,5 @@
 """Support for HomematicIP Cloud binary sensor."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -85,15 +86,15 @@ async def async_setup_entry(
         if isinstance(device, AsyncTiltVibrationSensor):
             entities.append(HomematicipTiltVibrationSensor(hap, device))
         if isinstance(device, AsyncWiredInput32):
-            for channel in range(1, 33):
-                entities.append(
-                    HomematicipMultiContactInterface(hap, device, channel=channel)
-                )
+            entities.extend(
+                HomematicipMultiContactInterface(hap, device, channel=channel)
+                for channel in range(1, 33)
+            )
         elif isinstance(device, AsyncFullFlushContactInterface6):
-            for channel in range(1, 7):
-                entities.append(
-                    HomematicipMultiContactInterface(hap, device, channel=channel)
-                )
+            entities.extend(
+                HomematicipMultiContactInterface(hap, device, channel=channel)
+                for channel in range(1, 7)
+            )
         elif isinstance(
             device, (AsyncContactInterface, AsyncFullFlushContactInterface)
         ):

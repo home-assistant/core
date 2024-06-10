@@ -1,4 +1,5 @@
 """Test Home Assistant scenes."""
+
 from unittest.mock import patch
 
 import pytest
@@ -8,6 +9,7 @@ from homeassistant.components.homeassistant import scene as ha_scene
 from homeassistant.components.homeassistant.scene import EVENT_SCENE_RELOADED
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events, async_mock_service
@@ -16,6 +18,7 @@ from tests.common import async_capture_events, async_mock_service
 async def test_reload_config_service(hass: HomeAssistant) -> None:
     """Test the reload config service."""
     assert await async_setup_component(hass, "scene", {})
+    await hass.async_block_till_done()
 
     test_reloaded_event = async_capture_events(hass, EVENT_SCENE_RELOADED)
 
@@ -164,6 +167,64 @@ async def test_create_service(
     assert scene.attributes.get("entity_id") == ["light.kitchen"]
 
 
+async def test_delete_service(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the delete service."""
+    assert await async_setup_component(
+        hass,
+        "scene",
+        {"scene": {"name": "hallo_2", "entities": {"light.kitchen": "on"}}},
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "scene",
+        "create",
+        {
+            "scene_id": "hallo",
+            "entities": {"light.bed_light": {"state": "on", "brightness": 50}},
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            "scene",
+            "delete",
+            {
+                "entity_id": "scene.hallo_3",
+            },
+            blocking=True,
+        )
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            "scene",
+            "delete",
+            {
+                "entity_id": "scene.hallo_2",
+            },
+            blocking=True,
+        )
+    assert hass.states.get("scene.hallo_2") is not None
+
+    assert hass.states.get("scene.hallo") is not None
+
+    await hass.services.async_call(
+        "scene",
+        "delete",
+        {
+            "entity_id": "scene.hallo",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("state.hallo") is None
+
+
 async def test_snapshot_service(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -240,7 +301,6 @@ async def test_ensure_no_intersection(hass: HomeAssistant) -> None:
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
     assert "entities and snapshot_entities must not overlap" in str(ex.value)
     assert hass.states.get("scene.hallo") is None
 

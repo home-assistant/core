@@ -1,23 +1,29 @@
 """Config flow for OpenAI Conversation integration."""
+
 from __future__ import annotations
 
-from functools import partial
 import logging
-import types
 from types import MappingProxyType
 from typing import Any
 
 import openai
-from openai import error
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
     TemplateSelector,
 )
 
@@ -25,14 +31,14 @@ from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
+    CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_TOP_P,
-    DEFAULT_CHAT_MODEL,
-    DEFAULT_MAX_TOKENS,
-    DEFAULT_PROMPT,
-    DEFAULT_TEMPERATURE,
-    DEFAULT_TOP_P,
     DOMAIN,
+    RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_TEMPERATURE,
+    RECOMMENDED_TOP_P,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,15 +49,11 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-DEFAULT_OPTIONS = types.MappingProxyType(
-    {
-        CONF_PROMPT: DEFAULT_PROMPT,
-        CONF_CHAT_MODEL: DEFAULT_CHAT_MODEL,
-        CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
-        CONF_TOP_P: DEFAULT_TOP_P,
-        CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
-    }
-)
+RECOMMENDED_OPTIONS = {
+    CONF_RECOMMENDED: True,
+    CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+    CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
+}
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
@@ -59,18 +61,18 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    openai.api_key = data[CONF_API_KEY]
-    await hass.async_add_executor_job(partial(openai.Engine.list, request_timeout=10))
+    client = openai.AsyncOpenAI(api_key=data[CONF_API_KEY])
+    await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenAI Conversation."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -81,15 +83,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await validate_input(self.hass, user_input)
-        except error.APIConnectionError:
+        except openai.APIConnectionError:
             errors["base"] = "cannot_connect"
-        except error.AuthenticationError:
+        except openai.AuthenticationError:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(title="OpenAI Conversation", data=user_input)
+            return self.async_create_entry(
+                title="ChatGPT",
+                data=user_input,
+                options=RECOMMENDED_OPTIONS,
+            )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -97,63 +103,113 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
         """Create the options flow."""
-        return OptionsFlow(config_entry)
+        return OpenAIOptionsFlow(config_entry)
 
 
-class OptionsFlow(config_entries.OptionsFlow):
+class OpenAIOptionsFlow(OptionsFlow):
     """OpenAI config flow options handler."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
+        self.last_rendered_recommended = config_entry.options.get(
+            CONF_RECOMMENDED, False
+        )
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
+        options: dict[str, Any] | MappingProxyType[str, Any] = self.config_entry.options
+
         if user_input is not None:
-            return self.async_create_entry(title="OpenAI Conversation", data=user_input)
-        schema = openai_config_option_schema(self.config_entry.options)
+            if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
+                if user_input[CONF_LLM_HASS_API] == "none":
+                    user_input.pop(CONF_LLM_HASS_API)
+                return self.async_create_entry(title="", data=user_input)
+
+            # Re-render the options again, now with the recommended options shown/hidden
+            self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
+
+            options = {
+                CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
+                CONF_PROMPT: user_input[CONF_PROMPT],
+                CONF_LLM_HASS_API: user_input[CONF_LLM_HASS_API],
+            }
+
+        schema = openai_config_option_schema(self.hass, options)
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(schema),
         )
 
 
-def openai_config_option_schema(options: MappingProxyType[str, Any]) -> dict:
+def openai_config_option_schema(
+    hass: HomeAssistant,
+    options: dict[str, Any] | MappingProxyType[str, Any],
+) -> dict:
     """Return a schema for OpenAI completion options."""
-    if not options:
-        options = DEFAULT_OPTIONS
-    return {
+    hass_apis: list[SelectOptionDict] = [
+        SelectOptionDict(
+            label="No control",
+            value="none",
+        )
+    ]
+    hass_apis.extend(
+        SelectOptionDict(
+            label=api.name,
+            value=api.id,
+        )
+        for api in llm.async_get_apis(hass)
+    )
+
+    schema = {
         vol.Optional(
             CONF_PROMPT,
-            description={"suggested_value": options[CONF_PROMPT]},
-            default=DEFAULT_PROMPT,
+            description={
+                "suggested_value": options.get(
+                    CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                )
+            },
         ): TemplateSelector(),
         vol.Optional(
-            CONF_CHAT_MODEL,
-            description={
-                # New key in HA 2023.4
-                "suggested_value": options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL)
-            },
-            default=DEFAULT_CHAT_MODEL,
-        ): str,
-        vol.Optional(
-            CONF_MAX_TOKENS,
-            description={"suggested_value": options[CONF_MAX_TOKENS]},
-            default=DEFAULT_MAX_TOKENS,
-        ): int,
-        vol.Optional(
-            CONF_TOP_P,
-            description={"suggested_value": options[CONF_TOP_P]},
-            default=DEFAULT_TOP_P,
-        ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-        vol.Optional(
-            CONF_TEMPERATURE,
-            description={"suggested_value": options[CONF_TEMPERATURE]},
-            default=DEFAULT_TEMPERATURE,
-        ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            CONF_LLM_HASS_API,
+            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+            default="none",
+        ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
+        vol.Required(
+            CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
+        ): bool,
     }
+
+    if options.get(CONF_RECOMMENDED):
+        return schema
+
+    schema.update(
+        {
+            vol.Optional(
+                CONF_CHAT_MODEL,
+                description={"suggested_value": options.get(CONF_CHAT_MODEL)},
+                default=RECOMMENDED_CHAT_MODEL,
+            ): str,
+            vol.Optional(
+                CONF_MAX_TOKENS,
+                description={"suggested_value": options.get(CONF_MAX_TOKENS)},
+                default=RECOMMENDED_MAX_TOKENS,
+            ): int,
+            vol.Optional(
+                CONF_TOP_P,
+                description={"suggested_value": options.get(CONF_TOP_P)},
+                default=RECOMMENDED_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Optional(
+                CONF_TEMPERATURE,
+                description={"suggested_value": options.get(CONF_TEMPERATURE)},
+                default=RECOMMENDED_TEMPERATURE,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
+        }
+    )
+    return schema

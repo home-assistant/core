@@ -1,4 +1,5 @@
 """Support for Toon binary sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -91,14 +92,14 @@ class ToonBoilerModuleBinarySensor(ToonBinarySensor, ToonBoilerModuleDeviceEntit
     """Defines a Boiler module binary sensor."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class ToonBinarySensorRequiredKeysMixin(ToonRequiredKeysMixin):
     """Mixin for binary sensor required keys."""
 
     cls: type[ToonBinarySensor]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ToonBinarySensorEntityDescription(
     BinarySensorEntityDescription, ToonBinarySensorRequiredKeysMixin
 ):

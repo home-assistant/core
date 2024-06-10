@@ -1,11 +1,11 @@
 """Controller for sharing Omada API coordinators between platforms."""
 
+from tplink_omada_client import OmadaSiteClient
 from tplink_omada_client.devices import (
     OmadaGateway,
     OmadaSwitch,
     OmadaSwitchPortDetails,
 )
-from tplink_omada_client.omadasiteclient import OmadaSiteClient
 
 from homeassistant.core import HomeAssistant
 
@@ -15,7 +15,7 @@ POLL_SWITCH_PORT = 300
 POLL_GATEWAY = 300
 
 
-class OmadaSwitchPortCoordinator(OmadaCoordinator[OmadaSwitchPortDetails]):
+class OmadaSwitchPortCoordinator(OmadaCoordinator[OmadaSwitchPortDetails]):  # pylint: disable=hass-enforce-coordinator-module
     """Coordinator for getting details about ports on a switch."""
 
     def __init__(
@@ -36,7 +36,7 @@ class OmadaSwitchPortCoordinator(OmadaCoordinator[OmadaSwitchPortDetails]):
         return {p.port_id: p for p in ports}
 
 
-class OmadaGatewayCoordinator(OmadaCoordinator[OmadaGateway]):
+class OmadaGatewayCoordinator(OmadaCoordinator[OmadaGateway]):  # pylint: disable=hass-enforce-coordinator-module
     """Coordinator for getting details about the site's gateway."""
 
     def __init__(

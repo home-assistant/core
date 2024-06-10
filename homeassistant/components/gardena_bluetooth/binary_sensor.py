@@ -1,4 +1,5 @@
 """Support for binary_sensor entities."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -20,7 +21,7 @@ from .const import DOMAIN
 from .coordinator import Coordinator, GardenaBluetoothDescriptorEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class GardenaBluetoothBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Description of entity."""
 

@@ -1,4 +1,5 @@
 """Support for August binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -21,14 +22,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from . import AugustData
-from .const import ACTIVITY_UPDATE_INTERVAL, DOMAIN
+from . import AugustConfigEntry, AugustData
+from .const import ACTIVITY_UPDATE_INTERVAL
 from .entity import AugustEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -105,27 +105,15 @@ def _native_datetime() -> datetime:
     return datetime.now()
 
 
-@dataclass
-class AugustBinarySensorEntityDescription(BinarySensorEntityDescription):
+@dataclass(frozen=True, kw_only=True)
+class AugustDoorbellBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes August binary_sensor entity."""
-
-
-@dataclass
-class AugustDoorbellRequiredKeysMixin:
-    """Mixin for required keys."""
 
     value_fn: Callable[[AugustData, DoorbellDetail], bool]
     is_time_based: bool
 
 
-@dataclass
-class AugustDoorbellBinarySensorEntityDescription(
-    BinarySensorEntityDescription, AugustDoorbellRequiredKeysMixin
-):
-    """Describes August binary_sensor entity."""
-
-
-SENSOR_TYPE_DOOR = AugustBinarySensorEntityDescription(
+SENSOR_TYPE_DOOR = BinarySensorEntityDescription(
     key="open",
     device_class=BinarySensorDeviceClass.DOOR,
 )
@@ -140,7 +128,6 @@ SENSOR_TYPES_VIDEO_DOORBELL = (
     AugustDoorbellBinarySensorEntityDescription(
         key="image capture",
         translation_key="image_capture",
-        icon="mdi:file-image",
         value_fn=_retrieve_image_capture_state,
         is_time_based=True,
     ),
@@ -166,11 +153,11 @@ SENSOR_TYPES_DOORBELL: tuple[AugustDoorbellBinarySensorEntityDescription, ...] =
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AugustConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the August binary sensors."""
-    data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     entities: list[BinarySensorEntity] = []
 
     for door in data.locks:
@@ -218,7 +205,7 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
         self,
         data: AugustData,
         device: Lock,
-        description: AugustBinarySensorEntityDescription,
+        description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
@@ -228,7 +215,7 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
         self._attr_unique_id = f"{self._device_id}_{description.key}"
 
     @callback
-    def _update_from_data(self):
+    def _update_from_data(self) -> None:
         """Get the latest state of the sensor and update activity."""
         assert self._data.activity_stream is not None
         door_activity = self._data.activity_stream.get_latest_device_activity(
@@ -270,12 +257,12 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
         """Initialize the sensor."""
         super().__init__(data, device)
         self.entity_description = description
-        self._check_for_off_update_listener = None
+        self._check_for_off_update_listener: Callable[[], None] | None = None
         self._data = data
         self._attr_unique_id = f"{self._device_id}_{description.key}"
 
     @callback
-    def _update_from_data(self):
+    def _update_from_data(self) -> None:
         """Get the latest state of the sensor."""
         self._cancel_any_pending_updates()
         self._attr_is_on = self.entity_description.value_fn(self._data, self._detail)
@@ -286,14 +273,14 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
         else:
             self._attr_available = True
 
-    def _schedule_update_to_recheck_turn_off_sensor(self):
+    def _schedule_update_to_recheck_turn_off_sensor(self) -> None:
         """Schedule an update to recheck the sensor to see if it is ready to turn off."""
         # If the sensor is already off there is nothing to do
         if not self.is_on:
             return
 
         @callback
-        def _scheduled_update(now):
+        def _scheduled_update(now: datetime) -> None:
             """Timer callback for sensor update."""
             self._check_for_off_update_listener = None
             self._update_from_data()
@@ -304,7 +291,7 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
             self.hass, TIME_TO_RECHECK_DETECTION.total_seconds(), _scheduled_update
         )
 
-    def _cancel_any_pending_updates(self):
+    def _cancel_any_pending_updates(self) -> None:
         """Cancel any updates to recheck a sensor to see if it is ready to turn off."""
         if not self._check_for_off_update_listener:
             return

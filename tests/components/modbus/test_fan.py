@@ -1,4 +1,5 @@
 """The tests for the Modbus fan component."""
+
 from pymodbus.exceptions import ModbusException
 import pytest
 
@@ -11,7 +12,6 @@ from homeassistant.components.modbus.const import (
     CONF_DEVICE_ADDRESS,
     CONF_FANS,
     CONF_INPUT_TYPE,
-    CONF_LAZY_ERROR,
     CONF_STATE_OFF,
     CONF_STATE_ON,
     CONF_VERIFY,
@@ -66,7 +66,6 @@ ENTITY_ID2 = f"{ENTITY_ID}_2"
                     CONF_SLAVE: 1,
                     CONF_COMMAND_OFF: 0x00,
                     CONF_COMMAND_ON: 0x01,
-                    CONF_LAZY_ERROR: 10,
                     CONF_VERIFY: {
                         CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                         CONF_ADDRESS: 1235,
@@ -84,7 +83,6 @@ ENTITY_ID2 = f"{ENTITY_ID}_2"
                     CONF_DEVICE_ADDRESS: 1,
                     CONF_COMMAND_OFF: 0x00,
                     CONF_COMMAND_ON: 0x01,
-                    CONF_LAZY_ERROR: 10,
                     CONF_VERIFY: {
                         CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                         CONF_ADDRESS: 1235,
@@ -264,7 +262,6 @@ async def test_fan_service_turn(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mock_modbus,
-    mock_pymodbus_return,
 ) -> None:
     """Run test for service turn_on/turn_off."""
 
@@ -325,13 +322,13 @@ async def test_fan_service_turn(
         },
     ],
 )
-async def test_service_fan_update(hass: HomeAssistant, mock_modbus, mock_ha) -> None:
+async def test_service_fan_update(hass: HomeAssistant, mock_modbus_ha) -> None:
     """Run test for service homeassistant.update_entity."""
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
-    mock_modbus.read_coils.return_value = ReadResult([0x01])
+    mock_modbus_ha.read_coils.return_value = ReadResult([0x01])
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )

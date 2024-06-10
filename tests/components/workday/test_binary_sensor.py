@@ -1,10 +1,13 @@
 """Tests the Home Assistant workday binary sensor."""
-from datetime import datetime
+
+from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.workday.binary_sensor import SERVICE_CHECK_DATE
+from homeassistant.components.workday.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import UTC
@@ -24,6 +27,7 @@ from . import (
     TEST_CONFIG_INCORRECT_REMOVE_DATE_RANGE_LEN,
     TEST_CONFIG_NO_COUNTRY,
     TEST_CONFIG_NO_COUNTRY_ADD_HOLIDAY,
+    TEST_CONFIG_NO_LANGUAGE_CONFIGURED,
     TEST_CONFIG_NO_PROVINCE,
     TEST_CONFIG_NO_STATE,
     TEST_CONFIG_REMOVE_HOLIDAY,
@@ -32,33 +36,41 @@ from . import (
     TEST_CONFIG_WITH_PROVINCE,
     TEST_CONFIG_WITH_STATE,
     TEST_CONFIG_YESTERDAY,
+    TEST_LANGUAGE_CHANGE,
+    TEST_LANGUAGE_NO_CHANGE,
     init_integration,
 )
 
+from tests.common import async_fire_time_changed
+
 
 @pytest.mark.parametrize(
-    ("config", "expected_state"),
+    ("config", "expected_state", "expected_state_weekend"),
     [
-        (TEST_CONFIG_NO_COUNTRY, "on"),
-        (TEST_CONFIG_WITH_PROVINCE, "off"),
-        (TEST_CONFIG_NO_PROVINCE, "off"),
-        (TEST_CONFIG_WITH_STATE, "on"),
-        (TEST_CONFIG_NO_STATE, "on"),
-        (TEST_CONFIG_EXAMPLE_1, "on"),
-        (TEST_CONFIG_EXAMPLE_2, "off"),
-        (TEST_CONFIG_TOMORROW, "off"),
-        (TEST_CONFIG_DAY_AFTER_TOMORROW, "off"),
-        (TEST_CONFIG_YESTERDAY, "on"),
+        (TEST_CONFIG_NO_COUNTRY, "on", "off"),
+        (TEST_CONFIG_WITH_PROVINCE, "off", "off"),
+        (TEST_CONFIG_NO_PROVINCE, "off", "off"),
+        (TEST_CONFIG_WITH_STATE, "on", "off"),
+        (TEST_CONFIG_NO_STATE, "on", "off"),
+        (TEST_CONFIG_EXAMPLE_1, "on", "off"),
+        (TEST_CONFIG_EXAMPLE_2, "off", "off"),
+        (TEST_CONFIG_TOMORROW, "off", "off"),
+        (TEST_CONFIG_DAY_AFTER_TOMORROW, "off", "off"),
+        (TEST_CONFIG_YESTERDAY, "on", "off"),  # Friday was good Friday
+        (TEST_CONFIG_NO_LANGUAGE_CONFIGURED, "off", "off"),
     ],
 )
 async def test_setup(
     hass: HomeAssistant,
     config: dict[str, Any],
     expected_state: str,
+    expected_state_weekend: str,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test setup from various configs."""
-    freezer.move_to(datetime(2022, 4, 15, 12, tzinfo=UTC))  # Monday
+    # Start on a Friday
+    await hass.config.async_set_time_zone("Europe/Paris")
+    freezer.move_to(datetime(2022, 4, 15, 0, tzinfo=timezone(timedelta(hours=1))))
     await init_integration(hass, config)
 
     state = hass.states.get("binary_sensor.workday_sensor")
@@ -70,6 +82,13 @@ async def test_setup(
         "excludes": config["excludes"],
         "days_offset": config["days_offset"],
     }
+
+    freezer.tick(timedelta(days=1))  # Saturday
+    async_fire_time_changed(hass)
+
+    state = hass.states.get("binary_sensor.workday_sensor")
+    assert state is not None
+    assert state.state == expected_state_weekend
 
 
 async def test_setup_with_invalid_province_from_yaml(hass: HomeAssistant) -> None:
@@ -273,3 +292,69 @@ async def test_setup_date_range(
 
     state = hass.states.get("binary_sensor.workday_sensor")
     assert state.state == "on"
+
+
+async def test_check_date_service(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test check date service with response data."""
+
+    freezer.move_to(datetime(2017, 1, 6, 12, tzinfo=UTC))  # Friday
+    await init_integration(hass, TEST_CONFIG_WITH_PROVINCE)
+
+    hass.states.get("binary_sensor.workday_sensor")
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CHECK_DATE,
+        {
+            "entity_id": "binary_sensor.workday_sensor",
+            "check_date": date(2022, 12, 25),  # Christmas Day
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"binary_sensor.workday_sensor": {"workday": False}}
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CHECK_DATE,
+        {
+            "entity_id": "binary_sensor.workday_sensor",
+            "check_date": date(2022, 12, 23),  # Normal Friday
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"binary_sensor.workday_sensor": {"workday": True}}
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CHECK_DATE,
+        {
+            "entity_id": "binary_sensor.workday_sensor",
+            "check_date": date(2022, 12, 17),  # Saturday (no workday)
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"binary_sensor.workday_sensor": {"workday": False}}
+
+
+async def test_language_difference_english_language(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test handling difference in English language naming."""
+    await init_integration(hass, TEST_LANGUAGE_CHANGE)
+    assert "Changing language from en to en_US" in caplog.text
+
+
+async def test_language_difference_no_change_other_language(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test skipping if no difference in language naming."""
+    await init_integration(hass, TEST_LANGUAGE_NO_CHANGE)
+    assert "Changing language from en to en_US" not in caplog.text

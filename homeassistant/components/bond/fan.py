@@ -1,4 +1,5 @@
 """Support for Bond fans."""
+
 from __future__ import annotations
 
 import logging
@@ -15,20 +16,19 @@ from homeassistant.components.fan import (
     FanEntity,
     FanEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
-    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+from homeassistant.util.scaling import int_states_in_range
 
-from .const import DOMAIN, SERVICE_SET_FAN_SPEED_TRACKED_STATE
+from . import BondConfigEntry
+from .const import SERVICE_SET_FAN_SPEED_TRACKED_STATE
 from .entity import BondEntity
-from .models import BondData
 from .utils import BondDevice, BondHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,11 +38,11 @@ PRESET_MODE_BREEZE = "Breeze"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: BondConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Bond fan devices."""
-    data: BondData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     hub = data.hub
     bpup_subs = data.bpup_subs
     platform = entity_platform.async_get_current_platform()
@@ -72,6 +72,14 @@ class BondFan(BondEntity, FanEntity):
         super().__init__(hub, device, bpup_subs)
         if self._device.has_action(Action.BREEZE_ON):
             self._attr_preset_modes = [PRESET_MODE_BREEZE]
+        features = FanEntityFeature(0)
+        if self._device.supports_speed():
+            features |= FanEntityFeature.SET_SPEED
+        if self._device.supports_direction():
+            features |= FanEntityFeature.DIRECTION
+        if self._device.has_action(Action.BREEZE_ON):
+            features |= FanEntityFeature.PRESET_MODE
+        self._attr_supported_features = features
 
     def _apply_state(self) -> None:
         state = self._device.state
@@ -80,18 +88,6 @@ class BondFan(BondEntity, FanEntity):
         self._direction = state.get("direction")
         breeze = state.get("breeze", [0, 0, 0])
         self._attr_preset_mode = PRESET_MODE_BREEZE if breeze[0] else None
-
-    @property
-    def supported_features(self) -> FanEntityFeature:
-        """Flag supported features."""
-        features = FanEntityFeature(0)
-        if self._device.supports_speed():
-            features |= FanEntityFeature.SET_SPEED
-        if self._device.supports_direction():
-            features |= FanEntityFeature.DIRECTION
-        if self._device.has_action(Action.BREEZE_ON):
-            features |= FanEntityFeature.PRESET_MODE
-        return features
 
     @property
     def _speed_range(self) -> tuple[int, int]:
@@ -199,10 +195,6 @@ class BondFan(BondEntity, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        if preset_mode != PRESET_MODE_BREEZE or not self._device.has_action(
-            Action.BREEZE_ON
-        ):
-            raise ValueError(f"Invalid preset mode: {preset_mode}")
         await self._hub.bond.action(self._device.device_id, Action(Action.BREEZE_ON))
 
     async def async_turn_off(self, **kwargs: Any) -> None:

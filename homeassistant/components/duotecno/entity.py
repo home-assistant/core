@@ -1,9 +1,10 @@
 """Support for Velbus devices."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from duotecno.unit import BaseUnit
 
@@ -17,10 +18,9 @@ from .const import DOMAIN
 class DuotecnoEntity(Entity):
     """Representation of a Duotecno entity."""
 
-    _attr_should_poll: bool = False
-    _unit: BaseUnit
+    _attr_should_poll = False
 
-    def __init__(self, unit) -> None:
+    def __init__(self, unit: BaseUnit) -> None:
         """Initialize a Duotecno entity."""
         self._unit = unit
         self._attr_name = unit.get_name()
@@ -41,13 +41,14 @@ class DuotecnoEntity(Entity):
         """When a unit has an update."""
         self.async_write_ha_state()
 
+    @property
+    def available(self) -> bool:
+        """Available state for the unit."""
+        return self._unit.is_available()
 
-_T = TypeVar("_T", bound="DuotecnoEntity")
-_P = ParamSpec("_P")
 
-
-def api_call(
-    func: Callable[Concatenate[_T, _P], Awaitable[None]]
+def api_call[_T: DuotecnoEntity, **_P](
+    func: Callable[Concatenate[_T, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
     """Catch command exceptions."""
 

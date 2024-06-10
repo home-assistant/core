@@ -1,9 +1,12 @@
 """The tests for the Google Assistant component."""
+
+from asyncio import AbstractEventLoop
 from http import HTTPStatus
 import json
 from unittest.mock import patch
 
 from aiohttp.hdrs import AUTHORIZATION
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant import const, core, setup
@@ -23,6 +26,8 @@ from homeassistant.helpers import entity_registry as er
 
 from . import DEMO_DEVICES
 
+from tests.typing import ClientSessionGenerator
+
 API_PASSWORD = "test1234"
 
 PROJECT_ID = "hasstest-1234"
@@ -31,13 +36,17 @@ ACCESS_TOKEN = "superdoublesecret"
 
 
 @pytest.fixture
-def auth_header(hass_access_token):
+def auth_header(hass_access_token: str) -> dict[str, str]:
     """Generate an HTTP header with bearer token authorization."""
     return {AUTHORIZATION: f"Bearer {hass_access_token}"}
 
 
 @pytest.fixture
-def assistant_client(event_loop, hass, hass_client_no_auth):
+def assistant_client(
+    event_loop: AbstractEventLoop,
+    hass: core.HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> TestClient:
     """Create web client for the Google Assistant API."""
     loop = event_loop
     loop.run_until_complete(
@@ -82,7 +91,9 @@ async def wanted_platforms_only() -> None:
 
 
 @pytest.fixture
-def hass_fixture(event_loop, hass):
+def hass_fixture(
+    event_loop: AbstractEventLoop, hass: core.HomeAssistant
+) -> core.HomeAssistant:
     """Set up a Home Assistant instance for these tests."""
     loop = event_loop
 
@@ -154,6 +165,7 @@ async def test_sync_request(
     for dev, demo in zip(
         sorted(devices, key=lambda d: d["id"]),
         sorted(DEMO_DEVICES, key=lambda d: d["id"]),
+        strict=False,
     ):
         assert dev["name"] == demo["name"]
         assert set(dev["traits"]) == set(demo["traits"])
@@ -233,25 +245,28 @@ async def test_query_climate_request(
     assert len(devices) == 3
     assert devices["climate.heatpump"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpoint": 20.0,
         "thermostatTemperatureAmbient": 25.0,
         "thermostatMode": "heat",
     }
     assert devices["climate.ecobee"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpointHigh": 24,
         "thermostatTemperatureAmbient": 23,
         "thermostatMode": "heatcool",
         "thermostatTemperatureSetpointLow": 21,
-        "currentFanSpeedSetting": "Auto Low",
+        "currentFanSpeedSetting": "auto_low",
     }
     assert devices["climate.hvac"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpoint": 21,
         "thermostatTemperatureAmbient": 22,
         "thermostatMode": "cool",
-        "thermostatHumidityAmbient": 54,
-        "currentFanSpeedSetting": "On High",
+        "thermostatHumidityAmbient": 54.2,
+        "currentFanSpeedSetting": "on_high",
     }
 
 
@@ -294,25 +309,28 @@ async def test_query_climate_request_f(
     assert len(devices) == 3
     assert devices["climate.heatpump"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpoint": -6.7,
         "thermostatTemperatureAmbient": -3.9,
         "thermostatMode": "heat",
     }
     assert devices["climate.ecobee"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpointHigh": -4.4,
         "thermostatTemperatureAmbient": -5,
         "thermostatMode": "heatcool",
         "thermostatTemperatureSetpointLow": -6.1,
-        "currentFanSpeedSetting": "Auto Low",
+        "currentFanSpeedSetting": "auto_low",
     }
     assert devices["climate.hvac"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpoint": -6.1,
         "thermostatTemperatureAmbient": -5.6,
         "thermostatMode": "cool",
-        "thermostatHumidityAmbient": 54,
-        "currentFanSpeedSetting": "On High",
+        "thermostatHumidityAmbient": 54.2,
+        "currentFanSpeedSetting": "on_high",
     }
     hass_fixture.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -356,8 +374,8 @@ async def test_query_humidifier_request(
     assert devices["humidifier.dehumidifier"] == {
         "on": True,
         "online": True,
-        "humiditySetpointPercent": 54,
-        "humidityAmbientPercent": 59,
+        "humiditySetpointPercent": 54.2,
+        "humidityAmbientPercent": 59.4,
     }
     assert devices["humidifier.hygrostat"] == {
         "on": True,

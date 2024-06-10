@@ -1,4 +1,5 @@
 """The scene tests for the nexia platform."""
+
 from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
@@ -30,7 +31,6 @@ async def test_automation_scenes(hass: HomeAssistant) -> None:
             "change Fan Mode to Auto"
         ),
         "friendly_name": "Away Short",
-        "icon": "mdi:script-text-outline",
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
@@ -51,7 +51,6 @@ async def test_automation_scenes(hass: HomeAssistant) -> None:
             "Activate the mode named 'Power Outage'"
         ),
         "friendly_name": "Power Outage",
-        "icon": "mdi:script-text-outline",
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
@@ -70,7 +69,6 @@ async def test_automation_scenes(hass: HomeAssistant) -> None:
             "'Home'"
         ),
         "friendly_name": "Power Restored",
-        "icon": "mdi:script-text-outline",
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears

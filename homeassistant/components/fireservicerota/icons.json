@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "duty": {
+        "default": "mdi:calendar-remove",
+        "state": {
+          "on": "mdi:calendar-check"
+        }
+      }
+    }
+  }
+}

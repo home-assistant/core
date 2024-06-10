@@ -1,7 +1,7 @@
 """The Gardena Bluetooth integration."""
+
 from __future__ import annotations
 
-import asyncio
 import logging
 
 from bleak.backends.device import BLEDevice
@@ -60,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         uuids = await client.get_all_characteristics_uuid()
         await client.update_timestamp(dt_util.now())
-    except (asyncio.TimeoutError, CommunicationFailure, DeviceUnavailable) as exception:
+    except (TimeoutError, CommunicationFailure, DeviceUnavailable) as exception:
         await client.disconnect()
         raise ConfigEntryNotReady(
             f"Unable to connect to device {address} due to {exception}"

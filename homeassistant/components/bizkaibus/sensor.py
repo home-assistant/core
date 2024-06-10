@@ -1,4 +1,5 @@
 """Support for Bizkaibus, Biscay (Basque Country, Spain) Bus service."""
+
 from __future__ import annotations
 
 from contextlib import suppress

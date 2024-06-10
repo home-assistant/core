@@ -1,4 +1,5 @@
 """Creates LOQED sensors."""
+
 from typing import Final
 
 from homeassistant.components.sensor import (

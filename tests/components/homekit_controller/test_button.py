@@ -1,4 +1,5 @@
 """Basic checks for HomeKit button."""
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
@@ -60,7 +61,7 @@ async def test_press_button(hass: HomeAssistant) -> None:
     button.async_assert_service_values(
         ServicesTypes.OUTLET,
         {
-            CharacteristicsTypes.VENDOR_HAA_SETUP: "#HAA@trcmd",
+            CharacteristicsTypes.VENDOR_HAA_SETUP: "#HAA@trcmd",  # codespell:ignore haa
         },
     )
 
@@ -94,9 +95,10 @@ async def test_ecobee_clear_hold_press_button(hass: HomeAssistant) -> None:
     )
 
 
-async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
+async def test_migrate_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test a we can migrate a button unique id."""
-    entity_registry = er.async_get(hass)
     aid = get_next_aid()
     button_entry = entity_registry.async_get_or_create(
         "button",

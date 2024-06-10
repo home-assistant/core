@@ -1,4 +1,5 @@
 """The tests for Philips Hue device triggers for V2 bridge."""
+
 from aiohue.v2.models.button import ButtonEvent
 from pytest_unordered import unordered
 

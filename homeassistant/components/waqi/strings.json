@@ -36,22 +36,41 @@
       }
     }
   },
-  "issues": {
-    "deprecated_yaml_import_issue_invalid_auth": {
-      "title": "The World Air Quality Index YAML configuration import failed",
-      "description": "Configuring World Air Quality Index using YAML is being removed but there was an authentication error importing your YAML configuration.\n\nCorrect the YAML configuration and restart Home Assistant to try again or remove the World Air Quality Index YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
-    "deprecated_yaml_import_issue_cannot_connect": {
-      "title": "The WAQI YAML configuration import failed",
-      "description": "Configuring World Air Quality Index using YAML is being removed but there was an connection error importing your YAML configuration.\n\nEnsure connection to WAQI works and restart Home Assistant to try again or remove the World Air Quality Index YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
-    "deprecated_yaml_import_issue_already_configured": {
-      "title": "The WAQI YAML configuration import failed",
-      "description": "Configuring World Air Quality Index using YAML is being removed but the measuring station was already imported when trying to import the YAML configuration.\n\nEnsure the imported configuration is correct and remove the World Air Quality Index YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
-    "deprecated_yaml_import_issue_none_found": {
-      "title": "The WAQI YAML configuration import failed",
-      "description": "Configuring World Air Quality Index using YAML is being removed but there weren't any stations imported because they couldn't be found.\n\nEnsure the imported configuration is correct and remove the World Air Quality Index YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+  "entity": {
+    "sensor": {
+      "carbon_monoxide": {
+        "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
+      },
+      "nitrogen_dioxide": {
+        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
+      },
+      "ozone": {
+        "name": "[%key:component::sensor::entity_component::ozone::name%]"
+      },
+      "sulphur_dioxide": {
+        "name": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
+      },
+      "pm10": {
+        "name": "[%key:component::sensor::entity_component::pm10::name%]"
+      },
+      "pm25": {
+        "name": "[%key:component::sensor::entity_component::pm25::name%]"
+      },
+      "neph": {
+        "name": "Visbility using nephelometry"
+      },
+      "dominant_pollutant": {
+        "name": "Dominant pollutant",
+        "state": {
+          "co": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+          "neph": "Nephelometry",
+          "no2": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
+          "o3": "[%key:component::sensor::entity_component::ozone::name%]",
+          "so2": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]",
+          "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
+          "pm25": "[%key:component::sensor::entity_component::pm25::name%]"
+        }
+      }
     }
   }
 }

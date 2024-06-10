@@ -1,4 +1,5 @@
 """Tests for HomematicIP Cloud sensor."""
+
 from homematicip.base.enums import ValveState
 
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN

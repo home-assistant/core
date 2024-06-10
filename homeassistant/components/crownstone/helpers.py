@@ -1,4 +1,5 @@
 """Helper functions for the Crownstone integration."""
+
 from __future__ import annotations
 
 import os
@@ -23,17 +24,18 @@ def list_ports_as_str(
     if no_usb_option:
         ports_as_string.append(DONT_USE_USB)
 
-    for port in serial_ports:
-        ports_as_string.append(
-            usb.human_readable_device_name(
-                port.device,
-                port.serial_number,
-                port.manufacturer,
-                port.description,
-                f"{hex(port.vid)[2:]:0>4}".upper() if port.vid else None,
-                f"{hex(port.pid)[2:]:0>4}".upper() if port.pid else None,
-            )
+    ports_as_string.extend(
+        usb.human_readable_device_name(
+            port.device,
+            port.serial_number,
+            port.manufacturer,
+            port.description,
+            f"{hex(port.vid)[2:]:0>4}".upper() if port.vid else None,
+            f"{hex(port.pid)[2:]:0>4}".upper() if port.pid else None,
         )
+        for port in serial_ports
+    )
+
     ports_as_string.append(MANUAL_PATH)
     ports_as_string.append(REFRESH_LIST)
 

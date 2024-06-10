@@ -1,4 +1,5 @@
 """Support for LaCrosse sensor components."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -209,7 +210,7 @@ class LaCrosseHumidity(LaCrosseSensor):
 
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_icon = "mdi:water-percent"
+    _attr_device_class = SensorDeviceClass.HUMIDITY
 
     @property
     def native_value(self) -> int | None:

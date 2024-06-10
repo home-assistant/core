@@ -1,12 +1,15 @@
 """The tests for the TTS component."""
+
 import asyncio
 from http import HTTPStatus
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components import tts
+from homeassistant.components import ffmpeg, tts
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
@@ -15,7 +18,6 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     MediaType,
 )
-from homeassistant.components.media_source import Unresolvable
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
@@ -33,18 +35,13 @@ from .common import (
     get_media_source_url,
     mock_config_entry_setup,
     mock_setup,
+    retrieve_media,
 )
 
 from tests.common import async_mock_service, mock_restore_cache
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 ORIG_WRITE_TAGS = tts.SpeechManager.write_tags
-
-
-@pytest.fixture
-async def setup_tts(hass: HomeAssistant, mock_tts: None) -> None:
-    """Mock TTS."""
-    assert await async_setup_component(hass, tts.DOMAIN, {"tts": {"platform": "test"}})
 
 
 class DefaultEntity(tts.TextToSpeechEntity):
@@ -75,7 +72,10 @@ async def test_default_entity_attributes() -> None:
 
 
 async def test_config_entry_unload(
-    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts_entity: MockTTSEntity,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test we can unload config entry."""
     entity_id = f"{tts.DOMAIN}.{TEST_DOMAIN}"
@@ -83,7 +83,7 @@ async def test_config_entry_unload(
     assert state is None
 
     config_entry = await mock_config_entry_setup(hass, mock_tts_entity)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNKNOWN
@@ -91,21 +91,24 @@ async def test_config_entry_unload(
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
     now = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await hass.services.async_call(
-            tts.DOMAIN,
-            "speak",
-            {
-                ATTR_ENTITY_ID: entity_id,
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
-            },
-            blocking=True,
-        )
-        assert len(calls) == 1
+    freezer.move_to(now)
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "speak",
+        {
+            ATTR_ENTITY_ID: entity_id,
+            tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+            tts.ATTR_MESSAGE: "There is someone at the door.",
+        },
+        blocking=True,
+    )
+    assert len(calls) == 1
 
-        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        await hass.async_block_till_done()
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.OK
+    )
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -113,7 +116,7 @@ async def test_config_entry_unload(
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     state = hass.states.get(entity_id)
     assert state is None
@@ -131,7 +134,7 @@ async def test_restore_state(
     config_entry = await mock_config_entry_setup(hass, mock_tts_entity)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     state = hass.states.get(entity_id)
     assert state
     assert state.state == timestamp
@@ -143,7 +146,7 @@ async def test_restore_state(
 async def test_setup_component(hass: HomeAssistant, setup: str) -> None:
     """Set up a TTS platform with defaults."""
     assert hass.services.has_service(tts.DOMAIN, "clear_cache")
-    assert f"{tts.DOMAIN}.test" in hass.config.components
+    assert f"test.{tts.DOMAIN}" in hass.config.components
 
 
 @pytest.mark.parametrize("init_tts_cache_dir_side_effect", [OSError(2, "No access")])
@@ -185,7 +188,7 @@ async def test_setup_component_no_access_cache_folder(
 )
 async def test_service(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -246,7 +249,7 @@ async def test_service(
 )
 async def test_service_default_language(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -307,7 +310,7 @@ async def test_service_default_language(
 )
 async def test_service_default_special_language(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -364,7 +367,7 @@ async def test_service_default_special_language(
 )
 async def test_service_language(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -421,7 +424,7 @@ async def test_service_language(
 )
 async def test_service_wrong_language(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -475,7 +478,7 @@ async def test_service_wrong_language(
 )
 async def test_service_options(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -559,7 +562,7 @@ class MockEntityWithDefaults(MockTTSEntity):
 )
 async def test_service_default_options(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -627,7 +630,7 @@ async def test_service_default_options(
 )
 async def test_merge_default_service_options(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -694,7 +697,7 @@ async def test_merge_default_service_options(
 )
 async def test_service_wrong_options(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -750,7 +753,7 @@ async def test_service_wrong_options(
 )
 async def test_service_clear_cache(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -812,7 +815,7 @@ async def test_service_clear_cache(
 async def test_service_receive_voice(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -884,7 +887,7 @@ async def test_service_receive_voice(
 async def test_service_receive_voice_german(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -992,7 +995,7 @@ async def test_web_view_wrong_filename(
 )
 async def test_service_without_cache(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -1040,7 +1043,7 @@ class MockEntityBoom(MockTTSEntity):
 @pytest.mark.parametrize("mock_provider", [MockProviderBoom(DEFAULT_LANG)])
 async def test_setup_legacy_cache_dir(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     mock_provider: MockProvider,
 ) -> None:
     """Set up a TTS platform with cache and call service without cache."""
@@ -1076,7 +1079,7 @@ async def test_setup_legacy_cache_dir(
 @pytest.mark.parametrize("mock_tts_entity", [MockEntityBoom(DEFAULT_LANG)])
 async def test_setup_cache_dir(
     hass: HomeAssistant,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     mock_tts_entity: MockTTSEntity,
 ) -> None:
     """Set up a TTS platform with cache and call service without cache."""
@@ -1159,6 +1162,7 @@ class MockEntityEmpty(MockTTSEntity):
 )
 async def test_service_get_tts_error(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     setup: str,
     tts_service: str,
     service_data: dict[str, Any],
@@ -1173,14 +1177,16 @@ async def test_service_get_tts_error(
         blocking=True,
     )
     assert len(calls) == 1
-    with pytest.raises(Unresolvable):
-        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.NOT_FOUND
+    )
 
 
 async def test_load_cache_legacy_retrieve_without_mem_cache(
     hass: HomeAssistant,
     mock_provider: MockProvider,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Set up component and load cache and get without mem cache."""
@@ -1206,7 +1212,7 @@ async def test_load_cache_legacy_retrieve_without_mem_cache(
 async def test_load_cache_retrieve_without_mem_cache(
     hass: HomeAssistant,
     mock_tts_entity: MockTTSEntity,
-    mock_tts_cache_dir,
+    mock_tts_cache_dir: Path,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Set up component and load cache and get without mem cache."""
@@ -1297,7 +1303,7 @@ async def test_tags_with_wave() -> None:
     # below data represents an empty wav file
     tts_data = bytes.fromhex(
         "52 49 46 46 24 00 00 00 57 41 56 45 66 6d 74 20 10 00 00 00 01 00 02 00"
-        + "22 56 00 00 88 58 01 00 04 00 10 00 64 61 74 61 00 00 00 00"
+        "22 56 00 00 88 58 01 00 04 00 10 00 64 61 74 61 00 00 00 00"
     )
 
     tagged_data = ORIG_WRITE_TAGS(
@@ -1322,12 +1328,12 @@ async def test_tags_with_wave() -> None:
 )
 @pytest.mark.parametrize(
     ("engine", "language", "options", "cache", "result_query"),
-    (
+    [
         (None, None, None, None, ""),
         (None, "de_DE", None, None, "language=de_DE"),
         (None, "de_DE", {"voice": "henk"}, None, "language=de_DE&voice=henk"),
         (None, "de_DE", None, True, "cache=true&language=de_DE"),
-    ),
+    ],
 )
 async def test_generate_media_source_id(
     hass: HomeAssistant,
@@ -1362,11 +1368,11 @@ async def test_generate_media_source_id(
 )
 @pytest.mark.parametrize(
     ("engine", "language", "options"),
-    (
+    [
         ("not-loaded-engine", None, None),
         (None, "unsupported-language", None),
         (None, None, {"option": "not-supported"}),
-    ),
+    ],
 )
 async def test_generate_media_source_id_invalid_options(
     hass: HomeAssistant,
@@ -1394,9 +1400,11 @@ def test_resolve_engine(hass: HomeAssistant, setup: str, engine_id: str) -> None
     assert tts.async_resolve_engine(hass, engine_id) == engine_id
     assert tts.async_resolve_engine(hass, "non-existing") is None
 
-    with patch.dict(
-        hass.data[tts.DATA_TTS_MANAGER].providers, {}, clear=True
-    ), patch.dict(hass.data[tts.DOMAIN]._platforms, {}, clear=True):
+    with (
+        patch.dict(hass.data[tts.DATA_TTS_MANAGER].providers, {}, clear=True),
+        patch.dict(hass.data[tts.DOMAIN]._platforms, {}, clear=True),
+        patch.dict(hass.data[tts.DOMAIN]._entities, {}, clear=True),
+    ):
         assert tts.async_resolve_engine(hass, None) is None
 
     with patch.dict(hass.data[tts.DATA_TTS_MANAGER].providers, {"cloud": object()}):
@@ -1454,7 +1462,11 @@ async def test_legacy_fetching_in_async(
 
     # Test async_get_media_source_audio
     media_source_id = tts.generate_media_source_id(
-        hass, "test message", "test", "en_US", None, None
+        hass,
+        "test message",
+        "test",
+        "en_US",
+        cache=None,
     )
 
     task = hass.async_create_task(
@@ -1508,16 +1520,6 @@ async def test_fetching_in_async(
     class EntityWithAsyncFetching(MockTTSEntity):
         """Entity that supports audio output option."""
 
-        @property
-        def supported_options(self) -> list[str]:
-            """Return list of supported options like voice, emotions."""
-            return [tts.ATTR_AUDIO_OUTPUT]
-
-        @property
-        def default_options(self) -> dict[str, str]:
-            """Return a dict including the default options."""
-            return {tts.ATTR_AUDIO_OUTPUT: "mp3"}
-
         async def async_get_tts_audio(
             self, message: str, language: str, options: dict[str, Any]
         ) -> tts.TtsAudioType:
@@ -1527,7 +1529,11 @@ async def test_fetching_in_async(
 
     # Test async_get_media_source_audio
     media_source_id = tts.generate_media_source_id(
-        hass, "test message", "tts.test", "en_US", None, None
+        hass,
+        "test message",
+        "tts.test",
+        "en_US",
+        cache=None,
     )
 
     task = hass.async_create_task(
@@ -1751,3 +1757,12 @@ async def test_ws_list_voices(
             {"voice_id": "fran_drescher", "name": "Fran Drescher"},
         ]
     }
+
+
+async def test_async_convert_audio_error(hass: HomeAssistant) -> None:
+    """Test that ffmpeg failing during audio conversion will raise an error."""
+    assert await async_setup_component(hass, ffmpeg.DOMAIN, {})
+
+    with pytest.raises(RuntimeError):
+        # Simulate a bad WAV file
+        await tts.async_convert_audio(hass, "wav", bytes(0), "mp3")

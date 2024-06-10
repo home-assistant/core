@@ -1,4 +1,5 @@
 """Tests for the Bond switch device."""
+
 from datetime import timedelta
 
 from bond_async import Action, DeviceType
@@ -14,7 +15,6 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_O
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
 from .common import (
@@ -33,7 +33,10 @@ def generic_device(name: str):
     return {"name": name, "type": DeviceType.GENERIC_DEVICE}
 
 
-async def test_entity_registry(hass: HomeAssistant) -> None:
+async def test_entity_registry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(
         hass,
@@ -43,8 +46,7 @@ async def test_entity_registry(hass: HomeAssistant) -> None:
         bond_device_id="test-device-id",
     )
 
-    registry: EntityRegistry = er.async_get(hass)
-    entity = registry.entities["switch.name_1"]
+    entity = entity_registry.entities["switch.name_1"]
     assert entity.unique_id == "test-hub-id_test-device-id"
 
 
@@ -110,16 +112,17 @@ async def test_switch_set_power_belief_api_error(hass: HomeAssistant) -> None:
         hass, SWITCH_DOMAIN, generic_device("name-1"), bond_device_id="test-device-id"
     )
 
-    with pytest.raises(
-        HomeAssistantError
-    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+    with (
+        pytest.raises(HomeAssistantError),
+        patch_bond_action_returns_clientresponseerror(),
+        patch_bond_device_state(),
+    ):
         await hass.services.async_call(
             BOND_DOMAIN,
             SERVICE_SET_POWER_TRACKED_STATE,
             {ATTR_ENTITY_ID: "switch.name_1", ATTR_POWER_STATE: False},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_update_reports_switch_is_on(hass: HomeAssistant) -> None:

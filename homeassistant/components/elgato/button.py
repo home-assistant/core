@@ -1,4 +1,5 @@
 """Support for Elgato button."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -12,29 +13,21 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import ElgatorConfigEntry
 from .coordinator import ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
 
 
-@dataclass
-class ElgatoButtonEntityDescriptionMixin:
-    """Mixin values for Elgato entities."""
+@dataclass(frozen=True, kw_only=True)
+class ElgatoButtonEntityDescription(ButtonEntityDescription):
+    """Class describing Elgato button entities."""
 
     press_fn: Callable[[Elgato], Awaitable[Any]]
-
-
-@dataclass
-class ElgatoButtonEntityDescription(
-    ButtonEntityDescription, ElgatoButtonEntityDescriptionMixin
-):
-    """Class describing Elgato button entities."""
 
 
 BUTTONS = [
@@ -55,11 +48,11 @@ BUTTONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ElgatorConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Elgato button based on a config entry."""
-    coordinator: ElgatoDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         ElgatoButtonEntity(
             coordinator=coordinator,

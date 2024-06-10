@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MediaContainer size="1" canInstall="1" checkedAt="1696794052" downloadURL="https://plex.tv/downloads/latest/5?channel=0&amp;build=linux-x86_64&amp;distro=debian&amp;X-Plex-Token=xxxxxxxxxxxxxxxxxxxx" status="0">
+    <Release key="https://plex.tv/updater/releases/9999" version="1.50.0" added="" fixed="Summary of&#xA;release notes" downloadURL="https://plex.tv/downloads/latest/5?channel=0&amp;build=linux-x86_64&amp;distro=debian&amp;X-Plex-Token=xxxxxxxxxxxxxxxxxxxx" state="notify" />
+</MediaContainer>

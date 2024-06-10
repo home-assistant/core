@@ -1,4 +1,5 @@
 """Elmax sensor platform."""
+
 from __future__ import annotations
 
 from elmax_api.model.alarm_status import AlarmArmStatus, AlarmStatus
@@ -16,9 +17,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import InvalidStateError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ElmaxCoordinator
 from .common import ElmaxEntity
 from .const import DOMAIN
+from .coordinator import ElmaxCoordinator
 
 
 async def async_setup_entry(
@@ -39,7 +40,6 @@ async def async_setup_entry(
         # Otherwise, add all the entities we found
         entities = [
             ElmaxArea(
-                panel=coordinator.panel_entry,
                 elmax_device=area,
                 panel_version=panel_status.release,
                 coordinator=coordinator,

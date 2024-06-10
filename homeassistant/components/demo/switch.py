@@ -1,4 +1,5 @@
 """Demo platform that has two fake switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -20,13 +21,13 @@ async def async_setup_entry(
     """Set up the demo switch platform."""
     async_add_entities(
         [
-            DemoSwitch("switch1", "Decorative Lights", True, None, True),
+            DemoSwitch("switch1", "Decorative Lights", True, True),
             DemoSwitch(
                 "switch2",
                 "AC",
                 False,
-                "mdi:air-conditioner",
                 False,
+                translation_key="air_conditioner",
                 device_class=SwitchDeviceClass.OUTLET,
             ),
         ]
@@ -45,14 +46,14 @@ class DemoSwitch(SwitchEntity):
         unique_id: str,
         device_name: str,
         state: bool,
-        icon: str | None,
         assumed: bool,
+        translation_key: str | None = None,
         device_class: SwitchDeviceClass | None = None,
     ) -> None:
         """Initialize the Demo switch."""
         self._attr_assumed_state = assumed
         self._attr_device_class = device_class
-        self._attr_icon = icon
+        self._attr_translation_key = translation_key
         self._attr_is_on = state
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(

@@ -1,12 +1,15 @@
 """The tests for the InfluxDB component."""
+
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
+import logging
 from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import pytest
+from typing_extensions import Generator
 
-import homeassistant.components.influxdb as influxdb
+from homeassistant.components import influxdb
 from homeassistant.components.influxdb.const import DEFAULT_BUCKET
 from homeassistant.const import PERCENTAGE, STATE_OFF, STATE_ON, STATE_STANDBY
 from homeassistant.core import HomeAssistant, split_entity_id
@@ -20,6 +23,15 @@ BASE_V2_CONFIG = {
     "organization": "org",
     "token": "token",
 }
+
+
+async def async_wait_for_queue_to_process(hass: HomeAssistant) -> None:
+    """Wait for the queue to be processed.
+
+    In the future we should refactor this away to not have
+    to access hass.data directly.
+    """
+    await hass.async_add_executor_job(hass.data[influxdb.DOMAIN].block_till_done)
 
 
 @dataclass
@@ -40,7 +52,9 @@ def mock_batch_timeout(hass, monkeypatch):
 
 
 @pytest.fixture(name="mock_client")
-def mock_client_fixture(request):
+def mock_client_fixture(
+    request: pytest.FixtureRequest,
+) -> Generator[MagicMock]:
     """Patch the InfluxDBClient object with mock for version under test."""
     if request.param == influxdb.API_VERSION_2:
         client_target = f"{INFLUX_CLIENT_PATH}V2"
@@ -52,7 +66,7 @@ def mock_client_fixture(request):
 
 
 @pytest.fixture(name="get_mock_call")
-def get_mock_call_fixture(request):
+def get_mock_call_fixture(request: pytest.FixtureRequest):
     """Get version specific lambda to make write API call mock."""
 
     def v2_call(body, precision):
@@ -248,8 +262,9 @@ async def test_setup_config_ssl(
     config = {"influxdb": config_base.copy()}
     config["influxdb"].update(config_ext)
 
-    with patch("os.access", return_value=True), patch(
-        "os.path.isfile", return_value=True
+    with (
+        patch("os.access", return_value=True),
+        patch("os.path.isfile", return_value=True),
     ):
         assert await async_setup_component(hass, influxdb.DOMAIN, config)
         await hass.async_block_till_done()
@@ -407,7 +422,7 @@ async def test_event_listener(
 
         hass.states.async_set("fake.entity_id", in_, attrs)
         await hass.async_block_till_done()
-        hass.data[influxdb.DOMAIN].block_till_done()
+        await async_wait_for_queue_to_process(hass)
 
         write_api = get_write_api(mock_client)
         assert write_api.call_count == 1
@@ -454,7 +469,7 @@ async def test_event_listener_no_units(
         ]
         hass.states.async_set("fake.entity_id", 1, attrs)
         await hass.async_block_till_done()
-        hass.data[influxdb.DOMAIN].block_till_done()
+        await async_wait_for_queue_to_process(hass)
 
         write_api = get_write_api(mock_client)
         assert write_api.call_count == 1
@@ -497,7 +512,7 @@ async def test_event_listener_inf(
     ]
     hass.states.async_set("fake.entity_id", 8, attrs)
     await hass.async_block_till_done()
-    hass.data[influxdb.DOMAIN].block_till_done()
+    await async_wait_for_queue_to_process(hass)
 
     write_api = get_write_api(mock_client)
     assert write_api.call_count == 1
@@ -539,7 +554,7 @@ async def test_event_listener_states(
         ]
         hass.states.async_set("fake.entity_id", state_state)
         await hass.async_block_till_done()
-        hass.data[influxdb.DOMAIN].block_till_done()
+        await async_wait_for_queue_to_process(hass)
 
         write_api = get_write_api(mock_client)
         if state_state == 1:
@@ -564,7 +579,7 @@ async def execute_filter_test(hass: HomeAssistant, tests, write_api, get_mock_ca
         ]
         hass.states.async_set(test.id, 1)
         await hass.async_block_till_done()
-        hass.data[influxdb.DOMAIN].block_till_done()
+        await async_wait_for_queue_to_process(hass)
 
         if test.should_pass:
             write_api.assert_called_once()
@@ -927,7 +942,7 @@ async def test_event_listener_invalid_type(
 
         hass.states.async_set("fake.entity_id", in_, attrs)
         await hass.async_block_till_done()
-        hass.data[influxdb.DOMAIN].block_till_done()
+        await async_wait_for_queue_to_process(hass)
 
         write_api = get_write_api(mock_client)
         assert write_api.call_count == 1
@@ -970,7 +985,7 @@ async def test_event_listener_default_measurement(
     ]
     hass.states.async_set("fake.ok", 1)
     await hass.async_block_till_done()
-    hass.data[influxdb.DOMAIN].block_till_done()
+    await async_wait_for_queue_to_process(hass)
 
     write_api = get_write_api(mock_client)
     assert write_api.call_count == 1
@@ -1014,7 +1029,7 @@ async def test_event_listener_unit_of_measurement_field(
     ]
     hass.states.async_set("fake.entity_id", "foo", attrs)
     await hass.async_block_till_done()
-    hass.data[influxdb.DOMAIN].block_till_done()
+    await async_wait_for_queue_to_process(hass)
 
     write_api = get_write_api(mock_client)
     assert write_api.call_count == 1
@@ -1062,7 +1077,7 @@ async def test_event_listener_tags_attributes(
     ]
     hass.states.async_set("fake.something", 1, attrs)
     await hass.async_block_till_done()
-    hass.data[influxdb.DOMAIN].block_till_done()
+    await async_wait_for_queue_to_process(hass)
 
     write_api = get_write_api(mock_client)
     assert write_api.call_count == 1
@@ -1120,7 +1135,7 @@ async def test_event_listener_component_override_measurement(
         ]
         hass.states.async_set(f"{comp['domain']}.{comp['id']}", 1)
         await hass.async_block_till_done()
-        hass.data[influxdb.DOMAIN].block_till_done()
+        await async_wait_for_queue_to_process(hass)
 
         write_api = get_write_api(mock_client)
         assert write_api.call_count == 1
@@ -1186,7 +1201,7 @@ async def test_event_listener_component_measurement_attr(
         ]
         hass.states.async_set(f"{comp['domain']}.{comp['id']}", 1, comp["attrs"])
         await hass.async_block_till_done()
-        hass.data[influxdb.DOMAIN].block_till_done()
+        await async_wait_for_queue_to_process(hass)
 
         write_api = get_write_api(mock_client)
         assert write_api.call_count == 1
@@ -1271,7 +1286,7 @@ async def test_event_listener_ignore_attributes(
             },
         )
         await hass.async_block_till_done()
-        hass.data[influxdb.DOMAIN].block_till_done()
+        await async_wait_for_queue_to_process(hass)
 
         write_api = get_write_api(mock_client)
         assert write_api.call_count == 1
@@ -1317,7 +1332,7 @@ async def test_event_listener_ignore_attributes_overlapping_entities(
     ]
     hass.states.async_set("sensor.fake", 1, {"ignore": 1})
     await hass.async_block_till_done()
-    hass.data[influxdb.DOMAIN].block_till_done()
+    await async_wait_for_queue_to_process(hass)
 
     write_api = get_write_api(mock_client)
     assert write_api.call_count == 1
@@ -1357,7 +1372,7 @@ async def test_event_listener_scheduled_write(
     with patch.object(influxdb.time, "sleep") as mock_sleep:
         hass.states.async_set("entity.entity_id", 1)
         await hass.async_block_till_done()
-        hass.data[influxdb.DOMAIN].block_till_done()
+        await async_wait_for_queue_to_process(hass)
         assert mock_sleep.called
     assert write_api.call_count == 2
 
@@ -1366,7 +1381,7 @@ async def test_event_listener_scheduled_write(
     with patch.object(influxdb.time, "sleep") as mock_sleep:
         hass.states.async_set("entity.entity_id", "2")
         await hass.async_block_till_done()
-        hass.data[influxdb.DOMAIN].block_till_done()
+        await async_wait_for_queue_to_process(hass)
         assert not mock_sleep.called
     assert write_api.call_count == 3
 
@@ -1406,7 +1421,7 @@ async def test_event_listener_backlog_full(
     with patch("homeassistant.components.influxdb.time.monotonic", new=fast_monotonic):
         hass.states.async_set("entity.id", 1)
         await hass.async_block_till_done()
-        hass.data[influxdb.DOMAIN].block_till_done()
+        await async_wait_for_queue_to_process(hass)
 
         assert get_write_api(mock_client).call_count == 0
 
@@ -1444,7 +1459,7 @@ async def test_event_listener_attribute_name_conflict(
     ]
     hass.states.async_set("fake.something", 1, {"value": "value_str"})
     await hass.async_block_till_done()
-    hass.data[influxdb.DOMAIN].block_till_done()
+    await async_wait_for_queue_to_process(hass)
 
     write_api = get_write_api(mock_client)
     assert write_api.call_count == 1
@@ -1563,10 +1578,24 @@ async def test_invalid_inputs_error(
     write_api = get_write_api(mock_client)
     write_api.side_effect = test_exception
 
-    with patch(f"{INFLUX_PATH}.time.sleep") as sleep:
+    log_emit_done = hass.loop.create_future()
+
+    original_emit = caplog.handler.emit
+
+    def wait_for_emit(record: logging.LogRecord) -> None:
+        original_emit(record)
+        if record.levelname == "ERROR":
+            hass.loop.call_soon_threadsafe(log_emit_done.set_result, None)
+
+    with (
+        patch(f"{INFLUX_PATH}.time.sleep") as sleep,
+        patch.object(caplog.handler, "emit", wait_for_emit),
+    ):
         hass.states.async_set("fake.something", 1)
         await hass.async_block_till_done()
-        hass.data[influxdb.DOMAIN].block_till_done()
+        await async_wait_for_queue_to_process(hass)
+        await log_emit_done
+        await hass.async_block_till_done()
 
         write_api.assert_called_once()
         assert (
@@ -1670,7 +1699,7 @@ async def test_precision(
         },
     )
     await hass.async_block_till_done()
-    hass.data[influxdb.DOMAIN].block_till_done()
+    await async_wait_for_queue_to_process(hass)
 
     write_api = get_write_api(mock_client)
     assert write_api.call_count == 1

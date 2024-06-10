@@ -1,4 +1,5 @@
 """Support for Elgato sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -10,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -21,25 +21,17 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import ElgatorConfigEntry
 from .coordinator import ElgatoData, ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
 
 
-@dataclass
-class ElgatoEntityDescriptionMixin:
-    """Mixin values for Elgato entities."""
-
-    value_fn: Callable[[ElgatoData], float | int | None]
-
-
-@dataclass
-class ElgatoSensorEntityDescription(
-    SensorEntityDescription, ElgatoEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class ElgatoSensorEntityDescription(SensorEntityDescription):
     """Class describing Elgato sensor entities."""
 
     has_fn: Callable[[ElgatoData], bool] = lambda _: True
+    value_fn: Callable[[ElgatoData], float | int | None]
 
 
 SENSORS = [
@@ -109,11 +101,11 @@ SENSORS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ElgatorConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Elgato sensor based on a config entry."""
-    coordinator: ElgatoDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         ElgatoSensorEntity(

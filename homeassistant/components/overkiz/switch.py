@@ -1,4 +1,5 @@
 """Support for Overkiz switches."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -24,18 +25,12 @@ from .const import DOMAIN
 from .entity import OverkizDescriptiveEntity
 
 
-@dataclass
-class OverkizSwitchDescriptionMixin:
-    """Define an entity description mixin for switch entities."""
+@dataclass(frozen=True, kw_only=True)
+class OverkizSwitchDescription(SwitchEntityDescription):
+    """Class to describe an Overkiz switch."""
 
     turn_on: str
     turn_off: str
-
-
-@dataclass
-class OverkizSwitchDescription(SwitchEntityDescription, OverkizSwitchDescriptionMixin):
-    """Class to describe an Overkiz switch."""
-
     is_on: Callable[[Callable[[str], OverkizStateType]], bool] | None = None
     turn_on_args: OverkizStateType | list[OverkizStateType] | None = None
     turn_off_args: OverkizStateType | list[OverkizStateType] | None = None
@@ -121,21 +116,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Overkiz switch from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
-    entities: list[OverkizSwitch] = []
 
-    for device in data.platforms[Platform.SWITCH]:
-        if description := SUPPORTED_DEVICES.get(device.widget) or SUPPORTED_DEVICES.get(
-            device.ui_class
-        ):
-            entities.append(
-                OverkizSwitch(
-                    device.device_url,
-                    data.coordinator,
-                    description,
-                )
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        OverkizSwitch(
+            device.device_url,
+            data.coordinator,
+            description,
+        )
+        for device in data.platforms[Platform.SWITCH]
+        if (
+            description := SUPPORTED_DEVICES.get(device.widget)
+            or SUPPORTED_DEVICES.get(device.ui_class)
+        )
+    )
 
 
 class OverkizSwitch(OverkizDescriptiveEntity, SwitchEntity):

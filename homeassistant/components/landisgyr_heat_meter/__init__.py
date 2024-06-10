@@ -1,4 +1,5 @@
 """The Landis+Gyr Heat Meter integration."""
+
 from __future__ import annotations
 
 import logging
@@ -49,7 +50,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     # Removing domain name and config entry id from entity unique id's, replacing it with device number
     if config_entry.version == 1:
-        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, version=2)
 
         device_number = config_entry.data["device_number"]
 

@@ -6,6 +6,9 @@
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your KMtronic device."
         }
       }
     },
@@ -24,6 +27,13 @@
         "data": {
           "reverse": "Reverse switch logic (use NC)"
         }
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "relay": {
+        "name": "Relay {relay_id}"
       }
     }
   }

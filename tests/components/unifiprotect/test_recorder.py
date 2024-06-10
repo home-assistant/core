@@ -1,10 +1,11 @@
 """The tests for unifiprotect recorder."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 
-from pyunifiprotect.data import Camera, Event, EventType
+from uiprotect.data import Camera, Event, EventType
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states

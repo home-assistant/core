@@ -1,4 +1,5 @@
 """The Read Your Meter Pro integration."""
+
 from __future__ import annotations
 
 import logging

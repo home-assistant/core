@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/upc_connect",
   "iot_class": "local_polling",
   "loggers": ["connect_box"],
-  "requirements": ["connect-box==0.2.8"]
+  "requirements": ["connect-box==0.3.1"]
 }

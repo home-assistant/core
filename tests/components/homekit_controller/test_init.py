@@ -1,4 +1,5 @@
 """Tests for homekit_controller init."""
+
 from datetime import timedelta
 import pathlib
 from unittest.mock import patch
@@ -17,13 +18,11 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from .common import (
     Helper,
-    remove_device,
     setup_accessories_from_file,
     setup_test_accessories,
     setup_test_accessories_with_controller,
@@ -47,7 +46,7 @@ def create_motion_sensor_service(accessory):
     cur_state.value = 0
 
 
-async def test_unload_on_stop(hass: HomeAssistant, utcnow) -> None:
+async def test_unload_on_stop(hass: HomeAssistant) -> None:
     """Test async_unload is called on stop."""
     await setup_test_component(hass, create_motion_sensor_service)
     with patch(
@@ -71,7 +70,7 @@ async def test_async_remove_entry(hass: HomeAssistant) -> None:
     assert hkid in hass.data[ENTITY_MAP].storage_data
 
     # Remove it via config entry and number of pairings should go down
-    await helper.config_entry.async_remove(hass)
+    await hass.config_entries.async_remove(helper.config_entry.entry_id)
     assert len(controller.pairings) == 0
 
     assert hkid not in hass.data[ENTITY_MAP].storage_data
@@ -85,7 +84,10 @@ def create_alive_service(accessory):
 
 
 async def test_device_remove_devices(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test we can only remove a device that no longer exists."""
     assert await async_setup_component(hass, "config", {})
@@ -93,24 +95,19 @@ async def test_device_remove_devices(
     config_entry = helper.config_entry
     entry_id = config_entry.entry_id
 
-    registry: EntityRegistry = er.async_get(hass)
-    entity = registry.entities[ALIVE_DEVICE_ENTITY_ID]
-    device_registry = dr.async_get(hass)
+    entity = entity_registry.entities[ALIVE_DEVICE_ENTITY_ID]
 
     live_device_entry = device_registry.async_get(entity.device_id)
-    assert (
-        await remove_device(await hass_ws_client(hass), live_device_entry.id, entry_id)
-        is False
-    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(live_device_entry.id, entry_id)
+    assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={("homekit_controller:accessory-id", "E9:88:E7:B8:B4:40:aid:1")},
     )
-    assert (
-        await remove_device(await hass_ws_client(hass), dead_device_entry.id, entry_id)
-        is True
-    )
+    response = await client.remove_device(dead_device_entry.id, entry_id)
+    assert response["success"]
 
 
 async def test_offline_device_raises(hass: HomeAssistant, controller) -> None:
@@ -154,13 +151,13 @@ async def test_offline_device_raises(hass: HomeAssistant, controller) -> None:
         )
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
     is_connected = True
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-    await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.LOADED
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
 
@@ -211,34 +208,37 @@ async def test_ble_device_only_checks_is_available(
         )
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
     is_available = True
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-    await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.LOADED
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
     is_available = False
     async_fire_time_changed(hass, utcnow() + timedelta(hours=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get("light.testdevice").state == STATE_UNAVAILABLE
 
     is_available = True
     async_fire_time_changed(hass, utcnow() + timedelta(hours=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
 
 @pytest.mark.parametrize("example", FIXTURES, ids=lambda val: str(val.stem))
 async def test_snapshots(
-    hass: HomeAssistant, snapshot: SnapshotAssertion, example: str
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+    example: str,
 ) -> None:
     """Detect regressions in enumerating a homekit accessory database and building entities."""
     accessories = await setup_accessories_from_file(hass, example)
     config_entry, _ = await setup_test_accessories(hass, accessories)
-
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
 
     registry_devices = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
@@ -263,6 +263,7 @@ async def test_snapshots(
                 state_dict = dict(state.as_dict())
                 state_dict.pop("context", None)
                 state_dict.pop("last_changed", None)
+                state_dict.pop("last_reported", None)
                 state_dict.pop("last_updated", None)
 
                 state_dict["attributes"] = dict(state_dict["attributes"])

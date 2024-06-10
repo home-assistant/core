@@ -31,5 +31,11 @@
         "invalid_code": "Invalid code, please try again."
       }
     }
+  },
+  "issues": {
+    "deprecated_legacy_api_password": {
+      "title": "The legacy API password is deprecated",
+      "description": "The legacy API password authentication provider is deprecated and will be removed. Please remove it from your YAML configuration and use the default Home Assistant authentication provider instead."
+    }
   }
 }

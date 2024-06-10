@@ -1,4 +1,5 @@
 """Test cases for the API stream sensor."""
+
 from homeassistant.auth.providers.legacy_api_password import (
     LegacyApiPasswordAuthProvider,
 )

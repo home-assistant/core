@@ -1,0 +1,3 @@
+# This violates the non_adr_0007.iot_domain platform schema (option1 wrong type)
+platform: non_adr_0007
+option1: 123

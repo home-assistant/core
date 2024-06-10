@@ -1,4 +1,5 @@
 """Support for Balboa Spa Wifi adaptor."""
+
 from __future__ import annotations
 
 from enum import IntEnum
@@ -53,12 +54,16 @@ async def async_setup_entry(
 class BalboaClimateEntity(BalboaEntity, ClimateEntity):
     """Representation of a Balboa spa climate entity."""
 
-    _attr_icon = "mdi:hot-tub"
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_translation_key = DOMAIN
+    _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, client: SpaClient) -> None:
         """Initialize the climate entity."""

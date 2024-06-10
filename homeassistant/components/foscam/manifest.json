@@ -1,10 +1,10 @@
 {
   "domain": "foscam",
   "name": "Foscam",
-  "codeowners": ["@skgsergio"],
+  "codeowners": ["@krmarien"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/foscam",
   "iot_class": "local_polling",
   "loggers": ["libpyfoscam"],
-  "requirements": ["libpyfoscam==1.0"]
+  "requirements": ["libpyfoscam==1.2.2"]
 }

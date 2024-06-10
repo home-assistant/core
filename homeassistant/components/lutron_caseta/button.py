@@ -1,4 +1,5 @@
 """Support for pico and keypad buttons."""
+
 from __future__ import annotations
 
 from typing import Any

@@ -1,4 +1,5 @@
 """Tests for the Modern Forms integration."""
+
 from unittest.mock import MagicMock, patch
 
 from aiomodernforms import ModernFormsConnectionError
@@ -14,7 +15,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @patch(
-    "homeassistant.components.modern_forms.ModernFormsDevice.update",
+    "homeassistant.components.modern_forms.coordinator.ModernFormsDevice.update",
     side_effect=ModernFormsConnectionError,
 )
 async def test_config_entry_not_ready(
@@ -38,13 +39,14 @@ async def test_unload_config_entry(
 
 
 async def test_fan_only_device(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test we set unique ID if not set yet."""
     await init_integration(
         hass, aioclient_mock, mock_type=modern_forms_no_light_call_mock
     )
-    entity_registry = er.async_get(hass)
 
     fan_entry = entity_registry.async_get("fan.modernformsfan_fan")
     assert fan_entry

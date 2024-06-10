@@ -1,4 +1,5 @@
 """Constants for the AVM FRITZ!SmartHome integration."""
+
 from __future__ import annotations
 
 import logging
@@ -13,9 +14,6 @@ ATTR_STATE_WINDOW_OPEN: Final = "window_open"
 
 COLOR_MODE: Final = "1"
 COLOR_TEMP_MODE: Final = "4"
-
-CONF_CONNECTIONS: Final = "connections"
-CONF_COORDINATOR: Final = "coordinator"
 
 DEFAULT_HOST: Final = "fritz.box"
 DEFAULT_USERNAME: Final = "admin"

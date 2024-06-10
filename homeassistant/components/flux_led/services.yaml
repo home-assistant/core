@@ -113,9 +113,9 @@ set_music_mode:
       example: "[255, 100, 100]"
       required: false
       selector:
-        object:
+        color_rgb:
     background_color:
       example: "[255, 100, 100]"
       required: false
       selector:
-        object:
+        color_rgb:

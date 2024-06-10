@@ -1,4 +1,5 @@
 """Support for Sinch notifications."""
+
 from __future__ import annotations
 
 import logging

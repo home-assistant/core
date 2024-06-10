@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice
-from .gateway import get_gateway_from_config_entry
+from .hub import DeconzHub
 
 SENSITIVITY_TO_DECONZ = {
     "High": PresenceConfigSensitivity.HIGH.value,
@@ -33,25 +33,25 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the deCONZ button entity."""
-    gateway = get_gateway_from_config_entry(hass, config_entry)
-    gateway.entities[DOMAIN] = set()
+    hub = DeconzHub.get_hub(hass, config_entry)
+    hub.entities[DOMAIN] = set()
 
     @callback
     def async_add_presence_sensor(_: EventType, sensor_id: str) -> None:
         """Add presence select entity from deCONZ."""
-        sensor = gateway.api.sensors.presence[sensor_id]
+        sensor = hub.api.sensors.presence[sensor_id]
         if sensor.presence_event is not None:
             async_add_entities(
                 [
-                    DeconzPresenceDeviceModeSelect(sensor, gateway),
-                    DeconzPresenceSensitivitySelect(sensor, gateway),
-                    DeconzPresenceTriggerDistanceSelect(sensor, gateway),
+                    DeconzPresenceDeviceModeSelect(sensor, hub),
+                    DeconzPresenceSensitivitySelect(sensor, hub),
+                    DeconzPresenceTriggerDistanceSelect(sensor, hub),
                 ]
             )
 
-    gateway.register_platform_add_device_callback(
+    hub.register_platform_add_device_callback(
         async_add_presence_sensor,
-        gateway.api.sensors.presence,
+        hub.api.sensors.presence,
     )
 
 
@@ -79,7 +79,7 @@ class DeconzPresenceDeviceModeSelect(DeconzDevice[Presence], SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self.gateway.api.sensors.presence.set_config(
+        await self.hub.api.sensors.presence.set_config(
             id=self._device.resource_id,
             device_mode=PresenceConfigDeviceMode(option),
         )
@@ -106,7 +106,7 @@ class DeconzPresenceSensitivitySelect(DeconzDevice[Presence], SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self.gateway.api.sensors.presence.set_config(
+        await self.hub.api.sensors.presence.set_config(
             id=self._device.resource_id,
             sensitivity=SENSITIVITY_TO_DECONZ[option],
         )
@@ -137,7 +137,7 @@ class DeconzPresenceTriggerDistanceSelect(DeconzDevice[Presence], SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self.gateway.api.sensors.presence.set_config(
+        await self.hub.api.sensors.presence.set_config(
             id=self._device.resource_id,
             trigger_distance=PresenceConfigTriggerDistance(option),
         )

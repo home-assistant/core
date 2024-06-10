@@ -2,6 +2,7 @@
 
 It will be removed when auth system production ready
 """
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -10,20 +11,38 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from ..models import Credentials, UserMeta
+from ..models import AuthFlowResult, Credentials, UserMeta
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 
 AUTH_PROVIDER_TYPE = "legacy_api_password"
 CONF_API_PASSWORD = "api_password"
 
-CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
+_CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
     {vol.Required(CONF_API_PASSWORD): cv.string}, extra=vol.PREVENT_EXTRA
 )
+
+
+def _create_repair_and_validate(config: dict[str, Any]) -> dict[str, Any]:
+    async_create_issue(
+        async_get_hass(),
+        "auth",
+        "deprecated_legacy_api_password",
+        breaks_in_ha_version="2024.6.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_legacy_api_password",
+    )
+
+    return _CONFIG_SCHEMA(config)  # type: ignore[no-any-return]
+
+
+CONFIG_SCHEMA = _create_repair_and_validate
+
 
 LEGACY_USER_NAME = "Legacy API password user"
 
@@ -82,7 +101,7 @@ class LegacyLoginFlow(LoginFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> AuthFlowResult:
         """Handle the step of the form."""
         errors = {}
 

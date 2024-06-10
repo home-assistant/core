@@ -1,4 +1,5 @@
 """Compile the current translation strings files for testing."""
+
 import argparse
 import json
 from pathlib import Path
@@ -42,7 +43,7 @@ def flatten_translations(translations):
             if isinstance(v, dict):
                 stack.append(iter(v.items()))
                 break
-            elif isinstance(v, str):
+            if isinstance(v, str):
                 common_key = "::".join(key_stack)
                 flattened_translations[common_key] = v
                 key_stack.pop()
@@ -69,7 +70,7 @@ def substitute_translation_references(integration_strings, flattened_translation
 
 def substitute_reference(value, flattened_translations):
     """Substitute localization key references in a translation string."""
-    matches = re.findall(r"\[\%key:((?:[a-z0-9-_]+|[:]{2})*)\%\]", value)
+    matches = re.findall(r"\[\%key:([a-z0-9_]+(?:::(?:[a-z0-9-_])+)+)\%\]", value)
     if not matches:
         return value
 

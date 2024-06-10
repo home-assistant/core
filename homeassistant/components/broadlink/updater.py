@@ -1,4 +1,5 @@
 """Support for fetching data from Broadlink devices."""
+
 from abc import ABC, abstractmethod
 from datetime import timedelta
 import logging
@@ -16,9 +17,11 @@ def get_update_manager(device):
     update_managers = {
         "A1": BroadlinkA1UpdateManager,
         "BG1": BroadlinkBG1UpdateManager,
+        "HYS": BroadlinkThermostatUpdateManager,
         "LB1": BroadlinkLB1UpdateManager,
         "LB2": BroadlinkLB1UpdateManager,
         "MP1": BroadlinkMP1UpdateManager,
+        "MP1S": BroadlinkMP1SUpdateManager,
         "RM4MINI": BroadlinkRMUpdateManager,
         "RM4PRO": BroadlinkRMUpdateManager,
         "RMMINI": BroadlinkRMUpdateManager,
@@ -110,6 +113,16 @@ class BroadlinkMP1UpdateManager(BroadlinkUpdateManager):
         return await self.device.async_request(self.device.api.check_power)
 
 
+class BroadlinkMP1SUpdateManager(BroadlinkUpdateManager):
+    """Manages updates for Broadlink MP1 devices."""
+
+    async def async_fetch_data(self):
+        """Fetch data from the device."""
+        power = await self.device.async_request(self.device.api.check_power)
+        sensors = await self.device.async_request(self.device.api.get_state)
+        return {**power, **sensors}
+
+
 class BroadlinkRMUpdateManager(BroadlinkUpdateManager):
     """Manages updates for Broadlink remotes."""
 
@@ -184,3 +197,11 @@ class BroadlinkLB1UpdateManager(BroadlinkUpdateManager):
     async def async_fetch_data(self):
         """Fetch data from the device."""
         return await self.device.async_request(self.device.api.get_state)
+
+
+class BroadlinkThermostatUpdateManager(BroadlinkUpdateManager):
+    """Manages updates for thermostats with Broadlink DNA."""
+
+    async def async_fetch_data(self):
+        """Fetch data from the device."""
+        return await self.device.async_request(self.device.api.get_full_status)

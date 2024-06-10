@@ -1,4 +1,5 @@
 """Tests for the Heos Media Player platform."""
+
 import asyncio
 
 from pyheos import CommandFailedError, const
@@ -249,6 +250,8 @@ async def test_updates_from_players_changed(
 
 async def test_updates_from_players_changed_new_ids(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     config_entry,
     config,
     controller,
@@ -257,8 +260,6 @@ async def test_updates_from_players_changed_new_ids(
 ) -> None:
     """Test player updates from changes to available players."""
     await setup_platform(hass, config_entry, config)
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
     player = controller.players[1]
     event = asyncio.Event()
 
@@ -687,7 +688,7 @@ async def test_unload_config_entry(
 ) -> None:
     """Test the player is set unavailable when the config entry is unloaded."""
     await setup_platform(hass, config_entry, config)
-    await config_entry.async_unload(hass)
+    await hass.config_entries.async_unload(config_entry.entry_id)
     assert hass.states.get("media_player.test_player").state == STATE_UNAVAILABLE
 
 

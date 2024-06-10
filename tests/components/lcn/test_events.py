@@ -1,4 +1,5 @@
 """Tests for LCN events."""
+
 from pypck.inputs import Input, ModSendKeysHost, ModStatusAccessControl
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import AccessControlPeriphery, KeyAction, SendKeyCommand

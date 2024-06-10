@@ -6,6 +6,9 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "type": "Type of the printer"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Brother printer to control."
         }
       },
       "zeroconf_confirm": {

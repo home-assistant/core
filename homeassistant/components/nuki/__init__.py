@@ -1,12 +1,11 @@
 """The nuki component."""
+
 from __future__ import annotations
 
 import asyncio
-from collections import defaultdict
-from datetime import timedelta
+from dataclasses import dataclass
 from http import HTTPStatus
 import logging
-from typing import Generic, TypeVar
 
 from aiohttp import web
 from pynuki import NukiBridge, NukiLock, NukiOpener
@@ -25,36 +24,28 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-    issue_registry as ir,
-)
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity, UpdateFailed
 
-from .const import (
-    DATA_BRIDGE,
-    DATA_COORDINATOR,
-    DATA_LOCKS,
-    DATA_OPENERS,
-    DEFAULT_TIMEOUT,
-    DOMAIN,
-    ERROR_STATES,
-)
+from .const import CONF_ENCRYPT_TOKEN, DEFAULT_TIMEOUT, DOMAIN
+from .coordinator import NukiCoordinator
 from .helpers import NukiWebhookException, parse_id
-
-_NukiDeviceT = TypeVar("_NukiDeviceT", bound=NukiDevice)
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
-UPDATE_INTERVAL = timedelta(seconds=30)
+
+
+@dataclass(slots=True)
+class NukiEntryData:
+    """Class to hold Nuki data."""
+
+    coordinator: NukiCoordinator
+    bridge: NukiBridge
+    locks: list[NukiLock]
+    openers: list[NukiOpener]
 
 
 def _get_bridge_devices(bridge: NukiBridge) -> tuple[list[NukiLock], list[NukiOpener]]:
@@ -74,14 +65,15 @@ async def _create_webhook(
         except ValueError:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 
-        locks = hass.data[DOMAIN][entry.entry_id][DATA_LOCKS]
-        openers = hass.data[DOMAIN][entry.entry_id][DATA_OPENERS]
+        entry_data: NukiEntryData = hass.data[DOMAIN][entry.entry_id]
+        locks = entry_data.locks
+        openers = entry_data.openers
 
         devices = [x for x in locks + openers if x.nuki_id == data["nukiId"]]
         if len(devices) == 1:
             devices[0].update_from_callback(data)
 
-        coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
+        coordinator = entry_data.coordinator
         coordinator.async_set_updated_data(None)
 
         return web.Response(status=HTTPStatus.OK)
@@ -184,7 +176,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_HOST],
             entry.data[CONF_TOKEN],
             entry.data[CONF_PORT],
-            True,
+            entry.data.get(CONF_ENCRYPT_TOKEN, True),
             DEFAULT_TIMEOUT,
         )
 
@@ -205,6 +197,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=f"Nuki Bridge {bridge_id}",
         model="Hardware Bridge",
         sw_version=info["versions"]["firmwareVersion"],
+        serial_number=parse_id(info["ids"]["hardwareId"]),
     )
 
     try:
@@ -232,13 +225,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     coordinator = NukiCoordinator(hass, bridge, locks, openers)
-
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_COORDINATOR: coordinator,
-        DATA_BRIDGE: bridge,
-        DATA_LOCKS: locks,
-        DATA_OPENERS: openers,
-    }
+    hass.data[DOMAIN][entry.entry_id] = NukiEntryData(
+        coordinator=coordinator,
+        bridge=bridge,
+        locks=locks,
+        openers=openers,
+    )
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
@@ -251,11 +243,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the Nuki entry."""
     webhook.async_unregister(hass, entry.entry_id)
+    entry_data: NukiEntryData = hass.data[DOMAIN][entry.entry_id]
+
     try:
         async with asyncio.timeout(10):
             await hass.async_add_executor_job(
                 _remove_webhook,
-                hass.data[DOMAIN][entry.entry_id][DATA_BRIDGE],
+                entry_data.bridge,
                 entry.entry_id,
             )
     except InvalidCredentialsException as err:
@@ -274,85 +268,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class NukiCoordinator(DataUpdateCoordinator[None]):
-    """Data Update Coordinator for the Nuki integration."""
-
-    def __init__(self, hass, bridge, locks, openers):
-        """Initialize my coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            # Name of the data. For logging purposes.
-            name="nuki devices",
-            # Polling interval. Will only be polled if there are subscribers.
-            update_interval=UPDATE_INTERVAL,
-        )
-        self.bridge = bridge
-        self.locks = locks
-        self.openers = openers
-
-    @property
-    def bridge_id(self):
-        """Return the parsed id of the Nuki bridge."""
-        return parse_id(self.bridge.info()["ids"]["hardwareId"])
-
-    async def _async_update_data(self) -> None:
-        """Fetch data from Nuki bridge."""
-        try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
-            # handled by the data update coordinator.
-            async with asyncio.timeout(10):
-                events = await self.hass.async_add_executor_job(
-                    self.update_devices, self.locks + self.openers
-                )
-        except InvalidCredentialsException as err:
-            raise UpdateFailed(f"Invalid credentials for Bridge: {err}") from err
-        except RequestException as err:
-            raise UpdateFailed(f"Error communicating with Bridge: {err}") from err
-
-        ent_reg = er.async_get(self.hass)
-        for event, device_ids in events.items():
-            for device_id in device_ids:
-                entity_id = ent_reg.async_get_entity_id(
-                    Platform.LOCK, DOMAIN, device_id
-                )
-                event_data = {
-                    "entity_id": entity_id,
-                    "type": event,
-                }
-                self.hass.bus.async_fire("nuki_event", event_data)
-
-    def update_devices(self, devices: list[NukiDevice]) -> dict[str, set[str]]:
-        """Update the Nuki devices.
-
-        Returns:
-            A dict with the events to be fired. The event type is the key and the device ids are the value
-        """
-
-        events: dict[str, set[str]] = defaultdict(set)
-
-        for device in devices:
-            for level in (False, True):
-                try:
-                    if isinstance(device, NukiOpener):
-                        last_ring_action_state = device.ring_action_state
-
-                        device.update(level)
-
-                        if not last_ring_action_state and device.ring_action_state:
-                            events["ring"].add(device.nuki_id)
-                    else:
-                        device.update(level)
-                except RequestException:
-                    continue
-
-                if device.state not in ERROR_STATES:
-                    break
-
-        return events
-
-
-class NukiEntity(CoordinatorEntity[NukiCoordinator], Generic[_NukiDeviceT]):
+class NukiEntity[_NukiDeviceT: NukiDevice](CoordinatorEntity[NukiCoordinator]):
     """An entity using CoordinatorEntity.
 
     The CoordinatorEntity class provides:
@@ -378,4 +294,5 @@ class NukiEntity(CoordinatorEntity[NukiCoordinator], Generic[_NukiDeviceT]):
             model=self._nuki_device.device_model_str.capitalize(),
             sw_version=self._nuki_device.firmware_version,
             via_device=(DOMAIN, self.coordinator.bridge_id),
+            serial_number=parse_id(self._nuki_device.nuki_id),
         )

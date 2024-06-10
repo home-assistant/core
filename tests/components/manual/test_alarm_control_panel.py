@@ -1,4 +1,5 @@
 """The tests for the manual Alarm Control Panel component."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -6,6 +7,7 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import alarm_control_panel
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.components.demo import alarm_control_panel as demo
 from homeassistant.const import (
     ATTR_CODE,
@@ -40,7 +42,7 @@ async def test_setup_demo_platform(hass: HomeAssistant) -> None:
     """Test setup."""
     mock = MagicMock()
     add_entities = mock.MagicMock()
-    await demo.async_setup_platform(hass, {}, add_entities)
+    await demo.async_setup_entry(hass, {}, add_entities)
     assert add_entities.call_count == 1
 
 
@@ -314,7 +316,7 @@ async def test_with_specific_pending(
     await hass.services.async_call(
         alarm_control_panel.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test"},
+        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: "1234"},
         blocking=True,
     )
 
@@ -1221,7 +1223,7 @@ async def test_restore_state(hass: HomeAssistant, expected_state) -> None:
     """Ensure state is restored on startup."""
     mock_restore_cache(hass, (State("alarm_control_panel.test", expected_state),))
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     assert await async_setup_component(
@@ -1266,7 +1268,7 @@ async def test_restore_state_arming(hass: HomeAssistant, expected_state) -> None
         hass, (State(entity_id, expected_state, attributes, last_updated=time),)
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     assert await async_setup_component(
@@ -1323,7 +1325,7 @@ async def test_restore_state_pending(hass: HomeAssistant, previous_state) -> Non
         (State(entity_id, STATE_ALARM_TRIGGERED, attributes, last_updated=time),),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     assert await async_setup_component(
@@ -1388,7 +1390,7 @@ async def test_restore_state_triggered(hass: HomeAssistant, previous_state) -> N
         (State(entity_id, STATE_ALARM_TRIGGERED, attributes, last_updated=time),),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     assert await async_setup_component(
@@ -1434,7 +1436,7 @@ async def test_restore_state_triggered_long_ago(hass: HomeAssistant) -> None:
         (State(entity_id, STATE_ALARM_TRIGGERED, attributes, last_updated=time),),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     assert await async_setup_component(
@@ -1455,3 +1457,70 @@ async def test_restore_state_triggered_long_ago(hass: HomeAssistant) -> None:
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ALARM_DISARMED
+
+
+async def test_default_arming_states(hass: HomeAssistant) -> None:
+    """Test default arming_states."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.test")
+    assert state.attributes["supported_features"] == (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
+        | AlarmControlPanelEntityFeature.ARM_VACATION
+        | AlarmControlPanelEntityFeature.TRIGGER
+        | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+    )
+
+
+async def test_arming_states(hass: HomeAssistant) -> None:
+    """Test arming_states."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "arming_states": ["armed_away", "armed_home"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.test")
+    assert state.attributes["supported_features"] == (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.TRIGGER
+    )
+
+
+async def test_invalid_arming_states(hass: HomeAssistant) -> None:
+    """Test invalid arming_states."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "arming_states": ["invalid", "armed_home"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.test")
+    assert state is None

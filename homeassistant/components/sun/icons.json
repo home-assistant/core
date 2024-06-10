@@ -1,0 +1,33 @@
+{
+  "entity": {
+    "sensor": {
+      "next_dawn": {
+        "default": "mdi:sun-clock"
+      },
+      "next_dusk": {
+        "default": "mdi:sun-clock"
+      },
+      "next_midnight": {
+        "default": "mdi:sun-clock"
+      },
+      "next_noon": {
+        "default": "mdi:sun-clock"
+      },
+      "next_rising": {
+        "default": "mdi:sun-clock"
+      },
+      "next_setting": {
+        "default": "mdi:sun-clock"
+      },
+      "solar_elevation": {
+        "default": "mdi:theme-light-dark"
+      },
+      "solar_azimuth": {
+        "default": "mdi:sun-angle"
+      },
+      "solar_rising": {
+        "default": "mdi:sun-clock"
+      }
+    }
+  }
+}

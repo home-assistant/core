@@ -1,7 +1,9 @@
 """Start Home Assistant."""
+
 from __future__ import annotations
 
 import argparse
+from contextlib import suppress
 import faulthandler
 import os
 import sys
@@ -93,7 +95,9 @@ def get_arguments() -> argparse.Namespace:
         help="Directory that contains the Home Assistant configuration",
     )
     parser.add_argument(
-        "--safe-mode", action="store_true", help="Start Home Assistant in safe mode"
+        "--recovery-mode",
+        action="store_true",
+        help="Start Home Assistant in recovery mode",
     )
     parser.add_argument(
         "--debug", action="store_true", help="Start Home Assistant in debug mode"
@@ -143,9 +147,7 @@ def get_arguments() -> argparse.Namespace:
         help="Skips validation of operating system",
     )
 
-    arguments = parser.parse_args()
-
-    return arguments
+    return parser.parse_args()
 
 
 def check_threads() -> None:
@@ -183,7 +185,9 @@ def main() -> int:
     ensure_config_path(config_dir)
 
     # pylint: disable-next=import-outside-toplevel
-    from . import runner
+    from . import config, runner
+
+    safe_mode = config.safe_mode_enabled(config_dir)
 
     runtime_conf = runner.RuntimeConfig(
         config_dir=config_dir,
@@ -193,9 +197,10 @@ def main() -> int:
         log_no_color=args.log_no_color,
         skip_pip=args.skip_pip,
         skip_pip_packages=args.skip_pip_packages,
-        safe_mode=args.safe_mode,
+        recovery_mode=args.recovery_mode,
         debug=args.debug,
         open_ui=args.open_ui,
+        safe_mode=safe_mode,
     )
 
     fault_file_name = os.path.join(config_dir, FAULT_LOG_FILENAME)
@@ -204,8 +209,10 @@ def main() -> int:
         exit_code = runner.run(runtime_conf)
         faulthandler.disable()
 
-    if os.path.getsize(fault_file_name) == 0:
-        os.remove(fault_file_name)
+    # It's possible for the fault file to disappear, so suppress obvious errors
+    with suppress(FileNotFoundError):
+        if os.path.getsize(fault_file_name) == 0:
+            os.remove(fault_file_name)
 
     check_threads()
 

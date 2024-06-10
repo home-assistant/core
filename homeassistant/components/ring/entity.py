@@ -1,45 +1,94 @@
 """Base class for Ring entity."""
+
+from collections.abc import Callable
+from typing import Any, Concatenate, Generic, cast
+
+from ring_doorbell import (
+    AuthenticationError,
+    RingDevices,
+    RingError,
+    RingGeneric,
+    RingTimeout,
+)
+from typing_extensions import TypeVar
+
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ATTRIBUTION, DOMAIN
+from .const import ATTRIBUTION, DOMAIN
+from .coordinator import RingDataCoordinator, RingNotificationsCoordinator
+
+RingDeviceT = TypeVar("RingDeviceT", bound=RingGeneric, default=RingGeneric)
+
+_RingCoordinatorT = TypeVar(
+    "_RingCoordinatorT",
+    bound=(RingDataCoordinator | RingNotificationsCoordinator),
+)
 
 
-class RingEntityMixin(Entity):
+def exception_wrap[_RingBaseEntityT: RingBaseEntity[Any, Any], **_P, _R](
+    func: Callable[Concatenate[_RingBaseEntityT, _P], _R],
+) -> Callable[Concatenate[_RingBaseEntityT, _P], _R]:
+    """Define a wrapper to catch exceptions and raise HomeAssistant errors."""
+
+    def _wrap(self: _RingBaseEntityT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+        try:
+            return func(self, *args, **kwargs)
+        except AuthenticationError as err:
+            self.hass.loop.call_soon_threadsafe(
+                self.coordinator.config_entry.async_start_reauth, self.hass
+            )
+            raise HomeAssistantError(err) from err
+        except RingTimeout as err:
+            raise HomeAssistantError(
+                f"Timeout communicating with API {func}: {err}"
+            ) from err
+        except RingError as err:
+            raise HomeAssistantError(
+                f"Error communicating with API{func}: {err}"
+            ) from err
+
+    return _wrap
+
+
+class RingBaseEntity(
+    CoordinatorEntity[_RingCoordinatorT], Generic[_RingCoordinatorT, RingDeviceT]
+):
     """Base implementation for Ring device."""
 
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, config_entry_id, device):
+    def __init__(
+        self,
+        device: RingDeviceT,
+        coordinator: _RingCoordinatorT,
+    ) -> None:
         """Initialize a sensor for Ring device."""
-        super().__init__()
-        self._config_entry_id = config_entry_id
+        super().__init__(coordinator, context=device.id)
         self._device = device
         self._attr_extra_state_attributes = {}
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.device_id)},
+            identifiers={(DOMAIN, device.device_id)},  # device_id is the mac
             manufacturer="Ring",
             model=device.model,
             name=device.name,
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        self.ring_objects["device_data"].async_add_listener(self._update_callback)
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect callbacks."""
-        self.ring_objects["device_data"].async_remove_listener(self._update_callback)
+class RingEntity(RingBaseEntity[RingDataCoordinator, RingDeviceT]):
+    """Implementation for Ring devices."""
+
+    def _get_coordinator_data(self) -> RingDevices:
+        return self.coordinator.data
 
     @callback
-    def _update_callback(self) -> None:
-        """Call update method."""
-        self.async_write_ha_state()
-
-    @property
-    def ring_objects(self):
-        """Return the Ring API objects."""
-        return self.hass.data[DOMAIN][self._config_entry_id]
+    def _handle_coordinator_update(self) -> None:
+        self._device = cast(
+            RingDeviceT,
+            self._get_coordinator_data().get_device(self._device.device_api_id),
+        )
+        super()._handle_coordinator_update()

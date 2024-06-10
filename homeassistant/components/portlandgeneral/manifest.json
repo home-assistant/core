@@ -1,0 +1,6 @@
+{
+  "domain": "portlandgeneral",
+  "name": "Portland General Electric (PGE)",
+  "integration_type": "virtual",
+  "supported_by": "opower"
+}

@@ -1,4 +1,5 @@
 """Test MQTT humidifiers."""
+
 import copy
 from typing import Any
 from unittest.mock import patch
@@ -33,7 +34,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 
@@ -83,13 +83,6 @@ DEFAULT_CONFIG = {
 }
 
 
-@pytest.fixture(autouse=True)
-def humidifer_platform_only():
-    """Only setup the humidifer platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.HUMIDIFIER]):
-        yield
-
-
 async def async_turn_on(
     hass: HomeAssistant,
     entity_id=ENTITY_MATCH_ALL,
@@ -108,7 +101,7 @@ async def async_turn_off(hass: HomeAssistant, entity_id=ENTITY_MATCH_ALL) -> Non
 
 
 async def async_set_mode(
-    hass: HomeAssistant, entity_id=ENTITY_MATCH_ALL, mode: str = None
+    hass: HomeAssistant, entity_id=ENTITY_MATCH_ALL, mode: str | None = None
 ) -> None:
     """Set mode for all or specified humidifier."""
     data = {
@@ -121,7 +114,7 @@ async def async_set_mode(
 
 
 async def async_set_humidity(
-    hass: HomeAssistant, entity_id=ENTITY_MATCH_ALL, humidity: int = None
+    hass: HomeAssistant, entity_id=ENTITY_MATCH_ALL, humidity: int | None = None
 ) -> None:
     """Set target humidity for all or specified humidifier."""
     data = {
@@ -142,9 +135,8 @@ async def test_fail_setup_if_no_command_topic(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if command fails with command topic."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
-    assert "Invalid config for [mqtt]: required key not provided" in caplog.text
+    assert await mqtt_mock_entry()
+    assert "required key not provided" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -934,11 +926,11 @@ async def test_attributes(
 @pytest.mark.parametrize(
     ("hass_config", "valid"),
     [
-        (
+        (  # test valid case 1
             {
                 mqtt.DOMAIN: {
                     humidifier.DOMAIN: {
-                        "name": "test_valid_1",
+                        "name": "test",
                         "command_topic": "command-topic",
                         "target_humidity_command_topic": "humidity-command-topic",
                     }
@@ -946,11 +938,11 @@ async def test_attributes(
             },
             True,
         ),
-        (
+        (  # test valid case 2
             {
                 mqtt.DOMAIN: {
                     humidifier.DOMAIN: {
-                        "name": "test_valid_2",
+                        "name": "test",
                         "command_topic": "command-topic",
                         "target_humidity_command_topic": "humidity-command-topic",
                         "device_class": "humidifier",
@@ -959,11 +951,11 @@ async def test_attributes(
             },
             True,
         ),
-        (
+        (  # test valid case 3
             {
                 mqtt.DOMAIN: {
                     humidifier.DOMAIN: {
-                        "name": "test_valid_3",
+                        "name": "test",
                         "command_topic": "command-topic",
                         "target_humidity_command_topic": "humidity-command-topic",
                         "device_class": "dehumidifier",
@@ -972,11 +964,11 @@ async def test_attributes(
             },
             True,
         ),
-        (
+        (  # test valid case 4
             {
                 mqtt.DOMAIN: {
                     humidifier.DOMAIN: {
-                        "name": "test_valid_4",
+                        "name": "test",
                         "command_topic": "command-topic",
                         "target_humidity_command_topic": "humidity-command-topic",
                         "device_class": None,
@@ -985,11 +977,11 @@ async def test_attributes(
             },
             True,
         ),
-        (
+        (  # test invalid device_class
             {
                 mqtt.DOMAIN: {
                     humidifier.DOMAIN: {
-                        "name": "test_invalid_device_class",
+                        "name": "test",
                         "command_topic": "command-topic",
                         "target_humidity_command_topic": "humidity-command-topic",
                         "device_class": "notsupporedSpeci@l",
@@ -998,11 +990,11 @@ async def test_attributes(
             },
             False,
         ),
-        (
+        (  # test mode_command_topic without modes
             {
                 mqtt.DOMAIN: {
                     humidifier.DOMAIN: {
-                        "name": "test_mode_command_without_modes",
+                        "name": "test",
                         "command_topic": "command-topic",
                         "target_humidity_command_topic": "humidity-command-topic",
                         "mode_command_topic": "mode-command-topic",
@@ -1011,11 +1003,11 @@ async def test_attributes(
             },
             False,
         ),
-        (
+        (  # test invalid humidity min max case 1
             {
                 mqtt.DOMAIN: {
                     humidifier.DOMAIN: {
-                        "name": "test_invalid_humidity_min_max_1",
+                        "name": "test",
                         "command_topic": "command-topic",
                         "target_humidity_command_topic": "humidity-command-topic",
                         "min_humidity": 0,
@@ -1025,11 +1017,11 @@ async def test_attributes(
             },
             False,
         ),
-        (
+        (  # test invalid humidity min max case 2
             {
                 mqtt.DOMAIN: {
                     humidifier.DOMAIN: {
-                        "name": "test_invalid_humidity_min_max_2",
+                        "name": "test",
                         "command_topic": "command-topic",
                         "target_humidity_command_topic": "humidity-command-topic",
                         "max_humidity": 20,
@@ -1039,11 +1031,11 @@ async def test_attributes(
             },
             False,
         ),
-        (
+        (  # test invalid mode, is reset payload
             {
                 mqtt.DOMAIN: {
                     humidifier.DOMAIN: {
-                        "name": "test_invalid_mode_is_reset",
+                        "name": "test",
                         "command_topic": "command-topic",
                         "target_humidity_command_topic": "humidity-command-topic",
                         "mode_command_topic": "mode-command-topic",
@@ -1061,11 +1053,9 @@ async def test_validity_configurations(
     valid: bool,
 ) -> None:
     """Test validity of configurations."""
-    if valid:
-        await mqtt_mock_entry()
-        return
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    await mqtt_mock_entry()
+    state = hass.states.get("humidifier.test")
+    assert (state is not None) == valid
 
 
 @pytest.mark.parametrize(
@@ -1167,14 +1157,11 @@ async def test_supported_features(
     features: humidifier.HumidifierEntityFeature | None,
 ) -> None:
     """Test supported features."""
+    await mqtt_mock_entry()
+    state = hass.states.get(f"humidifier.{name}")
+    assert (state is not None) == success
     if success:
-        await mqtt_mock_entry()
-
-        state = hass.states.get(f"humidifier.{name}")
         assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == features
-        return
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -1619,3 +1606,47 @@ async def test_skipped_async_ha_write_state(
     """Test a write state command is only called when there is change."""
     await mqtt_mock_entry()
     await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+VALUE_TEMPLATES = {
+    "state_value_template": "state_topic",
+    "action_template": "action_topic",
+    "mode_state_template": "mode_state_topic",
+    "current_humidity_template": "current_humidity_topic",
+    "target_humidity_state_template": "target_humidity_state_topic",
+}
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            humidifier.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "mode_command_topic": "preset-mode-command-topic",
+                    "modes": [
+                        "auto",
+                    ],
+                    topic: "test-topic",
+                    value_template: "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+        for value_template, topic in VALUE_TEMPLATES.items()
+    ],
+    ids=VALUE_TEMPLATES,
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

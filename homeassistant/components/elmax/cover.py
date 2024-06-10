@@ -1,4 +1,5 @@
 """Elmax cover platform."""
+
 from __future__ import annotations
 
 import logging
@@ -12,19 +13,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ElmaxCoordinator
 from .common import ElmaxEntity
 from .const import DOMAIN
+from .coordinator import ElmaxCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-_COMMAND_BY_MOTION_STATUS = (
-    {  # Maps the stop command to use for every cover motion status
-        CoverStatus.DOWN: CoverCommand.DOWN,
-        CoverStatus.UP: CoverCommand.UP,
-        CoverStatus.IDLE: None,
-    }
-)
+_COMMAND_BY_MOTION_STATUS = {  # Maps the stop command to use for every cover motion status
+    CoverStatus.DOWN: CoverCommand.DOWN,
+    CoverStatus.UP: CoverCommand.UP,
+    CoverStatus.IDLE: None,
+}
 
 
 async def async_setup_entry(
@@ -51,7 +50,6 @@ async def async_setup_entry(
             if cover.endpoint_id in known_devices:
                 continue
             entity = ElmaxCover(
-                panel=coordinator.panel_entry,
                 elmax_device=cover,
                 panel_version=panel_status.release,
                 coordinator=coordinator,

@@ -1,0 +1,19 @@
+[
+  {
+    "user": "0123456789abcdef01234567",
+    "uuid": "0123456789",
+    "resourceId": "012345670123456789abcdef",
+    "deviceInviteToken": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "location": {
+      "lat": "-1.0",
+      "lng": "1.0"
+    },
+    "name": "Front Door",
+    "type": "skybell hd",
+    "status": "up",
+    "createdAt": "2020-10-20T14:35:00.745Z",
+    "updatedAt": "2020-10-20T14:35:00.745Z",
+    "id": "012345670123456789abcdef",
+    "acl": "owner"
+  }
+]

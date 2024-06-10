@@ -1,9 +1,11 @@
 """Helpers for managing a pairing with a HomeKit accessory or bridge."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 from operator import attrgetter
 from types import MappingProxyType
@@ -17,7 +19,7 @@ from aiohomekit.exceptions import (
     EncryptionError,
 )
 from aiohomekit.model import Accessories, Accessory, Transport
-from aiohomekit.model.characteristics import Characteristic
+from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.thread.dataset_store import async_get_preferred_dataset
@@ -28,7 +30,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
 from .config_flow import normalize_hkid
 from .const import (
@@ -42,8 +44,10 @@ from .const import (
     IDENTIFIER_LEGACY_SERIAL_NUMBER,
     IDENTIFIER_SERIAL_NUMBER,
     STARTUP_EXCEPTIONS,
+    SUBSCRIBE_COOLDOWN,
 )
 from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
+from .utils import IidTuple, unique_id_to_iids
 
 RETRY_INTERVAL = 60  # seconds
 MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3
@@ -53,9 +57,9 @@ BLE_AVAILABILITY_CHECK_INTERVAL = 1800  # seconds
 
 _LOGGER = logging.getLogger(__name__)
 
-AddAccessoryCb = Callable[[Accessory], bool]
-AddServiceCb = Callable[[Service], bool]
-AddCharacteristicCb = Callable[[Characteristic], bool]
+type AddAccessoryCb = Callable[[Accessory], bool]
+type AddServiceCb = Callable[[Service], bool]
+type AddCharacteristicCb = Callable[[Characteristic], bool]
 
 
 def valid_serial_number(serial: str) -> bool:
@@ -101,12 +105,12 @@ class HKDevice:
 
         # Track aid/iid pairs so we know if we already handle triggers for a HK
         # service.
-        self._triggers: list[tuple[int, int]] = []
+        self._triggers: set[tuple[int, int]] = set()
 
         # A list of callbacks that turn HK characteristics into entities
         self.char_factories: list[AddCharacteristicCb] = []
 
-        # The platorms we have forwarded the config entry so far. If a new
+        # The platforms we have forwarded the config entry so far. If a new
         # accessory is added to a bridge we may have to load additional
         # platforms. We don't want to load all platforms up front if its just
         # a lightbulb. And we don't want to forward a config entry twice
@@ -115,7 +119,7 @@ class HKDevice:
 
         # This just tracks aid/iid pairs so we know if a HK service has been
         # mapped to a HA entity.
-        self.entities: list[tuple[int, int | None, int | None]] = []
+        self.entities: set[tuple[int, int | None, int | None]] = set()
 
         # A map of aid -> device_id
         # Useful when routing events to triggers
@@ -123,7 +127,7 @@ class HKDevice:
 
         self.available = False
 
-        self.pollable_characteristics: list[tuple[int, int]] = []
+        self.pollable_characteristics: set[tuple[int, int]] = set()
 
         # Never allow concurrent polling of the same accessory or bridge
         self._polling_lock = asyncio.Lock()
@@ -133,7 +137,7 @@ class HKDevice:
         # This is set to True if we can't rely on serial numbers to be unique
         self.unreliable_serial_numbers = False
 
-        self.watchable_characteristics: list[tuple[int, int]] = []
+        self.watchable_characteristics: set[tuple[int, int]] = set()
 
         self._debounced_update = Debouncer(
             hass,
@@ -141,10 +145,15 @@ class HKDevice:
             cooldown=DEBOUNCE_COOLDOWN,
             immediate=False,
             function=self.async_update,
+            background=True,
         )
 
         self._availability_callbacks: set[CALLBACK_TYPE] = set()
+        self._config_changed_callbacks: set[CALLBACK_TYPE] = set()
         self._subscriptions: dict[tuple[int, int], set[CALLBACK_TYPE]] = {}
+        self._pending_subscribes: set[tuple[int, int]] = set()
+        self._subscribe_timer: CALLBACK_TYPE | None = None
+        self._load_platforms_lock = asyncio.Lock()
 
     @property
     def entity_map(self) -> Accessories:
@@ -160,26 +169,57 @@ class HKDevice:
         self, characteristics: list[tuple[int, int]]
     ) -> None:
         """Add (aid, iid) pairs that we need to poll."""
-        self.pollable_characteristics.extend(characteristics)
+        self.pollable_characteristics.update(characteristics)
 
-    def remove_pollable_characteristics(self, accessory_id: int) -> None:
+    def remove_pollable_characteristics(
+        self, characteristics: list[tuple[int, int]]
+    ) -> None:
         """Remove all pollable characteristics by accessory id."""
-        self.pollable_characteristics = [
-            char for char in self.pollable_characteristics if char[0] != accessory_id
-        ]
+        for aid_iid in characteristics:
+            self.pollable_characteristics.discard(aid_iid)
 
-    async def add_watchable_characteristics(
+    def add_watchable_characteristics(
         self, characteristics: list[tuple[int, int]]
     ) -> None:
         """Add (aid, iid) pairs that we need to poll."""
-        self.watchable_characteristics.extend(characteristics)
-        await self.pairing.subscribe(characteristics)
+        self.watchable_characteristics.update(characteristics)
+        self._pending_subscribes.update(characteristics)
+        # Try to subscribe to the characteristics all at once
+        if not self._subscribe_timer:
+            self._subscribe_timer = async_call_later(
+                self.hass,
+                SUBSCRIBE_COOLDOWN,
+                self._async_subscribe,
+            )
 
-    def remove_watchable_characteristics(self, accessory_id: int) -> None:
+    @callback
+    def _async_cancel_subscription_timer(self) -> None:
+        """Cancel the subscribe timer."""
+        if self._subscribe_timer:
+            self._subscribe_timer()
+            self._subscribe_timer = None
+
+    @callback
+    def _async_subscribe(self, _now: datetime) -> None:
+        """Subscribe to characteristics."""
+        self._subscribe_timer = None
+        if self._pending_subscribes:
+            subscribes = self._pending_subscribes.copy()
+            self._pending_subscribes.clear()
+            self.config_entry.async_create_task(
+                self.hass,
+                self.pairing.subscribe(subscribes),
+                name=f"hkc subscriptions {self.unique_id}",
+                eager_start=True,
+            )
+
+    def remove_watchable_characteristics(
+        self, characteristics: list[tuple[int, int]]
+    ) -> None:
         """Remove all pollable characteristics by accessory id."""
-        self.watchable_characteristics = [
-            char for char in self.watchable_characteristics if char[0] != accessory_id
-        ]
+        for aid_iid in characteristics:
+            self.watchable_characteristics.discard(aid_iid)
+            self._pending_subscribes.discard(aid_iid)
 
     @callback
     def async_set_available_state(self, available: bool) -> None:
@@ -231,7 +271,7 @@ class HKDevice:
         # Ideally we would know which entities we are about to add
         # so we only poll those chars but that is not possible
         # yet.
-        attempts = None if self.hass.state == CoreState.running else 1
+        attempts = None if self.hass.state is CoreState.running else 1
         if (
             transport == Transport.BLE
             and pairing.accessories
@@ -262,6 +302,7 @@ class HKDevice:
         entry.async_on_unload(
             pairing.dispatcher_availability_changed(self.async_set_available_state)
         )
+        entry.async_on_unload(self._async_cancel_subscription_timer)
 
         await self.async_process_entity_map()
 
@@ -287,7 +328,8 @@ class HKDevice:
             )
             # BLE devices always get an RSSI sensor as well
             if "sensor" not in self.platforms:
-                await self.async_load_platform("sensor")
+                async with self._load_platforms_lock:
+                    await self._async_load_platforms({"sensor"})
 
     @callback
     def _async_start_polling(self) -> None:
@@ -298,10 +340,20 @@ class HKDevice:
         self.config_entry.async_on_unload(
             async_track_time_interval(
                 self.hass,
-                self.async_request_update,
+                self._async_schedule_update,
                 self.pairing.poll_interval,
                 name=f"HomeKit Device {self.unique_id} availability check poll",
             )
+        )
+
+    @callback
+    def _async_schedule_update(self, now: datetime) -> None:
+        """Schedule an update."""
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self._debounced_update.async_call(),
+            name=f"hkc {self.unique_id} alive poll",
+            eager_start=True,
         )
 
     async def async_add_new_entities(self) -> None:
@@ -333,6 +385,7 @@ class HKDevice:
             model=accessory.model,
             sw_version=accessory.firmware_revision,
             hw_version=accessory.hardware_revision,
+            serial_number=accessory.serial_number,
         )
 
         if accessory.aid != 1:
@@ -406,9 +459,10 @@ class HKDevice:
 
     @callback
     def async_migrate_unique_id(
-        self, old_unique_id: str, new_unique_id: str, platform: str
+        self, old_unique_id: str, new_unique_id: str | None, platform: str
     ) -> None:
         """Migrate legacy unique IDs to new format."""
+        assert new_unique_id is not None
         _LOGGER.debug(
             "Checking if unique ID %s on %s needs to be migrated",
             old_unique_id,
@@ -480,6 +534,58 @@ class HKDevice:
                 continue
 
             device_registry.async_update_device(device.id, new_identifiers=identifiers)
+
+    @callback
+    def async_reap_stale_entity_registry_entries(self) -> None:
+        """Delete entity registry entities for removed characteristics, services and accessories."""
+        _LOGGER.debug(
+            "Removing stale entity registry entries for pairing %s",
+            self.unique_id,
+        )
+
+        reg = er.async_get(self.hass)
+
+        # For the current config entry only, visit all registry entity entries
+        # Build a set of (unique_id, aid, sid, iid)
+        # For services, (unique_id, aid, sid, None)
+        # For accessories, (unique_id, aid, None, None)
+        entries = er.async_entries_for_config_entry(reg, self.config_entry.entry_id)
+        existing_entities = {
+            iids: entry.entity_id
+            for entry in entries
+            if (iids := unique_id_to_iids(entry.unique_id))
+        }
+
+        # Process current entity map and produce a similar set
+        current_unique_id: set[IidTuple] = set()
+        for accessory in self.entity_map.accessories:
+            current_unique_id.add((accessory.aid, None, None))
+
+            for service in accessory.services:
+                current_unique_id.add((accessory.aid, service.iid, None))
+
+                for char in service.characteristics:
+                    if self.pairing.transport != Transport.BLE:
+                        if char.type == CharacteristicsTypes.THREAD_CONTROL_POINT:
+                            continue
+
+                    current_unique_id.add(
+                        (
+                            accessory.aid,
+                            service.iid,
+                            char.iid,
+                        )
+                    )
+
+        # Remove the difference
+        if stale := existing_entities.keys() - current_unique_id:
+            for parts in stale:
+                _LOGGER.debug(
+                    "Removing stale entity registry entry %s for pairing %s",
+                    existing_entities[parts],
+                    self.unique_id,
+                )
+                reg.async_remove(existing_entities[parts])
 
     @callback
     def async_migrate_ble_unique_id(self) -> None:
@@ -583,6 +689,8 @@ class HKDevice:
 
         self.async_migrate_ble_unique_id()
 
+        self.async_reap_stale_entity_registry_entries()
+
         self.async_create_devices()
 
         # Load any triggers for this config entry
@@ -598,28 +706,39 @@ class HKDevice:
 
     def process_config_changed(self, config_num: int) -> None:
         """Handle a config change notification from the pairing."""
-        self.hass.async_create_task(self.async_update_new_accessories_state())
+        self.config_entry.async_create_task(
+            self.hass, self.async_update_new_accessories_state(), eager_start=True
+        )
 
     async def async_update_new_accessories_state(self) -> None:
         """Process a change in the pairings accessories state."""
         await self.async_process_entity_map()
-        if self.watchable_characteristics:
-            await self.pairing.subscribe(self.watchable_characteristics)
+        for callback_ in self._config_changed_callbacks:
+            callback_()
         await self.async_update()
         await self.async_add_new_entities()
 
-    def add_accessory_factory(self, add_entities_cb) -> None:
+    @callback
+    def async_entity_key_removed(
+        self, entity_key: tuple[int, int | None, int | None]
+    ) -> None:
+        """Handle an entity being removed.
+
+        Releases the entity from self.entities so it can be added again.
+        """
+        self.entities.discard(entity_key)
+
+    def add_accessory_factory(self, add_entities_cb: AddAccessoryCb) -> None:
         """Add a callback to run when discovering new entities for accessories."""
         self.accessory_factories.append(add_entities_cb)
         self._add_new_entities_for_accessory([add_entities_cb])
 
-    def _add_new_entities_for_accessory(self, handlers) -> None:
+    def _add_new_entities_for_accessory(self, handlers: list[AddAccessoryCb]) -> None:
         for accessory in self.entity_map.accessories:
+            entity_key = (accessory.aid, None, None)
             for handler in handlers:
-                if (accessory.aid, None, None) in self.entities:
-                    continue
-                if handler(accessory):
-                    self.entities.append((accessory.aid, None, None))
+                if entity_key not in self.entities and handler(accessory):
+                    self.entities.add(entity_key)
                     break
 
     def add_char_factory(self, add_entities_cb: AddCharacteristicCb) -> None:
@@ -627,15 +746,14 @@ class HKDevice:
         self.char_factories.append(add_entities_cb)
         self._add_new_entities_for_char([add_entities_cb])
 
-    def _add_new_entities_for_char(self, handlers) -> None:
+    def _add_new_entities_for_char(self, handlers: list[AddCharacteristicCb]) -> None:
         for accessory in self.entity_map.accessories:
             for service in accessory.services:
                 for char in service.characteristics:
+                    entity_key = (accessory.aid, service.iid, char.iid)
                     for handler in handlers:
-                        if (accessory.aid, service.iid, char.iid) in self.entities:
-                            continue
-                        if handler(char):
-                            self.entities.append((accessory.aid, service.iid, char.iid))
+                        if entity_key not in self.entities and handler(char):
+                            self.entities.add(entity_key)
                             break
 
     def add_listener(self, add_entities_cb: AddServiceCb) -> None:
@@ -661,7 +779,7 @@ class HKDevice:
 
                 for add_trigger_cb in callbacks:
                     if add_trigger_cb(service):
-                        self._triggers.append(entity_key)
+                        self._triggers.add(entity_key)
                         break
 
     def add_entities(self) -> None:
@@ -671,55 +789,50 @@ class HKDevice:
         self._add_new_entities_for_char(self.char_factories)
         self._add_new_triggers(self.trigger_factories)
 
-    def _add_new_entities(self, callbacks) -> None:
+    def _add_new_entities(self, callbacks: list[AddServiceCb]) -> None:
         for accessory in self.entity_map.accessories:
             aid = accessory.aid
             for service in accessory.services:
-                iid = service.iid
+                entity_key = (aid, None, service.iid)
 
-                if (aid, None, iid) in self.entities:
+                if entity_key in self.entities:
                     # Don't add the same entity again
                     continue
 
                 for listener in callbacks:
                     if listener(service):
-                        self.entities.append((aid, None, iid))
+                        self.entities.add(entity_key)
                         break
 
-    async def async_load_platform(self, platform: str) -> None:
-        """Load a single platform idempotently."""
-        if platform in self.platforms:
+    async def _async_load_platforms(self, platforms: set[str]) -> None:
+        """Load a group of platforms."""
+        assert self._load_platforms_lock.locked(), "Must be called with lock held"
+        if not (to_load := platforms - self.platforms):
             return
-
-        self.platforms.add(platform)
-        try:
-            await self.hass.config_entries.async_forward_entry_setup(
-                self.config_entry, platform
-            )
-        except Exception:
-            self.platforms.remove(platform)
-            raise
+        self.platforms.update(to_load)
+        await self.hass.config_entries.async_forward_entry_setups(
+            self.config_entry, platforms
+        )
 
     async def async_load_platforms(self) -> None:
         """Load any platforms needed by this HomeKit device."""
-        to_load: set[str] = set()
-        for accessory in self.entity_map.accessories:
-            for service in accessory.services:
-                if service.type in HOMEKIT_ACCESSORY_DISPATCH:
-                    platform = HOMEKIT_ACCESSORY_DISPATCH[service.type]
-                    if platform not in self.platforms:
-                        to_load.add(platform)
-
-                for char in service.characteristics:
-                    if char.type in CHARACTERISTIC_PLATFORMS:
-                        platform = CHARACTERISTIC_PLATFORMS[char.type]
+        async with self._load_platforms_lock:
+            to_load: set[str] = set()
+            for accessory in self.entity_map.accessories:
+                for service in accessory.services:
+                    if service.type in HOMEKIT_ACCESSORY_DISPATCH:
+                        platform = HOMEKIT_ACCESSORY_DISPATCH[service.type]
                         if platform not in self.platforms:
                             to_load.add(platform)
 
-        if to_load:
-            await asyncio.gather(
-                *[self.async_load_platform(platform) for platform in to_load]
-            )
+                    for char in service.characteristics:
+                        if char.type in CHARACTERISTIC_PLATFORMS:
+                            platform = CHARACTERISTIC_PLATFORMS[char.type]
+                            if platform not in self.platforms:
+                                to_load.add(platform)
+
+            if to_load:
+                await self._async_load_platforms(to_load)
 
     @callback
     def async_update_available_state(self, *_: Any) -> None:
@@ -730,7 +843,7 @@ class HKDevice:
         """Request an debounced update from the accessory."""
         await self._debounced_update.async_call()
 
-    async def async_update(self, now=None):
+    async def async_update(self, now: datetime | None = None) -> None:
         """Poll state of all entities attached to this bridge/accessory."""
         if not self.pollable_characteristics:
             self.async_update_available_state()
@@ -795,10 +908,8 @@ class HKDevice:
         # Process any stateless events (via device_triggers)
         async_fire_triggers(self, new_values_dict)
 
-        self.entity_map.process_changes(new_values_dict)
-
         to_callback: set[CALLBACK_TYPE] = set()
-        for aid_iid in new_values_dict:
+        for aid_iid in self.entity_map.process_changes(new_values_dict):
             if callbacks := self._subscriptions.get(aid_iid):
                 to_callback.update(callbacks)
 
@@ -806,32 +917,51 @@ class HKDevice:
             callback_()
 
     @callback
+    def _remove_characteristics_callback(
+        self, characteristics: set[tuple[int, int]], callback_: CALLBACK_TYPE
+    ) -> None:
+        """Remove a characteristics callback."""
+        for aid_iid in characteristics:
+            self._subscriptions[aid_iid].remove(callback_)
+            if not self._subscriptions[aid_iid]:
+                del self._subscriptions[aid_iid]
+
+    @callback
     def async_subscribe(
-        self, characteristics: Iterable[tuple[int, int]], callback_: CALLBACK_TYPE
+        self, characteristics: set[tuple[int, int]], callback_: CALLBACK_TYPE
     ) -> CALLBACK_TYPE:
         """Add characteristics to the watch list."""
         for aid_iid in characteristics:
             self._subscriptions.setdefault(aid_iid, set()).add(callback_)
+        return partial(
+            self._remove_characteristics_callback, characteristics, callback_
+        )
 
-        def _unsub():
-            for aid_iid in characteristics:
-                self._subscriptions[aid_iid].remove(callback_)
-                if not self._subscriptions[aid_iid]:
-                    del self._subscriptions[aid_iid]
-
-        return _unsub
+    @callback
+    def _remove_availability_callback(self, callback_: CALLBACK_TYPE) -> None:
+        """Remove an availability callback."""
+        self._availability_callbacks.remove(callback_)
 
     @callback
     def async_subscribe_availability(self, callback_: CALLBACK_TYPE) -> CALLBACK_TYPE:
         """Add characteristics to the watch list."""
         self._availability_callbacks.add(callback_)
+        return partial(self._remove_availability_callback, callback_)
 
-        def _unsub():
-            self._availability_callbacks.remove(callback_)
+    @callback
+    def _remove_config_changed_callback(self, callback_: CALLBACK_TYPE) -> None:
+        """Remove an availability callback."""
+        self._config_changed_callbacks.remove(callback_)
 
-        return _unsub
+    @callback
+    def async_subscribe_config_changed(self, callback_: CALLBACK_TYPE) -> CALLBACK_TYPE:
+        """Subscribe to config of the accessory being changed aka c# changes."""
+        self._config_changed_callbacks.add(callback_)
+        return partial(self._remove_config_changed_callback, callback_)
 
-    async def get_characteristics(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
+    async def get_characteristics(
+        self, *args: Any, **kwargs: Any
+    ) -> dict[tuple[int, int], dict[str, Any]]:
         """Read latest state from homekit accessory."""
         return await self.pairing.get_characteristics(*args, **kwargs)
 

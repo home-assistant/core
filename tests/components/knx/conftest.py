@@ -1,8 +1,10 @@
 """Conftest for the KNX integration."""
+
 from __future__ import annotations
 
 import asyncio
 import json
+from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, Mock, patch
 
 import pytest
@@ -29,6 +31,7 @@ from homeassistant.components.knx.const import (
 )
 from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
@@ -57,7 +60,9 @@ class KNXTestKit:
         for attribute, value in attributes.items():
             assert test_state.attributes.get(attribute) == value
 
-    async def setup_integration(self, config):
+    async def setup_integration(
+        self, config: ConfigType, add_entry_to_hass: bool = True
+    ) -> None:
         """Create the KNX integration."""
 
         async def patch_xknx_start():
@@ -87,12 +92,14 @@ class KNXTestKit:
             self.xknx = args[0]
             return DEFAULT
 
+        if add_entry_to_hass:
+            self.mock_config_entry.add_to_hass(self.hass)
+
         with patch(
             "xknx.xknx.knx_interface_factory",
             return_value=knx_ip_interface_mock(),
             side_effect=fish_xknx,
         ):
-            self.mock_config_entry.add_to_hass(self.hass)
             await async_setup_component(self.hass, KNX_DOMAIN, {KNX_DOMAIN: config})
             await self.hass.async_block_till_done()
 
@@ -156,7 +163,7 @@ class KNXTestKit:
 
         if payload is not None:
             assert (
-                telegram.payload.value.value == payload  # type: ignore
+                telegram.payload.value.value == payload  # type: ignore[attr-defined]
             ), f"Payload mismatch in {telegram} - Expected: {payload}"
 
     async def assert_read(self, group_address: str) -> None:
@@ -259,7 +266,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-async def knx(request, hass, mock_config_entry: MockConfigEntry):
+async def knx(hass: HomeAssistant, mock_config_entry: MockConfigEntry):
     """Create a KNX TestKit instance."""
     knx_test_kit = KNXTestKit(hass, mock_config_entry)
     yield knx_test_kit
@@ -267,10 +274,9 @@ async def knx(request, hass, mock_config_entry: MockConfigEntry):
 
 
 @pytest.fixture
-def load_knxproj(hass_storage):
+def load_knxproj(hass_storage: dict[str, Any]) -> None:
     """Mock KNX project data."""
     hass_storage[KNX_PROJECT_STORAGE_KEY] = {
         "version": 1,
         "data": FIXTURE_PROJECT_DATA,
     }
-    return

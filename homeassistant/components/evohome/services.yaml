@@ -24,7 +24,9 @@ set_system_mode:
         object:
 
 reset_system:
+
 refresh_system:
+
 set_zone_override:
   fields:
     entity_id:

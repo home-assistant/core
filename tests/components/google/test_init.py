@@ -1,4 +1,5 @@
 """The tests for the Google Calendar component."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -38,7 +39,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 EXPIRED_TOKEN_TIMESTAMP = datetime.datetime(2022, 4, 8).timestamp()
 
 # Typing helpers
-HassApi = Callable[[], Awaitable[dict[str, Any]]]
+type HassApi = Callable[[], Awaitable[dict[str, Any]]]
 
 TEST_EVENT_SUMMARY = "Test Summary"
 TEST_EVENT_DESCRIPTION = "Test Description"
@@ -80,7 +81,7 @@ def assert_state(actual: State | None, expected: State | None) -> None:
 )
 def add_event_call_service(
     hass: HomeAssistant,
-    request: Any,
+    request: pytest.FixtureRequest,
 ) -> Callable[dict[str, Any], Awaitable[None]]:
     """Fixture for calling the add or create event service."""
     (domain, service_call, data, target) = request.param
@@ -115,7 +116,7 @@ async def test_unload_entry(
     assert entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(
@@ -576,6 +577,59 @@ async def test_add_event_date_time(
     }
 
 
+@pytest.mark.parametrize(
+    "calendars_config",
+    [
+        [
+            {
+                "cal_id": CALENDAR_ID,
+                "entities": [
+                    {
+                        "device_id": "backyard_light",
+                        "name": "Backyard Light",
+                        "search": "#Backyard",
+                    },
+                ],
+            }
+        ],
+    ],
+)
+async def test_unsupported_create_event(
+    hass: HomeAssistant,
+    mock_calendars_yaml: Mock,
+    component_setup: ComponentSetup,
+    mock_calendars_list: ApiResult,
+    mock_insert_event: Callable[[str, dict[str, Any]], None],
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test create event service call is unsupported for virtual calendars."""
+
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    assert await component_setup()
+
+    start_datetime = datetime.datetime.now(tz=zoneinfo.ZoneInfo("America/Regina"))
+    delta = datetime.timedelta(days=3, hours=3)
+    end_datetime = start_datetime + delta
+
+    with pytest.raises(HomeAssistantError, match="does not support this service"):
+        await hass.services.async_call(
+            DOMAIN,
+            "create_event",
+            {
+                # **data,
+                "start_date_time": start_datetime.isoformat(),
+                "end_date_time": end_datetime.isoformat(),
+                "summary": TEST_EVENT_SUMMARY,
+                "description": TEST_EVENT_DESCRIPTION,
+            },
+            target={"entity_id": "calendar.backyard_light"},
+            blocking=True,
+        )
+
+
 async def test_add_event_failure(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
@@ -646,7 +700,11 @@ async def test_add_event_location(
 
 @pytest.mark.parametrize(
     "config_entry_token_expiry",
-    [datetime.datetime.max.replace(tzinfo=UTC).timestamp() + 1],
+    [
+        (datetime.datetime.max.replace(tzinfo=UTC).timestamp() + 1),
+        (utcnow().replace(tzinfo=None).timestamp()),
+    ],
+    ids=["max_timestamp", "timestamp_naive"],
 )
 async def test_invalid_token_expiry_in_config_entry(
     hass: HomeAssistant,
@@ -758,7 +816,7 @@ async def test_calendar_yaml_update(
     assert await component_setup()
 
     mock_calendars_yaml().read.assert_called()
-    mock_calendars_yaml().write.called is expect_write_calls
+    assert mock_calendars_yaml().write.called is expect_write_calls
 
     state = hass.states.get(TEST_API_ENTITY)
     assert state
@@ -901,4 +959,4 @@ async def test_remove_entry(
     assert entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_remove(entry.entry_id)
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED

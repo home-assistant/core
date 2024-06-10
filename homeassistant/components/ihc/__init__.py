@@ -1,4 +1,5 @@
 """Support for IHC devices."""
+
 import logging
 
 from ihcsdk.ihccontroller import IHCController

@@ -1,4 +1,5 @@
 """Test aiohttp request helper."""
+
 from aiohttp import web
 
 from homeassistant.util import aiohttp

@@ -1,0 +1,3 @@
+{
+  "url": "https://production-video-download.s3.us-west-2.amazonaws.com/012345670123456789abcdef/1654307756676-0123456789120123456789abcdef_012345670123456789abcdef.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=01234567890123456789%2F20203030%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20200330T201225Z&X-Amz-Expires=300&X-Amz-Signature=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef&X-Amz-SignedHeaders=host"
+}

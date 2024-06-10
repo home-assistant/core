@@ -1,6 +1,8 @@
 """Repairs implementation for supervisor integration."""
 
-from collections.abc import Callable
+from __future__ import annotations
+
+from collections.abc import Callable, Coroutine
 from types import MethodType
 from typing import Any
 
@@ -12,20 +14,33 @@ from homeassistant.data_entry_flow import FlowResult
 
 from . import get_addons_info, get_issues_info
 from .const import (
+    ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
+    PLACEHOLDER_KEY_ADDON,
     PLACEHOLDER_KEY_COMPONENTS,
     PLACEHOLDER_KEY_REFERENCE,
     SupervisorIssueContext,
 )
-from .handler import HassioAPIError, async_apply_suggestion
+from .handler import async_apply_suggestion
 from .issues import Issue, Suggestion
 
-SUGGESTION_CONFIRMATION_REQUIRED = {"system_execute_reboot"}
+HELP_URLS = {
+    "help_url": "https://www.home-assistant.io/help/",
+    "community_url": "https://community.home-assistant.io/",
+}
+
+SUGGESTION_CONFIRMATION_REQUIRED = {
+    "addon_execute_remove",
+    "system_adopt_data_disk",
+    "system_execute_reboot",
+}
+
 
 EXTRA_PLACEHOLDERS = {
     "issue_mount_mount_failed": {
         "storage_url": "/config/storage",
-    }
+    },
+    ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED: HELP_URLS,
 }
 
 
@@ -86,14 +101,20 @@ class SupervisorIssueRepairFlow(RepairsFlow):
             )
 
         if len(self.issue.suggestions) > 1:
-            return self.async_show_menu(
-                step_id="fix_menu",
-                menu_options=[suggestion.key for suggestion in self.issue.suggestions],
-                description_placeholders=self.description_placeholders,
-            )
+            return await self.async_step_fix_menu()
 
         # Always show a form for one suggestion to explain to user what's happening
         return self._async_form_for_suggestion(self.issue.suggestions[0])
+
+    async def async_step_fix_menu(self, _: None = None) -> FlowResult:
+        """Show the fix menu."""
+        assert self.issue
+
+        return self.async_show_menu(
+            step_id="fix_menu",
+            menu_options=[suggestion.key for suggestion in self.issue.suggestions],
+            description_placeholders=self.description_placeholders,
+        )
 
     async def _async_step_apply_suggestion(
         self, suggestion: Suggestion, confirmed: bool = False
@@ -102,22 +123,23 @@ class SupervisorIssueRepairFlow(RepairsFlow):
         if not confirmed and suggestion.key in SUGGESTION_CONFIRMATION_REQUIRED:
             return self._async_form_for_suggestion(suggestion)
 
-        try:
-            await async_apply_suggestion(self.hass, suggestion.uuid)
-        except HassioAPIError:
-            return self.async_abort(reason="apply_suggestion_fail")
-
-        return self.async_create_entry(data={})
+        if await async_apply_suggestion(self.hass, suggestion.uuid):
+            return self.async_create_entry(data={})
+        return self.async_abort(reason="apply_suggestion_fail")
 
     @staticmethod
-    def _async_step(suggestion: Suggestion) -> Callable:
+    def _async_step(
+        suggestion: Suggestion,
+    ) -> Callable[
+        [SupervisorIssueRepairFlow, dict[str, str] | None],
+        Coroutine[Any, Any, FlowResult],
+    ]:
         """Generate a step handler for a suggestion."""
 
         async def _async_step(
             self: SupervisorIssueRepairFlow, user_input: dict[str, str] | None = None
         ) -> FlowResult:
             """Handle a flow step for a suggestion."""
-            # pylint: disable-next=protected-access
             return await self._async_step_apply_suggestion(
                 suggestion, confirmed=user_input is not None
             )
@@ -159,6 +181,25 @@ class DockerConfigIssueRepairFlow(SupervisorIssueRepairFlow):
         return placeholders
 
 
+class DetachedAddonIssueRepairFlow(SupervisorIssueRepairFlow):
+    """Handler for detached addon issue fixing flows."""
+
+    @property
+    def description_placeholders(self) -> dict[str, str] | None:
+        """Get description placeholders for steps."""
+        placeholders: dict[str, str] = super().description_placeholders or {}
+        if self.issue and self.issue.reference:
+            addons = get_addons_info(self.hass)
+            if addons and self.issue.reference in addons:
+                placeholders[PLACEHOLDER_KEY_ADDON] = addons[self.issue.reference][
+                    "name"
+                ]
+            else:
+                placeholders[PLACEHOLDER_KEY_ADDON] = self.issue.reference
+
+        return placeholders or None
+
+
 async def async_create_fix_flow(
     hass: HomeAssistant,
     issue_id: str,
@@ -169,5 +210,7 @@ async def async_create_fix_flow(
     issue = supervisor_issues and supervisor_issues.get_issue(issue_id)
     if issue and issue.key == ISSUE_KEY_SYSTEM_DOCKER_CONFIG:
         return DockerConfigIssueRepairFlow(issue_id)
+    if issue and issue.key == ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED:
+        return DetachedAddonIssueRepairFlow(issue_id)
 
     return SupervisorIssueRepairFlow(issue_id)

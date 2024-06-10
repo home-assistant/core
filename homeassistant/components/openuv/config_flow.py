@@ -1,4 +1,5 @@
 """Config flow to configure the OpenUV component."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -9,8 +10,7 @@ from pyopenuv import Client
 from pyopenuv.errors import OpenUvError
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ELEVATION,
@@ -18,7 +18,6 @@ from homeassistant.const import (
     CONF_LONGITUDE,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
@@ -70,7 +69,7 @@ class OpenUvData:
         return f"{self.latitude}, {self.longitude}"
 
 
-class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class OpenUvFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an OpenUV config flow."""
 
     VERSION = 2
@@ -99,7 +98,7 @@ class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_verify(
         self, data: OpenUvData, error_step_id: str, error_schema: vol.Schema
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Verify the credentials and create/re-auth the entry."""
         websession = aiohttp_client.async_get_clientsession(self.hass)
         client = Client(data.api_key, 0, 0, session=websession)
@@ -138,14 +137,16 @@ class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Define the config flow to handle options."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self._reauth_data = entry_data
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle re-auth completion."""
         if not user_input:
             return self.async_show_form(
@@ -168,7 +169,7 @@ class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         if not user_input:
             return self.async_show_form(

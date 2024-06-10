@@ -51,7 +51,14 @@
         "name": "Current UV index"
       },
       "current_uv_level": {
-        "name": "Current UV level"
+        "name": "Current UV level",
+        "state": {
+          "extreme": "Extreme",
+          "high": "High",
+          "low": "Low",
+          "moderate": "Moderate",
+          "very_high": "Very high"
+        }
       },
       "max_uv_index": {
         "name": "Max UV index"

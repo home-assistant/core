@@ -1,11 +1,12 @@
 """HTTP Support for Hass.io."""
+
 from __future__ import annotations
 
-import asyncio
 from http import HTTPStatus
 import logging
 import os
 import re
+from typing import TYPE_CHECKING
 from urllib.parse import quote, unquote
 
 import aiohttp
@@ -23,11 +24,11 @@ from aiohttp.web_exceptions import HTTPBadGateway
 
 from homeassistant.components.http import (
     KEY_AUTHENTICATED,
+    KEY_HASS,
     KEY_HASS_USER,
     HomeAssistantView,
 )
 from homeassistant.components.onboarding import async_is_onboarded
-from homeassistant.core import HomeAssistant
 
 from .const import X_HASS_SOURCE
 
@@ -116,7 +117,7 @@ class HassIOView(HomeAssistantView):
         if path != unquote(path):
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         is_admin = request[KEY_AUTHENTICATED] and request[KEY_HASS_USER].is_admin
         authorized = is_admin
 
@@ -147,24 +148,25 @@ class HassIOView(HomeAssistantView):
                 return web.Response(status=HTTPStatus.UNAUTHORIZED)
 
             if authorized:
-                headers[
-                    AUTHORIZATION
-                ] = f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
+                headers[AUTHORIZATION] = (
+                    f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
+                )
 
             if request.method == "POST":
                 headers[CONTENT_TYPE] = request.content_type
                 # _stored_content_type is only computed once `content_type` is accessed
                 if path == "backups/new/upload":
                     # We need to reuse the full content type that includes the boundary
-                    # pylint: disable-next=protected-access
-                    headers[CONTENT_TYPE] = request._stored_content_type  # type: ignore[assignment]
+                    if TYPE_CHECKING:
+                        assert isinstance(request._stored_content_type, str)  # noqa: SLF001
+                    headers[CONTENT_TYPE] = request._stored_content_type  # noqa: SLF001
 
         try:
             client = await self._websession.request(
                 method=request.method,
                 url=f"http://{self._host}/{quote(path)}",
                 params=request.query,
-                data=request.content,
+                data=request.content if request.method != "GET" else None,
                 headers=headers,
                 timeout=_get_timeout(path),
             )
@@ -178,18 +180,19 @@ class HassIOView(HomeAssistantView):
             if should_compress(response.content_type):
                 response.enable_compression()
             await response.prepare(request)
-            async for data in client.content.iter_chunked(8192):
+            # In testing iter_chunked, iter_any, and iter_chunks:
+            # iter_chunks was the best performing option since
+            # it does not have to do as much re-assembly
+            async for data, _ in client.content.iter_chunks():
                 await response.write(data)
-
-            return response
 
         except aiohttp.ClientError as err:
             _LOGGER.error("Client error on api %s request %s", path, err)
-
-        except asyncio.TimeoutError:
+            raise HTTPBadGateway from err
+        except TimeoutError as err:
             _LOGGER.error("Client timeout error on API request %s", path)
-
-        raise HTTPBadGateway()
+            raise HTTPBadGateway from err
+        return response
 
     get = _handle
     post = _handle
@@ -218,4 +221,10 @@ def should_compress(content_type: str) -> bool:
     """Return if we should compress a response."""
     if content_type.startswith("image/"):
         return "svg" in content_type
+    if content_type.startswith("application/"):
+        return (
+            "json" in content_type
+            or "xml" in content_type
+            or "javascript" in content_type
+        )
     return not content_type.startswith(("video/", "audio/", "font/"))

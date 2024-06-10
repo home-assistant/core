@@ -1,4 +1,5 @@
 """VeSync integration."""
+
 import logging
 
 from pyvesync import VeSync
@@ -45,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     device_dict = await async_process_devices(hass, manager)
 
-    forward_setup = hass.config_entries.async_forward_entry_setup
+    forward_setups = hass.config_entries.async_forward_entry_setups
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][VS_MANAGER] = manager
@@ -96,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             return
         if new_switches and not switches:
             switches.extend(new_switches)
-            hass.async_create_task(forward_setup(config_entry, Platform.SWITCH))
+            hass.async_create_task(forward_setups(config_entry, [Platform.SWITCH]))
 
         fan_set = set(fan_devs)
         new_fans = list(fan_set.difference(fans))
@@ -106,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             return
         if new_fans and not fans:
             fans.extend(new_fans)
-            hass.async_create_task(forward_setup(config_entry, Platform.FAN))
+            hass.async_create_task(forward_setups(config_entry, [Platform.FAN]))
 
         light_set = set(light_devs)
         new_lights = list(light_set.difference(lights))
@@ -116,7 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             return
         if new_lights and not lights:
             lights.extend(new_lights)
-            hass.async_create_task(forward_setup(config_entry, Platform.LIGHT))
+            hass.async_create_task(forward_setups(config_entry, [Platform.LIGHT]))
 
         sensor_set = set(sensor_devs)
         new_sensors = list(sensor_set.difference(sensors))
@@ -126,7 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             return
         if new_sensors and not sensors:
             sensors.extend(new_sensors)
-            hass.async_create_task(forward_setup(config_entry, Platform.SENSOR))
+            hass.async_create_task(forward_setups(config_entry, [Platform.SENSOR]))
 
     hass.services.async_register(
         DOMAIN, SERVICE_UPDATE_DEVS, async_new_device_discovery

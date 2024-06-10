@@ -1,4 +1,5 @@
 """The myStrom integration."""
+
 from __future__ import annotations
 
 import logging
@@ -16,7 +17,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import DOMAIN
 from .models import MyStromData
 
-PLATFORMS_SWITCH = [Platform.SWITCH]
+PLATFORMS_PLUGS = [Platform.SENSOR, Platform.SWITCH]
 PLATFORMS_BULB = [Platform.LIGHT]
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +30,7 @@ async def _async_get_device_state(
         await device.get_state()
     except MyStromConnectionError as err:
         _LOGGER.error("No route to myStrom plug: %s", ip_address)
-        raise ConfigEntryNotReady() from err
+        raise ConfigEntryNotReady from err
 
 
 def _get_mystrom_bulb(host: str, mac: str) -> MyStromBulb:
@@ -43,19 +44,18 @@ def _get_mystrom_switch(host: str) -> MyStromSwitch:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up myStrom from a config entry."""
     host = entry.data[CONF_HOST]
-    device = None
     try:
         info = await pymystrom.get_device_info(host)
     except MyStromConnectionError as err:
         _LOGGER.error("No route to myStrom plug: %s", host)
-        raise ConfigEntryNotReady() from err
+        raise ConfigEntryNotReady from err
 
     info.setdefault("type", 101)
 
     device_type = info["type"]
     if device_type in [101, 106, 107, 120]:
         device = _get_mystrom_switch(host)
-        platforms = PLATFORMS_SWITCH
+        platforms = PLATFORMS_PLUGS
         await _async_get_device_state(device, info["ip"])
     elif device_type in [102, 105]:
         mac = info["mac"]
@@ -87,7 +87,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_type = hass.data[DOMAIN][entry.entry_id].info["type"]
     platforms = []
     if device_type in [101, 106, 107, 120]:
-        platforms.extend(PLATFORMS_SWITCH)
+        platforms.extend(PLATFORMS_PLUGS)
     elif device_type in [102, 105]:
         platforms.extend(PLATFORMS_BULB)
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):

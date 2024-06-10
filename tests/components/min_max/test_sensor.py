@@ -1,4 +1,5 @@
 """The test for the min/max sensor platform."""
+
 import statistics
 from unittest.mock import patch
 
@@ -50,7 +51,7 @@ async def test_default_name_sensor(hass: HomeAssistant) -> None:
 
     entity_ids = config["sensor"]["entity_ids"]
 
-    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 
@@ -60,7 +61,9 @@ async def test_default_name_sensor(hass: HomeAssistant) -> None:
     assert entity_ids[2] == state.attributes.get("min_entity_id")
 
 
-async def test_min_sensor(hass: HomeAssistant) -> None:
+async def test_min_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the min sensor."""
     config = {
         "sensor": {
@@ -77,7 +80,7 @@ async def test_min_sensor(hass: HomeAssistant) -> None:
 
     entity_ids = config["sensor"]["entity_ids"]
 
-    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 
@@ -87,8 +90,7 @@ async def test_min_sensor(hass: HomeAssistant) -> None:
     assert entity_ids[2] == state.attributes.get("min_entity_id")
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entity_reg = er.async_get(hass)
-    entity = entity_reg.async_get("sensor.test_min")
+    entity = entity_registry.async_get("sensor.test_min")
     assert entity.unique_id == "very_unique_id"
 
 
@@ -108,7 +110,7 @@ async def test_max_sensor(hass: HomeAssistant) -> None:
 
     entity_ids = config["sensor"]["entity_ids"]
 
-    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 
@@ -135,7 +137,7 @@ async def test_mean_sensor(hass: HomeAssistant) -> None:
 
     entity_ids = config["sensor"]["entity_ids"]
 
-    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 
@@ -162,7 +164,7 @@ async def test_mean_1_digit_sensor(hass: HomeAssistant) -> None:
 
     entity_ids = config["sensor"]["entity_ids"]
 
-    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 
@@ -188,7 +190,7 @@ async def test_mean_4_digit_sensor(hass: HomeAssistant) -> None:
 
     entity_ids = config["sensor"]["entity_ids"]
 
-    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 
@@ -213,7 +215,7 @@ async def test_median_sensor(hass: HomeAssistant) -> None:
 
     entity_ids = config["sensor"]["entity_ids"]
 
-    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 
@@ -240,7 +242,7 @@ async def test_range_4_digit_sensor(hass: HomeAssistant) -> None:
 
     entity_ids = config["sensor"]["entity_ids"]
 
-    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 
@@ -266,7 +268,7 @@ async def test_range_1_digit_sensor(hass: HomeAssistant) -> None:
 
     entity_ids = config["sensor"]["entity_ids"]
 
-    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 
@@ -392,7 +394,7 @@ async def test_last_sensor(hass: HomeAssistant) -> None:
 
     entity_ids = config["sensor"]["entity_ids"]
 
-    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test_last")
@@ -460,7 +462,7 @@ async def test_sensor_incorrect_state(
 
     entity_ids = config["sensor"]["entity_ids"]
 
-    for entity_id, value in dict(zip(entity_ids, VALUES_ERROR)).items():
+    for entity_id, value in dict(zip(entity_ids, VALUES_ERROR, strict=False)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 
@@ -470,7 +472,9 @@ async def test_sensor_incorrect_state(
     assert "Unable to store state. Only numerical states are supported" in caplog.text
 
 
-async def test_sum_sensor(hass: HomeAssistant) -> None:
+async def test_sum_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the sum sensor."""
     config = {
         "sensor": {
@@ -487,7 +491,7 @@ async def test_sum_sensor(hass: HomeAssistant) -> None:
 
     entity_ids = config["sensor"]["entity_ids"]
 
-    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 
@@ -496,8 +500,7 @@ async def test_sum_sensor(hass: HomeAssistant) -> None:
     assert str(float(SUM_VALUE)) == state.state
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entity_reg = er.async_get(hass)
-    entity = entity_reg.async_get("sensor.test_sum")
+    entity = entity_registry.async_get("sensor.test_sum")
     assert entity.unique_id == "very_unique_id_sum_sensor"
 
 
@@ -518,7 +521,7 @@ async def test_sum_sensor_no_state(hass: HomeAssistant) -> None:
 
     entity_ids = config["sensor"]["entity_ids"]
 
-    for entity_id, value in dict(zip(entity_ids, VALUES_ERROR)).items():
+    for entity_id, value in dict(zip(entity_ids, VALUES_ERROR, strict=False)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 

@@ -1,12 +1,11 @@
 """Test BTHome BLE events."""
-import pytest
 
 from homeassistant.components import automation
 from homeassistant.components.bluetooth.const import DOMAIN as BLUETOOTH_DOMAIN
 from homeassistant.components.bthome.const import CONF_SUBTYPE, DOMAIN
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     async_get as async_get_dev_reg,
@@ -19,7 +18,6 @@ from tests.common import (
     MockConfigEntry,
     async_capture_events,
     async_get_device_automations,
-    async_mock_service,
 )
 from tests.components.bluetooth import inject_bluetooth_service_info_bleak
 
@@ -28,12 +26,6 @@ from tests.components.bluetooth import inject_bluetooth_service_info_bleak
 def get_device_id(mac: str) -> tuple[str, str]:
     """Get device registry identifier for bthome_ble."""
     return (BLUETOOTH_DOMAIN, mac)
-
-
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 async def _async_setup_bthome_device(hass, mac: str):
@@ -58,7 +50,7 @@ async def test_event_long_press(hass: HomeAssistant) -> None:
     # Emit long press event
     inject_bluetooth_service_info_bleak(
         hass,
-        make_bthome_v2_adv(mac, b"\x40\x3A\x04"),
+        make_bthome_v2_adv(mac, b"\x40\x3a\x04"),
     )
 
     # wait for the event
@@ -81,7 +73,7 @@ async def test_event_rotate_dimmer(hass: HomeAssistant) -> None:
     # Emit rotate dimmer 3 steps left event
     inject_bluetooth_service_info_bleak(
         hass,
-        make_bthome_v2_adv(mac, b"\x40\x3C\x01\x03"),
+        make_bthome_v2_adv(mac, b"\x40\x3c\x01\x03"),
     )
 
     # wait for the event
@@ -104,7 +96,7 @@ async def test_get_triggers_button(hass: HomeAssistant) -> None:
     # Emit long press event so it creates the device in the registry
     inject_bluetooth_service_info_bleak(
         hass,
-        make_bthome_v2_adv(mac, b"\x40\x3A\x04"),
+        make_bthome_v2_adv(mac, b"\x40\x3a\x04"),
     )
 
     # wait for the event
@@ -140,7 +132,7 @@ async def test_get_triggers_dimmer(hass: HomeAssistant) -> None:
     # Emit rotate left with 3 steps event so it creates the device in the registry
     inject_bluetooth_service_info_bleak(
         hass,
-        make_bthome_v2_adv(mac, b"\x40\x3C\x01\x03"),
+        make_bthome_v2_adv(mac, b"\x40\x3c\x01\x03"),
     )
 
     # wait for the event
@@ -228,7 +220,9 @@ async def test_get_triggers_for_invalid_device_id(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_if_fires_on_motion_detected(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_motion_detected(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
     """Test for motion event trigger firing."""
     mac = "DE:70:E8:B2:39:0C"
     entry = await _async_setup_bthome_device(hass, mac)
@@ -236,7 +230,7 @@ async def test_if_fires_on_motion_detected(hass: HomeAssistant, calls) -> None:
     # Emit a button event so it creates the device in the registry
     inject_bluetooth_service_info_bleak(
         hass,
-        make_bthome_v2_adv(mac, b"\x40\x3A\x03"),
+        make_bthome_v2_adv(mac, b"\x40\x3a\x03"),
     )
 
     #     # wait for the event
@@ -271,12 +265,12 @@ async def test_if_fires_on_motion_detected(hass: HomeAssistant, calls) -> None:
     # Emit long press event
     inject_bluetooth_service_info_bleak(
         hass,
-        make_bthome_v2_adv(mac, b"\x40\x3A\x04"),
+        make_bthome_v2_adv(mac, b"\x40\x3a\x04"),
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "test_trigger_button_long_press"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "test_trigger_button_long_press"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

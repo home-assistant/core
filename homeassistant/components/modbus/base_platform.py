@@ -1,4 +1,5 @@
 """Base implementation for all modbus platforms."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -24,7 +25,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, ToggleEntity
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
@@ -44,7 +45,6 @@ from .const import (
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
-    CONF_LAZY_ERROR,
     CONF_MAX_VALUE,
     CONF_MIN_VALUE,
     CONF_NAN_VALUE,
@@ -55,7 +55,6 @@ from .const import (
     CONF_STATE_ON,
     CONF_SWAP,
     CONF_SWAP_BYTE,
-    CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_VERIFY,
@@ -68,17 +67,19 @@ from .const import (
 )
 from .modbus import ModbusHub
 
-PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 
 class BasePlatform(Entity):
     """Base for readonly platforms."""
 
-    def __init__(self, hub: ModbusHub, entry: dict[str, Any]) -> None:
+    def __init__(
+        self, hass: HomeAssistant, hub: ModbusHub, entry: dict[str, Any]
+    ) -> None:
         """Initialize the Modbus binary sensor."""
+
         self._hub = hub
-        self._slave = entry.get(CONF_SLAVE, None) or entry.get(CONF_DEVICE_ADDRESS, 0)
+        self._slave = entry.get(CONF_SLAVE) or entry.get(CONF_DEVICE_ADDRESS, 0)
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
         self._value: str | None = None
@@ -93,8 +94,6 @@ class BasePlatform(Entity):
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
         self._attr_available = True
         self._attr_unit_of_measurement = None
-        self._lazy_error_count = entry[CONF_LAZY_ERROR]
-        self._lazy_errors = self._lazy_error_count
 
         def get_optional_numeric_config(config_name: str) -> int | float | None:
             if (val := entry.get(config_name)) is None:
@@ -106,7 +105,7 @@ class BasePlatform(Entity):
 
         self._min_value = get_optional_numeric_config(CONF_MIN_VALUE)
         self._max_value = get_optional_numeric_config(CONF_MAX_VALUE)
-        self._nan_value = entry.get(CONF_NAN_VALUE, None)
+        self._nan_value = entry.get(CONF_NAN_VALUE)
         self._zero_suppress = get_optional_numeric_config(CONF_ZERO_SUPPRESS)
 
     @abstractmethod
@@ -154,29 +153,38 @@ class BasePlatform(Entity):
 class BaseStructPlatform(BasePlatform, RestoreEntity):
     """Base class representing a sensor/climate."""
 
-    def __init__(self, hub: ModbusHub, config: dict) -> None:
+    def __init__(self, hass: HomeAssistant, hub: ModbusHub, config: dict) -> None:
         """Initialize the switch."""
-        super().__init__(hub, config)
+        super().__init__(hass, hub, config)
         self._swap = config[CONF_SWAP]
-        if self._swap == CONF_SWAP_NONE:
-            self._swap = None
         self._data_type = config[CONF_DATA_TYPE]
         self._structure: str = config[CONF_STRUCTURE]
-        self._precision = config[CONF_PRECISION]
         self._scale = config[CONF_SCALE]
-        if self._scale < 1 and not self._precision:
-            self._precision = 2
         self._offset = config[CONF_OFFSET]
-        self._slave_count = config.get(CONF_SLAVE_COUNT, None) or config.get(
+        self._slave_count = config.get(CONF_SLAVE_COUNT) or config.get(
             CONF_VIRTUAL_COUNT, 0
         )
         self._slave_size = self._count = config[CONF_COUNT]
+        self._value_is_int: bool = self._data_type in (
+            DataType.INT16,
+            DataType.INT32,
+            DataType.INT64,
+            DataType.UINT16,
+            DataType.UINT32,
+            DataType.UINT64,
+        )
+        if not self._value_is_int:
+            self._precision = config.get(CONF_PRECISION, 2)
+        else:
+            self._precision = config.get(CONF_PRECISION, 0)
+            if self._precision > 0 or self._scale != int(self._scale):
+                self._value_is_int = False
 
     def _swap_registers(self, registers: list[int], slave_count: int) -> list[int]:
         """Do swap as needed."""
         if slave_count:
             swapped = []
-            for i in range(0, self._slave_count + 1):
+            for i in range(self._slave_count + 1):
                 inx = i * self._slave_size
                 inx2 = inx + self._slave_size
                 swapped.extend(self._swap_registers(registers[inx:inx2], 0))
@@ -194,22 +202,25 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             registers.reverse()
         return registers
 
-    def __process_raw_value(
-        self, entry: float | int | str | bytes
-    ) -> float | int | str | bytes | None:
+    def __process_raw_value(self, entry: float | str | bytes) -> str | None:
         """Process value from sensor with NaN handling, scaling, offset, min/max etc."""
         if self._nan_value and entry in (self._nan_value, -self._nan_value):
             return None
         if isinstance(entry, bytes):
-            return entry
+            return entry.decode()
+        if entry != entry:  # noqa: PLR0124
+            # NaN float detection replace with None
+            return None
         val: float | int = self._scale * entry + self._offset
         if self._min_value is not None and val < self._min_value:
-            return self._min_value
+            val = self._min_value
         if self._max_value is not None and val > self._max_value:
-            return self._max_value
+            val = self._max_value
         if self._zero_suppress is not None and abs(val) <= self._zero_suppress:
-            return 0
-        return val
+            return "0"
+        if self._precision == 0:
+            return str(round(val))
+        return f"{float(val):.{self._precision}f}"
 
     def unpack_structure_result(self, registers: list[int]) -> str | None:
         """Convert registers to proper result."""
@@ -219,6 +230,8 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         if self._data_type == DataType.STRING:
             return byte_string.decode()
+        if byte_string == b"nan\x00":
+            return None
 
         try:
             val = struct.unpack(self._structure, byte_string)
@@ -227,58 +240,28 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             msg = f"Received {recv_size} bytes, unpack error {err}"
             _LOGGER.error(msg)
             return None
-        # Issue: https://github.com/home-assistant/core/issues/41944
-        # If unpack() returns a tuple greater than 1, don't try to process the value.
-        # Instead, return the values of unpack(...) separated by commas.
         if len(val) > 1:
             # Apply scale, precision, limits to floats and ints
             v_result = []
             for entry in val:
                 v_temp = self.__process_raw_value(entry)
-
-                # We could convert int to float, and the code would still work; however
-                # we lose some precision, and unit tests will fail. Therefore, we do
-                # the conversion only when it's absolutely necessary.
-                if isinstance(v_temp, int) and self._precision == 0:
-                    v_result.append(str(v_temp))
-                elif v_temp is None:
-                    v_result.append("0")
-                elif v_temp != v_temp:  # noqa: PLR0124
-                    # NaN float detection replace with None
+                if v_temp is None:
                     v_result.append("0")
                 else:
-                    v_result.append(f"{float(v_temp):.{self._precision}f}")
+                    v_result.append(str(v_temp))
             return ",".join(map(str, v_result))
 
-        # NaN float detection replace with None
-        if val[0] != val[0]:  # noqa: PLR0124
-            return None
-        if byte_string == b"nan\x00":
-            return None
-
         # Apply scale, precision, limits to floats and ints
-        val_result = self.__process_raw_value(val[0])
-
-        # We could convert int to float, and the code would still work; however
-        # we lose some precision, and unit tests will fail. Therefore, we do
-        # the conversion only when it's absolutely necessary.
-
-        if val_result is None:
-            return None
-        if isinstance(val_result, int) and self._precision == 0:
-            return str(val_result)
-        if isinstance(val_result, bytes):
-            return val_result.decode()
-        return f"{float(val_result):.{self._precision}f}"
+        return self.__process_raw_value(val[0])
 
 
 class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
     """Base class representing a Modbus switch."""
 
-    def __init__(self, hub: ModbusHub, config: dict) -> None:
+    def __init__(self, hass: HomeAssistant, hub: ModbusHub, config: dict) -> None:
         """Initialize the switch."""
         config[CONF_INPUT_TYPE] = ""
-        super().__init__(hub, config)
+        super().__init__(hass, hub, config)
         self._attr_is_on = False
         convert = {
             CALL_TYPE_REGISTER_HOLDING: (
@@ -371,15 +354,10 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
         )
         self._call_active = False
         if result is None:
-            if self._lazy_errors:
-                self._lazy_errors -= 1
-                return
-            self._lazy_errors = self._lazy_error_count
             self._attr_available = False
             self.async_write_ha_state()
             return
 
-        self._lazy_errors = self._lazy_error_count
         self._attr_available = True
         if self._verify_type in (CALL_TYPE_COIL, CALL_TYPE_DISCRETE):
             self._attr_is_on = bool(result.bits[0] & 1)

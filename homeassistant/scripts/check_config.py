@@ -1,4 +1,5 @@
 """Script to check the configuration file."""
+
 from __future__ import annotations
 
 import argparse
@@ -27,12 +28,12 @@ import homeassistant.util.yaml.loader as yaml_loader
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
-REQUIREMENTS = ("colorlog==6.7.0",)
+REQUIREMENTS = ("colorlog==6.8.2",)
 
 _LOGGER = logging.getLogger(__name__)
 MOCKS: dict[str, tuple[str, Callable]] = {
     "load": ("homeassistant.util.yaml.loader.load_yaml", yaml_loader.load_yaml),
-    "load*": ("homeassistant.config.load_yaml", yaml_loader.load_yaml),
+    "load*": ("homeassistant.config.load_yaml_dict", yaml_loader.load_yaml_dict),
     "secrets": ("homeassistant.util.yaml.loader.secret_yaml", yaml_loader.secret_yaml),
 }
 
@@ -40,6 +41,7 @@ PATCHES: dict[str, Any] = {}
 
 C_HEAD = "bold"
 ERROR_STR = "General Errors"
+WARNING_STR = "General Warnings"
 
 
 def color(the_color, *args, reset=None):
@@ -116,6 +118,18 @@ def run(script_args: list) -> int:
             dump_dict(config, reset="red")
             print(color("reset"))
 
+    if res["warn"]:
+        print(color("bold_white", "Incorrect config"))
+        for domain, config in res["warn"].items():
+            domain_info.append(domain)
+            print(
+                " ",
+                color("bold_yellow", domain + ":"),
+                color("yellow", "", reset="yellow"),
+            )
+            dump_dict(config, reset="yellow")
+            print(color("reset"))
+
     if domain_info:
         if "all" in domain_info:
             print(color("bold_white", "Successful config (all)"))
@@ -160,8 +174,9 @@ def check(config_dir, secrets=False):
     res: dict[str, Any] = {
         "yaml_files": OrderedDict(),  # yaml_files loaded
         "secrets": OrderedDict(),  # secret cache and secrets loaded
-        "except": OrderedDict(),  # exceptions raised (with config)
-        #'components' is a HomeAssistantConfig  # noqa: E265
+        "except": OrderedDict(),  # critical exceptions raised (with config)
+        "warn": OrderedDict(),  # non critical exceptions raised (with config)
+        #'components' is a HomeAssistantConfig
         "secret_cache": {},
     }
 
@@ -200,7 +215,7 @@ def check(config_dir, secrets=False):
 
     def secrets_proxy(*args):
         secrets = Secrets(*args)
-        res["secret_cache"] = secrets._cache  # pylint: disable=protected-access
+        res["secret_cache"] = secrets._cache  # noqa: SLF001
         return secrets
 
     try:
@@ -215,7 +230,13 @@ def check(config_dir, secrets=False):
             if err.config:
                 res["except"].setdefault(domain, []).append(err.config)
 
-    except Exception as err:  # pylint: disable=broad-except
+        for err in res["components"].warnings:
+            domain = err.domain or WARNING_STR
+            res["warn"].setdefault(domain, []).append(err.message)
+            if err.config:
+                res["warn"].setdefault(domain, []).append(err.config)
+
+    except Exception as err:  # noqa: BLE001
         print(color("red", "Fatal error while loading config:"), str(err))
         res["except"].setdefault(ERROR_STR, []).append(str(err))
     finally:
@@ -270,13 +291,13 @@ def dump_dict(layer, indent_count=3, listi=False, **kwargs):
         for key, value in sorted(layer.items(), key=sort_dict_key):
             if isinstance(value, (dict, list)):
                 print(indent_str, str(key) + ":", line_info(value, **kwargs))
-                dump_dict(value, indent_count + 2)
+                dump_dict(value, indent_count + 2, **kwargs)
             else:
-                print(indent_str, str(key) + ":", value)
+                print(indent_str, str(key) + ":", value, line_info(key, **kwargs))
             indent_str = indent_count * " "
     if isinstance(layer, Sequence):
         for i in layer:
             if isinstance(i, dict):
-                dump_dict(i, indent_count + 2, True)
+                dump_dict(i, indent_count + 2, True, **kwargs)
             else:
                 print(" ", indent_str, i)

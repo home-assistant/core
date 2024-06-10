@@ -1,8 +1,12 @@
 """Mobile app utility functions."""
+
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING
 
+from homeassistant.components import cloud
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
 from .const import (
@@ -10,6 +14,7 @@ from .const import (
     ATTR_PUSH_TOKEN,
     ATTR_PUSH_URL,
     ATTR_PUSH_WEBSOCKET_CHANNEL,
+    CONF_CLOUDHOOK_URL,
     DATA_CONFIG_ENTRIES,
     DATA_DEVICES,
     DATA_NOTIFY,
@@ -53,3 +58,19 @@ def get_notify_service(hass: HomeAssistant, webhook_id: str) -> str | None:
             return target_service
 
     return None
+
+
+_CLOUD_HOOK_LOCK = asyncio.Lock()
+
+
+async def async_create_cloud_hook(
+    hass: HomeAssistant, webhook_id: str, entry: ConfigEntry | None
+) -> str:
+    """Create a cloud hook."""
+    async with _CLOUD_HOOK_LOCK:
+        hook = await cloud.async_get_or_create_cloudhook(hass, webhook_id)
+        if entry:
+            hass.config_entries.async_update_entry(
+                entry, data={**entry.data, CONF_CLOUDHOOK_URL: hook}
+            )
+        return hook

@@ -14,8 +14,8 @@ class FitbitProfile:
     encoded_id: str
     """The ID representing the Fitbit user."""
 
-    full_name: str
-    """The first name value specified in the user's account settings."""
+    display_name: str
+    """The name shown when the user's friends look at their Fitbit profile."""
 
     locale: str | None
     """The locale defined in the user's Fitbit account settings."""

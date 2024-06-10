@@ -1,4 +1,5 @@
 """Tests for LCN device triggers."""
+
 from pypck.inputs import ModSendKeysHost, ModStatusAccessControl
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import AccessControlPeriphery, KeyAction, SendKeyCommand
@@ -10,7 +11,7 @@ from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.lcn import device_trigger
 from homeassistant.components.lcn.const import DOMAIN, KEY_ACTIONS, SENDKEYS
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -49,12 +50,11 @@ async def test_get_triggers_module_device(
 
 
 async def test_get_triggers_non_module_device(
-    hass: HomeAssistant, entry, lcn_connection
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, entry, lcn_connection
 ) -> None:
     """Test we get the expected triggers from a LCN non-module device."""
     not_included_types = ("transmitter", "transponder", "fingerprint", "send_keys")
 
-    device_registry = dr.async_get(hass)
     host_device = device_registry.async_get_device(
         identifiers={(DOMAIN, entry.entry_id)}
     )
@@ -72,7 +72,7 @@ async def test_get_triggers_non_module_device(
 
 
 async def test_if_fires_on_transponder_event(
-    hass: HomeAssistant, calls, entry, lcn_connection
+    hass: HomeAssistant, calls: list[ServiceCall], entry, lcn_connection
 ) -> None:
     """Test for transponder event triggers firing."""
     address = (0, 7, False)
@@ -119,7 +119,7 @@ async def test_if_fires_on_transponder_event(
 
 
 async def test_if_fires_on_fingerprint_event(
-    hass: HomeAssistant, calls, entry, lcn_connection
+    hass: HomeAssistant, calls: list[ServiceCall], entry, lcn_connection
 ) -> None:
     """Test for fingerprint event triggers firing."""
     address = (0, 7, False)
@@ -166,7 +166,7 @@ async def test_if_fires_on_fingerprint_event(
 
 
 async def test_if_fires_on_codelock_event(
-    hass: HomeAssistant, calls, entry, lcn_connection
+    hass: HomeAssistant, calls: list[ServiceCall], entry, lcn_connection
 ) -> None:
     """Test for codelock event triggers firing."""
     address = (0, 7, False)
@@ -213,7 +213,7 @@ async def test_if_fires_on_codelock_event(
 
 
 async def test_if_fires_on_transmitter_event(
-    hass: HomeAssistant, calls, entry, lcn_connection
+    hass: HomeAssistant, calls: list[ServiceCall], entry, lcn_connection
 ) -> None:
     """Test for transmitter event triggers firing."""
     address = (0, 7, False)
@@ -269,7 +269,7 @@ async def test_if_fires_on_transmitter_event(
 
 
 async def test_if_fires_on_send_keys_event(
-    hass: HomeAssistant, calls, entry, lcn_connection
+    hass: HomeAssistant, calls: list[ServiceCall], entry, lcn_connection
 ) -> None:
     """Test for send_keys event triggers firing."""
     address = (0, 7, False)

@@ -1,4 +1,5 @@
 """Test the WebOS Tv config flow."""
+
 import dataclasses
 from unittest.mock import Mock
 
@@ -44,7 +45,7 @@ async def test_form(hass: HomeAssistant, client) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_init(
@@ -54,7 +55,7 @@ async def test_form(hass: HomeAssistant, client) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pairing"
 
     result = await hass.config_entries.flow.async_init(
@@ -64,7 +65,7 @@ async def test_form(hass: HomeAssistant, client) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pairing"
 
     result = await hass.config_entries.flow.async_configure(
@@ -73,7 +74,7 @@ async def test_form(hass: HomeAssistant, client) -> None:
 
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TV_NAME
 
 
@@ -105,7 +106,7 @@ async def test_options_flow_live_tv_in_apps(
     result = await hass.config_entries.options.async_init(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result2 = await hass.config_entries.options.async_configure(
@@ -114,7 +115,7 @@ async def test_options_flow_live_tv_in_apps(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"][CONF_SOURCES] == ["Live TV", "Input01", "Input02"]
 
 
@@ -126,7 +127,7 @@ async def test_options_flow_cannot_retrieve(hass: HomeAssistant, client) -> None
     result = await hass.config_entries.options.async_init(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_retrieve"}
 
 
@@ -144,7 +145,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, client) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -162,7 +163,7 @@ async def test_form_pairexception(hass: HomeAssistant, client) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "error_pairing"
 
 
@@ -177,7 +178,7 @@ async def test_entry_already_configured(hass: HomeAssistant, client) -> None:
         data=MOCK_USER_CONFIG,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -190,7 +191,7 @@ async def test_form_ssdp(hass: HomeAssistant, client) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pairing"
 
 
@@ -205,7 +206,7 @@ async def test_ssdp_in_progress(hass: HomeAssistant, client) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pairing"
 
     result2 = await hass.config_entries.flow.async_init(
@@ -213,7 +214,7 @@ async def test_ssdp_in_progress(hass: HomeAssistant, client) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
 
 
@@ -228,7 +229,7 @@ async def test_ssdp_update_uuid(hass: HomeAssistant, client) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.unique_id == MOCK_DISCOVERY_INFO.upnp[ssdp.ATTR_UPNP_UDN][5:]
 
@@ -247,7 +248,7 @@ async def test_ssdp_not_update_uuid(hass: HomeAssistant, client) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "pairing"
     assert entry.unique_id is None
 
@@ -265,7 +266,7 @@ async def test_form_abort_uuid_configured(hass: HomeAssistant, client) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     user_config = {
@@ -280,7 +281,7 @@ async def test_form_abort_uuid_configured(hass: HomeAssistant, client) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pairing"
 
     result = await hass.config_entries.flow.async_configure(
@@ -289,7 +290,7 @@ async def test_form_abort_uuid_configured(hass: HomeAssistant, client) -> None:
 
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == "new_host"
 
@@ -308,7 +309,7 @@ async def test_reauth_successful(hass: HomeAssistant, client, monkeypatch) -> No
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert entry.data[CONF_CLIENT_SECRET] == CLIENT_KEY
 
@@ -317,7 +318,7 @@ async def test_reauth_successful(hass: HomeAssistant, client, monkeypatch) -> No
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_CLIENT_SECRET] == "new_key"
 
@@ -345,7 +346,7 @@ async def test_reauth_errors(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     monkeypatch.setattr(client, "connect", Mock(side_effect=side_effect))
@@ -353,5 +354,5 @@ async def test_reauth_errors(
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason

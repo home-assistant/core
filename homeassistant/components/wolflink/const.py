@@ -7,6 +7,7 @@ PARAMETERS = "parameters"
 DEVICE_ID = "device_id"
 DEVICE_GATEWAY = "device_gateway"
 DEVICE_NAME = "device_name"
+MANUFACTURER = "WOLF GmbH"
 
 STATES = {
     "Ein": "ein",
@@ -66,7 +67,7 @@ STATES = {
     "Kombigerät mit Solareinbindung": "kombigerat_mit_solareinbindung",
     "Heizgerät mit Speicher": "heizgerat_mit_speicher",
     "Nur Heizgerät": "nur_heizgerat",
-    "Aktiviert": "ktiviert",
+    "Aktiviert": "aktiviert",
     "Sparen": "sparen",
     "Estrichtrocknung": "estrichtrocknung",
     "Telefonfernschalter": "telefonfernschalter",

@@ -1,19 +1,26 @@
 """Test the cloud component."""
+
+from collections.abc import Callable, Coroutine
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from hass_nabucasa import Cloud
 import pytest
 
 from homeassistant.components import cloud
-from homeassistant.components.cloud.const import DOMAIN
+from homeassistant.components.cloud import (
+    CloudNotAvailable,
+    CloudNotConnected,
+    async_get_or_create_cloudhook,
+)
+from homeassistant.components.cloud.const import DOMAIN, PREF_CLOUDHOOKS
 from homeassistant.components.cloud.prefs import STORAGE_KEY
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockUser
+from tests.common import MockConfigEntry, MockUser
 
 
 async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
@@ -65,12 +72,14 @@ async def test_remote_services(
 
     with patch("hass_nabucasa.remote.RemoteUI.connect") as mock_connect:
         await hass.services.async_call(DOMAIN, "remote_connect", blocking=True)
+        await hass.async_block_till_done()
 
     assert mock_connect.called
     assert cloud.client.remote_autostart
 
     with patch("hass_nabucasa.remote.RemoteUI.disconnect") as mock_disconnect:
         await hass.services.async_call(DOMAIN, "remote_disconnect", blocking=True)
+        await hass.async_block_till_done()
 
     assert mock_disconnect.called
     assert not cloud.client.remote_autostart
@@ -78,8 +87,9 @@ async def test_remote_services(
     # Test admin access required
     non_admin_context = Context(user_id=hass_read_only_user.id)
 
-    with patch("hass_nabucasa.remote.RemoteUI.connect") as mock_connect, pytest.raises(
-        Unauthorized
+    with (
+        patch("hass_nabucasa.remote.RemoteUI.connect") as mock_connect,
+        pytest.raises(Unauthorized),
     ):
         await hass.services.async_call(
             DOMAIN, "remote_connect", blocking=True, context=non_admin_context
@@ -87,9 +97,10 @@ async def test_remote_services(
 
     assert mock_connect.called is False
 
-    with patch(
-        "hass_nabucasa.remote.RemoteUI.disconnect"
-    ) as mock_disconnect, pytest.raises(Unauthorized):
+    with (
+        patch("hass_nabucasa.remote.RemoteUI.disconnect") as mock_disconnect,
+        pytest.raises(Unauthorized),
+    ):
         await hass.services.async_call(
             DOMAIN, "remote_disconnect", blocking=True, context=non_admin_context
         )
@@ -97,8 +108,8 @@ async def test_remote_services(
     assert mock_disconnect.called is False
 
 
-async def test_startup_shutdown_events(hass: HomeAssistant, mock_cloud_fixture) -> None:
-    """Test if the cloud will start on startup event."""
+async def test_shutdown_event(hass: HomeAssistant, mock_cloud_fixture) -> None:
+    """Test if the cloud will stop on shutdown event."""
     with patch("hass_nabucasa.Cloud.stop") as mock_stop:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
@@ -214,3 +225,73 @@ async def test_remote_ui_url(hass: HomeAssistant, mock_cloud_fixture) -> None:
         cl.client.prefs._prefs["remote_domain"] = "example.com"
 
         assert cloud.async_remote_ui_url(hass) == "https://example.com"
+
+
+async def test_async_get_or_create_cloudhook(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+) -> None:
+    """Test async_get_or_create_cloudhook."""
+    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    await hass.async_block_till_done()
+    await cloud.login("test-user", "test-pass")
+
+    webhook_id = "mock-webhook-id"
+    cloudhook_url = "https://cloudhook.nabu.casa/abcdefg"
+
+    with patch(
+        "homeassistant.components.cloud.async_create_cloudhook",
+        return_value=cloudhook_url,
+    ) as async_create_cloudhook_mock:
+        # create cloudhook as it does not exist
+        assert (await async_get_or_create_cloudhook(hass, webhook_id)) == cloudhook_url
+        async_create_cloudhook_mock.assert_called_once_with(hass, webhook_id)
+
+        await set_cloud_prefs(
+            {
+                PREF_CLOUDHOOKS: {
+                    webhook_id: {
+                        "webhook_id": webhook_id,
+                        "cloudhook_id": "random-id",
+                        "cloudhook_url": cloudhook_url,
+                        "managed": True,
+                    }
+                }
+            }
+        )
+
+        async_create_cloudhook_mock.reset_mock()
+
+        # get cloudhook as it exists
+        assert await async_get_or_create_cloudhook(hass, webhook_id) == cloudhook_url
+        async_create_cloudhook_mock.assert_not_called()
+
+    # Simulate logged out
+    await cloud.logout()
+
+    # Not logged in
+    with pytest.raises(CloudNotAvailable):
+        await async_get_or_create_cloudhook(hass, webhook_id)
+
+    # Simulate disconnected
+    cloud.iot.state = "disconnected"
+
+    # Not connected
+    with pytest.raises(CloudNotConnected):
+        await async_get_or_create_cloudhook(hass, webhook_id)
+
+
+async def test_cloud_logout(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+) -> None:
+    """Test cloud setup with existing config entry when user is logged out."""
+    assert cloud.is_logged_in is False
+
+    mock_config_entry = MockConfigEntry(domain=DOMAIN)
+    mock_config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
+    await hass.async_block_till_done()
+
+    assert cloud.is_logged_in is False

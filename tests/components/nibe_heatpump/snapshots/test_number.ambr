@@ -1,0 +1,143 @@
+# serializer version: 1
+# name: test_update[Model.F1155-47011-number.heat_offset_s1_47011--10]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'F1155 Heat Offset S1',
+      'max': 10.0,
+      'min': -10.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.heat_offset_s1_47011',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-10.0',
+  })
+# ---
+# name: test_update[Model.F1155-47011-number.heat_offset_s1_47011-10]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'F1155 Heat Offset S1',
+      'max': 10.0,
+      'min': -10.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.heat_offset_s1_47011',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.0',
+  })
+# ---
+# name: test_update[Model.F1155-47062-number.heat_offset_s1_47011-None]
+  None
+# ---
+# name: test_update[Model.F750-47062-number.hw_charge_offset_47062--10]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'F750 HW charge offset',
+      'max': 12.7,
+      'min': -12.8,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+      'unit_of_measurement': '°C',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.hw_charge_offset_47062',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-10.0',
+  })
+# ---
+# name: test_update[Model.F750-47062-number.hw_charge_offset_47062-10]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'F750 HW charge offset',
+      'max': 12.7,
+      'min': -12.8,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+      'unit_of_measurement': '°C',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.hw_charge_offset_47062',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.0',
+  })
+# ---
+# name: test_update[Model.F750-47062-number.hw_charge_offset_47062-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'F750 HW charge offset',
+      'max': 12.7,
+      'min': -12.8,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+      'unit_of_measurement': '°C',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.hw_charge_offset_47062',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_update[Model.S320-40031-number.heating_offset_climate_system_1_40031--10]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'S320 Heating offset climate system 1',
+      'max': 10.0,
+      'min': -10.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.heating_offset_climate_system_1_40031',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-10.0',
+  })
+# ---
+# name: test_update[Model.S320-40031-number.heating_offset_climate_system_1_40031-10]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'S320 Heating offset climate system 1',
+      'max': 10.0,
+      'min': -10.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.heating_offset_climate_system_1_40031',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.0',
+  })
+# ---
+# name: test_update[Model.S320-40031-number.heating_offset_climate_system_1_40031-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'S320 Heating offset climate system 1',
+      'max': 10.0,
+      'min': -10.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.heating_offset_climate_system_1_40031',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---

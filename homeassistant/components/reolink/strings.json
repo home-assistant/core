@@ -10,6 +10,13 @@
           "use_https": "Enable HTTPS",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Reolink device. For example: '192.168.1.25'.",
+          "port": "The port to connect to the Reolink device. For HTTP normally: '80', for HTTPS normally '443'.",
+          "use_https": "Use a HTTPS (SSL) connection to the Reolink device.",
+          "username": "Username to login to the Reolink device itself. Not the Reolink cloud account.",
+          "password": "Password to login to the Reolink device itself. Not the Reolink cloud account."
         }
       },
       "reauth_confirm": {
@@ -21,7 +28,7 @@
       "api_error": "API error occurred",
       "cannot_connect": "Failed to connect, check the IP address of the camera",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "not_admin": "User needs to be admin, user ''{username}'' has authorisation level ''{userlevel}''",
+      "not_admin": "User needs to be admin, user \"{username}\" has authorisation level \"{userlevel}\"",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "webhook_exception": "Home Assistant URL is not available, go to Settings > System > Network > Home Assistant URL and correct the URLs, see {more_info}"
     },
@@ -35,6 +42,9 @@
       "init": {
         "data": {
           "protocol": "Protocol"
+        },
+        "data_description": {
+          "protocol": "Streaming protocol to use for the camera entities. RTSP supports 4K streams (h265 encoding) while RTMP and FLV do not. FLV is the least demanding on the camera."
         }
       }
     }
@@ -61,58 +71,175 @@
       "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The latest firmware can be downloaded from the [Reolink download center]({download_link})."
     }
   },
+  "services": {
+    "ptz_move": {
+      "name": "PTZ move",
+      "description": "Move the camera with a specific speed.",
+      "fields": {
+        "speed": {
+          "name": "Speed",
+          "description": "PTZ move speed."
+        }
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "face": {
-        "name": "Face"
+        "name": "Face",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "person": {
-        "name": "Person"
+        "name": "Person",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "vehicle": {
-        "name": "Vehicle"
+        "name": "Vehicle",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "pet": {
-        "name": "Pet"
+        "name": "Pet",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "animal": {
+        "name": "Animal",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "visitor": {
         "name": "Visitor"
       },
+      "package": {
+        "name": "Package",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
       "motion_lens_0": {
-        "name": "Motion lens 0"
+        "name": "Motion lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "face_lens_0": {
-        "name": "Face lens 0"
+        "name": "Face lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "person_lens_0": {
-        "name": "Person lens 0"
+        "name": "Person lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "vehicle_lens_0": {
-        "name": "Vehicle lens 0"
+        "name": "Vehicle lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "pet_lens_0": {
-        "name": "Pet lens 0"
+        "name": "Pet lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "animal_lens_0": {
+        "name": "Animal lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "visitor_lens_0": {
         "name": "Visitor lens 0"
       },
+      "package_lens_0": {
+        "name": "Package lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
       "motion_lens_1": {
-        "name": "Motion lens 1"
+        "name": "Motion lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "face_lens_1": {
-        "name": "Face lens 1"
+        "name": "Face lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "person_lens_1": {
-        "name": "Person lens 1"
+        "name": "Person lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "vehicle_lens_1": {
-        "name": "Vehicle lens 1"
+        "name": "Vehicle lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "pet_lens_1": {
-        "name": "Pet lens 1"
+        "name": "Pet lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "animal_lens_1": {
+        "name": "Animal lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       },
       "visitor_lens_1": {
         "name": "Visitor lens 1"
+      },
+      "package_lens_1": {
+        "name": "Package lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "sleep": {
+        "name": "Sleep status",
+        "state": {
+          "off": "Awake",
+          "on": "Sleeping"
+        }
       }
     },
     "button": {
@@ -147,12 +274,65 @@
         "name": "Guard set current position"
       }
     },
+    "camera": {
+      "sub": {
+        "name": "Fluent"
+      },
+      "main": {
+        "name": "Clear"
+      },
+      "snapshots_sub": {
+        "name": "Snapshots fluent"
+      },
+      "snapshots_main": {
+        "name": "Snapshots clear"
+      },
+      "ext": {
+        "name": "Balanced"
+      },
+      "sub_lens_0": {
+        "name": "Fluent lens 0"
+      },
+      "main_lens_0": {
+        "name": "Clear lens 0"
+      },
+      "snapshots_sub_lens_0": {
+        "name": "Snapshots fluent lens 0"
+      },
+      "snapshots_main_lens_0": {
+        "name": "Snapshots clear lens 0"
+      },
+      "ext_lens_0": {
+        "name": "Balanced lens 0"
+      },
+      "sub_lens_1": {
+        "name": "Fluent lens 1"
+      },
+      "main_lens_1": {
+        "name": "Clear lens 1"
+      },
+      "snapshots_sub_lens_1": {
+        "name": "Snapshots fluent lens 1"
+      },
+      "snapshots_main_lens_1": {
+        "name": "Snapshots clear lens 1"
+      },
+      "ext_lens_1": {
+        "name": "Balanced lens 1"
+      },
+      "autotrack_sub": {
+        "name": "Autotrack fluent"
+      },
+      "autotrack_snapshots_sub": {
+        "name": "Autotrack snapshots fluent"
+      },
+      "autotrack_snapshots_main": {
+        "name": "Autotrack snapshots clear"
+      }
+    },
     "light": {
       "floodlight": {
         "name": "Floodlight"
-      },
-      "ir_lights": {
-        "name": "Infra red lights in night mode"
       },
       "status_led": {
         "name": "Status LED"
@@ -177,17 +357,26 @@
       "motion_sensitivity": {
         "name": "Motion sensitivity"
       },
-      "ai_face_sensititvity": {
+      "pir_sensitivity": {
+        "name": "PIR sensitivity"
+      },
+      "ai_face_sensitivity": {
         "name": "AI face sensitivity"
       },
-      "ai_person_sensititvity": {
+      "ai_person_sensitivity": {
         "name": "AI person sensitivity"
       },
-      "ai_vehicle_sensititvity": {
+      "ai_vehicle_sensitivity": {
         "name": "AI vehicle sensitivity"
       },
-      "ai_pet_sensititvity": {
+      "ai_package_sensitivity": {
+        "name": "AI package sensitivity"
+      },
+      "ai_pet_sensitivity": {
         "name": "AI pet sensitivity"
+      },
+      "ai_animal_sensitivity": {
+        "name": "AI animal sensitivity"
       },
       "ai_face_delay": {
         "name": "AI face delay"
@@ -198,8 +387,14 @@
       "ai_vehicle_delay": {
         "name": "AI vehicle delay"
       },
+      "ai_package_delay": {
+        "name": "AI package delay"
+      },
       "ai_pet_delay": {
         "name": "AI pet delay"
+      },
+      "ai_animal_delay": {
+        "name": "AI animal delay"
       },
       "auto_quick_reply_time": {
         "name": "Auto quick reply time"
@@ -215,6 +410,24 @@
       },
       "auto_track_stop_time": {
         "name": "Auto track stop time"
+      },
+      "day_night_switch_threshold": {
+        "name": "Day night switch threshold"
+      },
+      "image_brightness": {
+        "name": "Image brightness"
+      },
+      "image_contrast": {
+        "name": "Image contrast"
+      },
+      "image_saturation": {
+        "name": "Image saturation"
+      },
+      "image_sharpness": {
+        "name": "Image sharpness"
+      },
+      "image_hue": {
+        "name": "Image hue"
       }
     },
     "select": {
@@ -234,11 +447,14 @@
         "state": {
           "auto": "Auto",
           "color": "Color",
-          "blackwhite": "Black&White"
+          "blackwhite": "Black & white"
         }
       },
       "ptz_preset": {
         "name": "PTZ preset"
+      },
+      "play_quick_reply_message": {
+        "name": "Play quick reply message"
       },
       "auto_quick_reply_message": {
         "name": "Auto quick reply message",
@@ -254,12 +470,13 @@
           "pantiltfirst": "Pan/tilt first"
         }
       },
-      "status_led": {
-        "name": "Status LED",
+      "doorbell_led": {
+        "name": "Doorbell LED",
         "state": {
           "stayoff": "Stay off",
           "auto": "Auto",
-          "alwaysonatnight": "Auto & always on at night"
+          "alwaysonatnight": "Auto & always on at night",
+          "alwayson": "Always on"
         }
       }
     },
@@ -269,6 +486,23 @@
       },
       "ptz_pan_position": {
         "name": "PTZ pan position"
+      },
+      "battery_temperature": {
+        "name": "Battery temperature"
+      },
+      "battery_state": {
+        "name": "Battery state",
+        "state": {
+          "discharging": "Discharging",
+          "charging": "Charging",
+          "chargecomplete": "Charge complete"
+        }
+      },
+      "hdd_storage": {
+        "name": "HDD {hdd_index} storage"
+      },
+      "sd_storage": {
+        "name": "SD {hdd_index} storage"
       }
     },
     "siren": {
@@ -277,6 +511,9 @@
       }
     },
     "switch": {
+      "ir_lights": {
+        "name": "Infra red lights in night mode"
+      },
       "record_audio": {
         "name": "Record audio"
       },
@@ -289,8 +526,11 @@
       "auto_focus": {
         "name": "Auto focus"
       },
-      "gaurd_return": {
+      "guard_return": {
         "name": "Guard return"
+      },
+      "ptz_patrol": {
+        "name": "PTZ patrol"
       },
       "email": {
         "name": "Email on event"
@@ -304,11 +544,23 @@
       "record": {
         "name": "Record"
       },
+      "manual_record": {
+        "name": "Manual record"
+      },
       "buzzer": {
         "name": "Buzzer on event"
       },
       "doorbell_button_sound": {
         "name": "Doorbell button sound"
+      },
+      "hdr": {
+        "name": "HDR"
+      },
+      "pir_enabled": {
+        "name": "PIR enabled"
+      },
+      "pir_reduce_alarm": {
+        "name": "PIR reduce false alarm"
       }
     }
   }

@@ -1,4 +1,5 @@
 """Support for Nexia Automations."""
+
 from typing import Any
 
 from nexia.automation import NexiaAutomation
@@ -35,7 +36,7 @@ async def async_setup_entry(
 class NexiaAutomationScene(NexiaEntity, Scene):
     """Provides Nexia automation support."""
 
-    _attr_icon = "mdi:script-text-outline"
+    _attr_translation_key = "automation"
 
     def __init__(
         self, coordinator: NexiaDataUpdateCoordinator, automation: NexiaAutomation

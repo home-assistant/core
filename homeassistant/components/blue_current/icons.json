@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "sensor": {
+      "vehicle_status": {
+        "default": "mdi:car"
+      },
+      "activity": {
+        "default": "mdi:ev-station"
+      },
+      "max_usage": {
+        "default": "mdi:gauge-full"
+      },
+      "smartcharging_max_usage": {
+        "default": "mdi:gauge-full"
+      },
+      "max_offline": {
+        "default": "mdi:gauge-full"
+      },
+      "current_left": {
+        "default": "mdi:gauge"
+      }
+    }
+  }
+}

@@ -1,9 +1,9 @@
 """Statistics helper."""
+
 from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Sequence
-import contextlib
 import dataclasses
 from datetime import datetime, timedelta
 from functools import lru_cache, partial
@@ -11,12 +11,11 @@ from itertools import chain, groupby
 import logging
 from operator import itemgetter
 import re
-from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 from sqlalchemy import Select, and_, bindparam, func, lambda_stmt, select, text
 from sqlalchemy.engine.row import Row
-from sqlalchemy.exc import SQLAlchemyError, StatementError
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 import voluptuous as vol
@@ -31,6 +30,7 @@ from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     DataRateConverter,
     DistanceConverter,
+    DurationConverter,
     ElectricCurrentConverter,
     ElectricPotentialConverter,
     EnergyConverter,
@@ -42,6 +42,7 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
     UnitlessRatioConverter,
     VolumeConverter,
+    VolumeFlowRateConverter,
 )
 
 from .const import (
@@ -71,6 +72,7 @@ from .models import (
 from .util import (
     execute,
     execute_stmt_lambda_element,
+    filter_unique_constraint_integrity_error,
     get_instance,
     retryable_database_job,
     session_scope,
@@ -115,7 +117,7 @@ QUERY_STATISTICS_SUMMARY_SUM = (
     StatisticsShortTerm.state,
     StatisticsShortTerm.sum,
     func.row_number()
-    .over(  # type: ignore[no-untyped-call]
+    .over(
         partition_by=StatisticsShortTerm.metadata_id,
         order_by=StatisticsShortTerm.start_ts.desc(),
     )
@@ -126,6 +128,7 @@ QUERY_STATISTICS_SUMMARY_SUM = (
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     **{unit: DataRateConverter for unit in DataRateConverter.VALID_UNITS},
     **{unit: DistanceConverter for unit in DistanceConverter.VALID_UNITS},
+    **{unit: DurationConverter for unit in DurationConverter.VALID_UNITS},
     **{unit: ElectricCurrentConverter for unit in ElectricCurrentConverter.VALID_UNITS},
     **{
         unit: ElectricPotentialConverter
@@ -140,9 +143,21 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     **{unit: TemperatureConverter for unit in TemperatureConverter.VALID_UNITS},
     **{unit: UnitlessRatioConverter for unit in UnitlessRatioConverter.VALID_UNITS},
     **{unit: VolumeConverter for unit in VolumeConverter.VALID_UNITS},
+    **{unit: VolumeFlowRateConverter for unit in VolumeFlowRateConverter.VALID_UNITS},
 }
 
 DATA_SHORT_TERM_STATISTICS_RUN_CACHE = "recorder_short_term_statistics_run_cache"
+
+
+def mean(values: list[float]) -> float | None:
+    """Return the mean of the values.
+
+    This is a very simple version that only works
+    with a non-empty list of floats. The built-in
+    statistics.mean is more robust but is is almost
+    an order of magnitude slower.
+    """
+    return sum(values) / len(values)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -334,8 +349,7 @@ def get_start_time() -> datetime:
     now = dt_util.utcnow()
     current_period_minutes = now.minute - now.minute % 5
     current_period = now.replace(minute=current_period_minutes, second=0, microsecond=0)
-    last_period = current_period - timedelta(minutes=5)
-    return last_period
+    return current_period - timedelta(minutes=5)
 
 
 def _compile_hourly_statistics_summary_mean_stmt(
@@ -440,7 +454,9 @@ def compile_missing_statistics(instance: Recorder) -> bool:
 
     with session_scope(
         session=instance.get_session(),
-        exception_filter=_filter_unique_constraint_integrity_error(instance),
+        exception_filter=filter_unique_constraint_integrity_error(
+            instance, "statistic"
+        ),
     ) as session:
         # Find the newest statistics run, if any
         if last_run := session.query(func.max(StatisticsRuns.start)).scalar():
@@ -469,10 +485,18 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
 
     The actual calculation is delegated to the platforms.
     """
+    # Define modified_statistic_ids outside of the "with" statement as
+    # _compile_statistics may raise and be trapped by
+    # filter_unique_constraint_integrity_error which would make
+    # modified_statistic_ids unbound.
+    modified_statistic_ids: set[str] | None = None
+
     # Return if we already have 5-minute statistics for the requested period
     with session_scope(
         session=instance.get_session(),
-        exception_filter=_filter_unique_constraint_integrity_error(instance),
+        exception_filter=filter_unique_constraint_integrity_error(
+            instance, "statistic"
+        ),
     ) as session:
         modified_statistic_ids = _compile_statistics(
             instance, session, start, fire_events
@@ -622,7 +646,6 @@ def _insert_statistics(
     try:
         stat = table.from_stats(metadata_id, statistic)
         session.add(stat)
-        return stat
     except SQLAlchemyError:
         _LOGGER.exception(
             "Unexpected exception when inserting statistics %s:%s ",
@@ -630,6 +653,7 @@ def _insert_statistics(
             statistic,
         )
         return None
+    return stat
 
 
 def _update_statistics(
@@ -666,7 +690,7 @@ def get_metadata_with_session(
     session: Session,
     *,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Fetch meta data.
@@ -687,7 +711,7 @@ def get_metadata(
     hass: HomeAssistant,
     *,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Return metadata for statistic_ids."""
@@ -723,7 +747,9 @@ def update_statistics_metadata(
     if new_statistic_id is not UNDEFINED and new_statistic_id is not None:
         with session_scope(
             session=instance.get_session(),
-            exception_filter=_filter_unique_constraint_integrity_error(instance),
+            exception_filter=filter_unique_constraint_integrity_error(
+                instance, "statistic"
+            ),
         ) as session:
             statistics_meta_manager.update_statistic_id(
                 session, DOMAIN, statistic_id, new_statistic_id
@@ -733,7 +759,7 @@ def update_statistics_metadata(
 async def async_list_statistic_ids(
     hass: HomeAssistant,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
 ) -> list[dict]:
     """Return all statistic_ids (or filtered one) and unit of measurement.
 
@@ -782,7 +808,7 @@ def _statistic_by_id_from_metadata(
 
 
 def _flatten_list_statistic_ids_metadata_result(
-    result: dict[str, dict[str, Any]]
+    result: dict[str, dict[str, Any]],
 ) -> list[dict]:
     """Return a flat dict of metadata."""
     return [
@@ -803,7 +829,7 @@ def _flatten_list_statistic_ids_metadata_result(
 def list_statistic_ids(
     hass: HomeAssistant,
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
 ) -> list[dict]:
     """Return all statistic_ids (or filtered one) and unit of measurement.
 
@@ -922,19 +948,20 @@ def reduce_day_ts_factory() -> (
     ]
 ):
     """Return functions to match same day and day start end."""
-    _boundries: tuple[float, float] = (0, 0)
+    _lower_bound: float = 0
+    _upper_bound: float = 0
 
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
-        datetime.fromtimestamp, tz=dt_util.DEFAULT_TIME_ZONE
+        datetime.fromtimestamp, tz=dt_util.get_default_time_zone()
     )
 
     def _same_day_ts(time1: float, time2: float) -> bool:
         """Return True if time1 and time2 are in the same date."""
-        nonlocal _boundries
-        if not _boundries[0] <= time1 < _boundries[1]:
-            _boundries = _day_start_end_ts_cached(time1)
-        return _boundries[0] <= time2 < _boundries[1]
+        nonlocal _lower_bound, _upper_bound
+        if not _lower_bound <= time1 < _upper_bound:
+            _lower_bound, _upper_bound = _day_start_end_ts_cached(time1)
+        return _lower_bound <= time2 < _upper_bound
 
     def _day_start_end_ts(time: float) -> tuple[float, float]:
         """Return the start and end of the period (day) time is within."""
@@ -942,8 +969,8 @@ def reduce_day_ts_factory() -> (
             hour=0, minute=0, second=0, microsecond=0
         )
         return (
-            start_local.astimezone(dt_util.UTC).timestamp(),
-            (start_local + timedelta(days=1)).astimezone(dt_util.UTC).timestamp(),
+            start_local.timestamp(),
+            (start_local + timedelta(days=1)).timestamp(),
         )
 
     # We create _day_start_end_ts_cached in the closure in case the timezone changes
@@ -970,30 +997,30 @@ def reduce_week_ts_factory() -> (
     ]
 ):
     """Return functions to match same week and week start end."""
-    _boundries: tuple[float, float] = (0, 0)
+    _lower_bound: float = 0
+    _upper_bound: float = 0
 
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
-        datetime.fromtimestamp, tz=dt_util.DEFAULT_TIME_ZONE
+        datetime.fromtimestamp, tz=dt_util.get_default_time_zone()
     )
 
     def _same_week_ts(time1: float, time2: float) -> bool:
         """Return True if time1 and time2 are in the same year and week."""
-        nonlocal _boundries
-        if not _boundries[0] <= time1 < _boundries[1]:
-            _boundries = _week_start_end_ts_cached(time1)
-        return _boundries[0] <= time2 < _boundries[1]
+        nonlocal _lower_bound, _upper_bound
+        if not _lower_bound <= time1 < _upper_bound:
+            _lower_bound, _upper_bound = _week_start_end_ts_cached(time1)
+        return _lower_bound <= time2 < _upper_bound
 
     def _week_start_end_ts(time: float) -> tuple[float, float]:
         """Return the start and end of the period (week) time is within."""
-        nonlocal _boundries
         time_local = _local_from_timestamp(time)
         start_local = time_local.replace(
             hour=0, minute=0, second=0, microsecond=0
         ) - timedelta(days=time_local.weekday())
         return (
-            start_local.astimezone(dt_util.UTC).timestamp(),
-            (start_local + timedelta(days=7)).astimezone(dt_util.UTC).timestamp(),
+            start_local.timestamp(),
+            (start_local + timedelta(days=7)).timestamp(),
         )
 
     # We create _week_start_end_ts_cached in the closure in case the timezone changes
@@ -1028,19 +1055,20 @@ def reduce_month_ts_factory() -> (
     ]
 ):
     """Return functions to match same month and month start end."""
-    _boundries: tuple[float, float] = (0, 0)
+    _lower_bound: float = 0
+    _upper_bound: float = 0
 
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
-        datetime.fromtimestamp, tz=dt_util.DEFAULT_TIME_ZONE
+        datetime.fromtimestamp, tz=dt_util.get_default_time_zone()
     )
 
     def _same_month_ts(time1: float, time2: float) -> bool:
         """Return True if time1 and time2 are in the same year and month."""
-        nonlocal _boundries
-        if not _boundries[0] <= time1 < _boundries[1]:
-            _boundries = _month_start_end_ts_cached(time1)
-        return _boundries[0] <= time2 < _boundries[1]
+        nonlocal _lower_bound, _upper_bound
+        if not _lower_bound <= time1 < _upper_bound:
+            _lower_bound, _upper_bound = _month_start_end_ts_cached(time1)
+        return _lower_bound <= time2 < _upper_bound
 
     def _month_start_end_ts(time: float) -> tuple[float, float]:
         """Return the start and end of the period (month) time is within."""
@@ -1048,10 +1076,7 @@ def reduce_month_ts_factory() -> (
             day=1, hour=0, minute=0, second=0, microsecond=0
         )
         end_local = _find_month_end_time(start_local)
-        return (
-            start_local.astimezone(dt_util.UTC).timestamp(),
-            end_local.astimezone(dt_util.UTC).timestamp(),
-        )
+        return (start_local.timestamp(), end_local.timestamp())
 
     # We create _month_start_end_ts_cached in the closure in case the timezone changes
     _month_start_end_ts_cached = lru_cache(maxsize=6)(_month_start_end_ts)
@@ -1088,10 +1113,7 @@ def _generate_statistics_during_period_stmt(
         end_time_ts = end_time.timestamp()
         stmt += lambda q: q.filter(table.start_ts < end_time_ts)
     if metadata_ids:
-        stmt += lambda q: q.filter(
-            # https://github.com/python/mypy/issues/2608
-            table.metadata_id.in_(metadata_ids)  # type:ignore[arg-type]
-        )
+        stmt += lambda q: q.filter(table.metadata_id.in_(metadata_ids))
     stmt += lambda q: q.order_by(table.metadata_id, table.start_ts)
     return stmt
 
@@ -2045,7 +2067,7 @@ def _sorted_statistics_to_dict(  # noqa: C901
     seen_statistic_ids: set[str] = set()
     key_func = itemgetter(metadata_id_idx)
     for meta_id, group in groupby(stats, key_func):
-        stats_list = stats_by_meta_id[meta_id] = list(group)
+        stats_by_meta_id[meta_id] = list(group)
         seen_statistic_ids.add(metadata[meta_id]["statistic_id"])
 
     # Set all statistic IDs to empty lists in result set to maintain the order
@@ -2175,9 +2197,14 @@ def _async_import_statistics(
     for statistic in statistics:
         start = statistic["start"]
         if start.tzinfo is None or start.tzinfo.utcoffset(start) is None:
-            raise HomeAssistantError("Naive timestamp")
+            raise HomeAssistantError(
+                "Naive timestamp: no or invalid timezone info provided"
+            )
         if start.minute != 0 or start.second != 0 or start.microsecond != 0:
-            raise HomeAssistantError("Invalid timestamp")
+            raise HomeAssistantError(
+                "Invalid timestamp: timestamps must be from the top of the hour (minutes and seconds = 0)"
+            )
+
         statistic["start"] = dt_util.as_utc(start)
 
         if "last_reset" in statistic and statistic["last_reset"] is not None:
@@ -2233,54 +2260,6 @@ def async_add_external_statistics(
         raise HomeAssistantError("Invalid source")
 
     _async_import_statistics(hass, metadata, statistics)
-
-
-def _filter_unique_constraint_integrity_error(
-    instance: Recorder,
-) -> Callable[[Exception], bool]:
-    def _filter_unique_constraint_integrity_error(err: Exception) -> bool:
-        """Handle unique constraint integrity errors."""
-        if not isinstance(err, StatementError):
-            return False
-
-        assert instance.engine is not None
-        dialect_name = instance.engine.dialect.name
-
-        ignore = False
-        if (
-            dialect_name == SupportedDialect.SQLITE
-            and "UNIQUE constraint failed" in str(err)
-        ):
-            ignore = True
-        if (
-            dialect_name == SupportedDialect.POSTGRESQL
-            and err.orig
-            and hasattr(err.orig, "pgcode")
-            and err.orig.pgcode == "23505"
-        ):
-            ignore = True
-        if (
-            dialect_name == SupportedDialect.MYSQL
-            and err.orig
-            and hasattr(err.orig, "args")
-        ):
-            with contextlib.suppress(TypeError):
-                if err.orig.args[0] == 1062:
-                    ignore = True
-
-        if ignore:
-            _LOGGER.warning(
-                (
-                    "Blocked attempt to insert duplicated statistic rows, please report"
-                    " at %s"
-                ),
-                "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+recorder%22",
-                exc_info=err,
-            )
-
-        return ignore
-
-    return _filter_unique_constraint_integrity_error
 
 
 def _import_statistics_with_session(
@@ -2386,7 +2365,9 @@ def import_statistics(
 
     with session_scope(
         session=instance.get_session(),
-        exception_filter=_filter_unique_constraint_integrity_error(instance),
+        exception_filter=filter_unique_constraint_integrity_error(
+            instance, "statistic"
+        ),
     ) as session:
         return _import_statistics_with_session(
             instance, session, metadata, statistics, table

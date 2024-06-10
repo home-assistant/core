@@ -1,0 +1,13 @@
+{
+  "entity": {
+    "sensor": {
+      "energy_consumed": {
+        "default": "mdi:factory"
+      }
+    }
+  },
+  "services": {
+    "set_vane_horizontal": "mdi:arrow-left-right",
+    "set_vane_vertical": "mdi:arrow-up-down"
+  }
+}

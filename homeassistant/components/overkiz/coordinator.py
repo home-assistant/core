@@ -1,4 +1,5 @@
 """Helpers to help coordinate updates."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -6,7 +7,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from aiohttp import ServerDisconnectedError
+from aiohttp import ClientConnectorError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
 from pyoverkiz.enums import EventName, ExecutionState, Protocol
 from pyoverkiz.exceptions import (
@@ -43,7 +44,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         name: str,
         client: OverkizClient,
         devices: list[Device],
-        places: Place,
+        places: Place | None,
         update_interval: timedelta | None = None,
         config_entry_id: str,
     ) -> None:
@@ -79,7 +80,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             raise UpdateFailed("Server is down for maintenance.") from exception
         except InvalidEventListenerIdException as exception:
             raise UpdateFailed(exception) from exception
-        except TimeoutError as exception:
+        except (TimeoutError, ClientConnectorError) as exception:
             raise UpdateFailed("Failed to connect.") from exception
         except (ServerDisconnectedError, NotAuthenticatedException):
             self.executions = {}

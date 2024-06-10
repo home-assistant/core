@@ -1,4 +1,5 @@
 """Support for Wyoming wake-word-detection services."""
+
 import asyncio
 from collections.abc import AsyncIterable
 import logging
@@ -13,8 +14,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .data import WyomingService
+from .data import WyomingService, load_wyoming_info
 from .error import WyomingError
+from .models import DomainDataItem
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,10 +27,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Wyoming wake-word-detection."""
-    service: WyomingService = hass.data[DOMAIN][config_entry.entry_id]
+    item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         [
-            WyomingWakeWordProvider(config_entry, service),
+            WyomingWakeWordProvider(hass, config_entry, item.service),
         ]
     )
 
@@ -38,23 +40,41 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         config_entry: ConfigEntry,
         service: WyomingService,
     ) -> None:
         """Set up provider."""
+        self.hass = hass
         self.service = service
         wake_service = service.info.wake[0]
 
         self._supported_wake_words = [
-            wake_word.WakeWord(id=ww.name, name=ww.description or ww.name)
+            wake_word.WakeWord(
+                id=ww.name, name=ww.description or ww.name, phrase=ww.phrase
+            )
             for ww in wake_service.models
         ]
         self._attr_name = wake_service.name
         self._attr_unique_id = f"{config_entry.entry_id}-wake_word"
 
-    @property
-    def supported_wake_words(self) -> list[wake_word.WakeWord]:
+    async def get_supported_wake_words(self) -> list[wake_word.WakeWord]:
         """Return a list of supported wake words."""
+        info = await load_wyoming_info(
+            self.service.host, self.service.port, retries=0, timeout=1
+        )
+
+        if info is not None:
+            wake_service = info.wake[0]
+            self._supported_wake_words = [
+                wake_word.WakeWord(
+                    id=ww.name,
+                    name=ww.description or ww.name,
+                    phrase=ww.phrase,
+                )
+                for ww in wake_service.models
+            ]
+
         return self._supported_wake_words
 
     async def _async_process_audio_stream(
@@ -127,6 +147,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
 
                                 return wake_word.DetectionResult(
                                     wake_word_id=detection.name,
+                                    wake_word_phrase=self._get_phrase(detection.name),
                                     timestamp=detection.timestamp,
                                     queued_audio=queued_audio,
                                 )
@@ -166,7 +187,18 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
                     for task in pending:
                         task.cancel()
 
-        except (OSError, WyomingError) as err:
-            _LOGGER.exception("Error processing audio stream: %s", err)
+        except (OSError, WyomingError):
+            _LOGGER.exception("Error processing audio stream")
 
         return None
+
+    def _get_phrase(self, model_id: str) -> str:
+        """Get wake word phrase for model id."""
+        for ww_model in self._supported_wake_words:
+            if not ww_model.phrase:
+                continue
+
+            if ww_model.id == model_id:
+                return ww_model.phrase
+
+        return model_id

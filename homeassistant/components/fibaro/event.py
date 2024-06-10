@@ -1,4 +1,5 @@
 """Support for Fibaro event entities."""
+
 from __future__ import annotations
 
 from pyfibaro.fibaro_device import DeviceModel, SceneEvent
@@ -11,7 +12,7 @@ from homeassistant.components.event import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FibaroController, FibaroDevice
@@ -26,13 +27,15 @@ async def async_setup_entry(
     """Set up the Fibaro event entities."""
     controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
-    for device in controller.fibaro_devices[Platform.EVENT]:
-        for scene_event in device.central_scene_event:
-            # Each scene event represents a button on a device
-            entities.append(FibaroEventEntity(device, scene_event))
-
-    async_add_entities(entities, True)
+    # Each scene event represents a button on a device
+    async_add_entities(
+        (
+            FibaroEventEntity(device, scene_event)
+            for device in controller.fibaro_devices[Platform.EVENT]
+            for scene_event in device.central_scene_event
+        ),
+        True,
+    )
 
 
 class FibaroEventEntity(FibaroDevice, EventEntity):
@@ -41,16 +44,17 @@ class FibaroEventEntity(FibaroDevice, EventEntity):
     def __init__(self, fibaro_device: DeviceModel, scene_event: SceneEvent) -> None:
         """Initialize the Fibaro device."""
         super().__init__(fibaro_device)
-        self.entity_id = ENTITY_ID_FORMAT.format(
-            f"{self.ha_id}_button_{scene_event.key_id}"
-        )
 
-        self._button = scene_event.key_id
+        key_id = scene_event.key_id
 
-        self._attr_name = f"{fibaro_device.friendly_name} Button {scene_event.key_id}"
+        self.entity_id = ENTITY_ID_FORMAT.format(f"{self.ha_id}_button_{key_id}")
+
+        self._button = key_id
+
+        self._attr_name = f"{fibaro_device.friendly_name} Button {key_id}"
         self._attr_device_class = EventDeviceClass.BUTTON
         self._attr_event_types = scene_event.key_event_types
-        self._attr_unique_id = f"{fibaro_device.unique_id_str}.{scene_event.key_id}"
+        self._attr_unique_id = f"{fibaro_device.unique_id_str}.{key_id}"
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
@@ -61,7 +65,6 @@ class FibaroEventEntity(FibaroDevice, EventEntity):
             self.fibaro_device.fibaro_id, self._event_callback
         )
 
-    @callback
     def _event_callback(self, event: FibaroEvent) -> None:
         if event.key_id == self._button:
             self._trigger_event(event.key_event_type)

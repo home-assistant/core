@@ -4,6 +4,7 @@ import copy
 from unittest.mock import patch
 
 from aioairzone.const import API_DATA, API_SYSTEMS
+import pytest
 
 from homeassistant.components.airzone.coordinator import SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
@@ -22,9 +23,8 @@ from .util import (
 from tests.common import async_fire_time_changed
 
 
-async def test_airzone_create_sensors(
-    hass: HomeAssistant, entity_registry_enabled_by_default: None
-) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_airzone_create_sensors(hass: HomeAssistant) -> None:
     """Test creation of sensors."""
 
     await async_init_integration(hass)
@@ -34,7 +34,7 @@ async def test_airzone_create_sensors(
     assert state.state == "43"
 
     # WebServer
-    state = hass.states.get("sensor.webserver_rssi")
+    state = hass.states.get("sensor.airzone_webserver_rssi")
     assert state.state == "-42"
 
     # Zones
@@ -81,9 +81,8 @@ async def test_airzone_create_sensors(
     assert state is None
 
 
-async def test_airzone_sensors_availability(
-    hass: HomeAssistant, entity_registry_enabled_by_default: None
-) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_airzone_sensors_availability(hass: HomeAssistant) -> None:
     """Test sensors availability."""
 
     await async_init_integration(hass)
@@ -91,21 +90,27 @@ async def test_airzone_sensors_availability(
     HVAC_MOCK_UNAVAILABLE_ZONE = copy.deepcopy(HVAC_MOCK)
     del HVAC_MOCK_UNAVAILABLE_ZONE[API_SYSTEMS][0][API_DATA][1]
 
-    with patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
-        return_value=HVAC_DHW_MOCK,
-    ), patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
-        return_value=HVAC_MOCK_UNAVAILABLE_ZONE,
-    ), patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
-        return_value=HVAC_SYSTEMS_MOCK,
-    ), patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.get_version",
-        return_value=HVAC_VERSION_MOCK,
-    ), patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
-        return_value=HVAC_WEBSERVER_MOCK,
+    with (
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
+            return_value=HVAC_DHW_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
+            return_value=HVAC_MOCK_UNAVAILABLE_ZONE,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
+            return_value=HVAC_SYSTEMS_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+            return_value=HVAC_VERSION_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
+            return_value=HVAC_WEBSERVER_MOCK,
+        ),
     ):
         async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()

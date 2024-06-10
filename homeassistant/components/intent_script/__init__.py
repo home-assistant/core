@@ -1,12 +1,14 @@
 """Handle intents with scripts."""
+
 from __future__ import annotations
 
 import logging
-from typing import TypedDict
+from typing import Any, TypedDict
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_TYPE, SERVICE_RELOAD
+from homeassistant.components.script import CONF_MODE
+from homeassistant.const import CONF_DESCRIPTION, CONF_TYPE, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import (
     config_validation as cv,
@@ -22,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "intent_script"
 
+CONF_PLATFORMS = "platforms"
 CONF_INTENTS = "intents"
 CONF_SPEECH = "speech"
 CONF_REPROMPT = "reprompt"
@@ -39,10 +42,15 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: {
             cv.string: {
+                vol.Optional(CONF_DESCRIPTION): cv.string,
+                vol.Optional(CONF_PLATFORMS): vol.All([cv.string], vol.Coerce(set)),
                 vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
                 vol.Optional(
                     CONF_ASYNC_ACTION, default=DEFAULT_CONF_ASYNC_ACTION
                 ): cv.boolean,
+                vol.Optional(CONF_MODE, default=script.DEFAULT_SCRIPT_MODE): vol.In(
+                    script.SCRIPT_MODE_CHOICES
+                ),
                 vol.Optional(CONF_CARD): {
                     vol.Optional(CONF_TYPE, default="simple"): cv.string,
                     vol.Required(CONF_TITLE): cv.template,
@@ -87,8 +95,13 @@ def async_load_intents(hass: HomeAssistant, intents: dict[str, ConfigType]) -> N
 
     for intent_type, conf in intents.items():
         if CONF_ACTION in conf:
+            script_mode: str = conf.get(CONF_MODE, script.DEFAULT_SCRIPT_MODE)
             conf[CONF_ACTION] = script.Script(
-                hass, conf[CONF_ACTION], f"Intent Script {intent_type}", DOMAIN
+                hass,
+                conf[CONF_ACTION],
+                f"Intent Script {intent_type}",
+                DOMAIN,
+                script_mode=script_mode,
             )
         intent.async_register(hass, ScriptIntentHandler(intent_type, conf))
 
@@ -136,6 +149,8 @@ class ScriptIntentHandler(intent.IntentHandler):
         """Initialize the script intent handler."""
         self.intent_type = intent_type
         self.config = config
+        self.description = config.get(CONF_DESCRIPTION)
+        self.platforms = config.get(CONF_PLATFORMS)
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
@@ -144,7 +159,7 @@ class ScriptIntentHandler(intent.IntentHandler):
         card: _IntentCardData | None = self.config.get(CONF_CARD)
         action: script.Script | None = self.config.get(CONF_ACTION)
         is_async_action: bool = self.config[CONF_ASYNC_ACTION]
-        slots: dict[str, str] = {
+        slots: dict[str, Any] = {
             key: value["value"] for key, value in intent_obj.slots.items()
         }
 
@@ -164,7 +179,11 @@ class ScriptIntentHandler(intent.IntentHandler):
                     action.async_run(slots, intent_obj.context)
                 )
             else:
-                await action.async_run(slots, intent_obj.context)
+                action_res = await action.async_run(slots, intent_obj.context)
+
+                # if the action returns a response, make it available to the speech/reprompt templates below
+                if action_res and action_res.service_response is not None:
+                    slots["action_response"] = action_res.service_response
 
         response = intent_obj.create_response()
 

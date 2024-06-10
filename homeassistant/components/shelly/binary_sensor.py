@@ -1,22 +1,24 @@
 """Binary sensor for Shelly."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Final, cast
+
+from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import CONF_SLEEP_PERIOD
+from .coordinator import ShellyConfigEntry
 from .entity import (
     BlockEntityDescription,
     RestEntityDescription,
@@ -37,24 +39,24 @@ from .utils import (
 )
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class BlockBinarySensorDescription(
     BlockEntityDescription, BinarySensorEntityDescription
 ):
     """Class to describe a BLOCK binary sensor."""
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class RpcBinarySensorDescription(RpcEntityDescription, BinarySensorEntityDescription):
     """Class to describe a RPC binary sensor."""
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class RestBinarySensorDescription(RestEntityDescription, BinarySensorEntityDescription):
     """Class to describe a REST binary sensor."""
 
 
-SENSORS: Final = {
+SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
     ("device", "overtemp"): BlockBinarySensorDescription(
         key="device|overtemp",
         name="Overheating",
@@ -165,7 +167,7 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "external_power": RpcBinarySensorDescription(
-        key="devicepower:0",
+        key="devicepower",
         sub_key="external",
         name="External power",
         value=lambda status, _: status["present"],
@@ -205,26 +207,24 @@ RPC_SENSORS: Final = {
         name="Smoke",
         device_class=BinarySensorDeviceClass.SMOKE,
     ),
+    "restart": RpcBinarySensorDescription(
+        key="sys",
+        sub_key="restart_required",
+        name="Restart required",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 }
-
-
-def _build_block_description(entry: RegistryEntry) -> BlockBinarySensorDescription:
-    """Build description when restoring block attribute entities."""
-    return BlockBinarySensorDescription(
-        key="",
-        name="",
-        icon=entry.original_icon,
-        device_class=entry.original_device_class,
-    )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""
-    if get_device_entry_gen(config_entry) == 2:
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         if config_entry.data[CONF_SLEEP_PERIOD]:
             async_setup_entry_rpc(
                 hass,
@@ -246,7 +246,6 @@ async def async_setup_entry(
             async_add_entities,
             SENSORS,
             BlockSleepingBinarySensor,
-            _build_block_description,
         )
     else:
         async_setup_entry_attribute_entities(
@@ -255,7 +254,6 @@ async def async_setup_entry(
             async_add_entities,
             SENSORS,
             BlockBinarySensor,
-            _build_block_description,
         )
         async_setup_entry_rest(
             hass,

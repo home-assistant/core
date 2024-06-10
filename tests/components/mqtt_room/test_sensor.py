@@ -1,12 +1,13 @@
 """The tests for the MQTT room presence sensor."""
+
 import datetime
 import json
 from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components import sensor
 from homeassistant.components.mqtt import CONF_QOS, CONF_STATE_TOPIC, DEFAULT_QOS
-import homeassistant.components.sensor as sensor
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_NAME,
@@ -118,7 +119,7 @@ async def test_room_update(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> 
 
 
 async def test_unique_id_is_set(
-    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mqtt_mock: MqttMockHAClient
 ) -> None:
     """Test the updating between rooms."""
     unique_name = "my_unique_name_0123456789"
@@ -141,6 +142,5 @@ async def test_unique_id_is_set(
     state = hass.states.get(SENSOR_STATE)
     assert state.state is not None
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(SENSOR_STATE)
     assert entry.unique_id == unique_name

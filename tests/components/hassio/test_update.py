@@ -1,16 +1,19 @@
 """The tests for the hassio update entities."""
+
+from datetime import timedelta
 import os
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.hassio import DOMAIN
-from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.components.hassio import DOMAIN, HassioAPIError
+from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
@@ -18,7 +21,7 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
 @pytest.fixture(autouse=True)
-def mock_all(aioclient_mock, request):
+def mock_all(aioclient_mock: AiohttpClientMocker) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
@@ -183,6 +186,16 @@ def mock_all(aioclient_mock, request):
                 "suggestions": [],
                 "issues": [],
                 "checks": [],
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/network/info",
+        json={
+            "result": "ok",
+            "data": {
+                "host_internet": True,
+                "supervisor_internet": True,
             },
         },
     )
@@ -467,9 +480,12 @@ async def test_release_notes_between_versions(
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
-    with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.get_addons_changelogs",
-        return_value={"test": "# 2.0.1\nNew updates\n# 2.0.0\nOld updates"},
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch(
+            "homeassistant.components.hassio.coordinator.get_addons_changelogs",
+            return_value={"test": "# 2.0.1\nNew updates\n# 2.0.0\nOld updates"},
+        ),
     ):
         result = await async_setup_component(
             hass,
@@ -503,9 +519,12 @@ async def test_release_notes_full(
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
-    with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.get_addons_changelogs",
-        return_value={"test": "# 2.0.0\nNew updates\n# 2.0.0\nOld updates"},
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch(
+            "homeassistant.components.hassio.coordinator.get_addons_changelogs",
+            return_value={"test": "# 2.0.0\nNew updates\n# 2.0.0\nOld updates"},
+        ),
     ):
         result = await async_setup_component(
             hass,
@@ -539,9 +558,12 @@ async def test_not_release_notes(
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
-    with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.get_addons_changelogs",
-        return_value={"test": None},
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch(
+            "homeassistant.components.hassio.coordinator.get_addons_changelogs",
+            return_value={"test": None},
+        ),
     ):
         result = await async_setup_component(
             hass,
@@ -567,13 +589,16 @@ async def test_not_release_notes(
 
 async def test_no_os_entity(hass: HomeAssistant) -> None:
     """Test handling where there is no os entity."""
-    with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.HassIO.get_info",
-        return_value={
-            "supervisor": "222",
-            "homeassistant": "0.110.0",
-            "hassos": None,
-        },
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_info",
+            return_value={
+                "supervisor": "222",
+                "homeassistant": "0.110.0",
+                "hassos": None,
+            },
+        ),
     ):
         result = await async_setup_component(
             hass,
@@ -591,15 +616,20 @@ async def test_setting_up_core_update_when_addon_fails(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test setting up core update when single addon fails."""
-    with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.HassIO.get_addon_stats",
-        side_effect=HassioAPIError("add-on is not running"),
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_addon_changelog",
-        side_effect=HassioAPIError("add-on is not running"),
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_addon_info",
-        side_effect=HassioAPIError("add-on is not running"),
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_addon_stats",
+            side_effect=HassioAPIError("add-on is not running"),
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_addon_changelog",
+            side_effect=HassioAPIError("add-on is not running"),
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_addon_info",
+            side_effect=HassioAPIError("add-on is not running"),
+        ),
     ):
         result = await async_setup_component(
             hass,
@@ -609,8 +639,13 @@ async def test_setting_up_core_update_when_addon_fails(
         await hass.async_block_till_done()
     assert result
 
+    # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
+    async_fire_time_changed(
+        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+    )
+    await hass.async_block_till_done()
+
     # Verify that the core update entity does exist
     state = hass.states.get("update.home_assistant_core_update")
     assert state
     assert state.state == "on"
-    assert "Could not fetch stats for test: add-on is not running" in caplog.text

@@ -20,7 +20,7 @@ from homeassistant.components.airzone_cloud.const import DOMAIN
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 
-from .util import CONFIG, WS_ID, async_init_integration
+from .util import CONFIG, WS_ID, WS_ID_AIDOO, WS_ID_AIDOO_PRO, async_init_integration
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
@@ -28,9 +28,13 @@ from tests.typing import ClientSessionGenerator
 RAW_DATA_MOCK = {
     RAW_DEVICES_CONFIG: {
         "dev1": {},
+        "dev2": {},
+        "dev3": {},
     },
     RAW_DEVICES_STATUS: {
         "dev1": {},
+        "dev2": {},
+        "dev3": {},
     },
     RAW_INSTALLATIONS: {
         CONFIG[CONF_ID]: {
@@ -44,11 +48,31 @@ RAW_DATA_MOCK = {
                         },
                     ],
                 },
+                {
+                    API_GROUP_ID: "grp2",
+                    API_DEVICES: [
+                        {
+                            API_DEVICE_ID: "dev2",
+                            API_WS_ID: WS_ID_AIDOO,
+                        },
+                    ],
+                },
+                {
+                    API_GROUP_ID: "grp3",
+                    API_DEVICES: [
+                        {
+                            API_DEVICE_ID: "dev3",
+                            API_WS_ID: WS_ID_AIDOO_PRO,
+                        },
+                    ],
+                },
             ],
             "plugins": {
                 "schedules": {
                     "calendar_ws_ids": [
                         WS_ID,
+                        WS_ID_AIDOO,
+                        WS_ID_AIDOO_PRO,
                     ],
                 },
             },
@@ -57,6 +81,8 @@ RAW_DATA_MOCK = {
     RAW_INSTALLATIONS_LIST: {},
     RAW_WEBSERVERS: {
         WS_ID: {},
+        WS_ID_AIDOO: {},
+        WS_ID_AIDOO_PRO: {},
     },
     "test_cov": {
         "1": None,

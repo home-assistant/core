@@ -1,11 +1,12 @@
 """Base entity class for Flo entities."""
+
 from __future__ import annotations
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as FLO_DOMAIN
-from .device import FloDeviceDataUpdateCoordinator
+from .coordinator import FloDeviceDataUpdateCoordinator
 
 
 class FloEntity(Entity):
@@ -32,6 +33,7 @@ class FloEntity(Entity):
         return DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, self._device.mac_address)},
             identifiers={(FLO_DOMAIN, self._device.id)},
+            serial_number=self._device.serial_number,
             manufacturer=self._device.manufacturer,
             model=self._device.model,
             name=self._device.device_name.capitalize(),

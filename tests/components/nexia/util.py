@@ -1,4 +1,5 @@
 """Tests for the nexia integration."""
+
 from unittest.mock import patch
 import uuid
 
@@ -23,8 +24,9 @@ async def async_init_integration(
     session_fixture = "nexia/session_123456.json"
     sign_in_fixture = "nexia/sign_in.json"
     set_fan_speed_fixture = "nexia/set_fan_speed_2293892.json"
-    with mock_aiohttp_client() as mock_session, patch(
-        "nexia.home.load_or_create_uuid", return_value=uuid.uuid4()
+    with (
+        mock_aiohttp_client() as mock_session,
+        patch("nexia.home.load_or_create_uuid", return_value=uuid.uuid4()),
     ):
         nexia = NexiaHome(mock_session)
         if exception:

@@ -1,8 +1,9 @@
 """Support for ESPHome cameras."""
+
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable
 from functools import partial
 from typing import Any
 
@@ -70,14 +71,14 @@ class EsphomeCamera(Camera, EsphomeEntity[CameraInfo, CameraState]):
         return await self._async_request_image(self._client.request_single_image)
 
     async def _async_request_image(
-        self, request_method: Callable[[], Coroutine[Any, Any, None]]
+        self, request_method: Callable[[], None]
     ) -> bytes | None:
         """Wait for an image to be available and return it."""
         if not self.available:
             return None
         image_future = self._loop.create_future()
         self._image_futures.append(image_future)
-        await request_method()
+        request_method()
         if not await image_future:
             return None
         return self._state.data

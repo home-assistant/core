@@ -1,16 +1,18 @@
 """The tests for the Owntracks device tracker."""
+
 import json
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import owntracks
+from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.const import STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message
-from tests.typing import ClientSessionGenerator
+from tests.typing import ClientSessionGenerator, MqttMockHAClient
 
 USER = "greg"
 DEVICE = "phone"
@@ -283,7 +285,9 @@ BAD_JSON_SUFFIX = "** and it ends here ^^"
 
 
 @pytest.fixture
-def setup_comp(hass, mock_device_tracker_conf, mqtt_mock):
+def setup_comp(
+    hass, mock_device_tracker_conf: list[Device], mqtt_mock: MqttMockHAClient
+):
     """Initialize components."""
     hass.loop.run_until_complete(async_setup_component(hass, "device_tracker", {}))
 
@@ -963,7 +967,7 @@ async def test_mobile_exit_move_beacon(hass: HomeAssistant, context) -> None:
 async def test_mobile_multiple_async_enter_exit(hass: HomeAssistant, context) -> None:
     """Test the multiple entering."""
     # Test race condition
-    for _ in range(0, 20):
+    for _ in range(20):
         async_fire_mqtt_message(
             hass, EVENT_TOPIC, json.dumps(MOBILE_BEACON_ENTER_EVENT_MESSAGE)
         )
@@ -1382,7 +1386,7 @@ def mock_cipher():
 
         (mkey, plaintext) = pickle.loads(base64.b64decode(ciphertext))
         if key != mkey:
-            raise ValueError()
+            raise ValueError
         return plaintext
 
     return len(TEST_SECRET_KEY), mock_decrypt

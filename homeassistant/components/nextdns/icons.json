@@ -1,0 +1,266 @@
+{
+  "entity": {
+    "sensor": {
+      "all_queries": {
+        "default": "mdi:dns"
+      },
+      "blocked_queries": {
+        "default": "mdi:dns"
+      },
+      "blocked_queries_ratio": {
+        "default": "mdi:dns"
+      },
+      "doh_queries": {
+        "default": "mdi:dns"
+      },
+      "doh_queries_ratio": {
+        "default": "mdi:dns"
+      },
+      "doh3_queries": {
+        "default": "mdi:dns"
+      },
+      "doh3_queries_ratio": {
+        "default": "mdi:dns"
+      },
+      "doq_queries": {
+        "default": "mdi:dns"
+      },
+      "doq_queries_ratio": {
+        "default": "mdi:dns"
+      },
+      "dot_queries": {
+        "default": "mdi:dns"
+      },
+      "dot_queries_ratio": {
+        "default": "mdi:dns"
+      },
+      "encrypted_queries": {
+        "default": "mdi:lock"
+      },
+      "encrypted_queries_ratio": {
+        "default": "mdi:lock"
+      },
+      "ipv4_queries": {
+        "default": "mdi:ip"
+      },
+      "ipv6_queries": {
+        "default": "mdi:ip"
+      },
+      "ipv6_queries_ratio": {
+        "default": "mdi:ip"
+      },
+      "relayed_queries": {
+        "default": "mdi:dns"
+      },
+      "not_validated_queries": {
+        "default": "mdi:lock-alert"
+      },
+      "tcp_queries": {
+        "default": "mdi:dns"
+      },
+      "tcp_queries_ratio": {
+        "default": "mdi:dns"
+      },
+      "udp_queries": {
+        "default": "mdi:dns"
+      },
+      "udp_queries_ratio": {
+        "default": "mdi:dns"
+      },
+      "unencrypted_queries": {
+        "default": "mdi:lock-open"
+      },
+      "validated_queries": {
+        "default": "mdi:lock-check"
+      },
+      "validated_queries_ratio": {
+        "default": "mdi:lock-check"
+      }
+    },
+    "switch": {
+      "block_page": {
+        "default": "mdi:web-cancel"
+      },
+      "cache_boost": {
+        "default": "mdi:memory"
+      },
+      "cname_flattening": {
+        "default": "mdi:tournament"
+      },
+      "anonymized_ecs": {
+        "default": "mdi:incognito"
+      },
+      "logs": {
+        "default": "mdi:file-document-outline"
+      },
+      "web3": {
+        "default": "mdi:web"
+      },
+      "dns_rebinding_protection": {
+        "default": "mdi:dns"
+      },
+      "google_safe_browsing": {
+        "default": "mdi:google"
+      },
+      "typosquatting_protection": {
+        "default": "mdi:keyboard-outline"
+      },
+      "safesearch": {
+        "default": "mdi:search-web"
+      },
+      "youtube_restricted_mode": {
+        "default": "mdi:youtube"
+      },
+      "block_9gag": {
+        "default": "mdi:file-gif-box"
+      },
+      "block_amazon": {
+        "default": "mdi:cart-outline"
+      },
+      "block_bereal": {
+        "default": "mdi:alpha-b-box"
+      },
+      "block_blizzard": {
+        "default": "mdi:sword-cross"
+      },
+      "block_chatgpt": {
+        "default": "mdi:chat-processing-outline"
+      },
+      "block_dailymotion": {
+        "default": "mdi:movie-search-outline"
+      },
+      "block_discord": {
+        "default": "mdi:message-text"
+      },
+      "block_disneyplus": {
+        "default": "mdi:movie-search-outline"
+      },
+      "block_ebay": {
+        "default": "mdi:basket-outline"
+      },
+      "block_facebook": {
+        "default": "mdi:facebook"
+      },
+      "block_fortnite": {
+        "default": "mdi:tank"
+      },
+      "block_google_chat": {
+        "default": "mdi:forum"
+      },
+      "block_hbomax": {
+        "default": "mdi:movie-search-outline"
+      },
+      "block_hulu": {
+        "default": "mdi:hulu"
+      },
+      "block_imgur": {
+        "default": "mdi:camera-image"
+      },
+      "block_instagram": {
+        "default": "mdi:instagram"
+      },
+      "block_leagueoflegends": {
+        "default": "mdi:sword"
+      },
+      "block_mastodon": {
+        "default": "mdi:mastodon"
+      },
+      "block_messenger": {
+        "default": "mdi:facebook-messenger"
+      },
+      "block_minecraft": {
+        "default": "mdi:minecraft"
+      },
+      "block_netflix": {
+        "default": "mdi:netflix"
+      },
+      "block_pinterest": {
+        "default": "mdi:pinterest"
+      },
+      "block_playstation_network": {
+        "default": "mdi:sony-playstation"
+      },
+      "block_primevideo": {
+        "default": "mdi:filmstrip"
+      },
+      "block_reddit": {
+        "default": "mdi:reddit"
+      },
+      "block_roblox": {
+        "default": "mdi:robot"
+      },
+      "block_signal": {
+        "default": "mdi:chat-outline"
+      },
+      "block_skype": {
+        "default": "mdi:skype"
+      },
+      "block_snapchat": {
+        "default": "mdi:snapchat"
+      },
+      "block_spotify": {
+        "default": "mdi:spotify"
+      },
+      "block_steam": {
+        "default": "mdi:steam"
+      },
+      "block_telegram": {
+        "default": "mdi:send-outline"
+      },
+      "block_tiktok": {
+        "default": "mdi:music-note"
+      },
+      "block_tinder": {
+        "default": "mdi:fire"
+      },
+      "block_tumblr": {
+        "default": "mdi:image-outline"
+      },
+      "block_twitch": {
+        "default": "mdi:twitch"
+      },
+      "block_twitter": {
+        "default": "mdi:twitter"
+      },
+      "block_vimeo": {
+        "default": "mdi:vimeo"
+      },
+      "block_vk": {
+        "default": "mdi:power-socket-eu"
+      },
+      "block_whatsapp": {
+        "default": "mdi:whatsapp"
+      },
+      "block_xboxlive": {
+        "default": "mdi:microsoft-xbox"
+      },
+      "block_youtube": {
+        "default": "mdi:youtube"
+      },
+      "block_zoom": {
+        "default": "mdi:video"
+      },
+      "block_dating": {
+        "default": "mdi:candelabra"
+      },
+      "block_gambling": {
+        "default": "mdi:slot-machine"
+      },
+      "block_online_gaming": {
+        "default": "mdi:gamepad-variant"
+      },
+      "block_piracy": {
+        "default": "mdi:pirate"
+      },
+      "block_porn": {
+        "default": "mdi:movie-off"
+      },
+      "block_social_networks": {
+        "default": "mdi:facebook"
+      },
+      "block_video_streaming": {
+        "default": "mdi:video-wireless-outline"
+      }
+    }
+  }
+}

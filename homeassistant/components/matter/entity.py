@@ -1,4 +1,5 @@
 """Matter entity base class."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -27,7 +28,7 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class MatterEntityDescription(EntityDescription):
     """Describe the Matter entity."""
 
@@ -38,7 +39,6 @@ class MatterEntityDescription(EntityDescription):
 class MatterEntity(Entity):
     """Entity class for Matter devices."""
 
-    _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(
@@ -71,6 +71,9 @@ class MatterEntity(Entity):
         )
         self._attr_available = self._endpoint.node.available
 
+        # make sure to update the attributes once
+        self._update_from_device()
+
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
@@ -92,9 +95,6 @@ class MatterEntity(Entity):
                     attr_path_filter=attr_path,
                 )
             )
-        await self.matter_client.subscribe_attribute(
-            self._endpoint.node.node_id, sub_paths
-        )
         # subscribe to node (availability changes)
         self._unsubscribes.append(
             self.matter_client.subscribe_events(
@@ -104,17 +104,9 @@ class MatterEntity(Entity):
             )
         )
 
-        # make sure to update the attributes once
-        self._update_from_device()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        for unsub in self._unsubscribes:
-            unsub()
-
     @callback
     def _on_matter_event(self, event: EventType, data: Any = None) -> None:
-        """Call on update."""
+        """Call on update from the device."""
         self._attr_available = self._endpoint.node.available
         self._update_from_device()
         self.async_write_ha_state()

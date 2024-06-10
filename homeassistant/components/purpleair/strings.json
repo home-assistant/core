@@ -56,8 +56,8 @@
         "title": "Add Sensor",
         "description": "[%key:component::purpleair::config::step::by_coordinates::description%]",
         "data": {
-          "latitude": "[%key:component::purpleair::config::step::by_coordinates::data::latitude%]",
-          "longitude": "[%key:component::purpleair::config::step::by_coordinates::data::longitude%]",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
           "distance": "[%key:component::purpleair::config::step::by_coordinates::data::distance%]"
         },
         "data_description": {

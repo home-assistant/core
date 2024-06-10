@@ -1,4 +1,5 @@
 """Aussie Broadband common helpers for tests."""
+
 from unittest.mock import patch
 
 from homeassistant.components.aussie_broadband.const import (
@@ -49,20 +50,24 @@ async def setup_platform(
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.aussie_broadband.PLATFORMS", platforms), patch(
-        "aussiebb.asyncio.AussieBB.__init__", return_value=None
-    ), patch(
-        "aussiebb.asyncio.AussieBB.login",
-        return_value=True,
-        side_effect=side_effect,
-    ), patch(
-        "aussiebb.asyncio.AussieBB.get_services",
-        return_value=FAKE_SERVICES,
-        side_effect=side_effect,
-    ), patch(
-        "aussiebb.asyncio.AussieBB.get_usage",
-        return_value=usage,
-        side_effect=usage_effect,
+    with (
+        patch("homeassistant.components.aussie_broadband.PLATFORMS", platforms),
+        patch("aussiebb.asyncio.AussieBB.__init__", return_value=None),
+        patch(
+            "aussiebb.asyncio.AussieBB.login",
+            return_value=True,
+            side_effect=side_effect,
+        ),
+        patch(
+            "aussiebb.asyncio.AussieBB.get_services",
+            return_value=FAKE_SERVICES,
+            side_effect=side_effect,
+        ),
+        patch(
+            "aussiebb.asyncio.AussieBB.get_usage",
+            return_value=usage,
+            side_effect=usage_effect,
+        ),
     ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()

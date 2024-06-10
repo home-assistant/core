@@ -10,7 +10,20 @@ The Z-Wave integration uses a discovery mechanism to create the necessary entiti
 
 In cases where an entity's functionality requires interaction with multiple Values, the discovery rule for that particular entity type is based on the primary Value, or the Value that must be there to indicate that this entity needs to be created, and then the rest of the Values required are discovered by the class instance for that entity. A good example of this is the discovery logic for the `climate` entity. Currently, the discovery logic is tied to the discovery of a Value with a property of `mode` and a command class of `Thermostat Mode`, but the actual entity uses many more Values than that to be fully functional as evident in the [code](./climate.py).
 
-There are several ways that device support can be improved within Home Assistant, but regardless of the reason, it is important to add device specific tests in these use cases. To do so, add the device's data (from device diagnostics) to the [fixtures folder](../../../tests/components/zwave_js/fixtures) and then define the new fixtures in [conftest.py](../../../tests/components/zwave_js/conftest.py). Use existing tests as the model but the tests can go in the [test_discovery.py module](../../../tests/components/zwave_js/test_discovery.py).
+There are several ways that device support can be improved within Home Assistant, but regardless of the reason, it is important to add device specific tests in these use cases. To do so, add the device's data to the [fixtures folder](../../../tests/components/zwave_js/fixtures) and then define the new fixtures in [conftest.py](../../../tests/components/zwave_js/conftest.py). Use existing tests as the model but the tests can go in the [test_discovery.py module](../../../tests/components/zwave_js/test_discovery.py). To learn how to generate fixtures, see the following section.
+
+### Generating device fixtures
+
+To generate a device fixture, download a diagnostics dump of the device from your Home Assistant instance. The dumped data will need to be modified to match the expected format. You can always do this transformation by hand, but the integration provides a [helper script](scripts/convert_device_diagnostics_to_fixture.py) that will generate the appropriate fixture data from a device diagnostics dump for you. To use it, run the script with the path to the diagnostics dump you downloaded:
+
+`python homeassistant/components/zwave_js/scripts/convert_device_diagnostics_to_fixture.py <path/to/diagnostics/dump>`
+
+The script will print the fixture data to standard output, and you can use Unix piping to create a file from the fixture data:
+
+`python homeassistant/components/zwave_js/scripts/convert_device_diagnostics_to_fixture.py <path/to/diagnostics/dump> > <path_to_fixture_output>`
+
+You can alternatively pass the `--file` flag to the script and it will create the file for you in the [fixtures folder](../../../tests/components/zwave_js/fixtures):
+`python homeassistant/components/zwave_js/scripts/convert_device_diagnostics_to_fixture.py <path/to/diagnostics/dump> --file`
 
 ### Switching HA support for a device from one entity type to another.
 

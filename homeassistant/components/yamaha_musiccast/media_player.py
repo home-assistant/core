@@ -1,4 +1,5 @@
 """Implementation of the musiccast media player."""
+
 from __future__ import annotations
 
 import contextlib
@@ -384,7 +385,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 else:
                     children.append(item)
 
-        overview = BrowseMedia(
+        return BrowseMedia(
             title=media_content_provider.title,
             media_class=MEDIA_CLASS_MAPPING.get(media_content_provider.content_type),
             media_content_id=media_content_provider.content_id,
@@ -393,8 +394,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             can_expand=media_content_provider.can_browse,
             children=children,
         )
-
-        return overview
 
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
@@ -675,7 +674,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             return [self]
         entities = self.get_all_mc_entities()
         clients = [entity for entity in entities if entity.is_part_of_group(self)]
-        return [self] + clients
+        return [self, *clients]
 
     @property
     def musiccast_zone_entity(self) -> MusicCastMediaPlayer:
@@ -900,13 +899,13 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             return
 
         _LOGGER.debug("%s updates his group members", self.entity_id)
-        client_ips_for_removal = []
-        for expected_client_ip in self.coordinator.data.group_client_list:
-            if expected_client_ip not in [
-                entity.ip_address for entity in self.musiccast_group
-            ]:
-                # The client is no longer part of the group. Prepare removal.
-                client_ips_for_removal.append(expected_client_ip)
+        client_ips_for_removal = [
+            expected_client_ip
+            for expected_client_ip in self.coordinator.data.group_client_list
+            # The client is no longer part of the group. Prepare removal.
+            if expected_client_ip
+            not in [entity.ip_address for entity in self.musiccast_group]
+        ]
 
         if client_ips_for_removal:
             _LOGGER.debug(
@@ -926,4 +925,4 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     @callback
     def async_schedule_check_client_list(self):
         """Schedule async_check_client_list."""
-        self.hass.create_task(self.async_check_client_list())
+        self.hass.async_create_task(self.async_check_client_list(), eager_start=True)

@@ -1,4 +1,5 @@
 """Support for Z-Wave fans."""
+
 from __future__ import annotations
 
 import math
@@ -18,7 +19,6 @@ from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     FanEntity,
     FanEntityFeature,
-    NotValidPresetModeError,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -49,7 +49,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Fan from Config Entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
 
     @callback
     def async_add_fan(info: ZwaveDiscoveryInfo) -> None:
@@ -180,11 +180,6 @@ class ValueMappingZwaveFan(ZwaveFan):
             if preset_mode == mapped_preset_mode:
                 await self._async_set_value(self._target_value, zwave_value)
                 return
-
-        raise NotValidPresetModeError(
-            f"The preset_mode {preset_mode} is not a valid preset_mode:"
-            f" {self.preset_modes}"
-        )
 
     @property
     def available(self) -> bool:

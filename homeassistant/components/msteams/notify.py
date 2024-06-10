@@ -1,4 +1,5 @@
 """Microsoft Teams platform for notify component."""
+
 from __future__ import annotations
 
 import logging
@@ -36,8 +37,8 @@ def get_service(
     try:
         return MSTeamsNotificationService(webhook_url)
 
-    except RuntimeError as err:
-        _LOGGER.exception("Error in creating a new Microsoft Teams message: %s", err)
+    except RuntimeError:
+        _LOGGER.exception("Error in creating a new Microsoft Teams message")
         return None
 
 

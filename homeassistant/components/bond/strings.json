@@ -12,6 +12,9 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "host": "The IP address of your Bond hub."
         }
       }
     },

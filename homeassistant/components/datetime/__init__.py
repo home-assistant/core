@@ -1,8 +1,9 @@
 """Component to allow setting date/time as platforms."""
+
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from functools import cached_property
 import logging
 from typing import final
 
@@ -35,9 +36,7 @@ async def _async_set_value(entity: DateTimeEntity, service_call: ServiceCall) ->
     """Service call wrapper to set a new date/time."""
     value: datetime = service_call.data[ATTR_DATETIME]
     if value.tzinfo is None:
-        value = value.replace(
-            tzinfo=dt_util.get_time_zone(entity.hass.config.time_zone)
-        )
+        value = value.replace(tzinfo=dt_util.get_default_time_zone())
     return await entity.async_set_value(value)
 
 
@@ -71,12 +70,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class DateTimeEntityDescription(EntityDescription):
+class DateTimeEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes date/time entities."""
 
 
-class DateTimeEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "native_value",
+}
+
+
+class DateTimeEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Date/time entity."""
 
     entity_description: DateTimeEntityDescription
@@ -84,13 +87,13 @@ class DateTimeEntity(Entity):
     _attr_state: None = None
     _attr_native_value: datetime | None
 
-    @property
+    @cached_property
     @final
     def device_class(self) -> None:
         """Return entity device class."""
         return None
 
-    @property
+    @cached_property
     @final
     def state_attributes(self) -> None:
         """Return the state attributes."""
@@ -110,14 +113,14 @@ class DateTimeEntity(Entity):
 
         return value.astimezone(UTC).isoformat(timespec="seconds")
 
-    @property
+    @cached_property
     def native_value(self) -> datetime | None:
         """Return the value reported by the datetime."""
         return self._attr_native_value
 
     def set_value(self, value: datetime) -> None:
         """Change the date/time."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_value(self, value: datetime) -> None:
         """Change the date/time."""

@@ -1,4 +1,5 @@
 """Support for OpenUV binary sensors."""
+
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -20,7 +21,6 @@ ATTR_PROTECTION_WINDOW_STARTING_UV = "start_uv"
 BINARY_SENSOR_DESCRIPTION_PROTECTION_WINDOW = BinarySensorEntityDescription(
     key=TYPE_PROTECTION_WINDOW,
     translation_key="protection_window",
-    icon="mdi:sunglasses",
 )
 
 
@@ -45,7 +45,7 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
     """Define a binary sensor for OpenUV."""
 
     @callback
-    def _update_from_latest_data(self) -> None:
+    def _handle_coordinator_update(self) -> None:
         """Update the entity from the latest data."""
         data = self.coordinator.data
 
@@ -76,3 +76,5 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
                     ATTR_PROTECTION_WINDOW_STARTING_TIME: as_local(from_dt),
                 }
             )
+
+        super()._handle_coordinator_update()

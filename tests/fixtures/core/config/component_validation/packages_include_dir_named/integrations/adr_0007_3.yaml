@@ -1,0 +1,4 @@
+# Port is wrong type
+adr_0007_3:
+  host: blah.com
+  port: foo

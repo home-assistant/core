@@ -1,4 +1,5 @@
 """The tests for the temper (USB temperature sensor) component."""
+
 from datetime import timedelta
 from unittest.mock import Mock, patch
 
@@ -28,7 +29,7 @@ async def test_temperature_readback(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         async_fire_time_changed(hass, utcnow + timedelta(seconds=70))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         temperature = hass.states.get("sensor.mydevicename")
         assert temperature

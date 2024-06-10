@@ -1,4 +1,5 @@
 """Support for Kaiterra Air Quality Sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.air_quality import AirQualityEntity
