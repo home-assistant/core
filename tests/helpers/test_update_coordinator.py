@@ -531,8 +531,6 @@ async def test_stop_refresh_on_ha_stop(
     "err_msg",
     [
         *KNOWN_ERRORS,
-        (ConfigEntryError(), ConfigEntryError, "Config entry error"),
-        (ConfigEntryAuthFailed(), ConfigEntryAuthFailed, "Config entry error"),
         (Exception(), Exception, "Unknown exception"),
     ],
 )
