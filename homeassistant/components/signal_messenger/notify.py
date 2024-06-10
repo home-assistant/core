@@ -29,7 +29,7 @@ ATTR_URLS = "urls"
 ATTR_VERIFY_SSL = "verify_ssl"
 ATTR_TEXTMODE = "text_mode"
 
-DATA_FILENAMES_SCHEMA = vol.Schema({vol.Required(ATTR_FILENAMES): [cv.string]})
+DATA_FILENAMES_SCHEMA = vol.Schema([cv.string])
 
 DATA_URLS_SCHEMA = vol.Schema(
     {
@@ -38,15 +38,15 @@ DATA_URLS_SCHEMA = vol.Schema(
     }
 )
 
-DATA_TEXTMODE_SCHEMA = vol.Schema(
-    {vol.Optional(ATTR_TEXTMODE, default="normal"): [cv.string]}
-)
-
 DATA_SCHEMA = vol.Any(
     None,
-    DATA_FILENAMES_SCHEMA,
-    DATA_URLS_SCHEMA,
-    DATA_TEXTMODE_SCHEMA,
+    vol.Schema(
+        {
+            vol.Optional(ATTR_TEXTMODE, default="normal"): cv.string,
+            vol.Exclusive(ATTR_FILENAMES, "attachments"): [cv.string],
+            vol.Exclusive(ATTR_URLS, "attachments"): DATA_URLS_SCHEMA,
+        }
+    ),
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -106,15 +106,13 @@ class SignalNotificationService(BaseNotificationService):
         attachments_as_bytes = self.get_attachments_as_bytes(
             data, CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES, self._hass
         )
-        text_mode = self.get_text_mode(data)
-
         try:
             self._signal_cli_rest_api.send_message(
                 message,
                 self._recp_nrs,
                 filenames,
                 attachments_as_bytes,
-                text_mode=text_mode,
+                text_mode=self.get_text_mode(data),
             )
         except SignalCliRestApiError as ex:
             _LOGGER.error("%s", ex)
@@ -124,11 +122,15 @@ class SignalNotificationService(BaseNotificationService):
     def get_filenames(data: Any) -> list[str] | None:
         """Extract attachment filenames from data."""
         try:
-            data = DATA_FILENAMES_SCHEMA(data)
+            data = DATA_FILENAMES_SCHEMA(data[ATTR_FILENAMES])
         except vol.Invalid:
             return None
+        except KeyError:
+            return None
+        except TypeError:
+            return None
 
-        return data[ATTR_FILENAMES]
+        return data
 
     @staticmethod
     def get_attachments_as_bytes(
@@ -138,10 +140,13 @@ class SignalNotificationService(BaseNotificationService):
     ) -> list[bytearray] | None:
         """Retrieve attachments from URLs defined in data."""
         try:
-            data = DATA_URLS_SCHEMA(data)
+            data = DATA_URLS_SCHEMA(data[ATTR_URLS])
         except vol.Invalid:
             return None
-
+        except KeyError:
+            return None
+        except TypeError:
+            return None
         urls = data[ATTR_URLS]
 
         attachments_as_bytes: list[bytearray] = []
@@ -193,10 +198,12 @@ class SignalNotificationService(BaseNotificationService):
         return attachments_as_bytes
 
     @staticmethod
-    def get_text_mode(data: Any) -> str:
+    def get_text_mode(data) -> str:
         """Extract text mode parameter from data."""
         try:
-            data = DATA_TEXTMODE_SCHEMA(data)
-        except vol.Invalid:
+            text_mode = data.get(ATTR_TEXTMODE)
+            if text_mode in ["normal", "styled"]:
+                return text_mode
+        except AttributeError:
             return "normal"
-        return data[ATTR_TEXTMODE]
+        return "normal"

@@ -139,7 +139,7 @@ def test_send_message_with_attachment_as_url(
     with caplog.at_level(
         logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
     ):
-        data = {"urls": [URL_ATTACHMENT]}
+        data = {"urls": {"urls": [URL_ATTACHMENT]}}
         signal_notification_service.send_message(MESSAGE, data=data)
 
     assert "Sending signal message" in caplog.text
@@ -155,7 +155,7 @@ def test_get_attachments(
 ) -> None:
     """Test getting attachments as URL."""
     signal_requests_mock = signal_requests_mock_factory(True, str(len(CONTENT)))
-    data = {"urls": [URL_ATTACHMENT]}
+    data = {"urls": {"urls": [URL_ATTACHMENT]}}
     result = signal_notification_service.get_attachments_as_bytes(
         data, len(CONTENT), hass
     )
@@ -172,7 +172,7 @@ def test_get_attachments_not_on_allowlist(
 ) -> None:
     """Test getting attachments as URL that aren't on the allowlist."""
     url = "http://dodgyurl.com"
-    data = {"urls": [url]}
+    data = {"urls": {"urls": [url]}}
     with caplog.at_level(
         logging.ERROR, logger="homeassistant.components.signal_messenger.notify"
     ):
@@ -192,7 +192,7 @@ def test_get_attachments_with_large_attachment(
     """Test getting attachments as URL with large attachment (per Content-Length header) throws error."""
     signal_requests_mock = signal_requests_mock_factory(True, str(len(CONTENT) + 1))
     with pytest.raises(ValueError) as exc:
-        data = {"urls": [URL_ATTACHMENT]}
+        data = {"urls": {"urls": [URL_ATTACHMENT]}}
         signal_notification_service.get_attachments_as_bytes(data, len(CONTENT), hass)
 
     assert signal_requests_mock.called
@@ -208,7 +208,7 @@ def test_get_attachments_with_large_attachment_no_header(
     """Test getting attachments as URL with large attachment (per content length) throws error."""
     signal_requests_mock = signal_requests_mock_factory()
     with pytest.raises(ValueError) as exc:
-        data = {"urls": [URL_ATTACHMENT]}
+        data = {"urls": {"urls": [URL_ATTACHMENT]}}
         signal_notification_service.get_attachments_as_bytes(
             data, len(CONTENT) - 1, hass
         )
@@ -263,7 +263,7 @@ def test_get_attachments_with_non_list_returns_none(
     hass: HomeAssistant,
 ) -> None:
     """Test getting attachments with non list data."""
-    data = {"urls": URL_ATTACHMENT}
+    data = {"urls": {"urls": URL_ATTACHMENT}}
     result = signal_notification_service.get_attachments_as_bytes(
         data, len(CONTENT), hass
     )
@@ -278,7 +278,7 @@ def test_get_attachments_with_verify_unset(
 ) -> None:
     """Test getting attachments as URL with verify_ssl unset results in verify=true."""
     signal_requests_mock = signal_requests_mock_factory()
-    data = {"urls": [URL_ATTACHMENT]}
+    data = {"urls": {"urls": [URL_ATTACHMENT]}}
     signal_notification_service.get_attachments_as_bytes(data, len(CONTENT), hass)
 
     assert signal_requests_mock.called
@@ -293,7 +293,7 @@ def test_get_attachments_with_verify_set_true(
 ) -> None:
     """Test getting attachments as URL with verify_ssl set to true results in verify=true."""
     signal_requests_mock = signal_requests_mock_factory()
-    data = {"verify_ssl": True, "urls": [URL_ATTACHMENT]}
+    data = {"urls": {"verify_ssl": True, "urls": [URL_ATTACHMENT]}}
     signal_notification_service.get_attachments_as_bytes(data, len(CONTENT), hass)
 
     assert signal_requests_mock.called
@@ -308,7 +308,7 @@ def test_get_attachments_with_verify_set_false(
 ) -> None:
     """Test getting attachments as URL with verify_ssl set to false results in verify=false."""
     signal_requests_mock = signal_requests_mock_factory()
-    data = {"verify_ssl": False, "urls": [URL_ATTACHMENT]}
+    data = {"urls": {"verify_ssl": False, "urls": [URL_ATTACHMENT]}}
     signal_notification_service.get_attachments_as_bytes(data, len(CONTENT), hass)
 
     assert signal_requests_mock.called
@@ -321,7 +321,7 @@ def test_get_attachments_with_verify_set_garbage(
     hass: HomeAssistant,
 ) -> None:
     """Test getting attachments as URL with verify_ssl set to garbage results in None."""
-    data = {"verify_ssl": "test", "urls": [URL_ATTACHMENT]}
+    data = {"urls": {"verify_ssl": "test", "urls": [URL_ATTACHMENT]}}
     result = signal_notification_service.get_attachments_as_bytes(
         data, len(CONTENT), hass
     )
