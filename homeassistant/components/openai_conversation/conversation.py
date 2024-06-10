@@ -146,58 +146,58 @@ class OpenAIConversationEntity(
             messages = self.history[conversation_id]
         else:
             conversation_id = ulid.ulid_now()
+            messages = []
 
-            if (
-                user_input.context
-                and user_input.context.user_id
-                and (
-                    user := await self.hass.auth.async_get_user(
-                        user_input.context.user_id
-                    )
+        if (
+            user_input.context
+            and user_input.context.user_id
+            and (
+                user := await self.hass.auth.async_get_user(user_input.context.user_id)
+            )
+        ):
+            user_name = user.name
+
+        try:
+            if llm_api:
+                api_prompt = llm_api.api_prompt
+            else:
+                api_prompt = llm.async_render_no_api_prompt(self.hass)
+
+            prompt = "\n".join(
+                (
+                    template.Template(
+                        llm.BASE_PROMPT
+                        + options.get(CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT),
+                        self.hass,
+                    ).async_render(
+                        {
+                            "ha_name": self.hass.config.location_name,
+                            "user_name": user_name,
+                            "llm_context": llm_context,
+                        },
+                        parse_result=False,
+                    ),
+                    api_prompt,
                 )
-            ):
-                user_name = user.name
+            )
 
-            try:
-                if llm_api:
-                    api_prompt = llm_api.api_prompt
-                else:
-                    api_prompt = llm.async_render_no_api_prompt(self.hass)
+        except TemplateError as err:
+            LOGGER.error("Error rendering prompt: %s", err)
+            intent_response = intent.IntentResponse(language=user_input.language)
+            intent_response.async_set_error(
+                intent.IntentResponseErrorCode.UNKNOWN,
+                f"Sorry, I had a problem with my template: {err}",
+            )
+            return conversation.ConversationResult(
+                response=intent_response, conversation_id=conversation_id
+            )
 
-                prompt = "\n".join(
-                    (
-                        template.Template(
-                            llm.BASE_PROMPT
-                            + options.get(CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT),
-                            self.hass,
-                        ).async_render(
-                            {
-                                "ha_name": self.hass.config.location_name,
-                                "user_name": user_name,
-                                "llm_context": llm_context,
-                            },
-                            parse_result=False,
-                        ),
-                        api_prompt,
-                    )
-                )
-
-            except TemplateError as err:
-                LOGGER.error("Error rendering prompt: %s", err)
-                intent_response = intent.IntentResponse(language=user_input.language)
-                intent_response.async_set_error(
-                    intent.IntentResponseErrorCode.UNKNOWN,
-                    f"Sorry, I had a problem with my template: {err}",
-                )
-                return conversation.ConversationResult(
-                    response=intent_response, conversation_id=conversation_id
-                )
-
-            messages = [ChatCompletionSystemMessageParam(role="system", content=prompt)]
-
-        messages.append(
-            ChatCompletionUserMessageParam(role="user", content=user_input.text)
-        )
+        # Create a copy of the variable because we attach it to the trace
+        messages = [
+            ChatCompletionSystemMessageParam(role="system", content=prompt),
+            *messages[1:],
+            ChatCompletionUserMessageParam(role="user", content=user_input.text),
+        ]
 
         LOGGER.debug("Prompt: %s", messages)
         trace.async_conversation_trace_append(

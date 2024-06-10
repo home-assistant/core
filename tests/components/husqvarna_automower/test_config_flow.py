@@ -30,11 +30,11 @@ from tests.typing import ClientSessionGenerator
         ("iam:read", 0),
     ],
 )
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     jwt: str,
     new_scope: str,
     amount: int,
@@ -87,10 +87,10 @@ async def test_full_flow(
     assert len(mock_setup.mock_calls) == amount
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_config_non_unique_profile(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     mock_automower_client: AsyncMock,
@@ -148,12 +148,12 @@ async def test_config_non_unique_profile(
         ("iam:read", "missing_scope", "missing_amc_scope", "iam:read"),
     ],
 )
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
-    current_request_with_host: None,
     mock_automower_client: AsyncMock,
     jwt: str,
     step_id: str,
@@ -228,12 +228,12 @@ async def test_reauth(
         ("wrong_user_id", "wrong_account"),
     ],
 )
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth_wrong_account(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
-    current_request_with_host: None,
     mock_automower_client: AsyncMock,
     jwt,
     user_id: str,

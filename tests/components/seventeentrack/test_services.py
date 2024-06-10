@@ -7,9 +7,10 @@ from syrupy import SnapshotAssertion
 from homeassistant.components.seventeentrack import DOMAIN, SERVICE_GET_PACKAGES
 from homeassistant.core import HomeAssistant, SupportsResponse
 
+from . import init_integration
+from .conftest import get_package
+
 from tests.common import MockConfigEntry
-from tests.components.seventeentrack import init_integration
-from tests.components.seventeentrack.conftest import get_package
 
 
 async def test_get_packages_from_list(
