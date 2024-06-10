@@ -39,6 +39,7 @@ class IncomfortWaterHeater(IncomfortBoilerEntity, WaterHeaterEntity):
     _attr_max_temp = 80.0
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = "boiler"
 
     def __init__(
         self, coordinator: InComfortDataCoordinator, heater: InComfortHeater

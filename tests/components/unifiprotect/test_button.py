@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock
 
-from pyunifiprotect.data.devices import Camera, Chime, Doorlock
+from uiprotect.data.devices import Camera, Chime, Doorlock
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, Platform

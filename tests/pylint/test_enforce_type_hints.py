@@ -1152,6 +1152,28 @@ def test_pytest_function(
         type_hint_checker.visit_asyncfunctiondef(func_node)
 
 
+def test_pytest_nested_function(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure valid hints are accepted for a test function."""
+    func_node, nested_func_node = astroid.extract_node(
+        """
+    async def some_function( #@
+    ):
+        def test_value(value: str) -> bool: #@
+            return value == "Yes"
+        return test_value
+    """,
+        "tests.components.pylint_test.notify",
+    )
+    type_hint_checker.visit_module(func_node.parent)
+
+    with assert_no_messages(
+        linter,
+    ):
+        type_hint_checker.visit_asyncfunctiondef(nested_func_node)
+
+
 def test_pytest_invalid_function(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:

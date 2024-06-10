@@ -16,7 +16,7 @@ import pytest
 from homeassistant.components import camera
 from homeassistant.components.camera import STATE_IDLE, STATE_STREAMING, StreamType
 from homeassistant.components.nest.const import DOMAIN
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er

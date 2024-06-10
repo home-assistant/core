@@ -173,14 +173,14 @@ async def test_block_update_connection_error(
     )
     await init_integration(hass, 1)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: "update.test_name_firmware_update"},
             blocking=True,
         )
-        assert "Error starting OTA update" in caplog.text
+    assert "Error starting OTA update" in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -597,7 +597,7 @@ async def test_rpc_beta_update(
 @pytest.mark.parametrize(
     ("exc", "error"),
     [
-        (DeviceConnectionError, "Error starting OTA update"),
+        (DeviceConnectionError, "OTA update connection error: DeviceConnectionError()"),
         (RpcCallError(-1, "error"), "OTA update request error"),
     ],
 )
@@ -625,14 +625,14 @@ async def test_rpc_update_errors(
     )
     await init_integration(hass, 2)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: "update.test_name_firmware_update"},
             blocking=True,
         )
-        assert error in caplog.text
+    assert error in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

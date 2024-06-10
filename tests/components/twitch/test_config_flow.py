@@ -16,9 +16,9 @@ from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import get_generator, setup_integration
+from .conftest import CLIENT_ID, TITLE
 
 from tests.common import MockConfigEntry
-from tests.components.twitch.conftest import CLIENT_ID, TITLE
 from tests.typing import ClientSessionGenerator
 
 

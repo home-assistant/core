@@ -43,7 +43,7 @@ async def test_protect_loop_debugger_sleep(caplog: pytest.LogCaptureFixture) -> 
     assert "Detected blocking call inside the event loop" not in caplog.text
 
 
-async def test_protect_loop_sleep(caplog: pytest.LogCaptureFixture) -> None:
+async def test_protect_loop_sleep() -> None:
     """Test time.sleep not injected by the debugger raises."""
     block_async_io.enable()
     frames = extract_stack_to_frame(
@@ -71,9 +71,7 @@ async def test_protect_loop_sleep(caplog: pytest.LogCaptureFixture) -> None:
         time.sleep(0)
 
 
-async def test_protect_loop_sleep_get_current_frame_raises(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
+async def test_protect_loop_sleep_get_current_frame_raises() -> None:
     """Test time.sleep when get_current_frame raises ValueError."""
     block_async_io.enable()
     frames = extract_stack_to_frame(
@@ -115,7 +113,6 @@ async def test_protect_loop_importlib_import_module_non_integration(
         ]
     )
     with (
-        pytest.raises(ImportError),
         patch.object(block_async_io, "_IN_TESTS", False),
         patch(
             "homeassistant.block_async_io.get_current_frame",
@@ -127,7 +124,8 @@ async def test_protect_loop_importlib_import_module_non_integration(
         ),
     ):
         block_async_io.enable()
-        importlib.import_module("not_loaded_module")
+        with pytest.raises(ImportError):
+            importlib.import_module("not_loaded_module")
 
     assert "Detected blocking call to import_module" in caplog.text
 
@@ -186,7 +184,6 @@ async def test_protect_loop_importlib_import_module_in_integration(
         ]
     )
     with (
-        pytest.raises(ImportError),
         patch.object(block_async_io, "_IN_TESTS", False),
         patch(
             "homeassistant.block_async_io.get_current_frame",
@@ -198,7 +195,8 @@ async def test_protect_loop_importlib_import_module_in_integration(
         ),
     ):
         block_async_io.enable()
-        importlib.import_module("not_loaded_module")
+        with pytest.raises(ImportError):
+            importlib.import_module("not_loaded_module")
 
     assert (
         "Detected blocking call to import_module inside the event loop by "
