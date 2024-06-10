@@ -1,5 +1,6 @@
 """Test service for Tibber integration."""
 
+import asyncio
 import datetime as dt
 from unittest.mock import MagicMock
 
@@ -244,8 +245,10 @@ async def test_get_prices_start_tomorrow():
 async def test_get_prices_invalid_input():
     """Test __get_prices with invalid input."""
 
+    call = ServiceCall(DOMAIN, PRICE_SERVICE_NAME, {"start": "test"})
+    task = asyncio.create_task(__get_prices(call, hass=create_mock_hass()))
+
     with pytest.raises(ServiceValidationError) as excinfo:
-        call = ServiceCall(DOMAIN, PRICE_SERVICE_NAME, {"start": "test"})
-        await __get_prices(call, hass=create_mock_hass())
+        await task
 
     assert "Invalid datetime provided." in str(excinfo.value)
