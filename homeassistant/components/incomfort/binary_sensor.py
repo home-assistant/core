@@ -36,7 +36,7 @@ SENSOR_TYPES: tuple[IncomfortBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         value_key="is_failed",
         extra_state_attributes_fn=lambda status: {
-            "fault_code": status["fault_code"] or "-",
+            "fault_code": status["fault_code"] or "none",
         },
     ),
     IncomfortBinarySensorEntityDescription(

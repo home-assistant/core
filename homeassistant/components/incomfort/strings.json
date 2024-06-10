@@ -56,7 +56,14 @@
   "entity": {
     "binary_sensor": {
       "fault": {
-        "name": "Fault"
+        "name": "Fault",
+        "state_attributes": {
+          "fault_code": {
+            "state": {
+              "none": "None"
+            }
+          }
+        }
       },
       "is_burning": {
         "name": "Burner"
