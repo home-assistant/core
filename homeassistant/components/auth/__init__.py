@@ -544,7 +544,7 @@ async def websocket_create_long_lived_access_token(
     try:
         access_token = hass.auth.async_create_access_token(refresh_token)
     except InvalidAuthError as exc:
-        connection.send_error(msg["id"], websocket_api.const.ERR_UNAUTHORIZED, str(exc))
+        connection.send_error(msg["id"], websocket_api.ERR_UNAUTHORIZED, str(exc))
         return
 
     connection.send_result(msg["id"], access_token)
