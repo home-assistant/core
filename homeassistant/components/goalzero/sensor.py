@@ -26,7 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
 from .entity import GoalZeroEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -134,11 +133,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Goal Zero Yeti sensor."""
     async_add_entities(
-        GoalZeroSensor(
-            hass.data[DOMAIN][entry.entry_id],
-            description,
-        )
-        for description in SENSOR_TYPES
+        GoalZeroSensor(entry.runtime_data, description) for description in SENSOR_TYPES
     )
 
 

@@ -9,7 +9,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .entity import GoalZeroEntity
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
@@ -33,11 +32,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Goal Zero Yeti switch."""
     async_add_entities(
-        GoalZeroSwitch(
-            hass.data[DOMAIN][entry.entry_id],
-            description,
-        )
-        for description in SWITCH_TYPES
+        GoalZeroSwitch(entry.runtime_data, description) for description in SWITCH_TYPES
     )
 
 
