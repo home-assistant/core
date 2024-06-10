@@ -55,4 +55,4 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the lock."""
-        await self.async_unlock(kwargs)
+        await self.async_unlock(**kwargs)
