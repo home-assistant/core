@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -75,6 +76,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     except TeslaFleetError as e:
         raise ConfigEntryNotReady from e
 
+    device_registry = dr.async_get(hass)
+
     # Create array of classes
     vehicles: list[TeslemetryVehicleData] = []
     energysites: list[TeslemetryEnergyData] = []
@@ -113,6 +116,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 configuration_url="https://teslemetry.com/console",
                 name=product.get("site_name", "Energy Site"),
                 serial_number=str(site_id),
+            )
+
+            # Create the energy site device regardless of direct entities
+            # so it can be used for custom service calls
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id, **device
             )
 
             energysites.append(
