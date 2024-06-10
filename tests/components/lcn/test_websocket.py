@@ -10,7 +10,6 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_DOMAIN,
     CONF_ENTITIES,
-    CONF_ID,
     CONF_NAME,
     CONF_RESOURCE,
     CONF_TYPE,
@@ -19,27 +18,23 @@ from homeassistant.core import HomeAssistant
 
 from tests.typing import WebSocketGenerator
 
-DEVICES_PAYLOAD = {CONF_ID: 42, CONF_TYPE: "lcn/devices", "entry_id": ""}
+DEVICES_PAYLOAD = {CONF_TYPE: "lcn/devices", "entry_id": ""}
 ENTITIES_PAYLOAD = {
-    CONF_ID: 42,
     CONF_TYPE: "lcn/entities",
     "entry_id": "",
 }
-SCAN_PAYLOAD = {CONF_ID: 42, CONF_TYPE: "lcn/devices/scan", "entry_id": ""}
+SCAN_PAYLOAD = {CONF_TYPE: "lcn/devices/scan", "entry_id": ""}
 DEVICES_ADD_PAYLOAD = {
-    CONF_ID: 42,
     CONF_TYPE: "lcn/devices/add",
     "entry_id": "",
     CONF_ADDRESS: (0, 10, False),
 }
 DEVICES_DELETE_PAYLOAD = {
-    CONF_ID: 42,
     CONF_TYPE: "lcn/devices/delete",
     "entry_id": "",
     CONF_ADDRESS: (0, 7, False),
 }
 ENTITIES_ADD_PAYLOAD = {
-    CONF_ID: 42,
     CONF_TYPE: "lcn/entities/add",
     "entry_id": "",
     CONF_ADDRESS: (0, 7, False),
@@ -48,7 +43,6 @@ ENTITIES_ADD_PAYLOAD = {
     CONF_DOMAIN_DATA: {"output": "RELAY5"},
 }
 ENTITIES_DELETE_PAYLOAD = {
-    CONF_ID: 42,
     CONF_TYPE: "lcn/entities/delete",
     "entry_id": "",
     CONF_ADDRESS: (0, 7, False),
@@ -63,7 +57,7 @@ async def test_lcn_devices_command(
     """Test lcn/devices command."""
     client = await hass_ws_client(hass)
 
-    await client.send_json({**DEVICES_PAYLOAD, "entry_id": entry.entry_id})
+    await client.send_json_auto_id({**DEVICES_PAYLOAD, "entry_id": entry.entry_id})
 
     res = await client.receive_json()
     assert res["success"], res
@@ -91,7 +85,7 @@ async def test_lcn_entities_command(
 ) -> None:
     """Test lcn/entities command."""
     client = await hass_ws_client(hass)
-    await client.send_json(
+    await client.send_json_auto_id(
         {
             **payload,
             "entry_id": entry.entry_id,
@@ -120,7 +114,7 @@ async def test_lcn_devices_scan_command(
     lcn_connection.get_address_conn(LcnAddr(0, 10, False))
 
     client = await hass_ws_client(hass)
-    await client.send_json({**SCAN_PAYLOAD, "entry_id": entry.entry_id})
+    await client.send_json_auto_id({**SCAN_PAYLOAD, "entry_id": entry.entry_id})
 
     res = await client.receive_json()
     assert res["success"], res
@@ -141,7 +135,7 @@ async def test_lcn_devices_add_command(
     client = await hass_ws_client(hass)
     assert get_device_config((0, 10, False), entry) is None
 
-    await client.send_json({**DEVICES_ADD_PAYLOAD, "entry_id": entry.entry_id})
+    await client.send_json_auto_id({**DEVICES_ADD_PAYLOAD, "entry_id": entry.entry_id})
 
     res = await client.receive_json()
     assert res["success"], res
@@ -156,7 +150,9 @@ async def test_lcn_devices_delete_command(
     client = await hass_ws_client(hass)
     assert get_device_config((0, 7, False), entry)
 
-    await client.send_json({**DEVICES_DELETE_PAYLOAD, "entry_id": entry.entry_id})
+    await client.send_json_auto_id(
+        {**DEVICES_DELETE_PAYLOAD, "entry_id": entry.entry_id}
+    )
 
     res = await client.receive_json()
     assert res["success"], res
@@ -180,7 +176,7 @@ async def test_lcn_entities_add_command(
 
     assert {**entity_config, CONF_RESOURCE: resource} not in entry.data[CONF_ENTITIES]
 
-    await client.send_json({**ENTITIES_ADD_PAYLOAD, "entry_id": entry.entry_id})
+    await client.send_json_auto_id({**ENTITIES_ADD_PAYLOAD, "entry_id": entry.entry_id})
 
     res = await client.receive_json()
     assert res["success"], res
@@ -207,7 +203,9 @@ async def test_lcn_entities_delete_command(
         == 1
     )
 
-    await client.send_json({**ENTITIES_DELETE_PAYLOAD, "entry_id": entry.entry_id})
+    await client.send_json_auto_id(
+        {**ENTITIES_DELETE_PAYLOAD, "entry_id": entry.entry_id}
+    )
 
     res = await client.receive_json()
     assert res["success"], res
@@ -248,7 +246,7 @@ async def test_lcn_command_host_error(
 ) -> None:
     """Test lcn commands for unknown host."""
     client = await hass_ws_client(hass)
-    await client.send_json({**payload, "entry_id": entity_id})
+    await client.send_json_auto_id({**payload, "entry_id": entity_id})
 
     res = await client.receive_json()
     assert res["success"], res
@@ -275,7 +273,7 @@ async def test_lcn_command_address_error(
 ) -> None:
     """Test lcn commands for address error."""
     client = await hass_ws_client(hass)
-    await client.send_json(
+    await client.send_json_auto_id(
         {**payload, "entry_id": entry.entry_id, CONF_ADDRESS: address}
     )
 
@@ -292,7 +290,7 @@ async def test_lcn_entities_add_existing_error(
 ) -> None:
     """Test lcn commands for address error."""
     client = await hass_ws_client(hass)
-    await client.send_json(
+    await client.send_json_auto_id(
         {
             **ENTITIES_ADD_PAYLOAD,
             "entry_id": entry.entry_id,
