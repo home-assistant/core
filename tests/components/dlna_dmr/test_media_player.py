@@ -67,13 +67,12 @@ from tests.typing import WebSocketGenerator
 pytestmark = pytest.mark.usefixtures("domain_data_mock")
 
 
-async def setup_mock_component(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_entry: MockConfigEntry
-) -> str:
+async def setup_mock_component(hass: HomeAssistant, mock_entry: MockConfigEntry) -> str:
     """Set up a mock DlnaDmrEntity with the given configuration."""
     assert await hass.config_entries.async_setup(mock_entry.entry_id) is True
     await hass.async_block_till_done()
 
+    entity_registry = er.async_get(hass)
     entries = er.async_entries_for_config_entry(entity_registry, mock_entry.entry_id)
     assert len(entries) == 1
     return entries[0].entity_id
