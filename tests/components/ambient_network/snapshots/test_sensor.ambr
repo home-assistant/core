@@ -449,57 +449,6 @@
     'state': '2023-10-30T09:45:00+00:00',
   })
 # ---
-# name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_last_update-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.station_a_last_update',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Last update',
-    'platform': 'ambient_network',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'last_update',
-    'unique_id': 'AA:AA:AA:AA:AA:AA_last_update',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_last_update-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'timestamp',
-      'friendly_name': 'Station A Last update',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.station_a_last_update',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2023-11-08T20:12:00+00:00',
-  })
-# ---
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_max_daily_gust-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1064,7 +1013,7 @@
       'attribution': 'Data provided by ambientnetwork.net',
       'device_class': 'pressure',
       'friendly_name': 'Station C Absolute pressure',
-      'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
     }),
@@ -1123,7 +1072,7 @@
       'attribution': 'Data provided by ambientnetwork.net',
       'device_class': 'precipitation',
       'friendly_name': 'Station C Daily rain',
-      'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
@@ -1179,7 +1128,7 @@
       'attribution': 'Data provided by ambientnetwork.net',
       'device_class': 'temperature',
       'friendly_name': 'Station C Dew point',
-      'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -1235,7 +1184,7 @@
       'attribution': 'Data provided by ambientnetwork.net',
       'device_class': 'temperature',
       'friendly_name': 'Station C Feels like',
-      'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -1294,7 +1243,7 @@
       'attribution': 'Data provided by ambientnetwork.net',
       'device_class': 'precipitation_intensity',
       'friendly_name': 'Station C Hourly rain',
-      'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
@@ -1350,7 +1299,7 @@
       'attribution': 'Data provided by ambientnetwork.net',
       'device_class': 'humidity',
       'friendly_name': 'Station C Humidity',
-      'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -1406,7 +1355,7 @@
       'attribution': 'Data provided by ambientnetwork.net',
       'device_class': 'irradiance',
       'friendly_name': 'Station C Irradiance',
-      'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
@@ -1457,7 +1406,7 @@
       'attribution': 'Data provided by ambientnetwork.net',
       'device_class': 'timestamp',
       'friendly_name': 'Station C Last rain',
-      'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_c_last_rain',
@@ -1465,57 +1414,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2023-10-30T09:45:00+00:00',
-  })
-# ---
-# name: test_sensors[CC:CC:CC:CC:CC:CC][sensor.station_c_last_update-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.station_c_last_update',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Last update',
-    'platform': 'ambient_network',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'last_update',
-    'unique_id': 'CC:CC:CC:CC:CC:CC_last_update',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[CC:CC:CC:CC:CC:CC][sensor.station_c_last_update-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'timestamp',
-      'friendly_name': 'Station C Last update',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.station_c_last_update',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2023-11-08T20:12:00+00:00',
   })
 # ---
 # name: test_sensors[CC:CC:CC:CC:CC:CC][sensor.station_c_max_daily_gust-entry]
@@ -1565,7 +1463,7 @@
       'attribution': 'Data provided by ambientnetwork.net',
       'device_class': 'wind_speed',
       'friendly_name': 'Station C Max daily gust',
-      'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -1624,7 +1522,7 @@
       'attribution': 'Data provided by ambientnetwork.net',
       'device_class': 'precipitation',
       'friendly_name': 'Station C Monthly rain',
-      'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
@@ -1683,7 +1581,7 @@
       'attribution': 'Data provided by ambientnetwork.net',
       'device_class': 'pressure',
       'friendly_name': 'Station C Relative pressure',
-      'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
     }),
@@ -1739,7 +1637,7 @@
       'attribution': 'Data provided by ambientnetwork.net',
       'device_class': 'temperature',
       'friendly_name': 'Station C Temperature',
-      'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -1794,7 +1692,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by ambientnetwork.net',
       'friendly_name': 'Station C UV index',
-      'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'index',
     }),
@@ -1853,7 +1751,7 @@
       'attribution': 'Data provided by ambientnetwork.net',
       'device_class': 'precipitation',
       'friendly_name': 'Station C Weekly rain',
-      'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
@@ -1906,7 +1804,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by ambientnetwork.net',
       'friendly_name': 'Station C Wind direction',
-      'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       'unit_of_measurement': '°',
     }),
     'context': <ANY>,
@@ -1964,7 +1862,7 @@
       'attribution': 'Data provided by ambientnetwork.net',
       'device_class': 'wind_speed',
       'friendly_name': 'Station C Wind gust',
-      'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -2023,7 +1921,7 @@
       'attribution': 'Data provided by ambientnetwork.net',
       'device_class': 'wind_speed',
       'friendly_name': 'Station C Wind speed',
-      'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
