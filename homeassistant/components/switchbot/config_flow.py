@@ -83,6 +83,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_adv: SwitchBotAdvertisement | None = None
         self._discovered_advs: dict[str, SwitchBotAdvertisement] = {}
+        # Used to identify between Lock and Lock Pro, default to Lock
+        self._model_name: SwitchbotModel = SwitchbotModel.LOCK
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -96,10 +98,10 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         if not parsed or parsed.data.get("modelName") not in SUPPORTED_MODEL_TYPES:
             return self.async_abort(reason="not_supported")
-        model_name = parsed.data.get("modelName")
+        self._model_name = parsed.data.get("modelName")
         if (
             not discovery_info.connectable
-            and model_name in CONNECTABLE_SUPPORTED_MODEL_TYPES
+            and self._model_name in CONNECTABLE_SUPPORTED_MODEL_TYPES
         ):
             # Source is not connectable but the model is connectable
             return self.async_abort(reason="not_supported")
@@ -109,7 +111,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             "name": data["modelFriendlyName"],
             "address": short_address(discovery_info.address),
         }
-        if model_name == SwitchbotModel.LOCK:
+        if self._model_name in {SwitchbotModel.LOCK, SwitchbotModel.LOCK_PRO}:
             return await self.async_step_lock_choose_method()
         if self._discovered_adv.data["isEncrypted"]:
             return await self.async_step_password()
@@ -240,6 +242,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovered_adv.device,
                 user_input[CONF_KEY_ID],
                 user_input[CONF_ENCRYPTION_KEY],
+                model=self._model_name,
             ):
                 errors = {
                     "base": "encryption_key_invalid",
@@ -305,7 +308,10 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             device_adv = self._discovered_advs[user_input[CONF_ADDRESS]]
             await self._async_set_device(device_adv)
-            if device_adv.data.get("modelName") == SwitchbotModel.LOCK:
+            if device_adv.data.get("modelName") in {
+                SwitchbotModel.LOCK,
+                SwitchbotModel.LOCK_PRO,
+            }:
                 return await self.async_step_lock_choose_method()
             if device_adv.data["isEncrypted"]:
                 return await self.async_step_password()
