@@ -13,10 +13,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SunsynkConfigEntry
+from .const import DOMAIN
 from .coordinator import SunsynkUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,42 +29,6 @@ class SunsynkEntitySensorDescription(SensorEntityDescription):
     """A small wrapper for describing sunsynk entity sensors."""
 
     agg_func: Callable = sum
-
-
-class SunSynkApiSensor(CoordinatorEntity[SunsynkUpdateCoordinator], SensorEntity):
-    """Parent class for sunsynk api exposing sensors.
-
-    The sensors expose the sum of the power across all inverters
-    for plants that have more than one inverter.
-    State of charge is normally shared between inverters, so this will take
-    the maximum of the state of charge.
-    """
-
-    _attr_has_entity_name = True
-
-    def __init__(self, coordinator, description) -> None:
-        """Initialise the common elements for sunsynk web api sensors."""
-        CoordinatorEntity.__init__(self, coordinator, context=coordinator)
-        self.coordinator = coordinator
-
-        self._attr_unique_id = (
-            f"{description.key}_{sum(p.id for p in coordinator.cache.plants)}"
-        )
-
-        self._attr_translation_key = description.translation_key
-        self.entity_description = description
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        if self.coordinator.cache is not None:
-            self.native_value = self.entity_description.agg_func(
-                decimal.Decimal(getattr(i, self.entity_description.key))
-                for i in self.coordinator.cache.plants
-            )
-        else:
-            _LOGGER.debug("Not updating sensor as coordinator cache is empty. ")
-        self.async_write_ha_state()
 
 
 SENSOR_DESCRIPTIONS = [
@@ -162,3 +128,50 @@ async def async_setup_entry(
         SunSynkApiSensor(coordinator, description)
         for description in SENSOR_DESCRIPTIONS
     )
+
+
+class SunSynkApiSensor(CoordinatorEntity[SunsynkUpdateCoordinator], SensorEntity):
+    """Parent class for sunsynk api exposing sensors.
+
+    The sensors expose the sum of the power across all inverters
+    for plants that have more than one inverter.
+    State of charge is normally shared between inverters, so this will take
+    the maximum of the state of charge.
+    """
+
+    _attr_has_entity_name = True
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Publish a device info."""
+        return DeviceInfo(
+            identifiers={
+                (DOMAIN, str(sum(plant.id for plant in self.coordinator.cache.plants))),
+            },
+            name="sunsynk_installation",
+        )
+
+    def __init__(
+        self, coordinator, description: SunsynkEntitySensorDescription
+    ) -> None:
+        """Initialise the common elements for sunsynk web api sensors."""
+        CoordinatorEntity.__init__(self, coordinator, context=coordinator)
+        self.coordinator = coordinator
+        self._attr_unique_id = (
+            f"{description.key}_{sum(p.id for p in coordinator.cache.plants)}"
+        )
+        self.entity_id = f"sensor.sunsynk_{description.key}"
+
+        self.entity_description: SunsynkEntitySensorDescription = description
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if self.coordinator.cache is not None:
+            self.native_value = self.entity_description.agg_func(
+                decimal.Decimal(getattr(i, self.entity_description.key))
+                for i in self.coordinator.cache.plants
+            )
+        else:
+            _LOGGER.debug("Not updating sensor as coordinator cache is empty. ")
+        self.async_write_ha_state()

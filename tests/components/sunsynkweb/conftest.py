@@ -23,6 +23,24 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
+def sensor_keys():
+    """List keys to the sensors that we want to test."""
+    return (
+        "battery_power",
+        "load_power",
+        "grid_power",
+        "pv_power",
+        "state_of_charge",
+        "acc_pv",
+        "acc_load",
+        "acc_grid_import",
+        "acc_grid_export",
+        "acc_battery_charge",
+        "acc_battery_discharge",
+    )
+
+
+@pytest.fixture
 def basicdata():
     """Return the normal start of coordinator minimal api required from the api."""
     return [
@@ -154,12 +172,14 @@ async def init_integration(
         "homeassistant.components.sunsynkweb.coordinator.get_plants"
     ) as mockedplants:
         patchedplant = Plant(1, 2, "plant1", 1)
-        patchedplant.update = AsyncMock()
+
+        async def updateplant():
+            patchedplant.state_of_charge += 1
+
+        patchedplant.update = updateplant
         mockedplants.return_value = Installation([patchedplant])
-        patchedplant.update.side_effect = basicdata
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        patchedplant.update.assert_called_once()
         coordinator = mock_config_entry.runtime_data
         await coordinator._async_update_data()
         await hass.async_block_till_done()

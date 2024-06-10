@@ -1,10 +1,13 @@
 """Coordinator for the sunsynk web api."""
 
+from __future__ import annotations
+
 from asyncio import timeout as async_timeout
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
-from pysunsynkweb.model import get_plants
+from pysunsynkweb.model import Installation, get_plants
 from pysunsynkweb.session import SunsynkwebSession
 
 from homeassistant.core import HomeAssistant
@@ -13,9 +16,14 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 _LOGGER = logging.getLogger(__name__)
 
+if TYPE_CHECKING:
+    from . import SunsynkConfigEntry
+
 
 class SunsynkUpdateCoordinator(DataUpdateCoordinator[None]):
     """A Coordinator that updates sunsynk plants."""
+
+    config_entry: SunsynkConfigEntry
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize my coordinator."""
@@ -29,13 +37,12 @@ class SunsynkUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         self.bearer = None
         self.hass = hass
-        assert self.config_entry is not None
         self.session = SunsynkwebSession(
             session=async_get_clientsession(hass),
             username=self.config_entry.data["username"],
             password=self.config_entry.data["password"],
         )
-        self.cache = None
+        self.cache = Installation()
 
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint.
@@ -43,13 +50,17 @@ class SunsynkUpdateCoordinator(DataUpdateCoordinator[None]):
         This is the place to pre-process the data to lookup tables
         so entities can quickly look up their data.
         """
-        try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
-            # handled by the data update coordinator.
-            if self.cache is None:
-                async with async_timeout(10):
+        # Note: asyncio.TimeoutError and aiohttp.ClientError are already
+        # handled by the data update coordinator.
+        if not self.cache.plants:
+            async with async_timeout(10):
+                try:
                     self.cache = await get_plants(self.session)
-            assert self.cache is not None  # placate mypy type checker
+                except KeyError as err:
+                    raise UpdateFailed(
+                        f"Error initialising communication with the sunsynk API: {err}"
+                    ) from err
+        try:
             await self.cache.update()
         except KeyError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(f"Error updating from the sunsynk API: {err}") from err
