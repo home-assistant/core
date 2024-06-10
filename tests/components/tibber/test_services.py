@@ -13,6 +13,8 @@ from homeassistant.exceptions import ServiceValidationError
 
 def generate_mock_home_data():
     """Create mock data from the tibber connection."""
+    today = remove_microseconds(dt.datetime.now())
+    tomorrow = remove_microseconds(today + dt.timedelta(days=1))
     mock_homes = [
         MagicMock(
             name="first_home",
@@ -23,24 +25,28 @@ def generate_mock_home_data():
                             "priceInfo": {
                                 "today": [
                                     {
-                                        "startsAt": "2024-05-17T03:00:00.000+02:00",
+                                        "startsAt": today.isoformat(),
                                         "total": 0.46914,
                                         "level": "VERY_EXPENSIVE",
                                     },
                                     {
-                                        "startsAt": "2024-05-17T04:00:00.000+02:00",
+                                        "startsAt": (
+                                            today + dt.timedelta(hours=1)
+                                        ).isoformat(),
                                         "total": 0.46914,
                                         "level": "VERY_EXPENSIVE",
                                     },
                                 ],
                                 "tomorrow": [
                                     {
-                                        "startsAt": "2024-05-18T03:00:00.000+02:00",
+                                        "startsAt": tomorrow.isoformat(),
                                         "total": 0.46914,
                                         "level": "VERY_EXPENSIVE",
                                     },
                                     {
-                                        "startsAt": "2024-05-18T04:00:00.000+02:00",
+                                        "startsAt": (
+                                            tomorrow + dt.timedelta(hours=1)
+                                        ).isoformat(),
                                         "total": 0.46914,
                                         "level": "VERY_EXPENSIVE",
                                     },
@@ -60,24 +66,28 @@ def generate_mock_home_data():
                             "priceInfo": {
                                 "today": [
                                     {
-                                        "startsAt": "2024-05-17T03:00:00.000+02:00",
+                                        "startsAt": today.isoformat(),
                                         "total": 0.46914,
                                         "level": "VERY_EXPENSIVE",
                                     },
                                     {
-                                        "startsAt": "2024-05-17T04:00:00.000+02:00",
+                                        "startsAt": (
+                                            today + dt.timedelta(hours=1)
+                                        ).isoformat(),
                                         "total": 0.46914,
                                         "level": "VERY_EXPENSIVE",
                                     },
                                 ],
                                 "tomorrow": [
                                     {
-                                        "startsAt": "2024-05-18T03:00:00.000+02:00",
+                                        "startsAt": tomorrow.isoformat(),
                                         "total": 0.46914,
                                         "level": "VERY_EXPENSIVE",
                                     },
                                     {
-                                        "startsAt": "2024-05-18T04:00:00.000+02:00",
+                                        "startsAt": (
+                                            tomorrow + dt.timedelta(hours=1)
+                                        ).isoformat(),
                                         "total": 0.46914,
                                         "level": "VERY_EXPENSIVE",
                                     },
@@ -108,11 +118,19 @@ def create_mock_hass():
     return mock_hass
 
 
+def remove_microseconds(dt):
+    """Remove microseconds from a datetime object."""
+    return dt.replace(microsecond=0)
+
+
 async def test_get_prices():
     """Test __get_prices with mock data."""
-
+    today = remove_microseconds(dt.datetime.now())
+    tomorrow = remove_microseconds(dt.datetime.now() + dt.timedelta(days=1))
     call = ServiceCall(
-        DOMAIN, PRICE_SERVICE_NAME, {"start": "2024-05-17", "end": "2024-05-18"}
+        DOMAIN,
+        PRICE_SERVICE_NAME,
+        {"start": today.date().isoformat(), "end": tomorrow.date().isoformat()},
     )
 
     result = await __get_prices(call, hass=create_mock_hass())
@@ -121,32 +139,24 @@ async def test_get_prices():
         "prices": {
             "first_home": [
                 {
-                    "start_time": dt.datetime.fromisoformat(
-                        "2024-05-17 03:00:00+02:00"
-                    ),
+                    "start_time": today,
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
                 {
-                    "start_time": dt.datetime.fromisoformat(
-                        "2024-05-17 04:00:00+02:00"
-                    ),
+                    "start_time": today + dt.timedelta(hours=1),
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
             ],
             "second_home": [
                 {
-                    "start_time": dt.datetime.fromisoformat(
-                        "2024-05-17 03:00:00+02:00"
-                    ),
+                    "start_time": today,
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
                 {
-                    "start_time": dt.datetime.fromisoformat(
-                        "2024-05-17 04:00:00+02:00"
-                    ),
+                    "start_time": today + dt.timedelta(hours=1),
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
@@ -157,7 +167,7 @@ async def test_get_prices():
 
 async def test_get_prices_no_input():
     """Test __get_prices with no input."""
-
+    today = remove_microseconds(dt.datetime.now())
     call = ServiceCall(DOMAIN, PRICE_SERVICE_NAME, {})
 
     result = await __get_prices(call, hass=create_mock_hass())
@@ -166,32 +176,24 @@ async def test_get_prices_no_input():
         "prices": {
             "first_home": [
                 {
-                    "start_time": dt.datetime.fromisoformat(
-                        "2024-05-17 03:00:00+02:00"
-                    ),
+                    "start_time": today,
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
                 {
-                    "start_time": dt.datetime.fromisoformat(
-                        "2024-05-17 04:00:00+02:00"
-                    ),
+                    "start_time": today + dt.timedelta(hours=1),
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
             ],
             "second_home": [
                 {
-                    "start_time": dt.datetime.fromisoformat(
-                        "2024-05-17 03:00:00+02:00"
-                    ),
+                    "start_time": today,
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
                 {
-                    "start_time": dt.datetime.fromisoformat(
-                        "2024-05-17 04:00:00+02:00"
-                    ),
+                    "start_time": today + dt.timedelta(hours=1),
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
@@ -202,8 +204,10 @@ async def test_get_prices_no_input():
 
 async def test_get_prices_start_tomorrow():
     """Test __get_prices with start date tomorrow."""
-
-    call = ServiceCall(DOMAIN, PRICE_SERVICE_NAME, {"start": "2024-05-18"})
+    tomorrow = remove_microseconds(dt.datetime.now() + dt.timedelta(days=1))
+    call = ServiceCall(
+        DOMAIN, PRICE_SERVICE_NAME, {"start": tomorrow.date().isoformat()}
+    )
 
     result = await __get_prices(call, hass=create_mock_hass())
 
@@ -211,32 +215,24 @@ async def test_get_prices_start_tomorrow():
         "prices": {
             "first_home": [
                 {
-                    "start_time": dt.datetime.fromisoformat(
-                        "2024-05-18 03:00:00+02:00"
-                    ),
+                    "start_time": tomorrow,
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
                 {
-                    "start_time": dt.datetime.fromisoformat(
-                        "2024-05-18 04:00:00+02:00"
-                    ),
+                    "start_time": tomorrow + dt.timedelta(hours=1),
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
             ],
             "second_home": [
                 {
-                    "start_time": dt.datetime.fromisoformat(
-                        "2024-05-18 03:00:00+02:00"
-                    ),
+                    "start_time": tomorrow,
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
                 {
-                    "start_time": dt.datetime.fromisoformat(
-                        "2024-05-18 04:00:00+02:00"
-                    ),
+                    "start_time": tomorrow + dt.timedelta(hours=1),
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
