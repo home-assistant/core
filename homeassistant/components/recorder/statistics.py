@@ -948,7 +948,8 @@ def reduce_day_ts_factory() -> (
     ]
 ):
     """Return functions to match same day and day start end."""
-    _boundries: tuple[float, float] = (0, 0)
+    _lower_bound: float = 0
+    _upper_bound: float = 0
 
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
@@ -957,10 +958,10 @@ def reduce_day_ts_factory() -> (
 
     def _same_day_ts(time1: float, time2: float) -> bool:
         """Return True if time1 and time2 are in the same date."""
-        nonlocal _boundries
-        if not _boundries[0] <= time1 < _boundries[1]:
-            _boundries = _day_start_end_ts_cached(time1)
-        return _boundries[0] <= time2 < _boundries[1]
+        nonlocal _lower_bound, _upper_bound
+        if not _lower_bound <= time1 < _upper_bound:
+            _lower_bound, _upper_bound = _day_start_end_ts_cached(time1)
+        return _lower_bound <= time2 < _upper_bound
 
     def _day_start_end_ts(time: float) -> tuple[float, float]:
         """Return the start and end of the period (day) time is within."""
@@ -968,8 +969,8 @@ def reduce_day_ts_factory() -> (
             hour=0, minute=0, second=0, microsecond=0
         )
         return (
-            start_local.astimezone(dt_util.UTC).timestamp(),
-            (start_local + timedelta(days=1)).astimezone(dt_util.UTC).timestamp(),
+            start_local.timestamp(),
+            (start_local + timedelta(days=1)).timestamp(),
         )
 
     # We create _day_start_end_ts_cached in the closure in case the timezone changes
@@ -996,7 +997,8 @@ def reduce_week_ts_factory() -> (
     ]
 ):
     """Return functions to match same week and week start end."""
-    _boundries: tuple[float, float] = (0, 0)
+    _lower_bound: float = 0
+    _upper_bound: float = 0
 
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
@@ -1005,21 +1007,20 @@ def reduce_week_ts_factory() -> (
 
     def _same_week_ts(time1: float, time2: float) -> bool:
         """Return True if time1 and time2 are in the same year and week."""
-        nonlocal _boundries
-        if not _boundries[0] <= time1 < _boundries[1]:
-            _boundries = _week_start_end_ts_cached(time1)
-        return _boundries[0] <= time2 < _boundries[1]
+        nonlocal _lower_bound, _upper_bound
+        if not _lower_bound <= time1 < _upper_bound:
+            _lower_bound, _upper_bound = _week_start_end_ts_cached(time1)
+        return _lower_bound <= time2 < _upper_bound
 
     def _week_start_end_ts(time: float) -> tuple[float, float]:
         """Return the start and end of the period (week) time is within."""
-        nonlocal _boundries
         time_local = _local_from_timestamp(time)
         start_local = time_local.replace(
             hour=0, minute=0, second=0, microsecond=0
         ) - timedelta(days=time_local.weekday())
         return (
-            start_local.astimezone(dt_util.UTC).timestamp(),
-            (start_local + timedelta(days=7)).astimezone(dt_util.UTC).timestamp(),
+            start_local.timestamp(),
+            (start_local + timedelta(days=7)).timestamp(),
         )
 
     # We create _week_start_end_ts_cached in the closure in case the timezone changes
@@ -1054,7 +1055,8 @@ def reduce_month_ts_factory() -> (
     ]
 ):
     """Return functions to match same month and month start end."""
-    _boundries: tuple[float, float] = (0, 0)
+    _lower_bound: float = 0
+    _upper_bound: float = 0
 
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
@@ -1063,10 +1065,10 @@ def reduce_month_ts_factory() -> (
 
     def _same_month_ts(time1: float, time2: float) -> bool:
         """Return True if time1 and time2 are in the same year and month."""
-        nonlocal _boundries
-        if not _boundries[0] <= time1 < _boundries[1]:
-            _boundries = _month_start_end_ts_cached(time1)
-        return _boundries[0] <= time2 < _boundries[1]
+        nonlocal _lower_bound, _upper_bound
+        if not _lower_bound <= time1 < _upper_bound:
+            _lower_bound, _upper_bound = _month_start_end_ts_cached(time1)
+        return _lower_bound <= time2 < _upper_bound
 
     def _month_start_end_ts(time: float) -> tuple[float, float]:
         """Return the start and end of the period (month) time is within."""
@@ -1074,10 +1076,7 @@ def reduce_month_ts_factory() -> (
             day=1, hour=0, minute=0, second=0, microsecond=0
         )
         end_local = _find_month_end_time(start_local)
-        return (
-            start_local.astimezone(dt_util.UTC).timestamp(),
-            end_local.astimezone(dt_util.UTC).timestamp(),
-        )
+        return (start_local.timestamp(), end_local.timestamp())
 
     # We create _month_start_end_ts_cached in the closure in case the timezone changes
     _month_start_end_ts_cached = lru_cache(maxsize=6)(_month_start_end_ts)
@@ -1245,11 +1244,28 @@ def _first_statistic(
     table: type[StatisticsBase],
     metadata_id: int,
 ) -> datetime | None:
-    """Return the data of the oldest statistic row for a given metadata id."""
+    """Return the date of the oldest statistic row for a given metadata id."""
     stmt = lambda_stmt(
         lambda: select(table.start_ts)
         .filter(table.metadata_id == metadata_id)
         .order_by(table.start_ts.asc())
+        .limit(1)
+    )
+    if stats := cast(Sequence[Row], execute_stmt_lambda_element(session, stmt)):
+        return dt_util.utc_from_timestamp(stats[0].start_ts)
+    return None
+
+
+def _last_statistic(
+    session: Session,
+    table: type[StatisticsBase],
+    metadata_id: int,
+) -> datetime | None:
+    """Return the date of the newest statistic row for a given metadata id."""
+    stmt = lambda_stmt(
+        lambda: select(table.start_ts)
+        .filter(table.metadata_id == metadata_id)
+        .order_by(table.start_ts.desc())
         .limit(1)
     )
     if stats := cast(Sequence[Row], execute_stmt_lambda_element(session, stmt)):
@@ -1263,6 +1279,7 @@ def _get_oldest_sum_statistic(
     main_start_time: datetime | None,
     tail_start_time: datetime | None,
     oldest_stat: datetime | None,
+    oldest_5_min_stat: datetime | None,
     tail_only: bool,
     metadata_id: int,
 ) -> float | None:
@@ -1307,6 +1324,15 @@ def _get_oldest_sum_statistic(
 
     if (
         head_start_time is not None
+        and oldest_5_min_stat is not None
+        and (
+            # If we want stats older than the short term purge window, don't lookup
+            # the oldest sum in the short term table, as it would be prioritized
+            # over older LongTermStats.
+            (oldest_stat is None)
+            or (oldest_5_min_stat < oldest_stat)
+            or (oldest_5_min_stat <= head_start_time)
+        )
         and (
             oldest_sum := _get_oldest_sum_statistic_in_sub_period(
                 session, head_start_time, StatisticsShortTerm, metadata_id
@@ -1477,13 +1503,16 @@ def statistic_during_period(
         tail_start_time: datetime | None = None
         tail_end_time: datetime | None = None
         if end_time is None:
-            tail_start_time = now.replace(minute=0, second=0, microsecond=0)
+            tail_start_time = _last_statistic(session, Statistics, metadata_id)
+            if tail_start_time:
+                tail_start_time += Statistics.duration
+            else:
+                tail_start_time = now.replace(minute=0, second=0, microsecond=0)
+        elif tail_only:
+            tail_start_time = start_time
+            tail_end_time = end_time
         elif end_time.minute:
-            tail_start_time = (
-                start_time
-                if tail_only
-                else end_time.replace(minute=0, second=0, microsecond=0)
-            )
+            tail_start_time = end_time.replace(minute=0, second=0, microsecond=0)
             tail_end_time = end_time
 
         # Calculate the main period
@@ -1518,6 +1547,7 @@ def statistic_during_period(
                     main_start_time,
                     tail_start_time,
                     oldest_stat,
+                    oldest_5_min_stat,
                     tail_only,
                     metadata_id,
                 )

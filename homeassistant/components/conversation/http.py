@@ -94,9 +94,7 @@ async def websocket_prepare(
     agent = async_get_agent(hass, msg.get("agent_id"))
 
     if agent is None:
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Agent not found"
-        )
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, "Agent not found")
         return
 
     await agent.async_prepare(msg.get("language"))

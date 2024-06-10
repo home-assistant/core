@@ -15,6 +15,7 @@ from yalexs.activity import (
 )
 from yalexs.doorbell import Doorbell, DoorbellDetail
 from yalexs.lock import Lock, LockDetail, LockDoorStatus
+from yalexs.manager.const import ACTIVITY_UPDATE_INTERVAL
 from yalexs.util import update_lock_detail_from_activity
 
 from homeassistant.components.binary_sensor import (
@@ -28,7 +29,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from . import AugustConfigEntry, AugustData
-from .const import ACTIVITY_UPDATE_INTERVAL
 from .entity import AugustEntityMixin
 
 _LOGGER = logging.getLogger(__name__)

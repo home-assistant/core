@@ -8,8 +8,8 @@ from enum import Enum
 import logging
 from typing import Any, Final
 
-from pyunifiprotect.api import ProtectApiClient
-from pyunifiprotect.data import (
+from uiprotect.api import ProtectApiClient
+from uiprotect.data import (
     Camera,
     ChimeType,
     DoorbellMessageType,

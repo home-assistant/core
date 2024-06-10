@@ -1931,7 +1931,10 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         }
     }
 
-    assert trt.query_attributes() == {"isArmed": False}
+    assert trt.query_attributes() == {
+        "currentArmLevel": "armed_custom_bypass",
+        "isArmed": False,
+    }
 
     assert trt.can_execute(trait.COMMAND_ARMDISARM, {"arm": False})
 
