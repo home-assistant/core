@@ -66,6 +66,7 @@ class ElgatoLight(ElgatoEntity, LightEntity):
                 "Elgato Light Strip Pro",
             )
             or self.coordinator.data.settings.power_on_hue
+            or self.coordinator.data.state.hue is not None
         ):
             self._attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
             self._attr_min_mireds = 153
