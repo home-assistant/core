@@ -1,12 +1,12 @@
 """Support for Wyoming satellite services."""
 
 import asyncio
-from collections.abc import AsyncGenerator
 import io
 import logging
 from typing import Final
 import wave
 
+from typing_extensions import AsyncGenerator
 from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioChunkConverter, AudioStart, AudioStop
 from wyoming.client import AsyncTcpClient
@@ -420,8 +420,6 @@ class WyomingSatellite:
             self.hass.add_job(self._client.write_event(Detect().event()))
         elif event.type == assist_pipeline.PipelineEventType.WAKE_WORD_END:
             # Wake word detection
-            self.device.set_is_active(True)
-
             # Inform client of wake word detection
             if event.data and (wake_word_output := event.data.get("wake_word_output")):
                 detection = Detection(
@@ -552,7 +550,7 @@ class WyomingSatellite:
             await self._client.write_event(AudioStop(timestamp=timestamp).event())
             _LOGGER.debug("TTS streaming complete")
 
-    async def _stt_stream(self) -> AsyncGenerator[bytes, None]:
+    async def _stt_stream(self) -> AsyncGenerator[bytes]:
         """Yield audio chunks from a queue."""
         try:
             is_first_chunk = True

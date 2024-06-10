@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
-
 from chip.clusters.Objects import ClusterAttributeDescriptor
 from matter_server.client.models.node import MatterEndpoint
+from typing_extensions import Generator
 
 from homeassistant.const import Platform
 from homeassistant.core import callback
@@ -36,7 +35,7 @@ SUPPORTED_PLATFORMS = tuple(DISCOVERY_SCHEMAS)
 
 
 @callback
-def iter_schemas() -> Generator[MatterDiscoverySchema, None, None]:
+def iter_schemas() -> Generator[MatterDiscoverySchema]:
     """Iterate over all available discovery schemas."""
     for platform_schemas in DISCOVERY_SCHEMAS.values():
         yield from platform_schemas
@@ -45,7 +44,7 @@ def iter_schemas() -> Generator[MatterDiscoverySchema, None, None]:
 @callback
 def async_discover_entities(
     endpoint: MatterEndpoint,
-) -> Generator[MatterEntityInfo, None, None]:
+) -> Generator[MatterEntityInfo]:
     """Run discovery on MatterEndpoint and return matching MatterEntityInfo(s)."""
     discovered_attributes: set[type[ClusterAttributeDescriptor]] = set()
     device_info = endpoint.device_info
@@ -118,7 +117,6 @@ def async_discover_entities(
             attributes_to_watch=attributes_to_watch,
             entity_description=schema.entity_description,
             entity_class=schema.entity_class,
-            should_poll=schema.should_poll,
         )
 
         # prevent re-discovery of the primary attribute if not allowed

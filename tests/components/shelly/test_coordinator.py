@@ -15,12 +15,14 @@ from homeassistant.components.shelly.const import (
     ATTR_CLICK_TYPE,
     ATTR_DEVICE,
     ATTR_GENERATION,
+    CONF_BLE_SCANNER_MODE,
     DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
     MAX_PUSH_UPDATE_FAILURES,
     RPC_RECONNECT_INTERVAL,
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
+    BLEScannerMode,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, STATE_ON, STATE_UNAVAILABLE
@@ -485,6 +487,25 @@ async def test_rpc_reload_with_invalid_auth(
     assert flow["context"].get("entry_id") == entry.entry_id
 
 
+async def test_rpc_connection_error_during_unload(
+    hass: HomeAssistant, mock_rpc_device: Mock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test RPC DeviceConnectionError suppressed during config entry unload."""
+    entry = await init_integration(hass, 2)
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.shelly.coordinator.async_stop_scanner",
+        side_effect=DeviceConnectionError,
+    ):
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert "Error during shutdown for device" in caplog.text
+    assert entry.state is ConfigEntryState.NOT_LOADED
+
+
 async def test_rpc_click_event(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -711,6 +732,32 @@ async def test_rpc_reconnect_error(
     await hass.async_block_till_done()
 
     assert get_entity_state(hass, "switch.test_switch_0") == STATE_UNAVAILABLE
+
+
+async def test_rpc_error_running_connected_events(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test RPC error while running connected events."""
+    with patch(
+        "homeassistant.components.shelly.coordinator.async_ensure_ble_enabled",
+        side_effect=DeviceConnectionError,
+    ):
+        await init_integration(
+            hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
+        )
+
+    assert "Error running connected events for device" in caplog.text
+    assert get_entity_state(hass, "switch.test_switch_0") == STATE_UNAVAILABLE
+
+    # Move time to generate reconnect without error
+    freezer.tick(timedelta(seconds=RPC_RECONNECT_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert get_entity_state(hass, "switch.test_switch_0") == STATE_ON
 
 
 async def test_rpc_polling_connection_error(

@@ -94,9 +94,7 @@ async def websocket_prepare(
     agent = async_get_agent(hass, msg.get("agent_id"))
 
     if agent is None:
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Agent not found"
-        )
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, "Agent not found")
         return
 
     await agent.async_prepare(msg.get("language"))
@@ -188,6 +186,7 @@ async def websocket_hass_agent_debug(
                 conversation_id=None,
                 device_id=msg.get("device_id"),
                 language=msg.get("language", hass.config.language),
+                agent_id=None,
             )
         )
         for sentence in msg["sentences"]

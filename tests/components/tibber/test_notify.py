@@ -46,16 +46,22 @@ async def test_notification_services(
 
     with pytest.raises(HomeAssistantError):
         # Test legacy notify service
-        service = "tibber"
-        service_data = {"message": "The message", "title": "A title"}
-        await hass.services.async_call("notify", service, service_data, blocking=True)
+        await hass.services.async_call(
+            "notify",
+            service="tibber",
+            service_data={"message": "The message", "title": "A title"},
+            blocking=True,
+        )
 
     with pytest.raises(HomeAssistantError):
         # Test notify entity service
-        service = "send_message"
-        service_data = {
-            "entity_id": "notify.tibber",
-            "message": "The message",
-            "title": "A title",
-        }
-        await hass.services.async_call("notify", service, service_data, blocking=True)
+        await hass.services.async_call(
+            "notify",
+            service="send_message",
+            service_data={
+                "entity_id": "notify.tibber",
+                "message": "The message",
+                "title": "A title",
+            },
+            blocking=True,
+        )

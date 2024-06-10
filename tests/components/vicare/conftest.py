@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareService import ViCareDeviceAccessor, readFeature
+from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components.vicare.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -86,7 +86,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 async def mock_vicare_gas_boiler(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> AsyncGenerator[MockConfigEntry, None]:
+) -> AsyncGenerator[MockConfigEntry]:
     """Return a mocked ViCare API representing a single gas boiler device."""
     fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
     with patch(
@@ -120,7 +120,7 @@ async def mock_vicare_fan(
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry:
         yield mock_setup_entry
