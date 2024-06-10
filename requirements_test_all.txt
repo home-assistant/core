@@ -1987,6 +1987,9 @@ sensorpro-ble==0.5.3
 # homeassistant.components.sensorpush
 sensorpush-ble==1.6.2
 
+# homeassistant.components.sensoterra
+sensoterra==0.3.0
+
 # homeassistant.components.sentry
 sentry-sdk==1.40.3
 

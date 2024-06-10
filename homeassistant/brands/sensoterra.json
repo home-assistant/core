@@ -1,0 +1,5 @@
+{
+  "domain": "sensoterra",
+  "name": "Sensoterra",
+  "integrations": ["sensoterra"]
+}
