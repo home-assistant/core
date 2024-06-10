@@ -50,6 +50,7 @@ from .const import (
     ATTR_OCCURRED_OBSERVATION_ENTITIES,
     ATTR_PROBABILITY,
     ATTR_PROBABILITY_THRESHOLD,
+    CONF_NUMERIC_STATE,
     CONF_OBSERVATIONS,
     CONF_P_GIVEN_F,
     CONF_P_GIVEN_T,
@@ -68,7 +69,7 @@ _LOGGER = logging.getLogger(__name__)
 
 NUMERIC_STATE_SCHEMA = vol.Schema(
     {
-        CONF_PLATFORM: "numeric_state",
+        CONF_PLATFORM: CONF_NUMERIC_STATE,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_ABOVE): vol.Coerce(float),
         vol.Optional(CONF_BELOW): vol.Coerce(float),
@@ -77,6 +78,25 @@ NUMERIC_STATE_SCHEMA = vol.Schema(
     },
     required=True,
 )
+
+
+def _above_greater_than_below(configs: list) -> list:
+    config = configs[0]
+    if config.get(CONF_PLATFORM, None) != CONF_NUMERIC_STATE:
+        return configs
+    above = config.get(CONF_ABOVE, None)
+    below = config.get(CONF_BELOW, None)
+    if above is None and below is None:
+        raise vol.Invalid(
+            "For bayesian numeric state at least one of 'above' or 'below' must be specified."
+        )
+    if above is not None and below is not None:
+        if above > below:
+            raise vol.Invalid(
+                "For bayesian numeric state 'above' must be less than 'below'."
+            )
+    return configs
+
 
 STATE_SCHEMA = vol.Schema(
     {
@@ -107,7 +127,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_OBSERVATIONS): vol.Schema(
             vol.All(
                 cv.ensure_list,
-                [vol.Any(NUMERIC_STATE_SCHEMA, STATE_SCHEMA, TEMPLATE_SCHEMA)],
+                [vol.Any(TEMPLATE_SCHEMA, STATE_SCHEMA, NUMERIC_STATE_SCHEMA)],
+                _above_greater_than_below,
             )
         ),
         vol.Required(CONF_PRIOR): vol.Coerce(float),

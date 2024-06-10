@@ -827,9 +827,11 @@ async def test_bad_multi_numeric(
 
 
 async def test_bad_numeric(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test whether missing prob_given_false are detected and appropriate issues are created."""
+    """Test whether missing prob_given_false are detected and appropriate logs are created."""
 
     config = {
         "binary_sensor": {
@@ -850,28 +852,7 @@ async def test_bad_numeric(
     }
 
     assert await async_setup_component(hass, "binary_sensor", config)
-
-    hass.states.async_set("sensor.temp", 21)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("binary_sensor.goldilocks_zone")
-    await hass.async_block_till_done()
-    assert state.attributes.get("occurred_observation_entities") == []
-    assert abs(state.attributes.get("probability") - 0.4) == 0
-
-    hass.states.async_set("sensor.temp", 18)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("binary_sensor.goldilocks_zone")
-    await hass.async_block_till_done()
-    assert state.attributes.get("occurred_observation_entities") == []
-    assert abs(state.attributes.get("probability") - 0.4) == 0
-
-    assert len(issue_registry.issues) == 1
-    assert (
-        issue_registry.issues[("bayesian", "bad_config/goldilocks_zone/sensor.temp")]
-        is not None
-    )
+    assert "bayesian numeric state 'above' must be less than 'below'" in caplog.text
 
 
 async def test_probability_updates(hass: HomeAssistant) -> None:
